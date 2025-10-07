@@ -13,10 +13,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:registry/no-instance"
+jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -34,7 +34,7 @@ last_response: body
 [Asserts]
 jsonpath "$.valid" == true
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
@@ -57,7 +57,7 @@ jsonpath "$.errors[0].error" == "The value was expected to be of type string but
 jsonpath "$.errors[0].instanceLocation" == ""
 jsonpath "$.errors[0].keywordLocation" == "/type"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
@@ -81,7 +81,7 @@ jsonpath "$.annotations[0].keywordLocation" == "/title"
 jsonpath "$.annotations[0].annotation" count == 1
 jsonpath "$.annotations[0].annotation[0]" == "Annotation value"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
@@ -98,10 +98,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/no-template"
+jsonpath "$.title" == "sourcemeta:one/no-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The Sourcemeta One configuration file format",
+  "description": "The configuration file format used to configured One instances",
+  "type": "object",
+  "required": [ "url" ],
+  "properties": {
+    "extends": {
+      "$ref": "./extends.json"
+    },
+    "contents": {
+      "$ref": "./contents.json",
+      "properties": {
+        "self": false
+      }
+    },
+    "html": {
+      "type": [ "object", "boolean" ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "action": {
+          "type": "object",
+          "required": [ "title", "url", "icon" ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "url": {
+              "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+            }
+          },
+          "additionalProperties": false
+        },
+        "head": {
+          "type": "string"
+        },
+        "hero": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "url": {
+      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+    }
+  },
+  "additionalProperties": false
+}

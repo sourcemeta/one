@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "contents": {
     "example": {
@@ -19,12 +19,12 @@ cat << EOF > "$TMP/registry.json"
 }
 EOF
 
-"$1" "$TMP/registry.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 error: Invalid configuration
 The value was expected to be an object that defines the property "url"
   at instance location ""

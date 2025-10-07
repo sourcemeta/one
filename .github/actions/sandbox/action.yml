@@ -19,14 +19,14 @@ runs:
       run: docker compose --file test/sandbox/compose.yaml build
       shell: bash
       env:
-        SOURCEMETA_REGISTRY_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
-        SOURCEMETA_REGISTRY_SANDBOX_PORT: ${{ inputs.port }}
+        SOURCEMETA_ONE_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SOURCEMETA_ONE_SANDBOX_PORT: ${{ inputs.port }}
     - name: Up Sandbox (${{ inputs.configuration }})
       run: docker compose --file test/sandbox/compose.yaml up --detach --wait
       shell: bash
       env:
-        SOURCEMETA_REGISTRY_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
-        SOURCEMETA_REGISTRY_SANDBOX_PORT: ${{ inputs.port }}
+        SOURCEMETA_ONE_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SOURCEMETA_ONE_SANDBOX_PORT: ${{ inputs.port }}
     - name: Test Sandbox - E2E (${{ inputs.configuration }})
       run: make test-e2e PRESET=Release
       shell: bash
@@ -45,5 +45,5 @@ runs:
       run: docker compose --file test/sandbox/compose.yaml down
       shell: bash
       env:
-        SOURCEMETA_REGISTRY_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
-        SOURCEMETA_REGISTRY_SANDBOX_PORT: ${{ inputs.port }}
+        SOURCEMETA_ONE_SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SOURCEMETA_ONE_SANDBOX_PORT: ${{ inputs.port }}

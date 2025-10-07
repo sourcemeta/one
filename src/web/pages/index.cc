@@ -1,10 +1,10 @@
-#include <sourcemeta/registry/web.h>
+#include <sourcemeta/one/web.h>
 
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/registry/html.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/html.h>
+#include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
@@ -12,9 +12,9 @@
 
 namespace {
 
-auto make_hero(const sourcemeta::registry::Configuration &configuration)
-    -> sourcemeta::registry::html::HTML {
-  using namespace sourcemeta::registry::html;
+auto make_hero(const sourcemeta::one::Configuration &configuration)
+    -> sourcemeta::one::html::HTML {
+  using namespace sourcemeta::one::html;
   if (configuration.html->hero.has_value()) {
     return div({{"class", "container-fluid px-4"}},
                div({{"class", "bg-light border border-light-subtle mt-4 "
@@ -26,7 +26,7 @@ auto make_hero(const sourcemeta::registry::Configuration &configuration)
 
 } // anonymous namespace
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto GENERATE_WEB_INDEX::handler(
     const std::filesystem::path &destination,
@@ -54,4 +54,4 @@ auto GENERATE_WEB_INDEX::handler(
                  timestamp_end - timestamp_start));
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

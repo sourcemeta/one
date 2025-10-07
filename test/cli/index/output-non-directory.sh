@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
   "contents": {
@@ -33,7 +33,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 EOF
 
 echo "foobar" > "$TMP/output"
-"$1" "$TMP/registry.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"

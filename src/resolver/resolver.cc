@@ -1,5 +1,5 @@
-#include <sourcemeta/registry/resolver.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/resolver.h>
+#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uri.h>
@@ -11,11 +11,10 @@
 #include <mutex>     // std::mutex, std::lock_guard
 #include <sstream>   // std::ostringstream
 
-static auto
-rebase(const sourcemeta::registry::Configuration::Collection &collection,
-       const sourcemeta::core::JSON::String &uri,
-       const sourcemeta::core::JSON::String &new_base,
-       const sourcemeta::core::JSON::String &new_prefix)
+static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
+                   const sourcemeta::core::JSON::String &uri,
+                   const sourcemeta::core::JSON::String &new_base,
+                   const sourcemeta::core::JSON::String &new_prefix)
     -> sourcemeta::core::JSON::String {
   sourcemeta::core::URI maybe_relative{uri};
   maybe_relative.relative_to(collection.base);
@@ -60,7 +59,7 @@ static auto normalise_identifier(const std::string_view identifier)
 }
 
 static auto
-normalise_ref(const sourcemeta::registry::Configuration::Collection &collection,
+normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
               const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
               const sourcemeta::core::JSON::String &keyword,
               const sourcemeta::core::JSON::String &reference) -> void {
@@ -95,7 +94,7 @@ normalise_ref(const sourcemeta::registry::Configuration::Collection &collection,
   schema.assign(keyword, sourcemeta::core::JSON{value.recompose()});
 }
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto Resolver::operator()(
     std::string_view raw_identifier,
@@ -121,8 +120,7 @@ auto Resolver::operator()(
   if (result->second.cache_path.has_value()) {
     // We can guarantee the cached outcome is JSON, so we don't need to try
     // reading as YAML
-    auto schema{
-        sourcemeta::registry::read_json(result->second.cache_path.value())};
+    auto schema{sourcemeta::one::read_json(result->second.cache_path.value())};
     assert(sourcemeta::core::is_schema(schema));
     if (callback) {
       callback(result->second.cache_path.value());
@@ -271,7 +269,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // We have to do something if the schema is the base. Note that URI
   // canonicalisation technically cannot remove trailing slashes as they might
   // have meaning in certain use cases. But we still consider them equal in the
-  // context of the Registry
+  // context of the One
   if (identifier == collection.base || identifier == collection.base + "/") {
     identifier = default_identifier;
   }
@@ -283,7 +281,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   assert(identifier.find("..") == std::string::npos);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (3) Determine the new URI of the schema, from the registry base URI
+  // (3) Determine the new URI of the schema, from the one base URI
   /////////////////////////////////////////////////////////////////////////////
   const auto new_identifier{
       rebase(collection, identifier, server_url, collection_relative_path)};
@@ -292,7 +290,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Determine the dialect of the schema, which we also need to make sure
-  // we rebase according to the registry base URI, etc
+  // we rebase according to the one base URI, etc
   /////////////////////////////////////////////////////////////////////////////
   const auto raw_dialect{
       sourcemeta::core::dialect(schema, collection.default_dialect)};
@@ -314,7 +312,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   assert(!current_dialect.ends_with("#.json"));
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Safely registry the schema entry in the resolver
+  // (5) Safely one the schema entry in the resolver
   /////////////////////////////////////////////////////////////////////////////
   std::unique_lock lock{this->mutex};
   auto result{this->views.emplace(
@@ -349,4 +347,4 @@ auto Resolver::cache_path(const sourcemeta::core::JSON::String &uri,
   entry->second.cache_path = path;
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

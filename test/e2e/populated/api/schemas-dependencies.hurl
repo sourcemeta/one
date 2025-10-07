@@ -12,7 +12,7 @@ jsonpath "$[0].from" == "{{base}}/test/bundling/single"
 jsonpath "$[0].to" == "{{base}}/test/v2.0/schema"
 jsonpath "$[0].at" == "/properties/foo/$ref"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/dependencies/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/dependencies/response
 ```
 {{last_response}}
 ```
@@ -31,7 +31,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/dependencies/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/dependencies/response
 ```
 {{last_response}}
 ```
@@ -56,10 +56,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -75,10 +75,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -94,10 +94,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```

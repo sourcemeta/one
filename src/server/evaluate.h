@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_REGISTRY_SERVER_EVALUATE_H
-#define SOURCEMETA_REGISTRY_SERVER_EVALUATE_H
+#ifndef SOURCEMETA_ONE_SERVER_EVALUATE_H
+#define SOURCEMETA_ONE_SERVER_EVALUATE_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -7,7 +7,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem::path
@@ -25,7 +25,7 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
 
   auto locations_path{template_path.parent_path() / "locations.metapack"};
   // TODO: Cache this across runs?
-  const auto locations{sourcemeta::registry::read_json(locations_path)};
+  const auto locations{sourcemeta::one::read_json(locations_path)};
   assert(locations.defines("static"));
   const auto &static_locations{locations.at("static")};
 
@@ -102,7 +102,7 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
 
 } // namespace
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 enum class EvaluateType { Standard, Trace };
 
@@ -135,6 +135,6 @@ auto evaluate(const std::filesystem::path &template_path,
   }
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

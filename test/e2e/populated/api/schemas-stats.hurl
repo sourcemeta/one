@@ -12,7 +12,7 @@ jsonpath "$['http://json-schema.org/draft-07/schema#']['$id']" == 1
 jsonpath "$['http://json-schema.org/draft-07/schema#']['$schema']" == 1
 jsonpath "$['http://json-schema.org/draft-07/schema#']['type']" == 1
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/stats/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/stats/response
 ```
 {{last_response}}
 ```
@@ -38,10 +38,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -57,10 +57,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -76,10 +76,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```

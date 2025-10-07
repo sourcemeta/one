@@ -1,7 +1,7 @@
-#ifndef SOURCEMETA_REGISTRY_SERVER_STATUS_H
-#define SOURCEMETA_REGISTRY_SERVER_STATUS_H
+#ifndef SOURCEMETA_ONE_SERVER_STATUS_H
+#define SOURCEMETA_ONE_SERVER_STATUS_H
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#information_responses
 const char *STATUS_CONTINUE = "100 Continue";
@@ -81,6 +81,6 @@ const char *STATUS_NOT_EXTENDED = "510 Not Extended";
 const char *STATUS_NETWORK_AUTHENTICATION_REQUIRED =
     "511 Network Authentication Required";
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

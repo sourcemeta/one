@@ -1,9 +1,9 @@
 FROM ghcr.io/sourcemeta/sourcemeta-schemas:main AS builder
 FROM scratch
-COPY --from=builder /usr/bin/sourcemeta-registry-server \
-  /usr/bin/sourcemeta-registry-server
-COPY --from=builder /usr/share/sourcemeta/registry \
-  /usr/share/sourcemeta/registry
+COPY --from=builder /usr/bin/sourcemeta-one-server \
+  /usr/bin/sourcemeta-one-server
+COPY --from=builder /usr/share/sourcemeta/one \
+  /usr/share/sourcemeta/one
 COPY --from=builder /sourcemeta /sourcemeta
 
 # Linker

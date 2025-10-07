@@ -1,10 +1,10 @@
-#ifndef SOURCEMETA_REGISTRY_INDEX_OUTPUT_H_
-#define SOURCEMETA_REGISTRY_INDEX_OUTPUT_H_
+#ifndef SOURCEMETA_ONE_INDEX_OUTPUT_H_
+#define SOURCEMETA_ONE_INDEX_OUTPUT_H_
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cassert>       // assert
 #include <filesystem>    // std::filesystem
@@ -12,7 +12,7 @@
 #include <shared_mutex>  // std::shared_mutex, std::shared_lock
 #include <unordered_map> // std::unordered_map
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 class Output {
 public:
@@ -98,6 +98,6 @@ private:
   mutable std::shared_mutex tracker_mutex;
 };
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

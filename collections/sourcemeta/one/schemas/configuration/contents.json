@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The Sourcemeta One Contents",
+  "description": "An internal utility to represent the tree-structure of the configuration format",
+  "type": "object",
+  "additionalProperties": {
+    "anyOf": [
+      {
+        "type": "object",
+        "required": [ "include" ],
+        "properties": {
+          "include": {
+            "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ieee/posix/2017/path.json"
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "$ref": "./collection.json"
+      },
+      {
+        "$ref": "./page.json"
+      }
+    ]
+  }
+}

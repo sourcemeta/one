@@ -1,10 +1,10 @@
-#ifndef SOURCEMETA_REGISTRY_SHARED_CONFIGURE_H_
-#define SOURCEMETA_REGISTRY_SHARED_CONFIGURE_H_
+#ifndef SOURCEMETA_ONE_SHARED_CONFIGURE_H_
+#define SOURCEMETA_ONE_SHARED_CONFIGURE_H_
 
 #include <string_view> // std::string_view
 
-namespace sourcemeta::registry {
-constexpr std::string_view PROJECT_VERSION{"@REGISTRY_VERSION@"};
+namespace sourcemeta::one {
+constexpr std::string_view PROJECT_VERSION{"@ONE_VERSION@"};
 }
 
 #endif

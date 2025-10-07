@@ -1,9 +1,9 @@
-#ifndef SOURCEMETA_REGISTRY_WEB_PAGE_H_
-#define SOURCEMETA_REGISTRY_WEB_PAGE_H_
+#ifndef SOURCEMETA_ONE_WEB_PAGE_H_
+#define SOURCEMETA_ONE_WEB_PAGE_H_
 
-#include <sourcemeta/registry/configuration.h>
-#include <sourcemeta/registry/html.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/html.h>
+#include <sourcemeta/one/shared.h>
 
 #include <optional>    // std::optional
 #include <sstream>     // std::ostringstream
@@ -11,7 +11,7 @@
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
-namespace sourcemeta::registry::html {
+namespace sourcemeta::one::html {
 
 inline auto make_navigation(const Configuration &configuration) -> HTML {
   auto container =
@@ -65,20 +65,20 @@ inline auto make_footer() -> HTML {
                      {"height", "25"},
                      {"width", "25"},
                      {"class", "me-2"}}),
-                a({{"href", "https://github.com/sourcemeta/registry"},
+                a({{"href", "https://github.com/sourcemeta/one"},
                    {"class", "text-secondary"},
                    {"target", "_blank"}},
-                  "Registry"),
+                  "One"),
                 information.str(),
                 a({{"href", "https://www.sourcemeta.com"},
                    {"class", "text-secondary"},
                    {"target", "_blank"}},
                   "Sourcemeta")),
-          small(
-              a({{"href", "https://github.com/sourcemeta/registry/discussions"},
-                 {"class", "text-secondary"},
-                 {"target", "_blank"}},
-                i({{"class", "bi bi-question-square me-2"}}), "Need Help?"))));
+          small(a({{"href", "https://github.com/sourcemeta/one/discussions"},
+                   {"class", "text-secondary"},
+                   {"target", "_blank"}},
+                  i({{"class", "bi bi-question-square me-2"}}),
+                  "Need Help?"))));
 }
 
 inline auto make_head(const Configuration &configuration,
@@ -135,6 +135,6 @@ inline auto make_page(const Configuration &configuration,
               body({{"class", "h-100 d-flex flex-column"}}, nodes));
 }
 
-} // namespace sourcemeta::registry::html
+} // namespace sourcemeta::one::html
 
 #endif

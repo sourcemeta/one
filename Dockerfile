@@ -25,14 +25,14 @@ RUN cd /source && npm ci
 RUN	cmake -S /source -B ./build \
   -DCMAKE_BUILD_TYPE:STRING=Release \
   -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \
-  -DREGISTRY_INDEX:BOOL=ON \
-  -DREGISTRY_SERVER:BOOL=ON \
-  -DREGISTRY_TESTS:BOOL=ON \
+  -DONE_INDEX:BOOL=ON \
+  -DONE_SERVER:BOOL=ON \
+  -DONE_TESTS:BOOL=ON \
   -DBUILD_SHARED_LIBS:BOOL=OFF
 
 RUN cmake --build /build --config Release --parallel 2
 RUN cmake --install /build --prefix /usr --verbose --config Release \
-  --component sourcemeta_registry
+  --component sourcemeta_one
 
 # Linting
 RUN cmake --build /build --config Release --target clang_format_test
@@ -47,37 +47,37 @@ RUN ctest --test-dir /build --build-config Release \
 FROM debian:bookworm-slim
 
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
-LABEL org.opencontainers.image.url="https://registry.sourcemeta.com"
-LABEL org.opencontainers.image.documentation="https://registry.sourcemeta.com"
-LABEL org.opencontainers.image.source="https://github.com/sourcemeta/registry"
+LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
+LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
+LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
 LABEL org.opencontainers.image.licenses="Commercial"
-LABEL org.opencontainers.image.title="Sourcemeta Registry"
-LABEL org.opencontainers.image.description="The JSON Schema registry"
+LABEL org.opencontainers.image.title="Sourcemeta One"
+LABEL org.opencontainers.image.description="The JSON Schema one"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
-COPY --from=builder /usr/bin/sourcemeta-registry-index \
-  /usr/bin/sourcemeta-registry-index
-COPY --from=builder /usr/bin/sourcemeta-registry-server \
-  /usr/bin/sourcemeta-registry-server
-COPY --from=builder /usr/share/sourcemeta/registry \
-  /usr/share/sourcemeta/registry
+COPY --from=builder /usr/bin/sourcemeta-one-index \
+  /usr/bin/sourcemeta-one-index
+COPY --from=builder /usr/bin/sourcemeta-one-server \
+  /usr/bin/sourcemeta-one-server
+COPY --from=builder /usr/share/sourcemeta/one \
+  /usr/share/sourcemeta/one
 
 # For debugging purposes
-RUN ldd /usr/bin/sourcemeta-registry-index
-RUN ldd /usr/bin/sourcemeta-registry-server
+RUN ldd /usr/bin/sourcemeta-one-index
+RUN ldd /usr/bin/sourcemeta-one-server
 
 # We expect images that extend this one to use this directory
-ARG SOURCEMETA_REGISTRY_WORKDIR=/source
-ENV SOURCEMETA_REGISTRY_WORKDIR=${SOURCEMETA_REGISTRY_WORKDIR}
-WORKDIR ${SOURCEMETA_REGISTRY_WORKDIR}
+ARG SOURCEMETA_ONE_WORKDIR=/source
+ENV SOURCEMETA_ONE_WORKDIR=${SOURCEMETA_ONE_WORKDIR}
+WORKDIR ${SOURCEMETA_ONE_WORKDIR}
 
 # To make it easier for the consumer. So they can generate the index
 # without caring about output locations at all
-ARG SOURCEMETA_REGISTRY_OUTPUT=/sourcemeta
-ENV SOURCEMETA_REGISTRY_OUTPUT=${SOURCEMETA_REGISTRY_OUTPUT}
+ARG SOURCEMETA_ONE_OUTPUT=/sourcemeta
+ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 
-ENV SOURCEMETA_REGISTRY_PORT=8000
+ENV SOURCEMETA_ONE_PORT=8000
 ENTRYPOINT [ "/usr/bin/sourcemeta-server" ]

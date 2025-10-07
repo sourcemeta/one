@@ -1,9 +1,9 @@
-#ifndef SOURCEMETA_REGISTRY_SERVER_SEARCH_H
-#define SOURCEMETA_REGISTRY_SERVER_SEARCH_H
+#ifndef SOURCEMETA_ONE_SERVER_SEARCH_H
+#define SOURCEMETA_ONE_SERVER_SEARCH_H
 
 #include <sourcemeta/core/json.h>
 
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/shared.h>
 
 #include <algorithm>   // std::search
 #include <cassert>     // assert
@@ -11,7 +11,7 @@
 #include <string>      // std::string, std::getline
 #include <string_view> // std::string_view
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 static auto search(const std::filesystem::path &search_index,
                    const std::string_view query) -> sourcemeta::core::JSON {
@@ -50,6 +50,6 @@ static auto search(const std::filesystem::path &search_index,
   return result;
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

@@ -1,4 +1,4 @@
-#include <sourcemeta/registry/configuration.h>
+#include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
@@ -13,8 +13,8 @@
 namespace {
 
 auto page_from_json(const sourcemeta::core::JSON &input)
-    -> sourcemeta::registry::Configuration::Page {
-  sourcemeta::registry::Configuration::Page result;
+    -> sourcemeta::one::Configuration::Page {
+  sourcemeta::one::Configuration::Page result;
   using namespace sourcemeta::core;
   result.title = from_json<decltype(result.title)::value_type>(
       input.at_or("title", JSON{nullptr}));
@@ -71,7 +71,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
 
 } // namespace
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto Configuration::parse(const sourcemeta::core::JSON &data) -> Configuration {
   const auto compiled_schema{
@@ -118,4 +118,4 @@ auto Configuration::parse(const sourcemeta::core::JSON &data) -> Configuration {
   return result;
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

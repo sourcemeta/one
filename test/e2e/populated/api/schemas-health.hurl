@@ -11,7 +11,7 @@ header "Last-Modified" exists
 jsonpath "$.score" == 100
 jsonpath "$.errors" count == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/health/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/health/response
 ```
 {{last_response}}
 ```
@@ -43,7 +43,7 @@ jsonpath "$.errors[1].name" == "enum_with_type"
 jsonpath "$.errors[1].message" == "Setting `type` alongside `enum` is considered an anti-pattern, as the enumeration choices already imply their respective types"
 jsonpath "$.errors[1].description" == null
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/health/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/health/response
 ```
 {{last_response}}
 ```
@@ -69,10 +69,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -88,10 +88,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -107,10 +107,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```

@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
   "contents": {
@@ -32,7 +32,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" "$TMP/registry.json" "$TMP/output"
+"$1" "$TMP/one.json" "$TMP/output"
 
 cd "$TMP/output"
 find . -mindepth 1 | LC_ALL=C sort > "$TMP/old.txt"
@@ -54,7 +54,7 @@ echo "{}" > "$TMP/output/schemas/example/schemas/bar/test"
 mkdir "$TMP/output/schemas/example/bar"
 mkdir "$TMP/output/schemas/bar"
 
-"$1" "$TMP/registry.json" "$TMP/output"
+"$1" "$TMP/one.json" "$TMP/output"
 
 cd "$TMP/output"
 find . -mindepth 1 | LC_ALL=C sort > "$TMP/new.txt"

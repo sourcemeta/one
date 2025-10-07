@@ -15,8 +15,8 @@ expect is time-consuming and error-prone. That friction increases delivery
 risk, introduces compatibility bugs, and makes governance much harder than it
 needs to be.
 
-To solve this problem, the Sourcemeta Registry ships with a growing curated set
-of widely-used JSON Schema collections that you can easily import into your
+To solve this problem, Sourcemeta One ships with a growing curated set of
+widely-used JSON Schema collections that you can easily import into your
 instance. Each collection is discoverable, versioned, and maintained so you
 don't have to stitch together third-party copies or worry about minor drift
 between consumers. Importing a collection gives you an immediately usable,
@@ -29,7 +29,7 @@ validated set of schemas you can reference and extend.
     instance. We also ingest other collections to mature their definitions in
     such instance before they graduate as a built-in collection. Go take a look
     and checkout its
-    [`registry.json`](https://github.com/sourcemeta/registry/blob/main/public/registry.json)
+    [`one.json`](https://github.com/sourcemeta/one/blob/main/public/one.json)
     configuration file!
 
 Importing Collections
@@ -45,7 +45,7 @@ identifiers are `@geojson/v1.0.5` and `@geojson/v1.0.4`, respectively.
 Therefore, a minimal example configuration that ingests them both using the
 [`extends`](configuration.md#extends) keyword may look like this:
 
-```json hl_lines="3" title="registry.json"
+```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
   "extends": [ "@geojson/v1.0.5", "@geojson/v1.0.4" ]
@@ -61,8 +61,8 @@ option.
 Available Collections
 ---------------------
 
-These collections are available in every edition of the Sourcemeta Registry
-(including the free one) [^1].  Simply add the corresponding identifier to your
+These collections are available in every edition of Sourcemeta One (including
+the free one) [^1].  Simply add the corresponding identifier to your
 [configuration file](configuration.md) using the `extends` keyword.
 
 <!-- TODO: Generate this table from code using the CSV import plugin: -->
@@ -92,7 +92,7 @@ These collections are available in every edition of the Sourcemeta Registry
 | `@openapi/v3.1` | [OpenAPI](https://www.openapis.org) | The world's most widely used API description standard | [Link](https://schemas.sourcemeta.com/openapi/v3.1) |
 | `@openapi/v3.0` | [OpenAPI](https://www.openapis.org) | The world's most widely used API description standard | [Link](https://schemas.sourcemeta.com/openapi/v3.0) |
 | `@openapi/v2.0` | [OpenAPI](https://www.openapis.org) | The world's most widely used API description standard | [Link](https://schemas.sourcemeta.com/openapi/v2.0) |
-| `@sourcemeta/registry` | [Sourcemeta Registry](https://registry.sourcemeta.com) | Schemas that define the Sourcemeta Registry itself | [Link](https://schemas.sourcemeta.com/sourcemeta/registry) |
+| `@sourcemeta/one` | [Sourcemeta One](https://one.sourcemeta.com) | Schemas that define the Sourcemeta One service itself | [Link](https://schemas.sourcemeta.com/sourcemeta/one) |
 | `@sourcemeta/std` | [Sourcemeta Standard Library](https://www.sourcemeta.com/products/std) | The Sourcemeta JSON Schema Standard Library | [Link](https://schemas.sourcemeta.com/sourcemeta/std) |
 
 [^1]: The built-in collections we offer are redistributed directly from their
@@ -104,9 +104,9 @@ Requesting New Collections
 
 To request the addition of a new built-in collection, or a new version of an
 existing collection, please [open an issue on
-GitHub](https://github.com/sourcemeta/registry/issues). Or if you are feeling
+GitHub](https://github.com/sourcemeta/one/issues). Or if you are feeling
 adventurous, you may send a pull request to contribute it to the
-[`collections/`](https://github.com/sourcemeta/registry/tree/main/collections)
+[`collections/`](https://github.com/sourcemeta/one/tree/main/collections)
 folder.
 
 !!! info
@@ -114,6 +114,6 @@ folder.
     Not having a collection as part of the built-in library doesn't lock you
     out. You can always bring any collection into your instance yourself by
     cloning or downloading the collection's repository, and manually ingesting
-    it into the Registry using the [configuration file](configuration.md).
+    it into your instance using the [configuration file](configuration.md).
     Built-in collections are nothing more than pre-made configuration files we
     pre-package for you.

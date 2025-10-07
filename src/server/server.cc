@@ -2,8 +2,8 @@
 #include <sourcemeta/core/time.h>
 #include <sourcemeta/core/uuid.h>
 
-#include <sourcemeta/registry/gzip.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/gzip.h>
+#include <sourcemeta/one/shared.h>
 
 #include "uwebsockets.h"
 
@@ -61,7 +61,7 @@ static auto send_response(const char *const code, const std::string_view method,
   if (expected_encoding == ServerContentEncoding::GZIP) {
     response->writeHeader("Content-Encoding", "gzip");
     if (current_encoding == ServerContentEncoding::Identity) {
-      auto effective_message{sourcemeta::registry::gzip(message)};
+      auto effective_message{sourcemeta::one::gzip(message)};
       if (method == "head") {
         response->endWithoutBody(effective_message.size());
         response->end();
@@ -78,7 +78,7 @@ static auto send_response(const char *const code, const std::string_view method,
     }
   } else if (expected_encoding == ServerContentEncoding::Identity) {
     if (current_encoding == ServerContentEncoding::GZIP) {
-      auto effective_message{sourcemeta::registry::gunzip(message)};
+      auto effective_message{sourcemeta::one::gunzip(message)};
       if (method == "head") {
         response->endWithoutBody(effective_message.size());
         response->end();
@@ -111,7 +111,7 @@ static auto json_error(const std::string_view method,
   auto object{sourcemeta::core::JSON::make_object()};
   object.assign("title",
                 // A URI with a custom scheme
-                sourcemeta::core::JSON{"sourcemeta:registry/" + std::move(id)});
+                sourcemeta::core::JSON{"sourcemeta:one/" + std::move(id)});
   object.assign("status", sourcemeta::core::JSON{std::atoi(code)});
   object.assign("detail", sourcemeta::core::JSON{std::move(message)});
   response->writeStatus(code);
@@ -170,22 +170,22 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
   if (request->getMethod() != "get" && request->getMethod() != "head") {
     if (std::filesystem::exists(absolute_path)) {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+                 sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                  "There is nothing at this URL");
     }
 
     return;
   }
 
-  auto file{sourcemeta::registry::read_stream_raw(absolute_path)};
+  auto file{sourcemeta::one::read_stream_raw(absolute_path)};
   if (!file.has_value()) {
     json_error(request->getMethod(), request->getUrl(), response, encoding,
-               sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+               sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                "There is nothing at this URL");
     return;
   }
@@ -200,12 +200,12 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
       // to more consistent behavior.
       if ((sourcemeta::core::from_gmt(std::string{if_modified_since}) +
            std::chrono::seconds(1)) >= file.value().last_modified) {
-        response->writeStatus(sourcemeta::registry::STATUS_NOT_MODIFIED);
+        response->writeStatus(sourcemeta::one::STATUS_NOT_MODIFIED);
         if (enable_cors) {
           response->writeHeader("Access-Control-Allow-Origin", "*");
         }
 
-        send_response(sourcemeta::registry::STATUS_NOT_MODIFIED,
+        send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
                       request->getMethod(), request->getUrl(), response);
         return;
       }
@@ -227,12 +227,12 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
       // Cache hit
       if (match.first == "*" || match.first == etag_value_weak.str() ||
           match.first == etag_value_strong.str()) {
-        response->writeStatus(sourcemeta::registry::STATUS_NOT_MODIFIED);
+        response->writeStatus(sourcemeta::one::STATUS_NOT_MODIFIED);
         if (enable_cors) {
           response->writeHeader("Access-Control-Allow-Origin", "*");
         }
 
-        send_response(sourcemeta::registry::STATUS_NOT_MODIFIED,
+        send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
                       request->getMethod(), request->getUrl(), response);
         return;
       }
@@ -271,7 +271,7 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
   std::ostringstream contents;
   contents << file.value().data.rdbuf();
 
-  if (file.value().encoding == sourcemeta::registry::Encoding::GZIP) {
+  if (file.value().encoding == sourcemeta::one::Encoding::GZIP) {
     send_response(code, request->getMethod(), request->getUrl(), response,
                   contents.str(), encoding, ServerContentEncoding::GZIP);
   } else {
@@ -292,15 +292,15 @@ static auto on_evaluate(const std::filesystem::path &base,
                         const std::string_view &path, uWS::HttpRequest *request,
                         uWS::HttpResponse<true> *response,
                         const ServerContentEncoding encoding,
-                        const sourcemeta::registry::EvaluateType mode) -> void {
+                        const sourcemeta::one::EvaluateType mode) -> void {
   // A CORS pre-flight request
   if (request->getMethod() == "options") {
-    response->writeStatus(sourcemeta::registry::STATUS_NO_CONTENT);
+    response->writeStatus(sourcemeta::one::STATUS_NO_CONTENT);
     response->writeHeader("Access-Control-Allow-Origin", "*");
     response->writeHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     response->writeHeader("Access-Control-Allow-Headers", "Content-Type");
     response->writeHeader("Access-Control-Max-Age", "3600");
-    send_response(sourcemeta::registry::STATUS_NO_CONTENT, request->getMethod(),
+    send_response(sourcemeta::one::STATUS_NO_CONTENT, request->getMethod(),
                   request->getUrl(), response);
   } else if (request->getMethod() == "post") {
     auto template_path{base / "schemas"};
@@ -311,12 +311,11 @@ static auto on_evaluate(const std::filesystem::path &base,
       const auto schema_path{template_path.parent_path() / "schema.metapack"};
       if (std::filesystem::exists(schema_path)) {
         json_error(request->getMethod(), request->getUrl(), response, encoding,
-                   sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
-                   "no-template",
+                   sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "no-template",
                    "This schema was not precompiled for schema evaluation");
       } else {
         json_error(request->getMethod(), request->getUrl(), response, encoding,
-                   sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+                   sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                    "There is nothing at this URL");
       }
 
@@ -341,31 +340,30 @@ static auto on_evaluate(const std::filesystem::path &base,
         if (is_last) {
           if (buffer->empty()) {
             json_error("post", url, response, encoding,
-                       sourcemeta::registry::STATUS_BAD_REQUEST, "no-instance",
+                       sourcemeta::one::STATUS_BAD_REQUEST, "no-instance",
                        "You must pass an instance to validate against");
           } else {
             const auto result{
-                sourcemeta::registry::evaluate(template_path, *buffer, mode)};
-            response->writeStatus(sourcemeta::registry::STATUS_OK);
+                sourcemeta::one::evaluate(template_path, *buffer, mode)};
+            response->writeStatus(sourcemeta::one::STATUS_OK);
             response->writeHeader("Content-Type", "application/json");
             response->writeHeader("Access-Control-Allow-Origin", "*");
             std::ostringstream payload;
             sourcemeta::core::prettify(result, payload);
-            send_response(sourcemeta::registry::STATUS_OK, "post", url,
-                          response, payload.str(), encoding,
+            send_response(sourcemeta::one::STATUS_OK, "post", url, response,
+                          payload.str(), encoding,
                           ServerContentEncoding::Identity);
           }
         }
       } catch (const std::exception &error) {
         json_error("post", url, response, encoding,
-                   sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
-                   "uncaught-error", error.what());
+                   sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "uncaught-error",
+                   error.what());
       }
     });
   } else {
     json_error(request->getMethod(), request->getUrl(), response, encoding,
-               sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
-               "method-not-allowed",
+               sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "method-not-allowed",
                "This HTTP method is invalid for this URL");
   }
 }
@@ -399,13 +397,13 @@ static auto on_schema(const std::filesystem::path &base,
 
   if (is_deno) {
     serve_static_file(request, response, encoding, absolute_path,
-                      sourcemeta::registry::STATUS_OK, true,
+                      sourcemeta::one::STATUS_OK, true,
                       // For HTTP imports, as Deno won't like the
                       // `application/schema+json` one
                       "application/json");
   } else {
     serve_static_file(request, response, encoding, absolute_path,
-                      sourcemeta::registry::STATUS_OK, true);
+                      sourcemeta::one::STATUS_OK, true);
   }
 }
 
@@ -419,27 +417,27 @@ static auto on_request(const std::filesystem::path &base,
       serve_static_file(request, response, encoding,
                         base / "explorer" / SENTINEL /
                             "directory-html.metapack",
-                        sourcemeta::registry::STATUS_OK);
+                        sourcemeta::one::STATUS_OK);
     } else if (request->getMethod() == "get" ||
                request->getMethod() == "head") {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+                 sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                  "There is nothing at this URL");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
   } else if (request->getUrl() == "/self/api/list") {
     serve_static_file(request, response, encoding,
                       base / "explorer" / SENTINEL / "directory.metapack",
-                      sourcemeta::registry::STATUS_OK, true);
+                      sourcemeta::one::STATUS_OK, true);
   } else if (request->getUrl().starts_with("/self/api/list/")) {
     const auto absolute_path{base / "explorer" / request->getUrl().substr(15) /
                              SENTINEL / "directory.metapack"};
     serve_static_file(request, response, encoding, absolute_path,
-                      sourcemeta::registry::STATUS_OK, true);
+                      sourcemeta::one::STATUS_OK, true);
   } else if (request->getUrl().starts_with("/self/api/schemas/dependencies/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
@@ -447,10 +445,10 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "dependencies.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
@@ -461,10 +459,10 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "health.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
@@ -475,10 +473,10 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "locations.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
@@ -489,10 +487,10 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "positions.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
@@ -503,10 +501,10 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "stats.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
@@ -517,54 +515,54 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "schema.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::registry::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true);
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
   } else if (request->getUrl().starts_with("/self/api/schemas/evaluate/")) {
     on_evaluate(base, request->getUrl().substr(27), request, response, encoding,
-                sourcemeta::registry::EvaluateType::Standard);
+                sourcemeta::one::EvaluateType::Standard);
   } else if (request->getUrl().starts_with("/self/api/schemas/trace/")) {
     on_evaluate(base, request->getUrl().substr(24), request, response, encoding,
-                sourcemeta::registry::EvaluateType::Trace);
+                sourcemeta::one::EvaluateType::Trace);
   } else if (request->getUrl() == "/self/api/schemas/search") {
     if (request->getMethod() == "get") {
       const auto query{request->getQuery("q")};
       if (query.empty()) {
         json_error(request->getMethod(), request->getUrl(), response, encoding,
-                   sourcemeta::registry::STATUS_BAD_REQUEST, "missing-query",
+                   sourcemeta::one::STATUS_BAD_REQUEST, "missing-query",
                    "You must provide a query parameter to search for");
       } else {
-        auto result{sourcemeta::registry::search(
+        auto result{sourcemeta::one::search(
             base / "explorer" / SENTINEL / "search.metapack", query)};
-        response->writeStatus(sourcemeta::registry::STATUS_OK);
+        response->writeStatus(sourcemeta::one::STATUS_OK);
         response->writeHeader("Access-Control-Allow-Origin", "*");
         response->writeHeader("Content-Type", "application/json");
         std::ostringstream output;
         sourcemeta::core::prettify(result, output);
-        send_response(sourcemeta::registry::STATUS_OK, request->getMethod(),
+        send_response(sourcemeta::one::STATUS_OK, request->getMethod(),
                       request->getUrl(), response, output.str(), encoding,
                       ServerContentEncoding::Identity);
       }
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
-                 sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
+                 sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
   } else if (request->getUrl().starts_with("/self/api/")) {
     json_error(request->getMethod(), request->getUrl(), response, encoding,
-               sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+               sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                "There is nothing at this URL");
   } else if (!is_headless && request->getUrl().starts_with("/self/static/")) {
     std::ostringstream absolute_path;
-    absolute_path << SOURCEMETA_REGISTRY_STATIC;
+    absolute_path << SOURCEMETA_ONE_STATIC;
     absolute_path << request->getUrl().substr(12);
     serve_static_file(request, response, encoding, absolute_path.str(),
-                      sourcemeta::registry::STATUS_OK);
+                      sourcemeta::one::STATUS_OK);
   } else if (request->getUrl().ends_with(".json")) {
     on_schema(base, request->getUrl().substr(1, request->getUrl().size() - 6),
               request, response, encoding);
@@ -575,16 +573,16 @@ static auto on_request(const std::filesystem::path &base,
       if (std::filesystem::exists(absolute_path / "schema-html.metapack")) {
         serve_static_file(request, response, encoding,
                           absolute_path / "schema-html.metapack",
-                          sourcemeta::registry::STATUS_OK);
+                          sourcemeta::one::STATUS_OK);
       } else {
         absolute_path /= "directory-html.metapack";
         if (std::filesystem::exists(absolute_path)) {
           serve_static_file(request, response, encoding, absolute_path,
-                            sourcemeta::registry::STATUS_OK);
+                            sourcemeta::one::STATUS_OK);
         } else {
           serve_static_file(request, response, encoding,
                             base / "explorer" / SENTINEL / "404.metapack",
-                            sourcemeta::registry::STATUS_NOT_FOUND);
+                            sourcemeta::one::STATUS_NOT_FOUND);
         }
       }
     } else {
@@ -592,7 +590,7 @@ static auto on_request(const std::filesystem::path &base,
     }
   } else {
     json_error(request->getMethod(), request->getUrl(), response, encoding,
-               sourcemeta::registry::STATUS_NOT_FOUND, "not-found",
+               sourcemeta::one::STATUS_NOT_FOUND, "not-found",
                "There is nothing at this URL");
   }
 }
@@ -637,7 +635,7 @@ static auto dispatch(const std::filesystem::path &base,
     } else {
       json_error(request->getMethod(), request->getUrl(), response,
                  ServerContentEncoding::Identity,
-                 sourcemeta::registry::STATUS_BAD_REQUEST,
+                 sourcemeta::one::STATUS_BAD_REQUEST,
                  "cannot-satisfy-content-encoding",
                  "The server cannot satisfy the request content encoding");
     }
@@ -645,8 +643,8 @@ static auto dispatch(const std::filesystem::path &base,
     json_error(request->getMethod(), request->getUrl(), response,
                // As computing the right content encoding might throw
                ServerContentEncoding::Identity,
-               sourcemeta::registry::STATUS_METHOD_NOT_ALLOWED,
-               "uncaught-error", error.what());
+               sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "uncaught-error",
+               error.what());
   }
 }
 
@@ -664,8 +662,7 @@ auto terminate(int signal) -> void {
 auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  std::cout << "Sourcemeta Registry v" << sourcemeta::registry::version()
-            << "\n";
+  std::cout << "Sourcemeta One v" << sourcemeta::one::version() << "\n";
 
   // Mainly for Docker Compose
   std::signal(SIGINT, terminate);

@@ -1,15 +1,15 @@
-#include <sourcemeta/registry/web.h>
+#include <sourcemeta/one/web.h>
 
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/registry/html.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/html.h>
+#include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto GENERATE_WEB_DIRECTORY::handler(
     const std::filesystem::path &destination,
@@ -44,4 +44,4 @@ auto GENERATE_WEB_DIRECTORY::handler(
                  timestamp_end - timestamp_start));
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

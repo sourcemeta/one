@@ -6,10 +6,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:registry/missing-query"
+jsonpath "$.title" == "sourcemeta:one/missing-query"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -25,10 +25,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:registry/missing-query"
+jsonpath "$.title" == "sourcemeta:one/missing-query"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -44,10 +44,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -65,7 +65,7 @@ last_response: body
 [Asserts]
 jsonpath "$" count == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/search/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/search/response
 ```
 {{last_response}}
 ```
@@ -89,7 +89,7 @@ jsonpath "$[1].path" == "/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/search/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/search/response
 ```
 {{last_response}}
 ```
@@ -113,7 +113,7 @@ jsonpath "$[1].path" == "/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/search/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/search/response
 ```
 {{last_response}}
 ```
@@ -134,7 +134,7 @@ jsonpath "$[0].path" == "/test/schemas/camelcase"
 jsonpath "$[0].title" == ""
 jsonpath "$[0].description" == ""
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/search/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/search/response
 ```
 {{last_response}}
 ```
@@ -152,7 +152,7 @@ last_response: body
 [Asserts]
 jsonpath "$" count <= 10
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/search/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/search/response
 ```
 {{last_response}}
 ```
