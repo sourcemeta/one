@@ -1,8 +1,8 @@
-#ifndef SOURCEMETA_REGISTRY_INDEX_GENERATORS_H_
-#define SOURCEMETA_REGISTRY_INDEX_GENERATORS_H_
+#ifndef SOURCEMETA_ONE_INDEX_GENERATORS_H_
+#define SOURCEMETA_ONE_INDEX_GENERATORS_H_
 
-#include <sourcemeta/registry/resolver.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/resolver.h>
+#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/alterschema.h>
 #include <sourcemeta/core/build.h>
@@ -19,12 +19,11 @@
 #include <filesystem> // std::filesystem
 #include <utility>    // std::move
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 struct GENERATE_MATERIALISED_SCHEMA {
-  using Context =
-      std::pair<std::string_view,
-                std::reference_wrapper<sourcemeta::registry::Resolver>>;
+  using Context = std::pair<std::string_view,
+                            std::reference_wrapper<sourcemeta::one::Resolver>>;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path> &,
@@ -58,9 +57,9 @@ struct GENERATE_MATERIALISED_SCHEMA {
           return data.second.get()(identifier, callback);
         },
         dialect_identifier.value());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, schema.value(), "application/schema+json",
-        sourcemeta::registry::Encoding::GZIP,
+        sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{dialect_identifier.value()},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -97,7 +96,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
 private:
   static auto compile(const std::string &cache_key,
                       const sourcemeta::core::JSON &schema,
-                      const sourcemeta::registry::Resolver &resolver)
+                      const sourcemeta::one::Resolver &resolver)
       -> const sourcemeta::blaze::Template & {
     static std::mutex mutex;
     static std::unordered_map<std::string, sourcemeta::blaze::Template> cache;
@@ -118,7 +117,7 @@ private:
 };
 
 struct GENERATE_POINTER_POSITIONS {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -127,20 +126,20 @@ struct GENERATE_POINTER_POSITIONS {
           const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::registry::read_json(dependencies.front(), std::ref(tracker));
+    sourcemeta::one::read_json(dependencies.front(), std::ref(tracker));
     const auto result{sourcemeta::core::to_json(tracker)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, result, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
 struct GENERATE_FRAME_LOCATIONS {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -150,8 +149,8 @@ struct GENERATE_FRAME_LOCATIONS {
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
-    const auto contents{sourcemeta::registry::read_json(dependencies.front(),
-                                                        std::ref(tracker))};
+    const auto contents{
+        sourcemeta::one::read_json(dependencies.front(), std::ref(tracker))};
     sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::Locations};
     frame.analyse(contents, sourcemeta::core::schema_official_walker,
@@ -161,16 +160,16 @@ struct GENERATE_FRAME_LOCATIONS {
     const auto result{frame.to_json(tracker).at("locations")};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, result, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
 struct GENERATE_DEPENDENCIES {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -179,7 +178,7 @@ struct GENERATE_DEPENDENCIES {
               &callback,
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::registry::read_json(dependencies.front())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
     auto result{sourcemeta::core::JSON::make_array()};
     sourcemeta::core::dependencies(
         contents, sourcemeta::core::schema_official_walker,
@@ -197,16 +196,16 @@ struct GENERATE_DEPENDENCIES {
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, result, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
 struct GENERATE_HEALTH {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -215,7 +214,7 @@ struct GENERATE_HEALTH {
               &callback,
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::registry::read_json(dependencies.front())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
 
     sourcemeta::core::SchemaTransformer bundle;
     sourcemeta::core::add(bundle,
@@ -259,16 +258,16 @@ struct GENERATE_HEALTH {
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, report, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
 struct GENERATE_BUNDLE {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -277,7 +276,7 @@ struct GENERATE_BUNDLE {
               &callback,
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{sourcemeta::registry::read_json(dependencies.front())};
+    auto schema{sourcemeta::one::read_json(dependencies.front())};
     sourcemeta::core::bundle(schema, sourcemeta::core::schema_official_walker,
                              [&callback, &resolver](const auto identifier) {
                                return resolver(identifier, callback);
@@ -292,9 +291,9 @@ struct GENERATE_BUNDLE {
           return resolver(identifier, callback);
         },
         dialect_identifier.value());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
-        sourcemeta::registry::Encoding::GZIP,
+        sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{dialect_identifier.value()},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -302,7 +301,7 @@ struct GENERATE_BUNDLE {
 };
 
 struct GENERATE_EDITOR {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -311,7 +310,7 @@ struct GENERATE_EDITOR {
               &callback,
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{sourcemeta::registry::read_json(dependencies.front())};
+    auto schema{sourcemeta::one::read_json(dependencies.front())};
     sourcemeta::core::for_editor(schema,
                                  sourcemeta::core::schema_official_walker,
                                  [&callback, &resolver](const auto identifier) {
@@ -327,9 +326,9 @@ struct GENERATE_EDITOR {
           return resolver(identifier, callback);
         },
         dialect_identifier.value());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
-        sourcemeta::registry::Encoding::GZIP,
+        sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{dialect_identifier.value()},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -345,7 +344,7 @@ struct GENERATE_BLAZE_TEMPLATE {
           const sourcemeta::core::BuildDynamicCallback<std::filesystem::path> &,
           const Context &mode) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::registry::read_json(dependencies.front())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
     const auto schema_template{sourcemeta::blaze::compile(
         contents, sourcemeta::core::schema_official_walker,
         sourcemeta::core::schema_official_resolver,
@@ -353,18 +352,17 @@ struct GENERATE_BLAZE_TEMPLATE {
     const auto result{sourcemeta::blaze::to_json(schema_template)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_json(
+    sourcemeta::one::write_json(
         destination, result, "application/json",
         // Don't compress, as we only need to internally read from disk
-        sourcemeta::registry::Encoding::Identity,
-        sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
 struct GENERATE_STATS {
-  using Context = sourcemeta::registry::Resolver;
+  using Context = sourcemeta::one::Resolver;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -373,7 +371,7 @@ struct GENERATE_STATS {
               &callback,
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto schema{sourcemeta::registry::read_json(dependencies.front())};
+    const auto schema{sourcemeta::one::read_json(dependencies.front())};
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
@@ -396,14 +394,14 @@ struct GENERATE_STATS {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, sourcemeta::core::to_json(result), "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

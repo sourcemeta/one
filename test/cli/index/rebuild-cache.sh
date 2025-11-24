@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
   "contents": {
@@ -41,11 +41,11 @@ remove_threads_information() {
   fi
 }
 
-"$1" "$TMP/registry.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
@@ -63,11 +63,11 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Run it once more
 
-"$1" "$TMP/registry.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
@@ -110,11 +110,11 @@ cat << 'EOF' > "$TMP/schemas/foo.json"
   "type": "string"
 }
 EOF
-"$1" "$TMP/registry.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
@@ -133,11 +133,11 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Update the configuration summary
 touch "$TMP/output/configuration.json"
-"$1" "$TMP/registry.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo

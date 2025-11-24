@@ -1,9 +1,9 @@
-#ifndef SOURCEMETA_REGISTRY_WEB_HELPERS_H_
-#define SOURCEMETA_REGISTRY_WEB_HELPERS_H_
+#ifndef SOURCEMETA_ONE_WEB_HELPERS_H_
+#define SOURCEMETA_ONE_WEB_HELPERS_H_
 
-#include <sourcemeta/registry/configuration.h>
-#include <sourcemeta/registry/html.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/html.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
 #include <optional>    // std::optional
@@ -12,7 +12,7 @@
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
-namespace sourcemeta::registry::html {
+namespace sourcemeta::one::html {
 
 inline auto make_breadcrumb(const sourcemeta::core::JSON &breadcrumb) -> HTML {
   assert(breadcrumb.is_array());
@@ -233,6 +233,6 @@ inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
             std::move(tbody_content)));
 }
 
-} // namespace sourcemeta::registry::html
+} // namespace sourcemeta::one::html
 
 #endif

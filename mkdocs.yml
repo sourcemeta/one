@@ -1,7 +1,7 @@
-site_name: Sourcemeta Registry
-site_url: https://registry.sourcemeta.com
-repo_url: https://github.com/sourcemeta/registry
-repo_name: sourcemeta/registry
+site_name: Sourcemeta One
+site_url: https://one.sourcemeta.com
+repo_url: https://github.com/sourcemeta/one
+repo_name: sourcemeta/one
 copyright: Copyright &copy; Sourcemeta
 edit_uri: edit/main/docs/
 extra:
@@ -30,7 +30,7 @@ nav:
   - api.md
   - commercial.md
   - Live Example Instance: https://schemas.sourcemeta.com
-  - Community Support: https://github.com/sourcemeta/registry/discussions
+  - Community Support: https://github.com/sourcemeta/one/discussions
 markdown_extensions:
   - admonition
   - pymdownx.details

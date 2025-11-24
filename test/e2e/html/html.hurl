@@ -47,7 +47,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
 GET {{base}}/test/doc/string-1
@@ -136,7 +136,7 @@ xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
 header "Access-Control-Allow-Origin" not exists
 
-GET {{base}}/test/foobar/sourcemeta:registry/not-found
+GET {{base}}/test/foobar/sourcemeta:one/not-found
 Accept: text/html
 HTTP 404
 Content-Type: text/html

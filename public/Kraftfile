@@ -5,4 +5,4 @@ labels:
   cloud.unikraft.v1.instances/scale_to_zero.policy: "on"
   cloud.unikraft.v1.instances/scale_to_zero.cooldown_time_ms: 5000
   cloud.unikraft.v1.instances/scale_to_zero.stateful: "true"
-cmd: [ "/usr/bin/sourcemeta-registry-server", "/sourcemeta", "8000" ]
+cmd: [ "/usr/bin/sourcemeta-one-server", "/sourcemeta", "8000" ]

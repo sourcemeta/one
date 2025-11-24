@@ -1,5 +1,5 @@
-#include <sourcemeta/registry/gzip.h>
-#include <sourcemeta/registry/shared_metapack.h>
+#include <sourcemeta/one/gzip.h>
+#include <sourcemeta/one/shared_metapack.h>
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/md5.h>
@@ -19,7 +19,7 @@ namespace {
 
 auto write_stream(const std::filesystem::path &path,
                   const sourcemeta::core::JSON::String &mime,
-                  const sourcemeta::registry::Encoding encoding,
+                  const sourcemeta::one::Encoding encoding,
                   const sourcemeta::core::JSON &extension,
                   const std::chrono::milliseconds duration,
                   const std::function<void(std::ostream &)> &callback) -> void {
@@ -41,10 +41,10 @@ auto write_stream(const std::filesystem::path &path,
   metadata.assign("duration", sourcemeta::core::JSON{duration.count()});
 
   switch (encoding) {
-    case sourcemeta::registry::Encoding::Identity:
+    case sourcemeta::one::Encoding::Identity:
       metadata.assign("encoding", sourcemeta::core::JSON{"identity"});
       break;
-    case sourcemeta::registry::Encoding::GZIP:
+    case sourcemeta::one::Encoding::GZIP:
       metadata.assign("encoding", sourcemeta::core::JSON{"gzip"});
       break;
     default:
@@ -59,8 +59,8 @@ auto write_stream(const std::filesystem::path &path,
   std::ofstream output{path};
   assert(!output.fail());
   sourcemeta::core::stringify(metadata, output);
-  if (encoding == sourcemeta::registry::Encoding::GZIP) {
-    sourcemeta::registry::gzip(buffer, output);
+  if (encoding == sourcemeta::one::Encoding::GZIP) {
+    sourcemeta::one::gzip(buffer, output);
   } else {
     output << buffer.str();
   }
@@ -70,7 +70,7 @@ auto write_stream(const std::filesystem::path &path,
 
 } // namespace
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto read_stream_raw(const std::filesystem::path &path)
     -> std::optional<File<std::ifstream>> {
@@ -137,7 +137,7 @@ auto read_json_with_metadata(
   assert(file.has_value());
   std::ostringstream buffer;
   if (file.value().encoding == Encoding::GZIP) {
-    sourcemeta::registry::gunzip(file.value().data, buffer);
+    sourcemeta::one::gunzip(file.value().data, buffer);
   } else {
     buffer << file.value().data.rdbuf();
   }
@@ -216,4 +216,4 @@ auto write_jsonl(const std::filesystem::path &destination,
                });
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

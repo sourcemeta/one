@@ -1,4 +1,4 @@
-#include <sourcemeta/registry/configuration.h>
+#include <sourcemeta/one/configuration.h>
 
 #include <algorithm> // std::ranges
 #include <cassert>   // assert
@@ -16,11 +16,10 @@ auto read_file(const std::filesystem::path &current,
     return sourcemeta::core::read_json(path);
   } catch (const std::filesystem::filesystem_error &) {
     if (original.starts_with("@")) {
-      throw sourcemeta::registry::ConfigurationUnknownBuiltInCollectionError(
+      throw sourcemeta::one::ConfigurationUnknownBuiltInCollectionError(
           current, location, original);
     } else {
-      throw sourcemeta::registry::ConfigurationReadError(current, location,
-                                                         path);
+      throw sourcemeta::one::ConfigurationReadError(current, location, path);
     }
   }
 }
@@ -63,7 +62,7 @@ auto dereference(const std::filesystem::path &collections_path,
         const auto target_path{
             maybe_suffix(resolve_path(base.parent_path(), collections_path,
                                       entry.to_string()),
-                         "registry.json")};
+                         "one.json")};
         const auto new_location{location.concat({"extends"})};
         auto extension{
             read_file(base, new_location, target_path, entry.to_string())};
@@ -120,7 +119,7 @@ auto dereference(const std::filesystem::path &collections_path,
 
 } // namespace
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
                          const std::filesystem::path &collections_path)
@@ -139,11 +138,11 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
                                       sourcemeta::core::JSON{"Sourcemeta"});
     data.at("html").assign_if_missing(
         "description",
-        sourcemeta::core::JSON{"The next-generation JSON Schema Registry"});
+        sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
   dereference(collections_path, configuration_path, data, {});
   return data;
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

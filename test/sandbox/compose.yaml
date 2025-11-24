@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SOURCEMETA_REGISTRY_SANDBOX_CONFIGURATION: ${SOURCEMETA_REGISTRY_SANDBOX_CONFIGURATION}
+        SOURCEMETA_ONE_SANDBOX_CONFIGURATION: ${SOURCEMETA_ONE_SANDBOX_CONFIGURATION}
     environment:
       # Different from the default just to test this variable
-      - SOURCEMETA_REGISTRY_PORT=8001
+      - SOURCEMETA_ONE_PORT=8001
     ports:
-      - "${SOURCEMETA_REGISTRY_SANDBOX_PORT}:8001"
+      - "${SOURCEMETA_ONE_SANDBOX_PORT}:8001"

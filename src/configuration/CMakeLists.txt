@@ -1,22 +1,22 @@
-sourcemeta_library(NAMESPACE sourcemeta PROJECT registry NAME configuration
+sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
   PRIVATE_HEADERS error.h
   SOURCES parse.cc read.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
 
 # Compile the configuration schema
-set(REGISTRY_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/sourcemeta/registry/schemas")
+set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/sourcemeta/one/schemas")
 set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/v0/schemas/2020-12")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.json"
   COMMAND "$<TARGET_FILE:jsonschema_cli>" compile --minify
-    "${REGISTRY_SCHEMAS}/configuration/configuration.json"
+    "${ONE_SCHEMAS}/configuration/configuration.json"
     > "${CMAKE_CURRENT_BINARY_DIR}/template.json"
   DEPENDS
     "$<TARGET_FILE:jsonschema_cli>"
-    "${REGISTRY_SCHEMAS}/configuration/configuration.json"
-    "${REGISTRY_SCHEMAS}/configuration/collection.json"
-    "${REGISTRY_SCHEMAS}/configuration/contents.json"
-    "${REGISTRY_SCHEMAS}/configuration/extends.json"
-    "${REGISTRY_SCHEMAS}/configuration/page.json"
-    "${REGISTRY_SCHEMAS}/configuration/rpath.json"
+    "${ONE_SCHEMAS}/configuration/configuration.json"
+    "${ONE_SCHEMAS}/configuration/collection.json"
+    "${ONE_SCHEMAS}/configuration/contents.json"
+    "${ONE_SCHEMAS}/configuration/extends.json"
+    "${ONE_SCHEMAS}/configuration/page.json"
+    "${ONE_SCHEMAS}/configuration/rpath.json"
     "${STD_SCHEMAS}/ietf/email/address.json"
     "${STD_SCHEMAS}/ieee/posix/2017/path.json"
     "${STD_SCHEMAS}/ieee/posix/2017/path-absolute.json"
@@ -34,11 +34,11 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
     "${CMAKE_CURRENT_BINARY_DIR}/template.h"
   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/template.json")
 
-target_include_directories(sourcemeta_registry_configuration PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(sourcemeta_one_configuration PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
-target_link_libraries(sourcemeta_registry_configuration PUBLIC sourcemeta::core::json)
-target_link_libraries(sourcemeta_registry_configuration PUBLIC sourcemeta::core::jsonpointer)
-target_link_libraries(sourcemeta_registry_configuration PUBLIC sourcemeta::core::schemaconfig)
-target_link_libraries(sourcemeta_registry_configuration PRIVATE sourcemeta::core::uri)
-target_link_libraries(sourcemeta_registry_configuration PUBLIC sourcemeta::blaze::output)
-target_link_libraries(sourcemeta_registry_configuration PRIVATE sourcemeta::blaze::evaluator)
+target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::json)
+target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::jsonpointer)
+target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::schemaconfig)
+target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::core::uri)
+target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::blaze::output)
+target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::blaze::evaluator)

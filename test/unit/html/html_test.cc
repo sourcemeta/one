@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <sourcemeta/registry/html.h>
+#include <sourcemeta/one/html.h>
 
 TEST(HTML, example_1) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::vector<HTML> items;
   for (const auto &item : {"foo", "bar", "baz"}) {
@@ -19,7 +19,7 @@ TEST(HTML, example_1) {
 }
 
 TEST(HTML, escaped_text_content) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << p(
@@ -31,7 +31,7 @@ TEST(HTML, escaped_text_content) {
 }
 
 TEST(HTML, raw_html_basic) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div(raw("<strong>Bold text</strong>"));
@@ -40,7 +40,7 @@ TEST(HTML, raw_html_basic) {
 }
 
 TEST(HTML, raw_html_with_dangerous_content) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div(raw("<script>alert('xss')</script>"));
@@ -49,7 +49,7 @@ TEST(HTML, raw_html_with_dangerous_content) {
 }
 
 TEST(HTML, raw_html_mixed_with_escaped) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div("Safe text: <script>", raw("<em>raw italic</em>"),
@@ -60,7 +60,7 @@ TEST(HTML, raw_html_mixed_with_escaped) {
 }
 
 TEST(HTML, raw_html_in_list) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << ul(li("Regular item"), li(raw("<strong>Bold</strong> item")),
@@ -71,7 +71,7 @@ TEST(HTML, raw_html_in_list) {
 }
 
 TEST(HTML, raw_html_empty_content) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div(raw(""));
@@ -80,7 +80,7 @@ TEST(HTML, raw_html_empty_content) {
 }
 
 TEST(HTML, raw_html_with_entities) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div(raw("&lt;already&gt; &amp; &quot;escaped&quot;"));
@@ -90,7 +90,7 @@ TEST(HTML, raw_html_with_entities) {
 }
 
 TEST(HTML, empty_elements) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   EXPECT_EQ(div().render(), "<div></div>");
   EXPECT_EQ(p({}).render(), "<p></p>");
@@ -99,7 +99,7 @@ TEST(HTML, empty_elements) {
 }
 
 TEST(HTML, void_elements_self_closing) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   EXPECT_EQ(br().render(), "<br />");
   EXPECT_EQ(hr().render(), "<hr />");
@@ -112,7 +112,7 @@ TEST(HTML, void_elements_self_closing) {
 }
 
 TEST(HTML, single_text_node_inline_rendering) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   // Single text node should be rendered inline
   EXPECT_EQ(p("Hello").render(), "<p>Hello</p>");
@@ -121,7 +121,7 @@ TEST(HTML, single_text_node_inline_rendering) {
 }
 
 TEST(HTML, multiple_children_block_rendering) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   // Multiple children should not be inline
   std::ostringstream result;
@@ -131,7 +131,7 @@ TEST(HTML, multiple_children_block_rendering) {
 }
 
 TEST(HTML, attribute_value_escaping) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div({{"title", "Alert: \"Click here\" & 'submit'"},
@@ -146,7 +146,7 @@ TEST(HTML, attribute_value_escaping) {
 }
 
 TEST(HTML, empty_attribute_values) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << input(
@@ -157,7 +157,7 @@ TEST(HTML, empty_attribute_values) {
 }
 
 TEST(HTML, nested_html_elements) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << div(
@@ -172,7 +172,7 @@ TEST(HTML, nested_html_elements) {
 }
 
 TEST(HTML, complex_table_structure) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << table(thead(tr(th("Name"), th("Age"), th("City"))),
@@ -191,7 +191,7 @@ TEST(HTML, complex_table_structure) {
 }
 
 TEST(HTML, form_elements_combination) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << form(
@@ -221,7 +221,7 @@ TEST(HTML, form_elements_combination) {
 }
 
 TEST(HTML, unicode_and_special_characters) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << p("Unicode: 你好世界 🌍 ñáéíóú");
@@ -230,7 +230,7 @@ TEST(HTML, unicode_and_special_characters) {
 }
 
 TEST(HTML, whitespace_handling) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << pre("  Whitespace\n  should be\n    preserved  ");
@@ -240,7 +240,7 @@ TEST(HTML, whitespace_handling) {
 }
 
 TEST(HTML, mixed_raw_and_escaped_complex) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << article(h2("Article Title & <subtitle>"),
@@ -261,7 +261,7 @@ TEST(HTML, mixed_raw_and_escaped_complex) {
 }
 
 TEST(HTML, semantic_html5_elements) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::ostringstream result;
   result << main({{"role", "main"}},
@@ -288,7 +288,7 @@ TEST(HTML, semantic_html5_elements) {
 }
 
 TEST(HTML, attribute_order_consistency) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   // Since std::map orders keys lexicographically, attributes should be
   // consistent
@@ -301,14 +301,14 @@ TEST(HTML, attribute_order_consistency) {
 }
 
 TEST(HTML, zero_length_strings) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   EXPECT_EQ(p("").render(), "<p></p>");
   EXPECT_EQ(span({{"class", ""}}, "").render(), "<span class=\"\"></span>");
 }
 
 TEST(HTML, push_back_string) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   element.push_back(std::string("Hello World"));
@@ -317,7 +317,7 @@ TEST(HTML, push_back_string) {
 }
 
 TEST(HTML, push_back_string_chaining) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div()
                      .push_back(std::string("First"))
@@ -328,7 +328,7 @@ TEST(HTML, push_back_string_chaining) {
 }
 
 TEST(HTML, push_back_html_element) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   element.push_back(span("Nested span"));
@@ -337,7 +337,7 @@ TEST(HTML, push_back_html_element) {
 }
 
 TEST(HTML, push_back_html_element_chaining) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div()
                      .push_back(h1("Title"))
@@ -349,7 +349,7 @@ TEST(HTML, push_back_html_element_chaining) {
 }
 
 TEST(HTML, push_back_raw_html) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   element.push_back(raw("<strong>Bold text</strong>"));
@@ -358,7 +358,7 @@ TEST(HTML, push_back_raw_html) {
 }
 
 TEST(HTML, push_back_raw_html_chaining) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div()
                      .push_back(raw("<em>Italic</em>"))
@@ -370,7 +370,7 @@ TEST(HTML, push_back_raw_html_chaining) {
 }
 
 TEST(HTML, push_back_mixed_content) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   element.push_back(std::string("Text: "))
@@ -383,7 +383,7 @@ TEST(HTML, push_back_mixed_content) {
 }
 
 TEST(HTML, push_back_with_attributes) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div({{"class", "container"}, {"id", "main"}});
   element.push_back(std::string("Content")).push_back(p("Paragraph"));
@@ -394,7 +394,7 @@ TEST(HTML, push_back_with_attributes) {
 }
 
 TEST(HTML, push_back_to_existing_children) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div("Initial content");
   element.push_back(std::string(" ")).push_back(span("Added span"));
@@ -404,7 +404,7 @@ TEST(HTML, push_back_to_existing_children) {
 }
 
 TEST(HTML, push_back_complex_nesting) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto list = ul();
   list.push_back(li("Item 1"))
@@ -418,7 +418,7 @@ TEST(HTML, push_back_complex_nesting) {
 }
 
 TEST(HTML, push_back_escaped_content) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   element.push_back(std::string("Safe: <script>alert('xss')</script>"));
@@ -429,7 +429,7 @@ TEST(HTML, push_back_escaped_content) {
 }
 
 TEST(HTML, push_back_return_reference) {
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   auto element = div();
   auto &ref = element.push_back(std::string("test"));

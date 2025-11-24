@@ -39,7 +39,7 @@ function(sourcemeta_file2metapack_gzip)
   endif()
 
   add_custom_command(OUTPUT "${SOURCEMETA_FILE2METAPACK_OUTPUT}"
-    COMMAND "$<TARGET_FILE:sourcemeta_registry_file2metapack>" --gzip
+    COMMAND "$<TARGET_FILE:sourcemeta_one_file2metapack>" --gzip
       "${SOURCEMETA_FILE2METAPACK_INPUT}" "${MIME}" "${SOURCEMETA_FILE2METAPACK_OUTPUT}"
-    DEPENDS "${SOURCEMETA_FILE2METAPACK_INPUT}" "$<TARGET_FILE:sourcemeta_registry_file2metapack>")
+    DEPENDS "${SOURCEMETA_FILE2METAPACK_INPUT}" "$<TARGET_FILE:sourcemeta_one_file2metapack>")
 endfunction()

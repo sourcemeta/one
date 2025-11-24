@@ -1,4 +1,4 @@
-#include <sourcemeta/registry/gzip.h>
+#include <sourcemeta/one/gzip.h>
 
 extern "C" {
 #include <zlib.h>
@@ -8,7 +8,7 @@ extern "C" {
 #include <sstream> // std::istringstream, std::ostringstream
 #include <utility> // std::move
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 constexpr auto ZLIB_BUFFER_SIZE{4096};
 
@@ -130,4 +130,4 @@ auto gunzip(const std::string &input) -> std::string {
   return gunzip(stream);
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

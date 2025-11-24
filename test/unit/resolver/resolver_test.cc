@@ -5,8 +5,8 @@
 #include <memory>
 #include <vector>
 
-#include <sourcemeta/registry/configuration.h>
-#include <sourcemeta/registry/resolver.h>
+#include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/resolver.h>
 
 static auto to_lowercase(const std::string_view input) -> std::string {
   std::string result{input};
@@ -19,25 +19,23 @@ static auto to_lowercase(const std::string_view input) -> std::string {
 class ResolverTest : public testing::Test {
 protected:
   static auto SetUpTestSuite() -> void {
-    const auto raw_configuration{sourcemeta::registry::Configuration::read(
+    const auto raw_configuration{sourcemeta::one::Configuration::read(
         CONFIGURATION_PATH,
         std::filesystem::path{CONFIGURATION_PATH}.parent_path() /
             "collections")};
-    shared_configuration =
-        std::make_unique<sourcemeta::registry::Configuration>(
-            sourcemeta::registry::Configuration::parse(raw_configuration));
+    shared_configuration = std::make_unique<sourcemeta::one::Configuration>(
+        sourcemeta::one::Configuration::parse(raw_configuration));
   }
 
   static auto TearDownTestSuite() -> void { shared_configuration.reset(); }
 
-  static std::unique_ptr<sourcemeta::registry::Configuration>
-      shared_configuration;
+  static std::unique_ptr<sourcemeta::one::Configuration> shared_configuration;
 };
 
-std::unique_ptr<sourcemeta::registry::Configuration>
+std::unique_ptr<sourcemeta::one::Configuration>
     ResolverTest::shared_configuration{nullptr};
 
-#define RESOLVER_INIT(name) sourcemeta::registry::Resolver name;
+#define RESOLVER_INIT(name) sourcemeta::one::Resolver name;
 
 #define RESOLVER_EXPECT(resolver, expected_uri, expected_schema)               \
   {                                                                            \
@@ -49,7 +47,7 @@ std::unique_ptr<sourcemeta::registry::Configuration>
 #define RESOLVER_IMPORT(resolver, collection_name, relative_path)              \
   (resolver).add(                                                              \
       ResolverTest::shared_configuration->url, collection_name,                \
-      std::get<sourcemeta::registry::Configuration::Collection>(               \
+      std::get<sourcemeta::one::Configuration::Collection>(                    \
           ResolverTest::shared_configuration->entries.at(collection_name)),    \
       std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path))
 

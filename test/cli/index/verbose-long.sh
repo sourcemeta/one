@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
   "contents": {
@@ -41,11 +41,11 @@ remove_threads_information() {
   fi
 }
 
-"$1" "$TMP/registry.json" "$TMP/output" --verbose --concurrency 1 2> "$TMP/output.txt"
+"$1" "$TMP/one.json" "$TMP/output" --verbose --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 {
   "url": "https://sourcemeta.com/",
   "contents": {
@@ -60,7 +60,7 @@ Using configuration: $(realpath "$TMP")/registry.json
   },
   "html": {
     "name": "Sourcemeta",
-    "description": "The next-generation JSON Schema Registry"
+    "description": "The next-generation JSON Schema platform"
   }
 }
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)

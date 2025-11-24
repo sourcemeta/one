@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com",
   "contents": {
@@ -32,13 +32,13 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" "$TMP/registry.json" "$TMP/output" --url foo 2> "$TMP/output.txt" \
+"$1" "$TMP/one.json" "$TMP/output" --url foo 2> "$TMP/output.txt" \
   && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/registry.json
+Using configuration: $(realpath "$TMP")/one.json
 Overriding the URL in the configuration file with: foo
 error: The URL option must be an absolute HTTP(s) URL
 EOF

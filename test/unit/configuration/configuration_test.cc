@@ -1,13 +1,12 @@
 #include <gtest/gtest.h>
 
-#include <sourcemeta/registry/configuration.h>
+#include <sourcemeta/one/configuration.h>
 
 #define EXPECT_PAGE(configuration, path, property, value)                      \
   EXPECT_TRUE((configuration).entries.contains(path));                         \
-  EXPECT_TRUE(                                                                 \
-      std::holds_alternative<sourcemeta::registry::Configuration::Page>(       \
-          (configuration).entries.at(path)));                                  \
-  EXPECT_EQ(std::get<sourcemeta::registry::Configuration::Page>(               \
+  EXPECT_TRUE(std::holds_alternative<sourcemeta::one::Configuration::Page>(    \
+      (configuration).entries.at(path)));                                      \
+  EXPECT_EQ(std::get<sourcemeta::one::Configuration::Page>(                    \
                 (configuration).entries.at(path))                              \
                 .property,                                                     \
             value);
@@ -15,9 +14,9 @@
 #define EXPECT_COLLECTION(configuration, path, property, value)                \
   EXPECT_TRUE((configuration).entries.contains(path));                         \
   EXPECT_TRUE(                                                                 \
-      std::holds_alternative<sourcemeta::registry::Configuration::Collection>( \
+      std::holds_alternative<sourcemeta::one::Configuration::Collection>(      \
           (configuration).entries.at(path)));                                  \
-  EXPECT_EQ(std::get<sourcemeta::registry::Configuration::Collection>(         \
+  EXPECT_EQ(std::get<sourcemeta::one::Configuration::Collection>(              \
                 (configuration).entries.at(path))                              \
                 .property,                                                     \
             value);
@@ -25,10 +24,10 @@
 TEST(Configuration, valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  const auto raw_configuration{sourcemeta::registry::Configuration::read(
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{
-      sourcemeta::registry::Configuration::parse(raw_configuration)};
+      sourcemeta::one::Configuration::parse(raw_configuration)};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -50,7 +49,7 @@ TEST(Configuration, valid_001) {
   EXPECT_PAGE(configuration, "test", title, "A sample schema folder");
   EXPECT_PAGE(configuration, "test", description, "For testing purposes");
   EXPECT_PAGE(configuration, "test", email, std::nullopt);
-  EXPECT_PAGE(configuration, "test", github, "sourcemeta/registry");
+  EXPECT_PAGE(configuration, "test", github, "sourcemeta/one");
   EXPECT_PAGE(configuration, "test", website, std::nullopt);
 
   EXPECT_COLLECTION(configuration, "example/extension", title, "Test");
@@ -75,10 +74,10 @@ TEST(Configuration, valid_001) {
 TEST(Configuration, valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_002.json"};
-  const auto raw_configuration{sourcemeta::registry::Configuration::read(
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{
-      sourcemeta::registry::Configuration::parse(raw_configuration)};
+      sourcemeta::one::Configuration::parse(raw_configuration)};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -88,16 +87,16 @@ TEST(Configuration, valid_002) {
 
   EXPECT_PAGE(configuration, "test", title, "A sample schema folder");
   EXPECT_PAGE(configuration, "test", description, "For testing purposes");
-  EXPECT_PAGE(configuration, "test", github, "sourcemeta/registry");
+  EXPECT_PAGE(configuration, "test", github, "sourcemeta/one");
 }
 
 TEST(Configuration, valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_003.json"};
-  const auto raw_configuration{sourcemeta::registry::Configuration::read(
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{
-      sourcemeta::registry::Configuration::parse(raw_configuration)};
+      sourcemeta::one::Configuration::parse(raw_configuration)};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 

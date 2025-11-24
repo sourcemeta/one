@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
   "contents": {
@@ -23,14 +23,14 @@ cat << EOF > "$TMP/registry.json"
 }
 EOF
 
-"$1" "$TMP/registry.json" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" "$TMP/one.json" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 VERSION="$2"
 
 cat << EOF > "$TMP/expected.txt"
-Sourcemeta Registry v$VERSION
-Usage: sourcemeta-registry-index <registry.json> <path/to/output/directory>
+Sourcemeta One v$VERSION
+Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

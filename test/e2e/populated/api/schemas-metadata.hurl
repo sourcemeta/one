@@ -26,7 +26,7 @@ jsonpath "$.breadcrumb[1].path" == "/test/v2.0"
 jsonpath "$.breadcrumb[2].name" == "schema"
 jsonpath "$.breadcrumb[2].path" == "/test/v2.0/schema"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/metadata/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/metadata/response
 ```
 {{last_response}}
 ```
@@ -72,7 +72,7 @@ jsonpath "$.breadcrumb[1].path" == "/test/schemas"
 jsonpath "$.breadcrumb[2].name" == "string"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/string"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/metadata/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/metadata/response
 ```
 {{last_response}}
 ```
@@ -98,10 +98,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -118,10 +118,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -158,7 +158,7 @@ jsonpath "$.breadcrumb[1].path" == "/geojson/v1.0.5"
 jsonpath "$.breadcrumb[2].name" == "point"
 jsonpath "$.breadcrumb[2].path" == "/geojson/v1.0.5/point"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/metadata/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/metadata/response
 ```
 {{last_response}}
 ```
@@ -174,10 +174,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -213,7 +213,7 @@ jsonpath "$.breadcrumb[1].path" == "/test/bundling"
 jsonpath "$.breadcrumb[2].name" == "double"
 jsonpath "$.breadcrumb[2].path" == "/test/bundling/double"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/schemas/metadata/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/metadata/response
 ```
 {{last_response}}
 ```

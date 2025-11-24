@@ -1,8 +1,8 @@
-#include <sourcemeta/registry/html_escape.h>
+#include <sourcemeta/one/html_escape.h>
 
 #include <string> // std::string
 
-namespace sourcemeta::registry::html {
+namespace sourcemeta::one::html {
 
 auto escape(std::string &text) -> void {
   std::size_t write_position{0};
@@ -93,4 +93,4 @@ auto escape(std::string &text) -> void {
   }
 }
 
-} // namespace sourcemeta::registry::html
+} // namespace sourcemeta::one::html

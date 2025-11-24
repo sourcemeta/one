@@ -1,10 +1,10 @@
-#include <sourcemeta/registry/shared_version.h>
+#include <sourcemeta/one/shared_version.h>
 
 #include <sourcemeta/core/uuid.h>
 
 #include "configure.h"
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto stamp() noexcept -> std::string_view {
   static auto CACHE_STAMP{sourcemeta::core::uuidv4()};
@@ -13,4 +13,4 @@ auto stamp() noexcept -> std::string_view {
 
 auto version() noexcept -> std::string_view { return PROJECT_VERSION; }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

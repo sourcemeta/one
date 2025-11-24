@@ -35,7 +35,7 @@ jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 91
 jsonpath "$.entries[2].path" == "/geojson"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/list/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
 ```
 {{last_response}}
 ```
@@ -90,7 +90,7 @@ jsonpath "$.entries[6].health" == 100
 jsonpath "$.entries[6].path" == "/test/doc"
 jsonpath "$.entries[6].title" == "A sample schema folder"
 jsonpath "$.entries[6].description" == "For testing purposes"
-jsonpath "$.entries[6].github" == "sourcemeta/registry"
+jsonpath "$.entries[6].github" == "sourcemeta/one"
 jsonpath "$.entries[7].name" == "camelcase"
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].health" == 100
@@ -100,7 +100,7 @@ jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 100
 jsonpath "$.entries[8].path" == "/test/bundling"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/list/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
 ```
 {{last_response}}
 ```
@@ -137,7 +137,7 @@ jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/list/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
 ```
 {{last_response}}
 ```
@@ -153,10 +153,10 @@ Access-Control-Allow-Origin: *
 last_response: body
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/error
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
 ```
 {{last_response}}
 ```
@@ -196,7 +196,7 @@ jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/list/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
 ```
 {{last_response}}
 ```
@@ -256,7 +256,7 @@ jsonpath "$.entries[2].path" == "/test/extension/to-without"
 jsonpath "$.entries[2].health" == 100
 jsonpath "$.entries[2].dependencies" == 1
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/registry/api/list/response
+POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
 ```
 {{last_response}}
 ```

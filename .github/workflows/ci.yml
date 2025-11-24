@@ -1,10 +1,10 @@
-name: Sourcemeta Registry CI
+name: Sourcemeta One CI
 
 on:
   pull_request:
 
 concurrency:
-  group: registry-ci-${{ github.ref }}
+  group: one-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -20,8 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Registry
-        run: docker build . --tag registry --file Dockerfile --progress plain
+      - name: Build One
+        run: docker build . --tag one --file Dockerfile --progress plain
 
       - name: Sandbox (headless)
         uses: ./.github/actions/sandbox

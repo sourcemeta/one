@@ -26,7 +26,7 @@
     "test": {
       "title": "A sample schema folder",
       "description": "For testing purposes",
-      "github": "sourcemeta/registry"
+      "github": "sourcemeta/one"
     }
   }
 }

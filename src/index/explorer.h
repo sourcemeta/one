@@ -1,9 +1,9 @@
-#ifndef SOURCEMETA_REGISTRY_INDEX_EXPLORER_H_
-#define SOURCEMETA_REGISTRY_INDEX_EXPLORER_H_
+#ifndef SOURCEMETA_ONE_INDEX_EXPLORER_H_
+#define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
-#include <sourcemeta/registry/configuration.h>
-#include <sourcemeta/registry/resolver.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/resolver.h>
+#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
@@ -52,7 +52,7 @@ static auto make_breadcrumb(const std::filesystem::path &relative_path)
 }
 
 static auto
-inflate_metadata(const sourcemeta::registry::Configuration &configuration,
+inflate_metadata(const sourcemeta::one::Configuration &configuration,
                  const std::filesystem::path &path,
                  sourcemeta::core::JSON &target) -> void {
   const auto match{configuration.entries.find(path)};
@@ -91,14 +91,13 @@ inflate_metadata(const sourcemeta::registry::Configuration &configuration,
       match->second);
 }
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  using Context =
-      std::tuple<std::reference_wrapper<const sourcemeta::registry::Resolver>,
-                 std::reference_wrapper<
-                     const sourcemeta::registry::Configuration::Collection>,
-                 std::filesystem::path>;
+  using Context = std::tuple<
+      std::reference_wrapper<const sourcemeta::one::Resolver>,
+      std::reference_wrapper<const sourcemeta::one::Configuration::Collection>,
+      std::filesystem::path>;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
@@ -108,7 +107,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
           const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{
-        sourcemeta::registry::read_json_with_metadata(dependencies.front())};
+        sourcemeta::one::read_json_with_metadata(dependencies.front())};
     auto id{sourcemeta::core::identify(
         schema.data, [&callback, &context](const auto identifier) {
           return std::get<0>(context).get()(identifier, callback);
@@ -167,29 +166,27 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{sourcemeta::registry::read_json(dependencies.at(1))};
+    const auto health{sourcemeta::one::read_json(dependencies.at(1))};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::registry::read_json(dependencies.at(2))};
+        sourcemeta::one::read_json(dependencies.at(2))};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
     const auto &collection{std::get<1>(context).get()};
 
-    if (collection.extra.defines("x-sourcemeta-registry:alert")) {
-      assert(collection.extra.at("x-sourcemeta-registry:alert").is_string());
-      result.assign("alert",
-                    collection.extra.at("x-sourcemeta-registry:alert"));
+    if (collection.extra.defines("x-sourcemeta-one:alert")) {
+      assert(collection.extra.at("x-sourcemeta-one:alert").is_string());
+      result.assign("alert", collection.extra.at("x-sourcemeta-one:alert"));
     } else {
       result.assign("alert", sourcemeta::core::JSON{nullptr});
     }
 
-    if (collection.extra.defines("x-sourcemeta-registry:provenance")) {
-      assert(
-          collection.extra.at("x-sourcemeta-registry:provenance").is_string());
+    if (collection.extra.defines("x-sourcemeta-one:provenance")) {
+      assert(collection.extra.at("x-sourcemeta-one:provenance").is_string());
       result.assign("provenance",
-                    collection.extra.at("x-sourcemeta-registry:provenance"));
+                    collection.extra.at("x-sourcemeta-one:provenance"));
     } else {
       result.assign("provenance", sourcemeta::core::JSON{nullptr});
     }
@@ -199,9 +196,9 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
+    sourcemeta::one::write_pretty_json(
         destination, result, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
@@ -220,7 +217,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
     result.reserve(dependencies.size());
 
     for (const auto &metadata_path : dependencies) {
-      auto metadata_json{sourcemeta::registry::read_json(metadata_path)};
+      auto metadata_json{sourcemeta::one::read_json(metadata_path)};
       if (!sourcemeta::core::is_schema(metadata_json)) {
         continue;
       }
@@ -263,12 +260,11 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_jsonl(
+    sourcemeta::one::write_jsonl(
         destination, result, "application/jsonl",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
-        sourcemeta::registry::Encoding::Identity,
-        sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
@@ -277,8 +273,8 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
   struct Context {
     const std::filesystem::path &directory;
-    const sourcemeta::registry::Configuration &configuration;
-    const sourcemeta::registry::Output &output;
+    const sourcemeta::one::Configuration &configuration;
+    const sourcemeta::one::Output &output;
     const std::filesystem::path &explorer_path;
     const std::filesystem::path &schemas_path;
   };
@@ -310,7 +306,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
                                     entry_relative_path / "%" /
                                     "directory.metapack"};
           callback(directory_path);
-          auto directory_json{sourcemeta::registry::read_json(directory_path)};
+          auto directory_json{sourcemeta::one::read_json(directory_path)};
           assert(directory_json.is_object());
           assert(directory_json.defines("health"));
           assert(directory_json.at("health").is_integer());
@@ -337,7 +333,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           schema_nav_path /= "%";
           schema_nav_path /= "schema.metapack";
 
-          auto nav{sourcemeta::registry::read_json(schema_nav_path)};
+          auto nav{sourcemeta::one::read_json(schema_nav_path)};
           entry_json.merge(nav.as_object());
           assert(!entry_json.defines("entries"));
           // No need to show these on children
@@ -410,14 +406,14 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::registry::write_pretty_json(
-        destination, meta, "application/json",
-        sourcemeta::registry::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+    sourcemeta::one::write_pretty_json(
+        destination, meta, "application/json", sourcemeta::one::Encoding::GZIP,
+        sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
 };
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one
 
 #endif

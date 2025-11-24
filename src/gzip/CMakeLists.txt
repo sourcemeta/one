@@ -1,5 +1,5 @@
-sourcemeta_library(NAMESPACE sourcemeta PROJECT registry NAME gzip
+sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME gzip
   PRIVATE_HEADERS error.h
   SOURCES gzip.cc)
 
-target_link_libraries(sourcemeta_registry_gzip PRIVATE ZLIB::ZLIB)
+target_link_libraries(sourcemeta_one_gzip PRIVATE ZLIB::ZLIB)

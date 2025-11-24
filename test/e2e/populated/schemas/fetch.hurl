@@ -262,7 +262,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
 GET {{base}}/schemas/doc/.period.json
@@ -271,7 +271,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
 # Invalid method on found
@@ -281,7 +281,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:registry/method-not-allowed"
+jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
 # Invalid method on not found
@@ -291,7 +291,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
 GET {{base}}/.json

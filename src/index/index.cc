@@ -5,10 +5,10 @@
 #include <sourcemeta/core/parallel.h>
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/registry/configuration.h>
-#include <sourcemeta/registry/resolver.h>
-#include <sourcemeta/registry/shared.h>
-#include <sourcemeta/registry/web.h>
+#include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/resolver.h>
+#include <sourcemeta/one/shared.h>
+#include <sourcemeta/one/web.h>
 
 #include "explorer.h"
 #include "generators.h"
@@ -33,7 +33,7 @@
 constexpr auto SENTINEL{"%"};
 
 static auto attribute_not_disabled(
-    const sourcemeta::registry::Configuration::Collection &collection,
+    const sourcemeta::one::Configuration::Collection &collection,
     const sourcemeta::core::JSON::String &property) -> bool {
   return !collection.extra.defines(property) ||
          !collection.extra.at(property).is_boolean() ||
@@ -60,7 +60,7 @@ DISPATCH(const std::filesystem::path &destination,
          const typename Handler::Context &context, std::mutex &mutex,
          const std::string_view title, const std::string_view prefix,
          const std::string_view suffix, Adapter &adapter,
-         sourcemeta::registry::Output &output) -> void {
+         sourcemeta::one::Output &output) -> void {
   if (!sourcemeta::core::build<typename Handler::Context>(
           adapter, Handler::handler, destination, dependencies, context)) {
     std::lock_guard<std::mutex> lock{mutex};
@@ -75,12 +75,11 @@ DISPATCH(const std::filesystem::path &destination,
 
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
-  std::cout << "Sourcemeta Registry v" << sourcemeta::registry::version()
-            << "\n";
+  std::cout << "Sourcemeta One v" << sourcemeta::one::version() << "\n";
 
   if (app.positional().size() != 2) {
     std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
-              << " <registry.json> <path/to/output/directory>\n";
+              << " <one.json> <path/to/output/directory>\n";
     return EXIT_FAILURE;
   }
 
@@ -88,7 +87,7 @@ static auto index_main(const std::string_view &program,
   // (1) Prepare the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::registry::Output output{app.positional().at(1)};
+  sourcemeta::one::Output output{app.positional().at(1)};
   std::cerr << "Writing output to: " << output.path().string() << "\n";
 
   /////////////////////////////////////////////////////////////////////////////
@@ -98,16 +97,15 @@ static auto index_main(const std::string_view &program,
   const auto configuration_path{
       std::filesystem::canonical(app.positional().at(0))};
   std::cerr << "Using configuration: " << configuration_path.string() << "\n";
-  const auto raw_configuration{sourcemeta::registry::Configuration::read(
-      configuration_path, SOURCEMETA_REGISTRY_COLLECTIONS)};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, SOURCEMETA_ONE_COLLECTIONS)};
 
   if (app.contains("verbose")) {
     sourcemeta::core::prettify(raw_configuration, std::cerr);
     std::cerr << "\n";
   }
 
-  auto configuration{
-      sourcemeta::registry::Configuration::parse(raw_configuration)};
+  auto configuration{sourcemeta::one::Configuration::parse(raw_configuration)};
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Support overriding the target URL from the CLI
@@ -129,16 +127,15 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (4) Store a mark of the Registry version for target dependencies
+  // (4) Store a mark of the One version for target dependencies
   /////////////////////////////////////////////////////////////////////////////
 
-  // We do this so that targets can be re-built if the Registry version changes
+  // We do this so that targets can be re-built if the One version changes
   const auto mark_version_path{output.path() / "version.json"};
   // Note we only write back if the content changed in order to not accidentally
   // bump up the file modified time
   output.write_json_if_different(
-      mark_version_path,
-      sourcemeta::core::JSON{sourcemeta::registry::version()});
+      mark_version_path, sourcemeta::core::JSON{sourcemeta::one::version()});
 
   /////////////////////////////////////////////////////////////////////////////
   // (5) Store the full configuration file for target dependencies
@@ -156,13 +153,12 @@ static auto index_main(const std::string_view &program,
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::registry::Resolver resolver;
+  sourcemeta::one::Resolver resolver;
   // This step is very fast, so going parallel about it seems overkill, even
   // though in theory we could
   for (const auto &pair : configuration.entries) {
     const auto *collection{
-        std::get_if<sourcemeta::registry::Configuration::Collection>(
-            &pair.second)};
+        std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
     if (!collection) {
       continue;
     }
@@ -216,7 +212,7 @@ static auto index_main(const std::string_view &program,
                        resolver.size());
         const auto destination{schemas_path / schema.second.relative_path /
                                SENTINEL / "schema.metapack"};
-        DISPATCH<sourcemeta::registry::GENERATE_MATERIALISED_SCHEMA>(
+        DISPATCH<sourcemeta::one::GENERATE_MATERIALISED_SCHEMA>(
             destination,
             {schema.second.path,
              // This target depends on the configuration file given things like
@@ -249,56 +245,56 @@ static auto index_main(const std::string_view &program,
         const auto base_path{schemas_path / schema.second.relative_path /
                              SENTINEL};
 
-        DISPATCH<sourcemeta::registry::GENERATE_POINTER_POSITIONS>(
+        DISPATCH<sourcemeta::one::GENERATE_POINTER_POSITIONS>(
             base_path / "positions.metapack",
             {base_path / "schema.metapack", mark_version_path}, resolver, mutex,
             "Analysing", schema.first, "positions", adapter, output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_FRAME_LOCATIONS>(
+        DISPATCH<sourcemeta::one::GENERATE_FRAME_LOCATIONS>(
             base_path / "locations.metapack",
             {base_path / "schema.metapack", mark_version_path}, resolver, mutex,
             "Analysing", schema.first, "locations", adapter, output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_DEPENDENCIES>(
+        DISPATCH<sourcemeta::one::GENERATE_DEPENDENCIES>(
             base_path / "dependencies.metapack",
             {base_path / "schema.metapack", mark_version_path}, resolver, mutex,
             "Analysing", schema.first, "dependencies", adapter, output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_STATS>(
+        DISPATCH<sourcemeta::one::GENERATE_STATS>(
             base_path / "stats.metapack",
             {base_path / "schema.metapack", mark_version_path}, resolver, mutex,
             "Analysing", schema.first, "stats", adapter, output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_HEALTH>(
+        DISPATCH<sourcemeta::one::GENERATE_HEALTH>(
             base_path / "health.metapack",
             {base_path / "schema.metapack", base_path / "dependencies.metapack",
              mark_version_path},
             resolver, mutex, "Analysing", schema.first, "health", adapter,
             output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_BUNDLE>(
+        DISPATCH<sourcemeta::one::GENERATE_BUNDLE>(
             base_path / "bundle.metapack",
             {base_path / "schema.metapack", base_path / "dependencies.metapack",
              mark_version_path},
             resolver, mutex, "Analysing", schema.first, "bundle", adapter,
             output);
 
-        DISPATCH<sourcemeta::registry::GENERATE_EDITOR>(
+        DISPATCH<sourcemeta::one::GENERATE_EDITOR>(
             base_path / "editor.metapack",
             {base_path / "bundle.metapack", mark_version_path}, resolver, mutex,
             "Analysing", schema.first, "editor", adapter, output);
 
         if (attribute_not_disabled(schema.second.collection.get(),
-                                   "x-sourcemeta-registry:evaluate")) {
+                                   "x-sourcemeta-one:evaluate")) {
           // TODO: Compile fast templates too
-          DISPATCH<sourcemeta::registry::GENERATE_BLAZE_TEMPLATE>(
+          DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-exhaustive.metapack",
               {base_path / "bundle.metapack", mark_version_path},
               sourcemeta::blaze::Mode::Exhaustive, mutex, "Analysing",
               schema.first, "blaze-exhaustive", adapter, output);
         }
 
-        DISPATCH<sourcemeta::registry::GENERATE_EXPLORER_SCHEMA_METADATA>(
+        DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA>(
             explorer_path / schema.second.relative_path / SENTINEL /
                 "schema.metapack",
             {base_path / "schema.metapack", base_path / "health.metapack",
@@ -370,7 +366,7 @@ static auto index_main(const std::string_view &program,
 
   print_progress(mutex, concurrency, "Producing", explorer_path.string(), 0,
                  100);
-  DISPATCH<sourcemeta::registry::GENERATE_EXPLORER_SEARCH_INDEX>(
+  DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
       explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
       "Producing", explorer_path.string(), "search", adapter, output);
 
@@ -385,7 +381,7 @@ static auto index_main(const std::string_view &program,
                    directories.size());
     const auto destination{std::filesystem::weakly_canonical(
         explorer_path / relative_path / SENTINEL / "directory.metapack")};
-    DISPATCH<sourcemeta::registry::GENERATE_EXPLORER_DIRECTORY_LIST>(
+    DISPATCH<sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST>(
         destination,
         // If any of the entry summary files changes, by definition we need to
         // re-compute. This is a good enough dependency we can use without
@@ -421,21 +417,21 @@ static auto index_main(const std::string_view &program,
                          cursor, directories.size() + summaries.size());
 
           if (relative_path == ".") {
-            DISPATCH<sourcemeta::registry::GENERATE_WEB_INDEX>(
+            DISPATCH<sourcemeta::one::GENERATE_WEB_INDEX>(
                 explorer_path / SENTINEL / "directory-html.metapack",
                 {explorer_path / SENTINEL / "directory.metapack",
                  // We rely on the configuration for site metadata
                  mark_configuration_path, mark_version_path},
                 configuration, mutex, "Rendering", relative_path.string(),
                 "index", adapter, output);
-            DISPATCH<sourcemeta::registry::GENERATE_WEB_NOT_FOUND>(
+            DISPATCH<sourcemeta::one::GENERATE_WEB_NOT_FOUND>(
                 explorer_path / SENTINEL / "404.metapack",
                 {// We rely on the configuration for site metadata
                  mark_configuration_path, mark_version_path},
                 configuration, mutex, "Rendering", relative_path.string(),
                 "not-found", adapter, output);
           } else {
-            DISPATCH<sourcemeta::registry::GENERATE_WEB_DIRECTORY>(
+            DISPATCH<sourcemeta::one::GENERATE_WEB_DIRECTORY>(
                 explorer_path / relative_path / SENTINEL /
                     "directory-html.metapack",
                 {explorer_path / relative_path / SENTINEL /
@@ -462,7 +458,7 @@ static auto index_main(const std::string_view &program,
                          cursor + directories.size(),
                          summaries.size() + directories.size());
           const auto schema_path{schemas_path / relative_path / SENTINEL};
-          DISPATCH<sourcemeta::registry::GENERATE_WEB_SCHEMA>(
+          DISPATCH<sourcemeta::one::GENERATE_WEB_SCHEMA>(
               entry.parent_path() / "schema-html.metapack",
               {entry, schema_path / "dependencies.metapack",
                schema_path / "health.metapack",
@@ -487,7 +483,7 @@ static auto index_main(const std::string_view &program,
          std::filesystem::recursive_directory_iterator{output.path()}) {
       if (entry.is_regular_file() && entry.path().extension() == ".metapack") {
         try {
-          const auto file{sourcemeta::registry::read_stream_raw(entry.path())};
+          const auto file{sourcemeta::one::read_stream_raw(entry.path())};
           assert(file.has_value());
           durations.emplace_back(entry.path(), file.value().duration);
         } catch (...) {
@@ -530,16 +526,15 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const std::string_view program{argv[0]};
 
     return index_main(program, app);
-  } catch (const sourcemeta::registry::ConfigurationReadError &error) {
+  } catch (const sourcemeta::one::ConfigurationReadError &error) {
     std::cerr << "error: " << error.what() << "\n";
     std::cerr << "  from " << error.from().string() << "\n";
     std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
               << "\"\n";
     std::cerr << "  to " << error.target().string() << "\n";
     return EXIT_FAILURE;
-  } catch (
-      const sourcemeta::registry::ConfigurationUnknownBuiltInCollectionError
-          &error) {
+  } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
+               &error) {
     std::cerr << "error: " << error.what() << "\n";
     std::cerr << "  from " << error.from().string() << "\n";
     std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
@@ -555,15 +550,14 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::core::OptionsUnknownOptionError &error) {
     std::cerr << "error: " << error.what() << " '" << error.option() << "'\n";
     return EXIT_FAILURE;
-  } catch (const sourcemeta::registry::ConfigurationValidationError &error) {
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
     return EXIT_FAILURE;
-  } catch (
-      const sourcemeta::registry::GENERATE_MATERIALISED_SCHEMA::MetaschemaError
-          &error) {
+  } catch (const sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::MetaschemaError
+               &error) {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
     return EXIT_FAILURE;
-  } catch (const sourcemeta::registry::ResolverOutsideBaseError &error) {
+  } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::cerr << "error: " << error.what() << "\n  at " << error.uri()
               << "\n  with base " << error.base() << "\n";
     return EXIT_FAILURE;
@@ -574,7 +568,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
     std::cerr << "error: " << error.what() << "\n  " << error.id()
               << "\n\nDid you forget to register a schema with such URI in the "
-                 "registry?\n";
+                 "one?\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
     std::cerr << "error: " << error.what() << "\n  " << error.id()

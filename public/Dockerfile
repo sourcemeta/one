@@ -1,7 +1,7 @@
-ARG SOURCEMETA_REGISTRY=registry
-FROM ${SOURCEMETA_REGISTRY}
+ARG SOURCEMETA_ONE=one
+FROM ${SOURCEMETA_ONE}
 
-COPY public/registry.json ./public/registry.json
+COPY public/one.json ./public/one.json
 COPY vendor vendor
 
-RUN sourcemeta ./public/registry.json --profile
+RUN sourcemeta ./public/one.json --profile

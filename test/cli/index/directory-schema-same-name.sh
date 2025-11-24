@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-cat << EOF > "$TMP/registry.json"
+cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
   "html": {},
@@ -40,7 +40,7 @@ cat << 'EOF' > "$TMP/schemas/bar.json"
 }
 EOF
 
-"$1" "$TMP/registry.json" "$TMP/output"
+"$1" "$TMP/one.json" "$TMP/output"
 
 exists() {
   [ -f "$1" ] || (echo "File MUST exist: $1" 1>&2 && exit 1)

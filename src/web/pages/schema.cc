@@ -1,10 +1,10 @@
-#include <sourcemeta/registry/web.h>
+#include <sourcemeta/one/web.h>
 
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/registry/html.h>
-#include <sourcemeta/registry/shared.h>
+#include <sourcemeta/one/html.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cassert>    // assert
 #include <chrono>     // std::chrono
@@ -13,7 +13,7 @@
 #include <sstream>    // std::ostringstream
 #include <vector>     // std::vector
 
-namespace sourcemeta::registry {
+namespace sourcemeta::one {
 
 auto GENERATE_WEB_SCHEMA::handler(
     const std::filesystem::path &destination,
@@ -32,7 +32,7 @@ auto GENERATE_WEB_SCHEMA::handler(
           ? meta.at("description").to_string()
           : ("Schemas located at " + meta.at("path").to_string())};
 
-  using namespace sourcemeta::registry::html;
+  using namespace sourcemeta::one::html;
 
   std::vector<Node> container_children;
   std::vector<Node> content_children;
@@ -309,4 +309,4 @@ auto GENERATE_WEB_SCHEMA::handler(
                  timestamp_end - timestamp_start));
 }
 
-} // namespace sourcemeta::registry
+} // namespace sourcemeta::one

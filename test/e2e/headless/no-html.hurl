@@ -4,5 +4,5 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:registry/not-found"
+jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"

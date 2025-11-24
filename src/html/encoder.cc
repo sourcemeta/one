@@ -1,10 +1,10 @@
-#include <sourcemeta/registry/html_encoder.h>
+#include <sourcemeta/one/html_encoder.h>
 
 #include <iostream> // std::ostream
 #include <sstream>  // std::ostringstream
 #include <string>   // std::string
 
-namespace sourcemeta::registry::html {
+namespace sourcemeta::one::html {
 
 auto HTML::render() const -> std::string {
   std::ostringstream output_stream;
@@ -75,4 +75,4 @@ auto raw(std::string html_content) -> RawHTML {
   return RawHTML{std::move(html_content)};
 }
 
-} // namespace sourcemeta::registry::html
+} // namespace sourcemeta::one::html
