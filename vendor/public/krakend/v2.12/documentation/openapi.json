@@ -224,7 +224,7 @@
           },
           "name": {
             "title": "Name",
-            "description": "The name of the querystring, as declared in `input_query_strings`",
+            "description": "The name of the header, as declared in `input_headers`",
             "type": "string"
           }
         },
