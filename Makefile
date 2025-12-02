@@ -7,6 +7,7 @@ SHELLCHECK ?= shellcheck
 MKDOCS ?= mkdocs
 NPM ?= npm
 NPX ?= npx
+NODE ?= node
 
 # Options
 INDEX ?= ON
@@ -71,6 +72,10 @@ test-ui: node_modules
 	$(NPX) playwright install --with-deps
 	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
 		$(NPX) playwright test --config test/ui/playwright.config.js
+
+.PHONY: test-js
+test-js: node_modules
+	$(NODE) test/js/*.test.js
 
 .PHONY: sandbox-index
 sandbox-index: compile

@@ -78,7 +78,7 @@ export class Editor {
     const to = toLine.from + columnEnd;
 
     const decoration = Decoration.mark({
-      attributes: { 
+      attributes: {
         // Margin/padding to compensate whiteness between lines
         style: `
           background-color: ${color};
