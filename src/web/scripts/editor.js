@@ -70,14 +70,44 @@ export class Editor {
     });
   }
 
+  highlights() {
+    const result = [];
+    const decorations = this.view.state.field(highlightPlugin);
+    const cursor = decorations.iter();
+    while (cursor.value !== null) {
+      result.push({
+        range: cursor.value.spec.range,
+        color: cursor.value.spec.color
+      });
+
+      cursor.next();
+    }
+
+    return result;
+  }
+
   highlight(range, color) {
     const [ lineStart, columnStart, lineEnd, columnEnd ] = range;
+    const lineCount = this.view.state.doc.lines;
+    if (lineStart < 1 || lineStart > lineCount || lineEnd < 1 || lineEnd > lineCount) {
+      throw new RangeError(`Line out of range: document has ${lineCount} lines`);
+    }
+
     const fromLine = this.view.state.doc.line(lineStart);
     const toLine = this.view.state.doc.line(lineEnd);
+
+    if (columnStart < 1 || columnStart > fromLine.length + 1) {
+      throw new RangeError(`Column ${columnStart} out of range for line ${lineStart}`);
+    } else if (columnEnd < 0 || columnEnd > toLine.length) {
+      throw new RangeError(`Column ${columnEnd} out of range for line ${lineEnd}`);
+    }
+
     const from = fromLine.from + columnStart - 1;
     const to = toLine.from + columnEnd;
 
     const decoration = Decoration.mark({
+      range,
+      color,
       attributes: {
         // Margin/padding to compensate whiteness between lines
         style: `
