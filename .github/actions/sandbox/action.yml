@@ -34,6 +34,13 @@ runs:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
         SANDBOX_PORT: ${{ inputs.port }}
         HURL: 'docker run --rm --network=host --volume \$(PWD):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:7.0.0'
+    - name: Test Sandbox - JS (${{ inputs.configuration }})
+      run: make test-js PRESET=Release
+      if: inputs.configuration == 'html'
+      shell: bash
+      env:
+        SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_PORT: ${{ inputs.port }}
     - name: Test Sandbox - UI (${{ inputs.configuration }})
       run: make test-ui PRESET=Release
       if: inputs.configuration == 'html'
