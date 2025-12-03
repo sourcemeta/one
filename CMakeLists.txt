@@ -94,6 +94,8 @@ if(ONE_TESTS)
     "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
     "${PROJECT_SOURCE_DIR}/collections/sourcemeta")
 
+  add_subdirectory(test/js)
+
   if(ONE_INDEX OR ONE_SERVER)
     add_subdirectory(test/unit/gzip)
   endif()

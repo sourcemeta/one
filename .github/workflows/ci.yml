@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build One
-        run: docker build . --tag one --file Dockerfile --progress plain
+        run: make docker PRESET=Release
 
       - name: Sandbox (headless)
         uses: ./.github/actions/sandbox
