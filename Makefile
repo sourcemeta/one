@@ -20,6 +20,7 @@ SANDBOX_CONFIGURATION ?= html
 SANDBOX_PORT ?= 8000
 SANDBOX_URL ?= http://localhost:$(SANDBOX_PORT)
 PUBLIC ?= ./public
+PARALLEL ?= 4
 
 .PHONY: all
 all: configure compile test
@@ -41,7 +42,7 @@ configure: node_modules
 .PHONY: compile
 compile:
 	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --target clang_format
-	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --parallel 4
+	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --parallel $(PARALLEL)
 	$(CMAKE) --install $(OUTPUT) --prefix $(PREFIX) --config $(PRESET) --verbose \
 		--component sourcemeta_one --component sourcemeta_one
 	$(CMAKE) --install $(OUTPUT) --prefix $(PREFIX) --config $(PRESET) --verbose \
@@ -73,10 +74,6 @@ test-ui: node_modules
 	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
 		$(NPX) playwright test --config test/ui/playwright.config.js
 
-.PHONY: test-js
-test-js: node_modules
-	$(NODE) test/js/*.test.js
-
 .PHONY: sandbox-index
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
@@ -97,14 +94,40 @@ sandbox-manifest-refresh: configure compile
 	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) sandbox-index SANDBOX_CONFIGURATION=html || true
 
 .PHONY: docker
-docker:
-	$(DOCKER) build --tag one . --file Dockerfile --progress plain
+docker: Dockerfile
+	$(DOCKER) build --tag one . --file $< --progress plain \
+		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+
+.PHONY: docker-sandbox-build
+docker-sandbox-build: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --file test/sandbox/compose.yaml config
+		$(DOCKER) compose --file $< config
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --progress plain --file test/sandbox/compose.yaml up --build
+		$(DOCKER) compose --progress plain --file $< build
+
+.PHONY: docker-sandbox-up
+docker-sandbox-up: test/sandbox/compose.yaml
+	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
+		$(DOCKER) compose --progress plain --file $< up --detach --wait
+
+.PHONY: docker-sandbox-down
+docker-sandbox-down: test/sandbox/compose.yaml
+	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
+		$(DOCKER) compose --progress plain --file $< down
+
+.PHONY: docker-sandbox
+docker-sandbox: test/sandbox/compose.yaml
+	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
+		$(DOCKER) compose --file $< config
+	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
+		$(DOCKER) compose --progress plain --file $< up --build
 
 .PHONY: docs
 docs: mkdocs.yml

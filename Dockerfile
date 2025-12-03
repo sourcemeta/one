@@ -19,29 +19,41 @@ COPY CMakeLists.txt /source/CMakeLists.txt
 # For testing
 COPY test/cli /source/test/cli
 COPY test/unit /source/test/unit
+COPY test/js /source/test/js
 
 RUN cd /source && npm ci
 
+ARG SOURCEMETA_ONE_BUILD_TYPE=Release
+ARG SOURCEMETA_ONE_PARALLEL=2
+
 RUN	cmake -S /source -B ./build \
-  -DCMAKE_BUILD_TYPE:STRING=Release \
+  -DCMAKE_BUILD_TYPE:STRING=${SOURCEMETA_ONE_BUILD_TYPE} \
   -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \
   -DONE_INDEX:BOOL=ON \
   -DONE_SERVER:BOOL=ON \
   -DONE_TESTS:BOOL=ON \
   -DBUILD_SHARED_LIBS:BOOL=OFF
 
-RUN cmake --build /build --config Release --parallel 2
-RUN cmake --install /build --prefix /usr --verbose --config Release \
+RUN cmake --build /build \
+  --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --parallel ${SOURCEMETA_ONE_PARALLEL}
+RUN cmake --install /build --prefix /usr --verbose \
+  --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --component sourcemeta_one
 
 # Linting
-RUN cmake --build /build --config Release --target clang_format_test
-RUN cmake --build /build --config Release --target shellcheck
-RUN cmake --build /build --config Release --target jsonschema_fmt_test
-RUN cmake --build /build --config Release --target jsonschema_metaschema
-RUN cmake --build /build --config Release --target jsonschema_lint
+RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --target clang_format_test
+RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --target shellcheck
+RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --target jsonschema_fmt_test
+RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --target jsonschema_metaschema
+RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --target jsonschema_lint
 
-RUN ctest --test-dir /build --build-config Release \
+RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel
 
 FROM debian:bookworm-slim
