@@ -121,7 +121,7 @@ TEST_F(ResolverTest, duplicate_id) {
 
   EXPECT_THROW(RESOLVER_IMPORT(resolver, "example",
                                "2020-12-with-id-json-duplicate.json"),
-               sourcemeta::core::SchemaError);
+               sourcemeta::core::SchemaFrameError);
 }
 
 TEST_F(ResolverTest, case_insensitive_lookup) {
