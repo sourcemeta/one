@@ -6,6 +6,7 @@
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/pkg.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 #include <sourcemeta/one/web.h>
@@ -39,6 +40,9 @@ static auto attribute_not_disabled(
          !collection.extra.at(property).is_boolean() ||
          collection.extra.at(property).to_boolean();
 }
+
+static const std::filesystem::path DATA_DIRECTORY{
+    SOURCEMETA_ONE_DATA_DIRECTORY};
 
 static auto print_progress(std::mutex &mutex, const std::size_t threads,
                            const std::string_view title,
@@ -98,7 +102,7 @@ static auto index_main(const std::string_view &program,
       std::filesystem::canonical(app.positional().at(0))};
   std::cerr << "Using configuration: " << configuration_path.string() << "\n";
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, SOURCEMETA_ONE_COLLECTIONS)};
+      configuration_path, DATA_DIRECTORY / "collections")};
 
   if (app.contains("verbose")) {
     sourcemeta::core::prettify(raw_configuration, std::cerr);
@@ -235,6 +239,7 @@ static auto index_main(const std::string_view &program,
   constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
 
   const auto explorer_path{output.path() / "explorer"};
+
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&output, &schemas_path, &explorer_path, &resolver, &mutex, &adapter,
@@ -468,6 +473,51 @@ static auto index_main(const std::string_view &program,
               "schema", adapter, output);
         },
         concurrency);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (12) Generate integration packages
+  /////////////////////////////////////////////////////////////////////////////
+
+  // TODO: Determine from the configuration file
+  const auto generate_package{true};
+
+  if (generate_package) {
+    const auto pkg_path{output.path() / "pkg"};
+    // TODO: Only if "pkg" is set?
+    sourcemeta::core::parallel_for_each(
+        resolver.begin(), resolver.end(),
+        [&output, &schemas_path, &resolver, &mutex, &adapter,
+         &mark_version_path,
+         &pkg_path](const auto &schema, const auto threads, const auto cursor) {
+          print_progress(mutex, threads, "Packaging", schema.first, cursor,
+                         resolver.size());
+          // TODO: Test overlaps here?
+          // TODO: Maybe indeed keep the same SENTINEL structure, and deal with
+          // it by always exposing a resolve() for the URI that gets you the
+          // schema and TS type? The resolve signature itself on TS can be an
+          // enum of all valid URIs
+          DISPATCH<sourcemeta::one::GENERATE_PKG_EXTRACT_JSON>(
+              pkg_path / (schema.second.relative_path.string() + ".json"),
+              {schemas_path / schema.second.relative_path / SENTINEL /
+                   "bundle.metapack",
+               mark_version_path},
+              resolver, mutex, "Packaging", schema.first, "bundle", adapter,
+              output);
+        },
+        concurrency, THREAD_STACK_SIZE);
+
+    DISPATCH<sourcemeta::one::GENERATE_PKG_COPY_FILE>(
+        pkg_path / ".npmignore",
+        {DATA_DIRECTORY / "pkg" / "npm" / "npmignore", mark_version_path},
+        resolver, mutex, "Packaging", "npm", "npmignore", adapter, output);
+
+    // TODO: Also do this with a dispatch that takes base and just fills in some
+    // details
+    auto manifest_npm{sourcemeta::core::JSON::make_object()};
+    manifest_npm.assign("name", sourcemeta::core::JSON{"XXXXXXXX"});
+    manifest_npm.assign("version", sourcemeta::core::JSON{"0.0.0"});
+    output.write_json_if_different(pkg_path / "package.json", manifest_npm);
   }
 
   // TODO: Print the size of the output directory here
