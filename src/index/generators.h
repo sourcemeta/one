@@ -356,8 +356,7 @@ struct GENERATE_BLAZE_TEMPLATE {
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_json(
         destination, result, "application/json",
-        // Don't compress, as we only need to internally read from disk
-        sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
