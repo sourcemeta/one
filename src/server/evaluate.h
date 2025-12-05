@@ -86,10 +86,16 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
             sourcemeta::core::schema_official_resolver,
             current_location.at("baseDialect").to_string(),
             current_location.at("dialect").to_string())};
-        const auto walker_result{sourcemeta::core::schema_official_walker(
+        const auto &walker_result{sourcemeta::core::schema_official_walker(
             evaluate_path.back().to_property(), vocabularies)};
-        step.assign("vocabulary",
-                    sourcemeta::core::to_json(walker_result.vocabulary));
+        if (walker_result.vocabulary.has_value()) {
+          step.assign(
+              "vocabulary",
+              sourcemeta::core::to_json(std::string{sourcemeta::core::to_string(
+                  walker_result.vocabulary.value())}));
+        } else {
+          step.assign("vocabulary", sourcemeta::core::to_json(nullptr));
+        }
 
         steps.push_back(std::move(step));
       })};

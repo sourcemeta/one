@@ -148,7 +148,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
               return std::get<0>(context).get()(identifier, callback);
             },
             base_dialect.value(), dialect.value())};
-        const auto walker_result{
+        const auto &walker_result{
             sourcemeta::core::schema_official_walker("examples", vocabularies)};
         if (walker_result.type ==
                 sourcemeta::core::SchemaKeywordType::Annotation ||

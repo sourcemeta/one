@@ -566,12 +566,12 @@ auto main(int argc, char *argv[]) noexcept -> int {
               << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    std::cerr << "error: " << error.what() << "\n  " << error.id()
+    std::cerr << "error: " << error.what() << "\n  " << error.identifier()
               << "\n\nDid you forget to register a schema with such URI in the "
                  "one?\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    std::cerr << "error: " << error.what() << "\n  " << error.id()
+    std::cerr << "error: " << error.what() << "\n  " << error.identifier()
               << "\n    at schema location \"";
     sourcemeta::core::stringify(error.location(), std::cerr);
     std::cerr << "\"\n";

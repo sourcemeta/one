@@ -17,7 +17,9 @@
 
 #include <cassert>    // assert
 #include <filesystem> // std::filesystem
+#include <sstream>    // std::ostringstream
 #include <utility>    // std::move
+#include <variant>    // std::visit
 
 namespace sourcemeta::one {
 
@@ -385,10 +387,14 @@ struct GENERATE_STATS {
       }
 
       for (const auto &property : entry.subschema.get().as_object()) {
-        const auto walker_result{sourcemeta::core::schema_official_walker(
+        const auto &walker_result{sourcemeta::core::schema_official_walker(
             property.first, entry.vocabularies)};
-        const auto vocabulary{walker_result.vocabulary.value_or("unknown")};
-        result[vocabulary][property.first] += 1;
+        if (walker_result.vocabulary.has_value()) {
+          result[std::string{sourcemeta::core::to_string(
+              walker_result.vocabulary.value())}][property.first] += 1;
+        } else {
+          result["unknown"][property.first] += 1;
+        }
       }
     }
 

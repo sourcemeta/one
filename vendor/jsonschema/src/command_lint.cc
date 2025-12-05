@@ -56,50 +56,59 @@ static auto get_lint_callback(sourcemeta::core::JSON &errors_array,
   return [&entry, &errors_array,
           output_json](const auto &pointer, const auto &name,
                        const auto &message, const auto &result) {
-    const auto schema_location{result.locations.empty()
-                                   ? pointer
-                                   : pointer.concat(result.locations.front())};
-    const auto position{entry.positions.get(schema_location)};
-
-    if (output_json) {
-      auto error_obj = sourcemeta::core::JSON::make_object();
-
-      error_obj.assign("path", sourcemeta::core::JSON{entry.first.string()});
-      error_obj.assign("id", sourcemeta::core::JSON{name});
-      error_obj.assign("message", sourcemeta::core::JSON{message});
-      error_obj.assign("description",
-                       sourcemeta::core::to_json(result.description));
-      error_obj.assign("schemaLocation",
-                       sourcemeta::core::to_json(schema_location));
-      if (position.has_value()) {
-        error_obj.assign("position",
-                         sourcemeta::core::to_json(position.value()));
-      } else {
-        error_obj.assign("position", sourcemeta::core::to_json(nullptr));
-      }
-
-      errors_array.push_back(error_obj);
+    std::vector<sourcemeta::core::Pointer> locations;
+    if (result.locations.empty()) {
+      locations.emplace_back();
     } else {
-      std::cout << std::filesystem::relative(entry.first).string();
-      if (position.has_value()) {
-        std::cout << ":";
-        std::cout << std::get<0>(position.value());
-        std::cout << ":";
-        std::cout << std::get<1>(position.value());
-      } else {
-        std::cout << ":<unknown>:<unknown>";
+      for (const auto &location : result.locations) {
+        locations.push_back(location);
       }
+    }
 
-      std::cout << ":\n";
-      std::cout << "  " << message << " (" << name << ")\n";
-      std::cout << "    at location \"";
-      sourcemeta::core::stringify(schema_location, std::cout);
-      std::cout << "\"\n";
+    for (const auto &location : locations) {
+      const auto schema_location{pointer.concat(location)};
+      const auto position{entry.positions.get(schema_location)};
 
-      if (result.description.has_value()) {
-        reindent(result.description.value(), "    ", std::cout);
-        if (result.description.value().back() != '\n') {
-          std::cout << "\n";
+      if (output_json) {
+        auto error_obj = sourcemeta::core::JSON::make_object();
+
+        error_obj.assign("path", sourcemeta::core::JSON{entry.first.string()});
+        error_obj.assign("id", sourcemeta::core::JSON{name});
+        error_obj.assign("message", sourcemeta::core::JSON{message});
+        error_obj.assign("description",
+                         sourcemeta::core::to_json(result.description));
+        error_obj.assign("schemaLocation",
+                         sourcemeta::core::to_json(schema_location));
+        if (position.has_value()) {
+          error_obj.assign("position",
+                           sourcemeta::core::to_json(position.value()));
+        } else {
+          error_obj.assign("position", sourcemeta::core::to_json(nullptr));
+        }
+
+        errors_array.push_back(error_obj);
+      } else {
+        std::cout << std::filesystem::relative(entry.first).string();
+        if (position.has_value()) {
+          std::cout << ":";
+          std::cout << std::get<0>(position.value());
+          std::cout << ":";
+          std::cout << std::get<1>(position.value());
+        } else {
+          std::cout << ":<unknown>:<unknown>";
+        }
+
+        std::cout << ":\n";
+        std::cout << "  " << message << " (" << name << ")\n";
+        std::cout << "    at location \"";
+        sourcemeta::core::stringify(schema_location, std::cout);
+        std::cout << "\"\n";
+
+        if (result.description.has_value()) {
+          reindent(result.description.value(), "    ", std::cout);
+          if (result.description.value().back() != '\n') {
+            std::cout << "\n";
+          }
         }
       }
     }
@@ -187,7 +196,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
     for (const auto &entry : for_each_json(options)) {
       const auto configuration_path{find_configuration(entry.first)};
       const auto &configuration{
-          read_configuration(options, configuration_path)};
+          read_configuration(options, configuration_path, entry.first)};
       const auto dialect{default_dialect(options, configuration)};
 
       const auto &custom_resolver{
@@ -238,14 +247,15 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
           output << "\n";
         }
       } else {
-        result = false;
+        // Exception was caught - exit immediately with error code 1
+        throw Fail{EXIT_FAILURE};
       }
     }
   } else {
     for (const auto &entry : for_each_json(options)) {
       const auto configuration_path{find_configuration(entry.first)};
       const auto &configuration{
-          read_configuration(options, configuration_path)};
+          read_configuration(options, configuration_path, entry.first)};
       const auto dialect{default_dialect(options, configuration)};
       const auto &custom_resolver{
           resolver(options, options.contains("http"), dialect, configuration)};
@@ -263,7 +273,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               if (subresult.first) {
                 return EXIT_SUCCESS;
               } else {
-                return EXIT_FAILURE;
+                // Return 2 for logical lint failures
+                return 2;
               }
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
@@ -274,8 +285,12 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
             }
           });
 
-      if (wrapper_result != EXIT_SUCCESS) {
+      if (wrapper_result == 2) {
+        // Logical lint failure
         result = false;
+      } else if (wrapper_result != EXIT_SUCCESS) {
+        // Exception was caught - exit immediately with error code 1
+        throw Fail{EXIT_FAILURE};
       }
     }
   }
@@ -299,6 +314,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   }
 
   if (!result) {
-    throw Fail{EXIT_FAILURE};
+    // Report a different exit code for linting failures, to
+    // distinguish them from other errors
+    throw Fail{2};
   }
 }

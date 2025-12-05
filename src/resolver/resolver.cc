@@ -327,10 +327,8 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
             .collection = collection})};
   lock.unlock();
   if (!result.second && result.first->second.path != path) {
-    std::ostringstream error;
-    error << "Cannot register the same identifier twice: "
-          << result.first->first;
-    throw sourcemeta::core::SchemaError(error.str());
+    throw sourcemeta::core::SchemaFrameError(
+        result.first->first, "Cannot register the same identifier twice");
   }
 
   return {result.first->second.original_identifier, result.first->first};

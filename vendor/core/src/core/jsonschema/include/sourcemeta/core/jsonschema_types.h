@@ -3,20 +3,16 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema_vocabularies.h>
 
 #include <cstdint>       // std::uint8_t
 #include <functional>    // std::function, std::reference_wrapper
 #include <optional>      // std::optional
-#include <set>           // std::set
 #include <string>        // std::string
 #include <string_view>   // std::string_view
-#include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 
 namespace sourcemeta::core {
-
-/// @ingroup jsonschema
-/// A set of vocabularies
-using Vocabularies = std::unordered_map<JSON::String, bool>;
 
 // Take a URI and get back a schema
 /// @ingroup jsonschema
@@ -161,12 +157,27 @@ struct SchemaWalkerResult {
   /// The walker strategy to continue traversing across the schema
   SchemaKeywordType type;
   /// The vocabulary associated with the keyword, if any
-  std::optional<std::string> vocabulary;
+  std::optional<Vocabularies::URI> vocabulary;
   /// The keywords a given keyword depends on (if any) during the evaluation
   /// process
-  std::set<std::string> dependencies;
-  /// The JSON instance types that this keyword applies to (or to all of them)
-  std::set<JSON::Type> instances;
+  std::unordered_set<std::string_view> dependencies;
+  /// The JSON instance types that this keyword applies to (empty means all)
+  JSON::TypeSet instances;
+
+  // Prevent accidental copies, as walker results are always returned by
+  // reference
+  SchemaWalkerResult(const SchemaWalkerResult &) = delete;
+  auto operator=(const SchemaWalkerResult &) -> SchemaWalkerResult & = delete;
+  SchemaWalkerResult(SchemaWalkerResult &&) = default;
+  auto operator=(SchemaWalkerResult &&) -> SchemaWalkerResult & = default;
+  ~SchemaWalkerResult() = default;
+
+  SchemaWalkerResult(SchemaKeywordType type_,
+                     std::optional<Vocabularies::URI> vocabulary_,
+                     std::unordered_set<std::string_view> dependencies_,
+                     JSON::TypeSet instances_)
+      : type{type_}, vocabulary{std::move(vocabulary_)},
+        dependencies{std::move(dependencies_)}, instances{instances_} {}
 };
 
 /// @ingroup jsonschema
@@ -181,8 +192,8 @@ struct SchemaWalkerResult {
 ///
 /// - sourcemeta::core::schema_official_walker
 /// - sourcemeta::core::schema_walker_none
-using SchemaWalker =
-    std::function<SchemaWalkerResult(std::string_view, const Vocabularies &)>;
+using SchemaWalker = std::function<const SchemaWalkerResult &(
+    std::string_view, const Vocabularies &)>;
 
 /// @ingroup jsonschema
 /// An entry of a schema iterator.
@@ -191,9 +202,9 @@ struct SchemaIteratorEntry {
   std::optional<Pointer> parent;
   // TODO: Turn this into a weak pointer
   Pointer pointer;
-  std::optional<std::string> dialect;
+  std::optional<JSON::String> dialect;
   Vocabularies vocabularies;
-  std::optional<std::string> base_dialect;
+  std::optional<JSON::String> base_dialect;
   std::reference_wrapper<const JSON> subschema;
 
   // TODO: These two pointer templates contain some overlap.
