@@ -15,11 +15,12 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/linter.h>
 
-#include <cassert>    // assert
-#include <filesystem> // std::filesystem
-#include <sstream>    // std::ostringstream
-#include <utility>    // std::move
-#include <variant>    // std::visit
+#include <cassert>      // assert
+#include <filesystem>   // std::filesystem
+#include <shared_mutex> // std::shared_mutex, std::shared_lock, std::unique_lock
+#include <sstream>      // std::ostringstream
+#include <utility>      // std::move
+#include <variant>      // std::visit
 
 namespace sourcemeta::one {
 
@@ -43,10 +44,10 @@ struct GENERATE_MATERIALISED_SCHEMA {
     // Validate the schemas against their meta-schemas
     sourcemeta::blaze::SimpleOutput output{schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
-    const auto result{evaluator.validate(
-        GENERATE_MATERIALISED_SCHEMA::compile(dialect_identifier.value(),
-                                              metaschema.value(), data.second),
-        schema.value(), std::ref(output))};
+    const auto &compiled_template{GENERATE_MATERIALISED_SCHEMA::compile(
+        dialect_identifier.value(), metaschema.value(), data.second)};
+    const auto result{evaluator.validate(compiled_template, schema.value(),
+                                         std::ref(output))};
     if (!result) {
       throw MetaschemaError(output);
     }
@@ -101,21 +102,30 @@ private:
                       const sourcemeta::core::JSON &schema,
                       const sourcemeta::one::Resolver &resolver)
       -> const sourcemeta::blaze::Template & {
-    static std::mutex mutex;
+    static std::shared_mutex mutex;
     static std::unordered_map<std::string, sourcemeta::blaze::Template> cache;
-    std::lock_guard<std::mutex> lock{mutex};
+
+    {
+      std::shared_lock<std::shared_mutex> read_lock{mutex};
+      const auto match{cache.find(cache_key)};
+      if (match != cache.cend()) {
+        return match->second;
+      }
+    }
+
+    std::unique_lock<std::shared_mutex> write_lock{mutex};
     const auto match{cache.find(cache_key)};
-    if (match == cache.cend()) {
-      auto schema_template{sourcemeta::blaze::compile(
-          schema, sourcemeta::core::schema_official_walker,
-          [&resolver](const auto identifier) { return resolver(identifier); },
-          sourcemeta::blaze::default_schema_compiler,
-          // The point of this class is to show nice errors to the user
-          sourcemeta::blaze::Mode::Exhaustive)};
-      return cache.emplace(cache_key, std::move(schema_template)).first->second;
-    } else {
+    if (match != cache.cend()) {
       return match->second;
     }
+
+    auto schema_template{sourcemeta::blaze::compile(
+        schema, sourcemeta::core::schema_official_walker,
+        [&resolver](const auto identifier) { return resolver(identifier); },
+        sourcemeta::blaze::default_schema_compiler,
+        // The point of this class is to show nice errors to the user
+        sourcemeta::blaze::Mode::Exhaustive)};
+    return cache.emplace(cache_key, std::move(schema_template)).first->second;
   }
 };
 
