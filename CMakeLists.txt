@@ -62,6 +62,7 @@ if(ONE_INDEX)
   add_subdirectory(src/resolver)
   add_subdirectory(src/html)
   add_subdirectory(src/web)
+  add_subdirectory(src/pkg)
   add_subdirectory(src/index)
   add_subdirectory(collections)
   add_dependencies(sourcemeta_one_index

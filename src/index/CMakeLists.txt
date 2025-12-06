@@ -5,12 +5,13 @@ sourcemeta_executable(NAMESPACE sourcemeta PROJECT one NAME index
 set_target_properties(sourcemeta_one_index PROPERTIES OUTPUT_NAME sourcemeta-one-index)
 
 target_compile_definitions(sourcemeta_one_index
-  PRIVATE SOURCEMETA_ONE_COLLECTIONS="${ONE_PREFIX}/share/sourcemeta/one/collections")
+  PRIVATE SOURCEMETA_ONE_DATA_DIRECTORY="${ONE_PREFIX}/share/sourcemeta/one")
 
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::configuration)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::web)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::pkg)
 
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::build)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::uri)
