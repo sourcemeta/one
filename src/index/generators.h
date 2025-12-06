@@ -50,15 +50,16 @@ struct GENERATE_MATERIALISED_SCHEMA {
     if (!result) {
       throw MetaschemaError(output);
     }
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::core::format(
         schema.value(), sourcemeta::core::schema_official_walker,
         [&callback, &data](const auto identifier) {
           return data.second.get()(identifier, callback);
         },
         dialect_identifier.value());
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema.value(), "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
