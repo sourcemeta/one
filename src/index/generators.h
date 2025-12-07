@@ -286,14 +286,15 @@ struct GENERATE_BUNDLE {
                              });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
     assert(dialect_identifier.has_value());
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::core::format(
         schema, sourcemeta::core::schema_official_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
         dialect_identifier.value());
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
@@ -321,14 +322,15 @@ struct GENERATE_EDITOR {
                                  });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
     assert(dialect_identifier.has_value());
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::core::format(
         schema, sourcemeta::core::schema_official_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
         dialect_identifier.value());
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
