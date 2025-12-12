@@ -1,0 +1,15 @@
+{
+  "contents": {
+    "jsonld": {
+      "title": "JSON for Linking Data",
+      "description": "Data is messy and disconnected. JSON-LD organizes and connects it, creating a better Web",
+      "github": "json-ld",
+      "website": "https://json-ld.org",
+      "contents": {
+        "v1.0": {
+          "include": "./jsonschema.json"
+        }
+      }
+    }
+  }
+}
