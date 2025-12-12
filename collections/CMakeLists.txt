@@ -25,4 +25,7 @@ include("./openapi/v2.0/one.cmake")
 include("./openapi/v3.0/one.cmake")
 include("./openapi/v3.1/one.cmake")
 include("./openapi/v3.2/one.cmake")
+include("./w3c/wot/v1.0/one.cmake")
+include("./w3c/wot/v1.1/one.cmake")
+
 add_custom_target(sourcemeta_one_collections DEPENDS ${ONE_COLLECTION_SOURCES})
