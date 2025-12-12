@@ -1,0 +1,26 @@
+From 24d099d855d80006675069fc6453a93af1f47ec0 Mon Sep 17 00:00:00 2001
+From: Juan Cruz Viotti <jv@jviotti.com>
+Date: Fri, 12 Dec 2025 18:38:33 +0100
+Subject: [PATCH] Fix `$schema` keyword with trailing space in v1
+
+Signed-off-by: Juan Cruz Viotti <jv@jviotti.com>
+---
+ td/v1/validation/td-json-schema-validation.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/td/v1/validation/td-json-schema-validation.json b/td/v1/validation/td-json-schema-validation.json
+index b581790..aacdfcf 100644
+--- a/td/v1/validation/td-json-schema-validation.json
++++ b/td/v1/validation/td-json-schema-validation.json
+@@ -1,7 +1,7 @@
+ {
+   "title": "WoT TD Schema - 16 October 2019",
+   "description": "JSON Schema for validating TD instances against the TD model. TD instances can be with or without terms that have default values",
+-  "$schema ": "http://json-schema.org/draft-07/schema#",
++  "$schema": "http://json-schema.org/draft-07/schema#",
+   "definitions": {
+     "anyUri": {
+       "type": "string",
+-- 
+2.52.0
+

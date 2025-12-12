@@ -1,0 +1,41 @@
+From dc3d09a1790f9ca3e2d22ae922f5b9548a73a20c Mon Sep 17 00:00:00 2001
+From: Juan Cruz Viotti <jv@jviotti.com>
+Date: Fri, 12 Dec 2025 18:46:18 +0100
+Subject: [PATCH] Remove `$id` in v1.1
+
+TODO: Ideally have a way for One to override the identifier in cases
+like this one for better naming?
+
+Signed-off-by: Juan Cruz Viotti <jv@jviotti.com>
+---
+ td/v1.1/validation/td-json-schema-validation.json | 1 -
+ td/v1.1/validation/tm-json-schema-validation.json | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/td/v1.1/validation/td-json-schema-validation.json b/td/v1.1/validation/td-json-schema-validation.json
+index 6c655d8..ce7b108 100644
+--- a/td/v1.1/validation/td-json-schema-validation.json
++++ b/td/v1.1/validation/td-json-schema-validation.json
+@@ -3,7 +3,6 @@
+   "version": "1.1-12-March-2025",
+   "description": "JSON Schema for validating TD instances against the TD information model. TD instances can be with or without terms that have default values",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+-  "$id": "https://raw.githubusercontent.com/w3c/wot-thing-description/main/validation/td-json-schema-validation.json",
+   "definitions": {
+     "anyUri": {
+       "type": "string"
+diff --git a/td/v1.1/validation/tm-json-schema-validation.json b/td/v1.1/validation/tm-json-schema-validation.json
+index 0b502d8..b2e1b28 100644
+--- a/td/v1.1/validation/tm-json-schema-validation.json
++++ b/td/v1.1/validation/tm-json-schema-validation.json
+@@ -3,7 +3,6 @@
+   "version": "1.1-12-March-2025",
+   "description": "JSON Schema for validating Thing Models. This is automatically generated from the WoT TD Schema.",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+-  "$id": "https://raw.githubusercontent.com/w3c/wot-thing-description/main/validation/tm-json-schema-validation.json",
+   "definitions": {
+     "anyUri": {
+       "type": "string"
+-- 
+2.52.0
+
