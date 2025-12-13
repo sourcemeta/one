@@ -94,6 +94,8 @@ the free one) [^1].  Simply add the corresponding identifier to your
 | `@openapi/v2.0` | [OpenAPI](https://www.openapis.org) | The world's most widely used API description standard | [Link](https://schemas.sourcemeta.com/openapi/v2.0) |
 | `@w3c/wot/v1.1` | [W3C Web of Things](https://www.w3.org/WoT/) | The Web of Things (WoT) seeks to counter the fragmentation of the IoT by using and extending existing, standardized Web technologies | [Link](https://schemas.sourcemeta.com/w3c/wot/v1.1) |
 | `@w3c/wot/v1.0` | [W3C Web of Things](https://www.w3.org/WoT/) | The Web of Things (WoT) seeks to counter the fragmentation of the IoT by using and extending existing, standardized Web technologies | [Link](https://schemas.sourcemeta.com/w3c/wot/v1.0) |
+| `@jsonld/v1.1` | [JSON for Linking Data](https://json-ld.org) | Data is messy and disconnected. JSON-LD organizes and connects it, creating a better Web | [Link](https://schemas.sourcemeta.com/jsonld/v1.1) |
+| `@jsonld/v1.0` | [JSON for Linking Data](https://json-ld.org) | Data is messy and disconnected. JSON-LD organizes and connects it, creating a better Web | [Link](https://schemas.sourcemeta.com/jsonld/v1.0) |
 | `@sourcemeta/one` | [Sourcemeta One](https://one.sourcemeta.com) | Schemas that define the Sourcemeta One service itself | [Link](https://schemas.sourcemeta.com/sourcemeta/one) |
 | `@sourcemeta/std` | [Sourcemeta Standard Library](https://www.sourcemeta.com/products/std) | The Sourcemeta JSON Schema Standard Library | [Link](https://schemas.sourcemeta.com/sourcemeta/std) |
 

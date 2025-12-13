@@ -37,7 +37,9 @@
     "@openapi/v3.1",
     "@openapi/v3.2",
     "@w3c/wot/v1.0",
-    "@w3c/wot/v1.1"
+    "@w3c/wot/v1.1",
+    "@jsonld/v1.0",
+    "@jsonld/v1.1"
   ],
   "contents": {
     "sourcemeta": {
