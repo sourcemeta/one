@@ -1,0 +1,6 @@
+{
+  "title": "The JSON Schema registry of extensions",
+  "description": "A growing collection of popular extensions to JSON Schema",
+  "github": "sourcemeta/extensions",
+  "path": "./schemas"
+}

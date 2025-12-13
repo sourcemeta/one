@@ -98,6 +98,7 @@ the free one) [^1].  Simply add the corresponding identifier to your
 | `@jsonld/v1.0` | [JSON for Linking Data](https://json-ld.org) | Data is messy and disconnected. JSON-LD organizes and connects it, creating a better Web | [Link](https://schemas.sourcemeta.com/jsonld/v1.0) |
 | `@sourcemeta/one` | [Sourcemeta One](https://one.sourcemeta.com) | Schemas that define the Sourcemeta One service itself | [Link](https://schemas.sourcemeta.com/sourcemeta/one) |
 | `@sourcemeta/std` | [Sourcemeta Standard Library](https://www.sourcemeta.com/products/std) | The Sourcemeta JSON Schema Standard Library | [Link](https://schemas.sourcemeta.com/sourcemeta/std) |
+| `@sourcemeta/extensions` | [Sourcemeta Extension Vocabularies](https://github.com/sourcemeta/extensions) | The JSON Schema registry of extensions | [Link](https://schemas.sourcemeta.com/sourcemeta/extensions) |
 
 [^1]: The built-in collections we offer are redistributed directly from their
   upstream sources *without modification*. As such, any issues, errors, or

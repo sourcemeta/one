@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/extension/database/v1": false
+  },
+  "$dynamicAnchor": "meta",
+  "title": "Database Vocabulary",
+  "description": "Keywords for describing database objects and extended types in JSON Schema",
+  "examples": [
+    {
+      "sqlObjectName": "EMPLOYEES",
+      "sqlObjectType": "table",
+      "sqlObjectOwner": "HR",
+      "sqlPrimaryKey": "EMPLOYEE_ID"
+    },
+    {
+      "extendedType": "date"
+    },
+    {
+      "extendedType": "number",
+      "sqlPrecision": 10,
+      "sqlScale": 2
+    }
+  ],
+  "x-documentation": "https://github.com/sourcemeta-research/vocabularies/blob/main/specs/database/v1.markdown",
+  "properties": {
+    "sqlObjectName": {
+      "description": "Name of the database object being described",
+      "$ref": "#/$defs/identifier"
+    },
+    "sqlObjectOwner": {
+      "description": "Name of the owner of the database object",
+      "$ref": "#/$defs/identifier"
+    },
+    "sqlObjectType": {
+      "description": "Type of the database object",
+      "enum": [ "table", "view", "type" ]
+    },
+    "sqlPrimaryKey": {
+      "description": "Name or names of the primary key column(s)",
+      "type": [ "string", "array" ],
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/identifier"
+      }
+    },
+    "sqlForeignKey": {
+      "description": "Foreign key references to other database objects",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$dynamicRef": "#meta"
+      }
+    },
+    "sqlUnique": {
+      "description": "Columns or combinations of columns with unique constraints",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "sqlPrecision": {
+      "description": "Precision for numeric or timestamp types",
+      "type": "integer"
+    },
+    "sqlScale": {
+      "description": "Scale for numeric types",
+      "type": "integer"
+    },
+    "extendedType": {
+      "description": "Extended type annotation for database-specific types beyond standard JSON types",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/extended-type"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/extended-type"
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string"
+    },
+    "extended-type": {
+      "enum": [
+        "object",
+        "array",
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "null",
+        "date",
+        "timestamp",
+        "timestampTz",
+        "interval",
+        "binary",
+        "double",
+        "float"
+      ]
+    }
+  }
+}

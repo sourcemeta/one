@@ -13,6 +13,7 @@
   },
   "extends": [
     "@sourcemeta/one",
+    "@sourcemeta/extensions",
     "@geojson/v1.0.5",
     "@geojson/v1.0.4",
     "@geojson/v1.0.3",
