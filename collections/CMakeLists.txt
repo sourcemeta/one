@@ -2,6 +2,7 @@ set(ONE_COLLECTION_SOURCES)
 
 include("./sourcemeta/std/v0/one.cmake")
 include("./sourcemeta/one/one.cmake")
+include("./sourcemeta/extensions/one.cmake")
 include("./geojson/v1.0.0/one.cmake")
 include("./geojson/v1.0.1/one.cmake")
 include("./geojson/v1.0.2/one.cmake")
