@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Stats API Response",
+  "description": "The response format for the schema statistics API endpoint",
   "type": "object",
   "propertyNames": {
     "enum": [

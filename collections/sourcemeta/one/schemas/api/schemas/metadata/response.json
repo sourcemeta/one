@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Metadata API Response",
+  "description": "The response format for the schema metadata API endpoint",
   "$ref": "#base",
   "required": [ "breadcrumb", "examples" ],
   "properties": {

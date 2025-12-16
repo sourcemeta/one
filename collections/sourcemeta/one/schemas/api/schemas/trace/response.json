@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Trace API Response",
+  "description": "The response format for the schema trace API endpoint",
   "type": "object",
   "required": [ "valid", "steps" ],
   "properties": {

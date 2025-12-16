@@ -10,7 +10,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 130
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.health" == 100
+jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/v2.0/schema"
@@ -142,7 +142,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 532
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.health" == 84
+jsonpath "$.health" == 67
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/geojson/v1.0.5/point"
@@ -197,7 +197,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 269
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.health" == 100
+jsonpath "$.health" == 67
 jsonpath "$.dependencies" == 3
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/bundling/double"

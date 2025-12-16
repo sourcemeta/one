@@ -158,7 +158,7 @@ TEST_F(ResolverTest, example_official_2020_12_meta) {
   EXPECT_TRUE(
       resolver("https://json-schema.org/draft/2020-12/schema").has_value());
   EXPECT_EQ(resolver("https://json-schema.org/draft/2020-12/schema"),
-            sourcemeta::core::schema_official_resolver(
+            sourcemeta::core::schema_resolver(
                 "https://json-schema.org/draft/2020-12/schema"));
 }
 
