@@ -83,10 +83,10 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
         const auto &current_location{
             static_locations.at(instruction.keyword_location)};
         const auto vocabularies{sourcemeta::core::vocabularies(
-            sourcemeta::core::schema_official_resolver,
+            sourcemeta::core::schema_resolver,
             current_location.at("baseDialect").to_string(),
             current_location.at("dialect").to_string())};
-        const auto &walker_result{sourcemeta::core::schema_official_walker(
+        const auto &walker_result{sourcemeta::core::schema_walker(
             evaluate_path.back().to_property(), vocabularies)};
         if (walker_result.vocabulary.has_value()) {
           step.assign(

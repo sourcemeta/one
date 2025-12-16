@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One API Error",
+  "description": "The error response format returned by the Sourcemeta One API endpoints",
   "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/problem-details/problem.json",
   "required": [ "title", "status", "detail" ],
   "properties": {

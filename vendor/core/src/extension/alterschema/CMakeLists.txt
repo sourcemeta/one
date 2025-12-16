@@ -31,6 +31,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME alterschema
     linter/maximum_real_for_integer.h
     linter/draft_official_dialect_without_empty_fragment.h
     linter/minimum_real_for_integer.h
+    linter/required_properties_in_properties.h
     linter/single_type_array.h
     linter/enum_to_const.h
     linter/additional_properties_default.h
@@ -40,6 +41,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME alterschema
     linter/items_array_default.h
     linter/items_schema_default.h
     linter/multiple_of_default.h
+    linter/non_applicable_additional_items.h
     linter/pattern_properties_default.h
     linter/properties_default.h
     linter/unevaluated_items_default.h
@@ -48,7 +50,6 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME alterschema
     linter/unsatisfiable_min_properties.h
     linter/content_media_type_without_encoding.h
     linter/content_schema_without_media_type.h
-    linter/additional_items_with_schema_items.h
     linter/non_applicable_type_specific_keywords.h
     linter/unnecessary_allof_ref_wrapper_modern.h
     linter/unnecessary_allof_ref_wrapper_draft.h
@@ -63,16 +64,20 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME alterschema
     linter/then_empty.h
     linter/else_empty.h
     linter/then_without_if.h
+    linter/top_level_title.h
+    linter/top_level_description.h
+    linter/title_description_equal.h
+    linter/title_trailing_period.h
+    linter/description_trailing_period.h
+    linter/title_trim.h
+    linter/description_trim.h
     linter/property_names_type_default.h
     linter/property_names_default.h
     linter/draft_ref_siblings.h
     linter/definitions_to_defs.h
     linter/unknown_keywords_prefix.h
     linter/unknown_local_ref.h
-    linter/non_applicable_enum_validation_keywords.h
-
-    # Strict
-    strict/required_properties_in_properties.h)
+    linter/non_applicable_enum_validation_keywords.h)
 
 if(SOURCEMETA_CORE_INSTALL)
   sourcemeta_library_install(NAMESPACE sourcemeta PROJECT core NAME alterschema)

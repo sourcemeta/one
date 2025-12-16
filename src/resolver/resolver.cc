@@ -110,7 +110,7 @@ auto Resolver::operator()(
   auto result{this->views.find(identifier)};
   // If we don't recognise the schema, try a fallback as a last resort
   if (result == this->views.cend()) {
-    return sourcemeta::core::schema_official_resolver(identifier);
+    return sourcemeta::core::schema_resolver(identifier);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ auto Resolver::operator()(
                                 result->second.dialect)
                                 .has_value()};
   frame.analyse(
-      schema, sourcemeta::core::schema_official_walker,
+      schema, sourcemeta::core::schema_walker,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
       },
@@ -301,8 +301,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // function that just checks for string equality in an `std::unordered_map`
   // of official dialects without constructing the final object
   const auto is_official_dialect{
-      sourcemeta::core::schema_official_resolver(raw_dialect.value())
-          .has_value()};
+      sourcemeta::core::schema_resolver(raw_dialect.value()).has_value()};
   auto current_dialect{is_official_dialect
                            ? raw_dialect.value()
                            : rebase(collection,

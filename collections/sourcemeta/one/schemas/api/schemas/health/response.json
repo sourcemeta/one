@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Health API Response",
+  "description": "The response format for the schema health API endpoint",
   "type": "object",
   "required": [ "score", "errors" ],
   "properties": {

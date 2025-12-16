@@ -52,7 +52,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
     }
 
     sourcemeta::core::format(
-        schema.value(), sourcemeta::core::schema_official_walker,
+        schema.value(), sourcemeta::core::schema_walker,
         [&callback, &data](const auto identifier) {
           return data.second.get()(identifier, callback);
         },
@@ -107,7 +107,7 @@ private:
     const auto match{cache.find(cache_key)};
     if (match == cache.cend()) {
       auto schema_template{sourcemeta::blaze::compile(
-          schema, sourcemeta::core::schema_official_walker,
+          schema, sourcemeta::core::schema_walker,
           [&resolver](const auto identifier) { return resolver(identifier); },
           sourcemeta::blaze::default_schema_compiler,
           // The point of this class is to show nice errors to the user
@@ -156,7 +156,7 @@ struct GENERATE_FRAME_LOCATIONS {
         sourcemeta::one::read_json(dependencies.front(), std::ref(tracker))};
     sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::Locations};
-    frame.analyse(contents, sourcemeta::core::schema_official_walker,
+    frame.analyse(contents, sourcemeta::core::schema_walker,
                   [&callback, &resolver](const auto identifier) {
                     return resolver(identifier, callback);
                   });
@@ -184,7 +184,7 @@ struct GENERATE_DEPENDENCIES {
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
     auto result{sourcemeta::core::JSON::make_array()};
     sourcemeta::core::dependencies(
-        contents, sourcemeta::core::schema_official_walker,
+        contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -229,7 +229,7 @@ struct GENERATE_HEALTH {
 
     auto errors{sourcemeta::core::JSON::make_array()};
     const auto result = bundle.check(
-        contents, sourcemeta::core::schema_official_walker,
+        contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -280,14 +280,14 @@ struct GENERATE_BUNDLE {
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(dependencies.front())};
-    sourcemeta::core::bundle(schema, sourcemeta::core::schema_official_walker,
+    sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
                              [&callback, &resolver](const auto identifier) {
                                return resolver(identifier, callback);
                              });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
     assert(dialect_identifier.has_value());
     sourcemeta::core::format(
-        schema, sourcemeta::core::schema_official_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -315,15 +315,14 @@ struct GENERATE_EDITOR {
           const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(dependencies.front())};
-    sourcemeta::core::for_editor(schema,
-                                 sourcemeta::core::schema_official_walker,
+    sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
                                  [&callback, &resolver](const auto identifier) {
                                    return resolver(identifier, callback);
                                  });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
     assert(dialect_identifier.has_value());
     sourcemeta::core::format(
-        schema, sourcemeta::core::schema_official_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -351,8 +350,8 @@ struct GENERATE_BLAZE_TEMPLATE {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
     const auto schema_template{sourcemeta::blaze::compile(
-        contents, sourcemeta::core::schema_official_walker,
-        sourcemeta::core::schema_official_resolver,
+        contents, sourcemeta::core::schema_walker,
+        sourcemeta::core::schema_resolver,
         sourcemeta::blaze::default_schema_compiler, mode)};
     const auto result{sourcemeta::blaze::to_json(schema_template)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
@@ -380,7 +379,7 @@ struct GENERATE_STATS {
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
     for (const auto &entry : sourcemeta::core::SchemaIterator{
-             schema, sourcemeta::core::schema_official_walker,
+             schema, sourcemeta::core::schema_walker,
              [&callback, &resolver](const auto identifier) {
                return resolver(identifier, callback);
              }}) {
@@ -389,7 +388,7 @@ struct GENERATE_STATS {
       }
 
       for (const auto &property : entry.subschema.get().as_object()) {
-        const auto &walker_result{sourcemeta::core::schema_official_walker(
+        const auto &walker_result{sourcemeta::core::schema_walker(
             property.first, entry.vocabularies)};
         if (walker_result.vocabulary.has_value()) {
           result[std::string{sourcemeta::core::to_string(

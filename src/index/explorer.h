@@ -149,7 +149,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
             },
             base_dialect.value(), dialect.value())};
         const auto &walker_result{
-            sourcemeta::core::schema_official_walker("examples", vocabularies)};
+            sourcemeta::core::schema_walker("examples", vocabularies)};
         if (walker_result.type ==
                 sourcemeta::core::SchemaKeywordType::Annotation ||
             walker_result.type ==

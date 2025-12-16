@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Evaluate API Response",
+  "description": "The response format for the schema evaluation API endpoint",
   "anyOf": [
     {
       "type": "object",
