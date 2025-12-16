@@ -22,7 +22,6 @@
       "const": "pure"
     },
     {
-      "title": "Rate",
       "description": "Rate",
       "x-status": "REC",
       "const": "Rate"

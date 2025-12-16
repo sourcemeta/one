@@ -17,7 +17,6 @@
       "const": "bbl"
     },
     {
-      "title": "Cubic Foot",
       "description": "Cubic Foot",
       "x-status": "REC",
       "x-symbol": "ft³",
@@ -59,14 +58,12 @@
       "const": "MMcf"
     },
     {
-      "title": "Litre",
       "description": "Litre",
       "x-status": "REC",
       "x-symbol": "l",
       "const": "l"
     },
     {
-      "title": "Cubic Metre",
       "description": "Cubic Metre",
       "x-status": "REC",
       "x-symbol": "m³",

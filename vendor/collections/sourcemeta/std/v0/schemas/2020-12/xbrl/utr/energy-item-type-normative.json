@@ -10,14 +10,12 @@
   ],
   "anyOf": [
     {
-      "title": "Barrel of Oil Equivalent",
       "description": "Barrel of Oil Equivalent",
       "x-status": "REC",
       "x-symbol": "Boe",
       "const": "Boe"
     },
     {
-      "title": "British Thermal Unit",
       "description": "British Thermal Unit",
       "x-status": "REC",
       "x-symbol": "BTU",
@@ -31,42 +29,36 @@
       "const": "ft_lb"
     },
     {
-      "title": "Thousand Barrels of Oil Equivalent",
       "description": "Thousand Barrels of Oil Equivalent",
       "x-status": "REC",
       "x-symbol": "MBoe",
       "const": "MBoe"
     },
     {
-      "title": "Thousand Cubic Foot Equivalent",
       "description": "Thousand Cubic Foot Equivalent",
       "x-status": "REC",
       "x-symbol": "Mcfe",
       "const": "Mcfe"
     },
     {
-      "title": "Millions of Barrels of Oil Equivalent",
       "description": "Millions of Barrels of Oil Equivalent",
       "x-status": "REC",
       "x-symbol": "MMBoe",
       "const": "MMBoe"
     },
     {
-      "title": "Millions of BTU",
       "description": "Millions of BTU",
       "x-status": "REC",
       "x-symbol": "MMBTU",
       "const": "MMBTU"
     },
     {
-      "title": "Calorie",
       "description": "Calorie",
       "x-status": "REC",
       "x-symbol": "Cal",
       "const": "Cal"
     },
     {
-      "title": "Joule",
       "description": "Joule",
       "x-status": "REC",
       "x-symbol": "J",
@@ -94,21 +86,18 @@
       "const": "mJ"
     },
     {
-      "title": "Megawatt-Hour",
       "description": "Megawatt-Hour",
       "x-status": "REC",
       "x-symbol": "MWh",
       "const": "MWh"
     },
     {
-      "title": "Gigawatt-Hour",
       "description": "Gigawatt-Hour",
       "x-status": "REC",
       "x-symbol": "GWh",
       "const": "GWh"
     },
     {
-      "title": "Terawatt-Hour",
       "description": "Terawatt-Hour",
       "x-status": "REC",
       "x-symbol": "TWh",
