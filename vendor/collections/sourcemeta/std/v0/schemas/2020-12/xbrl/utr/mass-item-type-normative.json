@@ -24,7 +24,6 @@
       "const": "oz"
     },
     {
-      "title": "Troy Ounce",
       "description": "Troy Ounce",
       "x-status": "REC",
       "x-symbol": "ozt",
@@ -45,14 +44,12 @@
       "const": "t"
     },
     {
-      "title": "Gram",
       "description": "Gram",
       "x-status": "REC",
       "x-symbol": "g",
       "const": "g"
     },
     {
-      "title": "Kilogram",
       "description": "Kilogram",
       "x-status": "REC",
       "x-symbol": "kg",

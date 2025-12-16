@@ -10,14 +10,12 @@
   ],
   "anyOf": [
     {
-      "title": "Acre",
       "description": "Acre",
       "x-status": "REC",
       "x-symbol": "a",
       "const": "acre"
     },
     {
-      "title": "Square Foot",
       "description": "Square Foot",
       "x-status": "REC",
       "x-symbol": "ft²",
@@ -31,14 +29,12 @@
       "const": "sqmi"
     },
     {
-      "title": "Square Yard",
       "description": "Square Yard",
       "x-status": "REC",
       "x-symbol": "yd²",
       "const": "sqyd"
     },
     {
-      "title": "Hectare",
       "description": "Hectare",
       "x-status": "REC",
       "x-symbol": "ha",

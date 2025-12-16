@@ -17,7 +17,6 @@
       "const": "ft"
     },
     {
-      "title": "Inch",
       "description": "Inch",
       "x-status": "REC",
       "x-symbol": "in",
@@ -52,7 +51,6 @@
       "const": "cm"
     },
     {
-      "title": "Decimetre",
       "description": "Decimetre",
       "x-status": "REC",
       "x-symbol": "dm",
@@ -66,7 +64,6 @@
       "const": "km"
     },
     {
-      "title": "Metre",
       "description": "Metre",
       "x-status": "REC",
       "x-symbol": "m",

@@ -5,7 +5,7 @@
   "examples": [ 1, 100, 1000 ],
   "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
   "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
-  "x-prefix-factor": 1000000000000000.0,
+  "x-prefix-factor": 1.0000000000000000e+15,
   "x-symbol": "PΩ",
   "$ref": "../unit/ohm.json"
 }
