@@ -15,7 +15,7 @@ jsonpath "$.entries[0].name" == "test"
 jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 27
+jsonpath "$.entries[0].health" == 15
 jsonpath "$.entries[0].path" == "/test"
 jsonpath "$.entries[1].name" == "sourcemeta"
 jsonpath "$.entries[1].title" == "Sourcemeta"
@@ -78,7 +78,7 @@ jsonpath "$.entries[3].health" == 0
 jsonpath "$.entries[3].path" == "/test/no-blaze"
 jsonpath "$.entries[4].name" == "hyper"
 jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].health" == 67
+jsonpath "$.entries[4].health" == 34
 jsonpath "$.entries[4].path" == "/test/hyper"
 jsonpath "$.entries[5].name" == "extension"
 jsonpath "$.entries[5].type" == "directory"
@@ -86,7 +86,7 @@ jsonpath "$.entries[5].health" == 17
 jsonpath "$.entries[5].path" == "/test/extension"
 jsonpath "$.entries[6].name" == "doc"
 jsonpath "$.entries[6].type" == "directory"
-jsonpath "$.entries[6].health" == 50
+jsonpath "$.entries[6].health" == 0
 jsonpath "$.entries[6].path" == "/test/doc"
 jsonpath "$.entries[6].title" == "A sample schema folder"
 jsonpath "$.entries[6].description" == "For testing purposes"
@@ -97,7 +97,7 @@ jsonpath "$.entries[7].health" == 25
 jsonpath "$.entries[7].path" == "/test/camelcase"
 jsonpath "$.entries[8].name" == "bundling"
 jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].health" == 84
+jsonpath "$.entries[8].health" == 59
 jsonpath "$.entries[8].path" == "/test/bundling"
 
 POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response

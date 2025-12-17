@@ -2,6 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Metadata API Response",
   "description": "The response format for the schema metadata API endpoint",
+  "examples": [
+    {
+      "bytes": 512,
+      "identifier": "https://example.com/schemas/user.json",
+      "path": "/schemas/user.json",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "dialect": "https://json-schema.org/draft/2020-12/schema",
+      "provenance": null,
+      "health": 100,
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ],
+      "examples": []
+    }
+  ],
   "$ref": "#base",
   "required": [ "breadcrumb", "examples" ],
   "properties": {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "XBRL booleanItemType",
   "description": "XBRL item type for boolean values (true or false). Based on W3C XML Schema boolean",
-  "examples": [ true, false, true ],
+  "examples": [ true, false ],
   "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
   "x-links": [
     "https://www.xbrl.org/Specification/XBRL-2.1/REC-2003-12-31/XBRL-2.1-REC-2003-12-31+corrected-errata-2013-02-20.html#_5.1.1.3",

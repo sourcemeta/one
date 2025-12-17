@@ -2,6 +2,22 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Evaluate API Response",
   "description": "The response format for the schema evaluation API endpoint",
+  "examples": [
+    {
+      "valid": true
+    },
+    {
+      "valid": false,
+      "errors": [
+        {
+          "absoluteKeywordLocation": "https://example.com/schema.json#/type",
+          "error": "Expected string but got integer",
+          "instanceLocation": "/name",
+          "keywordLocation": "/type"
+        }
+      ]
+    }
+  ],
   "anyOf": [
     {
       "type": "object",

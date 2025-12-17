@@ -2,6 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Search API Response",
   "description": "The response format for the schema search API endpoint",
+  "examples": [
+    [
+      {
+        "path": "/schemas/user.json",
+        "title": "User Schema",
+        "description": "Defines a user object"
+      }
+    ]
+  ],
   "type": "array",
   "items": {
     "type": "object",

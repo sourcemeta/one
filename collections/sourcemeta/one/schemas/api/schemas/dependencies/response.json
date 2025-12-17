@@ -2,6 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Dependencies API Response",
   "description": "The response format for the schema dependencies API endpoint",
+  "examples": [
+    [
+      {
+        "from": "https://example.com/schemas/user.json",
+        "to": "https://example.com/schemas/address.json",
+        "at": "/properties/address"
+      }
+    ]
+  ],
   "type": "array",
   "items": {
     "type": "object",
