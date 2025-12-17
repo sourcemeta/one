@@ -2,6 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Position",
   "description": "Represents a position in a JSON document as line start, column start, line end, and column end",
+  "examples": [
+    [ 1, 1, 10, 5 ]
+  ],
   "type": "array",
   "maxItems": 4,
   "minItems": 4,

@@ -2,6 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "The Sourcemeta One configuration file format",
   "description": "The configuration file format used to configured One instances",
+  "examples": [
+    {
+      "url": "https://schemas.example.com"
+    }
+  ],
   "type": "object",
   "required": [ "url" ],
   "properties": {

@@ -2,6 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Schema Health API Response",
   "description": "The response format for the schema health API endpoint",
+  "examples": [
+    {
+      "score": 100,
+      "errors": []
+    },
+    {
+      "score": 75,
+      "errors": [
+        {
+          "pointers": [ "/properties/name" ],
+          "name": "missing-description",
+          "message": "Property lacks a description",
+          "description": null
+        }
+      ]
+    }
+  ],
   "type": "object",
   "required": [ "score", "errors" ],
   "properties": {

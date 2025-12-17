@@ -2,6 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One List API Response",
   "description": "The response format for the directory listing API endpoint",
+  "examples": [
+    {
+      "health": 100,
+      "entries": [],
+      "path": "/schemas",
+      "url": "https://example.com/schemas",
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ]
+    }
+  ],
   "type": "object",
   "required": [ "health", "entries", "path", "url", "breadcrumb" ],
   "properties": {

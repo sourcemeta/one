@@ -2,6 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One Collection",
   "description": "Represents a set of schemas to be mounted into the One",
+  "examples": [
+    {
+      "title": "My Schema Collection",
+      "description": "A collection of JSON Schemas",
+      "path": "schemas"
+    }
+  ],
   "type": "object",
   "properties": {
     "title": {
