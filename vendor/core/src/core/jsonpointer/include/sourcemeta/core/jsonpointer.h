@@ -21,6 +21,7 @@
 #include <memory>      // std::allocator
 #include <ostream>     // std::basic_ostream
 #include <string>      // std::basic_string
+#include <string_view> // std::string_view
 #include <type_traits> // std::is_same_v
 
 /// @defgroup jsonpointer JSON Pointer
@@ -526,6 +527,63 @@ auto to_string(const WeakPointer &pointer)
 
 /// @ingroup jsonpointer
 ///
+/// Stringify the input JSON Pointer template into a C++ standard string. For
+/// example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/jsonpointer.h>
+/// #include <string>
+/// #include <iostream>
+///
+/// sourcemeta::core::PointerTemplate pointer;
+/// pointer.emplace_back(sourcemeta::core::Pointer::Token{"foo"});
+/// pointer.emplace_back(sourcemeta::core::PointerTemplate::Wildcard::Property);
+/// const std::string result{sourcemeta::core::to_string(pointer)};
+/// std::cout << result << '\n';
+/// ```
+SOURCEMETA_CORE_JSONPOINTER_EXPORT
+auto to_string(const PointerTemplate &pointer)
+    -> std::basic_string<JSON::Char, JSON::CharTraits,
+                         std::allocator<JSON::Char>>;
+
+/// @ingroup jsonpointer
+///
+/// Mangle a JSON Pointer template and prefix into a collision-free identifier.
+///
+/// The encoding rules for ASCII characters (0x00-0x7F) are:
+///
+/// - Lowercase at segment start (except x, u, z): capitalize (no marker)
+/// - Lowercase x, u, z at segment start: hex escape (reserved characters)
+/// - Uppercase at segment start (except X, U, Z): U + letter
+/// - Uppercase X, U, Z at segment start: hex escape (reserved characters)
+/// - Non-segment-start lowercase: as-is
+/// - Non-segment-start uppercase (except X, U): as-is
+/// - Non-segment-start X: X58, Non-segment-start U: X55
+/// - ASCII digits (0-9): as-is
+/// - Other ASCII (space, punctuation, control): hex escape, starts new segment
+/// - Z/z reserved for special token prefixes
+///
+/// For non-ASCII bytes (0x80-0xFF, e.g. UTF-8 sequences):
+///
+/// - Always hex escaped
+/// - Do NOT start a new segment (preserves UTF-8 multi-byte sequences)
+///
+/// For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/jsonpointer.h>
+/// #include <cassert>
+///
+/// const sourcemeta::core::PointerTemplate pointer{"foo", "bar"};
+/// const auto result{sourcemeta::core::mangle(pointer, "schema")};
+/// assert(result == "Schema_Foo_Bar");
+/// ```
+SOURCEMETA_CORE_JSONPOINTER_EXPORT
+auto mangle(const PointerTemplate &pointer, std::string_view prefix)
+    -> std::string;
+
+/// @ingroup jsonpointer
+///
 /// Stringify the input JSON Pointer into a properly escaped URI fragment. For
 /// example:
 ///
@@ -657,6 +715,41 @@ struct hash<sourcemeta::core::GenericPointer<
            (last.is_property()
                 ? static_cast<std::size_t>(last.property_hash().a)
                 : last.to_index());
+  }
+};
+
+template <typename PointerT>
+struct hash<sourcemeta::core::GenericPointerTemplate<PointerT>> {
+  auto operator()(const sourcemeta::core::GenericPointerTemplate<PointerT>
+                      &pointer) const noexcept -> std::size_t {
+    const auto size{pointer.size()};
+    if (size == 0) {
+      return size;
+    }
+
+    auto hash_element =
+        [](const typename sourcemeta::core::GenericPointerTemplate<
+            PointerT>::value_type &element) -> std::size_t {
+      using Template = sourcemeta::core::GenericPointerTemplate<PointerT>;
+      const auto *token{std::get_if<typename Template::Token>(&element)};
+      if (token) {
+        return token->is_property()
+                   ? static_cast<std::size_t>(token->property_hash().a)
+                   : token->to_index();
+      } else {
+        return element.index();
+      }
+    };
+
+    const auto &first{*pointer.cbegin()};
+    const auto &middle{
+        *(pointer.cbegin() +
+          static_cast<typename sourcemeta::core::GenericPointerTemplate<
+              PointerT>::difference_type>(size / 2))};
+    const auto &last{*(pointer.cend() - 1)};
+
+    return size + hash_element(first) + hash_element(middle) +
+           hash_element(last);
   }
 };
 } // namespace std

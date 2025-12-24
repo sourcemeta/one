@@ -220,8 +220,7 @@ struct GENERATE_HEALTH {
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
 
     sourcemeta::core::SchemaTransformer bundle;
-    sourcemeta::core::add(bundle,
-                          sourcemeta::core::AlterSchemaMode::Readability);
+    sourcemeta::core::add(bundle, sourcemeta::core::AlterSchemaMode::Linter);
     bundle.add<sourcemeta::blaze::ValidExamples>(
         sourcemeta::blaze::default_schema_compiler);
     bundle.add<sourcemeta::blaze::ValidDefault>(

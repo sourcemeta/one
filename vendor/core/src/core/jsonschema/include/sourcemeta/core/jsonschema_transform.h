@@ -13,7 +13,6 @@
 #include <cstdint>     // std::uint8_t
 #include <functional>  // std::function
 #include <iterator>    // std::make_move_iterator, std::begin, std::end
-#include <map>         // std::map
 #include <memory>      // std::make_unique, std::unique_ptr
 #include <optional>    // std::optional, std::nullopt
 #include <set>         // std::set
@@ -230,13 +229,11 @@ public:
   auto operator=(SchemaTransformer &&) -> SchemaTransformer & = default;
 #endif
 
-  /// Add a rule to the bundle
+  /// Add a rule to the bundle. Rules are evaluated in the order they are added.
+  /// It is the caller's responsibility to not add duplicate rules.
   template <std::derived_from<SchemaTransformRule> T, typename... Args>
   auto add(Args &&...args) -> void {
-    auto rule{std::make_unique<T>(std::forward<Args>(args)...)};
-    // Rules must only be defined once
-    assert(!this->rules.contains(rule->name()));
-    this->rules.emplace(rule->name(), std::move(rule));
+    this->rules.push_back(std::make_unique<T>(std::forward<Args>(args)...));
   }
 
   /// Remove a rule from the bundle
@@ -254,10 +251,11 @@ public:
                                       const SchemaTransformRule::Result &)>;
 
   /// Apply the bundle of rules to a schema
-  auto apply(JSON &schema, const SchemaWalker &walker,
-             const SchemaResolver &resolver, const Callback &callback,
-             const std::optional<JSON::String> &default_dialect = std::nullopt,
-             const std::optional<JSON::String> &default_id = std::nullopt) const
+  [[nodiscard]] auto
+  apply(JSON &schema, const SchemaWalker &walker,
+        const SchemaResolver &resolver, const Callback &callback,
+        const std::optional<JSON::String> &default_dialect = std::nullopt,
+        const std::optional<JSON::String> &default_id = std::nullopt) const
       -> std::pair<bool, std::uint8_t>;
 
   /// Report back the rules from the bundle that need to be applied to a schema
@@ -278,7 +276,7 @@ private:
 #if defined(_MSC_VER)
 #pragma warning(disable : 4251)
 #endif
-  std::map<std::string, std::unique_ptr<SchemaTransformRule>> rules;
+  std::vector<std::unique_ptr<SchemaTransformRule>> rules;
 #if defined(_MSC_VER)
 #pragma warning(default : 4251)
 #endif

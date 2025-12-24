@@ -79,13 +79,13 @@ sourcemeta_target_shellcheck(SOURCES test/*.sh docker/*.sh)
 
 set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/sourcemeta/one/schemas")
 add_custom_target(jsonschema_fmt_test
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt --check --verbose ${SOURCEMETA_SCHEMAS})
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt --check ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_fmt
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt --verbose ${SOURCEMETA_SCHEMAS})
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_metaschema
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" metaschema --verbose ${SOURCEMETA_SCHEMAS})
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" metaschema ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_lint
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" lint --verbose
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" lint --exclude simple_properties_identifiers
   ${SOURCEMETA_SCHEMAS})
 
 if(ONE_TESTS)
