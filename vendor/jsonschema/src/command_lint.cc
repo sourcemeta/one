@@ -120,7 +120,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   const bool output_json = options.contains("json");
 
   sourcemeta::core::SchemaTransformer bundle;
-  sourcemeta::core::add(bundle, sourcemeta::core::AlterSchemaMode::Readability);
+  sourcemeta::core::add(bundle, sourcemeta::core::AlterSchemaMode::Linter);
 
   bundle.add<sourcemeta::blaze::ValidExamples>(
       sourcemeta::blaze::default_schema_compiler);
@@ -135,7 +135,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
 
     std::unordered_set<std::string_view> blacklist;
     for (const auto &entry : bundle) {
-      blacklist.emplace(entry.first);
+      blacklist.emplace(entry->name());
     }
 
     for (const auto &only : options.at("only")) {
@@ -159,7 +159,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                           std::reference_wrapper<const std::string>>>
         rules;
     for (const auto &entry : bundle) {
-      rules.emplace_back(entry.first, entry.second->message());
+      rules.emplace_back(entry->name(), entry->message());
     }
 
     std::sort(rules.begin(), rules.end(),
@@ -195,8 +195,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
       const auto &custom_resolver{
           resolver(options, options.contains("http"), dialect, configuration)};
       LOG_VERBOSE(options) << "Linting: " << entry.first.string() << "\n";
-      if (entry.first.extension() == ".yaml" ||
-          entry.first.extension() == ".yml") {
+      if (entry.yaml) {
         throw YAMLInputError{
             "The --fix option is not supported for YAML input files",
             entry.first};

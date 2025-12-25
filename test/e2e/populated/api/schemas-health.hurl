@@ -41,16 +41,16 @@ jsonpath "$.errors[1].pointers[0]" == ""
 jsonpath "$.errors[1].name" == "top_level_examples"
 jsonpath "$.errors[1].message" == "Set a non-empty examples array at the top level of the schema to illustrate the expected data"
 jsonpath "$.errors[1].description" == null
-jsonpath "$.errors[2].pointers" count == 1
+jsonpath "$.errors[2].pointers" count == 2
 jsonpath "$.errors[2].pointers[0]" == "/properties/type/enum"
-jsonpath "$.errors[2].name" == "enum_to_const"
-jsonpath "$.errors[2].message" == "An `enum` of a single value can be expressed as `const`"
+jsonpath "$.errors[2].pointers[1]" == "/properties/type/type"
+jsonpath "$.errors[2].name" == "enum_with_type"
+jsonpath "$.errors[2].message" == "Setting `type` alongside `enum` is considered an anti-pattern, as the enumeration choices already imply their respective types"
 jsonpath "$.errors[2].description" == null
-jsonpath "$.errors[3].pointers" count == 2
+jsonpath "$.errors[3].pointers" count == 1
 jsonpath "$.errors[3].pointers[0]" == "/properties/type/enum"
-jsonpath "$.errors[3].pointers[1]" == "/properties/type/type"
-jsonpath "$.errors[3].name" == "enum_with_type"
-jsonpath "$.errors[3].message" == "Setting `type` alongside `enum` is considered an anti-pattern, as the enumeration choices already imply their respective types"
+jsonpath "$.errors[3].name" == "enum_to_const"
+jsonpath "$.errors[3].message" == "An `enum` of a single value can be expressed as `const`"
 jsonpath "$.errors[3].description" == null
 
 POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/health/response
