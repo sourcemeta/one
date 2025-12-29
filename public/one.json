@@ -14,27 +14,7 @@
   "extends": [
     "@sourcemeta/one",
     "@sourcemeta/extensions",
-    "@modelcontextprotocol/2025-06-18",
-    "@modelcontextprotocol/2025-03-26",
-    "@modelcontextprotocol/2024-11-05",
-    "@a2a/v0.3.0",
-    "@a2a/v0.2.6",
-    "@a2a/v0.2.5",
-    "@a2a/v0.2.4",
-    "@a2a/v0.2.3",
-    "@a2a/v0.2.2",
-    "@a2a/v0.2.1",
-    "@a2a/v0.2.0",
-    "@sdf/v1.0.0",
-    "@sourcemeta/std/v0",
-    "@openapi/v2.0",
-    "@openapi/v3.0",
-    "@openapi/v3.1",
-    "@openapi/v3.2",
-    "@w3c/wot/v1.0",
-    "@w3c/wot/v1.1",
-    "@jsonld/v1.0",
-    "@jsonld/v1.1"
+    "@sourcemeta/std/v0"
   ],
   "contents": {
     "sourcemeta": {
@@ -45,6 +25,127 @@
               "x-sourcemeta-one:alert": "By using this schema, you confirm you agree to its <a href=\"https://github.com/sourcemeta/std/blob/main/LICENSE\">license</a>"
             }
           }
+        }
+      }
+    },
+    "modelcontextprotocol": {
+      "title": "Model Context Protocol (MCP)",
+      "description": "An open protocol that standardizes how applications provide context to large language models (LLMs)",
+      "github": "modelcontextprotocol",
+      "website": "https://modelcontextprotocol.io",
+      "contents": {
+        "2025-06-18": {
+          "path": "../vendor/collections/modelcontextprotocol/schema/2025-06-18"
+        },
+        "2025-03-26": {
+          "path": "../vendor/collections/modelcontextprotocol/schema/2025-03-26"
+        },
+        "2024-11-05": {
+          "path": "../vendor/collections/modelcontextprotocol/schema/2024-11-05"
+        }
+      }
+    },
+    "a2a": {
+      "title": "Agent2Agent (A2A) Protocol",
+      "description": "An open protocol enabling communication and interoperability between opaque agentic applications",
+      "github": "a2aproject",
+      "website": "https://a2a-protocol.org",
+      "contents": {
+        "v0.3.0": {
+          "path": "../vendor/collections/a2a/v0.3.0/specification/json"
+        },
+        "v0.2.6": {
+          "path": "../vendor/collections/a2a/v0.2.6/specification/json"
+        },
+        "v0.2.5": {
+          "path": "../vendor/collections/a2a/v0.2.5/specification/json"
+        },
+        "v0.2.4": {
+          "path": "../vendor/collections/a2a/v0.2.4/specification/json"
+        },
+        "v0.2.3": {
+          "path": "../vendor/collections/a2a/v0.2.3/specification/json"
+        },
+        "v0.2.2": {
+          "path": "../vendor/collections/a2a/v0.2.2/specification/json"
+        },
+        "v0.2.1": {
+          "path": "../vendor/collections/a2a/v0.2.1/specification/json"
+        },
+        "v0.2.0": {
+          "path": "../vendor/collections/a2a/v0.2.0/specification/json"
+        }
+      }
+    },
+    "sdf": {
+      "title": "Semantic Definition Format (SDF)",
+      "description": "A format for domain experts to use in the creation and maintenance of data and interaction models that describe Things",
+      "github": "ietf-wg-asdf",
+      "website": "https://datatracker.ietf.org/doc/draft-ietf-asdf-sdf/",
+      "contents": {
+        "v1.0.0": {
+          "path": "../vendor/collections/sdf/v1.0.0"
+        }
+      }
+    },
+    "openapi": {
+      "title": "OpenAPI",
+      "description": "The world's most widely used API description standard",
+      "email": "tsc@openapi.groups.io",
+      "github": "oai",
+      "website": "https://openapis.org",
+      "contents": {
+        "v2.0": {
+          "baseUri": "http://swagger.io/v2",
+          "path": "../vendor/collections/openapi/oas/2.0"
+        },
+        "v3.0": {
+          "baseUri": "https://spec.openapis.org/oas/3.0/schema",
+          "path": "../vendor/collections/openapi/oas/3.0"
+        },
+        "v3.1": {
+          "baseUri": "https://spec.openapis.org/oas/3.1",
+          "path": "../vendor/collections/openapi/oas/3.1"
+        },
+        "v3.2": {
+          "baseUri": "https://spec.openapis.org/oas/3.2",
+          "path": "../vendor/collections/openapi/oas/3.2"
+        }
+      }
+    },
+    "w3c": {
+      "title": "World Wide Web Consortium",
+      "description": "The international community that develops open standards to ensure the long-term growth of the Web",
+      "github": "w3c",
+      "website": "https://www.w3.org",
+      "contents": {
+        "wot": {
+          "title": "Web of Things",
+          "description": "The Web of Things (WoT) seeks to counter the fragmentation of the IoT by using and extending existing, standardized Web technologies. By providing standardized metadata and other re-usable technological building blocks, W3C WoT enables easy integration across IoT platforms and application domains",
+          "github": "w3c/wot",
+          "website": "https://www.w3.org/WoT/",
+          "contents": {
+            "v1.0": {
+              "path": "../vendor/collections/wot/td/v1/validation"
+            },
+            "v1.1": {
+              "path": "../vendor/collections/wot/td/v1.1/validation"
+            }
+          }
+        }
+      }
+    },
+    "jsonld": {
+      "title": "JSON for Linking Data",
+      "description": "Data is messy and disconnected. JSON-LD organizes and connects it, creating a better Web",
+      "github": "json-ld",
+      "website": "https://json-ld.org",
+      "contents": {
+        "v1.0": {
+          "path": "../vendor/collections/jsonld/v1.0/schemas"
+        },
+        "v1.1": {
+          "path": "../vendor/collections/jsonld/v1.1/schemas"
         }
       }
     },
