@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Litre",
+  "description": "A non-SI unit of volume accepted for use with the SI. One litre is equal to one cubic decimetre (0.001 cubic metres)",
+  "examples": [ 0, 1, 0.5, 2, 1.5, 100, 0.25 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "0.001 m^3",
+  "x-symbol": "l",
+  "x-symbol-alt": "L",
+  "type": "number",
+  "minimum": 0
+}

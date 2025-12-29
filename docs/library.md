@@ -40,23 +40,23 @@ the `@` character. To import such a collection, import the corresponding
 identifier to your [configuration file](configuration.md) using the
 [`extends`](configuration.md#extends) keyword.
 
-For example, let's say your company depends on GeoJSON v1.0.5 and v1.0.4. Their
-identifiers are `@geojson/v1.0.5` and `@geojson/v1.0.4`, respectively.
-Therefore, a minimal example configuration that ingests them both using the
+For example, let's say your company depends on OpenAPI v3.2 and v3.1. Their
+identifiers are `@openapi/v3.2` and `@openapi/v3.1`, respectively.  Therefore,
+a minimal example configuration that ingests them both using the
 [`extends`](configuration.md#extends) keyword may look like this:
 
 ```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@geojson/v1.0.5", "@geojson/v1.0.4" ]
+  "extends": [ "@openapi/v3.2", "@openapi/v3.1" ]
 }
 ```
 
-Other schemas in your instance may reference these GeoJSON schemas using their
-absolute URLs (i.e. `https://schemas.example.com/geojson/v1.0.5/point.json`)
-or.  relative URLs (i.e. `/geojson/v1.0.5/point.json`). You can also re-route
-existing schemas into the imported locations using the `resolve` configuration
-option.
+Other schemas in your instance may reference these OpenAPI schemas using their
+absolute URLs (i.e.
+`https://schemas.example.com/openapi/v3.1/dialect/base.json`) or.  relative
+URLs (i.e. `/openapi/v3.1/dialect/base.json`). You can also re-route existing
+schemas into the imported locations using the `resolve` configuration option.
 
 Available Collections
 ---------------------
@@ -70,12 +70,6 @@ the free one) [^1].  Simply add the corresponding identifier to your
 
 | Identifier | Source | Description | Preview |
 |------------|------|-------------|---------|
-| `@geojson/v1.0.5` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.5) |
-| `@geojson/v1.0.4` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.4) |
-| `@geojson/v1.0.3` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.3) |
-| `@geojson/v1.0.2` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.2) |
-| `@geojson/v1.0.1` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.1) |
-| `@geojson/v1.0.0` | [GeoJSON](https://geojson.org) | A standard format (RFC 7946) for encoding a variety of geographic data structures | [Link](https://schemas.sourcemeta.com/geojson/v1.0.0) |
 | `@modelcontextprotocol/2025-06-18` | [Model Context Protocol (MCP)](https://modelcontextprotocol.io) | An open protocol that standardizes how applications provide context to large language models (LLMs) | [Link](https://schemas.sourcemeta.com/modelcontextprotocol/2025-06-18) |
 | `@modelcontextprotocol/2025-03-26` | [Model Context Protocol (MCP)](https://modelcontextprotocol.io) | An open protocol that standardizes how applications provide context to large language models (LLMs) | [Link](https://schemas.sourcemeta.com/modelcontextprotocol/2025-03-26) |
 | `@modelcontextprotocol/2024-11-05` | [Model Context Protocol (MCP)](https://modelcontextprotocol.io) | An open protocol that standardizes how applications provide context to large language models (LLMs) | [Link](https://schemas.sourcemeta.com/modelcontextprotocol/2024-11-05) |

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Polygon Coordinates",
+  "description": "An array of linear ring coordinate arrays, where the first is the exterior ring and any subsequent rings are interior holes",
+  "examples": [
+    [
+      [
+        [ 0, 0 ],
+        [ 1, 0 ],
+        [ 1, 1 ],
+        [ 0, 0 ]
+      ]
+    ],
+    [
+      [
+        [ 0, 0 ],
+        [ 10, 0 ],
+        [ 10, 10 ],
+        [ 0, 10 ],
+        [ 0, 0 ]
+      ],
+      [
+        [ 2, 2 ],
+        [ 8, 2 ],
+        [ 8, 8 ],
+        [ 2, 8 ],
+        [ 2, 2 ]
+      ]
+    ]
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6" ],
+  "type": "array",
+  "items": {
+    "$ref": "linear-ring-coordinates.json"
+  }
+}

@@ -190,19 +190,19 @@ your schema collection depends on [GeoJSON](https://geojson.org) and has
 various references to its latest official URL:
 `https://geojson.org/schema/GeoJSON.json`. Instead of depending on an external
 resource outside your control, you can configure the instance to extend from
-the [`@geojson/v1.0.5`](library.md) built-in collection and rephrase the
+the [`@sourcemeta/std`](library.md) built-in collection and rephrase the
 `https://geojson.org/schema/GeoJSON.json` references to consume from the
 internal version:
 
 ```json hl_lines="3 8" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@geojson/v1.0.5" ],
+  "extends": [ "@sourcemeta/std/v0" ],
   "contents": {
     "my-first-collection": {
       "path": "./schemas",
       "resolve": {
-        "https://geojson.org/schema/GeoJSON.json": "/geojson/v1.0.5/geojson.json"
+        "https://geojson.org/schema/GeoJSON.json": "/sourcemeta/std/v0/ietf/geojson/schema.json"
       }
     }
   }

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON LineString",
+  "description": "A geometry object representing a connected sequence of two or more positions",
+  "examples": [
+    {
+      "type": "LineString",
+      "coordinates": [
+        [ 0, 0 ],
+        [ 1, 1 ]
+      ]
+    },
+    {
+      "type": "LineString",
+      "coordinates": [
+        [ 0, 0 ],
+        [ 1, 1 ],
+        [ 2, 0 ]
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.4" ],
+  "type": "object",
+  "required": [ "type", "coordinates" ],
+  "properties": {
+    "type": {
+      "const": "LineString"
+    },
+    "coordinates": {
+      "$ref": "line-string-coordinates.json"
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "geometry": false,
+    "properties": false,
+    "features": false
+  }
+}

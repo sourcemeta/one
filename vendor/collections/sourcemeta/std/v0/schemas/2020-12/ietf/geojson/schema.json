@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON",
+  "description": "A format for encoding a variety of geographic data structures",
+  "examples": [
+    {
+      "type": "Point",
+      "coordinates": [ 0, 0 ]
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [ 0, 0 ]
+      },
+      "properties": {
+        "name": "Example"
+      }
+    },
+    {
+      "type": "FeatureCollection",
+      "features": []
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3" ],
+  "anyOf": [
+    {
+      "$ref": "geometry.json"
+    },
+    {
+      "$ref": "geometry-collection.json"
+    },
+    {
+      "$ref": "feature.json"
+    },
+    {
+      "$ref": "feature-collection.json"
+    }
+  ]
+}

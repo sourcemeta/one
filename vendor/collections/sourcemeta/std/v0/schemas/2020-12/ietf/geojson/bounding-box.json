@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Bounding Box",
+  "description": "An array of numbers representing a bounding box that encloses a GeoJSON object, with coordinates in the order: westernmost, southernmost, easternmost, northernmost",
+  "examples": [
+    [ -180, -90, 180, 90 ],
+    [ -122.5, 37.5, -122.0, 38.0 ],
+    [ -180, -90, 0, 180, 90, 1000 ]
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-5" ],
+  "type": "array",
+  "anyOf": [
+    {
+      "description": "2D bounding box",
+      "maxItems": 4,
+      "minItems": 4,
+      "prefixItems": [
+        {
+          "description": "Westernmost longitude",
+          "$comment": "RFC 7946 does not constrain longitude range",
+          "type": "number"
+        },
+        {
+          "description": "Southernmost latitude",
+          "$ref": "../../iso/coordinate/2022/latitude.json"
+        },
+        {
+          "description": "Easternmost longitude",
+          "$comment": "RFC 7946 does not constrain longitude range",
+          "type": "number"
+        },
+        {
+          "description": "Northernmost latitude",
+          "$ref": "../../iso/coordinate/2022/latitude.json"
+        }
+      ]
+    },
+    {
+      "description": "3D bounding box",
+      "maxItems": 6,
+      "minItems": 6,
+      "prefixItems": [
+        {
+          "description": "Westernmost longitude",
+          "$comment": "RFC 7946 does not constrain longitude range",
+          "type": "number"
+        },
+        {
+          "description": "Southernmost latitude",
+          "$ref": "../../iso/coordinate/2022/latitude.json"
+        },
+        {
+          "description": "Minimum altitude",
+          "$ref": "../../iso/coordinate/2022/altitude.json"
+        },
+        {
+          "description": "Easternmost longitude",
+          "$comment": "RFC 7946 does not constrain longitude range",
+          "type": "number"
+        },
+        {
+          "description": "Northernmost latitude",
+          "$ref": "../../iso/coordinate/2022/latitude.json"
+        },
+        {
+          "description": "Maximum altitude",
+          "$ref": "../../iso/coordinate/2022/altitude.json"
+        }
+      ]
+    },
+    {
+      "description": "Higher dimension bounding box",
+      "minItems": 7,
+      "items": {
+        "type": "number"
+      }
+    }
+  ]
+}

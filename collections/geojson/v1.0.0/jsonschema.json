@@ -1,5 +1,0 @@
-{
-  "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
-  "baseUri": "https://geojson.org/schema",
-  "path": "./schemas"
-}

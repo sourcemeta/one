@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hour",
+  "description": "A non-SI unit of time accepted for use with the SI. One hour is equal to 60 minutes or 3600 seconds",
+  "examples": [ 0, 1, 6, 12, 24, 1.5, 0.5 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "3600 s",
+  "x-symbol": "h",
+  "type": "number",
+  "minimum": 0
+}

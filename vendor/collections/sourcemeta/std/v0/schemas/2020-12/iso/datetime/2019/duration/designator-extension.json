@@ -15,28 +15,6 @@
   "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
   "x-links": [ "https://www.iso.org/standard/70908.html" ],
   "type": "string",
-  "allOf": [
-    {
-      "not": {
-        "const": "P"
-      }
-    },
-    {
-      "not": {
-        "const": "PT"
-      }
-    },
-    {
-      "not": {
-        "const": "-P"
-      }
-    },
-    {
-      "not": {
-        "const": "-PT"
-      }
-    }
-  ],
   "anyOf": [
     {
       "$comment": "Positive: Date-only: Years with decimal (lowest order)",
@@ -422,5 +400,8 @@
       "$comment": "Negative: Date+Time: Days + Seconds with decimal (lowest order)",
       "pattern": "^-P[0-9]+DT[0-9]+(?:\\.[0-9]+)?S$"
     }
-  ]
+  ],
+  "not": {
+    "enum": [ "P", "PT", "-P", "-PT" ]
+  }
 }

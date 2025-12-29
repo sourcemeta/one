@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Geometry",
+  "description": "A geometry object representing coordinates in geographic space, excluding GeometryCollection",
+  "examples": [
+    {
+      "type": "Point",
+      "coordinates": [ 0, 0 ]
+    },
+    {
+      "type": "LineString",
+      "coordinates": [
+        [ 0, 0 ],
+        [ 1, 1 ]
+      ]
+    },
+    {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [ 0, 0 ],
+          [ 1, 0 ],
+          [ 1, 1 ],
+          [ 0, 0 ]
+        ]
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1" ],
+  "anyOf": [
+    {
+      "$ref": "point.json"
+    },
+    {
+      "$ref": "line-string.json"
+    },
+    {
+      "$ref": "polygon.json"
+    },
+    {
+      "$ref": "multi-point.json"
+    },
+    {
+      "$ref": "multi-line-string.json"
+    },
+    {
+      "$ref": "multi-polygon.json"
+    }
+  ]
+}

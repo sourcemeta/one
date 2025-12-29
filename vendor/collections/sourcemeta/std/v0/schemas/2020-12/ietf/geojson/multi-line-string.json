@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON MultiLineString",
+  "description": "A geometry object representing multiple LineString geometries",
+  "examples": [
+    {
+      "type": "MultiLineString",
+      "coordinates": [
+        [
+          [ 0, 0 ],
+          [ 1, 1 ]
+        ]
+      ]
+    },
+    {
+      "type": "MultiLineString",
+      "coordinates": [
+        [
+          [ 0, 0 ],
+          [ 1, 1 ]
+        ],
+        [
+          [ 2, 2 ],
+          [ 3, 3 ]
+        ]
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.5" ],
+  "type": "object",
+  "required": [ "type", "coordinates" ],
+  "properties": {
+    "type": {
+      "const": "MultiLineString"
+    },
+    "coordinates": {
+      "type": "array",
+      "items": {
+        "$ref": "line-string-coordinates.json"
+      }
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "geometry": false,
+    "properties": false,
+    "features": false
+  }
+}
