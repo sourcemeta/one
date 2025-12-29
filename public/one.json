@@ -32,7 +32,7 @@
     "@a2a/v0.2.1",
     "@a2a/v0.2.0",
     "@sdf/v1.0.0",
-    "@sourcemeta/std/v0",
+    "@sourcemeta/std",
     "@openapi/v2.0",
     "@openapi/v3.0",
     "@openapi/v3.1",

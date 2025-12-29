@@ -1,0 +1,58 @@
+{
+  "contents": {
+    "bipm": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "Bureau International des Poids et Mesures",
+      "description": "The international organization established by the Metre Convention",
+      "github": "TheBIPM",
+      "website": "https://www.bipm.org",
+      "path": "./schemas/2020-12/bipm"
+    },
+    "ieee": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "IEEE Standards Association",
+      "description": "A global community for technologists, helping to shape the systems and standards of tomorrow",
+      "github": "ieee-sa",
+      "website": "https://www.ieee.org",
+      "path": "./schemas/2020-12/ieee"
+    },
+    "ietf": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "Internet Engineering Task Force",
+      "description": "The premier standards development organization (SDO) for the Internet",
+      "github": "ietf",
+      "website": "https://www.ietf.org",
+      "path": "./schemas/2020-12/ietf"
+    },
+    "iso": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "International Organization for Standardization",
+      "description": "Global standards for trusted goods and services",
+      "website": "https://www.iso.org",
+      "path": "./schemas/2020-12/iso"
+    },
+    "jsonrpc": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "JSON-RPC",
+      "description": "A light weight remote procedure call protocol designed to be simple",
+      "website": "https://www.jsonrpc.org",
+      "path": "./schemas/2020-12/jsonrpc"
+    },
+    "w3c": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "World Wide Web Consortium",
+      "description": "The international community that develops open standards to ensure the long-term growth of the Web",
+      "github": "w3c",
+      "website": "https://www.w3.org",
+      "path": "./schemas/2020-12/w3c"
+    },
+    "xbrl": {
+      "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+      "title": "eXtensible Business Reporting Language",
+      "description": "The business reporting standard",
+      "github": "XBRLInternational",
+      "website": "https://www.xbrl.org",
+      "path": "./schemas/2020-12/xbrl"
+    }
+  }
+}
