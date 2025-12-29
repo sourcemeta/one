@@ -218,15 +218,6 @@
         }
       }
     },
-    "krakend": {
-      "title": "KrakenD API Gateway",
-      "description": "An open-source API Gateway that helps you effortlessly adopt microservices and secure communications",
-      "email": "hello@krakend.io",
-      "github": "krakend",
-      "website": "https://www.krakend.io",
-      "baseUri": "https://www.krakend.io/schema",
-      "path": "../vendor/public/krakend"
-    },
     "movielabs": {
       "title": "Motion Picture Laboratories",
       "description": "A Technology Joint Venture of the Major Hollywood Studios",
@@ -337,52 +328,6 @@
           }
         }
       }
-    },
-    "hl7": {
-      "title": "Health Level Seven International (HL7)",
-      "description": "A range of global standards for the transfer of clinical and administrative health",
-      "email": "webmaster@hl7.org",
-      "github": "hl7",
-      "website": "https://www.hl7.org",
-      "contents": {
-        "fhir": {
-          "title": "Fast Healthcare Interoperability Resources (FHIR)",
-          "description": "A standard for health care data exchange",
-          "email": "fhir.github@gmail.com",
-          "github": "fhir",
-          "website": "https://www.hl7.org/implement/standards/fhir/",
-          "contents": {
-            "r5": {
-              "baseUri": "http://hl7.org/fhir/json-schema",
-              "path": "../vendor/public/fhir/hl7.fhir.rX/hl7.fhir.r5.core/package/openapi",
-              "x-sourcemeta-one:evaluate": false
-            },
-            "r4b": {
-              "baseUri": "http://hl7.org/fhir/json-schema",
-              "path": "../vendor/public/fhir/hl7.fhir.rX/hl7.fhir.r4b.core/package/openapi",
-              "x-sourcemeta-one:evaluate": false
-            },
-            "r4": {
-              "baseUri": "http://hl7.org/fhir/json-schema",
-              "path": "../vendor/public/fhir/hl7.fhir.rX/hl7.fhir.r4.core/package/openapi",
-              "x-sourcemeta-one:evaluate": false
-            },
-            "r3": {
-              "path": "../vendor/public/fhir/hl7.fhir.rX/hl7.fhir.r3.core/package/openapi",
-              "x-sourcemeta-one:evaluate": false
-            }
-          }
-        }
-      }
-    },
-    "asyncapi": {
-      "title": "AsyncAPI Initiative",
-      "description": "Building the future of Event-Driven Architectures (EDA)",
-      "email": "info@asyncapi.io",
-      "github": "asyncapi",
-      "website": "https://www.asyncapi.com",
-      "baseUri": "http://asyncapi.com",
-      "path": "../vendor/public/asyncapi"
     },
     "iptc": {
       "title": "IPTC",
