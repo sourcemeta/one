@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Day",
+  "description": "A non-SI unit of time accepted for use with the SI. One day is equal to 24 hours or 86400 seconds",
+  "examples": [ 0, 1, 7, 30, 365, 0.5, 1.5 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "86400 s",
+  "x-symbol": "d",
+  "type": "number",
+  "minimum": 0
+}

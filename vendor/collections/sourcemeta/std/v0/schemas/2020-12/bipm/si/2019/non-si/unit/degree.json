@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Degree",
+  "description": "A non-SI unit of plane angle accepted for use with the SI. One degree is equal to (pi/180) radians",
+  "examples": [ 0, 45, 90, 180, 360, -90, -180, 37.7749 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "(pi/180) rad",
+  "x-symbol": "°",
+  "type": "number"
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON FeatureCollection",
+  "description": "A collection of Feature objects",
+  "examples": [
+    {
+      "type": "FeatureCollection",
+      "features": []
+    },
+    {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": null,
+          "properties": null
+        },
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [ 0, 0 ]
+          },
+          "properties": {
+            "name": "Example"
+          }
+        }
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.3" ],
+  "type": "object",
+  "required": [ "type", "features" ],
+  "properties": {
+    "type": {
+      "const": "FeatureCollection"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "$ref": "feature.json"
+      }
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "coordinates": false,
+    "geometries": false,
+    "geometry": false,
+    "properties": false
+  }
+}

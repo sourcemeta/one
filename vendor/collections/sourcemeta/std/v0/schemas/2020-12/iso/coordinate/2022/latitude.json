@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ISO 6709:2022 Latitude",
+  "description": "A latitude coordinate in decimal degrees, ranging from -90 (south pole) to +90 (north pole)",
+  "examples": [ 0, 37.7749, -33.8688, 90, -90 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.iso.org/standard/75147.html" ],
+  "$ref": "../../../bipm/si/2019/non-si/unit/degree.json",
+  "maximum": 90,
+  "minimum": -90
+}

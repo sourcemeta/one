@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Astronomical Unit",
+  "description": "A non-SI unit of length accepted for use with the SI. One astronomical unit is a conventional unit of length approximately equal to the mean Earth-Sun distance. It is defined as exactly 149597870700 metres",
+  "examples": [ 0, 1, 0.387, 1.524, 5.203, 39.5 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "149597870700 m",
+  "x-symbol": "au",
+  "type": "number",
+  "minimum": 0
+}

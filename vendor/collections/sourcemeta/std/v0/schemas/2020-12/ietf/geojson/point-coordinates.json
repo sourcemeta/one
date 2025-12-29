@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Position",
+  "description": "An array of numbers representing a geographic position, with longitude first, latitude second, and optional altitude third",
+  "examples": [
+    [ -122.419, 37.7749 ],
+    [ 0, 0 ],
+    [ -122.419, 37.7749, 10.5 ]
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.1" ],
+  "type": "array",
+  "minItems": 2,
+  "prefixItems": [
+    {
+      "description": "Longitude in decimal degrees",
+      "$comment": "RFC 7946 does not constrain longitude range",
+      "type": "number"
+    },
+    {
+      "$ref": "../../iso/coordinate/2022/latitude.json"
+    },
+    {
+      "$ref": "../../iso/coordinate/2022/altitude.json"
+    }
+  ],
+  "items": {
+    "type": "number"
+  }
+}

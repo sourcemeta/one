@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ISO 6709:2022 Altitude",
+  "description": "An altitude or height in meters relative to the reference ellipsoid, with positive values above and negative values below",
+  "examples": [ 0, 100, -50, 8848.86, -10994 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.iso.org/standard/75147.html" ],
+  "type": "number"
+}

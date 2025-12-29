@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Electronvolt",
+  "description": "A non-SI unit of energy accepted for use with the SI. One electronvolt is the kinetic energy acquired by an electron in passing through a potential difference of one volt in vacuum. It is equal to approximately 1.602 176 634 x 10^-19 joules",
+  "examples": [ 0, 1, 13.6, 511000, 1000000, 1e+9 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "1.602176634e-19 J",
+  "x-symbol": "eV",
+  "type": "number",
+  "minimum": 0
+}

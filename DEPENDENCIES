@@ -7,13 +7,7 @@ hydra https://github.com/sourcemeta/hydra af9f2c54709d620872ead0c3f8f683c15a0fa7
 jsonschema https://github.com/sourcemeta/jsonschema v13.5.0
 bootstrap https://github.com/twbs/bootstrap v5.3.3
 bootstrap-icons https://github.com/twbs/icons v1.11.3
-collections/sourcemeta/std/v0 https://github.com/sourcemeta/std 3f8746fb22ac70494ea3e3075cc19ee5d770ced7
-collections/geojson/v1.0.5 https://github.com/geojson/schema v1.0.5
-collections/geojson/v1.0.4 https://github.com/geojson/schema v1.0.4
-collections/geojson/v1.0.3 https://github.com/geojson/schema v1.0.3
-collections/geojson/v1.0.2 https://github.com/geojson/schema v1.0.2
-collections/geojson/v1.0.1 https://github.com/geojson/schema v1.0.1
-collections/geojson/v1.0.0 https://github.com/geojson/schema v1.0.0
+collections/sourcemeta/std/v0 https://github.com/sourcemeta/std v0.4.0
 collections/modelcontextprotocol https://github.com/modelcontextprotocol/modelcontextprotocol 2025-11-25
 collections/a2a/v0.3.0 https://github.com/a2aproject/A2A v0.3.0
 collections/a2a/v0.2.6 https://github.com/a2aproject/A2A v0.2.6

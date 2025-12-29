@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Point",
+  "description": "A geometry object representing a single position in coordinate space",
+  "examples": [
+    {
+      "type": "Point",
+      "coordinates": [ -122.419, 37.7749 ]
+    },
+    {
+      "type": "Point",
+      "coordinates": [ 0, 0, 10 ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.2" ],
+  "type": "object",
+  "required": [ "type", "coordinates" ],
+  "properties": {
+    "type": {
+      "const": "Point"
+    },
+    "coordinates": {
+      "$ref": "point-coordinates.json"
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "geometry": false,
+    "properties": false,
+    "features": false
+  }
+}

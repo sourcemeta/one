@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Polygon",
+  "description": "A geometry object representing an area enclosed by an exterior linear ring and zero or more interior rings (holes)",
+  "examples": [
+    {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [ 0, 0 ],
+          [ 1, 0 ],
+          [ 1, 1 ],
+          [ 0, 0 ]
+        ]
+      ]
+    },
+    {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [ 0, 0 ],
+          [ 10, 0 ],
+          [ 10, 10 ],
+          [ 0, 10 ],
+          [ 0, 0 ]
+        ],
+        [
+          [ 2, 2 ],
+          [ 8, 2 ],
+          [ 8, 8 ],
+          [ 2, 8 ],
+          [ 2, 2 ]
+        ]
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6" ],
+  "type": "object",
+  "required": [ "type", "coordinates" ],
+  "properties": {
+    "type": {
+      "const": "Polygon"
+    },
+    "coordinates": {
+      "$ref": "polygon-coordinates.json"
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "geometry": false,
+    "properties": false,
+    "features": false
+  }
+}

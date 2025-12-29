@@ -14,12 +14,6 @@
   "extends": [
     "@sourcemeta/one",
     "@sourcemeta/extensions",
-    "@geojson/v1.0.5",
-    "@geojson/v1.0.4",
-    "@geojson/v1.0.3",
-    "@geojson/v1.0.2",
-    "@geojson/v1.0.1",
-    "@geojson/v1.0.0",
     "@modelcontextprotocol/2025-06-18",
     "@modelcontextprotocol/2025-03-26",
     "@modelcontextprotocol/2024-11-05",
@@ -343,7 +337,7 @@
           "baseUri": "http://www.iptc.org/std/ninjs",
           "path": "../vendor/public/ninjs/specification",
           "resolve": {
-            "https://geojson.org/schema/GeoJSON.json#": "/geojson/v1.0.5/geojson.json"
+            "https://geojson.org/schema/GeoJSON.json#": "/sourcemeta/std/v0/ietf/geojson/schema.json"
           }
         }
       }

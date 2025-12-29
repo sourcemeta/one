@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hectare",
+  "description": "A non-SI unit of area accepted for use with the SI. One hectare is equal to 10000 square metres",
+  "examples": [ 0, 1, 10, 100, 0.5, 2.5 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "10000 m^2",
+  "x-symbol": "ha",
+  "type": "number",
+  "minimum": 0
+}

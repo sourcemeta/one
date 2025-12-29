@@ -130,7 +130,7 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # With built-in library provenance
-GET {{base}}/self/api/schemas/metadata/geojson/v1.0.5/point
+GET {{base}}/self/api/schemas/metadata/sourcemeta/std/v0/ietf/geojson/point
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -140,23 +140,29 @@ last_response: body
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.bytes" == 532
-jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.health" == 67
-jsonpath "$.dependencies" == 0
-jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.identifier" == "{{base}}/geojson/v1.0.5/point"
-jsonpath "$.path" == "/geojson/v1.0.5/point"
-jsonpath "$.alert" == null
-jsonpath "$.provenance" == "@geojson/v1.0.5"
-jsonpath "$.examples" count == 0
-jsonpath "$.breadcrumb" count == 3
-jsonpath "$.breadcrumb[0].name" == "geojson"
-jsonpath "$.breadcrumb[0].path" == "/geojson"
-jsonpath "$.breadcrumb[1].name" == "v1.0.5"
-jsonpath "$.breadcrumb[1].path" == "/geojson/v1.0.5"
-jsonpath "$.breadcrumb[2].name" == "point"
-jsonpath "$.breadcrumb[2].path" == "/geojson/v1.0.5/point"
+jsonpath "$.bytes" == 882
+jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.health" == 100
+jsonpath "$.dependencies" == 5
+jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.identifier" == "{{base}}/sourcemeta/std/v0/ietf/geojson/point"
+jsonpath "$.path" == "/sourcemeta/std/v0/ietf/geojson/point"
+jsonpath "$.alert" == "By using this schema, you confirm you agree to its <a href=\"https://github.com/sourcemeta/std/blob/main/LICENSE\">license</a>"
+jsonpath "$.provenance" == "@sourcemeta/std/v0"
+jsonpath "$.examples" count == 2
+jsonpath "$.breadcrumb" count == 6
+jsonpath "$.breadcrumb[0].name" == "sourcemeta"
+jsonpath "$.breadcrumb[0].path" == "/sourcemeta"
+jsonpath "$.breadcrumb[1].name" == "std"
+jsonpath "$.breadcrumb[1].path" == "/sourcemeta/std"
+jsonpath "$.breadcrumb[2].name" == "v0"
+jsonpath "$.breadcrumb[2].path" == "/sourcemeta/std/v0"
+jsonpath "$.breadcrumb[3].name" == "ietf"
+jsonpath "$.breadcrumb[3].path" == "/sourcemeta/std/v0/ietf"
+jsonpath "$.breadcrumb[4].name" == "geojson"
+jsonpath "$.breadcrumb[4].path" == "/sourcemeta/std/v0/ietf/geojson"
+jsonpath "$.breadcrumb[5].name" == "point"
+jsonpath "$.breadcrumb[5].path" == "/sourcemeta/std/v0/ietf/geojson/point"
 
 POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/metadata/response
 ```

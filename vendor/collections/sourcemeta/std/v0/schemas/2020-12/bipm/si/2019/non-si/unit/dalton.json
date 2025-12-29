@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dalton",
+  "description": "A non-SI unit of mass accepted for use with the SI. One dalton is equal to (1/12) of the mass of an unbound neutral carbon-12 atom in its nuclear and electronic ground state. It is approximately 1.660 539 066 60 x 10^-27 kg",
+  "examples": [ 1, 12, 16, 18, 28, 44, 180.16 ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.bipm.org/en/publications/si-brochure" ],
+  "x-si-equivalent": "1.660539066605e-27 kg",
+  "x-symbol": "Da",
+  "type": "number",
+  "minimum": 0
+}

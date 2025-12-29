@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON Feature",
+  "description": "A spatially bounded entity that combines a geometry with additional properties",
+  "examples": [
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": null
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [ 0, 0 ]
+      },
+      "properties": {
+        "name": "Example"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "feature-1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [ 0, 0 ]
+      },
+      "properties": null
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.2" ],
+  "type": "object",
+  "required": [ "type", "geometry", "properties" ],
+  "properties": {
+    "type": {
+      "const": "Feature"
+    },
+    "id": {
+      "type": [ "number", "string" ]
+    },
+    "geometry": {
+      "anyOf": [
+        {
+          "const": null
+        },
+        {
+          "$ref": "geometry.json"
+        },
+        {
+          "$ref": "geometry-collection.json"
+        }
+      ]
+    },
+    "properties": {
+      "anyOf": [
+        {
+          "const": null
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "coordinates": false,
+    "geometries": false,
+    "features": false
+  }
+}

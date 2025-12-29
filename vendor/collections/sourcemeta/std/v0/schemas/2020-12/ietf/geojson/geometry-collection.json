@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RFC 7946 GeoJSON GeometryCollection",
+  "description": "A geometry object that represents a collection of geometry objects",
+  "examples": [
+    {
+      "type": "GeometryCollection",
+      "geometries": []
+    },
+    {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Point",
+          "coordinates": [ 0, 0 ]
+        },
+        {
+          "type": "LineString",
+          "coordinates": [
+            [ 0, 0 ],
+            [ 1, 1 ]
+          ]
+        }
+      ]
+    }
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://www.rfc-editor.org/rfc/rfc7946#section-3.1.8" ],
+  "type": "object",
+  "required": [ "type", "geometries" ],
+  "properties": {
+    "type": {
+      "const": "GeometryCollection"
+    },
+    "geometries": {
+      "type": "array",
+      "items": {
+        "$ref": "geometry.json"
+      }
+    },
+    "bbox": {
+      "$ref": "bounding-box.json"
+    },
+    "geometry": false,
+    "properties": false,
+    "features": false
+  }
+}
