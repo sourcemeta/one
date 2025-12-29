@@ -1,2 +1,0 @@
-README.md
-proposed_extensions_to_DATS.md
