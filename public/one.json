@@ -265,24 +265,6 @@
         }
       }
     },
-    "usnistgov": {
-      "title": "U.S. National Institute of Standards and Technology",
-      "description": "Department of Commerce",
-      "github": "usnistgov",
-      "website": "https://www.nist.gov",
-      "contents": {
-        "mgi": {
-          "title": "Materials Genome Initiative",
-          "description": "Community development of JSON schema within materials science and engineering",
-          "github": "usnistgov/mgi-json-schema",
-          "contents": {
-            "2022-08": {
-              "path": "../vendor/public/usnistgov-mgi-2022-08"
-            }
-          }
-        }
-      }
-    },
     "cloudevents": {
       "title": "CloudEvents",
       "description": "A specification for describing event data in a common way",
@@ -298,35 +280,6 @@
         "v1.0.0": {
           "path": "../vendor/public/cloudevents-1-0-0",
           "defaultDialect": "http://json-schema.org/draft-07/schema#"
-        }
-      }
-    },
-    "riskine": {
-      "title": "Riskine",
-      "description": "To create the customer-centric advisory of the future",
-      "email": "office@riskine.com",
-      "github": "riskine",
-      "website": "https://riskine.com",
-      "contents": {
-        "global-insurance": {
-          "title": "Global Insurance Ontology",
-          "github": "riskine/ontology",
-          "contents": {
-            "v1.0.0": {
-              "contents": {
-                "core": {
-                  "baseUri": "https://ontology.riskine.com",
-                  "path": "../vendor/public/riskine-ontology-1-0-0/schemas/core",
-                  "defaultDialect": "http://json-schema.org/draft-07/schema#"
-                },
-                "products": {
-                  "baseUri": "https://ontology.riskine.com",
-                  "path": "../vendor/public/riskine-ontology-1-0-0/schemas/products",
-                  "defaultDialect": "http://json-schema.org/draft-07/schema#"
-                }
-              }
-            }
-          }
         }
       }
     },
@@ -382,19 +335,6 @@
               "path": "../vendor/public/hca-metadata-5-0-0/json_schema"
             }
           }
-        }
-      }
-    },
-    "dats": {
-      "title": "Data Tag Suite (DATS)",
-      "description": "A data model for describing datasets",
-      "github": "datatagsuite",
-      "website": "https://datatagsuite.github.io/docs/html",
-      "contents": {
-        "v1.0.0": {
-          "baseUri": "https://w3id.org/dats/schema",
-          "path": "../vendor/public/dats-1-0-0",
-          "x-sourcemeta-one:evaluate": false
         }
       }
     },

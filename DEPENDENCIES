@@ -63,11 +63,9 @@ public/krakend https://github.com/krakend/krakend-schema fe9afd7d67de256a6c10830
 public/octue-power-curve/v1.0.0.alpha-1 https://github.com/octue/power-curve-schema 1.0.0.alpha-1
 public/octue-power-curve/v1.0.0.alpha-2 https://github.com/octue/power-curve-schema 1.0.0.alpha-2
 public/octue-power-curve/v1.0.0.alpha-3 https://github.com/octue/power-curve-schema 1.0.0.alpha-3
-public/usnistgov-mgi-2022-08 https://github.com/usnistgov/mgi-json-schema e5e6aaf3f5eae0d15b88ecbd57f44cc28b035f11
 public/cloudevents-1-0-0 https://github.com/cloudevents/spec v1.0
 public/cloudevents-1-0-1 https://github.com/cloudevents/spec v1.0.1
 public/cloudevents-1-0-2 https://github.com/cloudevents/spec v1.0.2
-public/riskine-ontology-1-0-0 https://github.com/riskine/ontology v1.0.0
 public/jsr https://github.com/jsr-io/jsr 0e218a1d98b52f4c67b99a5c00742ffc3a3dda7d
 public/jsonschema-2020-12 https://github.com/json-schema-org/json-schema-spec 769daad75a9553562333a8937a187741cb708c72
 public/jsonschema-2019-09 https://github.com/json-schema-org/json-schema-spec 41014ea723120ce70b314d72f863c6929d9f3cfd
@@ -75,7 +73,6 @@ public/jsonschema-draft7 https://github.com/json-schema-org/json-schema-spec 567
 public/jsonschema-draft6 https://github.com/json-schema-org/json-schema-spec 59ed5f6fc6f6386e23ca51d7f31d7fe9cf696713
 public/jsonschema-draft4 https://github.com/json-schema-org/json-schema-spec 955d185db846cfca84269d9d711b10f4f3353d38
 public/hca-metadata-5-0-0 https://github.com/HumanCellAtlas/metadata-schema 5.0.0
-public/dats-1-0-0 https://github.com/datatagsuite/schema 1.0.0
 public/fhir https://github.com/FHIR/packages b401fbd45566006a21243a9b88f1391e32b1ed40
 public/asyncapi https://github.com/asyncapi/spec-json-schemas v6.10.0
 public/ninjs https://github.com/iptc/newsinjson v3.2
