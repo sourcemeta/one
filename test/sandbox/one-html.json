@@ -13,17 +13,6 @@
     "@sourcemeta/one"
   ],
   "contents": {
-    "sourcemeta": {
-      "contents": {
-        "std": {
-          "contents": {
-            "v0": {
-              "x-sourcemeta-one:alert": "By using this schema, you confirm you agree to its <a href=\"https://github.com/sourcemeta/std/blob/main/LICENSE\">license</a>"
-            }
-          }
-        }
-      }
-    },
     "test": {
       "title": "Test",
       "description": "A directory full of testing schemas",

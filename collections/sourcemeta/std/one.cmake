@@ -1,4 +1,4 @@
-set(COLLECTION_NAMESPACE "sourcemeta/std/v0")
+set(COLLECTION_NAMESPACE "sourcemeta/std")
 set(STD_PATH "${PROJECT_SOURCE_DIR}/vendor/collections/${COLLECTION_NAMESPACE}")
 
 install(DIRECTORY "${STD_PATH}/schemas"

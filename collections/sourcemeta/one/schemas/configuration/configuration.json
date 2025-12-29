@@ -36,7 +36,7 @@
               "type": "string"
             },
             "url": {
-              "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+              "$ref": "../../../../../vendor/collections/sourcemeta/std/schemas/2020-12/ietf/uri/url.json"
             }
           },
           "additionalProperties": false
@@ -54,7 +54,7 @@
       "additionalProperties": false
     },
     "url": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+      "$ref": "../../../../../vendor/collections/sourcemeta/std/schemas/2020-12/ietf/uri/url.json"
     }
   },
   "additionalProperties": false

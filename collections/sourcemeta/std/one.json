@@ -1,5 +1,4 @@
 {
-  "extends": [ "@sourcemeta/std" ],
   "contents": {
     "sourcemeta": {
       "title": "Sourcemeta",
@@ -8,7 +7,7 @@
       "github": "sourcemeta",
       "website": "https://www.sourcemeta.com",
       "contents": {
-        "one": {
+        "std": {
           "include": "./jsonschema.json"
         }
       }

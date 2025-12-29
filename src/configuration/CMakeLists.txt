@@ -4,7 +4,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
 
 # Compile the configuration schema
 set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/sourcemeta/one/schemas")
-set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/v0/schemas/2020-12")
+set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/schemas/2020-12")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.json"
   COMMAND "$<TARGET_FILE:jsonschema_cli>" compile --minify
     "${ONE_SCHEMAS}/configuration/configuration.json"
