@@ -200,11 +200,7 @@ TEST(Configuration_read, read_valid_006) {
     },
     "contents": {
       "here": {
-        "contents": {
-          "test": {
-            "title": "Imported utility"
-          }
-        }
+        "title": "With standard name"
       }
     }
   })JSON"};
@@ -222,13 +218,12 @@ TEST(Configuration_read, read_valid_007) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
-    "html": {
-      "name": "Sourcemeta",
-      "description": "The next-generation JSON Schema platform"
-    },
+    "html": false,
     "contents": {
-      "here": {
-        "title": "With standard name"
+      "test": {
+        "title": "A sample schema folder",
+        "description": "For testing purposes",
+        "github": "sourcemeta/one"
       }
     }
   })JSON"};
@@ -246,7 +241,10 @@ TEST(Configuration_read, read_valid_008) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
-    "html": false,
+    "html": {
+      "name": "Sourcemeta",
+      "description": "The next-generation JSON Schema platform"
+    },
     "contents": {
       "test": {
         "title": "A sample schema folder",
@@ -295,10 +293,7 @@ TEST(Configuration_read, read_valid_010) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
-    "html": {
-      "name": "Sourcemeta",
-      "description": "The next-generation JSON Schema platform"
-    },
+    "html": false,
     "contents": {
       "test": {
         "title": "A sample schema folder",
@@ -320,29 +315,6 @@ TEST(Configuration_read, read_valid_011) {
       configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
-    "url": "http://localhost:8000",
-    "html": false,
-    "contents": {
-      "test": {
-        "title": "A sample schema folder",
-        "description": "For testing purposes",
-        "github": "sourcemeta/one"
-      }
-    }
-  })JSON"};
-
-  replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  const auto expected{sourcemeta::core::parse_json(text)};
-  EXPECT_EQ(raw_configuration, expected);
-}
-
-TEST(Configuration_read, read_valid_012) {
-  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_012.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
-
-  std::string text{R"JSON({
     "include": "./read_valid_001.json",
     "html": {
       "name": "Sourcemeta",
@@ -355,9 +327,9 @@ TEST(Configuration_read, read_valid_012) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_013) {
+TEST(Configuration_read, read_valid_012) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_013.json"};
+                                "read_valid_012.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
 
@@ -386,9 +358,9 @@ TEST(Configuration_read, read_valid_013) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_014) {
+TEST(Configuration_read, read_valid_013) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_014.json"};
+                                "read_valid_013.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
 

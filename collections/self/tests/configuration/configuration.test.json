@@ -82,6 +82,21 @@
       }
     },
     {
+      "description": "No extends on a page",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "A sample schema folder",
+            "description": "For testing purposes",
+            "github": "sourcemeta/one",
+            "extends": [ "./foo" ]
+          }
+        }
+      }
+    },
+    {
       "description": "No includes on a page",
       "valid": false,
       "data": {

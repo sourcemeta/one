@@ -13,7 +13,11 @@
       "resolve": {
         "https://other.com/single.json": "/foo.json"
       },
-      "include": "./read_partial_001.json"
+      "contents": {
+        "foo": {
+          "include": "./read_partial_001.json"
+        }
+      }
     }
   }
 }

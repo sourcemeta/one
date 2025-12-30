@@ -2,7 +2,7 @@
   "url": "http://localhost:8000",
   "contents": {
     "here": {
-      "extends": [ "@test" ]
+      "include": "@test"
     }
   }
 }

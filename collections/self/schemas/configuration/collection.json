@@ -24,7 +24,8 @@
       "type": "boolean"
     },
     "x-sourcemeta-one:provenance": {
-      "$ref": "./rpath.json"
+      "type": "string",
+      "pattern": "^@[a-z0-9/.-]+$"
     },
     "baseUri": {
       "$ref": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-reference.json"

@@ -11,7 +11,19 @@
   "required": [ "url" ],
   "properties": {
     "extends": {
-      "$ref": "./extends.json"
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^@[a-z0-9/.-]+$"
+          },
+          {
+            "$ref": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ieee/posix/2017/path.json"
+          }
+        ]
+      }
     },
     "contents": {
       "$ref": "./contents.json"

@@ -224,17 +224,15 @@ contains the schema collections they own.
 | `/email`        | String  | No  | None | The e-mail address associated with the page |
 | `/github`       | String  | No  | None | The GitHub organisation or `organisation/repository` identifier associated with the page |
 | `/website`      | String  | No  | None | The absolute URL to the website associated with the page |
-| `/extends`      | Array   | No  | None | One or more configuration files to extend from. See the [Extends](#extends) section for more information |
 | `/contents`     | Object  | No  | None | The nested [Collections](#collections) and [Pages](#pages) inside this page |
 
 ## Extends
 
-The `extends` property enables configuration inheritance, allowing either your
-top-level schema or individual pages to build upon existing configuration files
-for enhanced reusability and modularity. This property accepts an array of
-strings where each entry represents either a file path (relative from the
-configuration file location) or a built-in schema collection identifier
-(prefixed with `@`). For example:
+The `extends` property enables configuration inheritance, allowing you to build
+upon existing configuration files for enhanced reusability and modularity. This
+property accepts an array of strings where each entry represents either a file
+path (relative from the configuration file location) or a built-in schema
+collection identifier (prefixed with `@`). For example:
 
 ```json hl_lines="3" title="one.json"
 {
