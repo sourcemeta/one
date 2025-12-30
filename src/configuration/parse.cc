@@ -74,11 +74,8 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
 namespace sourcemeta::one {
 
 auto Configuration::parse(const sourcemeta::core::JSON &data) -> Configuration {
-  const auto compiled_schema{
-      sourcemeta::blaze::from_json(sourcemeta::core::parse_json(
-          std::string(reinterpret_cast<const char *>(
-                          SOURCEMETA_CONFIGURATION_SCHEMA_TEMPLATE),
-                      SOURCEMETA_CONFIGURATION_SCHEMA_TEMPLATE_len)))};
+  const auto compiled_schema{sourcemeta::blaze::from_json(
+      sourcemeta::core::parse_json(std::string{CONFIGURATION}))};
   assert(compiled_schema.has_value());
   sourcemeta::blaze::Evaluator evaluator;
   sourcemeta::blaze::SimpleOutput output{data};
