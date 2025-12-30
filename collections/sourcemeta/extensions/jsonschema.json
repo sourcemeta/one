@@ -1,8 +1,0 @@
-{
-  "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
-  "path": "./schemas/extension",
-  "title": "The JSON Schema registry of extensions",
-  "description": "A growing collection of popular extensions to JSON Schema",
-  "email": "hello@sourcemeta.com",
-  "github": "sourcemeta/extensions"
-}

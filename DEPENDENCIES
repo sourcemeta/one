@@ -22,7 +22,6 @@ collections/openapi https://github.com/OAI/OpenAPI-Specification 74906beddddab9e
 collections/wot https://github.com/w3c/wot-resources 27f33da933023ba1adbfbaa92f70eb01d8b0c010
 collections/jsonld/v1.0 https://github.com/json-ld/json-ld.org 1.0
 collections/jsonld/v1.1 https://github.com/json-ld/json-ld.org a9e5cdd45bb6ebb90afe1f55dc3737f0af2e19c9
-collections/sourcemeta/extensions https://github.com/sourcemeta/extensions 1ff35e38b3941235dc11cd9790dd580604619968
 public/nasa-gcn-1-0-0 https://github.com/nasa-gcn/gcn-schema v1.0.0
 public/nasa-gcn-2-0-0 https://github.com/nasa-gcn/gcn-schema v2.0.0
 public/nasa-gcn-3-0-0 https://github.com/nasa-gcn/gcn-schema v3.0.0
