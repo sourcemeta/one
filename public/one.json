@@ -34,13 +34,13 @@
       "website": "https://modelcontextprotocol.io",
       "contents": {
         "2025-06-18": {
-          "path": "../vendor/collections/modelcontextprotocol/schema/2025-06-18"
+          "path": "../vendor/public/modelcontextprotocol/schema/2025-06-18"
         },
         "2025-03-26": {
-          "path": "../vendor/collections/modelcontextprotocol/schema/2025-03-26"
+          "path": "../vendor/public/modelcontextprotocol/schema/2025-03-26"
         },
         "2024-11-05": {
-          "path": "../vendor/collections/modelcontextprotocol/schema/2024-11-05"
+          "path": "../vendor/public/modelcontextprotocol/schema/2024-11-05"
         }
       }
     },
@@ -51,28 +51,28 @@
       "website": "https://a2a-protocol.org",
       "contents": {
         "v0.3.0": {
-          "path": "../vendor/collections/a2a/v0.3.0/specification/json"
+          "path": "../vendor/public/a2a/v0.3.0/specification/json"
         },
         "v0.2.6": {
-          "path": "../vendor/collections/a2a/v0.2.6/specification/json"
+          "path": "../vendor/public/a2a/v0.2.6/specification/json"
         },
         "v0.2.5": {
-          "path": "../vendor/collections/a2a/v0.2.5/specification/json"
+          "path": "../vendor/public/a2a/v0.2.5/specification/json"
         },
         "v0.2.4": {
-          "path": "../vendor/collections/a2a/v0.2.4/specification/json"
+          "path": "../vendor/public/a2a/v0.2.4/specification/json"
         },
         "v0.2.3": {
-          "path": "../vendor/collections/a2a/v0.2.3/specification/json"
+          "path": "../vendor/public/a2a/v0.2.3/specification/json"
         },
         "v0.2.2": {
-          "path": "../vendor/collections/a2a/v0.2.2/specification/json"
+          "path": "../vendor/public/a2a/v0.2.2/specification/json"
         },
         "v0.2.1": {
-          "path": "../vendor/collections/a2a/v0.2.1/specification/json"
+          "path": "../vendor/public/a2a/v0.2.1/specification/json"
         },
         "v0.2.0": {
-          "path": "../vendor/collections/a2a/v0.2.0/specification/json"
+          "path": "../vendor/public/a2a/v0.2.0/specification/json"
         }
       }
     },
@@ -83,7 +83,7 @@
       "website": "https://datatracker.ietf.org/doc/draft-ietf-asdf-sdf/",
       "contents": {
         "v1.0.0": {
-          "path": "../vendor/collections/sdf/v1.0.0"
+          "path": "../vendor/public/sdf/v1.0.0"
         }
       }
     },
@@ -96,19 +96,19 @@
       "contents": {
         "v2.0": {
           "baseUri": "http://swagger.io/v2",
-          "path": "../vendor/collections/openapi/oas/2.0"
+          "path": "../vendor/public/openapi/oas/2.0"
         },
         "v3.0": {
           "baseUri": "https://spec.openapis.org/oas/3.0/schema",
-          "path": "../vendor/collections/openapi/oas/3.0"
+          "path": "../vendor/public/openapi/oas/3.0"
         },
         "v3.1": {
           "baseUri": "https://spec.openapis.org/oas/3.1",
-          "path": "../vendor/collections/openapi/oas/3.1"
+          "path": "../vendor/public/openapi/oas/3.1"
         },
         "v3.2": {
           "baseUri": "https://spec.openapis.org/oas/3.2",
-          "path": "../vendor/collections/openapi/oas/3.2"
+          "path": "../vendor/public/openapi/oas/3.2"
         }
       }
     },
@@ -125,10 +125,10 @@
           "website": "https://www.w3.org/WoT/",
           "contents": {
             "v1.0": {
-              "path": "../vendor/collections/wot/td/v1/validation"
+              "path": "../vendor/public/wot/td/v1/validation"
             },
             "v1.1": {
-              "path": "../vendor/collections/wot/td/v1.1/validation"
+              "path": "../vendor/public/wot/td/v1.1/validation"
             }
           }
         }
@@ -141,10 +141,10 @@
       "website": "https://json-ld.org",
       "contents": {
         "v1.0": {
-          "path": "../vendor/collections/jsonld/v1.0/schemas"
+          "path": "../vendor/public/jsonld/v1.0/schemas"
         },
         "v1.1": {
-          "path": "../vendor/collections/jsonld/v1.1/schemas"
+          "path": "../vendor/public/jsonld/v1.1/schemas"
         }
       }
     },
