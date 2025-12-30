@@ -3,7 +3,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
   SOURCES parse.cc read.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
 
 # Compile the configuration schema
-set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/schemas")
+set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
 set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/v0/schemas/2020-12")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.json"
   COMMAND "$<TARGET_FILE:jsonschema_cli>" compile --minify

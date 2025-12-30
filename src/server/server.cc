@@ -124,7 +124,7 @@ static auto json_error(const std::string_view method,
   response->writeStatus(code);
   response->writeHeader("Content-Type", "application/problem+json");
   response->writeHeader("Access-Control-Allow-Origin", "*");
-  write_link_header(response, "/self/schemas/api/error");
+  write_link_header(response, "/self/v1/schemas/api/error");
 
   std::ostringstream output;
   sourcemeta::core::prettify(object, output);
@@ -361,10 +361,10 @@ static auto on_evaluate(const std::filesystem::path &base,
             response->writeHeader("Access-Control-Allow-Origin", "*");
             if (mode == sourcemeta::one::EvaluateType::Trace) {
               write_link_header(response,
-                                "/self/schemas/api/schemas/trace/response");
+                                "/self/v1/schemas/api/schemas/trace/response");
             } else {
-              write_link_header(response,
-                                "/self/schemas/api/schemas/evaluate/response");
+              write_link_header(
+                  response, "/self/v1/schemas/api/schemas/evaluate/response");
             }
             std::ostringstream payload;
             sourcemeta::core::prettify(result, payload);
@@ -447,114 +447,115 @@ static auto on_request(const std::filesystem::path &base,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl() == "/self/api/list") {
+  } else if (request->getUrl() == "/self/v1/api/list") {
     serve_static_file(request, response, encoding,
                       base / "explorer" / SENTINEL / "directory.metapack",
                       sourcemeta::one::STATUS_OK, true, std::nullopt,
-                      "/self/schemas/api/list/response");
-  } else if (request->getUrl().starts_with("/self/api/list/")) {
-    const auto absolute_path{base / "explorer" / request->getUrl().substr(15) /
+                      "/self/v1/schemas/api/list/response");
+  } else if (request->getUrl().starts_with("/self/v1/api/list/")) {
+    const auto absolute_path{base / "explorer" / request->getUrl().substr(18) /
                              SENTINEL / "directory.metapack"};
     serve_static_file(request, response, encoding, absolute_path,
                       sourcemeta::one::STATUS_OK, true, std::nullopt,
-                      "/self/schemas/api/list/response");
-  } else if (request->getUrl().starts_with("/self/api/schemas/dependencies/")) {
+                      "/self/v1/schemas/api/list/response");
+  } else if (request->getUrl().starts_with(
+                 "/self/v1/api/schemas/dependencies/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
-      absolute_path /= request->getUrl().substr(31);
+      absolute_path /= request->getUrl().substr(34);
       absolute_path /= SENTINEL;
       absolute_path /= "dependencies.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/dependencies/response");
+                        "/self/v1/schemas/api/schemas/dependencies/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/health/")) {
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/health/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
-      absolute_path /= request->getUrl().substr(25);
+      absolute_path /= request->getUrl().substr(28);
       absolute_path /= SENTINEL;
       absolute_path /= "health.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/health/response");
+                        "/self/v1/schemas/api/schemas/health/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/locations/")) {
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/locations/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
-      absolute_path /= request->getUrl().substr(28);
+      absolute_path /= request->getUrl().substr(31);
       absolute_path /= SENTINEL;
       absolute_path /= "locations.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/locations/response");
+                        "/self/v1/schemas/api/schemas/locations/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/positions/")) {
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/positions/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
-      absolute_path /= request->getUrl().substr(28);
+      absolute_path /= request->getUrl().substr(31);
       absolute_path /= SENTINEL;
       absolute_path /= "positions.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/positions/response");
+                        "/self/v1/schemas/api/schemas/positions/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/stats/")) {
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/stats/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
-      absolute_path /= request->getUrl().substr(24);
+      absolute_path /= request->getUrl().substr(27);
       absolute_path /= SENTINEL;
       absolute_path /= "stats.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/stats/response");
+                        "/self/v1/schemas/api/schemas/stats/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/metadata/")) {
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/metadata/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "explorer"};
-      absolute_path /= request->getUrl().substr(27);
+      absolute_path /= request->getUrl().substr(30);
       absolute_path /= SENTINEL;
       absolute_path /= "schema.metapack";
       serve_static_file(request, response, encoding, absolute_path,
                         sourcemeta::one::STATUS_OK, true, std::nullopt,
-                        "/self/schemas/api/schemas/metadata/response");
+                        "/self/v1/schemas/api/schemas/metadata/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                  "method-not-allowed",
                  "This HTTP method is invalid for this URL");
     }
-  } else if (request->getUrl().starts_with("/self/api/schemas/evaluate/")) {
-    on_evaluate(base, request->getUrl().substr(27), request, response, encoding,
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/evaluate/")) {
+    on_evaluate(base, request->getUrl().substr(30), request, response, encoding,
                 sourcemeta::one::EvaluateType::Standard);
-  } else if (request->getUrl().starts_with("/self/api/schemas/trace/")) {
-    on_evaluate(base, request->getUrl().substr(24), request, response, encoding,
+  } else if (request->getUrl().starts_with("/self/v1/api/schemas/trace/")) {
+    on_evaluate(base, request->getUrl().substr(27), request, response, encoding,
                 sourcemeta::one::EvaluateType::Trace);
-  } else if (request->getUrl() == "/self/api/schemas/search") {
+  } else if (request->getUrl() == "/self/v1/api/schemas/search") {
     if (request->getMethod() == "get") {
       const auto query{request->getQuery("q")};
       if (query.empty()) {
@@ -568,7 +569,7 @@ static auto on_request(const std::filesystem::path &base,
         response->writeHeader("Access-Control-Allow-Origin", "*");
         response->writeHeader("Content-Type", "application/json");
         write_link_header(response,
-                          "/self/schemas/api/schemas/search/response");
+                          "/self/v1/schemas/api/schemas/search/response");
         std::ostringstream output;
         sourcemeta::core::prettify(result, output);
         send_response(sourcemeta::one::STATUS_OK, request->getMethod(),

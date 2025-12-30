@@ -8,8 +8,12 @@
       "github": "sourcemeta/one",
       "website": "https://www.sourcemeta.com",
       "contents": {
-        "schemas": {
-          "include": "./jsonschema.json"
+        "v1": {
+          "contents": {
+            "schemas": {
+              "include": "./jsonschema.json"
+            }
+          }
         }
       }
     }

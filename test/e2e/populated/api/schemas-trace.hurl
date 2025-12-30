@@ -1,15 +1,15 @@
-OPTIONS {{base}}/self/api/schemas/trace/test/schemas/string
+OPTIONS {{base}}/self/v1/api/schemas/trace/test/schemas/string
 HTTP 204
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type
 Access-Control-Max-Age: 3600
 
-POST {{base}}/self/api/schemas/trace/test/schemas/string
+POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -18,21 +18,21 @@ jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-POST {{base}}/self/api/schemas/trace/test/schemas/string
+POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
 Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/trace/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -66,21 +66,21 @@ jsonpath "$.steps[1].type" == "pass"
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[1].message" == "The value was expected to be of type string"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-POST {{base}}/self/api/schemas/trace/test/no-blaze/string
+POST {{base}}/self/v1/api/schemas/trace/test/no-blaze/string
 Content-Type: application/problem+json
 "Hello World"
 HTTP 405
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -89,11 +89,11 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/no-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
