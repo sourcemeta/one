@@ -1,18 +1,18 @@
 #ifndef SOURCEMETA_JSONSCHEMA_CLI_ERROR_H_
 #define SOURCEMETA_JSONSCHEMA_CLI_ERROR_H_
 
+#include <sourcemeta/blaze/test.h>
+
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/schemaconfig.h>
 
-#include <cassert>      // assert
 #include <cstdlib>      // EXIT_FAILURE
 #include <filesystem>   // std::filesystem
 #include <functional>   // std::function
 #include <iostream>     // std::cout, std::cerr
-#include <optional>     // std::optional
 #include <stdexcept>    // std::runtime_error
 #include <string>       // std::string
 #include <system_error> // std::errc
@@ -81,6 +81,21 @@ private:
   std::string rule_;
 };
 
+class InvalidIncludeIdentifier : public std::runtime_error {
+public:
+  InvalidIncludeIdentifier(std::string identifier)
+      : std::runtime_error{"The include identifier is not a valid C/C++ "
+                           "identifier"},
+        identifier_{std::move(identifier)} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+private:
+  std::string identifier_;
+};
+
 class LintAutoFixError : public std::runtime_error {
 public:
   LintAutoFixError(std::string message, std::filesystem::path path,
@@ -113,21 +128,6 @@ public:
 
 private:
   std::string command_;
-};
-
-class TestError : public std::runtime_error {
-public:
-  TestError(std::string message, std::optional<unsigned int> test_number)
-      : std::runtime_error{std::move(message)},
-        test_number_{std::move(test_number)} {}
-
-  [[nodiscard]] auto test_number() const noexcept
-      -> const std::optional<unsigned int> & {
-    return this->test_number_;
-  }
-
-private:
-  std::optional<unsigned int> test_number_;
 };
 
 class Fail : public std::runtime_error {
@@ -203,19 +203,6 @@ inline auto print_exception(const bool is_json, const Exception &exception)
                         sourcemeta::core::JSON{exception.identifier()});
     } else {
       std::cerr << "  at identifier " << exception.identifier() << "\n";
-    }
-  }
-
-  if constexpr (requires(const Exception &current) { current.test_number(); }) {
-    if (exception.test_number().has_value()) {
-      if (is_json) {
-        error_json.assign("testNumber",
-                          sourcemeta::core::JSON{static_cast<std::size_t>(
-                              exception.test_number().value())});
-      } else {
-        std::cerr << "  at test case #" << exception.test_number().value()
-                  << "\n";
-      }
     }
   }
 
@@ -344,6 +331,10 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_FAILURE;
+  } catch (const InvalidIncludeIdentifier &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_FAILURE;
   } catch (const LintAutoFixError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -363,7 +354,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_FAILURE;
-  } catch (const FileError<TestError> &error) {
+  } catch (const FileError<sourcemeta::blaze::TestParseError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
