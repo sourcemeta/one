@@ -1,288 +1,321 @@
-#include <sourcemeta/core/io.h>
-#include <sourcemeta/core/json.h>
-#include <sourcemeta/core/jsonschema.h>
-#include <sourcemeta/core/uri.h>
-#include <sourcemeta/core/yaml.h>
-
-#include <sourcemeta/blaze/compiler.h>
-#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
+#include <sourcemeta/blaze/test.h>
 
-#include <cstdlib>    // EXIT_FAILURE
-#include <filesystem> // std::filesystem
-#include <iostream>   // std::cerr, std::cout
+#include <sourcemeta/core/json.h>
+
+#include <chrono>   // std::chrono
+#include <cstdlib>  // EXIT_FAILURE
+#include <iostream> // std::cerr, std::cout
+#include <sstream>  // std::ostringstream
+#include <string>   // std::string
+#include <thread>   // std::this_thread
+#include <vector>   // std::vector
 
 #include "command.h"
 #include "configuration.h"
+#include "configure.h"
 #include "error.h"
 #include "input.h"
 #include "logger.h"
 #include "resolver.h"
 #include "utils.h"
 
-static auto get_data(const sourcemeta::core::JSON &test_case,
-                     const std::filesystem::path &base,
-                     const sourcemeta::core::Options &options,
-                     sourcemeta::core::PointerPositionTracker &tracker)
-    -> sourcemeta::core::JSON {
-  assert(base.is_absolute());
-  assert(test_case.is_object());
-  assert(test_case.defines("data") || test_case.defines("dataPath"));
-  if (test_case.defines("data")) {
-    return test_case.at("data");
-  }
+namespace {
 
-  assert(test_case.defines("dataPath"));
-  assert(test_case.at("dataPath").is_string());
-
-  const std::filesystem::path data_path{sourcemeta::core::weakly_canonical(
-      base / test_case.at("dataPath").to_string())};
-  sourcemeta::jsonschema::LOG_VERBOSE(options)
-      << "Reading test instance file: " << data_path.string() << "\n";
-
+auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
+                      const sourcemeta::core::SchemaResolver &schema_resolver,
+                      const std::optional<std::string> &dialect,
+                      const bool json_output) -> sourcemeta::blaze::TestSuite {
   try {
-    return sourcemeta::core::read_yaml_or_json(data_path, std::ref(tracker));
+    return sourcemeta::blaze::TestSuite::parse(
+        entry.second, entry.positions, entry.first.parent_path(),
+        schema_resolver, sourcemeta::core::schema_walker,
+        sourcemeta::blaze::default_schema_compiler, dialect);
+  } catch (const sourcemeta::blaze::TestParseError &error) {
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
+    throw sourcemeta::jsonschema::FileError<sourcemeta::blaze::TestParseError>{
+        entry.first, error.what(), error.location(), error.line(),
+        error.column()};
+  } catch (
+      const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
+    throw sourcemeta::jsonschema::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>{entry.first,
+                                                                   error};
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
+    throw sourcemeta::jsonschema::FileError<
+        sourcemeta::core::SchemaResolutionError>{entry.first, error};
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
+    throw sourcemeta::jsonschema::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>{entry.first};
   } catch (...) {
-    std::cout << "\n";
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
     throw;
   }
 }
 
-auto sourcemeta::jsonschema::test(const sourcemeta::core::Options &options)
-    -> void {
+auto report_as_text(const sourcemeta::core::Options &options) -> void {
   bool result{true};
-
   const auto verbose{options.contains("verbose")};
-  sourcemeta::blaze::Evaluator evaluator;
 
-  for (const auto &entry : for_each_json(options)) {
-    const auto configuration_path{find_configuration(entry.first)};
-    const auto &configuration{read_configuration(options, configuration_path)};
-    const auto dialect{default_dialect(options, configuration)};
+  for (const auto &entry : sourcemeta::jsonschema::for_each_json(options)) {
+    const auto configuration_path{
+        sourcemeta::jsonschema::find_configuration(entry.first)};
+    const auto &configuration{sourcemeta::jsonschema::read_configuration(
+        options, configuration_path)};
+    const auto dialect{
+        sourcemeta::jsonschema::default_dialect(options, configuration)};
+    const auto &schema_resolver{sourcemeta::jsonschema::resolver(
+        options, options.contains("http"), dialect, configuration)};
 
-    const sourcemeta::core::JSON test{
-        sourcemeta::core::read_yaml_or_json(entry.first)};
-
-    if (!test.is_object()) {
-      std::cout << entry.first.string() << ":\n";
-      throw FileError<TestError>{
-          entry.first, "The test document must be an object", std::nullopt};
-    }
-
-    const auto &test_resolver{
-        resolver(options, options.contains("http"), dialect, configuration)};
-
-    if (!test.defines("target")) {
-      std::cout << entry.first.string() << ":\n";
-      throw FileError<TestError>{
-          entry.first, "The test document must contain a `target` property",
-          std::nullopt};
-    }
-
-    if (!test.at("target").is_string()) {
-      std::cout << entry.first.string() << ":\n";
-      throw FileError<TestError>{
-          entry.first, "The test document `target` property must be a URI",
-          std::nullopt};
-    }
-
-    if (!test.defines("tests")) {
-      std::cout << entry.first.string() << ":\n";
-      throw FileError<TestError>{
-          entry.first, "The test document must contain a `tests` property",
-          std::nullopt};
-    }
-
-    if (!test.at("tests").is_array()) {
-      std::cout << entry.first.string() << ":\n";
-      throw FileError<TestError>{
-          entry.first, "The test document `tests` property must be an array",
-          std::nullopt};
-    }
-
-    const auto test_path_uri{sourcemeta::core::URI::from_path(entry.first)};
-    sourcemeta::core::URI schema_uri{test.at("target").to_string()};
-    schema_uri.resolve_from(test_path_uri);
-    schema_uri.canonicalize();
-
-    LOG_VERBOSE(options) << "Looking for target: " << schema_uri.recompose()
-                         << "\n";
-
-    const auto schema{sourcemeta::core::wrap(schema_uri.recompose())};
-
-    unsigned int pass_count{0};
-    unsigned int index{0};
-    const auto total{test.at("tests").size()};
-
-    if (test.at("tests").empty()) {
-      std::cout << entry.first.string() << ":";
-      std::cout << " NO TESTS\n";
-      continue;
-    }
-
-    sourcemeta::blaze::Template schema_template;
-
-    try {
-      schema_template = sourcemeta::blaze::compile(
-          schema, sourcemeta::core::schema_walker, test_resolver,
-          sourcemeta::blaze::default_schema_compiler,
-          sourcemeta::blaze::Mode::FastValidation, dialect);
-    } catch (const sourcemeta::core::SchemaReferenceError &error) {
-      if (error.location() == sourcemeta::core::Pointer{"$ref"} &&
-          error.identifier() == schema_uri.recompose()) {
-        std::cout << entry.first.string() << ":";
-        std::cout << "\n";
-        throw FileError<sourcemeta::core::SchemaResolutionError>{
-            entry.first, test.at("target").to_string(),
-            "Could not resolve schema under test"};
-      }
-
-      throw;
-    } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
-                 &error) {
-      std::cout << entry.first.string() << ":";
-      std::cout << "\n";
-      throw FileError<
-          sourcemeta::core::SchemaRelativeMetaschemaResolutionError>{
-          entry.first, error};
-    } catch (const sourcemeta::core::SchemaResolutionError &error) {
-      std::cout << entry.first.string() << ":";
-      std::cout << "\n";
-      throw FileError<sourcemeta::core::SchemaResolutionError>{entry.first,
-                                                               error};
-    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-      std::cout << entry.first.string() << ":";
-      std::cout << "\n";
-      throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>{
-          entry.first};
-    } catch (...) {
-      std::cout << entry.first.string() << ":";
-      std::cout << "\n";
-      throw;
-    }
+    auto test_suite{parse_test_suite(entry, schema_resolver, dialect, false)};
 
     std::cout << entry.first.string() << ":";
-    if (verbose) {
-      std::cout << "\n";
+
+    const auto suite_result{test_suite.run(
+        [&](const sourcemeta::core::JSON::String &, std::size_t index,
+            std::size_t total, const sourcemeta::blaze::TestCase &test_case,
+            bool actual, sourcemeta::blaze::TestTimestamp,
+            sourcemeta::blaze::TestTimestamp) {
+          if (index == 1 && verbose) {
+            std::cout << "\n";
+          }
+
+          const auto &description{test_case.description.empty()
+                                      ? "<no description>"
+                                      : test_case.description};
+
+          if (test_case.valid == actual) {
+            if (verbose) {
+              std::cout << "  " << index << "/" << total << " PASS "
+                        << description << "\n";
+            }
+          } else if (!test_case.valid && actual) {
+            if (!verbose) {
+              std::cout << "\n";
+            }
+
+            std::cout << "  " << index << "/" << total << " FAIL "
+                      << description << "\n\n"
+                      << "error: Passed but was expected to fail\n";
+
+            if (index != total && verbose) {
+              std::cout << "\n";
+            }
+          } else {
+            const std::string ref{"$ref"};
+            sourcemeta::blaze::SimpleOutput output{test_case.data,
+                                                   {std::cref(ref)}};
+            test_suite.evaluator.validate(test_suite.schema_exhaustive,
+                                          test_case.data, std::ref(output));
+
+            if (!verbose) {
+              std::cout << "\n";
+            }
+
+            std::cout << "  " << index << "/" << total << " FAIL "
+                      << description << "\n\n";
+            sourcemeta::jsonschema::print(output, test_case.tracker, std::cout);
+
+            if (index != total && verbose) {
+              std::cout << "\n";
+            }
+          }
+        })};
+
+    if (suite_result.passed != suite_result.total) {
+      result = false;
     }
 
-    for (const auto &test_case : test.at("tests").as_array()) {
-      index += 1;
-
-      if (!test_case.is_object()) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first, "Test case documents must be objects", index};
-      }
-
-      if (!test_case.defines("data") && !test_case.defines("dataPath")) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first,
-            "Test case documents must contain a `data` or `dataPath` property",
-            index};
-      }
-
-      if (test_case.defines("data") && test_case.defines("dataPath")) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first,
-            "Test case documents must contain either a `data` or "
-            "`dataPath` property, but not both",
-            index};
-      }
-
-      if (test_case.defines("dataPath") &&
-          !test_case.at("dataPath").is_string()) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first,
-            "Test case documents must set the `dataPath` property to a string",
-            index};
-      }
-
-      if (test_case.defines("description") &&
-          !test_case.at("description").is_string()) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first,
-            "If you set a test case description, it must be a string", index};
-      }
-
-      if (!test_case.defines("valid")) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first, "Test case documents must contain a `valid` property",
-            index};
-      }
-
-      if (!test_case.at("valid").is_boolean()) {
-        std::cout << "\n";
-        throw FileError<TestError>{
-            entry.first,
-            "The test case document `valid` property must be a boolean", index};
-      }
-
-      sourcemeta::core::PointerPositionTracker tracker;
-      const auto instance{
-          get_data(test_case, entry.first.parent_path(), options, tracker)};
-      const std::string ref{"$ref"};
-      sourcemeta::blaze::SimpleOutput output{instance, {std::cref(ref)}};
-      const auto case_result{
-          evaluator.validate(schema_template, instance, std::ref(output))};
-
-      std::ostringstream test_case_description;
-      if (test_case.defines("description")) {
-        test_case_description << test_case.at("description").to_string();
-      } else {
-        test_case_description << "<no description>";
-      }
-
-      if (test_case.at("valid").to_boolean() == case_result) {
-        pass_count += 1;
-        if (verbose) {
-          std::cout << "  " << index << "/" << total << " PASS "
-                    << test_case_description.str() << "\n";
-        }
-      } else if (!test_case.at("valid").to_boolean() && case_result) {
-        if (!verbose) {
-          std::cout << "\n";
-        }
-
-        std::cout << "  " << index << "/" << total << " FAIL "
-                  << test_case_description.str() << "\n\n"
-                  << "error: Passed but was expected to fail\n";
-
-        if (index != total && verbose) {
-          std::cout << "\n";
-        }
-
-        result = false;
-      } else {
-        if (!verbose) {
-          std::cout << "\n";
-        }
-
-        std::cout << "  " << index << "/" << total << " FAIL "
-                  << test_case_description.str() << "\n\n";
-        print(output, tracker, std::cout);
-
-        if (index != total && verbose) {
-          std::cout << "\n";
-        }
-
-        result = false;
-      }
-    }
-
-    if (!verbose && pass_count == total) {
-      std::cout << " PASS " << pass_count << "/" << total << "\n";
+    if (suite_result.total == 0) {
+      std::cout << " NO TESTS\n";
+    } else if (!verbose && suite_result.passed == suite_result.total) {
+      std::cout << " PASS " << suite_result.passed << "/" << suite_result.total
+                << "\n";
     }
   }
 
   if (!result) {
-    // Report a different exit code for test failures, to
-    // distinguish them from other errors
-    throw Fail{2};
+    throw sourcemeta::jsonschema::Fail{2};
+  }
+}
+
+auto timestamp_to_unix_ms(
+    const sourcemeta::blaze::TestTimestamp &timestamp,
+    const std::chrono::system_clock::time_point &system_ref,
+    const sourcemeta::blaze::TestTimestamp &steady_ref) -> std::int64_t {
+  const auto offset{timestamp - steady_ref};
+  const auto unix_time{system_ref + offset};
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             unix_time.time_since_epoch())
+      .count();
+}
+
+auto duration_ms(const sourcemeta::blaze::TestTimestamp &start,
+                 const sourcemeta::blaze::TestTimestamp &end) -> std::int64_t {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+      .count();
+}
+
+auto report_as_ctrf(const sourcemeta::core::Options &options) -> void {
+  bool result{true};
+
+  const auto system_ref{std::chrono::system_clock::now()};
+  const auto steady_ref{std::chrono::steady_clock::now()};
+
+  auto ctrf_tests{sourcemeta::core::JSON::make_array()};
+  std::size_t total_passed{0};
+  std::size_t total_failed{0};
+  sourcemeta::blaze::TestTimestamp global_start{};
+  sourcemeta::blaze::TestTimestamp global_end{};
+  bool first_suite{true};
+
+  for (const auto &entry : sourcemeta::jsonschema::for_each_json(options)) {
+    const auto configuration_path{
+        sourcemeta::jsonschema::find_configuration(entry.first)};
+    const auto &configuration{sourcemeta::jsonschema::read_configuration(
+        options, configuration_path)};
+    const auto dialect{
+        sourcemeta::jsonschema::default_dialect(options, configuration)};
+    const auto &schema_resolver{sourcemeta::jsonschema::resolver(
+        options, options.contains("http"), dialect, configuration)};
+
+    auto test_suite{parse_test_suite(entry, schema_resolver, dialect, true)};
+
+    const auto file_path{
+        sourcemeta::core::weakly_canonical(entry.first).string()};
+
+    const auto suite_result{test_suite.run(
+        [&](const sourcemeta::core::JSON::String &target, std::size_t,
+            std::size_t, const sourcemeta::blaze::TestCase &test_case,
+            bool actual, sourcemeta::blaze::TestTimestamp start,
+            sourcemeta::blaze::TestTimestamp end) {
+          auto test_object{sourcemeta::core::JSON::make_object()};
+
+          const auto &name{test_case.description.empty()
+                               ? "<no description>"
+                               : test_case.description};
+          test_object.assign("name", sourcemeta::core::JSON{name});
+
+          const bool passed{test_case.valid == actual};
+          test_object.assign(
+              "status", sourcemeta::core::JSON{passed ? "passed" : "failed"});
+
+          test_object.assign("duration",
+                             sourcemeta::core::JSON{duration_ms(start, end)});
+          auto suite{sourcemeta::core::JSON::make_array()};
+          suite.push_back(sourcemeta::core::JSON{target});
+          test_object.assign("suite", std::move(suite));
+          test_object.assign("type", sourcemeta::core::JSON{"unit"});
+          test_object.assign("filePath", sourcemeta::core::JSON{file_path});
+
+          test_object.assign("line",
+                             sourcemeta::core::JSON{static_cast<std::int64_t>(
+                                 std::get<0>(test_case.position))});
+          test_object.assign(
+              "retries", sourcemeta::core::JSON{static_cast<std::int64_t>(0)});
+          test_object.assign("flaky", sourcemeta::core::JSON{false});
+          std::ostringstream thread_id_stream;
+          thread_id_stream << std::this_thread::get_id();
+          test_object.assign("threadId",
+                             sourcemeta::core::JSON{thread_id_stream.str()});
+
+          if (!passed) {
+            if (!test_case.valid && actual) {
+              test_object.assign("message",
+                                 sourcemeta::core::JSON{"Passed but was "
+                                                        "expected to fail"});
+            } else {
+              std::ostringstream trace_stream;
+              const std::string ref{"$ref"};
+              sourcemeta::blaze::SimpleOutput output{test_case.data,
+                                                     {std::cref(ref)}};
+              test_suite.evaluator.validate(test_suite.schema_exhaustive,
+                                            test_case.data, std::ref(output));
+              sourcemeta::jsonschema::print(output, test_case.tracker,
+                                            trace_stream);
+              test_object.assign("trace",
+                                 sourcemeta::core::JSON{trace_stream.str()});
+            }
+          }
+
+          ctrf_tests.push_back(test_object);
+        })};
+
+    if (first_suite) {
+      global_start = suite_result.start;
+      first_suite = false;
+    }
+    global_end = suite_result.end;
+
+    total_passed += suite_result.passed;
+    total_failed += suite_result.total - suite_result.passed;
+
+    if (suite_result.passed != suite_result.total) {
+      result = false;
+    }
+  }
+
+  // Build CTRF output
+  auto summary{sourcemeta::core::JSON::make_object()};
+  summary.assign("tests", sourcemeta::core::JSON{static_cast<std::int64_t>(
+                              total_passed + total_failed)});
+  summary.assign("passed", sourcemeta::core::JSON{
+                               static_cast<std::int64_t>(total_passed)});
+  summary.assign("failed", sourcemeta::core::JSON{
+                               static_cast<std::int64_t>(total_failed)});
+  summary.assign("pending",
+                 sourcemeta::core::JSON{static_cast<std::int64_t>(0)});
+  summary.assign("skipped",
+                 sourcemeta::core::JSON{static_cast<std::int64_t>(0)});
+  summary.assign("other", sourcemeta::core::JSON{static_cast<std::int64_t>(0)});
+  summary.assign("start", sourcemeta::core::JSON{timestamp_to_unix_ms(
+                              global_start, system_ref, steady_ref)});
+  summary.assign("stop", sourcemeta::core::JSON{timestamp_to_unix_ms(
+                             global_end, system_ref, steady_ref)});
+
+  auto tool{sourcemeta::core::JSON::make_object()};
+  tool.assign("name", sourcemeta::core::JSON{"jsonschema"});
+  tool.assign("version", sourcemeta::core::JSON{std::string{
+                             sourcemeta::jsonschema::PROJECT_VERSION}});
+
+  auto results{sourcemeta::core::JSON::make_object()};
+  results.assign("tool", std::move(tool));
+  results.assign("summary", std::move(summary));
+  results.assign("tests", std::move(ctrf_tests));
+
+  auto ctrf{sourcemeta::core::JSON::make_object()};
+  ctrf.assign("reportFormat", sourcemeta::core::JSON{"CTRF"});
+  ctrf.assign("specVersion", sourcemeta::core::JSON{"0.0.0"});
+  ctrf.assign("results", std::move(results));
+
+  sourcemeta::core::prettify(ctrf, std::cout);
+  std::cout << "\n";
+
+  if (!result) {
+    throw sourcemeta::jsonschema::Fail{2};
+  }
+}
+
+} // namespace
+
+auto sourcemeta::jsonschema::test(const sourcemeta::core::Options &options)
+    -> void {
+  if (options.contains("json")) {
+    report_as_ctrf(options);
+  } else {
+    report_as_text(options);
   }
 }

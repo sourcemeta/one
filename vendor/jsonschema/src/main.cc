@@ -59,13 +59,16 @@ Commands:
 
    compile <schema.json|.yaml> [--extension/-e <extension>]
            [--ignore/-i <schemas-or-directories>] [--fast/-f] [--minify/-m]
+           [--include/-n <name>]
 
        Compile the given schema into an internal optimised representation.
+       Use --include/-n to output as a C/C++ header file.
 
    test [schemas-or-directories...] [--extension/-e <extension>]
         [--ignore/-i <schemas-or-directories>]
 
        Run a set of unit tests against a schema.
+       Pass --json/-j to output results in CTRF format (https://ctrf.io).
 
    fmt [schemas-or-directories...] [--check/-c] [--extension/-e <extension>]
        [--ignore/-i <schemas-or-directories>] [--keep-ordering/-k]
@@ -167,6 +170,7 @@ auto jsonschema_main(const std::string &program, const std::string &command,
   } else if (command == "compile") {
     app.flag("fast", {"f"});
     app.flag("minify", {"m"});
+    app.option("include", {"n"});
     app.parse(argc, argv, {.skip = 1});
     sourcemeta::jsonschema::compile(app);
     return EXIT_SUCCESS;
