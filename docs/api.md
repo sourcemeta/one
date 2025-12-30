@@ -23,8 +23,7 @@ endpoints.
   Issue #2653](https://github.com/OAI/OpenAPI-Specification/issues/2653)) which
   make describing this API impossible, Sourcemeta One itself is comprehensively
   defined using JSON Schemas.  For complete API schema definitions, mount the
-  built-in [`@sourcemeta/one`](library.md) schema collection to your
-  instance
+  built-in `@sourcemeta/one` schema collection to your instance
 
 ## General
 

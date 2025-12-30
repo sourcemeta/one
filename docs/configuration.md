@@ -32,8 +32,8 @@ than a pre-defined model.
     By convention, the name of the configuration file is `one.json`.
 
 The JSON Schema that defines `one.json` can be mounted in the instance as a
-[built-in collection](library.md) called `@sourcemeta/one`. You can explore the
-latest version at
+built-in collection called `@sourcemeta/one`. You can explore the latest
+version at
 [https://schemas.sourcemeta.com/sourcemeta/one/configuration](https://schemas.sourcemeta.com/sourcemeta/one/configuration).
 
 !!! tip
@@ -190,7 +190,7 @@ your schema collection depends on [GeoJSON](https://geojson.org) and has
 various references to its latest official URL:
 `https://geojson.org/schema/GeoJSON.json`. Instead of depending on an external
 resource outside your control, you can configure the instance to extend from
-the [`@sourcemeta/std`](library.md) built-in collection and rephrase the
+the `@sourcemeta/std` built-in collection and rephrase the
 `https://geojson.org/schema/GeoJSON.json` references to consume from the
 internal version:
 
@@ -233,8 +233,8 @@ The `extends` property enables configuration inheritance, allowing either your
 top-level schema or individual pages to build upon existing configuration files
 for enhanced reusability and modularity. This property accepts an array of
 strings where each entry represents either a file path (relative from the
-configuration file location) or a [built-in schema collection
-identifier](library.md) (prefixed with `@`). For example:
+configuration file location) or a built-in schema collection identifier
+(prefixed with `@`). For example:
 
 ```json hl_lines="3" title="one.json"
 {

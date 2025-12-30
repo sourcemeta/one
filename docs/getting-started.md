@@ -125,10 +125,8 @@ Ready to take things further? Take a look at our
 [integrations](integrations.md) which cover ways on which you can pull and use
 the schemas in a growing amount of programming languages and applications.
 
-We also recommend exploring the full range of options in the Registry
-[configuration file](configuration.md), discovering how to import ready-made
-schema collections through our [built-in schema library](library.md), exploring
-the [HTTP API](api.md), and having a peek at
+We also recommend exploring the full range of options in the [configuration
+file](configuration.md), exploring the [HTTP API](api.md), and having a peek at
 [schemas.sourcemeta.com](https://schemas.sourcemeta.com) to see what a
 fully-fledged public instance looks like in the wild.
 

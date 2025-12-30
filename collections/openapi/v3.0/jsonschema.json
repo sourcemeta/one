@@ -1,5 +1,0 @@
-{
-  "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
-  "path": "./schemas",
-  "baseUri": "https://spec.openapis.org/oas/3.0/schema"
-}
