@@ -32,10 +32,10 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+            "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
           },
           "instanceLocation": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+            "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
           },
           "instancePositions": {
             "type": "array",
@@ -47,7 +47,7 @@
             }
           },
           "keywordLocation": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+            "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
           },
           "message": {
             "type": [ "string", "null" ]
@@ -61,7 +61,7 @@
                 "type": "null"
               },
               {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+                "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
               }
             ]
           }

@@ -30,6 +30,13 @@
 #include <utility>     // std::move, std::pair
 #include <vector>      // std::vector
 
+static auto write_link_header(uWS::HttpResponse<true> *response,
+                              const std::string_view schema_path) -> void {
+  std::ostringstream link;
+  link << "<" << schema_path << ">; rel=\"describedby\"";
+  response->writeHeader("Link", std::move(link).str());
+}
+
 static auto log(std::string_view message) -> void {
   // Otherwise we can get messed up output interleaved from multiple threads
   static std::mutex log_mutex;
@@ -117,6 +124,7 @@ static auto json_error(const std::string_view method,
   response->writeStatus(code);
   response->writeHeader("Content-Type", "application/problem+json");
   response->writeHeader("Access-Control-Allow-Origin", "*");
+  write_link_header(response, "/self/schemas/api/error");
 
   std::ostringstream output;
   sourcemeta::core::prettify(object, output);
@@ -165,7 +173,8 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
                   const ServerContentEncoding encoding,
                   const std::filesystem::path &absolute_path,
                   const char *const code, const bool enable_cors = false,
-                  const std::optional<std::string> &mime = std::nullopt)
+                  const std::optional<std::string> &mime = std::nullopt,
+                  const std::optional<std::string> &link = std::nullopt)
     -> void {
   if (request->getMethod() != "get" && request->getMethod() != "head") {
     if (std::filesystem::exists(absolute_path)) {
@@ -261,11 +270,13 @@ serve_static_file(uWS::HttpRequest *request, uWS::HttpResponse<true> *response,
 
   // See
   // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
-  const auto &dialect{file.value().extension};
-  if (dialect.is_string()) {
-    std::ostringstream link;
-    link << "<" << dialect.to_string() << ">; rel=\"describedby\"";
-    response->writeHeader("Link", std::move(link).str());
+  if (link.has_value()) {
+    write_link_header(response, link.value());
+  } else {
+    const auto &dialect{file.value().extension};
+    if (dialect.is_string()) {
+      write_link_header(response, dialect.to_string());
+    }
   }
 
   std::ostringstream contents;
@@ -348,6 +359,13 @@ static auto on_evaluate(const std::filesystem::path &base,
             response->writeStatus(sourcemeta::one::STATUS_OK);
             response->writeHeader("Content-Type", "application/json");
             response->writeHeader("Access-Control-Allow-Origin", "*");
+            if (mode == sourcemeta::one::EvaluateType::Trace) {
+              write_link_header(response,
+                                "/self/schemas/api/schemas/trace/response");
+            } else {
+              write_link_header(response,
+                                "/self/schemas/api/schemas/evaluate/response");
+            }
             std::ostringstream payload;
             sourcemeta::core::prettify(result, payload);
             send_response(sourcemeta::one::STATUS_OK, "post", url, response,
@@ -432,12 +450,14 @@ static auto on_request(const std::filesystem::path &base,
   } else if (request->getUrl() == "/self/api/list") {
     serve_static_file(request, response, encoding,
                       base / "explorer" / SENTINEL / "directory.metapack",
-                      sourcemeta::one::STATUS_OK, true);
+                      sourcemeta::one::STATUS_OK, true, std::nullopt,
+                      "/self/schemas/api/list/response");
   } else if (request->getUrl().starts_with("/self/api/list/")) {
     const auto absolute_path{base / "explorer" / request->getUrl().substr(15) /
                              SENTINEL / "directory.metapack"};
     serve_static_file(request, response, encoding, absolute_path,
-                      sourcemeta::one::STATUS_OK, true);
+                      sourcemeta::one::STATUS_OK, true, std::nullopt,
+                      "/self/schemas/api/list/response");
   } else if (request->getUrl().starts_with("/self/api/schemas/dependencies/")) {
     if (request->getMethod() == "get" || request->getMethod() == "head") {
       auto absolute_path{base / "schemas"};
@@ -445,7 +465,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "dependencies.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/dependencies/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -459,7 +480,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "health.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/health/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -473,7 +495,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "locations.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/locations/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -487,7 +510,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "positions.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/positions/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -501,7 +525,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "stats.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/stats/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -515,7 +540,8 @@ static auto on_request(const std::filesystem::path &base,
       absolute_path /= SENTINEL;
       absolute_path /= "schema.metapack";
       serve_static_file(request, response, encoding, absolute_path,
-                        sourcemeta::one::STATUS_OK, true);
+                        sourcemeta::one::STATUS_OK, true, std::nullopt,
+                        "/self/schemas/api/schemas/metadata/response");
     } else {
       json_error(request->getMethod(), request->getUrl(), response, encoding,
                  sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -541,6 +567,8 @@ static auto on_request(const std::filesystem::path &base,
         response->writeStatus(sourcemeta::one::STATUS_OK);
         response->writeHeader("Access-Control-Allow-Origin", "*");
         response->writeHeader("Content-Type", "application/json");
+        write_link_header(response,
+                          "/self/schemas/api/schemas/search/response");
         std::ostringstream output;
         sourcemeta::core::prettify(result, output);
         send_response(sourcemeta::one::STATUS_OK, request->getMethod(),

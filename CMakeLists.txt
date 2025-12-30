@@ -77,7 +77,7 @@ endif()
 sourcemeta_target_clang_format(SOURCES src/*.h src/*.cc test/*.cc contrib/*.cc)
 sourcemeta_target_shellcheck(SOURCES test/*.sh docker/*.sh)
 
-set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/sourcemeta/one/schemas")
+set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/schemas")
 add_custom_target(jsonschema_fmt_test
   COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt --check ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_fmt

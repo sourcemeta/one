@@ -9,18 +9,21 @@ POST {{base}}/self/api/schemas/trace/test/schemas/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -29,8 +32,10 @@ Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/schemas/trace/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 jsonpath "$.steps" count == 2
@@ -61,11 +66,12 @@ jsonpath "$.steps[1].type" == "pass"
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[1].message" == "The value was expected to be of type string"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/trace/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -74,17 +80,20 @@ Content-Type: application/problem+json
 "Hello World"
 HTTP 405
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/no-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true

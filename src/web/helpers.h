@@ -178,6 +178,48 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
              std::move(children));
 }
 
+inline auto make_file_manager_row(const sourcemeta::core::JSON &entry) -> HTML {
+  auto type_content = [&entry]() -> HTML {
+    if (entry.at("type").to_string() == "directory") {
+      if (entry.defines("github") && !entry.at("github").contains('/')) {
+        return img(
+            {{"src", "https://github.com/" + entry.at("github").to_string() +
+                         ".png?size=80"},
+             {"width", "40"},
+             {"height", "40"}});
+      } else {
+        return i({{"class", "bi bi-folder-fill"}});
+      }
+    } else {
+      return make_dialect_badge(entry.at("baseDialect").to_string());
+    }
+  }();
+
+  return tr(
+      td({{"class", "text-nowrap"}}, type_content),
+      td({{"class", "font-monospace text-nowrap"}},
+         a({{"href", entry.at("path").to_string()}},
+           entry.at("name").to_string())),
+      td(small(entry.defines("title") ? entry.at("title").to_string() : "-")),
+      td(small(entry.defines("description")
+                   ? entry.at("description").to_string()
+                   : "-")),
+      td(small(entry.defines("dependencies")
+                   ? std::to_string(entry.at("dependencies").to_integer())
+                   : "-")),
+      td({{"class", "align-middle"}},
+         make_schema_health_progress_bar(entry.at("health").to_integer())));
+}
+
+inline auto make_file_manager_table_header() -> HTML {
+  return thead(tr(th({{"scope", "col"}, {"style", "width: 50px"}}),
+                  th({{"scope", "col"}}, "Name"),
+                  th({{"scope", "col"}}, "Title"),
+                  th({{"scope", "col"}}, "Description"),
+                  th({{"scope", "col"}}, "Dependencies"),
+                  th({{"scope", "col"}, {"style", "width: 150px"}}, "Health")));
+}
+
 inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
   if (directory.at("entries").empty()) {
     return div(
@@ -187,50 +229,39 @@ inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
   }
 
   auto tbody_content = tbody();
-  for (const auto &entry : directory.at("entries").as_array()) {
-    // Type column content
-    auto type_content = [&entry]() -> HTML {
-      if (entry.at("type").to_string() == "directory") {
-        if (entry.defines("github") && !entry.at("github").contains('/')) {
-          return img(
-              {{"src", "https://github.com/" + entry.at("github").to_string() +
-                           ".png?size=80"},
-               {"width", "40"},
-               {"height", "40"}});
-        } else {
-          return i({{"class", "bi bi-folder-fill"}});
-        }
-      } else {
-        return make_dialect_badge(entry.at("baseDialect").to_string());
-      }
-    }();
+  auto special_tbody_content = tbody();
+  bool has_regular_entries = false;
+  bool has_special_entries = false;
 
-    tbody_content.push_back(tr(
-        td({{"class", "text-nowrap"}}, type_content),
-        td({{"class", "font-monospace text-nowrap"}},
-           a({{"href", entry.at("path").to_string()}},
-             entry.at("name").to_string())),
-        td(small(entry.defines("title") ? entry.at("title").to_string() : "-")),
-        td(small(entry.defines("description")
-                     ? entry.at("description").to_string()
-                     : "-")),
-        td(small(entry.defines("dependencies")
-                     ? std::to_string(entry.at("dependencies").to_integer())
-                     : "-")),
-        td({{"class", "align-middle"}},
-           make_schema_health_progress_bar(entry.at("health").to_integer()))));
+  for (const auto &entry : directory.at("entries").as_array()) {
+    const auto path = entry.at("path").to_string();
+    if (path == "/self") {
+      special_tbody_content.push_back(make_file_manager_row(entry));
+      has_special_entries = true;
+    } else {
+      tbody_content.push_back(make_file_manager_row(entry));
+      has_regular_entries = true;
+    }
   }
 
-  return div(
-      {{"class", "container-fluid p-4 flex-grow-1"}},
-      table({{"class", "table table-bordered border-light-subtle table-light"}},
-            thead(tr(
-                th({{"scope", "col"}, {"style", "width: 50px"}}),
-                th({{"scope", "col"}}, "Name"), th({{"scope", "col"}}, "Title"),
-                th({{"scope", "col"}}, "Description"),
-                th({{"scope", "col"}}, "Dependencies"),
-                th({{"scope", "col"}, {"style", "width: 150px"}}, "Health"))),
-            std::move(tbody_content)));
+  std::vector<Node> container_children;
+
+  if (has_regular_entries) {
+    container_children.push_back(table(
+        {{"class", "table table-bordered border-light-subtle table-light"}},
+        make_file_manager_table_header(), std::move(tbody_content)));
+  }
+
+  if (has_special_entries) {
+    container_children.push_back(
+        h6({{"class", "text-secondary mt-4 mb-3"}}, "Special directories"));
+    container_children.push_back(table(
+        {{"class", "table table-bordered border-light-subtle table-light"}},
+        make_file_manager_table_header(), std::move(special_tbody_content)));
+  }
+
+  return div({{"class", "container-fluid p-4 flex-grow-1"}},
+             std::move(container_children));
 }
 
 } // namespace sourcemeta::one::html

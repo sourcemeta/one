@@ -1,14 +1,14 @@
 {
   "extends": [ "@sourcemeta/std/v0" ],
   "contents": {
-    "sourcemeta": {
-      "title": "Sourcemeta",
-      "description": "A provider of premium tooling and services to support JSON Schema use in production",
+    "self": {
+      "title": "Self",
+      "description": "The schemas that define the current version of this instance",
       "email": "hello@sourcemeta.com",
-      "github": "sourcemeta",
+      "github": "sourcemeta/one",
       "website": "https://www.sourcemeta.com",
       "contents": {
-        "one": {
+        "schemas": {
           "include": "./jsonschema.json"
         }
       }

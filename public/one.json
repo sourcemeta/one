@@ -12,7 +12,7 @@
     }
   },
   "extends": [
-    "@sourcemeta/one",
+    "@self",
     "@sourcemeta/std/v0"
   ],
   "contents": {
