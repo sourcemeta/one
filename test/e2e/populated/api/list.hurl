@@ -2,15 +2,17 @@ GET {{base}}/self/api/list
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.entries" count == 2
+jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "test"
 jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"
@@ -26,12 +28,19 @@ jsonpath "$.entries[1].website" == "https://www.sourcemeta.com"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 100
 jsonpath "$.entries[1].path" == "/sourcemeta"
+jsonpath "$.entries[2].name" == "self"
+jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].health" == 100
+jsonpath "$.entries[2].path" == "/self"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -39,8 +48,10 @@ GET {{base}}/self/api/list/test
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
@@ -92,11 +103,12 @@ jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 59
 jsonpath "$.entries[8].path" == "/test/bundling"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -104,8 +116,10 @@ GET {{base}}/self/api/list/test/v2.0
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
@@ -129,11 +143,12 @@ jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -141,18 +156,21 @@ GET {{base}}/self/api/list/test/v2.0.json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -160,8 +178,10 @@ GET {{base}}/self/api/list/test/schemas/versions
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
@@ -188,11 +208,12 @@ jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -200,8 +221,10 @@ GET {{base}}/self/api/list/test/extension
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
@@ -248,10 +271,11 @@ jsonpath "$.entries[2].path" == "/test/extension/to-without"
 jsonpath "$.entries[2].health" == 50
 jsonpath "$.entries[2].dependencies" == 1
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/list/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true

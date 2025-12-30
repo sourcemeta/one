@@ -1,4 +1,4 @@
-set(COLLECTION_NAMESPACE "sourcemeta/one")
+set(COLLECTION_NAMESPACE "self")
 
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/schemas"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/sourcemeta/one/collections/${COLLECTION_NAMESPACE}"

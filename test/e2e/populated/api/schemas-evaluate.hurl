@@ -9,18 +9,21 @@ POST {{base}}/self/api/schemas/evaluate/test/schemas/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -29,16 +32,19 @@ Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -47,8 +53,10 @@ Content-Type: application/json
 1234
 HTTP 200
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == false
 jsonpath "$.errors" count == 1
@@ -57,11 +65,12 @@ jsonpath "$.errors[0].error" == "The value was expected to be of type string but
 jsonpath "$.errors[0].instanceLocation" == ""
 jsonpath "$.errors[0].keywordLocation" == "/type"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -70,8 +79,10 @@ Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 jsonpath "$.annotations" count == 1
@@ -81,11 +92,12 @@ jsonpath "$.annotations[0].keywordLocation" == "/title"
 jsonpath "$.annotations[0].annotation" count == 1
 jsonpath "$.annotations[0].annotation[0]" == "Annotation value"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/schemas/evaluate/response
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -94,17 +106,20 @@ Content-Type: application/problem+json
 "Hello World"
 HTTP 405
 Access-Control-Allow-Origin: *
+Link: </self/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/no-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
 
-POST {{base}}/self/api/schemas/evaluate/sourcemeta/one/api/error
+POST {{base}}/self/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
+Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
