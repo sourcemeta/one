@@ -22,7 +22,7 @@ endpoints.
   to its current limitations with multi-fragment path support ([see OpenAPI
   Issue #2653](https://github.com/OAI/OpenAPI-Specification/issues/2653)) which
   make describing this API impossible, Sourcemeta One itself is comprehensively
-  defined using JSON Schemas mounted in `/self/schemas`.
+  defined using JSON Schemas mounted in `/self/v1/schemas`.
 
 ## General
 
@@ -32,7 +32,7 @@ endpoints.
 parameter*.
 
 ```
-GET /self/api/list/{path?}
+GET /self/v1/api/list/{path?}
 ```
 
 If no path is provided, the endpoint returns the contents of the root
@@ -112,7 +112,7 @@ process.
 the JSON Schema located at the `{path}` parameter.*
 
 ```
-POST /self/api/schemas/evaluate/{path}
+POST /self/v1/api/schemas/evaluate/{path}
 ```
 
 Perform exhaustive JSON Schema evaluation (including annotation collection) and
@@ -141,7 +141,7 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 the JSON Schema located at the `{path}` parameter.*
 
 ```
-POST /self/api/schemas/trace/{path}
+POST /self/v1/api/schemas/trace/{path}
 ```
 
 Unlike standard schema validation, this endpoint performs a detailed trace
@@ -191,7 +191,7 @@ insight into the validation engine's behavior and logic flow.
 the `{path}` parameter.*
 
 ```
-GET /self/api/schemas/metadata/{path}
+GET /self/v1/api/schemas/metadata/{path}
 ```
 
 === "200"
@@ -222,7 +222,7 @@ GET /self/api/schemas/metadata/{path}
 *This endpoint searches for JSON Schemas based on the provided query `{term}`.*
 
 ```
-GET /self/api/schemas/search?q={term}
+GET /self/v1/api/schemas/search?q={term}
 ```
 
 Note that the this endpoint has a hard limit of 10 results.
@@ -241,7 +241,7 @@ Note that the this endpoint has a hard limit of 10 results.
 Schema located at the specified `{path}` parameter.*
 
 ```
-GET /self/api/schemas/dependencies/{path}
+GET /self/v1/api/schemas/dependencies/{path}
 ```
 
 === "200"
@@ -261,7 +261,7 @@ GET /self/api/schemas/dependencies/{path}
 *This endpoint retrieves the health analysis and score for the JSON Schema located at the specified `{path}` parameter.*
 
 ```
-GET /self/api/schemas/health/{path}
+GET /self/v1/api/schemas/health/{path}
 ```
 
 === "200"
@@ -287,7 +287,7 @@ Schema located at the specified `{path}` parameter, including schema resources,
 subschemas, anchors, and more.*
 
 ```
-GET /self/api/schemas/locations/{path}
+GET /self/v1/api/schemas/locations/{path}
 ```
 
 === "200"
@@ -339,7 +339,7 @@ GET /self/api/schemas/locations/{path}
 associated with the JSON Schema located at the specified `{path}` parameter.*
 
 ```
-GET /self/api/schemas/stats/{path}
+GET /self/v1/api/schemas/stats/{path}
 ```
 
 === "200"
@@ -362,7 +362,7 @@ GET /self/api/schemas/stats/{path}
 in the JSON Schema located at the specified `{path}` parameter.*
 
 ```
-GET /self/api/schemas/positions/{path}
+GET /self/v1/api/schemas/positions/{path}
 ```
 
 The result is a JSON object where every property is JSON Pointer to the given

@@ -1,4 +1,4 @@
-GET {{base}}/self/api/list
+GET {{base}}/self/v1/api/list
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *

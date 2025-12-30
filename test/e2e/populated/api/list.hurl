@@ -1,8 +1,8 @@
-GET {{base}}/self/api/list
+GET {{base}}/self/v1/api/list
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/list/response>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -35,20 +35,20 @@ jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 100
 jsonpath "$.entries[2].path" == "/self"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/list/test
+GET {{base}}/self/v1/api/list/test
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/list/response>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -103,20 +103,20 @@ jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 59
 jsonpath "$.entries[8].path" == "/test/bundling"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/list/test/v2.0
+GET {{base}}/self/v1/api/list/test/v2.0
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/list/response>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -143,20 +143,20 @@ jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/list/test/v2.0.json
+GET {{base}}/self/v1/api/list/test/v2.0.json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -165,20 +165,20 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/list/test/schemas/versions
+GET {{base}}/self/v1/api/list/test/schemas/versions
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/list/response>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -208,20 +208,20 @@ jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/list/test/extension
+GET {{base}}/self/v1/api/list/test/extension
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/list/response>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -271,11 +271,11 @@ jsonpath "$.entries[2].path" == "/test/extension/to-without"
 jsonpath "$.entries[2].health" == 50
 jsonpath "$.entries[2].dependencies" == 1
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true

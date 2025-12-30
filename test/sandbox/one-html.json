@@ -8,7 +8,7 @@
       "icon": "github"
     }
   },
-  "extends": [ "@self" ],
+  "extends": [ "@self/v1" ],
   "contents": {
     "sourcemeta": {
       "contents": {

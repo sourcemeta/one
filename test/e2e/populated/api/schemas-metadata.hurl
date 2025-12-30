@@ -1,9 +1,9 @@
-GET {{base}}/self/api/schemas/metadata/test/v2.0/schema
+GET {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
 Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -28,21 +28,21 @@ jsonpath "$.breadcrumb[1].path" == "/test/v2.0"
 jsonpath "$.breadcrumb[2].name" == "schema"
 jsonpath "$.breadcrumb[2].path" == "/test/v2.0/schema"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/schemas/metadata/test/schemas/string
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/string
 Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -77,31 +77,31 @@ jsonpath "$.breadcrumb[1].path" == "/test/schemas"
 jsonpath "$.breadcrumb[2].name" == "string"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/string"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/api/schemas/metadata/test/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
 Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/api/schemas/metadata/test/v2.0/schema
+POST {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -110,21 +110,21 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/schemas/metadata/xyz
+GET {{base}}/self/v1/api/schemas/metadata/xyz
 Accept: application/json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -133,22 +133,22 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
 # With built-in library provenance
-GET {{base}}/self/api/schemas/metadata/sourcemeta/std/v0/ietf/geojson/point
+GET {{base}}/self/v1/api/schemas/metadata/sourcemeta/std/v0/ietf/geojson/point
 Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -179,20 +179,20 @@ jsonpath "$.breadcrumb[4].path" == "/sourcemeta/std/v0/ietf/geojson"
 jsonpath "$.breadcrumb[5].name" == "point"
 jsonpath "$.breadcrumb[5].path" == "/sourcemeta/std/v0/ietf/geojson/point"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/schemas/metadata
+GET {{base}}/self/v1/api/schemas/metadata
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -201,21 +201,21 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/api/schemas/metadata/test/bundling/double
+GET {{base}}/self/v1/api/schemas/metadata/test/bundling/double
 Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -240,11 +240,11 @@ jsonpath "$.breadcrumb[1].path" == "/test/bundling"
 jsonpath "$.breadcrumb[2].name" == "double"
 jsonpath "$.breadcrumb[2].path" == "/test/bundling/double"
 
-POST {{base}}/self/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true

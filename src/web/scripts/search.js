@@ -31,7 +31,7 @@ search.addEventListener('input', (event) => {
     }
 
     console.log('Searching for:', event.target.value);
-    const response = await fetch(`/self/api/schemas/search?q=${encodeURIComponent(event.target.value)}`);
+    const response = await fetch(`/self/v1/api/schemas/search?q=${encodeURIComponent(event.target.value)}`);
     if (!response.ok) {
       return;
     }
