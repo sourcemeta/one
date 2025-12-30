@@ -13,7 +13,6 @@
   },
   "extends": [
     "@sourcemeta/one",
-    "@sourcemeta/extensions",
     "@sourcemeta/std/v0"
   ],
   "contents": {
