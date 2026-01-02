@@ -3,10 +3,13 @@
 
 #include <sourcemeta/core/time.h>
 
+#include "response.h"
 #include "uwebsockets.h"
 
 #include <algorithm>   // std::sort
 #include <chrono>      // std::chrono::system_clock
+#include <exception>   // std::exception_ptr, std::current_exception
+#include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
 #include <sstream>     // std::istringstream
 #include <stdexcept>   // std::invalid_argument
@@ -19,9 +22,17 @@ namespace sourcemeta::one {
 
 class HTTPRequest {
 public:
-  enum class Encoding { Identity, GZIP };
+  // Primary constructor from raw uWebSockets pointers
+  HTTPRequest(uWS::HttpRequest *request,
+              uWS::HttpResponse<true> *response) noexcept
+      : request_{request}, response_{response} {}
 
-  HTTPRequest(uWS::HttpRequest *request) noexcept : request_{request} {}
+  // Snapshot constructor for async contexts where uWS::HttpRequest is gone
+  HTTPRequest(std::string method, std::string path,
+              sourcemeta::one::Encoding encoding,
+              uWS::HttpResponse<true> *response) noexcept
+      : request_{nullptr}, response_{response}, method_{std::move(method)},
+        path_{std::move(path)}, response_encoding_{encoding} {}
 
   // If the identity;q=0 or *;q=0 directives explicitly forbid the identity
   // encoding, the server should return a 406 Not Acceptable error. See
@@ -47,18 +58,18 @@ public:
           // equivalent to "gzip". See
           // https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.5
           rule.first == "x-gzip") {
-        this->response_encoding_ = Encoding::GZIP;
+        this->response_encoding_ = sourcemeta::one::Encoding::GZIP;
         break;
       }
     }
   }
 
   auto method() const noexcept -> std::string_view {
-    return this->request_->getMethod();
+    return this->request_ ? this->request_->getMethod() : this->method_;
   }
 
   auto path() const noexcept -> std::string_view {
-    return this->request_->getUrl();
+    return this->request_ ? this->request_->getUrl() : this->path_;
   }
 
   auto header(const std::string_view name) const noexcept -> std::string_view {
@@ -136,14 +147,75 @@ public:
     return this->satisfiable_encoding_;
   }
 
-  auto response_encoding() const noexcept -> Encoding {
+  auto response_encoding() const noexcept -> sourcemeta::one::Encoding {
     return this->response_encoding_;
+  }
+
+  // Read the entire request body asynchronously.
+  // - callback: Invoked with (response, body, too_big) on completion
+  // - on_error: Invoked with (response, exception_ptr) on any exception,
+  //   including exceptions thrown by the main callback
+  // - max_size: Maximum body size in bytes (default 1MB)
+  // Note: If the request is aborted, the callback is not invoked
+  template <typename Callback, typename ErrorCallback>
+  auto body(Callback callback, ErrorCallback on_error,
+            std::size_t max_size = 1024 * 1024) -> void {
+    auto raw_response = this->response_;
+    auto snapshot = std::make_shared<HTTPRequest>(
+        std::string{this->method()}, std::string{this->path()},
+        this->response_encoding_, raw_response);
+    auto buffer = std::make_shared<std::string>();
+    auto completed = std::make_shared<bool>(false);
+
+    raw_response->onAborted([completed]() mutable { *completed = true; });
+
+    raw_response->onData(
+        [raw_response, snapshot, buffer, completed, max_size, callback,
+         on_error](std::string_view chunk, bool is_last) mutable {
+          if (*completed) {
+            return;
+          }
+
+          try {
+            if (buffer->size() + chunk.size() > max_size) {
+              *completed = true;
+              HTTPResponse response{raw_response};
+              try {
+                callback(*snapshot, response, std::move(*buffer), true);
+              } catch (...) {
+                on_error(*snapshot, response, std::current_exception());
+              }
+
+              return;
+            }
+
+            buffer->append(chunk);
+
+            if (is_last) {
+              *completed = true;
+              HTTPResponse response{raw_response};
+              try {
+                callback(*snapshot, response, std::move(*buffer), false);
+              } catch (...) {
+                on_error(*snapshot, response, std::current_exception());
+              }
+            }
+          } catch (...) {
+            *completed = true;
+            HTTPResponse response{raw_response};
+            on_error(*snapshot, response, std::current_exception());
+          }
+        });
   }
 
 private:
   uWS::HttpRequest *request_;
+  uWS::HttpResponse<true> *response_;
+  std::string method_;
+  std::string path_;
   bool satisfiable_encoding_{true};
-  Encoding response_encoding_{Encoding::Identity};
+  sourcemeta::one::Encoding response_encoding_{
+      sourcemeta::one::Encoding::Identity};
 };
 
 } // namespace sourcemeta::one
