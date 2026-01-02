@@ -1,5 +1,14 @@
-#ifndef SOURCEMETA_ONE_SERVER_STATUS_H
-#define SOURCEMETA_ONE_SERVER_STATUS_H
+#ifndef SOURCEMETA_ONE_SERVER_RESPONSE_H
+#define SOURCEMETA_ONE_SERVER_RESPONSE_H
+
+#include <sourcemeta/one/gzip.h>
+#include <sourcemeta/one/shared.h>
+
+#include "uwebsockets.h"
+
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace sourcemeta::one {
 
@@ -80,6 +89,73 @@ const char *STATUS_LOOP_DETECTED = "508 Loop Detected";
 const char *STATUS_NOT_EXTENDED = "510 Not Extended";
 const char *STATUS_NETWORK_AUTHENTICATION_REQUIRED =
     "511 Network Authentication Required";
+
+class HTTPResponse {
+public:
+  HTTPResponse(uWS::HttpResponse<true> *response) noexcept
+      : response_{response} {}
+
+  auto write_status(const char *status) -> void {
+    this->response_->writeStatus(status);
+  }
+
+  auto write_header(const std::string_view name, const std::string_view value)
+      -> void {
+    this->response_->writeHeader(name, value);
+  }
+
+  auto handle() noexcept -> uWS::HttpResponse<true> * {
+    return this->response_;
+  }
+
+  auto send_without_content() -> void { this->response_->end(); }
+
+  template <typename Request>
+  auto send(const Request &request, const std::string &message,
+            const Encoding current_encoding) -> void {
+    const auto method{request.method()};
+    const auto expected_encoding{request.response_encoding()};
+    if (expected_encoding == Encoding::GZIP) {
+      this->response_->writeHeader("Content-Encoding", "gzip");
+      if (current_encoding == Encoding::Identity) {
+        auto effective_message{gzip(message)};
+        if (method == "head") {
+          this->response_->endWithoutBody(effective_message.size());
+          this->response_->end();
+        } else {
+          this->response_->end(std::move(effective_message));
+        }
+      } else {
+        if (method == "head") {
+          this->response_->endWithoutBody(message.size());
+          this->response_->end();
+        } else {
+          this->response_->end(message);
+        }
+      }
+    } else if (expected_encoding == Encoding::Identity) {
+      if (current_encoding == Encoding::GZIP) {
+        auto effective_message{gunzip(message)};
+        if (method == "head") {
+          this->response_->endWithoutBody(effective_message.size());
+          this->response_->end();
+        } else {
+          this->response_->end(effective_message);
+        }
+      } else {
+        if (method == "head") {
+          this->response_->endWithoutBody(message.size());
+          this->response_->end();
+        } else {
+          this->response_->end(message);
+        }
+      }
+    }
+  }
+
+private:
+  uWS::HttpResponse<true> *response_;
+};
 
 } // namespace sourcemeta::one
 
