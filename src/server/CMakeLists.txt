@@ -1,6 +1,15 @@
 sourcemeta_executable(NAMESPACE sourcemeta PROJECT one NAME server
   FOLDER "One/Server"
-  SOURCES search.h status.h evaluate.h helpers.h request.h server.cc uwebsockets.h)
+  SOURCES
+    action_jsonschema_evaluate.h
+    action_jsonschema_serve.h
+    action_schema_search.h
+    action_serve_metapack_file.h
+    helpers.h
+    request.h
+    response.h
+    server.cc
+    uwebsockets.h)
 
 set_target_properties(sourcemeta_one_server PROPERTIES OUTPUT_NAME sourcemeta-one-server)
 
