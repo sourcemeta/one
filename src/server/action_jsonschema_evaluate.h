@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_SERVER_EVALUATE_H
-#define SOURCEMETA_ONE_SERVER_EVALUATE_H
+#ifndef SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_EVALUATE_H
+#define SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_EVALUATE_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -9,8 +9,14 @@
 
 #include <sourcemeta/one/shared.h>
 
+#include "helpers.h"
+#include "request.h"
+#include "response.h"
+
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem::path
+#include <sstream>     // std::ostringstream
+#include <string_view> // std::string_view
 #include <type_traits> // std::underlying_type_t
 #include <utility>     // std::move
 
@@ -142,5 +148,106 @@ auto evaluate(const std::filesystem::path &template_path,
 }
 
 } // namespace sourcemeta::one
+
+static auto
+action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
+                                    const sourcemeta::one::EvaluateType mode,
+                                    sourcemeta::one::HTTPRequest &request,
+                                    sourcemeta::one::HTTPResponse &response,
+                                    std::string &&body, bool too_big) -> void {
+  if (too_big) {
+    json_error(request, response, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
+               "payload-too-large", "The request body is too large");
+    return;
+  }
+
+  if (body.empty()) {
+    json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+               "no-instance", "You must pass an instance to validate against");
+    return;
+  }
+
+  try {
+    const auto result{sourcemeta::one::evaluate(template_path, body, mode)};
+    response.write_status(sourcemeta::one::STATUS_OK);
+    response.write_header("Content-Type", "application/json");
+    response.write_header("Access-Control-Allow-Origin", "*");
+    if (mode == sourcemeta::one::EvaluateType::Trace) {
+      write_link_header(response,
+                        "/self/v1/schemas/api/schemas/trace/response");
+    } else {
+      write_link_header(response,
+                        "/self/v1/schemas/api/schemas/evaluate/response");
+    }
+
+    std::ostringstream payload;
+    sourcemeta::core::prettify(result, payload);
+    send_response(sourcemeta::one::STATUS_OK, request, response, payload.str(),
+                  sourcemeta::one::Encoding::Identity);
+  } catch (const std::exception &exception) {
+    json_error(request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+               "evaluation-error", exception.what());
+  }
+}
+
+static auto action_jsonschema_evaluate(const std::filesystem::path &base,
+                                       const std::string_view &path,
+                                       sourcemeta::one::HTTPRequest &request,
+                                       sourcemeta::one::HTTPResponse &response,
+                                       const sourcemeta::one::EvaluateType mode)
+    -> void {
+  // A CORS pre-flight request
+  if (request.method() == "options") {
+    response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
+    response.write_header("Access-Control-Allow-Origin", "*");
+    response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
+    response.write_header("Access-Control-Allow-Headers", "Content-Type");
+    response.write_header("Access-Control-Max-Age", "3600");
+    send_response(sourcemeta::one::STATUS_NO_CONTENT, request, response);
+  } else if (request.method() == "post") {
+    auto template_path{base / "schemas"};
+    template_path /= path;
+    template_path /= SENTINEL;
+    template_path /= "blaze-exhaustive.metapack";
+    if (!std::filesystem::exists(template_path)) {
+      const auto schema_path{template_path.parent_path() / "schema.metapack"};
+      if (std::filesystem::exists(schema_path)) {
+        json_error(request, response,
+                   sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "no-template",
+                   "This schema was not precompiled for schema evaluation");
+      } else {
+        json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
+                   "not-found", "There is nothing at this URL");
+      }
+
+      return;
+    }
+
+    request.body(
+        [mode, template_path = std::move(template_path)](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            std::string &&body, bool too_big) {
+          action_jsonschema_evaluate_callback(
+              template_path, mode, callback_request, callback_response,
+              std::move(body), too_big);
+        },
+        [](sourcemeta::one::HTTPRequest &callback_request,
+           sourcemeta::one::HTTPResponse &callback_response,
+           std::exception_ptr error) {
+          try {
+            std::rethrow_exception(error);
+          } catch (const std::exception &exception) {
+            json_error(callback_request, callback_response,
+                       sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                       "uncaught-error", exception.what());
+          }
+        });
+  } else {
+    json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+               "method-not-allowed",
+               "This HTTP method is invalid for this URL");
+  }
+}
 
 #endif
