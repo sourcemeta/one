@@ -246,7 +246,7 @@ static const Handler HANDLERS[] = {handle_default,
                                    handle_self_api_not_found,
                                    handle_self_static};
 
-static auto dispatch(const sourcemeta::core::URITemplateRouter &router,
+static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                      const std::filesystem::path &base,
                      uWS::HttpResponse<true> *const raw_response,
                      uWS::HttpRequest *const raw_request) noexcept -> void {
@@ -306,38 +306,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     const auto port{static_cast<std::uint32_t>(std::stoul(argv[2]))};
     const auto base{std::filesystem::canonical(argv[1])};
-    const auto is_headless{!std::filesystem::exists(
-        base / "explorer" / SENTINEL / "directory-html.metapack")};
-
-    // TODO: Restore this from a URI Template binary view
-    sourcemeta::core::URITemplateRouter router;
-    router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
-    router.add("/self/v1/api/list/{+path}",
-               sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
-    router.add("/self/v1/api/schemas/dependencies/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
-    router.add("/self/v1/api/schemas/health/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
-    router.add("/self/v1/api/schemas/locations/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
-    router.add("/self/v1/api/schemas/positions/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
-    router.add("/self/v1/api/schemas/stats/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
-    router.add("/self/v1/api/schemas/metadata/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
-    router.add("/self/v1/api/schemas/evaluate/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
-    router.add("/self/v1/api/schemas/trace/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
-    router.add("/self/v1/api/schemas/search",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
-    router.add("/self/v1/api/{+any}",
-               sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
-
-    if (!is_headless) {
-      router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC);
-    }
+    const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
     uWS::LocalCluster(
         {}, [&router, &base, port, timestamp_start](uWS::SSLApp &app) -> void {

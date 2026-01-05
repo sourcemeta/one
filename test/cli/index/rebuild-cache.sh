@@ -99,6 +99,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (skip) Rendering: . [not-found]
 (100%) Rendering: example/schemas/foo
 (skip) Rendering: example/schemas/foo [schema]
+(skip) Producing: $(realpath "$TMP")/output/routes.bin [routes]
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -128,6 +129,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 ( 75%) Rendering: .
 (skip) Rendering: . [not-found]
 (100%) Rendering: example/schemas/foo
+(skip) Producing: $(realpath "$TMP")/output/routes.bin [routes]
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

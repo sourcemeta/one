@@ -58,6 +58,8 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/%/directory.metapack.deps
 ./explorer/%/search.metapack
 ./explorer/%/search.metapack.deps
+./routes.bin
+./routes.bin.deps
 ./version.json
 EOF
 
