@@ -5399,6 +5399,8 @@
 ./explorer/test/v2.0/schema/%
 ./explorer/test/v2.0/schema/%/schema.metapack
 ./explorer/test/v2.0/schema/%/schema.metapack.deps
+./routes.bin
+./routes.bin.deps
 ./schemas
 ./schemas/self
 ./schemas/self/v1

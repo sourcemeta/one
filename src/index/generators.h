@@ -10,6 +10,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
@@ -405,6 +406,18 @@ struct GENERATE_STATS {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+  }
+};
+
+struct GENERATE_URITEMPLATE_ROUTES {
+  using Context = sourcemeta::core::URITemplateRouter;
+  static auto
+  handler(const std::filesystem::path &destination,
+          const sourcemeta::core::BuildDependencies<std::filesystem::path> &,
+          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path> &,
+          const Context &router) -> void {
+    std::filesystem::create_directories(destination.parent_path());
+    sourcemeta::core::URITemplateRouterView::save(router, destination);
   }
 };
 

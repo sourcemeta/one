@@ -4,6 +4,7 @@
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/parallel.h>
 #include <sourcemeta/core/uri.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
@@ -469,6 +470,48 @@ static auto index_main(const std::string_view &program,
         },
         concurrency);
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (12) Generate the pre computed routes
+  /////////////////////////////////////////////////////////////////////////////
+
+  sourcemeta::core::URITemplateRouter router;
+  router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
+  router.add("/self/v1/api/list/{+path}",
+             sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
+  router.add("/self/v1/api/schemas/dependencies/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
+  router.add("/self/v1/api/schemas/health/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
+  router.add("/self/v1/api/schemas/locations/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
+  router.add("/self/v1/api/schemas/positions/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
+  router.add("/self/v1/api/schemas/stats/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
+  router.add("/self/v1/api/schemas/metadata/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
+  router.add("/self/v1/api/schemas/evaluate/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
+  router.add("/self/v1/api/schemas/trace/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
+  router.add("/self/v1/api/schemas/search",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
+  router.add("/self/v1/api/{+any}",
+             sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
+
+  if (configuration.html.has_value()) {
+    router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC);
+  }
+
+  const auto routes_path{output.path() / "routes.bin"};
+  DISPATCH<sourcemeta::one::GENERATE_URITEMPLATE_ROUTES>(
+      routes_path, {mark_configuration_path, mark_version_path}, router, mutex,
+      "Producing", routes_path.string(), "routes", adapter, output);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Finish generation
+  /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Print the size of the output directory here
 
