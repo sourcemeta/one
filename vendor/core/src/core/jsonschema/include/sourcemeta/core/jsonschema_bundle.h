@@ -13,8 +13,10 @@
 #include <sourcemeta/core/jsonschema_types.h>
 // NOLINTEND(misc-include-cleaner)
 
-#include <functional> // std::function
-#include <optional>   // std::optional, std::nullopt
+#include <functional>    // std::function
+#include <optional>      // std::optional, std::nullopt
+#include <string_view>   // std::string_view
+#include <unordered_set> // std::unordered_set
 
 namespace sourcemeta::core {
 
@@ -129,7 +131,9 @@ auto bundle(JSON &schema, const SchemaWalker &walker,
             const std::optional<std::string> &default_dialect = std::nullopt,
             const std::optional<std::string> &default_id = std::nullopt,
             const std::optional<Pointer> &default_container = std::nullopt,
-            const SchemaFrame::Paths &paths = {empty_pointer}) -> void;
+            const SchemaFrame::Paths &paths = {empty_pointer},
+            const std::unordered_set<std::string_view> &exclusions = {})
+    -> void;
 
 /// @ingroup jsonschema
 ///
@@ -188,7 +192,9 @@ auto bundle(const JSON &schema, const SchemaWalker &walker,
             const std::optional<std::string> &default_dialect = std::nullopt,
             const std::optional<std::string> &default_id = std::nullopt,
             const std::optional<Pointer> &default_container = std::nullopt,
-            const SchemaFrame::Paths &paths = {empty_pointer}) -> JSON;
+            const SchemaFrame::Paths &paths = {empty_pointer},
+            const std::unordered_set<std::string_view> &exclusions = {})
+    -> JSON;
 
 } // namespace sourcemeta::core
 

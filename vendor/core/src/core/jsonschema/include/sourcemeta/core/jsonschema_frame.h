@@ -233,9 +233,12 @@ public:
       -> std::pair<SchemaReferenceType,
                    std::optional<std::reference_wrapper<const Location>>>;
 
-  /// Find all references to a given location pointer
-  [[nodiscard]] auto references_to(const Pointer &pointer) const -> std::vector<
-      std::reference_wrapper<const typename References::value_type>>;
+  /// Check if there are any references to a given location pointer
+  [[nodiscard]] auto has_references_to(const Pointer &pointer) const -> bool;
+
+  /// Check if there are any references that go through a given location pointer
+  [[nodiscard]] auto has_references_through(const Pointer &pointer) const
+      -> bool;
 
 private:
   Mode mode_;

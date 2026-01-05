@@ -54,7 +54,7 @@ public:
       // Skip entries that have direct references pointing to them
       const auto entry_pointer{
           location.relative_pointer.concat({"allOf", index - 1})};
-      if (!frame.references_to(entry_pointer).empty()) {
+      if (frame.has_references_to(entry_pointer)) {
         continue;
       }
 

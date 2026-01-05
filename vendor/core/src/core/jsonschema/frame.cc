@@ -987,13 +987,7 @@ auto SchemaFrame::dereference(const Location &location,
   return {SchemaReferenceType::Static, destination->second};
 }
 
-auto SchemaFrame::references_to(const Pointer &pointer) const -> std::vector<
-    std::reference_wrapper<const typename References::value_type>> {
-  std::vector<std::reference_wrapper<const typename References::value_type>>
-      result;
-
-  // TODO: This is currently very slow, as we need to loop on every reference
-  // to brute force whether it points to the desired entry or not
+auto SchemaFrame::has_references_to(const Pointer &pointer) const -> bool {
   for (const auto &reference : this->references_) {
     assert(!reference.first.second.empty());
     assert(reference.first.second.back().is_property());
@@ -1003,7 +997,7 @@ auto SchemaFrame::references_to(const Pointer &pointer) const -> std::vector<
           {reference.first.first, reference.second.destination})};
       if (match != this->locations_.cend() &&
           match->second.pointer == pointer) {
-        result.emplace_back(reference);
+        return true;
       }
     } else {
       for (const auto &location : this->locations_) {
@@ -1013,14 +1007,44 @@ auto SchemaFrame::references_to(const Pointer &pointer) const -> std::vector<
           if (!reference.second.fragment.has_value() ||
               URI{location.first.second}.fragment().value_or("") ==
                   reference.second.fragment.value()) {
-            result.emplace_back(reference);
+            return true;
           }
         }
       }
     }
   }
 
-  return result;
+  return false;
+}
+
+auto SchemaFrame::has_references_through(const Pointer &pointer) const -> bool {
+  for (const auto &reference : this->references_) {
+    assert(!reference.first.second.empty());
+    assert(reference.first.second.back().is_property());
+
+    if (reference.first.first == SchemaReferenceType::Static) {
+      const auto match{this->locations_.find(
+          {reference.first.first, reference.second.destination})};
+      if (match != this->locations_.cend() &&
+          match->second.pointer.starts_with(pointer)) {
+        return true;
+      }
+    } else {
+      for (const auto &location : this->locations_) {
+        if (location.second.type == LocationType::Anchor &&
+            location.first.first == SchemaReferenceType::Dynamic &&
+            location.second.pointer.starts_with(pointer)) {
+          if (!reference.second.fragment.has_value() ||
+              URI{location.first.second}.fragment().value_or("") ==
+                  reference.second.fragment.value()) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 } // namespace sourcemeta::core
