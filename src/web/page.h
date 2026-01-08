@@ -121,10 +121,10 @@ inline auto make_page(const Configuration &configuration,
                       const std::string &description, Children &&...children)
     -> HTML {
   std::vector<Node> nodes;
-  nodes.push_back(make_navigation(configuration));
-  (nodes.push_back(std::forward<Children>(children)), ...);
-  nodes.push_back(make_footer());
-  nodes.push_back(script(
+  nodes.emplace_back(make_navigation(configuration));
+  (nodes.emplace_back(std::forward<Children>(children)), ...);
+  nodes.emplace_back(make_footer());
+  nodes.emplace_back(script(
       {{"async", ""},
        {"defer", ""},
        {"src",

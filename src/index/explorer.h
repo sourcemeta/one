@@ -108,15 +108,15 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{
         sourcemeta::one::read_json_with_metadata(dependencies.front())};
-    auto id{sourcemeta::core::identify(
+    const auto id{sourcemeta::core::identify(
         schema.data, [&callback, &context](const auto identifier) {
           return std::get<0>(context).get()(identifier, callback);
         })};
-    assert(id.has_value());
+    assert(!id.empty());
     auto result{sourcemeta::core::JSON::make_object()};
 
     result.assign("bytes", sourcemeta::core::JSON{schema.bytes});
-    result.assign("identifier", sourcemeta::core::JSON{std::move(id).value()});
+    result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
     result.assign("path",
                   sourcemeta::core::JSON{"/" + std::get<2>(context).string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
@@ -124,10 +124,12 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
           return std::get<0>(context).get()(identifier, callback);
         })};
     assert(base_dialect.has_value());
-    result.assign("baseDialect", sourcemeta::core::JSON{base_dialect.value()});
-    const auto dialect{sourcemeta::core::dialect(schema.data, base_dialect)};
-    assert(dialect.has_value());
-    result.assign("dialect", sourcemeta::core::JSON{dialect.value()});
+    result.assign("baseDialect",
+                  sourcemeta::core::JSON{std::string{
+                      sourcemeta::core::to_string(base_dialect.value())}});
+    const auto dialect{sourcemeta::core::dialect(schema.data)};
+    assert(!dialect.empty());
+    result.assign("dialect", sourcemeta::core::JSON{std::string{dialect}});
 
     if (schema.data.is_object()) {
       const auto title{schema.data.try_at("title")};
@@ -147,7 +149,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
             [&callback, &context](const auto identifier) {
               return std::get<0>(context).get()(identifier, callback);
             },
-            base_dialect.value(), dialect.value())};
+            base_dialect.value(), dialect)};
         const auto &walker_result{
             sourcemeta::core::schema_walker("examples", vocabularies)};
         if (walker_result.type ==

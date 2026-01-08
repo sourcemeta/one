@@ -75,7 +75,7 @@ public:
     (child_elements.push_back(std::forward<Children>(children)), ...);
   }
 
-  auto render() const -> std::string;
+  [[nodiscard]] auto render() const -> std::string;
 
   auto push_back(const Node &child) -> HTML &;
   auto push_back(Node &&child) -> HTML &;
@@ -90,7 +90,7 @@ private:
   std::vector<Node> child_elements;
   bool self_closing;
 
-  auto render(const Node &child_element) const -> std::string;
+  [[nodiscard]] auto render(const Node &child_element) const -> std::string;
 };
 
 // Raw HTML content wrapper - DANGER: Content is NOT escaped!

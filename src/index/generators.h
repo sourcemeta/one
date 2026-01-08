@@ -37,15 +37,15 @@ struct GENERATE_MATERIALISED_SCHEMA {
     auto schema{data.second.get()(data.first)};
     assert(schema.has_value());
     const auto dialect_identifier{sourcemeta::core::dialect(schema.value())};
-    assert(dialect_identifier.has_value());
-    const auto metaschema{data.second.get()(dialect_identifier.value())};
+    assert(!dialect_identifier.empty());
+    const auto metaschema{data.second.get()(dialect_identifier)};
     assert(metaschema.has_value());
 
     // Validate the schemas against their meta-schemas
     sourcemeta::blaze::SimpleOutput output{schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
     const auto result{evaluator.validate(
-        GENERATE_MATERIALISED_SCHEMA::compile(dialect_identifier.value(),
+        GENERATE_MATERIALISED_SCHEMA::compile(std::string{dialect_identifier},
                                               metaschema.value(), data.second),
         schema.value(), std::ref(output))};
     if (!result) {
@@ -57,14 +57,14 @@ struct GENERATE_MATERIALISED_SCHEMA {
         [&callback, &data](const auto identifier) {
           return data.second.get()(identifier, callback);
         },
-        dialect_identifier.value());
+        dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema.value(), "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
-        sourcemeta::core::JSON{dialect_identifier.value()},
+        sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
@@ -192,11 +192,13 @@ struct GENERATE_DEPENDENCIES {
         [&result](const auto &origin, const auto &pointer, const auto &target,
                   const auto &) {
           auto trace{sourcemeta::core::JSON::make_object()};
-          trace.assign("from", sourcemeta::core::to_json(origin));
-          trace.assign("to", sourcemeta::core::to_json(target));
+          trace.assign("from", sourcemeta::core::JSON{std::string{origin}});
+          trace.assign("to", sourcemeta::core::JSON{std::string{target}});
           trace.assign("at", sourcemeta::core::to_json(pointer));
           result.push_back(std::move(trace));
         });
+    // Otherwise we are returning non-sense
+    assert(result.unique());
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
@@ -285,20 +287,20 @@ struct GENERATE_BUNDLE {
                                return resolver(identifier, callback);
                              });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
-    assert(dialect_identifier.has_value());
+    assert(!dialect_identifier.empty());
     sourcemeta::core::format(
         schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        dialect_identifier.value());
+        dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
-        sourcemeta::core::JSON{dialect_identifier.value()},
+        sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
@@ -320,20 +322,20 @@ struct GENERATE_EDITOR {
                                    return resolver(identifier, callback);
                                  });
     const auto dialect_identifier{sourcemeta::core::dialect(schema)};
-    assert(dialect_identifier.has_value());
+    assert(!dialect_identifier.empty());
     sourcemeta::core::format(
         schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        dialect_identifier.value());
+        dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::one::write_pretty_json(
         destination, schema, "application/schema+json",
         sourcemeta::one::Encoding::GZIP,
-        sourcemeta::core::JSON{dialect_identifier.value()},
+        sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
