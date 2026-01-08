@@ -56,7 +56,7 @@ public:
   /// const std::string source{"http://example.com/~{username}/"};
   /// const sourcemeta::core::URITemplate uri_template{source};
   /// ```
-  URITemplate(std::string_view source);
+  URITemplate(const std::string_view source);
 
   /// Get the number of tokens in the template
   [[nodiscard]] auto size() const noexcept -> std::uint64_t;
