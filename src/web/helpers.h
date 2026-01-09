@@ -118,7 +118,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
   std::vector<Node> children;
 
   if (directory.defines("github") && !directory.at("github").contains('/')) {
-    children.push_back(
+    children.emplace_back(
         img({{"src", "https://github.com/" +
                          directory.at("github").to_string() + ".png?size=200"},
              {"width", "100"},
@@ -127,11 +127,11 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
   }
 
   std::vector<Node> title_section_children;
-  title_section_children.push_back(
+  title_section_children.emplace_back(
       h2({{"class", "fw-bold h4"}}, directory.at("title").to_string()));
 
   if (directory.defines("description")) {
-    title_section_children.push_back(
+    title_section_children.emplace_back(
         p({{"class", "text-secondary"}},
           directory.at("description").to_string()));
   }
@@ -141,7 +141,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
     std::vector<Node> contact_children;
 
     if (directory.defines("github")) {
-      contact_children.push_back(
+      contact_children.emplace_back(
           small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
                 i({{"class", "bi bi-github text-secondary me-1"}}),
                 a({{"href",
@@ -152,7 +152,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
     }
 
     if (directory.defines("website")) {
-      contact_children.push_back(
+      contact_children.emplace_back(
           small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
                 i({{"class", "bi bi-link-45deg text-secondary me-1"}}),
                 a({{"href", directory.at("website").to_string()},
@@ -162,7 +162,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
     }
 
     if (directory.defines("email")) {
-      contact_children.push_back(
+      contact_children.emplace_back(
           small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
                 i({{"class", "bi bi-envelope text-secondary me-1"}}),
                 a({{"href", "mailto:" + directory.at("email").to_string()},
@@ -170,10 +170,10 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
                   directory.at("email").to_string())));
     }
 
-    title_section_children.push_back(div(contact_children));
+    title_section_children.emplace_back(div(contact_children));
   }
 
-  children.push_back(div(title_section_children));
+  children.emplace_back(div(title_section_children));
   return div({{"class", "container-fluid px-4 pt-4 d-flex"}},
              std::move(children));
 }
@@ -247,15 +247,15 @@ inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
   std::vector<Node> container_children;
 
   if (has_regular_entries) {
-    container_children.push_back(table(
+    container_children.emplace_back(table(
         {{"class", "table table-bordered border-light-subtle table-light"}},
         make_file_manager_table_header(), std::move(tbody_content)));
   }
 
   if (has_special_entries) {
-    container_children.push_back(
+    container_children.emplace_back(
         h6({{"class", "text-secondary mt-4 mb-3"}}, "Special directories"));
-    container_children.push_back(table(
+    container_children.emplace_back(table(
         {{"class", "table table-bordered border-light-subtle table-light"}},
         make_file_manager_table_header(), std::move(special_tbody_content)));
   }

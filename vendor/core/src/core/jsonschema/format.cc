@@ -2,8 +2,9 @@
 
 #include <cstdint>       // std::uint64_t
 #include <limits>        // std::numeric_limits
-#include <string>        // std::string
+#include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <vector>        // std::vector
 
 namespace {
 
@@ -136,21 +137,29 @@ auto keyword_compare(const sourcemeta::core::JSON::String &left,
 namespace sourcemeta::core {
 
 auto format(JSON &schema, const SchemaWalker &walker,
-            const SchemaResolver &resolver,
-            const std::optional<JSON::String> &default_dialect) -> void {
+            const SchemaResolver &resolver, std::string_view default_dialect)
+    -> void {
   assert(is_schema(schema));
-  SchemaFrame frame{SchemaFrame::Mode::Locations};
-  frame.analyse(schema, walker, resolver, default_dialect);
+  std::vector<Pointer> subschemas;
 
-  for (const auto &entry : frame.locations()) {
-    if (entry.second.type != SchemaFrame::LocationType::Resource &&
-        entry.second.type != SchemaFrame::LocationType::Subschema) {
-      continue;
+  {
+    SchemaFrame frame{SchemaFrame::Mode::Locations};
+    frame.analyse(schema, walker, resolver, default_dialect);
+
+    for (const auto &entry : frame.locations()) {
+      if (entry.second.type != SchemaFrame::LocationType::Resource &&
+          entry.second.type != SchemaFrame::LocationType::Subschema) {
+        continue;
+      }
+
+      subschemas.push_back(to_pointer(entry.second.pointer));
     }
+  }
 
-    auto &value{get(schema, entry.second.pointer)};
-    if (value.is_object()) {
-      value.reorder(keyword_compare);
+  for (const auto &pointer : subschemas) {
+    auto &subschema{get(schema, pointer)};
+    if (subschema.is_object()) {
+      subschema.reorder(keyword_compare);
     }
   }
 }

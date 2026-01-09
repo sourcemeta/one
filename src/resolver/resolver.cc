@@ -9,7 +9,6 @@
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
 #include <mutex>     // std::mutex, std::lock_guard
-#include <sstream>   // std::ostringstream
 
 static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::JSON::String &uri,
@@ -158,13 +157,13 @@ auto Resolver::operator()(
 
   sourcemeta::core::SchemaFrame frame{
       sourcemeta::core::SchemaFrame::Mode::Locations};
-  const auto has_identifier{sourcemeta::core::identify(
-                                schema,
-                                [this](const auto subidentifier) {
-                                  return this->operator()(subidentifier);
-                                },
-                                result->second.dialect)
-                                .has_value()};
+  const auto identifier_result{sourcemeta::core::identify(
+      schema,
+      [this](const auto subidentifier) {
+        return this->operator()(subidentifier);
+      },
+      result->second.dialect)};
+  const auto has_identifier{!identifier_result.empty()};
   frame.analyse(
       schema, sourcemeta::core::schema_walker,
       [this](const auto subidentifier) {
@@ -172,9 +171,7 @@ auto Resolver::operator()(
       },
       result->second.dialect,
       // Otherwise we will loop over all locations twice
-      has_identifier
-          ? std::optional<sourcemeta::core::JSON::String>{std::nullopt}
-          : result->second.original_identifier);
+      has_identifier ? std::string_view{} : result->second.original_identifier);
 
   const auto ref_hash{schema.as_object().hash("$ref")};
   const auto dynamic_ref_hash{schema.as_object().hash("$dynamicRef")};
@@ -195,7 +192,7 @@ auto Resolver::operator()(
         }
 
         if (entry.second.base_dialect ==
-            "https://json-schema.org/draft/2020-12/schema") {
+            sourcemeta::core::SchemaBaseDialect::JSON_Schema_2020_12) {
           const auto maybe_dynamic_ref{
               subschema.try_at("$dynamicRef", dynamic_ref_hash)};
           if (maybe_dynamic_ref) {
@@ -238,6 +235,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   const auto schema{sourcemeta::core::read_yaml_or_json(path)};
   assert(sourcemeta::core::is_schema(schema));
 
+  const std::string default_dialect_str{
+      collection.default_dialect.value_or("")};
+
   /////////////////////////////////////////////////////////////////////////////
   // (2) Try our best to determine the identifier of the schema, defaulting to a
   // file-system-based identifier based on the *current* URI
@@ -249,15 +249,13 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
                   .string()))
           .canonicalize()
           .recompose()};
-  sourcemeta::core::URI identifier_uri{normalise_identifier(
-      sourcemeta::core::identify(
+  sourcemeta::core::URI identifier_uri{
+      normalise_identifier(sourcemeta::core::identify(
           schema,
           [this](const auto subidentifier) {
             return this->operator()(subidentifier);
           },
-          collection.default_dialect, default_identifier)
-          // We can safely assume this as we pass a default identifier
-          .value())};
+          default_dialect_str, default_identifier))};
   identifier_uri.canonicalize();
   auto identifier{
       identifier_uri.is_relative()
@@ -293,19 +291,19 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // we rebase according to the one base URI, etc
   /////////////////////////////////////////////////////////////////////////////
   const auto raw_dialect{
-      sourcemeta::core::dialect(schema, collection.default_dialect)};
+      sourcemeta::core::dialect(schema, default_dialect_str)};
   // If we couldn't determine the dialect, we would be in trouble!
-  assert(raw_dialect.has_value());
+  assert(!raw_dialect.empty());
   // Don't modify references to official meta-schemas
   // TODO: This line may be unnecessarily slow. We should have a different
   // function that just checks for string equality in an `std::unordered_map`
   // of official dialects without constructing the final object
   const auto is_official_dialect{
-      sourcemeta::core::schema_resolver(raw_dialect.value()).has_value()};
+      sourcemeta::core::schema_resolver(raw_dialect).has_value()};
   auto current_dialect{is_official_dialect
-                           ? raw_dialect.value()
+                           ? std::string{raw_dialect}
                            : rebase(collection,
-                                    normalise_identifier(raw_dialect.value()),
+                                    normalise_identifier(raw_dialect),
                                     server_url, collection_relative_path)};
   // Otherwise we messed things up
   assert(!current_dialect.ends_with("#.json"));

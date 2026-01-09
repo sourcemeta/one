@@ -29,8 +29,8 @@ public:
   }
 
 private:
-  const sourcemeta::core::JSON::String uri_;
-  const sourcemeta::core::JSON::String base_;
+  sourcemeta::core::JSON::String uri_;
+  sourcemeta::core::JSON::String base_;
 };
 
 } // namespace sourcemeta::one

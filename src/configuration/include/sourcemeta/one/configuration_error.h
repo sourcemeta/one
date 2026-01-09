@@ -27,7 +27,7 @@ public:
     this->stacktrace_ = stream.str();
   }
 
-  [[nodiscard]] auto what() const noexcept -> const char * {
+  [[nodiscard]] auto what() const noexcept -> const char * override {
     return "Invalid configuration";
   }
 
@@ -47,7 +47,7 @@ public:
       : from_{std::move(from)}, location_{std::move(location)},
         target_{std::move(target)} {}
 
-  [[nodiscard]] auto what() const noexcept -> const char * {
+  [[nodiscard]] auto what() const noexcept -> const char * override {
     return "Could not read referenced file";
   }
 
@@ -77,7 +77,7 @@ public:
       : from_{std::move(from)}, location_{std::move(location)},
         identifier_{std::move(identifier)} {}
 
-  [[nodiscard]] auto what() const noexcept -> const char * {
+  [[nodiscard]] auto what() const noexcept -> const char * override {
     return "Could not locate built-in collection";
   }
 

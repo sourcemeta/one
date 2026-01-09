@@ -88,9 +88,11 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
         // Determine keyword vocabulary
         const auto &current_location{
             static_locations.at(instruction.keyword_location)};
+        const auto base_dialect_result{sourcemeta::core::to_base_dialect(
+            current_location.at("baseDialect").to_string())};
+        assert(base_dialect_result.has_value());
         const auto vocabularies{sourcemeta::core::vocabularies(
-            sourcemeta::core::schema_resolver,
-            current_location.at("baseDialect").to_string(),
+            sourcemeta::core::schema_resolver, base_dialect_result.value(),
             current_location.at("dialect").to_string())};
         const auto &walker_result{sourcemeta::core::schema_walker(
             evaluate_path.back().to_property(), vocabularies)};

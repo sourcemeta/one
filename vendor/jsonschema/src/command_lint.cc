@@ -155,24 +155,21 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   }
 
   if (options.contains("list")) {
-    std::vector<std::pair<std::reference_wrapper<const std::string>,
-                          std::reference_wrapper<const std::string>>>
-        rules;
+    std::vector<std::pair<std::string_view, std::string_view>> rules;
     for (const auto &entry : bundle) {
       rules.emplace_back(entry->name(), entry->message());
     }
 
-    std::sort(rules.begin(), rules.end(),
-              [](const auto &left, const auto &right) {
-                return left.first.get() < right.first.get() ||
-                       (left.first.get() == right.first.get() &&
-                        left.second.get() < right.second.get());
-              });
+    std::sort(
+        rules.begin(), rules.end(), [](const auto &left, const auto &right) {
+          return left.first < right.first ||
+                 (left.first == right.first && left.second < right.second);
+        });
 
     std::size_t count{0};
     for (const auto &entry : rules) {
-      std::cout << entry.first.get() << "\n";
-      std::cout << "  " << entry.second.get() << "\n\n";
+      std::cout << entry.first << "\n";
+      std::cout << "  " << entry.second << "\n\n";
       count += 1;
     }
 
@@ -296,6 +293,13 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   }
 
   if (output_json) {
+    std::sort(errors_array.as_array().begin(), errors_array.as_array().end(),
+              [](const sourcemeta::core::JSON &left,
+                 const sourcemeta::core::JSON &right) {
+                return left.at("position").front() <
+                       right.at("position").front();
+              });
+
     auto output_json_object = sourcemeta::core::JSON::make_object();
     output_json_object.assign("valid", sourcemeta::core::JSON{result});
 

@@ -22,9 +22,9 @@ public:
   Resolver() = default;
   // Just to prevent mistakes
   Resolver(const Resolver &) = delete;
-  Resolver &operator=(const Resolver &) = delete;
+  auto operator=(const Resolver &) -> Resolver & = delete;
   Resolver(Resolver &&) = delete;
-  Resolver &operator=(Resolver &&) = delete;
+  auto operator=(Resolver &&) -> Resolver & = delete;
 
   using Callback = std::function<void(const std::filesystem::path &)>;
 
@@ -44,9 +44,9 @@ public:
   auto cache_path(const sourcemeta::core::JSON::String &uri,
                   const std::filesystem::path &path) -> void;
 
-  auto begin() const -> auto { return this->views.begin(); }
-  auto end() const -> auto { return this->views.end(); }
-  auto size() const -> auto { return this->views.size(); }
+  [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
+  [[nodiscard]] auto end() const -> auto { return this->views.end(); }
+  [[nodiscard]] auto size() const -> auto { return this->views.size(); }
 
   struct Entry {
     std::optional<std::filesystem::path> cache_path;
