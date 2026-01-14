@@ -24,7 +24,7 @@ case "$(realpath "$CONFIGURATION")" in
     rm -rf "$SOURCEMETA_ONE_WORKDIR"
     ;;
   *)
-    echo "error: $1 must be inside the workding directory ($SOURCEMETA_ONE_WORKDIR)" 1>&2
+    echo "error: $1 must be inside the working directory ($SOURCEMETA_ONE_WORKDIR)" 1>&2
     exit 1
     ;;
 esac
