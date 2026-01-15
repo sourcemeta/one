@@ -7,9 +7,9 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME web
 
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::core::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)
+target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::html)
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::configuration)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::shared)
-target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::html)
 
 sourcemeta_esbuild_bundle(
   ENTRYPOINT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/main.js"

@@ -3,7 +3,7 @@
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/one/html.h>
+#include <sourcemeta/core/html.h>
 #include <sourcemeta/one/shared.h>
 
 #include <cassert>    // assert
@@ -32,11 +32,11 @@ auto GENERATE_WEB_SCHEMA::handler(
           ? meta.at("description").to_string()
           : ("Schemas located at " + meta.at("path").to_string())};
 
-  using namespace sourcemeta::one::html;
+  using namespace sourcemeta::core::html;
 
-  std::vector<Node> container_children;
-  std::vector<Node> content_children;
-  std::vector<Node> header_children;
+  std::vector<sourcemeta::core::HTMLNode> container_children;
+  std::vector<sourcemeta::core::HTMLNode> content_children;
+  std::vector<sourcemeta::core::HTMLNode> header_children;
 
   // Title and description
   if (meta.defines("title")) {
@@ -63,7 +63,7 @@ auto GENERATE_WEB_SCHEMA::handler(
   content_children.emplace_back(div(header_children));
 
   // Information table
-  std::vector<Node> table_rows;
+  std::vector<sourcemeta::core::HTMLNode> table_rows;
 
   // Identifier row
   table_rows.emplace_back(
@@ -124,7 +124,7 @@ auto GENERATE_WEB_SCHEMA::handler(
   assert(health.defines("errors"));
 
   // Tab navigation
-  std::vector<Node> nav_items;
+  std::vector<sourcemeta::core::HTMLNode> nav_items;
   nav_items.emplace_back(li(
       {{"class", "nav-item"}},
       button(
@@ -163,11 +163,11 @@ auto GENERATE_WEB_SCHEMA::handler(
       ul({{"class", "nav nav-tabs mt-4 mb-3"}}, nav_items));
 
   // Examples tab
-  std::vector<Node> examples_content;
+  std::vector<sourcemeta::core::HTMLNode> examples_content;
   if (meta.at("examples").empty()) {
     examples_content.emplace_back(p("This schema declares 0 examples."));
   } else {
-    std::vector<Node> example_items;
+    std::vector<sourcemeta::core::HTMLNode> example_items;
     for (const auto &example : meta.at("examples").as_array()) {
       std::ostringstream pretty;
       sourcemeta::core::prettify(example, pretty);
@@ -199,13 +199,13 @@ auto GENERATE_WEB_SCHEMA::handler(
                      << (indirect.size() == 1 ? "dependency" : "dependencies")
                      << ".";
 
-  std::vector<Node> dependencies_content;
+  std::vector<sourcemeta::core::HTMLNode> dependencies_content;
   dependencies_content.emplace_back(p(dependency_summary.str()));
 
   if (direct.size() + indirect.size() > 0) {
-    std::vector<Node> dep_table_rows;
+    std::vector<sourcemeta::core::HTMLNode> dep_table_rows;
     for (const auto &dependency : dependencies_json.as_array()) {
-      std::vector<Node> row_cells;
+      std::vector<sourcemeta::core::HTMLNode> row_cells;
 
       if (dependency.at("from") == meta.at("identifier")) {
         std::ostringstream dependency_attribute;
@@ -250,7 +250,7 @@ auto GENERATE_WEB_SCHEMA::handler(
 
   // Health tab
   const auto errors_count{health.at("errors").size()};
-  std::vector<Node> health_content;
+  std::vector<sourcemeta::core::HTMLNode> health_content;
   if (errors_count == 1) {
     health_content.emplace_back(p(
         "This schema has " + std::to_string(errors_count) + " quality error."));
@@ -261,13 +261,13 @@ auto GENERATE_WEB_SCHEMA::handler(
   }
 
   if (errors_count > 0) {
-    std::vector<Node> error_items;
+    std::vector<sourcemeta::core::HTMLNode> error_items;
     for (const auto &error : health.at("errors").as_array()) {
       assert(error.at("pointers").size() >= 1);
       std::ostringstream pointers;
       sourcemeta::core::stringify(error.at("pointers"), pointers);
 
-      std::vector<Node> error_children;
+      std::vector<sourcemeta::core::HTMLNode> error_children;
       error_children.emplace_back(
           code({{"class", "d-block text-primary"}},
                error.at("pointers").front().to_string()));

@@ -3,7 +3,7 @@
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/one/html.h>
+#include <sourcemeta/core/html.h>
 #include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
@@ -13,8 +13,8 @@
 namespace {
 
 auto make_hero(const sourcemeta::one::Configuration &configuration)
-    -> sourcemeta::one::html::HTML {
-  using namespace sourcemeta::one::html;
+    -> sourcemeta::core::HTML {
+  using namespace sourcemeta::core::html;
   if (configuration.html->hero.has_value()) {
     return div({{"class", "container-fluid px-4"}},
                div({{"class", "bg-light border border-light-subtle mt-4 "

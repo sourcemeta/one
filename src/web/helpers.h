@@ -1,8 +1,8 @@
 #ifndef SOURCEMETA_ONE_WEB_HELPERS_H_
 #define SOURCEMETA_ONE_WEB_HELPERS_H_
 
+#include <sourcemeta/core/html.h>
 #include <sourcemeta/one/configuration.h>
-#include <sourcemeta/one/html.h>
 #include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
@@ -14,7 +14,10 @@
 
 namespace sourcemeta::one::html {
 
-inline auto make_breadcrumb(const sourcemeta::core::JSON &breadcrumb) -> HTML {
+using namespace sourcemeta::core::html;
+
+inline auto make_breadcrumb(const sourcemeta::core::JSON &breadcrumb)
+    -> sourcemeta::core::HTML {
   assert(breadcrumb.is_array());
   assert(!breadcrumb.empty());
   auto entries = ol({{"class", "breadcrumb mb-0"}},
@@ -42,7 +45,7 @@ inline auto make_breadcrumb(const sourcemeta::core::JSON &breadcrumb) -> HTML {
 
 inline auto
 make_schema_health_progress_bar(const sourcemeta::core::JSON::Integer health)
-    -> HTML {
+    -> sourcemeta::core::HTML {
   const auto [progress_class, progress_style] =
       [health]() -> std::pair<std::string, std::string> {
     if (health > 90) {
@@ -60,9 +63,9 @@ make_schema_health_progress_bar(const sourcemeta::core::JSON::Integer health)
     }
   }();
 
-  Attributes attributes{{"class", progress_class}};
+  sourcemeta::core::HTMLAttributes attributes{{"class", progress_class}};
   if (!progress_style.empty()) {
-    attributes["style"] = progress_style;
+    attributes.emplace_back("style", progress_style);
   }
 
   return div({{"class", "progress"},
@@ -76,7 +79,7 @@ make_schema_health_progress_bar(const sourcemeta::core::JSON::Integer health)
 
 inline auto
 make_dialect_badge(const sourcemeta::core::JSON::String &base_dialect_uri)
-    -> HTML {
+    -> sourcemeta::core::HTML {
   const auto [short_name, is_current] =
       [&base_dialect_uri]() -> std::pair<std::string, bool> {
     if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema") {
@@ -110,12 +113,12 @@ make_dialect_badge(const sourcemeta::core::JSON::String &base_dialect_uri)
 }
 
 inline auto make_directory_header(const sourcemeta::core::JSON &directory)
-    -> HTML {
+    -> sourcemeta::core::HTML {
   if (!directory.defines("title")) {
     return div();
   }
 
-  std::vector<Node> children;
+  std::vector<sourcemeta::core::HTMLNode> children;
 
   if (directory.defines("github") && !directory.at("github").contains('/')) {
     children.emplace_back(
@@ -126,7 +129,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
              {"class", "img-thumbnail me-4"}}));
   }
 
-  std::vector<Node> title_section_children;
+  std::vector<sourcemeta::core::HTMLNode> title_section_children;
   title_section_children.emplace_back(
       h2({{"class", "fw-bold h4"}}, directory.at("title").to_string()));
 
@@ -138,7 +141,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
 
   if (directory.defines("email") || directory.defines("github") ||
       directory.defines("website")) {
-    std::vector<Node> contact_children;
+    std::vector<sourcemeta::core::HTMLNode> contact_children;
 
     if (directory.defines("github")) {
       contact_children.emplace_back(
@@ -178,8 +181,9 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
              std::move(children));
 }
 
-inline auto make_file_manager_row(const sourcemeta::core::JSON &entry) -> HTML {
-  auto type_content = [&entry]() -> HTML {
+inline auto make_file_manager_row(const sourcemeta::core::JSON &entry)
+    -> sourcemeta::core::HTML {
+  auto type_content = [&entry]() -> sourcemeta::core::HTML {
     if (entry.at("type").to_string() == "directory") {
       if (entry.defines("github") && !entry.at("github").contains('/')) {
         return img(
@@ -211,7 +215,7 @@ inline auto make_file_manager_row(const sourcemeta::core::JSON &entry) -> HTML {
          make_schema_health_progress_bar(entry.at("health").to_integer())));
 }
 
-inline auto make_file_manager_table_header() -> HTML {
+inline auto make_file_manager_table_header() -> sourcemeta::core::HTML {
   return thead(tr(th({{"scope", "col"}, {"style", "width: 50px"}}),
                   th({{"scope", "col"}}, "Name"),
                   th({{"scope", "col"}}, "Title"),
@@ -220,7 +224,8 @@ inline auto make_file_manager_table_header() -> HTML {
                   th({{"scope", "col"}, {"style", "width: 150px"}}, "Health")));
 }
 
-inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
+inline auto make_file_manager(const sourcemeta::core::JSON &directory)
+    -> sourcemeta::core::HTML {
   if (directory.at("entries").empty()) {
     return div(
         {{"class", "container-fluid p-4 flex-grow-1"}},
@@ -244,7 +249,7 @@ inline auto make_file_manager(const sourcemeta::core::JSON &directory) -> HTML {
     }
   }
 
-  std::vector<Node> container_children;
+  std::vector<sourcemeta::core::HTMLNode> container_children;
 
   if (has_regular_entries) {
     container_children.emplace_back(table(

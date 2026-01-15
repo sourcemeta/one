@@ -3,7 +3,7 @@
 #include "../helpers.h"
 #include "../page.h"
 
-#include <sourcemeta/one/html.h>
+#include <sourcemeta/core/html.h>
 #include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
