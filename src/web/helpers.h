@@ -197,7 +197,7 @@ inline auto make_file_manager_row(const sourcemeta::core::JSON &entry) -> HTML {
 
   return tr(
       td({{"class", "text-nowrap"}}, type_content),
-      td({{"class", "font-monospace text-nowrap"}},
+      td({{"class", "font-monospace"}},
          a({{"href", entry.at("path").to_string()}},
            entry.at("name").to_string())),
       td(small(entry.defines("title") ? entry.at("title").to_string() : "-")),
