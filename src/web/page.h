@@ -1,8 +1,8 @@
 #ifndef SOURCEMETA_ONE_WEB_PAGE_H_
 #define SOURCEMETA_ONE_WEB_PAGE_H_
 
+#include <sourcemeta/core/html.h>
 #include <sourcemeta/one/configuration.h>
-#include <sourcemeta/one/html.h>
 #include <sourcemeta/one/shared.h>
 
 #include <optional>    // std::optional
@@ -13,7 +13,10 @@
 
 namespace sourcemeta::one::html {
 
-inline auto make_navigation(const Configuration &configuration) -> HTML {
+using namespace sourcemeta::core::html;
+
+inline auto make_navigation(const Configuration &configuration)
+    -> sourcemeta::core::HTML {
   auto container =
       div({{"class", "container-fluid px-4 py-1 align-items-center "
                      "flex-column flex-md-row"}},
@@ -50,7 +53,7 @@ inline auto make_navigation(const Configuration &configuration) -> HTML {
              std::move(container));
 }
 
-inline auto make_footer() -> HTML {
+inline auto make_footer() -> sourcemeta::core::HTML {
   std::ostringstream information;
   information << " v" << version() << " © 2025 ";
 
@@ -81,10 +84,10 @@ inline auto make_footer() -> HTML {
                   "Need Help?"))));
 }
 
-inline auto make_head(const Configuration &configuration,
-                      const std::string &canonical,
-                      const std::string &page_title,
-                      const std::string &description) -> HTML {
+inline auto
+make_head(const Configuration &configuration, const std::string &canonical,
+          const std::string &page_title, const std::string &description)
+    -> sourcemeta::core::HTML {
   return head(meta({{"charset", "utf-8"}}),
               meta({{"name", "referrer"}, {"content", "no-referrer"}}),
               meta({{"name", "viewport"},
@@ -119,8 +122,8 @@ template <typename... Children>
 inline auto make_page(const Configuration &configuration,
                       const std::string &canonical, const std::string &title,
                       const std::string &description, Children &&...children)
-    -> HTML {
-  std::vector<Node> nodes;
+    -> sourcemeta::core::HTML {
+  std::vector<sourcemeta::core::HTMLNode> nodes;
   nodes.emplace_back(make_navigation(configuration));
   (nodes.emplace_back(std::forward<Children>(children)), ...);
   nodes.emplace_back(make_footer());
@@ -130,9 +133,10 @@ inline auto make_page(const Configuration &configuration,
        {"src",
         // For cache busting, to force browsers to refresh styles on any update
         "/self/static/main.min.js?v=" + std::string{stamp()}}}));
-  return html({{"class", "h-100"}, {"lang", "en"}},
-              make_head(configuration, canonical, title, description),
-              body({{"class", "h-100 d-flex flex-column"}}, nodes));
+  return sourcemeta::core::html::html(
+      {{"class", "h-100"}, {"lang", "en"}},
+      make_head(configuration, canonical, title, description),
+      body({{"class", "h-100 d-flex flex-column"}}, nodes));
 }
 
 } // namespace sourcemeta::one::html

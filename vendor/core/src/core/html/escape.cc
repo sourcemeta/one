@@ -1,10 +1,10 @@
-#include <sourcemeta/one/html_escape.h>
+#include <sourcemeta/core/html_escape.h>
 
 #include <string> // std::string
 
-namespace sourcemeta::one::html {
+namespace sourcemeta::core {
 
-auto escape(std::string &text) -> void {
+auto html_escape(std::string &text) -> void {
   std::size_t write_position{0};
   std::size_t original_size{text.size()};
 
@@ -93,4 +93,4 @@ auto escape(std::string &text) -> void {
   }
 }
 
-} // namespace sourcemeta::one::html
+} // namespace sourcemeta::core
