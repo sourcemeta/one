@@ -20,9 +20,10 @@ traditional open-source model.
 
 ## Editions
 
-You can use Sourcemeta One at no cost with all features included for
-non-commercial and evaluation purposes. However, commercial deployments require
-a license from Sourcemeta. This licensing model enables us to:
+You can use the Sourcemeta One commercial edition at no cost with all features
+included for non-commercial and evaluation purposes. However, commercial
+deployments require a license from Sourcemeta. This licensing model enables us
+to:
 
 - Maintain and enhance the service's advanced capabilities
 - Provide enterprise-grade support and reliability
