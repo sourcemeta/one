@@ -63,9 +63,9 @@ LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
-LABEL org.opencontainers.image.licenses="Commercial"
+LABEL org.opencontainers.image.licenses="BUSL-1.1 AND LicenseRef-Commercial"
 LABEL org.opencontainers.image.title="Sourcemeta One"
-LABEL org.opencontainers.image.description="The JSON Schema one"
+LABEL org.opencontainers.image.description="The JSON Schema platform. Commercial license available at hello@sourcemeta.com"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
 COPY --from=builder /usr/bin/sourcemeta-one-index \

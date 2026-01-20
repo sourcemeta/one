@@ -1,52 +1,57 @@
-Sourcemeta One License
+Business Source License 1.1
 
-For acquiring a commercial license, contact: hello@sourcemeta.com
+Licensor: Sourcemeta OU
 
-Copyright (c) 2025 Sourcemeta
+Licensed Work: Sourcemeta One
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to use
-the Software subject to the following conditions:
+Additional Use Grant: You may make use of the Licensed Work, provided that you
+may not use the Licensed Work for a hosting solution that competes with
+Licensor.
 
-PERMITTED USE WITHOUT LICENSE:
+Change Date: Change date is four years from release date. Please see [GitHub
+releases](https://github.com/sourcemeta/one/releases/) for exact dates
 
-You may use the Software without a commercial license for:
+Change License: [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), as
+published by the Free Software Foundation.
 
-1. Evaluation: Testing and evaluating the Software for potential adoption,
-   for a reasonable period not exceeding 90 days of evaluation.
+Terms
 
-2. Non-Commercial Use: Personal, academic, open source, or use by registered
-   non-profit organisations, where the Software is not used in connection with
-   any for-profit business activities.
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may make an Additional Use Grant, above, permitting limited production
+use.
 
-3. Development and Testing: Internal development and testing environments
-   that are not serving production workloads.
+Effective on the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Licensed Work under this
+License, whichever comes first, the Licensor hereby grants you rights under the
+terms of the Change License, and the rights granted in the paragraph above
+terminate.
 
-COMMERCIAL LICENSE REQUIRED:
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
 
-Any use of the Software in production environments by for-profit organisations,
-or any use in connection with revenue-generating activities, requires a
-commercial license.
+All copies of the original and modified Licensed Work, and derivative works
+of the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work and the Change Date may vary
+for each version of the Licensed Work released by Licensor.
 
-Production use includes but is not limited to: operating the Software to
-support business operations, serving internal or external users in a production
-capacity, or incorporating the Software into commercial products or services.
+You must conspicuously display this License on each original or modified copy
+of the Licensed Work. If you receive the Licensed Work in original or
+modified form from a third party, the terms and conditions set forth in this
+License apply to your use of that work.
 
-For commercial licensing, contact: hello@sourcemeta.com
+Any use of the Licensed Work in violation of this License will automatically
+terminate your rights under this License for the current and all other
+versions of the Licensed Work.
 
-CONTRIBUTIONS:
+This License does not grant you any right in any trademark or logo of
+Licensor or its affiliates (provided that you may use a trademark or logo of
+Licensor as expressly required by this License).
 
-If you submit a source code contribution to the Software, all rights, title,
-and interest in the contribution are transferred to Sourcemeta. You warrant
-that you own all intellectual property rights to your contribution and accept
-full liability for any copyright or patent infringement arising from your
-contribution.
-
-NO WARRANTY: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-LIMITATION OF LIABILITY: IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
+AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
+TITLE.
