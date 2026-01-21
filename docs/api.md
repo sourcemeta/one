@@ -309,6 +309,7 @@ GET /self/v1/api/schemas/locations/{path}
     | `/static/*/position/1` | Integer | Yes | Starting column number |
     | `/static/*/position/2` | Integer | Yes | Ending line number |
     | `/static/*/position/3` | Integer | Yes | Ending column number |
+    | `/static/*/propertyName` | Boolean | Yes | Whether the location applies to a property name |
     | `/dynamic` | Object | Yes | Dynamic URI locations within the schema |
     | `/dynamic/*` | Object | Yes | Metadata for a specific URI location |
     | `/dynamic/*/base` | String | Yes | The base URI of the location |
@@ -324,6 +325,7 @@ GET /self/v1/api/schemas/locations/{path}
     | `/dynamic/*/position/1` | Integer | Yes | Starting column number |
     | `/dynamic/*/position/2` | Integer | Yes | Ending line number |
     | `/dynamic/*/position/3` | Integer | Yes | Ending column number |
+    | `/dynamic/*/propertyName` | Boolean | Yes | Whether the location applies to a property name |
 
 === "404"
 

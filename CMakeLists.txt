@@ -15,6 +15,7 @@ endif()
 
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
+find_package(Codegen REQUIRED)
 find_package(Hydra REQUIRED)
 find_package(JSONBinPack REQUIRED)
 find_package(JSONSchema REQUIRED)
