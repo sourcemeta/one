@@ -318,5 +318,31 @@ header "ETag" exists
   "$id": "{{base}}/test/schemas/clash/foo/bar"
 }
 
+GET {{base}}/test/no-base/no-id.json
+HTTP 200
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/no-base/no-id",
+  "type": "string"
+}
+
+GET {{base}}/test/no-base/test-1.json
+HTTP 200
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/no-base/test-1",
+  "type": "string"
+}
+
 GET {{base}}/.json
 HTTP 404

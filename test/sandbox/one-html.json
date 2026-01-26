@@ -72,6 +72,9 @@
           "baseUri": "https://other.com",
           "path": "./schemas/test/no-blaze",
           "x-sourcemeta-one:evaluate": false
+        },
+        "no-base": {
+          "path": "./schemas/test/no-base"
         }
       }
     }

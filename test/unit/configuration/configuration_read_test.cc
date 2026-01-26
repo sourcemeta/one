@@ -421,6 +421,31 @@ TEST(Configuration_read, read_valid_014) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
+TEST(Configuration_read, read_valid_015) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_015.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+
+  std::string text{R"JSON({
+    "url": "http://localhost:8000",
+    "html": {
+      "name": "Title",
+      "description": "Description"
+    },
+    "contents": {
+      "example": {
+        "path": "STUB_DIRECTORY/schemas/example/extension",
+        "baseUri": "http://localhost:8000"
+      }
+    }
+  })JSON"};
+
+  replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
+  const auto expected{sourcemeta::core::parse_json(text)};
+  EXPECT_EQ(raw_configuration, expected);
+}
+
 TEST(Configuration_read, read_invalid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_001.json"};
