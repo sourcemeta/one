@@ -18,7 +18,7 @@ jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 15
-jsonpath "$.entries[0].path" == "/test"
+jsonpath "$.entries[0].path" == "/test/"
 jsonpath "$.entries[1].name" == "sourcemeta"
 jsonpath "$.entries[1].title" == "Sourcemeta"
 jsonpath "$.entries[1].description" == "A provider of premium tooling and services to support JSON Schema use in production"
@@ -27,13 +27,13 @@ jsonpath "$.entries[1].github" == "sourcemeta"
 jsonpath "$.entries[1].website" == "https://www.sourcemeta.com"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 100
-jsonpath "$.entries[1].path" == "/sourcemeta"
+jsonpath "$.entries[1].path" == "/sourcemeta/"
 jsonpath "$.entries[2].name" == "self"
 jsonpath "$.entries[2].title" == "Self"
 jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 100
-jsonpath "$.entries[2].path" == "/self"
+jsonpath "$.entries[2].path" == "/self/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -59,49 +59,49 @@ jsonpath "$.path" == "/test"
 jsonpath "$.url" == "{{base}}/test"
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.entries" count == 9
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
-jsonpath "$.entries[0].path" == "/test/v2.0"
+jsonpath "$.entries[0].path" == "/test/v2.0/"
 jsonpath "$.entries[1].name" == "schemas"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 3
-jsonpath "$.entries[1].path" == "/test/schemas"
+jsonpath "$.entries[1].path" == "/test/schemas/"
 jsonpath "$.entries[2].name" == "same"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 0
-jsonpath "$.entries[2].path" == "/test/same"
+jsonpath "$.entries[2].path" == "/test/same/"
 jsonpath "$.entries[3].name" == "no-blaze"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 0
-jsonpath "$.entries[3].path" == "/test/no-blaze"
+jsonpath "$.entries[3].path" == "/test/no-blaze/"
 jsonpath "$.entries[4].name" == "hyper"
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].health" == 34
-jsonpath "$.entries[4].path" == "/test/hyper"
+jsonpath "$.entries[4].path" == "/test/hyper/"
 jsonpath "$.entries[5].name" == "extension"
 jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.entries[5].health" == 17
-jsonpath "$.entries[5].path" == "/test/extension"
+jsonpath "$.entries[5].path" == "/test/extension/"
 jsonpath "$.entries[6].name" == "doc"
 jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].health" == 0
-jsonpath "$.entries[6].path" == "/test/doc"
+jsonpath "$.entries[6].path" == "/test/doc/"
 jsonpath "$.entries[6].title" == "A sample schema folder"
 jsonpath "$.entries[6].description" == "For testing purposes"
 jsonpath "$.entries[6].github" == "sourcemeta/one"
 jsonpath "$.entries[7].name" == "camelcase"
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].health" == 25
-jsonpath "$.entries[7].path" == "/test/camelcase"
+jsonpath "$.entries[7].path" == "/test/camelcase/"
 jsonpath "$.entries[8].name" == "bundling"
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 59
-jsonpath "$.entries[8].path" == "/test/bundling"
+jsonpath "$.entries[8].path" == "/test/bundling/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -127,9 +127,9 @@ jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
-jsonpath "$.breadcrumb[1].path" == "/test/v2.0"
+jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].bytes" == 130
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
@@ -190,11 +190,11 @@ jsonpath "$.url" == "{{base}}/test/schemas/versions"
 jsonpath "$.health" == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "schemas"
-jsonpath "$.breadcrumb[1].path" == "/test/schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
 jsonpath "$.breadcrumb[2].name" == "versions"
-jsonpath "$.breadcrumb[2].path" == "/test/schemas/versions"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/versions/"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].bytes" == 141
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
@@ -207,6 +207,98 @@ jsonpath "$.entries[0].provenance" == null
 jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/api/list/test/schemas/clash/foo
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.path" == "/test/schemas/clash/foo"
+jsonpath "$.url" == "{{base}}/test/schemas/clash/foo"
+jsonpath "$.health" == 0
+jsonpath "$.breadcrumb" count == 4
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "clash"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/clash/"
+jsonpath "$.breadcrumb[3].name" == "foo"
+jsonpath "$.breadcrumb[3].path" == "/test/schemas/clash/foo/"
+jsonpath "$.entries" count == 1
+jsonpath "$.entries[0].bytes" == 124
+jsonpath "$.entries[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.entries[0].dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/clash/foo/bar"
+jsonpath "$.entries[0].name" == "bar"
+jsonpath "$.entries[0].type" == "schema"
+jsonpath "$.entries[0].alert" == null
+jsonpath "$.entries[0].provenance" == null
+jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/bar"
+jsonpath "$.entries[0].health" == 0
+jsonpath "$.entries[0].dependencies" == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/api/list/test/schemas/clash
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.path" == "/test/schemas/clash"
+jsonpath "$.url" == "{{base}}/test/schemas/clash"
+jsonpath "$.health" == 0
+jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "clash"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/clash/"
+jsonpath "$.entries" count == 2
+jsonpath "$.entries[0].name" == "foo"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].health" == 0
+jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/"
+jsonpath "$.entries[1].name" == "foo"
+jsonpath "$.entries[1].type" == "schema"
+jsonpath "$.entries[1].bytes" == 120
+jsonpath "$.entries[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.entries[1].dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.entries[1].identifier" == "{{base}}/test/schemas/clash/foo"
+jsonpath "$.entries[1].path" == "/test/schemas/clash/foo"
+jsonpath "$.entries[1].health" == 0
+jsonpath "$.entries[1].dependencies" == 0
+jsonpath "$.entries[1].alert" == null
+jsonpath "$.entries[1].provenance" == null
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -233,9 +325,9 @@ jsonpath "$.url" == "{{base}}/test/extension"
 jsonpath "$.health" == 17
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "extension"
-jsonpath "$.breadcrumb[1].path" == "/test/extension"
+jsonpath "$.breadcrumb[1].path" == "/test/extension/"
 jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].bytes" == 135
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"

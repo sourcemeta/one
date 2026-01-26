@@ -22,9 +22,9 @@ jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
-jsonpath "$.breadcrumb[1].path" == "/test/v2.0"
+jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
 jsonpath "$.breadcrumb[2].name" == "schema"
 jsonpath "$.breadcrumb[2].path" == "/test/v2.0/schema"
 
@@ -71,9 +71,9 @@ jsonpath "$.examples[8]" == "example_09"
 jsonpath "$.examples[9]" == "example_10"
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "schemas"
-jsonpath "$.breadcrumb[1].path" == "/test/schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
 jsonpath "$.breadcrumb[2].name" == "string"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/string"
 
@@ -167,15 +167,15 @@ jsonpath "$.provenance" == "@sourcemeta/std/v0"
 jsonpath "$.examples" count == 2
 jsonpath "$.breadcrumb" count == 6
 jsonpath "$.breadcrumb[0].name" == "sourcemeta"
-jsonpath "$.breadcrumb[0].path" == "/sourcemeta"
+jsonpath "$.breadcrumb[0].path" == "/sourcemeta/"
 jsonpath "$.breadcrumb[1].name" == "std"
-jsonpath "$.breadcrumb[1].path" == "/sourcemeta/std"
+jsonpath "$.breadcrumb[1].path" == "/sourcemeta/std/"
 jsonpath "$.breadcrumb[2].name" == "v0"
-jsonpath "$.breadcrumb[2].path" == "/sourcemeta/std/v0"
+jsonpath "$.breadcrumb[2].path" == "/sourcemeta/std/v0/"
 jsonpath "$.breadcrumb[3].name" == "ietf"
-jsonpath "$.breadcrumb[3].path" == "/sourcemeta/std/v0/ietf"
+jsonpath "$.breadcrumb[3].path" == "/sourcemeta/std/v0/ietf/"
 jsonpath "$.breadcrumb[4].name" == "geojson"
-jsonpath "$.breadcrumb[4].path" == "/sourcemeta/std/v0/ietf/geojson"
+jsonpath "$.breadcrumb[4].path" == "/sourcemeta/std/v0/ietf/geojson/"
 jsonpath "$.breadcrumb[5].name" == "point"
 jsonpath "$.breadcrumb[5].path" == "/sourcemeta/std/v0/ietf/geojson/point"
 
@@ -234,9 +234,9 @@ jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
-jsonpath "$.breadcrumb[0].path" == "/test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "bundling"
-jsonpath "$.breadcrumb[1].path" == "/test/bundling"
+jsonpath "$.breadcrumb[1].path" == "/test/bundling/"
 jsonpath "$.breadcrumb[2].name" == "double"
 jsonpath "$.breadcrumb[2].path" == "/test/bundling/double"
 

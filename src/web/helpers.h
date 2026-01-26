@@ -240,7 +240,7 @@ inline auto make_file_manager(const sourcemeta::core::JSON &directory)
 
   for (const auto &entry : directory.at("entries").as_array()) {
     const auto path = entry.at("path").to_string();
-    if (path == "/self") {
+    if (path == "/self" || path == "/self/") {
       special_tbody_content.push_back(make_file_manager_row(entry));
       has_special_entries = true;
     } else {
