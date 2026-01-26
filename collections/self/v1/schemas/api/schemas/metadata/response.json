@@ -76,13 +76,16 @@
           "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
         },
         "bytes": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/it/2015/byte"
+          "type": "integer",
+          "minimum": 0
         },
         "dialect": {
           "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
         },
         "health": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
+          "type": "integer",
+          "maximum": 100,
+          "minimum": 0
         },
         "identifier": {
           "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"

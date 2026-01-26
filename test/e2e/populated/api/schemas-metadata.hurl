@@ -119,6 +119,52 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+# With built-in library provenance
+GET {{base}}/self/v1/api/schemas/metadata/self/v1/schemas/configuration/configuration
+Accept: application/json
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.bytes" == 1422
+jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.health" == 100
+jsonpath "$.dependencies" == 16
+jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.identifier" == "{{base}}/self/v1/schemas/configuration/configuration"
+jsonpath "$.path" == "/self/v1/schemas/configuration/configuration"
+jsonpath "$.title" == "The Sourcemeta One configuration file format"
+jsonpath "$.description" == "The configuration file format used to configured One instances"
+jsonpath "$.alert" == null
+jsonpath "$.provenance" == "@self/v1"
+jsonpath "$.examples" count == 1
+jsonpath "$.breadcrumb" count == 5
+jsonpath "$.breadcrumb[0].name" == "self"
+jsonpath "$.breadcrumb[0].path" == "/self/"
+jsonpath "$.breadcrumb[1].name" == "v1"
+jsonpath "$.breadcrumb[1].path" == "/self/v1/"
+jsonpath "$.breadcrumb[2].name" == "schemas"
+jsonpath "$.breadcrumb[2].path" == "/self/v1/schemas/"
+jsonpath "$.breadcrumb[3].name" == "configuration"
+jsonpath "$.breadcrumb[3].path" == "/self/v1/schemas/configuration/"
+jsonpath "$.breadcrumb[4].name" == "configuration"
+jsonpath "$.breadcrumb[4].path" == "/self/v1/schemas/configuration/configuration"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 GET {{base}}/self/v1/api/schemas/metadata/xyz
 Accept: application/json
 HTTP 404
@@ -132,52 +178,6 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-jsonpath "$.valid" == true
-
-# With built-in library provenance
-GET {{base}}/self/v1/api/schemas/metadata/sourcemeta/std/v0/ietf/geojson/point
-Accept: application/json
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "ETag" exists
-header "Last-Modified" exists
-jsonpath "$.bytes" == 882
-jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.health" == 100
-jsonpath "$.dependencies" == 5
-jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.identifier" == "{{base}}/sourcemeta/std/v0/ietf/geojson/point"
-jsonpath "$.path" == "/sourcemeta/std/v0/ietf/geojson/point"
-jsonpath "$.alert" == "By using this schema, you confirm you agree to its <a href=\"https://github.com/sourcemeta/std/blob/main/LICENSE\">license</a>"
-jsonpath "$.provenance" == "@sourcemeta/std/v0"
-jsonpath "$.examples" count == 2
-jsonpath "$.breadcrumb" count == 6
-jsonpath "$.breadcrumb[0].name" == "sourcemeta"
-jsonpath "$.breadcrumb[0].path" == "/sourcemeta/"
-jsonpath "$.breadcrumb[1].name" == "std"
-jsonpath "$.breadcrumb[1].path" == "/sourcemeta/std/"
-jsonpath "$.breadcrumb[2].name" == "v0"
-jsonpath "$.breadcrumb[2].path" == "/sourcemeta/std/v0/"
-jsonpath "$.breadcrumb[3].name" == "ietf"
-jsonpath "$.breadcrumb[3].path" == "/sourcemeta/std/v0/ietf/"
-jsonpath "$.breadcrumb[4].name" == "geojson"
-jsonpath "$.breadcrumb[4].path" == "/sourcemeta/std/v0/ietf/geojson/"
-jsonpath "$.breadcrumb[5].name" == "point"
-jsonpath "$.breadcrumb[5].path" == "/sourcemeta/std/v0/ietf/geojson/point"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -68,7 +68,9 @@
                 "type": "string"
               },
               "health": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
+                "type": "integer",
+                "maximum": 100,
+                "minimum": 0
               },
               "name": {
                 "type": "string"
@@ -102,7 +104,9 @@
       "type": "string"
     },
     "health": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 0
     },
     "path": {
       "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"

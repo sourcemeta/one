@@ -9,8 +9,6 @@
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-reference.json",
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json",
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/it/2015/byte": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/it/2015/byte.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/units/2022/percentage.json",
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/urn": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/urn.json",
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-absolute": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ieee/posix/2017/path-absolute.json",
     "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-relative": "../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ieee/posix/2017/path-relative.json",

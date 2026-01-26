@@ -85,7 +85,7 @@ add_custom_target(jsonschema_fmt
 add_custom_target(jsonschema_metaschema
   COMMAND "$<TARGET_FILE:jsonschema_cli>" metaschema ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_lint
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" lint --exclude simple_properties_identifiers
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" lint
   ${SOURCEMETA_SCHEMAS})
 
 if(ONE_TESTS)

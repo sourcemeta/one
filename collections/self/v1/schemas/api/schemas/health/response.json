@@ -49,7 +49,9 @@
       }
     },
     "score": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 0
     }
   },
   "additionalProperties": false
