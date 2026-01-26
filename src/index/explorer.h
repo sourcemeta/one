@@ -36,16 +36,28 @@ static auto try_parse_version(const sourcemeta::core::JSON::String &name)
   }
 }
 
-static auto make_breadcrumb(const std::filesystem::path &relative_path)
-    -> sourcemeta::core::JSON {
+static auto make_breadcrumb(const std::filesystem::path &relative_path,
+                            const bool is_directory) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
   std::filesystem::path current_path{"/"};
+  const auto parts_count{
+      std::distance(relative_path.begin(), relative_path.end())};
+  std::size_t index{0};
   for (const auto &part : relative_path) {
     current_path = current_path / part;
     auto entry{sourcemeta::core::JSON::make_object()};
     entry.assign("name", sourcemeta::core::JSON{part});
-    entry.assign("path", sourcemeta::core::JSON{current_path});
+    const auto is_last{index == static_cast<std::size_t>(parts_count - 1)};
+    // Add trailing slash to directory paths to distinguish between
+    // schema and directory entries which might have the same name
+    if (!is_last || is_directory) {
+      entry.assign("path", sourcemeta::core::JSON{current_path.string() + "/"});
+    } else {
+      entry.assign("path", sourcemeta::core::JSON{current_path});
+    }
+
     result.push_back(std::move(entry));
+    index++;
   }
 
   return result;
@@ -193,7 +205,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("provenance", sourcemeta::core::JSON{nullptr});
     }
 
-    result.assign("breadcrumb", make_breadcrumb(std::get<2>(context)));
+    result.assign("breadcrumb", make_breadcrumb(std::get<2>(context), false));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -297,18 +309,21 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     if (std::filesystem::exists(context.directory)) {
       for (const auto &entry :
            std::filesystem::directory_iterator{context.directory}) {
-        auto entry_json{sourcemeta::core::JSON::make_object()};
         const auto entry_relative_path{entry.path().string().substr(
             context.schemas_path.string().size() + 1)};
         assert(!entry_relative_path.starts_with('/'));
+
+        const auto directory_metapack_path{context.explorer_path /
+                                           entry_relative_path / "%" /
+                                           "directory.metapack"};
+
         if (entry.is_directory() && entry.path().filename() != "%" &&
-            !std::filesystem::exists(entry.path() / "%" / "schema.metapack") &&
+            std::filesystem::exists(directory_metapack_path) &&
             !context.output.is_untracked_file(entry.path())) {
-          const auto directory_path{context.explorer_path /
-                                    entry_relative_path / "%" /
-                                    "directory.metapack"};
-          callback(directory_path);
-          auto directory_json{sourcemeta::one::read_json(directory_path)};
+          auto entry_json{sourcemeta::core::JSON::make_object()};
+          callback(directory_metapack_path);
+          auto directory_json{
+              sourcemeta::one::read_json(directory_metapack_path)};
           assert(directory_json.is_object());
           assert(directory_json.defines("health"));
           assert(directory_json.at("health").is_integer());
@@ -321,14 +336,19 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
                            entry_json);
 
           entry_json.assign("type", sourcemeta::core::JSON{"directory"});
-          entry_json.assign("path",
-                            sourcemeta::core::JSON{entry.path().string().substr(
-                                context.schemas_path.string().size())});
+          entry_json.assign(
+              "path", sourcemeta::core::JSON{
+                          entry.path().string().substr(
+                              context.schemas_path.string().size()) +
+                          // This is to distinguish links to a directory or to a
+                          // schema, in case both entries have the same name
+                          "/"});
           entries.push_back(std::move(entry_json));
+        }
 
-        } else if (entry.is_directory() &&
-                   std::filesystem::exists(entry.path() / "%" /
-                                           "schema.metapack")) {
+        if (entry.is_directory() &&
+            std::filesystem::exists(entry.path() / "%" / "schema.metapack")) {
+          auto entry_json{sourcemeta::core::JSON::make_object()};
           auto name{entry.path().filename()};
           entry_json.assign("name", sourcemeta::core::JSON{std::move(name)});
           auto schema_nav_path{context.explorer_path / entry_relative_path};
@@ -404,7 +424,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
                                                 "/" + relative_path.string()});
     }
 
-    meta.assign("breadcrumb", make_breadcrumb(relative_path));
+    meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());

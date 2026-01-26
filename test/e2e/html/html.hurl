@@ -145,6 +145,42 @@ xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
 header "Access-Control-Allow-Origin" not exists
 
+# Directory listing for a path that contains both a schema and subdirectory
+GET {{base}}/test/schemas/clash
+Accept: text/html
+HTTP 200
+Content-Type: text/html
+[Asserts]
+xpath "string(/html/head/title)" == "/test/schemas/clash"
+xpath "count(//table/tbody/tr)" == 2
+xpath "string(//table/tbody/tr[1]/td[2]//a)" == "foo"
+xpath "string(//table/tbody/tr[1]/td[2]//a/@href)" == "/test/schemas/clash/foo/"
+xpath "string(//table/tbody/tr[2]/td[2]//a)" == "foo"
+xpath "string(//table/tbody/tr[2]/td[2]//a/@href)" == "/test/schemas/clash/foo"
+header "Access-Control-Allow-Origin" not exists
+
+# Schema page for a name that also has a subdirectory
+GET {{base}}/test/schemas/clash/foo
+Accept: text/html
+HTTP 200
+Content-Type: text/html
+[Asserts]
+xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
+xpath "count(//code)" > 0
+header "Access-Control-Allow-Origin" not exists
+
+# Directory listing via trailing slash for a name that is also a schema
+GET {{base}}/test/schemas/clash/foo/
+Accept: text/html
+HTTP 200
+Content-Type: text/html
+[Asserts]
+xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
+xpath "count(//code)" == 0
+xpath "count(//table/tbody/tr)" == 1
+xpath "string(//table/tbody/tr[1]/td[2]//a)" == "bar"
+header "Access-Control-Allow-Origin" not exists
+
 # Test that the v= query parameter is consistent across different pages to
 # ensure the cache stamp is generated once at build/startup time, not per request
 GET {{base}}

@@ -202,7 +202,10 @@ static auto handle_default(const std::filesystem::path &base,
   if (request.method() == "get" || request.method() == "head") {
     if (request.prefers_html()) {
       auto absolute_path{base / "explorer" / path / SENTINEL};
-      if (std::filesystem::exists(absolute_path / "schema-html.metapack")) {
+      if (std::filesystem::exists(absolute_path / "schema-html.metapack") &&
+          // To distinguish between entries that are both directories and
+          // schemas
+          !path.ends_with("/")) {
         action_serve_metapack_file(request, response,
                                    absolute_path / "schema-html.metapack",
                                    sourcemeta::one::STATUS_OK);

@@ -294,5 +294,29 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
+GET {{base}}/test/schemas/clash/foo.json
+HTTP 200
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/schemas/clash/foo"
+}
+
+GET {{base}}/test/schemas/clash/foo/bar.json
+HTTP 200
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/schemas/clash/foo/bar"
+}
+
 GET {{base}}/.json
 HTTP 404
