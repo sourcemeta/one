@@ -35,14 +35,14 @@
             "type": "string"
           },
           "path": {
-            "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json"
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
           }
         },
         "additionalProperties": false
       }
     },
     "email": {
-      "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/email/address.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
     },
     "entries": {
       "type": "array",
@@ -62,22 +62,22 @@
                 "const": "directory"
               },
               "email": {
-                "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/email/address.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
               },
               "github": {
                 "type": "string"
               },
               "health": {
-                "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/units/2022/percentage.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
               },
               "name": {
                 "type": "string"
               },
               "path": {
-                "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
               },
               "website": {
-                "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
               }
             },
             "additionalProperties": false
@@ -102,16 +102,16 @@
       "type": "string"
     },
     "health": {
-      "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/units/2022/percentage.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
     },
     "path": {
-      "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
     },
     "url": {
-      "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
     },
     "website": {
-      "$ref": "../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
     }
   },
   "additionalProperties": false

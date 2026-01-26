@@ -32,10 +32,10 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
           },
           "instanceLocation": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
           },
           "instancePositions": {
             "type": "array",
@@ -47,7 +47,7 @@
             }
           },
           "keywordLocation": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
           },
           "message": {
             "type": [ "string", "null" ]
@@ -61,7 +61,7 @@
                 "type": "null"
               },
               {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
               }
             ]
           }

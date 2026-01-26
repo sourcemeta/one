@@ -1,3 +1,4 @@
+#include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/output.h>
 #include <sourcemeta/blaze/test.h>
 
@@ -39,6 +40,14 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
         entry.first, error.what(), error.location(), error.line(),
         error.column()};
   } catch (
+      const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
+    if (!json_output) {
+      std::cout << entry.first.string() << ":\n";
+    }
+    throw sourcemeta::jsonschema::FileError<
+        sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>{entry.first,
+                                                                  error};
+  } catch (
       const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
     if (!json_output) {
       std::cout << entry.first.string() << ":\n";
@@ -68,7 +77,7 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
 
 auto report_as_text(const sourcemeta::core::Options &options) -> void {
   bool result{true};
-  const auto verbose{options.contains("verbose")};
+  const auto verbose{options.contains("verbose") || options.contains("debug")};
 
   for (const auto &entry : sourcemeta::jsonschema::for_each_json(options)) {
     const auto configuration_path{

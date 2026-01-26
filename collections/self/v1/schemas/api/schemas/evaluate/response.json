@@ -36,17 +36,17 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
               },
               "annotation": {
                 "type": "array",
                 "minItems": 1
               },
               "instanceLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
               },
               "keywordLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
               }
             },
             "additionalProperties": false
@@ -75,16 +75,16 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
               },
               "error": {
                 "type": "string"
               },
               "instanceLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
               },
               "keywordLocation": {
-                "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
               }
             },
             "additionalProperties": false

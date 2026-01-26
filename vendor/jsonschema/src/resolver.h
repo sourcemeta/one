@@ -25,6 +25,7 @@
 #include "error.h"
 #include "input.h"
 #include "logger.h"
+#include "utils.h"
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::seconds
@@ -104,9 +105,8 @@ public:
       : options_{options}, configuration_{configuration}, remote_{remote} {
     if (options.contains("resolve")) {
       for (const auto &entry : for_each_json(options.at("resolve"), options)) {
-        LOG_VERBOSE(options)
-            << "Detecting schema resources from file: " << entry.first.string()
-            << "\n";
+        LOG_DEBUG(options) << "Detecting schema resources from file: "
+                           << entry.first.string() << "\n";
 
         if (!sourcemeta::core::is_schema(entry.second)) {
           throw FileError<sourcemeta::core::SchemaError>(
@@ -117,9 +117,9 @@ public:
         try {
           const auto result = this->add(
               entry.second, default_dialect,
-              sourcemeta::core::URI::from_path(entry.first).recompose(),
+              sourcemeta::jsonschema::default_id(entry.first),
               [&options](const auto &identifier) {
-                LOG_VERBOSE(options)
+                LOG_DEBUG(options)
                     << "Importing schema into the resolution context: "
                     << identifier << "\n";
               });
@@ -189,20 +189,32 @@ public:
       -> std::optional<sourcemeta::core::JSON> {
     const std::string string_identifier{identifier};
     if (this->configuration_.has_value()) {
-      const auto match{
-          this->configuration_.value().resolve.find(string_identifier)};
+
+      // TODO: Abstract this fallback logic as a SchemaConfig method
+      auto match{this->configuration_.value().resolve.find(string_identifier)};
+      if (match == this->configuration_.value().resolve.cend() &&
+          !string_identifier.ends_with(".json")) {
+        match = this->configuration_.value().resolve.find(string_identifier +
+                                                          ".json");
+      }
+      if (match == this->configuration_.value().resolve.cend() &&
+          string_identifier.ends_with(".json")) {
+        match = this->configuration_.value().resolve.find(
+            string_identifier.substr(0, string_identifier.size() - 5));
+      }
+
       if (match != this->configuration_.value().resolve.cend()) {
         const sourcemeta::core::URI new_uri{match->second};
         if (new_uri.is_relative()) {
           const auto file_uri{sourcemeta::core::URI::from_path(
               this->configuration_.value().absolute_path / new_uri.to_path())};
           const auto result{file_uri.recompose()};
-          LOG_VERBOSE(this->options_)
+          LOG_DEBUG(this->options_)
               << "Resolving " << identifier << " as " << result
               << " given the configuration file\n";
           return this->operator()(result);
         } else {
-          LOG_VERBOSE(this->options_)
+          LOG_DEBUG(this->options_)
               << "Resolving " << identifier << " as " << match->second
               << " given the configuration file\n";
           return this->operator()(match->second);
@@ -215,10 +227,16 @@ public:
     }
 
     // Fallback resolution logic
-    const sourcemeta::core::URI uri{std::string{identifier}};
+    sourcemeta::core::URI uri;
+    try {
+      uri = sourcemeta::core::URI{std::string{identifier}};
+    } catch (const sourcemeta::core::URIParseError &) {
+      return std::nullopt;
+    }
+
     if (uri.is_file()) {
       const auto path{uri.to_path()};
-      LOG_VERBOSE(this->options_)
+      LOG_DEBUG(this->options_)
           << "Attempting to read file reference from disk: " << path.string()
           << "\n";
       if (std::filesystem::exists(path)) {

@@ -37,7 +37,7 @@
             "type": "string"
           },
           "path": {
-            "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json"
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
           }
         },
         "additionalProperties": false
@@ -73,22 +73,22 @@
           "type": [ "string", "null" ]
         },
         "baseDialect": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
         },
         "bytes": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/it/2015/byte.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/it/2015/byte"
         },
         "dialect": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
         },
         "health": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/iso/units/2022/percentage.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage"
         },
         "identifier": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
         },
         "path": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-relative.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
         },
         "provenance": {
           "type": [ "string", "null" ]

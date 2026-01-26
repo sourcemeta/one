@@ -3,6 +3,7 @@
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
 
+#include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/linter.h>
 
 #include <cstdlib>  // EXIT_FAILURE
@@ -18,6 +19,8 @@
 #include "logger.h"
 #include "resolver.h"
 #include "utils.h"
+
+static const sourcemeta::core::JSON::String EXCLUDE_KEYWORD{"x-lint-exclude"};
 
 template <typename Options, typename Iterator>
 static auto disable_lint_rules(sourcemeta::core::SchemaTransformer &bundle,
@@ -206,7 +209,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               const auto apply_result = bundle.apply(
                   copy, sourcemeta::core::schema_walker, custom_resolver,
                   get_lint_callback(errors_array, entry, output_json), dialect,
-                  sourcemeta::core::URI::from_path(entry.first).recompose());
+                  sourcemeta::jsonschema::default_id(entry.first),
+                  EXCLUDE_KEYWORD);
               scores.emplace_back(apply_result.second);
               if (!apply_result.first) {
                 return 2;
@@ -224,6 +228,18 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   "Could not autofix the schema without breaking its internal "
                   "references",
                   entry.first, error.location()};
+            } catch (
+                const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
+                    &error) {
+              throw FileError<
+                  sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
+                  entry.first, error);
+            } catch (const sourcemeta::core::SchemaKeywordError &error) {
+              throw FileError<sourcemeta::core::SchemaKeywordError>(entry.first,
+                                                                    error);
+            } catch (const sourcemeta::core::SchemaFrameError &error) {
+              throw FileError<sourcemeta::core::SchemaFrameError>(entry.first,
+                                                                  error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
                   entry.first);
@@ -265,7 +281,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   entry.second, sourcemeta::core::schema_walker,
                   custom_resolver,
                   get_lint_callback(errors_array, entry, output_json), dialect,
-                  sourcemeta::core::URI::from_path(entry.first).recompose());
+                  sourcemeta::jsonschema::default_id(entry.first),
+                  EXCLUDE_KEYWORD);
               scores.emplace_back(subresult.second);
               if (subresult.first) {
                 return EXIT_SUCCESS;
@@ -273,6 +290,18 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                 // Return 2 for logical lint failures
                 return 2;
               }
+            } catch (
+                const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
+                    &error) {
+              throw FileError<
+                  sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
+                  entry.first, error);
+            } catch (const sourcemeta::core::SchemaKeywordError &error) {
+              throw FileError<sourcemeta::core::SchemaKeywordError>(entry.first,
+                                                                    error);
+            } catch (const sourcemeta::core::SchemaFrameError &error) {
+              throw FileError<sourcemeta::core::SchemaFrameError>(entry.first,
+                                                                  error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
                   entry.first);

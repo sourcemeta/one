@@ -23,13 +23,13 @@
       "$ref": "./contents.json"
     },
     "email": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/email/address.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
     },
     "github": {
       "type": "string"
     },
     "website": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
     }
   },
   "additionalProperties": false

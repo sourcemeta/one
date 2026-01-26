@@ -27,31 +27,31 @@
       "$ref": "./rpath.json"
     },
     "baseUri": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-reference.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
     },
     "defaultDialect": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
     },
     "email": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/email/address.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
     },
     "github": {
       "type": "string"
     },
     "path": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ieee/posix/2017/path.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
     },
     "resolve": {
       "type": "object",
       "propertyNames": {
-        "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-reference.json"
+        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
       },
       "additionalProperties": {
-        "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri-reference.json"
+        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
       }
     },
     "website": {
-      "$ref": "../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
     }
   },
   "additionalProperties": false

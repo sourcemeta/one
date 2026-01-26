@@ -1,0 +1,16 @@
+{
+  "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
+  "path": "./schemas",
+  "resolve": {
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path": "/sourcemeta/std/v0/ieee/posix/2017/path",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address": "/sourcemeta/std/v0/ietf/email/address",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer": "/sourcemeta/std/v0/ietf/jsonpointer/pointer",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/problem-details/problem": "/sourcemeta/std/v0/ietf/problem-details/problem",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri": "/sourcemeta/std/v0/ietf/uri/uri",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference": "/sourcemeta/std/v0/ietf/uri/uri-reference",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative": "/sourcemeta/std/v0/ietf/uri/uri-relative",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url": "/sourcemeta/std/v0/ietf/uri/url",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/it/2015/byte": "/sourcemeta/std/v0/iso/it/2015/byte",
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/iso/units/2022/percentage": "/sourcemeta/std/v0/iso/units/2022/percentage"
+  }
+}
