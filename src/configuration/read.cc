@@ -117,6 +117,29 @@ auto dereference(const std::filesystem::path &collections_path,
   }
 }
 
+auto default_base_uri(sourcemeta::core::JSON &contents,
+                      const sourcemeta::core::JSON &url) -> void {
+  assert(contents.is_object());
+  std::vector<sourcemeta::core::JSON::String> keys;
+  std::ranges::transform(contents.as_object(), std::back_inserter(keys),
+                         [](const auto &entry) { return entry.first; });
+  for (const auto &key : keys) {
+    if (!contents.at(key).is_object()) {
+      continue;
+    }
+
+    if (contents.at(key).defines("path") &&
+        !contents.at(key).defines("baseUri")) {
+      contents.at(key).assign("baseUri", url);
+    }
+
+    if (contents.at(key).defines("contents") &&
+        contents.at(key).at("contents").is_object()) {
+      default_base_uri(contents.at(key).at("contents"), url);
+    }
+  }
+}
+
 } // namespace
 
 namespace sourcemeta::one {
@@ -142,6 +165,12 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   }
 
   dereference(collections_path, configuration_path, data, {});
+
+  if (data.is_object() && data.defines("url") && data.defines("contents") &&
+      data.at("contents").is_object()) {
+    default_base_uri(data.at("contents"), data.at("url"));
+  }
+
   return data;
 }
 

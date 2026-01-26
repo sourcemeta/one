@@ -122,3 +122,42 @@ TEST(Configuration, valid_003) {
   EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
 }
+
+TEST(Configuration, valid_004) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_004.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{
+      sourcemeta::one::Configuration::parse(raw_configuration)};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+  EXPECT_FALSE(configuration.html.value().head.has_value());
+  EXPECT_FALSE(configuration.html.value().hero.has_value());
+  EXPECT_FALSE(configuration.html.value().action.has_value());
+
+  EXPECT_EQ(configuration.entries.size(), 1);
+
+  EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", email, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", github, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "schemas" /
+                        "example" / "extension");
+  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000");
+  EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extension.size(), 3);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".json"),
+                    true);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".yml"), true);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".yaml"),
+                    true);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
+}

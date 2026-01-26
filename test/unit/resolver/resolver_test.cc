@@ -1,20 +1,10 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
-#include <cctype>
-#include <memory>
-#include <vector>
+#include <memory> // std::shared_ptr
+#include <vector> // std::vector
 
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
-
-static auto to_lowercase(const std::string_view input) -> std::string {
-  std::string result{input};
-  std::ranges::transform(result, result.begin(), [](const auto character) {
-    return static_cast<char>(std::tolower(character));
-  });
-  return result;
-}
 
 class ResolverTest : public testing::Test {
 protected:
@@ -548,16 +538,10 @@ TEST_F(ResolverTest, meta_draft4_override) {
 
 TEST_F(ResolverTest, no_base_anonymous) {
   RESOLVER_INIT(resolver);
-  const auto schemas_path{
-      std::filesystem::path{to_lowercase(CONFIGURATION_PATH)}.parent_path() /
-      "schemas"};
-
-  RESOLVER_ADD(
-      resolver, "no-base", "anonymous.json",
-      sourcemeta::core::URI::from_path(schemas_path / "no-base" / "anonymous")
-          .recompose(),
-      "http://localhost:8000/no-base/anonymous",
-      R"JSON({
+  RESOLVER_ADD(resolver, "no-base", "anonymous.json",
+               "http://localhost:8000/anonymous",
+               "http://localhost:8000/no-base/anonymous",
+               R"JSON({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "http://localhost:8000/no-base/anonymous"
   })JSON");
