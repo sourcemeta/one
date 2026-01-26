@@ -1,5 +1,4 @@
 {
-  "extends": [ "@sourcemeta/std/v0" ],
   "contents": {
     "self": {
       "title": "Self",
