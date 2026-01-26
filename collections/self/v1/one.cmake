@@ -7,7 +7,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/one.json"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/sourcemeta/one/collections/${COLLECTION_NAMESPACE}"
   COMPONENT sourcemeta_one)
 
-configure_file("${CMAKE_CURRENT_LIST_DIR}/jsonschema.json"
+configure_file("${CMAKE_CURRENT_LIST_DIR}/jsonschema.in.json"
   "${CMAKE_CURRENT_BINARY_DIR}/${COLLECTION_NAMESPACE}.json" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${COLLECTION_NAMESPACE}.json"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/sourcemeta/one/collections/${COLLECTION_NAMESPACE}"

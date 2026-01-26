@@ -45,13 +45,13 @@
           "enum": [ "resource", "anchor", "pointer", "subschema" ]
         },
         "base": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
         },
         "baseDialect": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/uri.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
         },
         "dialect": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
         },
         "parent": {
           "anyOf": [
@@ -59,21 +59,21 @@
               "type": "null"
             },
             {
-              "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
             }
           ]
         },
         "pointer": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
         },
         "position": {
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/jsonpointer/pointer.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
         },
         "root": {
-          "$ref": "../../../../../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12/ietf/uri/url.json"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
         },
         "propertyName": {
           "type": "boolean"

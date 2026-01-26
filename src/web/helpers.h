@@ -120,7 +120,7 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
 
   std::vector<sourcemeta::core::HTMLNode> children;
 
-  if (directory.defines("github") && !directory.at("github").contains('/')) {
+  if (directory.defines("github") && !directory.at("github").includes('/')) {
     children.emplace_back(
         img({{"src", "https://github.com/" +
                          directory.at("github").to_string() + ".png?size=200"},
@@ -185,7 +185,7 @@ inline auto make_file_manager_row(const sourcemeta::core::JSON &entry)
     -> sourcemeta::core::HTML {
   auto type_content = [&entry]() -> sourcemeta::core::HTML {
     if (entry.at("type").to_string() == "directory") {
-      if (entry.defines("github") && !entry.at("github").contains('/')) {
+      if (entry.defines("github") && !entry.at("github").includes('/')) {
         return img(
             {{"src", "https://github.com/" + entry.at("github").to_string() +
                          ".png?size=80"},

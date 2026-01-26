@@ -27,16 +27,13 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
       read_configuration(options, configuration_path, schema_path)};
   const auto dialect{default_dialect(options, configuration)};
   auto schema{sourcemeta::core::read_yaml_or_json(schema_path)};
+  const auto &custom_resolver{
+      resolver(options, options.contains("http"), dialect, configuration)};
 
   try {
-    const auto &custom_resolver{
-        resolver(options, options.contains("http"), dialect, configuration)};
-
-    sourcemeta::core::bundle(
-        schema, sourcemeta::core::schema_walker, custom_resolver, dialect,
-        sourcemeta::core::URI::from_path(
-            sourcemeta::core::weakly_canonical(schema_path))
-            .recompose());
+    sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
+                             custom_resolver, dialect,
+                             sourcemeta::jsonschema::default_id(schema_path));
 
     if (options.contains("without-id")) {
       sourcemeta::jsonschema::LOG_WARNING()
@@ -58,6 +55,10 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
 
     sourcemeta::core::format(schema, sourcemeta::core::schema_walker,
                              custom_resolver, dialect);
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
     throw FileError<sourcemeta::core::SchemaReferenceError>(
         schema_path, std::string{error.identifier()}, error.location(),
