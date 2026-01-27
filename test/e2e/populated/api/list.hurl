@@ -60,7 +60,7 @@ jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].path" == "/test/v2.0/"
 jsonpath "$.entries[1].name" == "schemas"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 3
+jsonpath "$.entries[1].health" == 7
 jsonpath "$.entries[1].path" == "/test/schemas/"
 jsonpath "$.entries[2].name" == "same"
 jsonpath "$.entries[2].type" == "directory"

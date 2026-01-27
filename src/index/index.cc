@@ -494,6 +494,7 @@ static auto index_main(const std::string_view &program,
               entry.parent_path() / "schema-html.metapack",
               {entry, schema_path / "dependencies.metapack",
                schema_path / "health.metapack",
+               schema_path / "dependents.metapack",
                // We rely on the configuration for site metadata
                mark_configuration_path, mark_version_path},
               configuration, mutex, "Rendering", relative_path.string(),
