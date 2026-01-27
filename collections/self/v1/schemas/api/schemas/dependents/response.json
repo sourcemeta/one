@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Dependents API Response",
+  "description": "The response format for the schema dependents API endpoint",
+  "examples": [
+    [
+      {
+        "from": "https://example.com/schemas/user.json",
+        "to": "https://example.com/schemas/address.json"
+      }
+    ]
+  ],
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "from", "to" ],
+    "properties": {
+      "from": {
+        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      },
+      "to": {
+        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      }
+    },
+    "additionalProperties": false
+  }
+}

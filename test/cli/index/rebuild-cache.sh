@@ -49,7 +49,9 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
+( 50%) Reviewing: $(realpath "$TMP")/output/schemas
 (100%) Reviewing: $(realpath "$TMP")/output/schemas
+(100%) Reworking: https://sourcemeta.com/example/schemas/foo
 (  0%) Producing: $(realpath "$TMP")/output/explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example
@@ -82,7 +84,11 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
+( 50%) Reviewing: $(realpath "$TMP")/output/schemas
 (100%) Reviewing: $(realpath "$TMP")/output/schemas
+(skip) Reviewing: $(realpath "$TMP")/output/schemas [dependencies]
+(100%) Reworking: https://sourcemeta.com/example/schemas/foo
+(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
 (  0%) Producing: $(realpath "$TMP")/output/explorer
 (skip) Producing: $(realpath "$TMP")/output/explorer [search]
 ( 33%) Producing: example/schemas
@@ -120,7 +126,9 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
+( 50%) Reviewing: $(realpath "$TMP")/output/schemas
 (100%) Reviewing: $(realpath "$TMP")/output/schemas
+(100%) Reworking: https://sourcemeta.com/example/schemas/foo
 (  0%) Producing: $(realpath "$TMP")/output/explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example
@@ -144,7 +152,9 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
+( 50%) Reviewing: $(realpath "$TMP")/output/schemas
 (100%) Reviewing: $(realpath "$TMP")/output/schemas
+(100%) Reworking: https://sourcemeta.com/example/schemas/foo
 (  0%) Producing: $(realpath "$TMP")/output/explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example

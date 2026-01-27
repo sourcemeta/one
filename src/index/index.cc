@@ -319,11 +319,12 @@ static auto index_main(const std::string_view &program,
   // This is a pretty fast step that will be useful for us to properly declare
   // dependencies for HTML and navigational targets
 
-  print_progress(mutex, concurrency, "Reviewing", schemas_path.string(), 1, 1);
+  print_progress(mutex, concurrency, "Reviewing", schemas_path.string(), 1, 2);
   std::vector<std::filesystem::path> directories;
   // The top-level is itself a directory
   directories.emplace_back(schemas_path);
   std::vector<std::filesystem::path> summaries;
+  std::vector<std::filesystem::path> dependencies;
   if (std::filesystem::exists(schemas_path)) {
     for (const auto &entry :
          std::filesystem::recursive_directory_iterator{schemas_path}) {
@@ -348,6 +349,8 @@ static auto index_main(const std::string_view &program,
                  entry.path().parent_path().filename() == SENTINEL) {
         summaries.emplace_back(explorer_path / std::filesystem::relative(
                                                    entry.path(), schemas_path));
+        dependencies.emplace_back(entry.path().parent_path() /
+                                  "dependencies.metapack");
       }
     }
 
@@ -365,8 +368,32 @@ static auto index_main(const std::string_view &program,
     });
   }
 
+  print_progress(mutex, concurrency, "Reviewing", schemas_path.string(), 2, 2);
+  DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
+      output.path() / "dependency-tree.metapack", dependencies, resolver, mutex,
+      "Reviewing", schemas_path.string(), "dependencies", adapter, output);
+
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Generate the JSON-based explorer
+  // (10) A further pass on the schemas after review
+  /////////////////////////////////////////////////////////////////////////////
+
+  sourcemeta::core::parallel_for_each(
+      resolver.begin(), resolver.end(),
+      [&output, &schemas_path, &resolver, &mutex,
+       &adapter](const auto &schema, const auto threads, const auto cursor) {
+        print_progress(mutex, threads, "Reworking", schema.first, cursor,
+                       resolver.size());
+        const auto base_path{schemas_path / schema.second.relative_path /
+                             SENTINEL};
+        DISPATCH<sourcemeta::one::GENERATE_DEPENDENTS>(
+            base_path / "dependents.metapack",
+            {output.path() / "dependency-tree.metapack"}, schema.first, mutex,
+            "Reworking", schema.first, "dependents", adapter, output);
+      },
+      concurrency, THREAD_STACK_SIZE);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (11) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing", explorer_path.string(), 0,
@@ -406,7 +433,7 @@ static auto index_main(const std::string_view &program,
   summaries.pop_back();
 
   /////////////////////////////////////////////////////////////////////////////
-  // (11) Generate the HTML web interface
+  // (12) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
@@ -476,7 +503,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) Generate the pre computed routes
+  // (13) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
@@ -485,6 +512,8 @@ static auto index_main(const std::string_view &program,
              sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
   router.add("/self/v1/api/schemas/dependencies/{+schema}",
              sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
+  router.add("/self/v1/api/schemas/dependents/{+schema}",
+             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS);
   router.add("/self/v1/api/schemas/health/{+schema}",
              sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
   router.add("/self/v1/api/schemas/locations/{+schema}",

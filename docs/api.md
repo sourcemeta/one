@@ -256,6 +256,28 @@ GET /self/v1/api/schemas/dependencies/{path}
 
     The schema does not exist.
 
+### Dependents
+
+*This endpoint retrieves all direct and transitive dependents of the JSON
+Schema located at the specified `{path}` parameter. A dependent is a schema
+that references this schema, either directly or indirectly through a chain of
+references.*
+
+```
+GET /self/v1/api/schemas/dependents/{path}
+```
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/from` | String | Yes | The absolute URL of the schema that originates the dependency |
+    | `/*/to` | String | Yes | The absolute URL of the schema being referenced |
+
+=== "404"
+
+    The schema does not exist.
+
 ### Health
 
 *This endpoint retrieves the health analysis and score for the JSON Schema located at the specified `{path}` parameter.*

@@ -1,4 +1,6 @@
 ./configuration.json
+./dependency-tree.metapack
+./dependency-tree.metapack.deps
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack

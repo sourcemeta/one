@@ -55,6 +55,19 @@ static auto handle_self_v1_api_schemas_dependencies(
 }
 
 static auto
+handle_self_v1_api_schemas_dependents(const std::filesystem::path &base,
+                                      const std::span<std::string_view> matches,
+                                      sourcemeta::one::HTTPRequest &request,
+                                      sourcemeta::one::HTTPResponse &response)
+    -> void {
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "dependents.metapack"};
+  action_serve_metapack_file(
+      request, response, absolute_path, sourcemeta::one::STATUS_OK, true,
+      std::nullopt, "/self/v1/schemas/api/schemas/dependents/response");
+}
+
+static auto
 handle_self_v1_api_schemas_health(const std::filesystem::path &base,
                                   const std::span<std::string_view> matches,
                                   sourcemeta::one::HTTPRequest &request,
@@ -238,6 +251,7 @@ static const Handler HANDLERS[] = {handle_default,
                                    handle_self_v1_api_list,
                                    handle_self_v1_api_list_path,
                                    handle_self_v1_api_schemas_dependencies,
+                                   handle_self_v1_api_schemas_dependents,
                                    handle_self_v1_api_schemas_health,
                                    handle_self_v1_api_schemas_locations,
                                    handle_self_v1_api_schemas_positions,
