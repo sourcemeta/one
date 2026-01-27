@@ -78,6 +78,8 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/test/schemas/test-1/%
 ./schemas/test/schemas/test-1/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/test-1/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/test-1/%/blaze-fast.metapack
+./schemas/test/schemas/test-1/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/test-1/%/bundle.metapack
 ./schemas/test/schemas/test-1/%/bundle.metapack.deps
 ./schemas/test/schemas/test-1/%/dependencies.metapack

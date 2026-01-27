@@ -287,12 +287,16 @@ static auto index_main(const std::string_view &program,
 
         if (attribute_not_disabled(schema.second.collection.get(),
                                    "x-sourcemeta-one:evaluate")) {
-          // TODO: Compile fast templates too
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-exhaustive.metapack",
               {base_path / "bundle.metapack", mark_version_path},
               sourcemeta::blaze::Mode::Exhaustive, mutex, "Analysing",
               schema.first, "blaze-exhaustive", adapter, output);
+          DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
+              base_path / "blaze-fast.metapack",
+              {base_path / "bundle.metapack", mark_version_path},
+              sourcemeta::blaze::Mode::FastValidation, mutex, "Analysing",
+              schema.first, "blaze-fast", adapter, output);
         }
 
         DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA>(
