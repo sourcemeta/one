@@ -23,9 +23,23 @@ jobs:
           - package: one
             os: ubuntu-24.04
             arch: amd64
+            enterprise: OFF
+            license: BUSL-1.1
           - package: one
             os: ubuntu-24.04-arm
             arch: arm64
+            enterprise: OFF
+            license: BUSL-1.1
+          - package: one-enterprise
+            os: ubuntu-24.04
+            arch: amd64
+            enterprise: ON
+            license: LicenseRef-Commercial
+          - package: one-enterprise
+            os: ubuntu-24.04-arm
+            arch: arm64
+            enterprise: ON
+            license: LicenseRef-Commercial
 
     runs-on: ${{ matrix.edition.os }}
     steps:
@@ -57,6 +71,9 @@ jobs:
         with:
           context: .
           file: Dockerfile
+          build-args: |
+            SOURCEMETA_ONE_ENTERPRISE=${{ matrix.edition.enterprise }}
+            SOURCEMETA_ONE_LICENSE=${{ matrix.edition.license }}
           platforms: linux/${{ matrix.edition.arch }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
@@ -86,6 +103,7 @@ jobs:
       matrix:
         edition:
           - package: one
+          - package: one-enterprise
 
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -175,7 +193,7 @@ jobs:
         with:
           context: .
           file: public/Dockerfile
-          build-args: "SOURCEMETA_ONE=ghcr.io/sourcemeta/one:main"
+          build-args: "SOURCEMETA_ONE=ghcr.io/sourcemeta/one-enterprise:main"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -95,13 +95,13 @@ as databases. Perfect for highly-regulated industries, compliance requirements,
 and airgapped environments where every dependency creates security and
 operational risk.
 
-**Source-available**: Sourcemeta One is source-available (though not
-open-source) on [GitHub](https://github.com/sourcemeta/one), providing complete
-code transparency for security audits, compliance reviews, internal
-assessments, and modification. Enterprises can examine every line of code,
-eliminating black-box concerns and ensuring no vendor lock-in. If Sourcemeta
-would ever cease operations, you retain full access to continue running and
-maintaining your instances.
+**Source-available**: Sourcemeta One is publicly available on
+[GitHub](https://github.com/sourcemeta/one), providing complete code
+transparency for security audits, compliance reviews, internal assessments, and
+modification. Enterprises can examine every line of code, eliminating black-box
+concerns and ensuring no vendor lock-in. If Sourcemeta would ever cease
+operations, you retain full access to continue running and maintaining your
+instances.
 
 **Expert commercial support & training**: [Commercial
 Licenses](./commercial.md) give you access to world-class JSON Schema expertise
@@ -123,9 +123,6 @@ solution the industry needs.
 - **Schema evolution and transforms**: Convert data between schema versions and
   formats. Includes schema evolution (i.e. v1 to v2) to arbitrary data
   transformations (i.e. Celsius to Fahrenheit)
-- **Standard Library of Schemas**: Expertly crafted OEM schema collections
-  covering diverse domains, so that you can stop reinventing the wheel and
-  build other schemas and API specifications on proven foundations
 - **Step-through Online Schema Debugger**: Visual schema evaluation debugger
   that highlights validation logic line-by-line in both schema and instance
   data for faster troubleshooting

@@ -15,6 +15,7 @@ COPY contrib /source/contrib
 COPY collections /source/collections
 COPY vendor /source/vendor
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY enterprise /source/enterprise
 
 # For testing
 COPY test/cli /source/test/cli
@@ -22,6 +23,10 @@ COPY test/unit /source/test/unit
 COPY test/js /source/test/js
 
 RUN cd /source && npm ci
+
+# Commercial editions require a paid license
+# See https://one.sourcemeta.com/commercial/
+ARG SOURCEMETA_ONE_ENTERPRISE=OFF
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
@@ -32,6 +37,7 @@ RUN	cmake -S /source -B ./build \
   -DONE_INDEX:BOOL=ON \
   -DONE_SERVER:BOOL=ON \
   -DONE_TESTS:BOOL=ON \
+  -DONE_ENTERPRISE:BOOL=${SOURCEMETA_ONE_ENTERPRISE} \
   -DBUILD_SHARED_LIBS:BOOL=OFF
 
 RUN cmake --build /build \
@@ -58,14 +64,16 @@ RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 FROM debian:bookworm-slim
 
+ARG SOURCEMETA_ONE_LICENSE=LicenseRef-Commercial
+
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
-LABEL org.opencontainers.image.licenses="BUSL-1.1 AND LicenseRef-Commercial"
+LABEL org.opencontainers.image.licenses="${SOURCEMETA_ONE_LICENSE}"
 LABEL org.opencontainers.image.title="Sourcemeta One"
-LABEL org.opencontainers.image.description="The JSON Schema platform. Commercial license available at hello@sourcemeta.com"
+LABEL org.opencontainers.image.description="The JSON Schema platform"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
 COPY --from=builder /usr/bin/sourcemeta-one-index \

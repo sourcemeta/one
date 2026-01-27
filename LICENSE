@@ -4,9 +4,16 @@ Licensor: Sourcemeta OU
 
 Licensed Work: Sourcemeta One
 
-Additional Use Grant: You may make use of the Licensed Work, provided that you
-may not use the Licensed Work for a hosting solution that competes with
-Licensor.
+Additional Use Grant: You may make use of the Licensed Work as if under the
+terms of the AGPL-3.0, provided that you may not use the Licensed Work for a
+hosting solution that competes with Licensor.
+
+The `enterprise/` directory of the source repository contains code specific to
+the Enterprise edition of Sourcemeta One. This code is not available under the
+Business Source License and requires a separate Commercial License from
+Sourcemeta. You may not use the Enterprise image, nor circumvent the build
+configuration or the software in any way to access or use Enterprise edition
+features without a valid Commercial License.
 
 Change Date: Change date is four years from release date. Please see [GitHub
 releases](https://github.com/sourcemeta/one/releases/) for exact dates

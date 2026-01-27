@@ -5,11 +5,10 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/shared.h>
 
-#include <optional>    // std::optional
-#include <sstream>     // std::ostringstream
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <vector>      // std::vector
+#include <optional> // std::optional
+#include <sstream>  // std::ostringstream
+#include <string>   // std::string
+#include <vector>   // std::vector
 
 namespace sourcemeta::one::html {
 
@@ -55,7 +54,7 @@ inline auto make_navigation(const Configuration &configuration)
 
 inline auto make_footer() -> sourcemeta::core::HTML {
   std::ostringstream information;
-  information << " v" << version() << " © 2025 ";
+  information << " " << edition() << " v" << version() << " © 2026 ";
 
   return div(
       {{"class", "container-fluid px-4 mb-2"}},

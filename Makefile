@@ -21,6 +21,8 @@ SANDBOX_PORT ?= 8000
 SANDBOX_URL ?= http://localhost:$(SANDBOX_PORT)
 PUBLIC ?= ./public
 PARALLEL ?= 4
+# Only for local development
+ENTERPRISE ?= ON
 
 .PHONY: all
 all: configure compile test
@@ -36,6 +38,7 @@ configure: node_modules
 		-DONE_TESTS:BOOL=ON \
 		-DONE_INDEX:BOOL=$(INDEX) \
 		-DONE_SERVER:BOOL=$(SERVER) \
+		-DONE_ENTERPRISE:BOOL=$(ENTERPRISE) \
 		-DONE_PREFIX:STRING=$(or $(realpath $(PREFIX)),$(abspath $(PREFIX))) \
 		-DBUILD_SHARED_LIBS:BOOL=OFF
 
@@ -66,7 +69,10 @@ HURL_TESTS += test/e2e/populated/schemas/*.hurl
 HURL_TESTS += test/e2e/populated/api/*.hurl
 endif
 test-e2e:
-	$(HURL) --test --variable base=$(SANDBOX_URL) $(HURL_TESTS)
+	$(HURL) --test \
+		--variable base=$(SANDBOX_URL) \
+		--variable edition=$(if $(filter ON,$(ENTERPRISE)),Enterprise,Community) \
+		$(HURL_TESTS)
 
 .PHONY: test-ui
 test-ui: node_modules
@@ -97,7 +103,8 @@ sandbox-manifest-refresh: configure compile
 docker: Dockerfile
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
+		--build-arg SOURCEMETA_ONE_ENTERPRISE=$(ENTERPRISE)
 
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml

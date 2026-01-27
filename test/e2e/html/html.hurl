@@ -9,6 +9,7 @@ Content-Type: text/html
 xpath "string(/html/head/title)" == "Sourcemeta Schemas"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
+xpath "boolean(//footer//small[contains(., '{{edition}}')])" == true
 header "Access-Control-Allow-Origin" not exists
 
 # This is a Safari Accept header

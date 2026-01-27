@@ -9,6 +9,11 @@ target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::md5)
 target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::one::gzip)
 
+if(ONE_ENTERPRISE)
+  target_compile_definitions(sourcemeta_one_shared
+    PRIVATE SOURCEMETA_ONE_ENTERPRISE)
+endif()
+
 configure_file(configure.h.in configure.h @ONLY)
 target_include_directories(sourcemeta_one_shared
   PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")

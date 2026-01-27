@@ -29,16 +29,13 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-While the project is publicly available on GitHub, it operates under a
-[source-available
-license](https://github.com/sourcemeta/one/blob/main/LICENSE) rather than
-a traditional open-source model. Commercial use requires a [paid commercial
-license](https://one.sourcemeta.com/commercial/). Reach out to
-[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss.
-
-> We are typically happy to provide free commercial licenses to open-source
-> projects, non-profits, educational institutions, and research projects.
-> [Reach out](mailto:hello@sourcemeta.com) if you think you qualify!
+This project is dual-licensed. See
+[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) for the
+open-source offering and
+[LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
+for the enterprise offering. Reach out to
+[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss commercial
+licensing.
 
 ## :handshake: Contributing
 

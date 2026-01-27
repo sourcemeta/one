@@ -29,7 +29,7 @@ test "$CODE" = "1" || exit 1
 VERSION="$2"
 
 cat << EOF > "$TMP/expected.txt"
-Sourcemeta One v$VERSION
+Sourcemeta One Community v$VERSION
 Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 EOF
 
