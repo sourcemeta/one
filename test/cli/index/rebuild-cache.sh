@@ -80,6 +80,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [bundle]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [editor]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
 (100%) Reviewing: $(realpath "$TMP")/output/schemas
 (  0%) Producing: $(realpath "$TMP")/output/explorer

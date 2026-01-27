@@ -670,6 +670,8 @@
 ./schemas/self/v1/schemas/api/error/%
 ./schemas/self/v1/schemas/api/error/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/error/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/error/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/error/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/error/%/bundle.metapack
 ./schemas/self/v1/schemas/api/error/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/error/%/dependencies.metapack
@@ -691,6 +693,8 @@
 ./schemas/self/v1/schemas/api/list/response/%
 ./schemas/self/v1/schemas/api/list/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/list/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/list/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/list/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/list/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/list/response/%/dependencies.metapack
@@ -713,6 +717,8 @@
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack
@@ -734,6 +740,8 @@
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack
@@ -755,6 +763,8 @@
 ./schemas/self/v1/schemas/api/schemas/health/response/%
 ./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack
@@ -776,6 +786,8 @@
 ./schemas/self/v1/schemas/api/schemas/locations/response/%
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
@@ -797,6 +809,8 @@
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack
@@ -817,6 +831,8 @@
 ./schemas/self/v1/schemas/api/schemas/position/%
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/position/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/position/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
@@ -838,6 +854,8 @@
 ./schemas/self/v1/schemas/api/schemas/positions/response/%
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack
@@ -859,6 +877,8 @@
 ./schemas/self/v1/schemas/api/schemas/search/response/%
 ./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
@@ -880,6 +900,8 @@
 ./schemas/self/v1/schemas/api/schemas/stats/response/%
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
@@ -901,6 +923,8 @@
 ./schemas/self/v1/schemas/api/schemas/trace/response/%
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack
@@ -926,6 +950,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/dependencies.metapack
@@ -946,6 +972,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/dependencies.metapack
@@ -965,6 +993,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/dependencies.metapack
@@ -987,6 +1017,8 @@
 ./schemas/self/v1/schemas/common/ietf/email/address/%
 ./schemas/self/v1/schemas/common/ietf/email/address/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/email/address/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/email/address/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/email/address/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/email/address/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/email/address/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/email/address/%/dependencies.metapack
@@ -1008,6 +1040,8 @@
 ./schemas/self/v1/schemas/common/ietf/http/status/%
 ./schemas/self/v1/schemas/common/ietf/http/status/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/http/status/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/http/status/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/http/status/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/http/status/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/http/status/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/http/status/%/dependencies.metapack
@@ -1029,6 +1063,8 @@
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/dependencies.metapack
@@ -1050,6 +1086,8 @@
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/dependencies.metapack
@@ -1072,6 +1110,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/dependencies.metapack
@@ -1092,6 +1132,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/dependencies.metapack
@@ -1111,6 +1153,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/dependencies.metapack
@@ -1131,6 +1175,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/url/%
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/url/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/uri/url/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/dependencies.metapack
@@ -1151,6 +1197,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/urn/%/blaze-fast.metapack
+./schemas/self/v1/schemas/common/ietf/uri/urn/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/bundle.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/dependencies.metapack
@@ -1172,6 +1220,8 @@
 ./schemas/self/v1/schemas/configuration/collection/%
 ./schemas/self/v1/schemas/configuration/collection/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/collection/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/collection/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/collection/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/collection/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/collection/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
@@ -1192,6 +1242,8 @@
 ./schemas/self/v1/schemas/configuration/configuration/%
 ./schemas/self/v1/schemas/configuration/configuration/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/configuration/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/configuration/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/configuration/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
@@ -1212,6 +1264,8 @@
 ./schemas/self/v1/schemas/configuration/contents/%
 ./schemas/self/v1/schemas/configuration/contents/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/contents/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/contents/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
@@ -1232,6 +1286,8 @@
 ./schemas/self/v1/schemas/configuration/extends/%
 ./schemas/self/v1/schemas/configuration/extends/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/extends/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/extends/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/extends/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
@@ -1252,6 +1308,8 @@
 ./schemas/self/v1/schemas/configuration/page/%
 ./schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/page/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/page/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/page/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/page/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
@@ -1272,6 +1330,8 @@
 ./schemas/self/v1/schemas/configuration/rpath/%
 ./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
+./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack.deps
 ./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
 ./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
@@ -1294,6 +1354,8 @@
 ./schemas/test/bundling/double/%
 ./schemas/test/bundling/double/%/blaze-exhaustive.metapack
 ./schemas/test/bundling/double/%/blaze-exhaustive.metapack.deps
+./schemas/test/bundling/double/%/blaze-fast.metapack
+./schemas/test/bundling/double/%/blaze-fast.metapack.deps
 ./schemas/test/bundling/double/%/bundle.metapack
 ./schemas/test/bundling/double/%/bundle.metapack.deps
 ./schemas/test/bundling/double/%/dependencies.metapack
@@ -1314,6 +1376,8 @@
 ./schemas/test/bundling/single/%
 ./schemas/test/bundling/single/%/blaze-exhaustive.metapack
 ./schemas/test/bundling/single/%/blaze-exhaustive.metapack.deps
+./schemas/test/bundling/single/%/blaze-fast.metapack
+./schemas/test/bundling/single/%/blaze-fast.metapack.deps
 ./schemas/test/bundling/single/%/bundle.metapack
 ./schemas/test/bundling/single/%/bundle.metapack.deps
 ./schemas/test/bundling/single/%/dependencies.metapack
@@ -1337,6 +1401,8 @@
 ./schemas/test/camelcase/test/no-id-absolute-ref/%
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/blaze-exhaustive.metapack
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/blaze-exhaustive.metapack.deps
+./schemas/test/camelcase/test/no-id-absolute-ref/%/blaze-fast.metapack
+./schemas/test/camelcase/test/no-id-absolute-ref/%/blaze-fast.metapack.deps
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/bundle.metapack
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/bundle.metapack.deps
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/dependencies.metapack
@@ -1356,6 +1422,8 @@
 ./schemas/test/camelcase/test/no-id/%
 ./schemas/test/camelcase/test/no-id/%/blaze-exhaustive.metapack
 ./schemas/test/camelcase/test/no-id/%/blaze-exhaustive.metapack.deps
+./schemas/test/camelcase/test/no-id/%/blaze-fast.metapack
+./schemas/test/camelcase/test/no-id/%/blaze-fast.metapack.deps
 ./schemas/test/camelcase/test/no-id/%/bundle.metapack
 ./schemas/test/camelcase/test/no-id/%/bundle.metapack.deps
 ./schemas/test/camelcase/test/no-id/%/dependencies.metapack
@@ -1377,6 +1445,8 @@
 ./schemas/test/doc/.period/%
 ./schemas/test/doc/.period/%/blaze-exhaustive.metapack
 ./schemas/test/doc/.period/%/blaze-exhaustive.metapack.deps
+./schemas/test/doc/.period/%/blaze-fast.metapack
+./schemas/test/doc/.period/%/blaze-fast.metapack.deps
 ./schemas/test/doc/.period/%/bundle.metapack
 ./schemas/test/doc/.period/%/bundle.metapack.deps
 ./schemas/test/doc/.period/%/dependencies.metapack
@@ -1397,6 +1467,8 @@
 ./schemas/test/doc/string-1/%
 ./schemas/test/doc/string-1/%/blaze-exhaustive.metapack
 ./schemas/test/doc/string-1/%/blaze-exhaustive.metapack.deps
+./schemas/test/doc/string-1/%/blaze-fast.metapack
+./schemas/test/doc/string-1/%/blaze-fast.metapack.deps
 ./schemas/test/doc/string-1/%/bundle.metapack
 ./schemas/test/doc/string-1/%/bundle.metapack.deps
 ./schemas/test/doc/string-1/%/dependencies.metapack
@@ -1418,6 +1490,8 @@
 ./schemas/test/extension/to-without/%
 ./schemas/test/extension/to-without/%/blaze-exhaustive.metapack
 ./schemas/test/extension/to-without/%/blaze-exhaustive.metapack.deps
+./schemas/test/extension/to-without/%/blaze-fast.metapack
+./schemas/test/extension/to-without/%/blaze-fast.metapack.deps
 ./schemas/test/extension/to-without/%/bundle.metapack
 ./schemas/test/extension/to-without/%/bundle.metapack.deps
 ./schemas/test/extension/to-without/%/dependencies.metapack
@@ -1438,6 +1512,8 @@
 ./schemas/test/extension/with/%
 ./schemas/test/extension/with/%/blaze-exhaustive.metapack
 ./schemas/test/extension/with/%/blaze-exhaustive.metapack.deps
+./schemas/test/extension/with/%/blaze-fast.metapack
+./schemas/test/extension/with/%/blaze-fast.metapack.deps
 ./schemas/test/extension/with/%/bundle.metapack
 ./schemas/test/extension/with/%/bundle.metapack.deps
 ./schemas/test/extension/with/%/dependencies.metapack
@@ -1458,6 +1534,8 @@
 ./schemas/test/extension/without/%
 ./schemas/test/extension/without/%/blaze-exhaustive.metapack
 ./schemas/test/extension/without/%/blaze-exhaustive.metapack.deps
+./schemas/test/extension/without/%/blaze-fast.metapack
+./schemas/test/extension/without/%/blaze-fast.metapack.deps
 ./schemas/test/extension/without/%/bundle.metapack
 ./schemas/test/extension/without/%/bundle.metapack.deps
 ./schemas/test/extension/without/%/dependencies.metapack
@@ -1479,6 +1557,8 @@
 ./schemas/test/hyper/2020-12/%
 ./schemas/test/hyper/2020-12/%/blaze-exhaustive.metapack
 ./schemas/test/hyper/2020-12/%/blaze-exhaustive.metapack.deps
+./schemas/test/hyper/2020-12/%/blaze-fast.metapack
+./schemas/test/hyper/2020-12/%/blaze-fast.metapack.deps
 ./schemas/test/hyper/2020-12/%/bundle.metapack
 ./schemas/test/hyper/2020-12/%/bundle.metapack.deps
 ./schemas/test/hyper/2020-12/%/dependencies.metapack
@@ -1500,6 +1580,8 @@
 ./schemas/test/no-base/no-id/%
 ./schemas/test/no-base/no-id/%/blaze-exhaustive.metapack
 ./schemas/test/no-base/no-id/%/blaze-exhaustive.metapack.deps
+./schemas/test/no-base/no-id/%/blaze-fast.metapack
+./schemas/test/no-base/no-id/%/blaze-fast.metapack.deps
 ./schemas/test/no-base/no-id/%/bundle.metapack
 ./schemas/test/no-base/no-id/%/bundle.metapack.deps
 ./schemas/test/no-base/no-id/%/dependencies.metapack
@@ -1520,6 +1602,8 @@
 ./schemas/test/no-base/test-1/%
 ./schemas/test/no-base/test-1/%/blaze-exhaustive.metapack
 ./schemas/test/no-base/test-1/%/blaze-exhaustive.metapack.deps
+./schemas/test/no-base/test-1/%/blaze-fast.metapack
+./schemas/test/no-base/test-1/%/blaze-fast.metapack.deps
 ./schemas/test/no-base/test-1/%/bundle.metapack
 ./schemas/test/no-base/test-1/%/bundle.metapack.deps
 ./schemas/test/no-base/test-1/%/dependencies.metapack
@@ -1560,6 +1644,8 @@
 ./schemas/test/same/schema/%
 ./schemas/test/same/schema/%/blaze-exhaustive.metapack
 ./schemas/test/same/schema/%/blaze-exhaustive.metapack.deps
+./schemas/test/same/schema/%/blaze-fast.metapack
+./schemas/test/same/schema/%/blaze-fast.metapack.deps
 ./schemas/test/same/schema/%/bundle.metapack
 ./schemas/test/same/schema/%/bundle.metapack.deps
 ./schemas/test/same/schema/%/dependencies.metapack
@@ -1582,6 +1668,8 @@
 ./schemas/test/schemas/%25/test/%
 ./schemas/test/schemas/%25/test/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/%25/test/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/%25/test/%/blaze-fast.metapack
+./schemas/test/schemas/%25/test/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/%25/test/%/bundle.metapack
 ./schemas/test/schemas/%25/test/%/bundle.metapack.deps
 ./schemas/test/schemas/%25/test/%/dependencies.metapack
@@ -1602,6 +1690,8 @@
 ./schemas/test/schemas/absolute-refs/%
 ./schemas/test/schemas/absolute-refs/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/absolute-refs/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/absolute-refs/%/blaze-fast.metapack
+./schemas/test/schemas/absolute-refs/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/absolute-refs/%/bundle.metapack
 ./schemas/test/schemas/absolute-refs/%/bundle.metapack.deps
 ./schemas/test/schemas/absolute-refs/%/dependencies.metapack
@@ -1622,6 +1712,8 @@
 ./schemas/test/schemas/annotation/%
 ./schemas/test/schemas/annotation/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/annotation/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/annotation/%/blaze-fast.metapack
+./schemas/test/schemas/annotation/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/annotation/%/bundle.metapack
 ./schemas/test/schemas/annotation/%/bundle.metapack.deps
 ./schemas/test/schemas/annotation/%/dependencies.metapack
@@ -1642,6 +1734,8 @@
 ./schemas/test/schemas/camelcase/%
 ./schemas/test/schemas/camelcase/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/camelcase/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/camelcase/%/blaze-fast.metapack
+./schemas/test/schemas/camelcase/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/camelcase/%/bundle.metapack
 ./schemas/test/schemas/camelcase/%/bundle.metapack.deps
 ./schemas/test/schemas/camelcase/%/dependencies.metapack
@@ -1663,6 +1757,8 @@
 ./schemas/test/schemas/clash/foo/%
 ./schemas/test/schemas/clash/foo/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/clash/foo/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/clash/foo/%/blaze-fast.metapack
+./schemas/test/schemas/clash/foo/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/clash/foo/%/bundle.metapack
 ./schemas/test/schemas/clash/foo/%/bundle.metapack.deps
 ./schemas/test/schemas/clash/foo/%/dependencies.metapack
@@ -1683,6 +1779,8 @@
 ./schemas/test/schemas/clash/foo/bar/%
 ./schemas/test/schemas/clash/foo/bar/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/clash/foo/bar/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/clash/foo/bar/%/blaze-fast.metapack
+./schemas/test/schemas/clash/foo/bar/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/clash/foo/bar/%/bundle.metapack
 ./schemas/test/schemas/clash/foo/bar/%/bundle.metapack.deps
 ./schemas/test/schemas/clash/foo/bar/%/dependencies.metapack
@@ -1703,6 +1801,8 @@
 ./schemas/test/schemas/html/%
 ./schemas/test/schemas/html/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/html/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/html/%/blaze-fast.metapack
+./schemas/test/schemas/html/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/html/%/bundle.metapack
 ./schemas/test/schemas/html/%/bundle.metapack.deps
 ./schemas/test/schemas/html/%/dependencies.metapack
@@ -1723,6 +1823,8 @@
 ./schemas/test/schemas/id-same-as-base/%
 ./schemas/test/schemas/id-same-as-base/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/id-same-as-base/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/id-same-as-base/%/blaze-fast.metapack
+./schemas/test/schemas/id-same-as-base/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/id-same-as-base/%/bundle.metapack
 ./schemas/test/schemas/id-same-as-base/%/bundle.metapack.deps
 ./schemas/test/schemas/id-same-as-base/%/dependencies.metapack
@@ -1743,6 +1845,8 @@
 ./schemas/test/schemas/index.html/%
 ./schemas/test/schemas/index.html/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/index.html/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/index.html/%/blaze-fast.metapack
+./schemas/test/schemas/index.html/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/index.html/%/bundle.metapack
 ./schemas/test/schemas/index.html/%/bundle.metapack.deps
 ./schemas/test/schemas/index.html/%/dependencies.metapack
@@ -1763,6 +1867,8 @@
 ./schemas/test/schemas/meta-ref/%
 ./schemas/test/schemas/meta-ref/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/meta-ref/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/meta-ref/%/blaze-fast.metapack
+./schemas/test/schemas/meta-ref/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/meta-ref/%/bundle.metapack
 ./schemas/test/schemas/meta-ref/%/bundle.metapack.deps
 ./schemas/test/schemas/meta-ref/%/dependencies.metapack
@@ -1783,6 +1889,8 @@
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/blaze-fast.metapack
+./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/bundle.metapack
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/bundle.metapack.deps
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/dependencies.metapack
@@ -1803,6 +1911,8 @@
 ./schemas/test/schemas/no-id/%
 ./schemas/test/schemas/no-id/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/no-id/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/no-id/%/blaze-fast.metapack
+./schemas/test/schemas/no-id/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/no-id/%/bundle.metapack
 ./schemas/test/schemas/no-id/%/bundle.metapack.deps
 ./schemas/test/schemas/no-id/%/dependencies.metapack
@@ -1824,6 +1934,8 @@
 ./schemas/test/schemas/no-schema-nor-id/%
 ./schemas/test/schemas/no-schema-nor-id/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/no-schema-nor-id/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/no-schema-nor-id/%/blaze-fast.metapack
+./schemas/test/schemas/no-schema-nor-id/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/no-schema-nor-id/%/bundle.metapack
 ./schemas/test/schemas/no-schema-nor-id/%/bundle.metapack.deps
 ./schemas/test/schemas/no-schema-nor-id/%/dependencies.metapack
@@ -1843,6 +1955,8 @@
 ./schemas/test/schemas/no-schema/%
 ./schemas/test/schemas/no-schema/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/no-schema/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/no-schema/%/blaze-fast.metapack
+./schemas/test/schemas/no-schema/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/no-schema/%/bundle.metapack
 ./schemas/test/schemas/no-schema/%/bundle.metapack.deps
 ./schemas/test/schemas/no-schema/%/dependencies.metapack
@@ -1863,6 +1977,8 @@
 ./schemas/test/schemas/string/%
 ./schemas/test/schemas/string/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/string/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/string/%/blaze-fast.metapack
+./schemas/test/schemas/string/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/string/%/bundle.metapack
 ./schemas/test/schemas/string/%/bundle.metapack.deps
 ./schemas/test/schemas/string/%/dependencies.metapack
@@ -1883,6 +1999,8 @@
 ./schemas/test/schemas/string/overlap/%
 ./schemas/test/schemas/string/overlap/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/string/overlap/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/string/overlap/%/blaze-fast.metapack
+./schemas/test/schemas/string/overlap/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/string/overlap/%/bundle.metapack
 ./schemas/test/schemas/string/overlap/%/bundle.metapack.deps
 ./schemas/test/schemas/string/overlap/%/dependencies.metapack
@@ -1904,6 +2022,8 @@
 ./schemas/test/schemas/versions/v1.2.3/%
 ./schemas/test/schemas/versions/v1.2.3/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/versions/v1.2.3/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/versions/v1.2.3/%/blaze-fast.metapack
+./schemas/test/schemas/versions/v1.2.3/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/versions/v1.2.3/%/bundle.metapack
 ./schemas/test/schemas/versions/v1.2.3/%/bundle.metapack.deps
 ./schemas/test/schemas/versions/v1.2.3/%/dependencies.metapack
@@ -1925,6 +2045,8 @@
 ./schemas/test/schemas/with-rebase-same-host/%
 ./schemas/test/schemas/with-rebase-same-host/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/with-rebase-same-host/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/with-rebase-same-host/%/blaze-fast.metapack
+./schemas/test/schemas/with-rebase-same-host/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/with-rebase-same-host/%/bundle.metapack
 ./schemas/test/schemas/with-rebase-same-host/%/bundle.metapack.deps
 ./schemas/test/schemas/with-rebase-same-host/%/dependencies.metapack
@@ -1944,6 +2066,8 @@
 ./schemas/test/schemas/with-rebase/%
 ./schemas/test/schemas/with-rebase/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/with-rebase/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/with-rebase/%/blaze-fast.metapack
+./schemas/test/schemas/with-rebase/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/with-rebase/%/bundle.metapack
 ./schemas/test/schemas/with-rebase/%/bundle.metapack.deps
 ./schemas/test/schemas/with-rebase/%/dependencies.metapack
@@ -1964,6 +2088,8 @@
 ./schemas/test/schemas/yaml/%
 ./schemas/test/schemas/yaml/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/yaml/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/yaml/%/blaze-fast.metapack
+./schemas/test/schemas/yaml/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/yaml/%/bundle.metapack
 ./schemas/test/schemas/yaml/%/bundle.metapack.deps
 ./schemas/test/schemas/yaml/%/dependencies.metapack
@@ -1984,6 +2110,8 @@
 ./schemas/test/schemas/yml/%
 ./schemas/test/schemas/yml/%/blaze-exhaustive.metapack
 ./schemas/test/schemas/yml/%/blaze-exhaustive.metapack.deps
+./schemas/test/schemas/yml/%/blaze-fast.metapack
+./schemas/test/schemas/yml/%/blaze-fast.metapack.deps
 ./schemas/test/schemas/yml/%/bundle.metapack
 ./schemas/test/schemas/yml/%/bundle.metapack.deps
 ./schemas/test/schemas/yml/%/dependencies.metapack
@@ -2005,6 +2133,8 @@
 ./schemas/test/v2.0/schema/%
 ./schemas/test/v2.0/schema/%/blaze-exhaustive.metapack
 ./schemas/test/v2.0/schema/%/blaze-exhaustive.metapack.deps
+./schemas/test/v2.0/schema/%/blaze-fast.metapack
+./schemas/test/v2.0/schema/%/blaze-fast.metapack.deps
 ./schemas/test/v2.0/schema/%/bundle.metapack
 ./schemas/test/v2.0/schema/%/bundle.metapack.deps
 ./schemas/test/v2.0/schema/%/dependencies.metapack
