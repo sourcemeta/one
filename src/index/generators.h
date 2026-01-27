@@ -18,8 +18,10 @@
 
 #include <cassert>    // assert
 #include <filesystem> // std::filesystem
+#include <queue>      // std::queue
+#include <set>        // std::set
 #include <sstream>    // std::ostringstream
-#include <utility>    // std::move
+#include <utility>    // std::move, std::pair
 #include <variant>    // std::visit
 
 namespace sourcemeta::one {
@@ -192,13 +194,122 @@ struct GENERATE_DEPENDENCIES {
         [&result](const auto &origin, const auto &pointer, const auto &target,
                   const auto &) {
           auto trace{sourcemeta::core::JSON::make_object()};
-          trace.assign("from", sourcemeta::core::JSON{std::string{origin}});
-          trace.assign("to", sourcemeta::core::JSON{std::string{target}});
+          trace.assign("from", without_json_extension(origin));
+          trace.assign("to", without_json_extension(target));
           trace.assign("at", sourcemeta::core::to_json(pointer));
           result.push_back(std::move(trace));
         });
     // Otherwise we are returning non-sense
     assert(result.unique());
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    std::filesystem::create_directories(destination.parent_path());
+    sourcemeta::one::write_pretty_json(
+        destination, result, "application/json",
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+
+private:
+  static auto without_json_extension(const std::string_view uri)
+      -> sourcemeta::core::JSON {
+    if (uri.ends_with(".json")) {
+      return sourcemeta::core::JSON{std::string{uri.substr(0, uri.size() - 5)}};
+    }
+
+    return sourcemeta::core::JSON{std::string{uri}};
+  }
+};
+
+struct GENERATE_DEPENDENCY_TREE {
+  using Context = sourcemeta::one::Resolver;
+  static auto
+  handler(const std::filesystem::path &destination,
+          const sourcemeta::core::BuildDependencies<std::filesystem::path>
+              &dependencies,
+          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path> &,
+          const Context &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+
+    // Direct dependencies
+    using DirectMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::unordered_set<sourcemeta::core::JSON::String>>;
+    DirectMap direct;
+    for (const auto &path : dependencies) {
+      const auto contents{sourcemeta::one::read_json(path)};
+      assert(contents.is_array());
+      for (const auto &entry : contents.as_array()) {
+        direct[entry.at("to").to_string()].emplace(
+            entry.at("from").to_string());
+      }
+    }
+
+    // Indirect dependencies
+    using TransitiveMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
+    TransitiveMap transitive;
+    for (const auto &[target, _] : direct) {
+      auto &edges{transitive[target]};
+      std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+      visited.emplace(target);
+      std::queue<sourcemeta::core::JSON::String> queue;
+      queue.emplace(target);
+      while (!queue.empty()) {
+        const auto current{std::move(queue.front())};
+        queue.pop();
+        const auto match{direct.find(current)};
+        if (match == direct.cend()) {
+          continue;
+        }
+
+        for (const auto &dependent : match->second) {
+          edges.emplace(dependent, current);
+          if (visited.emplace(dependent).second) {
+            queue.emplace(dependent);
+          }
+        }
+      }
+    }
+
+    auto result{sourcemeta::core::to_json(transitive)};
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    std::filesystem::create_directories(destination.parent_path());
+    sourcemeta::one::write_pretty_json(
+        destination, result, "application/json",
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+
+struct GENERATE_DEPENDENTS {
+  using Context = sourcemeta::core::JSON::String;
+  static auto
+  handler(const std::filesystem::path &destination,
+          const sourcemeta::core::BuildDependencies<std::filesystem::path>
+              &dependencies,
+          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path> &,
+          const Context &context) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
+    assert(contents.is_object());
+    auto result{sourcemeta::core::JSON::make_array()};
+    const auto *match{contents.try_at(context)};
+    if (match) {
+      assert(match->is_array());
+      for (const auto &entry : match->as_array()) {
+        auto object{sourcemeta::core::JSON::make_object()};
+        object.assign("from", entry.at(0));
+        object.assign("to", entry.at(1));
+        result.push_back(std::move(object));
+      }
+    }
+
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     std::filesystem::create_directories(destination.parent_path());

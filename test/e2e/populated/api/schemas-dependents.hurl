@@ -1,18 +1,21 @@
-GET {{base}}/self/v1/api/schemas/dependencies/test/bundling/single
+GET {{base}}/self/v1/api/schemas/dependents/test/bundling/single
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 1
-jsonpath "$[0].from" == "{{base}}/test/bundling/single"
-jsonpath "$[0].to" == "{{base}}/test/v2.0/schema"
-jsonpath "$[0].at" == "/properties/foo/$ref"
+jsonpath "$" count == 3
+jsonpath "$[0].from" == "{{base}}/test/bundling/double"
+jsonpath "$[0].to" == "{{base}}/test/bundling/single"
+jsonpath "$[1].from" == "{{base}}/test/schemas/with-rebase"
+jsonpath "$[1].to" == "{{base}}/test/bundling/single"
+jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase-same-host"
+jsonpath "$[2].to" == "{{base}}/test/bundling/single"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -23,21 +26,26 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependencies/self/v1/schemas/api/schemas/dependents/response
+GET {{base}}/self/v1/api/schemas/dependents/test/v2.0/schema
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 1
-jsonpath "$[0].from" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
-jsonpath "$[0].to" == "{{base}}/self/v1/schemas/common/ietf/uri/url"
-jsonpath "$[0].at" == "/items/properties/from/$ref"
+jsonpath "$" count == 4
+jsonpath "$[0].from" == "{{base}}/test/bundling/double"
+jsonpath "$[0].to" == "{{base}}/test/bundling/single"
+jsonpath "$[1].from" == "{{base}}/test/bundling/single"
+jsonpath "$[1].to" == "{{base}}/test/v2.0/schema"
+jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase"
+jsonpath "$[2].to" == "{{base}}/test/bundling/single"
+jsonpath "$[3].from" == "{{base}}/test/schemas/with-rebase-same-host"
+jsonpath "$[3].to" == "{{base}}/test/bundling/single"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -48,11 +56,11 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
+GET {{base}}/self/v1/api/schemas/dependents/test/bundling/double
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -70,17 +78,17 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/dependents/test/bundling/double
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
+POST {{base}}/self/v1/api/schemas/dependents/test/bundling/double
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -102,7 +110,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependencies/xyz/
+GET {{base}}/self/v1/api/schemas/dependents/xyz/
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -124,7 +132,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependencies
+GET {{base}}/self/v1/api/schemas/dependents
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

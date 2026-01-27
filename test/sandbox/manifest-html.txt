@@ -1,4 +1,6 @@
 ./configuration.json
+./dependency-tree.metapack
+./dependency-tree.metapack.deps
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
@@ -69,6 +71,18 @@
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema-html.metapack.deps
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack.deps
+./explorer/self/v1/schemas/api/schemas/dependents
+./explorer/self/v1/schemas/api/schemas/dependents/%
+./explorer/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack.deps
+./explorer/self/v1/schemas/api/schemas/dependents/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/%/directory.metapack.deps
+./explorer/self/v1/schemas/api/schemas/dependents/response
+./explorer/self/v1/schemas/api/schemas/dependents/response/%
+./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack.deps
+./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack.deps
 ./explorer/self/v1/schemas/api/schemas/evaluate
 ./explorer/self/v1/schemas/api/schemas/evaluate/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
@@ -676,6 +690,8 @@
 ./schemas/self/v1/schemas/api/error/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/error/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/error/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/error/%/dependents.metapack
+./schemas/self/v1/schemas/api/error/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/error/%/editor.metapack
 ./schemas/self/v1/schemas/api/error/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/error/%/health.metapack
@@ -699,6 +715,8 @@
 ./schemas/self/v1/schemas/api/list/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/list/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/list/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/list/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/list/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/list/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/list/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/list/response/%/health.metapack
@@ -723,6 +741,8 @@
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/health.metapack
@@ -735,6 +755,31 @@
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/stats.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents
+./schemas/self/v1/schemas/api/schemas/dependents/response
+./schemas/self/v1/schemas/api/schemas/dependents/response/%
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-exhaustive.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-fast.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/health.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/locations.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/positions.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack.deps
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate
 ./schemas/self/v1/schemas/api/schemas/evaluate/response
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%
@@ -746,6 +791,8 @@
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/health.metapack
@@ -769,6 +816,8 @@
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/health/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/health/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/health/response/%/health.metapack
@@ -792,6 +841,8 @@
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/health.metapack
@@ -815,6 +866,8 @@
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/health.metapack
@@ -837,6 +890,8 @@
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/position/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/position/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/position/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/position/%/health.metapack
@@ -860,6 +915,8 @@
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/health.metapack
@@ -883,6 +940,8 @@
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/search/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/search/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/search/response/%/health.metapack
@@ -906,6 +965,8 @@
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/health.metapack
@@ -929,6 +990,8 @@
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/editor.metapack.deps
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/health.metapack
@@ -956,6 +1019,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/dependents.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/editor.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-absolute/%/health.metapack
@@ -978,6 +1043,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/dependents.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/editor.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path-relative/%/health.metapack
@@ -999,6 +1066,8 @@
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/dependents.metapack
+./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/editor.metapack
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ieee/posix/2017/path/%/health.metapack
@@ -1023,6 +1092,8 @@
 ./schemas/self/v1/schemas/common/ietf/email/address/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/email/address/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/email/address/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/email/address/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/email/address/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/email/address/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/email/address/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/email/address/%/health.metapack
@@ -1046,6 +1117,8 @@
 ./schemas/self/v1/schemas/common/ietf/http/status/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/http/status/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/http/status/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/http/status/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/http/status/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/http/status/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/http/status/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/http/status/%/health.metapack
@@ -1069,6 +1142,8 @@
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/jsonpointer/pointer/%/health.metapack
@@ -1092,6 +1167,8 @@
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/problem-details/problem/%/health.metapack
@@ -1116,6 +1193,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-reference/%/health.metapack
@@ -1138,6 +1217,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri-relative/%/health.metapack
@@ -1159,6 +1240,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/uri/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/uri/uri/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/uri/%/health.metapack
@@ -1181,6 +1264,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/url/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/uri/url/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/url/%/health.metapack
@@ -1203,6 +1288,8 @@
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/dependencies.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/common/ietf/uri/urn/%/dependents.metapack
+./schemas/self/v1/schemas/common/ietf/uri/urn/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/editor.metapack
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/editor.metapack.deps
 ./schemas/self/v1/schemas/common/ietf/uri/urn/%/health.metapack
@@ -1226,6 +1313,8 @@
 ./schemas/self/v1/schemas/configuration/collection/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/collection/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/collection/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/collection/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/collection/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/collection/%/health.metapack
@@ -1248,6 +1337,8 @@
 ./schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/configuration/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/configuration/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/configuration/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/configuration/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/configuration/%/health.metapack
@@ -1270,6 +1361,8 @@
 ./schemas/self/v1/schemas/configuration/contents/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/contents/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/contents/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/contents/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/contents/%/health.metapack
@@ -1292,6 +1385,8 @@
 ./schemas/self/v1/schemas/configuration/extends/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/extends/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/extends/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/extends/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/extends/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/extends/%/health.metapack
@@ -1314,6 +1409,8 @@
 ./schemas/self/v1/schemas/configuration/page/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/page/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/page/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/page/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/page/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/page/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/page/%/health.metapack
@@ -1336,6 +1433,8 @@
 ./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack.deps
 ./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
 ./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack.deps
+./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
+./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack.deps
 ./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
 ./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack.deps
 ./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
@@ -1360,6 +1459,8 @@
 ./schemas/test/bundling/double/%/bundle.metapack.deps
 ./schemas/test/bundling/double/%/dependencies.metapack
 ./schemas/test/bundling/double/%/dependencies.metapack.deps
+./schemas/test/bundling/double/%/dependents.metapack
+./schemas/test/bundling/double/%/dependents.metapack.deps
 ./schemas/test/bundling/double/%/editor.metapack
 ./schemas/test/bundling/double/%/editor.metapack.deps
 ./schemas/test/bundling/double/%/health.metapack
@@ -1382,6 +1483,8 @@
 ./schemas/test/bundling/single/%/bundle.metapack.deps
 ./schemas/test/bundling/single/%/dependencies.metapack
 ./schemas/test/bundling/single/%/dependencies.metapack.deps
+./schemas/test/bundling/single/%/dependents.metapack
+./schemas/test/bundling/single/%/dependents.metapack.deps
 ./schemas/test/bundling/single/%/editor.metapack
 ./schemas/test/bundling/single/%/editor.metapack.deps
 ./schemas/test/bundling/single/%/health.metapack
@@ -1407,6 +1510,8 @@
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/bundle.metapack.deps
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/dependencies.metapack
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/dependencies.metapack.deps
+./schemas/test/camelcase/test/no-id-absolute-ref/%/dependents.metapack
+./schemas/test/camelcase/test/no-id-absolute-ref/%/dependents.metapack.deps
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/editor.metapack
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/editor.metapack.deps
 ./schemas/test/camelcase/test/no-id-absolute-ref/%/health.metapack
@@ -1428,6 +1533,8 @@
 ./schemas/test/camelcase/test/no-id/%/bundle.metapack.deps
 ./schemas/test/camelcase/test/no-id/%/dependencies.metapack
 ./schemas/test/camelcase/test/no-id/%/dependencies.metapack.deps
+./schemas/test/camelcase/test/no-id/%/dependents.metapack
+./schemas/test/camelcase/test/no-id/%/dependents.metapack.deps
 ./schemas/test/camelcase/test/no-id/%/editor.metapack
 ./schemas/test/camelcase/test/no-id/%/editor.metapack.deps
 ./schemas/test/camelcase/test/no-id/%/health.metapack
@@ -1451,6 +1558,8 @@
 ./schemas/test/doc/.period/%/bundle.metapack.deps
 ./schemas/test/doc/.period/%/dependencies.metapack
 ./schemas/test/doc/.period/%/dependencies.metapack.deps
+./schemas/test/doc/.period/%/dependents.metapack
+./schemas/test/doc/.period/%/dependents.metapack.deps
 ./schemas/test/doc/.period/%/editor.metapack
 ./schemas/test/doc/.period/%/editor.metapack.deps
 ./schemas/test/doc/.period/%/health.metapack
@@ -1473,6 +1582,8 @@
 ./schemas/test/doc/string-1/%/bundle.metapack.deps
 ./schemas/test/doc/string-1/%/dependencies.metapack
 ./schemas/test/doc/string-1/%/dependencies.metapack.deps
+./schemas/test/doc/string-1/%/dependents.metapack
+./schemas/test/doc/string-1/%/dependents.metapack.deps
 ./schemas/test/doc/string-1/%/editor.metapack
 ./schemas/test/doc/string-1/%/editor.metapack.deps
 ./schemas/test/doc/string-1/%/health.metapack
@@ -1496,6 +1607,8 @@
 ./schemas/test/extension/to-without/%/bundle.metapack.deps
 ./schemas/test/extension/to-without/%/dependencies.metapack
 ./schemas/test/extension/to-without/%/dependencies.metapack.deps
+./schemas/test/extension/to-without/%/dependents.metapack
+./schemas/test/extension/to-without/%/dependents.metapack.deps
 ./schemas/test/extension/to-without/%/editor.metapack
 ./schemas/test/extension/to-without/%/editor.metapack.deps
 ./schemas/test/extension/to-without/%/health.metapack
@@ -1518,6 +1631,8 @@
 ./schemas/test/extension/with/%/bundle.metapack.deps
 ./schemas/test/extension/with/%/dependencies.metapack
 ./schemas/test/extension/with/%/dependencies.metapack.deps
+./schemas/test/extension/with/%/dependents.metapack
+./schemas/test/extension/with/%/dependents.metapack.deps
 ./schemas/test/extension/with/%/editor.metapack
 ./schemas/test/extension/with/%/editor.metapack.deps
 ./schemas/test/extension/with/%/health.metapack
@@ -1540,6 +1655,8 @@
 ./schemas/test/extension/without/%/bundle.metapack.deps
 ./schemas/test/extension/without/%/dependencies.metapack
 ./schemas/test/extension/without/%/dependencies.metapack.deps
+./schemas/test/extension/without/%/dependents.metapack
+./schemas/test/extension/without/%/dependents.metapack.deps
 ./schemas/test/extension/without/%/editor.metapack
 ./schemas/test/extension/without/%/editor.metapack.deps
 ./schemas/test/extension/without/%/health.metapack
@@ -1563,6 +1680,8 @@
 ./schemas/test/hyper/2020-12/%/bundle.metapack.deps
 ./schemas/test/hyper/2020-12/%/dependencies.metapack
 ./schemas/test/hyper/2020-12/%/dependencies.metapack.deps
+./schemas/test/hyper/2020-12/%/dependents.metapack
+./schemas/test/hyper/2020-12/%/dependents.metapack.deps
 ./schemas/test/hyper/2020-12/%/editor.metapack
 ./schemas/test/hyper/2020-12/%/editor.metapack.deps
 ./schemas/test/hyper/2020-12/%/health.metapack
@@ -1586,6 +1705,8 @@
 ./schemas/test/no-base/no-id/%/bundle.metapack.deps
 ./schemas/test/no-base/no-id/%/dependencies.metapack
 ./schemas/test/no-base/no-id/%/dependencies.metapack.deps
+./schemas/test/no-base/no-id/%/dependents.metapack
+./schemas/test/no-base/no-id/%/dependents.metapack.deps
 ./schemas/test/no-base/no-id/%/editor.metapack
 ./schemas/test/no-base/no-id/%/editor.metapack.deps
 ./schemas/test/no-base/no-id/%/health.metapack
@@ -1608,6 +1729,8 @@
 ./schemas/test/no-base/test-1/%/bundle.metapack.deps
 ./schemas/test/no-base/test-1/%/dependencies.metapack
 ./schemas/test/no-base/test-1/%/dependencies.metapack.deps
+./schemas/test/no-base/test-1/%/dependents.metapack
+./schemas/test/no-base/test-1/%/dependents.metapack.deps
 ./schemas/test/no-base/test-1/%/editor.metapack
 ./schemas/test/no-base/test-1/%/editor.metapack.deps
 ./schemas/test/no-base/test-1/%/health.metapack
@@ -1627,6 +1750,8 @@
 ./schemas/test/no-blaze/string/%/bundle.metapack.deps
 ./schemas/test/no-blaze/string/%/dependencies.metapack
 ./schemas/test/no-blaze/string/%/dependencies.metapack.deps
+./schemas/test/no-blaze/string/%/dependents.metapack
+./schemas/test/no-blaze/string/%/dependents.metapack.deps
 ./schemas/test/no-blaze/string/%/editor.metapack
 ./schemas/test/no-blaze/string/%/editor.metapack.deps
 ./schemas/test/no-blaze/string/%/health.metapack
@@ -1650,6 +1775,8 @@
 ./schemas/test/same/schema/%/bundle.metapack.deps
 ./schemas/test/same/schema/%/dependencies.metapack
 ./schemas/test/same/schema/%/dependencies.metapack.deps
+./schemas/test/same/schema/%/dependents.metapack
+./schemas/test/same/schema/%/dependents.metapack.deps
 ./schemas/test/same/schema/%/editor.metapack
 ./schemas/test/same/schema/%/editor.metapack.deps
 ./schemas/test/same/schema/%/health.metapack
@@ -1674,6 +1801,8 @@
 ./schemas/test/schemas/%25/test/%/bundle.metapack.deps
 ./schemas/test/schemas/%25/test/%/dependencies.metapack
 ./schemas/test/schemas/%25/test/%/dependencies.metapack.deps
+./schemas/test/schemas/%25/test/%/dependents.metapack
+./schemas/test/schemas/%25/test/%/dependents.metapack.deps
 ./schemas/test/schemas/%25/test/%/editor.metapack
 ./schemas/test/schemas/%25/test/%/editor.metapack.deps
 ./schemas/test/schemas/%25/test/%/health.metapack
@@ -1696,6 +1825,8 @@
 ./schemas/test/schemas/absolute-refs/%/bundle.metapack.deps
 ./schemas/test/schemas/absolute-refs/%/dependencies.metapack
 ./schemas/test/schemas/absolute-refs/%/dependencies.metapack.deps
+./schemas/test/schemas/absolute-refs/%/dependents.metapack
+./schemas/test/schemas/absolute-refs/%/dependents.metapack.deps
 ./schemas/test/schemas/absolute-refs/%/editor.metapack
 ./schemas/test/schemas/absolute-refs/%/editor.metapack.deps
 ./schemas/test/schemas/absolute-refs/%/health.metapack
@@ -1718,6 +1849,8 @@
 ./schemas/test/schemas/annotation/%/bundle.metapack.deps
 ./schemas/test/schemas/annotation/%/dependencies.metapack
 ./schemas/test/schemas/annotation/%/dependencies.metapack.deps
+./schemas/test/schemas/annotation/%/dependents.metapack
+./schemas/test/schemas/annotation/%/dependents.metapack.deps
 ./schemas/test/schemas/annotation/%/editor.metapack
 ./schemas/test/schemas/annotation/%/editor.metapack.deps
 ./schemas/test/schemas/annotation/%/health.metapack
@@ -1740,6 +1873,8 @@
 ./schemas/test/schemas/camelcase/%/bundle.metapack.deps
 ./schemas/test/schemas/camelcase/%/dependencies.metapack
 ./schemas/test/schemas/camelcase/%/dependencies.metapack.deps
+./schemas/test/schemas/camelcase/%/dependents.metapack
+./schemas/test/schemas/camelcase/%/dependents.metapack.deps
 ./schemas/test/schemas/camelcase/%/editor.metapack
 ./schemas/test/schemas/camelcase/%/editor.metapack.deps
 ./schemas/test/schemas/camelcase/%/health.metapack
@@ -1763,6 +1898,8 @@
 ./schemas/test/schemas/clash/foo/%/bundle.metapack.deps
 ./schemas/test/schemas/clash/foo/%/dependencies.metapack
 ./schemas/test/schemas/clash/foo/%/dependencies.metapack.deps
+./schemas/test/schemas/clash/foo/%/dependents.metapack
+./schemas/test/schemas/clash/foo/%/dependents.metapack.deps
 ./schemas/test/schemas/clash/foo/%/editor.metapack
 ./schemas/test/schemas/clash/foo/%/editor.metapack.deps
 ./schemas/test/schemas/clash/foo/%/health.metapack
@@ -1785,6 +1922,8 @@
 ./schemas/test/schemas/clash/foo/bar/%/bundle.metapack.deps
 ./schemas/test/schemas/clash/foo/bar/%/dependencies.metapack
 ./schemas/test/schemas/clash/foo/bar/%/dependencies.metapack.deps
+./schemas/test/schemas/clash/foo/bar/%/dependents.metapack
+./schemas/test/schemas/clash/foo/bar/%/dependents.metapack.deps
 ./schemas/test/schemas/clash/foo/bar/%/editor.metapack
 ./schemas/test/schemas/clash/foo/bar/%/editor.metapack.deps
 ./schemas/test/schemas/clash/foo/bar/%/health.metapack
@@ -1807,6 +1946,8 @@
 ./schemas/test/schemas/html/%/bundle.metapack.deps
 ./schemas/test/schemas/html/%/dependencies.metapack
 ./schemas/test/schemas/html/%/dependencies.metapack.deps
+./schemas/test/schemas/html/%/dependents.metapack
+./schemas/test/schemas/html/%/dependents.metapack.deps
 ./schemas/test/schemas/html/%/editor.metapack
 ./schemas/test/schemas/html/%/editor.metapack.deps
 ./schemas/test/schemas/html/%/health.metapack
@@ -1829,6 +1970,8 @@
 ./schemas/test/schemas/id-same-as-base/%/bundle.metapack.deps
 ./schemas/test/schemas/id-same-as-base/%/dependencies.metapack
 ./schemas/test/schemas/id-same-as-base/%/dependencies.metapack.deps
+./schemas/test/schemas/id-same-as-base/%/dependents.metapack
+./schemas/test/schemas/id-same-as-base/%/dependents.metapack.deps
 ./schemas/test/schemas/id-same-as-base/%/editor.metapack
 ./schemas/test/schemas/id-same-as-base/%/editor.metapack.deps
 ./schemas/test/schemas/id-same-as-base/%/health.metapack
@@ -1851,6 +1994,8 @@
 ./schemas/test/schemas/index.html/%/bundle.metapack.deps
 ./schemas/test/schemas/index.html/%/dependencies.metapack
 ./schemas/test/schemas/index.html/%/dependencies.metapack.deps
+./schemas/test/schemas/index.html/%/dependents.metapack
+./schemas/test/schemas/index.html/%/dependents.metapack.deps
 ./schemas/test/schemas/index.html/%/editor.metapack
 ./schemas/test/schemas/index.html/%/editor.metapack.deps
 ./schemas/test/schemas/index.html/%/health.metapack
@@ -1873,6 +2018,8 @@
 ./schemas/test/schemas/meta-ref/%/bundle.metapack.deps
 ./schemas/test/schemas/meta-ref/%/dependencies.metapack
 ./schemas/test/schemas/meta-ref/%/dependencies.metapack.deps
+./schemas/test/schemas/meta-ref/%/dependents.metapack
+./schemas/test/schemas/meta-ref/%/dependents.metapack.deps
 ./schemas/test/schemas/meta-ref/%/editor.metapack
 ./schemas/test/schemas/meta-ref/%/editor.metapack.deps
 ./schemas/test/schemas/meta-ref/%/health.metapack
@@ -1895,6 +2042,8 @@
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/bundle.metapack.deps
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/dependencies.metapack
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/dependencies.metapack.deps
+./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/dependents.metapack
+./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/dependents.metapack.deps
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/editor.metapack
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/editor.metapack.deps
 ./schemas/test/schemas/my-ultra-very-very-very-very-very-very-very-very-very-very-long-schema-name/%/health.metapack
@@ -1917,6 +2066,8 @@
 ./schemas/test/schemas/no-id/%/bundle.metapack.deps
 ./schemas/test/schemas/no-id/%/dependencies.metapack
 ./schemas/test/schemas/no-id/%/dependencies.metapack.deps
+./schemas/test/schemas/no-id/%/dependents.metapack
+./schemas/test/schemas/no-id/%/dependents.metapack.deps
 ./schemas/test/schemas/no-id/%/editor.metapack
 ./schemas/test/schemas/no-id/%/editor.metapack.deps
 ./schemas/test/schemas/no-id/%/health.metapack
@@ -1940,6 +2091,8 @@
 ./schemas/test/schemas/no-schema-nor-id/%/bundle.metapack.deps
 ./schemas/test/schemas/no-schema-nor-id/%/dependencies.metapack
 ./schemas/test/schemas/no-schema-nor-id/%/dependencies.metapack.deps
+./schemas/test/schemas/no-schema-nor-id/%/dependents.metapack
+./schemas/test/schemas/no-schema-nor-id/%/dependents.metapack.deps
 ./schemas/test/schemas/no-schema-nor-id/%/editor.metapack
 ./schemas/test/schemas/no-schema-nor-id/%/editor.metapack.deps
 ./schemas/test/schemas/no-schema-nor-id/%/health.metapack
@@ -1961,6 +2114,8 @@
 ./schemas/test/schemas/no-schema/%/bundle.metapack.deps
 ./schemas/test/schemas/no-schema/%/dependencies.metapack
 ./schemas/test/schemas/no-schema/%/dependencies.metapack.deps
+./schemas/test/schemas/no-schema/%/dependents.metapack
+./schemas/test/schemas/no-schema/%/dependents.metapack.deps
 ./schemas/test/schemas/no-schema/%/editor.metapack
 ./schemas/test/schemas/no-schema/%/editor.metapack.deps
 ./schemas/test/schemas/no-schema/%/health.metapack
@@ -1983,6 +2138,8 @@
 ./schemas/test/schemas/string/%/bundle.metapack.deps
 ./schemas/test/schemas/string/%/dependencies.metapack
 ./schemas/test/schemas/string/%/dependencies.metapack.deps
+./schemas/test/schemas/string/%/dependents.metapack
+./schemas/test/schemas/string/%/dependents.metapack.deps
 ./schemas/test/schemas/string/%/editor.metapack
 ./schemas/test/schemas/string/%/editor.metapack.deps
 ./schemas/test/schemas/string/%/health.metapack
@@ -2005,6 +2162,8 @@
 ./schemas/test/schemas/string/overlap/%/bundle.metapack.deps
 ./schemas/test/schemas/string/overlap/%/dependencies.metapack
 ./schemas/test/schemas/string/overlap/%/dependencies.metapack.deps
+./schemas/test/schemas/string/overlap/%/dependents.metapack
+./schemas/test/schemas/string/overlap/%/dependents.metapack.deps
 ./schemas/test/schemas/string/overlap/%/editor.metapack
 ./schemas/test/schemas/string/overlap/%/editor.metapack.deps
 ./schemas/test/schemas/string/overlap/%/health.metapack
@@ -2028,6 +2187,8 @@
 ./schemas/test/schemas/versions/v1.2.3/%/bundle.metapack.deps
 ./schemas/test/schemas/versions/v1.2.3/%/dependencies.metapack
 ./schemas/test/schemas/versions/v1.2.3/%/dependencies.metapack.deps
+./schemas/test/schemas/versions/v1.2.3/%/dependents.metapack
+./schemas/test/schemas/versions/v1.2.3/%/dependents.metapack.deps
 ./schemas/test/schemas/versions/v1.2.3/%/editor.metapack
 ./schemas/test/schemas/versions/v1.2.3/%/editor.metapack.deps
 ./schemas/test/schemas/versions/v1.2.3/%/health.metapack
@@ -2051,6 +2212,8 @@
 ./schemas/test/schemas/with-rebase-same-host/%/bundle.metapack.deps
 ./schemas/test/schemas/with-rebase-same-host/%/dependencies.metapack
 ./schemas/test/schemas/with-rebase-same-host/%/dependencies.metapack.deps
+./schemas/test/schemas/with-rebase-same-host/%/dependents.metapack
+./schemas/test/schemas/with-rebase-same-host/%/dependents.metapack.deps
 ./schemas/test/schemas/with-rebase-same-host/%/editor.metapack
 ./schemas/test/schemas/with-rebase-same-host/%/editor.metapack.deps
 ./schemas/test/schemas/with-rebase-same-host/%/health.metapack
@@ -2072,6 +2235,8 @@
 ./schemas/test/schemas/with-rebase/%/bundle.metapack.deps
 ./schemas/test/schemas/with-rebase/%/dependencies.metapack
 ./schemas/test/schemas/with-rebase/%/dependencies.metapack.deps
+./schemas/test/schemas/with-rebase/%/dependents.metapack
+./schemas/test/schemas/with-rebase/%/dependents.metapack.deps
 ./schemas/test/schemas/with-rebase/%/editor.metapack
 ./schemas/test/schemas/with-rebase/%/editor.metapack.deps
 ./schemas/test/schemas/with-rebase/%/health.metapack
@@ -2094,6 +2259,8 @@
 ./schemas/test/schemas/yaml/%/bundle.metapack.deps
 ./schemas/test/schemas/yaml/%/dependencies.metapack
 ./schemas/test/schemas/yaml/%/dependencies.metapack.deps
+./schemas/test/schemas/yaml/%/dependents.metapack
+./schemas/test/schemas/yaml/%/dependents.metapack.deps
 ./schemas/test/schemas/yaml/%/editor.metapack
 ./schemas/test/schemas/yaml/%/editor.metapack.deps
 ./schemas/test/schemas/yaml/%/health.metapack
@@ -2116,6 +2283,8 @@
 ./schemas/test/schemas/yml/%/bundle.metapack.deps
 ./schemas/test/schemas/yml/%/dependencies.metapack
 ./schemas/test/schemas/yml/%/dependencies.metapack.deps
+./schemas/test/schemas/yml/%/dependents.metapack
+./schemas/test/schemas/yml/%/dependents.metapack.deps
 ./schemas/test/schemas/yml/%/editor.metapack
 ./schemas/test/schemas/yml/%/editor.metapack.deps
 ./schemas/test/schemas/yml/%/health.metapack
@@ -2139,6 +2308,8 @@
 ./schemas/test/v2.0/schema/%/bundle.metapack.deps
 ./schemas/test/v2.0/schema/%/dependencies.metapack
 ./schemas/test/v2.0/schema/%/dependencies.metapack.deps
+./schemas/test/v2.0/schema/%/dependents.metapack
+./schemas/test/v2.0/schema/%/dependents.metapack.deps
 ./schemas/test/v2.0/schema/%/editor.metapack
 ./schemas/test/v2.0/schema/%/editor.metapack.deps
 ./schemas/test/v2.0/schema/%/health.metapack

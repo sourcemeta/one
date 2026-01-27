@@ -48,6 +48,8 @@ cd - > /dev/null
 
 cat << 'EOF' > "$TMP/new-expected.txt"
 ./configuration.json
+./dependency-tree.metapack
+./dependency-tree.metapack.deps
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
