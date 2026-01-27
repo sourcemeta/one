@@ -10,6 +10,7 @@
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
 #include <functional> // std::reference_wrapper
+#include <set>        // std::set
 #include <sstream>    // std::ostringstream
 #include <vector>     // std::vector
 
@@ -122,6 +123,27 @@ auto GENERATE_WEB_SCHEMA::handler(
   const auto health{read_json(dependencies.at(2))};
   assert(health.is_object());
   assert(health.defines("errors"));
+  const auto dependents_json{read_json(dependencies.at(3))};
+  assert(dependents_json.is_array());
+
+  // Collect unique dependent schemas, preferring direct over indirect.
+  // The dependency tree already takes care of self-references, so
+  // a schema should never appear as its own dependent
+  std::set<sourcemeta::core::JSON::String> direct_dependent_schemas;
+  std::set<sourcemeta::core::JSON::String> indirect_dependent_schemas;
+  for (const auto &dependent : dependents_json.as_array()) {
+    assert(dependent.at("from") != dependent.at("to"));
+    if (dependent.at("to") == meta.at("identifier")) {
+      direct_dependent_schemas.emplace(dependent.at("from").to_string());
+    } else {
+      indirect_dependent_schemas.emplace(dependent.at("from").to_string());
+    }
+  }
+
+  // If a schema is a direct dependent, don't also show it as indirect
+  for (const auto &schema : direct_dependent_schemas) {
+    indirect_dependent_schemas.erase(schema);
+  }
 
   // Tab navigation
   std::vector<sourcemeta::core::HTMLNode> nav_items;
@@ -147,6 +169,18 @@ auto GENERATE_WEB_SCHEMA::handler(
           span({{"class",
                  "ms-2 badge rounded-pill text-bg-secondary align-text-top"}},
                std::to_string(dependencies_json.size())))));
+  nav_items.emplace_back(li(
+      {{"class", "nav-item"}},
+      button(
+          {{"class", "nav-link"},
+           {"type", "button"},
+           {"role", "tab"},
+           {"data-sourcemeta-ui-tab-target", "dependents"}},
+          span("Dependents"),
+          span({{"class",
+                 "ms-2 badge rounded-pill text-bg-secondary align-text-top"}},
+               std::to_string(direct_dependent_schemas.size() +
+                              indirect_dependent_schemas.size())))));
   nav_items.emplace_back(li(
       {{"class", "nav-item"}},
       button(
@@ -247,6 +281,69 @@ auto GENERATE_WEB_SCHEMA::handler(
   container_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "dependencies"}, {"class", "d-none"}},
           dependencies_content));
+
+  // Dependents tab
+  std::ostringstream dependent_summary;
+  dependent_summary
+      << "This schema has " << direct_dependent_schemas.size() << " direct "
+      << (direct_dependent_schemas.size() == 1 ? "dependent" : "dependents")
+      << " and " << indirect_dependent_schemas.size() << " indirect "
+      << (indirect_dependent_schemas.size() == 1 ? "dependent" : "dependents")
+      << ".";
+
+  std::vector<sourcemeta::core::HTMLNode> dependents_content;
+  dependents_content.emplace_back(p(dependent_summary.str()));
+
+  if (!direct_dependent_schemas.empty() ||
+      !indirect_dependent_schemas.empty()) {
+    std::vector<sourcemeta::core::HTMLNode> dep_tab_rows;
+
+    const auto render_dependent_row{
+        [&dep_tab_rows,
+         &configuration](const sourcemeta::core::JSON::String &schema,
+                         const bool is_direct) -> void {
+          std::vector<sourcemeta::core::HTMLNode> row_cells;
+          if (is_direct) {
+            row_cells.emplace_back(
+                td(span({{"class", "badge text-bg-primary"}}, "Direct")));
+          } else {
+            row_cells.emplace_back(
+                td(span({{"class", "badge text-bg-dark"}}, "Indirect")));
+          }
+
+          if (schema.starts_with(configuration.url)) {
+            std::filesystem::path dependent_schema_url{
+                schema.substr(configuration.url.size())};
+            if (dependent_schema_url.extension() == ".json") {
+              dependent_schema_url.replace_extension("");
+            }
+            row_cells.emplace_back(
+                td(code(a({{"href", dependent_schema_url.string()}},
+                          dependent_schema_url.string()))));
+          } else {
+            row_cells.emplace_back(td(code(schema)));
+          }
+
+          dep_tab_rows.emplace_back(tr(row_cells));
+        }};
+
+    for (const auto &schema : direct_dependent_schemas) {
+      render_dependent_row(schema, true);
+    }
+
+    for (const auto &schema : indirect_dependent_schemas) {
+      render_dependent_row(schema, false);
+    }
+
+    dependents_content.emplace_back(
+        table({{"class", "table table-bordered"}},
+              thead(tr(th({{"scope", "col"}}, "Type"),
+                       th({{"scope", "col"}}, "Dependent"))),
+              tbody(dep_tab_rows)));
+  }
+  container_children.emplace_back(
+      div({{"data-sourcemeta-ui-tab-id", "dependents"}, {"class", "d-none"}},
+          dependents_content));
 
   // Health tab
   const auto errors_count{health.at("errors").size()};

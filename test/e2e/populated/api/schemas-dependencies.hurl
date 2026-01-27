@@ -70,6 +70,59 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/recursive
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/cycle/foo
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 3
+jsonpath "$[0].from" == "{{base}}/test/schemas/cycle/foo"
+jsonpath "$[0].to" == "{{base}}/test/schemas/cycle/bar"
+jsonpath "$[0].at" == "/additionalProperties/$ref"
+jsonpath "$[1].from" == "{{base}}/test/schemas/cycle/bar"
+jsonpath "$[1].to" == "{{base}}/test/schemas/cycle/baz"
+jsonpath "$[1].at" == "/additionalProperties/$ref"
+jsonpath "$[2].from" == "{{base}}/test/schemas/cycle/baz"
+jsonpath "$[2].to" == "{{base}}/test/schemas/cycle/foo"
+jsonpath "$[2].at" == "/additionalProperties/$ref"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 HEAD {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
 HTTP 200
 Content-Type: application/json
