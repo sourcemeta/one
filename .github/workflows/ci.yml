@@ -16,33 +16,45 @@ jobs:
       - run: codespell docs *.markdown docs/*.md
 
   test:
+    strategy:
+      fail-fast: false
+      matrix:
+        edition:
+          - name: community
+            options: ENTERPRISE=OFF
+          - name: enterprise
+            options: ENTERPRISE=ON
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build One
-        run: make docker PRESET=Release
+      - run: make docker PRESET=Release ${{ matrix.edition.options }}
 
       - name: Sandbox (headless)
         uses: ./.github/actions/sandbox
         with:
           configuration: headless
+          edition: ${{ matrix.edition.name }}
           port: 8000
 
       - name: Sandbox (html)
         uses: ./.github/actions/sandbox
         with:
           configuration: html
+          edition: ${{ matrix.edition.name }}
           port: 8000
 
       - name: Sandbox (empty)
         uses: ./.github/actions/sandbox
         with:
           configuration: empty
+          edition: ${{ matrix.edition.name }}
           port: 8000
 
       # Public instance
       - run: docker build .  --file public/Dockerfile --progress plain
+        if: matrix.edition.name == 'enterprise'
 
   website:
     runs-on: ubuntu-latest

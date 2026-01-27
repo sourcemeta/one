@@ -308,7 +308,8 @@ auto terminate(int signal) -> void {
 auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  std::cout << "Sourcemeta One v" << sourcemeta::one::version() << "\n";
+  std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+            << sourcemeta::one::version() << "\n";
 
   // Mainly for Docker Compose
   std::signal(SIGINT, terminate);

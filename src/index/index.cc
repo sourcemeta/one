@@ -76,7 +76,8 @@ DISPATCH(const std::filesystem::path &destination,
 
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
-  std::cout << "Sourcemeta One v" << sourcemeta::one::version() << "\n";
+  std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+            << sourcemeta::one::version() << "\n";
 
   if (app.positional().size() != 2) {
     std::cout << "Usage: " << std::filesystem::path{program}.filename().string()

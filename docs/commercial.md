@@ -12,22 +12,22 @@ technology.*
 
 Sourcemeta One is [publicly available on
 GitHub](https://github.com/sourcemeta/one) with full source code transparency,
-enabling comprehensive auditing and community contributions.  While the
-codebase is accessible for review and collaboration, Sourcemeta One operates
-under a [source-available
-license](https://github.com/sourcemeta/one/blob/main/LICENSE) rather than a
-traditional open-source model.
+enabling comprehensive auditing and community contributions.
 
 ## Editions
 
-You can use the Sourcemeta One commercial edition at no cost with all features
-included for non-commercial and evaluation purposes. However, commercial
-deployments require a license from Sourcemeta. This licensing model enables us
-to:
+Sourcemeta One is available in two editions:
 
-- Maintain and enhance the service's advanced capabilities
-- Provide enterprise-grade support and reliability
-- Continue investing in cutting-edge JSON Schema tooling development
+- **Community**: Licensed under the [Business Source License
+  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE). You may use it as
+  if under the terms of AGPL-3.0, provided that you may not use it for a
+  hosting solution that competes with Sourcemeta. After four years from each
+  release, the code transitions to AGPL-3.0.
+
+- **Enterprise**: Includes additional features not available in the Community
+  edition. Requires a [commercial
+  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
+  from Sourcemeta.
 
 ## Our Commitment to Excellence
 

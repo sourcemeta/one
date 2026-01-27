@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -o errexit
+set -o nounset
+
+TMP="$(mktemp -d)"
+clean() { rm -rf "$TMP"; }
+trap clean EXIT
+
+cat << EOF > "$TMP/one.json"
+{
+  "url": "https://example.com/",
+  "extends": [ "@sourcemeta/std/v0" ]
+}
+EOF
+
+"$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+test "$CODE" = "1" || exit 1
+
+cat << EOF > "$TMP/expected.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+error: Could not locate built-in collection
+  from $(realpath "$TMP")/one.json
+  at "/extends"
+  to @sourcemeta/std/v0
+EOF
+
+diff "$TMP/output.txt" "$TMP/expected.txt"

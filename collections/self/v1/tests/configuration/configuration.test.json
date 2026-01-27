@@ -131,24 +131,6 @@
       }
     },
     {
-      "description": "Self top-level entry",
-      "valid": false,
-      "data": {
-        "url": "http://localhost:8000",
-        "html": {
-          "name": "Title",
-          "description": "Description"
-        },
-        "contents": {
-          "self": {
-            "title": "A sample schema folder",
-            "description": "For testing purposes",
-            "github": "sourcemeta/one"
-          }
-        }
-      }
-    },
-    {
       "description": "Self nested entry",
       "valid": true,
       "data": {

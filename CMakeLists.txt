@@ -13,6 +13,15 @@ if(NOT ONE_PREFIX_IS_ABSOLUTE)
   message(FATAL_ERROR "ONE_PREFIX must be an absolute path but it was: ${ONE_PREFIX}")
 endif()
 
+# Commercial editions require a paid license
+# See https://one.sourcemeta.com/commercial/
+option(ONE_ENTERPRISE "Build the One Enterprise edition (commercial)" OFF)
+if(ONE_ENTERPRISE)
+  message(STATUS "Sourcemeta One edition: Enterprise")
+else()
+  message(STATUS "Sourcemeta One edition: Community")
+endif()
+
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
 find_package(Codegen REQUIRED)
@@ -90,9 +99,16 @@ add_custom_target(jsonschema_lint
 
 if(ONE_TESTS)
   enable_testing()
+
+  set(SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/collections")
+
+  if(ONE_ENTERPRISE)
+    list(APPEND SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/enterprise/collections")
+  endif()
+
   add_test(NAME one.schemas COMMAND
     "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
-    "${PROJECT_SOURCE_DIR}/collections/sourcemeta")
+    ${SCHEMA_TEST_DIRECTORIES})
 
   add_subdirectory(test/js)
 
