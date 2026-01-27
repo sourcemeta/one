@@ -8,7 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
-  outputDir: '../../build/test-results',
+  outputDir: '../../../build/test-results',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL,
     trace: 'on-first-retry'

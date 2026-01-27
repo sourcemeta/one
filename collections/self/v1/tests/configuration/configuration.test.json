@@ -132,7 +132,7 @@
     },
     {
       "description": "Self top-level entry",
-      "valid": false,
+      "valid": true,
       "data": {
         "url": "http://localhost:8000",
         "html": {

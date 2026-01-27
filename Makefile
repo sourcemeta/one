@@ -21,6 +21,8 @@ SANDBOX_PORT ?= 8000
 SANDBOX_URL ?= http://localhost:$(SANDBOX_PORT)
 PUBLIC ?= ./public
 PARALLEL ?= 4
+# Only for local development
+ENTERPRISE ?= ON
 
 .PHONY: all
 all: configure compile test
@@ -37,6 +39,7 @@ configure: node_modules
 		-DONE_INDEX:BOOL=$(INDEX) \
 		-DONE_SERVER:BOOL=$(SERVER) \
 		-DONE_PREFIX:STRING=$(or $(realpath $(PREFIX)),$(abspath $(PREFIX))) \
+		-DONE_ENTERPRISE:BOOL=$(ENTERPRISE) \
 		-DBUILD_SHARED_LIBS:BOOL=OFF
 
 .PHONY: compile
@@ -68,11 +71,13 @@ endif
 test-e2e:
 	$(HURL) --test --variable base=$(SANDBOX_URL) $(HURL_TESTS)
 
+ifeq ($(ENTERPRISE),ON)
 .PHONY: test-ui
 test-ui: node_modules
 	$(NPX) playwright install --with-deps
 	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
-		$(NPX) playwright test --config test/ui/playwright.config.js
+		$(NPX) playwright test --config enterprise/test/ui/playwright.config.js
+endif
 
 .PHONY: sandbox-index
 sandbox-index: compile
@@ -97,7 +102,8 @@ sandbox-manifest-refresh: configure compile
 docker: Dockerfile
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
+		--build-arg SOURCEMETA_ONE_ENTERPRISE=$(ENTERPRISE)
 
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml

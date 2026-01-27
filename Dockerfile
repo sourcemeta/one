@@ -15,13 +15,17 @@ COPY contrib /source/contrib
 COPY collections /source/collections
 COPY vendor /source/vendor
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY enterprise /source/enterprise
 
 # For testing
 COPY test/cli /source/test/cli
 COPY test/unit /source/test/unit
-COPY test/js /source/test/js
 
 RUN cd /source && npm ci
+
+# Commercial editions require a paid license
+# See https://one.sourcemeta.com/commercial/
+ARG SOURCEMETA_ONE_ENTERPRISE=OFF
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
@@ -32,6 +36,7 @@ RUN	cmake -S /source -B ./build \
   -DONE_INDEX:BOOL=ON \
   -DONE_SERVER:BOOL=ON \
   -DONE_TESTS:BOOL=ON \
+  -DONE_ENTERPRISE:BOOL=${SOURCEMETA_ONE_ENTERPRISE} \
   -DBUILD_SHARED_LIBS:BOOL=OFF
 
 RUN cmake --build /build \

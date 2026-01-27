@@ -9,7 +9,10 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
 #include <sourcemeta/one/web.h>
+#endif
 
 #include "explorer.h"
 #include "generators.h"
@@ -437,6 +440,8 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    // TODO: Abstract all of this in enterprise/src/web
     sourcemeta::core::parallel_for_each(
         directories.begin(), directories.end(),
         [&configuration, &output, &schemas_path, &explorer_path, &directories,
@@ -501,6 +506,11 @@ static auto index_main(const std::string_view &program,
               "schema", adapter, output);
         },
         concurrency);
+#else
+    std::cerr
+        << "The `html` option is only available on the Enterprise edition\n";
+    return EXIT_FAILURE;
+#endif
   }
 
   /////////////////////////////////////////////////////////////////////////////

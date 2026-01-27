@@ -13,6 +13,15 @@ if(NOT ONE_PREFIX_IS_ABSOLUTE)
   message(FATAL_ERROR "ONE_PREFIX must be an absolute path but it was: ${ONE_PREFIX}")
 endif()
 
+# Commercial editions require a paid license
+# See https://one.sourcemeta.com/commercial/
+option(ONE_ENTERPRISE "Build the One Enterprise edition (commercial license required)" OFF)
+if(ONE_ENTERPRISE)
+  message(STATUS "Sourcemeta One edition: Enterprise")
+else()
+  message(STATUS "Sourcemeta One edition: Community")
+endif()
+
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
 find_package(Codegen REQUIRED)
@@ -61,11 +70,14 @@ if(ONE_INDEX)
   include(commands/esbuild)
   add_subdirectory(src/configuration)
   add_subdirectory(src/resolver)
-  add_subdirectory(src/web)
   add_subdirectory(src/index)
   add_subdirectory(collections)
   add_dependencies(sourcemeta_one_index
     sourcemeta_one_collections)
+
+  if(ONE_ENTERPRISE)
+    add_subdirectory(enterprise/src/web)
+  endif()
 endif()
 
 if(ONE_SERVER)
@@ -90,11 +102,15 @@ add_custom_target(jsonschema_lint
 
 if(ONE_TESTS)
   enable_testing()
+
   add_test(NAME one.schemas COMMAND
     "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
-    "${PROJECT_SOURCE_DIR}/collections/sourcemeta")
+    "${PROJECT_SOURCE_DIR}/collections"
+    "${PROJECT_SOURCE_DIR}/enterprise/collections")
 
-  add_subdirectory(test/js)
+  if(ONE_ENTERPRISE)
+    add_subdirectory(enterprise/test/js)
+  endif()
 
   if(ONE_INDEX OR ONE_SERVER)
     add_subdirectory(test/unit/gzip)

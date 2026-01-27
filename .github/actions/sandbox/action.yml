@@ -8,6 +8,13 @@ inputs:
       - html
       - headless
       - empty
+  edition:
+    description: edition
+    required: true
+    type: choice
+    options:
+      - community
+      - enterprise
   port:
     description: Port
     required: true
@@ -20,6 +27,7 @@ runs:
       shell: bash
       env:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_EDITION: ${{ inputs.edition }}
         SANDBOX_PORT: ${{ inputs.port }}
         PARALLEL: 2
     - name: Up Sandbox (${{ inputs.configuration }})
@@ -27,24 +35,28 @@ runs:
       shell: bash
       env:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_EDITION: ${{ inputs.edition }}
         SANDBOX_PORT: ${{ inputs.port }}
     - name: Test Sandbox - E2E (${{ inputs.configuration }})
       run: make test-e2e PRESET=Release
       shell: bash
       env:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_EDITION: ${{ inputs.edition }}
         SANDBOX_PORT: ${{ inputs.port }}
         HURL: 'docker run --rm --network=host --volume \$(PWD):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:7.0.0'
     - name: Test Sandbox - UI (${{ inputs.configuration }})
       run: make test-ui PRESET=Release
-      if: inputs.configuration == 'html'
+      if: inputs.configuration == 'html' && inputs.edition == 'enterprise'
       shell: bash
       env:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_EDITION: ${{ inputs.edition }}
         SANDBOX_PORT: ${{ inputs.port }}
     - name: Down Sandbox (${{ inputs.configuration }})
       run: make docker-sandbox-down
       shell: bash
       env:
         SANDBOX_CONFIGURATION: ${{ inputs.configuration }}
+        SANDBOX_EDITION: ${{ inputs.edition }}
         SANDBOX_PORT: ${{ inputs.port }}

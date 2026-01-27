@@ -10,7 +10,11 @@ target_compile_definitions(sourcemeta_one_index
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::configuration)
-target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::web)
+
+if(ONE_ENTERPRISE)
+  target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::web)
+  target_compile_definitions(sourcemeta_one_index PRIVATE SOURCEMETA_ONE_ENTERPRISE)
+endif()
 
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::build)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::uri)
