@@ -1,5 +1,7 @@
 class EnumSingleton final : public sourcemeta::core::SchemaTransformRule {
 public:
+  using mutates = std::true_type;
+  using reframe_after_transform = std::true_type;
   EnumSingleton()
       : sourcemeta::core::SchemaTransformRule{"enum_singleton", ""} {};
 
@@ -15,8 +17,8 @@ public:
     return location.dialect == "https://json-schema.org/draft/2020-12/schema" &&
            vocabularies.contains(sourcemeta::core::Vocabularies::Known::
                                      JSON_Schema_2020_12_Validation) &&
-           schema.defines("enum") && schema.at("enum").is_array() &&
-           schema.at("enum").size() == 1;
+           schema.is_object() && schema.defines("enum") &&
+           schema.at("enum").is_array() && schema.at("enum").size() == 1;
   }
 
   auto transform(sourcemeta::core::JSON &schema,

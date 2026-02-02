@@ -3,6 +3,8 @@ private:
   static inline const std::string KEYWORD{"unevaluatedItems"};
 
 public:
+  using mutates = std::true_type;
+  using reframe_after_transform = std::true_type;
   UnevaluatedItemsDefault()
       : SchemaTransformRule{
             "unevaluated_items_default",

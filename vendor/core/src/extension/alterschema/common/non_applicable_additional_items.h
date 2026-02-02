@@ -3,6 +3,8 @@ private:
   static inline const std::string KEYWORD{"additionalItems"};
 
 public:
+  using mutates = std::true_type;
+  using reframe_after_transform = std::true_type;
   NonApplicableAdditionalItems()
       : SchemaTransformRule{
             "non_applicable_additional_items",

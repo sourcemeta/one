@@ -18,7 +18,9 @@
 #include <set>         // std::set
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move, std::forward, std::pair
+#include <tuple>       // std::tuple
+#include <type_traits> // std::is_same_v, std::true_type
+#include <utility>     // std::move, std::forward
 #include <vector>      // std::vector
 
 namespace sourcemeta::core {
@@ -130,7 +132,7 @@ public:
             const SchemaResolver &resolver) const -> Result = 0;
 
   /// The rule transformation. If this virtual method is not overriden,
-  /// then the rule condition is considered to not be fixable.
+  /// then the rule is considered to not mutate the schema.
   virtual auto transform(JSON &schema, const Result &result) const -> void;
 
 private:
@@ -162,6 +164,9 @@ private:
 ///   : public sourcemeta::core::SchemaTransformRule {
 /// public:
 ///   MyRule() : sourcemeta::core::SchemaTransformRule("my_rule") {};
+///
+///   using mutates = std::true_type;
+///   using reframe_after_transform = std::true_type;
 ///
 ///   [[nodiscard]] auto condition(const sourcemeta::core::JSON &schema,
 ///                                const sourcemeta::core::Vocabularies
@@ -227,7 +232,15 @@ public:
   /// It is the caller's responsibility to not add duplicate rules.
   template <std::derived_from<SchemaTransformRule> T, typename... Args>
   auto add(Args &&...args) -> void {
-    this->rules.push_back(std::make_unique<T>(std::forward<Args>(args)...));
+    static_assert(requires { typename T::mutates; });
+    static_assert(requires { typename T::reframe_after_transform; });
+    static_assert(
+        std::is_same_v<typename T::mutates, std::true_type> ||
+        std::is_same_v<typename T::reframe_after_transform, std::false_type>);
+    this->rules.emplace_back(
+        std::make_unique<T>(std::forward<Args>(args)...),
+        std::is_same_v<typename T::mutates, std::true_type>,
+        std::is_same_v<typename T::reframe_after_transform, std::true_type>);
   }
 
   /// Remove a rule from the bundle
@@ -270,7 +283,8 @@ private:
 #if defined(_MSC_VER)
 #pragma warning(disable : 4251)
 #endif
-  std::vector<std::unique_ptr<SchemaTransformRule>> rules;
+  std::vector<std::tuple<std::unique_ptr<SchemaTransformRule>, bool, bool>>
+      rules;
 #if defined(_MSC_VER)
 #pragma warning(default : 4251)
 #endif

@@ -705,6 +705,13 @@ public:
     return this->data == other.data;
   }
 
+  /// Compare with a reference wrapper
+  [[nodiscard]] auto
+  operator==(const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+                 &other) const noexcept -> bool {
+    return this->data == other.get().data;
+  }
+
   /// Overload to support ordering of JSON Pointers. Typically for sorting
   /// reasons.
   [[nodiscard]] auto
@@ -712,6 +719,90 @@ public:
       -> bool {
     return this->data < other.data;
   }
+
+  /// Compare with a reference wrapper for ordering
+  [[nodiscard]] auto
+  operator<(const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+                &other) const noexcept -> bool {
+    return this->data < other.get().data;
+  }
+
+  /// Hash functor for use with containers
+  struct Hasher {
+    using is_transparent = void;
+
+    auto
+    operator()(const GenericPointer<PropertyT, Hash> &pointer) const noexcept
+        -> std::size_t {
+      const auto size{pointer.size()};
+      if (size == 0) {
+        return size;
+      }
+
+      const auto &first{pointer.at(0)};
+      const auto &middle{pointer.at(size / 2)};
+      const auto &last{pointer.at(size - 1)};
+
+      return size +
+             (first.is_property() ? property_hash(first.property_hash())
+                                  : first.to_index()) +
+             (middle.is_property() ? property_hash(middle.property_hash())
+                                   : middle.to_index()) +
+             (last.is_property() ? property_hash(last.property_hash())
+                                 : last.to_index());
+    }
+
+    auto operator()(
+        const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+            &reference) const noexcept -> std::size_t {
+      return (*this)(reference.get());
+    }
+
+  private:
+    static auto property_hash(const typename Hash::hash_type &hash) noexcept
+        -> std::size_t {
+#if defined(__SIZEOF_INT128__)
+      const auto *parts =
+          reinterpret_cast<const std::uint64_t *>(&hash.a); // NOLINT
+      return parts[0] ^ parts[1];
+#else
+      return hash.a ^ hash.b;
+#endif
+    }
+  };
+
+  /// Comparator for use with containers
+  struct Comparator {
+    using is_transparent = void;
+
+    auto operator()(const GenericPointer<PropertyT, Hash> &left,
+                    const GenericPointer<PropertyT, Hash> &right) const noexcept
+        -> bool {
+      return left == right;
+    }
+
+    auto operator()(
+        const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+            &left,
+        const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+            &right) const noexcept -> bool {
+      return left.get() == right.get();
+    }
+
+    auto operator()(
+        const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+            &left,
+        const GenericPointer<PropertyT, Hash> &right) const noexcept -> bool {
+      return left.get() == right;
+    }
+
+    auto operator()(
+        const GenericPointer<PropertyT, Hash> &left,
+        const std::reference_wrapper<const GenericPointer<PropertyT, Hash>>
+            &right) const noexcept -> bool {
+      return left == right.get();
+    }
+  };
 
 private:
   Container data;

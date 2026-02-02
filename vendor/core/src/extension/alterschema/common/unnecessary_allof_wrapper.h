@@ -3,6 +3,8 @@ private:
   static inline const std::string KEYWORD{"allOf"};
 
 public:
+  using mutates = std::true_type;
+  using reframe_after_transform = std::true_type;
   UnnecessaryAllOfWrapper()
       : SchemaTransformRule{"unnecessary_allof_wrapper",
                             "Keywords inside `allOf` that do not conflict with "
