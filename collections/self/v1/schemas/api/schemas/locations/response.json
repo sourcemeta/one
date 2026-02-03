@@ -38,7 +38,8 @@
         "relativePointer",
         "dialect",
         "baseDialect",
-        "propertyName"
+        "propertyName",
+        "orphan"
       ],
       "properties": {
         "type": {
@@ -76,6 +77,9 @@
           "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
         },
         "propertyName": {
+          "type": "boolean"
+        },
+        "orphan": {
           "type": "boolean"
         }
       },

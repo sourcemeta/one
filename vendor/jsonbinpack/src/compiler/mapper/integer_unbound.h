@@ -1,5 +1,7 @@
 class IntegerUnbound final : public sourcemeta::core::SchemaTransformRule {
 public:
+  using mutates = std::true_type;
+  using reframe_after_transform = std::true_type;
   IntegerUnbound()
       : sourcemeta::core::SchemaTransformRule{"integer_unbound", ""} {};
 
@@ -15,7 +17,7 @@ public:
     return location.dialect == "https://json-schema.org/draft/2020-12/schema" &&
            vocabularies.contains(sourcemeta::core::Vocabularies::Known::
                                      JSON_Schema_2020_12_Validation) &&
-           schema.defines("type") &&
+           schema.is_object() && schema.defines("type") &&
            schema.at("type").to_string() == "integer" &&
            !schema.defines("minimum") && !schema.defines("maximum") &&
            !schema.defines("multipleOf");
