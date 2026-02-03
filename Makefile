@@ -84,6 +84,9 @@ test-ui: node_modules
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
 		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION).json \
+		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --configuration
+	$(PREFIX)/bin/sourcemeta-one-index \
+		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION).json \
 		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --profile
 	./test/sandbox/manifest-check.sh $(OUTPUT)/sandbox \
 		$(SANDBOX)/manifest-$(SANDBOX_CONFIGURATION).txt
@@ -142,6 +145,7 @@ docs: mkdocs.yml
 
 .PHONY: public
 public:
+	$(PREFIX)/bin/sourcemeta-one-index $(PUBLIC)/one.json $(OUTPUT)/public --configuration
 	$(PREFIX)/bin/sourcemeta-one-index $(PUBLIC)/one.json $(OUTPUT)/public --verbose
 	$(PREFIX)/bin/sourcemeta-one-server $(OUTPUT)/public 8000
 

@@ -14,7 +14,7 @@ cat << EOF > "$TMP/one.json"
 }
 EOF
 
-"$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" "$TMP/one.json" "$TMP/output" --configuration 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
