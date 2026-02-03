@@ -102,9 +102,10 @@ static auto index_main(const std::string_view &program,
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, SOURCEMETA_ONE_COLLECTIONS)};
 
-  if (app.contains("verbose")) {
-    sourcemeta::core::prettify(raw_configuration, std::cerr);
-    std::cerr << "\n";
+  if (app.contains("configuration")) {
+    sourcemeta::core::prettify(raw_configuration, std::cout);
+    std::cout << "\n";
+    return EXIT_SUCCESS;
   }
 
   auto configuration{sourcemeta::one::Configuration::parse(raw_configuration)};
@@ -600,6 +601,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
+    app.flag("configuration", {"g"});
     app.parse(argc, argv);
     const std::string_view program{argv[0]};
 
