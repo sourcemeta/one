@@ -347,7 +347,7 @@ struct GENERATE_HEALTH {
           return resolver(identifier, callback);
         },
         [&errors](const auto &pointer, const auto &name, const auto &message,
-                  const auto &outcome) {
+                  const auto &outcome, const bool) {
           auto entry{sourcemeta::core::JSON::make_object()};
           entry.assign("name", sourcemeta::core::JSON{name});
           entry.assign("message", sourcemeta::core::JSON{message});
