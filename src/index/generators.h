@@ -462,10 +462,14 @@ struct GENERATE_BLAZE_TEMPLATE {
           const Context &mode) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
+    sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::References};
+    frame.analyse(contents, sourcemeta::core::schema_walker,
+                  sourcemeta::core::schema_resolver);
     const auto schema_template{sourcemeta::blaze::compile(
         contents, sourcemeta::core::schema_walker,
         sourcemeta::core::schema_resolver,
-        sourcemeta::blaze::default_schema_compiler, mode)};
+        sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
     const auto result{sourcemeta::blaze::to_json(schema_template)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
