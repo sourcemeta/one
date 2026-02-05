@@ -7,7 +7,7 @@
 #include <sourcemeta/blaze/linter.h>
 
 #include <cstdlib>  // EXIT_FAILURE
-#include <fstream>  // std::ofstream
+#include <fstream>  // std::ofstream, std::ifstream
 #include <iostream> // std::cerr, std::cout
 #include <numeric>  // std::accumulate
 #include <sstream>  // std::ostringstream
@@ -55,10 +55,25 @@ static auto reindent(const std::string_view &value,
 
 static auto get_lint_callback(sourcemeta::core::JSON &errors_array,
                               const sourcemeta::jsonschema::InputJSON &entry,
-                              const bool output_json) -> auto {
-  return [&entry, &errors_array,
-          output_json](const auto &pointer, const auto &name,
-                       const auto &message, const auto &result) {
+                              const bool output_json, const bool fixing,
+                              bool &printed_progress) -> auto {
+  return [&entry, &errors_array, output_json, fixing, &printed_progress](
+             const auto &pointer, const auto &name, const auto &message,
+             const auto &result, const auto applied) {
+    if (fixing && applied) {
+      if (!output_json) {
+        std::cerr << ".";
+        printed_progress = true;
+      }
+
+      return;
+    }
+
+    if (printed_progress) {
+      std::cerr << "\n";
+      printed_progress = false;
+    }
+
     std::vector<sourcemeta::core::Pointer> locations;
     if (result.locations.empty()) {
       locations.emplace_back();
@@ -181,6 +196,18 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
     return;
   }
 
+  const bool format_output{options.contains("format")};
+  const bool keep_ordering{options.contains("keep-ordering")};
+
+  if (format_output && !options.contains("fix")) {
+    throw OptionConflictError{"The --format option requires --fix to be set"};
+  }
+
+  if (keep_ordering && !format_output) {
+    throw OptionConflictError{
+        "The --keep-ordering option requires --format to be set"};
+  }
+
   bool result{true};
   auto errors_array = sourcemeta::core::JSON::make_array();
   std::vector<std::uint8_t> scores;
@@ -203,15 +230,20 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
       }
 
       auto copy = entry.second;
+      bool printed_progress{false};
 
       const auto wrapper_result =
           sourcemeta::jsonschema::try_catch(options, [&]() {
             try {
               const auto apply_result = bundle.apply(
                   copy, sourcemeta::core::schema_walker, custom_resolver,
-                  get_lint_callback(errors_array, entry, output_json), dialect,
-                  sourcemeta::jsonschema::default_id(entry.first),
+                  get_lint_callback(errors_array, entry, output_json, true,
+                                    printed_progress),
+                  dialect, sourcemeta::jsonschema::default_id(entry.first),
                   EXCLUDE_KEYWORD);
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
               scores.emplace_back(apply_result.second);
               if (!apply_result.first) {
                 return 2;
@@ -221,10 +253,18 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
             } catch (
                 const sourcemeta::core::SchemaTransformRuleProcessedTwiceError
                     &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw LintAutoFixError{error.what(), entry.first,
                                      error.location()};
             } catch (
                 const sourcemeta::core::SchemaBrokenReferenceError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw LintAutoFixError{
                   "Could not autofix the schema without breaking its internal "
                   "references",
@@ -232,21 +272,47 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
             } catch (
                 const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
                     &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw FileError<
                   sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
                   entry.first, error);
             } catch (const sourcemeta::core::SchemaKeywordError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw FileError<sourcemeta::core::SchemaKeywordError>(entry.first,
                                                                     error);
             } catch (const sourcemeta::core::SchemaFrameError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw FileError<sourcemeta::core::SchemaFrameError>(entry.first,
                                                                   error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
                   entry.first);
             } catch (const sourcemeta::core::SchemaResolutionError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
               throw FileError<sourcemeta::core::SchemaResolutionError>(
                   entry.first, error);
+            } catch (...) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw;
             }
           });
 
@@ -255,7 +321,25 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
           result = false;
         }
 
-        if (copy != entry.second) {
+        if (format_output) {
+          if (!keep_ordering) {
+            sourcemeta::core::format(copy, sourcemeta::core::schema_walker,
+                                     custom_resolver, dialect);
+          }
+
+          std::ostringstream expected;
+          sourcemeta::core::prettify(copy, expected, indentation);
+          expected << "\n";
+
+          std::ifstream current_stream{entry.first};
+          std::ostringstream current;
+          current << current_stream.rdbuf();
+
+          if (current.str() != expected.str()) {
+            std::ofstream output{entry.first};
+            output << expected.str();
+          }
+        } else if (copy != entry.second) {
           std::ofstream output{entry.first};
           sourcemeta::core::prettify(copy, output, indentation);
           output << "\n";
@@ -275,14 +359,16 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
           resolver(options, options.contains("http"), dialect, configuration)};
       LOG_VERBOSE(options) << "Linting: " << entry.first.string() << "\n";
 
+      bool printed_progress{false};
       const auto wrapper_result =
           sourcemeta::jsonschema::try_catch(options, [&]() {
             try {
               const auto subresult = bundle.check(
                   entry.second, sourcemeta::core::schema_walker,
                   custom_resolver,
-                  get_lint_callback(errors_array, entry, output_json), dialect,
-                  sourcemeta::jsonschema::default_id(entry.first),
+                  get_lint_callback(errors_array, entry, output_json, false,
+                                    printed_progress),
+                  dialect, sourcemeta::jsonschema::default_id(entry.first),
                   EXCLUDE_KEYWORD);
               scores.emplace_back(subresult.second);
               if (subresult.first) {
