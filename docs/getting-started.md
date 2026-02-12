@@ -93,7 +93,7 @@ our configuration file and schemas directory into the container, and then
 running the indexing process with the `sourcemeta` command. Simple as that!
 
 ```docker title="Dockerfile"
-FROM ghcr.io/sourcemeta/one:3.2
+FROM ghcr.io/sourcemeta/one:4.1
 COPY one.json .
 COPY schemas schemas
 RUN sourcemeta one.json
