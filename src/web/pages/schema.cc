@@ -63,6 +63,84 @@ auto GENERATE_WEB_SCHEMA::handler(
 
   content_children.emplace_back(div(header_children));
 
+  // Integration snippets
+  const auto schema_name{
+      std::filesystem::path{meta.at("path").to_string()}.filename().string()};
+  const auto cli_snippet{"jsonschema install " + canonical + " schemas/" +
+                         schema_name + ".json"};
+  const auto openapi_snippet{R"($ref: ")" + canonical + R"(")"};
+  const auto deno_snippet{R"(import schema from ")" + canonical +
+                          R"(" with { type: "json" };)"};
+
+  std::vector<sourcemeta::core::HTMLNode> usage_buttons;
+  usage_buttons.emplace_back(
+      button({{"class", "btn btn-sm btn-outline-secondary"},
+              {"type", "button"},
+              {"data-sourcemeta-ui-tab-target", "usage-cli"}},
+             "CLI"));
+  usage_buttons.emplace_back(
+      button({{"class", "btn btn-sm btn-outline-secondary"},
+              {"type", "button"},
+              {"data-sourcemeta-ui-tab-target", "usage-openapi"}},
+             "OpenAPI"));
+  usage_buttons.emplace_back(
+      button({{"class", "btn btn-sm btn-outline-secondary"},
+              {"type", "button"},
+              {"data-sourcemeta-ui-tab-target", "usage-deno"}},
+             "Deno"));
+
+  std::vector<sourcemeta::core::HTMLNode> usage_row;
+  usage_row.emplace_back(
+      span({{"class", "text-secondary fw-light text-nowrap"}}, "Use with"));
+  usage_row.emplace_back(
+      div({{"class", "btn-group flex-shrink-0 me-2"}, {"role", "group"}},
+          usage_buttons));
+  usage_row.emplace_back(
+      div({{"data-sourcemeta-ui-tab-id", "usage-cli"},
+           {"class", "d-none d-flex align-items-center flex-grow-1 gap-2"},
+           {"style", "min-width: 0"}},
+          code({{"class", "bg-white border p-2 font-monospace flex-grow-1 "
+                          "text-dark text-break"}},
+               span("$ "),
+               a({{"href", "/integrations/#json-schema-cli"},
+                  {"target", "_blank"},
+                  {"class", "text-dark"}},
+                 "jsonschema install"),
+               span(" " + canonical + " schemas/" + schema_name + ".json")),
+          button({{"class", "btn btn-sm btn-outline-secondary"},
+                  {"type", "button"},
+                  {"data-sourcemeta-ui-copy", cli_snippet}},
+                 i({{"class", "bi bi-clipboard"}}))));
+  usage_row.emplace_back(
+      div({{"data-sourcemeta-ui-tab-id", "usage-openapi"},
+           {"class", "d-none d-flex align-items-center flex-grow-1 gap-2"},
+           {"style", "min-width: 0"}},
+          code({{"class", "bg-white border p-2 font-monospace flex-grow-1 "
+                          "text-dark text-break"}},
+               openapi_snippet),
+          button({{"class", "btn btn-sm btn-outline-secondary"},
+                  {"type", "button"},
+                  {"data-sourcemeta-ui-copy", openapi_snippet}},
+                 i({{"class", "bi bi-clipboard"}}))));
+  usage_row.emplace_back(
+      div({{"data-sourcemeta-ui-tab-id", "usage-deno"},
+           {"class", "d-none d-flex align-items-center flex-grow-1 gap-2"},
+           {"style", "min-width: 0"}},
+          code({{"class", "bg-white border p-2 font-monospace flex-grow-1 "
+                          "text-dark text-break"}},
+               deno_snippet),
+          button({{"class", "btn btn-sm btn-outline-secondary"},
+                  {"type", "button"},
+                  {"data-sourcemeta-ui-copy", deno_snippet}},
+                 i({{"class", "bi bi-clipboard"}}))));
+
+  content_children.emplace_back(
+      div({{"data-sourcemeta-ui-tab-group", "usage"},
+           {"class", "bg-light border rounded px-3 py-2 mt-4 d-flex "
+                     "flex-wrap flex-md-nowrap align-items-center small "
+                     "gap-2"}},
+          usage_row));
+
   // Information table
   std::vector<sourcemeta::core::HTMLNode> table_rows;
 
@@ -145,6 +223,8 @@ auto GENERATE_WEB_SCHEMA::handler(
     indirect_dependent_schemas.erase(schema);
   }
 
+  std::vector<sourcemeta::core::HTMLNode> details_children;
+
   // Tab navigation
   std::vector<sourcemeta::core::HTMLNode> nav_items;
   nav_items.emplace_back(li(
@@ -193,7 +273,7 @@ auto GENERATE_WEB_SCHEMA::handler(
                  "ms-2 badge rounded-pill text-bg-secondary align-text-top"}},
                std::to_string(health.at("errors").size())))));
 
-  container_children.emplace_back(
+  details_children.emplace_back(
       ul({{"class", "nav nav-tabs mt-4 mb-3"}}, nav_items));
 
   // Examples tab
@@ -212,7 +292,7 @@ auto GENERATE_WEB_SCHEMA::handler(
     examples_content.emplace_back(
         div({{"class", "list-group"}}, example_items));
   }
-  container_children.emplace_back(
+  details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "examples"}, {"class", "d-none"}},
           examples_content));
 
@@ -278,7 +358,7 @@ auto GENERATE_WEB_SCHEMA::handler(
                        th({{"scope", "col"}}, "Dependency"))),
               tbody(dep_table_rows)));
   }
-  container_children.emplace_back(
+  details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "dependencies"}, {"class", "d-none"}},
           dependencies_content));
 
@@ -341,7 +421,7 @@ auto GENERATE_WEB_SCHEMA::handler(
                        th({{"scope", "col"}}, "Dependent"))),
               tbody(dep_tab_rows)));
   }
-  container_children.emplace_back(
+  details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "dependents"}, {"class", "d-none"}},
           dependents_content));
 
@@ -387,9 +467,14 @@ auto GENERATE_WEB_SCHEMA::handler(
     }
     health_content.emplace_back(div({{"class", "list-group"}}, error_items));
   }
-  container_children.emplace_back(
+  details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "health"}, {"class", "d-none"}},
           health_content));
+
+  container_children.emplace_back(
+      div({{"data-sourcemeta-ui-tab-group", "details"},
+           {"data-sourcemeta-ui-tab-url-param", "tab"}},
+          details_children));
 
   std::ostringstream html_content;
   html_content << "<!DOCTYPE html>"
