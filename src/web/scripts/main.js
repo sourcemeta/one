@@ -1,4 +1,5 @@
 import "./tabs.js";
+import "./copy.js";
 import "./search.js";
 
 import { Editor } from "./editor.js";

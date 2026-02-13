@@ -11,6 +11,45 @@ custom integrations, and we are always eager to hear more about use cases that
 demand a more direct integration. If you have any ideas, please reach out on
 [GitHub Discussions](https://github.com/sourcemeta/one/discussions)!
 
+## Tools
+
+### JSON Schema CLI
+
+The [JSON Schema CLI](https://github.com/sourcemeta/jsonschema) can fetch
+schemas from Sourcemeta One, resolve their references, and bundle them locally
+using the `install` command. For example, to install a schema and its
+dependencies into a local `schemas` directory:
+
+```sh
+jsonschema install https://schemas.example.com/my/schema.json schemas/schema.json
+```
+
+The CLI will fetch the schema, resolve any `$ref` references it depends on, and
+write a self-contained bundled result to the given path. On subsequent runs, it
+only re-fetches dependencies that have changed.
+
+For projects with multiple schemas, you can declare them in a
+`jsonschema.json` configuration file:
+
+```json title="jsonschema.json"
+{
+  "dependencies": {
+    "https://schemas.example.com/schemas/user.json": "./schemas/user.json",
+    "https://schemas.example.com/schemas/order.json": "./schemas/order.json"
+  }
+}
+```
+
+Then run `jsonschema install` without arguments to fetch them all. A
+`jsonschema.lock.json` lock file is created to track dependency hashes for
+reproducible installations. We recommend committing both files to version
+control.
+
+!!! tip
+
+    Use `jsonschema install --frozen` in CI/CD to verify that installed
+    schemas match the lock file exactly, catching any unexpected changes.
+
 ## Languages
 
 ### Deno
