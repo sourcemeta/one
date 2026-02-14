@@ -1,8 +1,8 @@
 #ifndef SOURCEMETA_ONE_CONFIGURATION_H_
 #define SOURCEMETA_ONE_CONFIGURATION_H_
 
+#include <sourcemeta/blaze/configuration.h>
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/core/schemaconfig.h>
 
 #include <sourcemeta/one/configuration_error.h>
 
@@ -46,7 +46,7 @@ struct Configuration {
     std::optional<sourcemeta::core::JSON::String> website;
   };
 
-  using Collection = sourcemeta::core::SchemaConfig;
+  using Collection = sourcemeta::blaze::Configuration;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;

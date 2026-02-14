@@ -15,7 +15,7 @@ set_target_properties(sourcemeta_one_server PROPERTIES OUTPUT_NAME sourcemeta-on
 
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::jsonpointer)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::uuid)
+target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::crypto)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_server PRIVATE uNetworking::uSockets)

@@ -42,7 +42,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
   } else {
     assert(!result.contains(location));
     if (input.defines("path")) {
-      auto collection{sourcemeta::core::SchemaConfig::from_json(
+      auto collection{sourcemeta::blaze::Configuration::from_json(
           input,
           // This path doesn't matter much here, as by now we
           // have converted all paths to their absolute forms

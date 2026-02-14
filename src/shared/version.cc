@@ -1,6 +1,6 @@
 #include <sourcemeta/one/shared_version.h>
 
-#include <sourcemeta/core/uuid.h>
+#include <sourcemeta/core/crypto.h>
 
 #include "configure.h"
 
