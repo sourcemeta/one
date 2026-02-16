@@ -2,7 +2,15 @@ FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
+  openssl libssl-dev openssl-provider-fips \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Enable the OpenSSL FIPS provider by running the module self-tests
+# and appending the integrity-checked configuration to our openssl.cnf
+RUN openssl fipsinstall -module /usr/lib/*/ossl-modules/fips.so \
+  -out /tmp/fipsmodule.cnf
+COPY enterprise/openssl.base.cnf /etc/ssl/openssl.cnf
+RUN cat /tmp/fipsmodule.cnf >> /etc/ssl/openssl.cnf && cat /etc/ssl/openssl.cnf
 
 COPY package.json /source/package.json
 COPY package-lock.json /source/package-lock.json
@@ -57,6 +65,11 @@ RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 FROM debian:trixie-slim
 
+RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
+  openssl-provider-fips \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
+
 # Commercial editions require a paid license
 # See https://one.sourcemeta.com/commercial/
 
@@ -67,7 +80,7 @@ LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
 LABEL org.opencontainers.image.licenses="LicenseRef-Commercial"
 LABEL org.opencontainers.image.title="Sourcemeta One Enterprise"
-LABEL org.opencontainers.image.description="The JSON Schema platform"
+LABEL org.opencontainers.image.description="A self-hosted platform for publishing, browsing, and governing your JSON Schema collections"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
 COPY --from=builder /usr/bin/sourcemeta-one-index \
@@ -80,6 +93,12 @@ COPY --from=builder /usr/share/sourcemeta/one \
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index
 RUN ldd /usr/bin/sourcemeta-one-server
+
+# Verify that the index binary uses system OpenSSL for cryptography
+RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
+# Verify that the OpenSSL FIPS provider is configured and present
+RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
+RUN test -f /usr/lib/*/ossl-modules/fips.so
 
 # We expect images that extend this one to use this directory
 ARG SOURCEMETA_ONE_WORKDIR=/source

@@ -7,6 +7,10 @@ if(NOT Core_FOUND)
     set(SOURCEMETA_CORE_CONTRIB_GOOGLETEST OFF CACHE BOOL "GoogleTest")
   endif()
 
+  if(ONE_ENTERPRISE)
+    set(SOURCEMETA_CORE_CRYPTO_USE_SYSTEM_OPENSSL ON CACHE BOOL "Enable OpenSSL")
+  endif()
+
   set(SOURCEMETA_CORE_CONTRIB_GOOGLEBENCHMARK OFF CACHE BOOL "GoogleBenchmark")
 
   add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/core")
