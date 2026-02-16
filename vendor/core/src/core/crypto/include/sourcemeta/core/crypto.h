@@ -10,7 +10,6 @@
 /// #include <sourcemeta/core/crypto.h>
 /// ```
 
-#include <sourcemeta/core/crypto_md5.h>
 #include <sourcemeta/core/crypto_sha256.h>
 #include <sourcemeta/core/crypto_uuid.h>
 
