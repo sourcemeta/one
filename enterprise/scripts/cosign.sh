@@ -15,9 +15,10 @@ CERTIFICATE_OIDC_ISSUER="$3"
 CERTIFICATE_IDENTITY="$4"
 
 echo "Cosign: Extracting manifest digest for ${IMAGE}:${VERSION}" 1>&2
-DIGEST=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" \
-  --format '{{json .Manifest}}' | jq --raw-output '.digest')
-if ! echo "$DIGEST" | grep -qE '^sha256:[a-f0-9]{64}$'
+MANIFEST=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" \
+  --format '{{json .Manifest}}')
+DIGEST=$(printf '%s\n' "$MANIFEST" | jq --raw-output '.digest')
+if ! printf '%s\n' "$DIGEST" | grep -qE '^sha256:[a-f0-9]{64}$'
 then
   echo "Cosign: Invalid manifest digest: $DIGEST" 1>&2
   exit 1
