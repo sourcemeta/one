@@ -4,8 +4,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME shared
 
 target_link_libraries(sourcemeta_one_shared PUBLIC sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::io)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::uuid)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::md5)
+target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::crypto)
 target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::one::gzip)
 

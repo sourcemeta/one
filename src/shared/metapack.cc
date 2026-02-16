@@ -1,8 +1,8 @@
 #include <sourcemeta/one/gzip.h>
 #include <sourcemeta/one/shared_metapack.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/io.h>
-#include <sourcemeta/core/md5.h>
 #include <sourcemeta/core/time.h>
 
 #include <cassert>    // assert
