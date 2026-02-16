@@ -5,6 +5,9 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/shared.h>
 
+#include "checksum_css.h"
+#include "checksum_js.h"
+
 #include <optional> // std::optional
 #include <sstream>  // std::ostringstream
 #include <string>   // std::string
@@ -99,7 +102,8 @@ make_head(const Configuration &configuration, const std::string &canonical,
                     {"href",
                      // For cache busting, to force browsers to refresh styles
                      // on any update
-                     "/self/static/style.min.css?v=" + std::string{stamp()}}}),
+                     std::string{"/self/static/style.min.css?v="} +
+                         std::string{SOURCEMETA_ONE_CSS_CHECKSUM}}}),
               link({{"rel", "icon"},
                     {"href", "/self/static/favicon.ico"},
                     {"sizes", "any"}}),
@@ -131,7 +135,8 @@ inline auto make_page(const Configuration &configuration,
        {"defer", ""},
        {"src",
         // For cache busting, to force browsers to refresh styles on any update
-        "/self/static/main.min.js?v=" + std::string{stamp()}}}));
+        std::string{"/self/static/main.min.js?v="} +
+            std::string{SOURCEMETA_ONE_JS_CHECKSUM}}}));
   return sourcemeta::core::html::html(
       {{"class", "h-100"}, {"lang", "en"}},
       make_head(configuration, canonical, title, description),

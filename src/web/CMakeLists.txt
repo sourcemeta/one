@@ -59,3 +59,27 @@ install(FILES ${ONE_STATIC_METAPACK}
 target_sources(sourcemeta_one_web PRIVATE ${ONE_STATIC_METAPACK}
   "${CMAKE_CURRENT_BINARY_DIR}/main.min.js"
   "${CMAKE_CURRENT_BINARY_DIR}/style.min.css")
+
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/checksum_css.h"
+  COMMAND "${CMAKE_COMMAND}"
+    -DINPUT="${CMAKE_CURRENT_BINARY_DIR}/style.min.css"
+    -DDEFINE=SOURCEMETA_ONE_CSS_CHECKSUM
+    -DOUTPUT="${CMAKE_CURRENT_BINARY_DIR}/checksum_css.h"
+    -P "${PROJECT_SOURCE_DIR}/cmake/commands/checksum.cmake"
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/style.min.css")
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/checksum_js.h"
+  COMMAND "${CMAKE_COMMAND}"
+    -DINPUT="${CMAKE_CURRENT_BINARY_DIR}/main.min.js"
+    -DDEFINE=SOURCEMETA_ONE_JS_CHECKSUM
+    -DOUTPUT="${CMAKE_CURRENT_BINARY_DIR}/checksum_js.h"
+    -P "${PROJECT_SOURCE_DIR}/cmake/commands/checksum.cmake"
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/main.min.js")
+target_sources(sourcemeta_one_web PRIVATE
+  "${CMAKE_CURRENT_BINARY_DIR}/checksum_css.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/checksum_js.h")
+target_include_directories(sourcemeta_one_web PRIVATE
+  "${CMAKE_CURRENT_BINARY_DIR}")
