@@ -23,6 +23,7 @@ PUBLIC ?= ./public
 PARALLEL ?= 4
 # Only for local development
 ENTERPRISE ?= ON
+DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 
 .PHONY: all
 all: configure compile test
@@ -103,11 +104,10 @@ sandbox-manifest-refresh: configure compile
 	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) sandbox-index SANDBOX_CONFIGURATION=html || true
 
 .PHONY: docker
-docker: Dockerfile
+docker: $(DOCKERFILE)
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
-		--build-arg SOURCEMETA_ONE_ENTERPRISE=$(ENTERPRISE)
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
 
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml

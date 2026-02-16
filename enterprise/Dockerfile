@@ -15,6 +15,7 @@ COPY contrib /source/contrib
 COPY collections /source/collections
 COPY vendor /source/vendor
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY enterprise /source/enterprise
 
 # For testing
 COPY test/cli /source/test/cli
@@ -32,7 +33,7 @@ RUN	cmake -S /source -B ./build \
   -DONE_INDEX:BOOL=ON \
   -DONE_SERVER:BOOL=ON \
   -DONE_TESTS:BOOL=ON \
-  -DONE_ENTERPRISE:BOOL=OFF \
+  -DONE_ENTERPRISE:BOOL=ON \
   -DBUILD_SHARED_LIBS:BOOL=OFF
 
 RUN cmake --build /build \
@@ -59,13 +60,16 @@ RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 FROM debian:trixie-slim
 
+# Commercial editions require a paid license
+# See https://one.sourcemeta.com/commercial/
+
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
-LABEL org.opencontainers.image.licenses="BUSL-1.1"
-LABEL org.opencontainers.image.title="Sourcemeta One"
+LABEL org.opencontainers.image.licenses="LicenseRef-Commercial"
+LABEL org.opencontainers.image.title="Sourcemeta One Enterprise"
 LABEL org.opencontainers.image.description="The JSON Schema platform"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
