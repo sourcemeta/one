@@ -5,7 +5,6 @@
 
 namespace sourcemeta::one {
 
-auto stamp() noexcept -> std::string_view;
 auto version() noexcept -> std::string_view;
 auto edition() noexcept -> std::string_view;
 
