@@ -23,23 +23,19 @@ jobs:
           - package: one
             os: ubuntu-24.04
             arch: amd64
-            enterprise: OFF
-            license: BUSL-1.1
+            file: Dockerfile
           - package: one
             os: ubuntu-24.04-arm
             arch: arm64
-            enterprise: OFF
-            license: BUSL-1.1
+            file: Dockerfile
           - package: one-enterprise
             os: ubuntu-24.04
             arch: amd64
-            enterprise: ON
-            license: LicenseRef-Commercial
+            file: enterprise/Dockerfile
           - package: one-enterprise
             os: ubuntu-24.04-arm
             arch: arm64
-            enterprise: ON
-            license: LicenseRef-Commercial
+            file: enterprise/Dockerfile
 
     runs-on: ${{ matrix.edition.os }}
     steps:
@@ -70,10 +66,7 @@ jobs:
           DOCKER_BUILDKIT: 1
         with:
           context: .
-          file: Dockerfile
-          build-args: |
-            SOURCEMETA_ONE_ENTERPRISE=${{ matrix.edition.enterprise }}
-            SOURCEMETA_ONE_LICENSE=${{ matrix.edition.license }}
+          file: ${{ matrix.edition.file }}
           platforms: linux/${{ matrix.edition.arch }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
