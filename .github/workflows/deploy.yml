@@ -167,12 +167,20 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/one-enterprise
 
+      - run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/one-enterprise:${{ steps.meta.outputs.version }}"
+          docker pull "$IMAGE"
+          CONTAINER=$(docker create "$IMAGE")
+          docker cp "$CONTAINER:/usr/share/sbom/sourcemeta-one-enterprise.spdx" /tmp/sbom.spdx
+          docker rm "$CONTAINER"
+
       - run: >
           ./enterprise/scripts/cosign.sh
           "ghcr.io/${{ github.repository_owner }}/one-enterprise"
           "${{ steps.meta.outputs.version }}"
           "https://token.actions.githubusercontent.com"
           "https://github.com/${{ github.repository }}/.github/workflows/deploy.yml@${{ github.ref }}"
+          "/tmp/sbom.spdx"
 
   release:
     needs: docker-multi-arch

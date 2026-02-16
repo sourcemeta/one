@@ -58,6 +58,7 @@ else()
   set(ONE_VERSION "${PROJECT_VERSION}+${PROJECT_GIT_SHA}")
 endif()
 message(STATUS "One version: ${ONE_VERSION}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/VERSION" "${ONE_VERSION}")
 
 if(ONE_INDEX OR ONE_SERVER)
   add_subdirectory(src/shared)
