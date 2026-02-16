@@ -29,10 +29,10 @@ auto write_stream(const std::filesystem::path &path,
 
   auto metadata{sourcemeta::core::JSON::make_object()};
   metadata.assign("version", sourcemeta::core::JSON{1});
-  std::ostringstream md5;
+  std::ostringstream checksum;
   // TODO: Have a shorthand version that doesn't require an intermediary stream
-  sourcemeta::core::md5(buffer.str(), md5);
-  metadata.assign("checksum", sourcemeta::core::JSON{md5.str()});
+  sourcemeta::core::sha256(buffer.str(), checksum);
+  metadata.assign("checksum", sourcemeta::core::JSON{checksum.str()});
   metadata.assign("lastModified",
                   sourcemeta::core::JSON{sourcemeta::core::to_gmt(
                       std::chrono::system_clock::now())});
