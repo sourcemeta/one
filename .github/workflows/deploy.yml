@@ -159,6 +159,8 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad
 
       - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
@@ -172,26 +174,12 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/one-enterprise
 
-      - id: manifest-digest
-        run: |
-          DIGEST=$(docker buildx imagetools inspect \
-            'ghcr.io/${{ github.repository_owner }}/one-enterprise:${{ steps.meta.outputs.version }}' \
-            --format '{{json .Manifest}}' | jq --raw-output '.digest')
-          if [[ ! "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then
-            echo "::error::Invalid manifest digest: $DIGEST"
-            exit 1
-          fi
-          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-
       - run: >
-          cosign sign --yes
-          'ghcr.io/${{ github.repository_owner }}/one-enterprise@${{ steps.manifest-digest.outputs.digest }}'
-
-      - run: >
-          cosign verify
-          --certificate-oidc-issuer https://token.actions.githubusercontent.com
-          --certificate-identity 'https://github.com/${{ github.repository }}/.github/workflows/deploy.yml@${{ github.ref }}'
-          'ghcr.io/${{ github.repository_owner }}/one-enterprise@${{ steps.manifest-digest.outputs.digest }}'
+          ./enterprise/scripts/cosign.sh
+          "ghcr.io/${{ github.repository_owner }}/one-enterprise"
+          "${{ steps.meta.outputs.version }}"
+          "https://token.actions.githubusercontent.com"
+          "https://github.com/${{ github.repository }}/.github/workflows/deploy.yml@${{ github.ref }}"
 
   release:
     needs: docker-multi-arch
