@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// Generates an SPDX 2.3 JSON Software Bill of Materials (SBOM) for the
-// vendored C++ and frontend dependencies managed through DEPENDENCIES files
-
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

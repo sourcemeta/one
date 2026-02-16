@@ -1,0 +1,12 @@
+bin/
+chapters/
+examples/
+model/
+ontology/
+.editorconfig
+CHANGELOG.md
+CONTRIBUTING.md
+mkdocs.yml
+README.md
+requirements.txt
+setup.py
