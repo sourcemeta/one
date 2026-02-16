@@ -1,10 +1,7 @@
 FROM debian:trixie AS builder
 
-RUN apt-get --yes update && apt-get install --yes --no-install-recommends curl ca-certificates \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  build-essential cmake sassc esbuild shellcheck nodejs \
+  build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY package.json /source/package.json
