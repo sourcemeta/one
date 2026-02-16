@@ -1,4 +1,4 @@
-FROM debian:bookworm AS builder
+FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends curl ca-certificates \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -62,7 +62,7 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG SOURCEMETA_ONE_LICENSE=LicenseRef-Commercial
 
