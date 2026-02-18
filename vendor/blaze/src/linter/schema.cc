@@ -13,12 +13,21 @@
 
 namespace sourcemeta::blaze {
 
+static constexpr std::string_view NAME_PATTERN{"^[a-z0-9_/]+$"};
+
 static auto validate_name(const std::string_view name) -> void {
-  static const auto pattern{sourcemeta::core::to_regex("^[a-z0-9_/]+$")};
+  static const auto pattern{
+      sourcemeta::core::to_regex(std::string{NAME_PATTERN})};
   assert(pattern.has_value());
-  if (name.empty() ||
-      !sourcemeta::core::matches(pattern.value(), std::string{name})) {
-    throw LinterInvalidNameError(name);
+  if (name.empty()) {
+    throw LinterInvalidNameError(name,
+                                 "The schema rule name must not be empty");
+  }
+
+  if (!sourcemeta::core::matches(pattern.value(), std::string{name})) {
+    std::string message{"The schema rule name must match "};
+    message += NAME_PATTERN;
+    throw LinterInvalidNameError(name, message);
   }
 }
 
@@ -38,8 +47,15 @@ static auto extract_description(const sourcemeta::core::JSON &schema)
 }
 
 static auto extract_title(const sourcemeta::core::JSON &schema) -> std::string {
-  if (!schema.defines("title") || !schema.at("title").is_string()) {
-    throw LinterInvalidNameError("");
+  if (!schema.defines("title")) {
+    throw LinterMissingNameError{};
+  }
+
+  if (!schema.at("title").is_string()) {
+    std::ostringstream result;
+    sourcemeta::core::stringify(schema.at("title"), result);
+    throw LinterInvalidNameError(std::move(result).str(),
+                                 "The schema rule title is not a string");
   }
 
   auto title{schema.at("title").to_string()};
@@ -73,18 +89,16 @@ auto SchemaRule::condition(const sourcemeta::core::JSON &schema,
     return false;
   }
 
-  std::ostringstream message;
-  for (const auto &entry : output) {
-    message << entry.message << "\n";
-    message << "  at instance location \"";
-    sourcemeta::core::stringify(entry.instance_location, message);
-    message << "\"\n";
-    message << "  at evaluate path \"";
-    sourcemeta::core::stringify(entry.evaluate_path, message);
-    message << "\"\n";
-  }
+  if (output.cbegin() != output.cend()) {
+    if (output.cbegin()->instance_location.empty()) {
+      return {{}, std::string{output.cbegin()->message}};
+    }
 
-  return {{}, std::move(message).str()};
+    return {{sourcemeta::core::to_pointer(output.cbegin()->instance_location)},
+            std::string{output.cbegin()->message}};
+  } else {
+    return true;
+  }
 }
 
 } // namespace sourcemeta::blaze
