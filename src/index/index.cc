@@ -110,7 +110,8 @@ static auto index_main(const std::string_view &program,
     return EXIT_SUCCESS;
   }
 
-  auto configuration{sourcemeta::one::Configuration::parse(raw_configuration)};
+  auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Support overriding the target URL from the CLI

@@ -14,7 +14,9 @@ protected:
         std::filesystem::path{CONFIGURATION_PATH}.parent_path() /
             "collections")};
     shared_configuration = std::make_unique<sourcemeta::one::Configuration>(
-        sourcemeta::one::Configuration::parse(raw_configuration));
+        sourcemeta::one::Configuration::parse(
+            raw_configuration,
+            std::filesystem::path{CONFIGURATION_PATH}.parent_path()));
   }
 
   static auto TearDownTestSuite() -> void { shared_configuration.reset(); }

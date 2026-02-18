@@ -31,22 +31,21 @@ auto page_from_json(const sourcemeta::core::JSON &input)
 
 template <typename T>
 auto entries_from_json(T &result, const std::filesystem::path &location,
-                       const sourcemeta::core::JSON &input) -> void {
+                       const sourcemeta::core::JSON &input,
+                       const std::filesystem::path &base_path) -> void {
   // A heuristic to check if we are at the root or not
   if (input.defines("url")) {
     if (input.defines("contents")) {
       for (const auto &entry : input.at("contents").as_object()) {
-        entries_from_json<T>(result, location / entry.first, entry.second);
+        entries_from_json<T>(result, location / entry.first, entry.second,
+                             base_path);
       }
     }
   } else {
     assert(!result.contains(location));
     if (input.defines("path")) {
-      auto collection{sourcemeta::blaze::Configuration::from_json(
-          input,
-          // This path doesn't matter much here, as by now we
-          // have converted all paths to their absolute forms
-          std::filesystem::current_path())};
+      auto collection{
+          sourcemeta::blaze::Configuration::from_json(input, base_path)};
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
       std::ranges::transform(
@@ -62,7 +61,8 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
       // Only pages may have children
       if (input.defines("contents")) {
         for (const auto &entry : input.at("contents").as_object()) {
-          entries_from_json<T>(result, location / entry.first, entry.second);
+          entries_from_json<T>(result, location / entry.first, entry.second,
+                               base_path);
         }
       }
     }
@@ -73,7 +73,9 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
 
 namespace sourcemeta::one {
 
-auto Configuration::parse(const sourcemeta::core::JSON &data) -> Configuration {
+auto Configuration::parse(const sourcemeta::core::JSON &data,
+                          const std::filesystem::path &base_path)
+    -> Configuration {
   const auto compiled_schema{sourcemeta::blaze::from_json(
       sourcemeta::core::parse_json(std::string{CONFIGURATION}))};
   assert(compiled_schema.has_value());
@@ -110,7 +112,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data) -> Configuration {
     }
   }
 
-  entries_from_json(result.entries, "", data);
+  entries_from_json(result.entries, "", data, base_path);
 
   return result;
 }
