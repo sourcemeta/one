@@ -5,7 +5,7 @@ blaze https://github.com/sourcemeta/blaze 61f8cf9cd33e8e300942bbcecff8e8a5d3eb25
 jsonbinpack https://github.com/sourcemeta/jsonbinpack c9038f1ca016890cf0dc6929e668b77784f91332
 hydra https://github.com/sourcemeta/hydra 2f46a5e2d1b24fd1bdd2d4b98e71646403a6bdce
 codegen https://github.com/sourcemeta/codegen 615532845e07353c3a4a95af40d0f4ad1a03b6ec
-jsonschema https://github.com/sourcemeta/jsonschema v14.13.0
+jsonschema https://github.com/sourcemeta/jsonschema 36b107e9bb55e6ec7cf57021f944119bc20d7ce4
 bootstrap https://github.com/twbs/bootstrap v5.3.3
 bootstrap-icons https://github.com/twbs/icons v1.11.3
 collections/sourcemeta/std/v0 https://github.com/sourcemeta/std v0.4.0
