@@ -26,8 +26,8 @@ TEST(Configuration, valid_001) {
                                 "parse_valid_001.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -78,8 +78,8 @@ TEST(Configuration, valid_002) {
                                 "parse_valid_002.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -97,8 +97,8 @@ TEST(Configuration, valid_003) {
                                 "parse_valid_003.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -132,8 +132,8 @@ TEST(Configuration, valid_004) {
                                 "parse_valid_004.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -173,8 +173,8 @@ TEST(Configuration, valid_005) {
                                 "parse_valid_005.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -197,14 +197,14 @@ TEST(Configuration, valid_005) {
   EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 2);
-  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0),
-                    std::filesystem::weakly_canonical(
-                        std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "rules" / "my_rule.py"));
-  EXPECT_COLLECTION(configuration, "example", lint.rules.at(1),
-                    std::filesystem::weakly_canonical(
-                        std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "rules" / "another_rule.py"));
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(0),
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(1),
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "another_rule.py"));
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
   EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
 }
@@ -214,8 +214,8 @@ TEST(Configuration, valid_006) {
                                 "parse_valid_006.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -242,13 +242,11 @@ TEST(Configuration, valid_006) {
   EXPECT_COLLECTION(configuration, "example", ignore.at(0),
                     std::filesystem::weakly_canonical(
                         std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "schemas" / "example" /
-                        "extension" / "draft"));
+                        "example" / "extension" / "draft"));
   EXPECT_COLLECTION(configuration, "example", ignore.at(1),
                     std::filesystem::weakly_canonical(
                         std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "schemas" / "example" /
-                        "extension" / "deprecated"));
+                        "example" / "extension" / "deprecated"));
   EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
 }
 
@@ -257,8 +255,8 @@ TEST(Configuration, valid_007) {
                                 "parse_valid_007.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
-  const auto configuration{
-      sourcemeta::one::Configuration::parse(raw_configuration)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -281,15 +279,14 @@ TEST(Configuration, valid_007) {
   EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);
-  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0),
-                    std::filesystem::weakly_canonical(
-                        std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(0),
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "my_rule.py"));
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 1);
   EXPECT_COLLECTION(configuration, "example", ignore.at(0),
                     std::filesystem::weakly_canonical(
                         std::filesystem::path{STUB_DIRECTORY} / "schemas" /
-                        "example" / "extension" / "schemas" / "example" /
-                        "extension" / "draft"));
+                        "example" / "extension" / "draft"));
   EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
 }

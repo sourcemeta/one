@@ -19,7 +19,7 @@ cat << EOF > "$TMP/one.json"
   "contents": {
     "test": {
       "path": "./schemas",
-      "lint": { "rules": [ "../rules/does-not-exist.json" ] }
+      "lint": { "rules": [ "./rules/does-not-exist.json" ] }
     }
   }
 }
