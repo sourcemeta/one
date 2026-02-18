@@ -12,7 +12,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.entries" count == 2
+jsonpath "$.entries" count >= 2
 jsonpath "$.entries[0].name" == "test"
 jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"

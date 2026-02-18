@@ -1,0 +1,4 @@
+{
+  "extends": [ "./one-html-community.json" ],
+  "html": false
+}

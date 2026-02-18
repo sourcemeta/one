@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_INDEX_GENERATORS_H_
 #define SOURCEMETA_ONE_INDEX_GENERATORS_H_
 
+#include "error.h"
+
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
@@ -13,16 +15,24 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/configuration.h>
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/linter.h>
 
-#include <cassert>    // assert
-#include <filesystem> // std::filesystem
-#include <queue>      // std::queue
-#include <set>        // std::set
-#include <sstream>    // std::ostringstream
-#include <utility>    // std::move, std::pair
-#include <variant>    // std::visit
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/one/enterprise_index.h>
+#endif
+
+#include <cassert>       // assert
+#include <filesystem>    // std::filesystem
+#include <memory>        // std::unique_ptr
+#include <mutex>         // std::mutex, std::lock_guard
+#include <queue>         // std::queue
+#include <set>           // std::set
+#include <sstream>       // std::ostringstream
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move, std::pair
+#include <variant>       // std::visit
 
 namespace sourcemeta::one {
 
@@ -70,34 +80,6 @@ struct GENERATE_MATERIALISED_SCHEMA {
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
-
-  class MetaschemaError : public std::exception {
-  public:
-    MetaschemaError(const sourcemeta::blaze::SimpleOutput &output) {
-      std::ostringstream stream;
-      for (const auto &entry : output) {
-        stream << entry.message << "\n";
-        stream << "  at instance location \"";
-        sourcemeta::core::stringify(entry.instance_location, stream);
-        stream << "\"\n";
-        stream << "  at evaluate path \"";
-        sourcemeta::core::stringify(entry.evaluate_path, stream);
-        stream << "\"\n";
-      }
-      this->stacktrace_ = stream.str();
-    }
-
-    [[nodiscard]] auto what() const noexcept -> const char * {
-      return "The schema does not adhere to its metaschema";
-    }
-
-    [[nodiscard]] auto stacktrace() const noexcept -> const std::string & {
-      return stacktrace_;
-    }
-
-  private:
-    std::string stacktrace_;
-  };
 
 private:
   static auto compile(const std::string &cache_key,
@@ -322,37 +304,38 @@ struct GENERATE_DEPENDENTS {
 };
 
 struct GENERATE_HEALTH {
-  using Context = sourcemeta::one::Resolver;
+  using Context =
+      std::pair<std::reference_wrapper<sourcemeta::one::Resolver>,
+                std::reference_wrapper<const sourcemeta::blaze::Configuration>>;
   static auto
   handler(const std::filesystem::path &destination,
           const sourcemeta::core::BuildDependencies<std::filesystem::path>
               &dependencies,
           const sourcemeta::core::BuildDynamicCallback<std::filesystem::path>
               &callback,
-          const Context &resolver) -> void {
+          const Context &context) -> void {
+    const auto &resolver{context.first.get()};
+    const auto &configuration{context.second.get()};
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
 
-    sourcemeta::core::SchemaTransformer bundle;
-    sourcemeta::core::add(bundle, sourcemeta::core::AlterSchemaMode::Linter);
-    bundle.add<sourcemeta::blaze::ValidExamples>(
-        sourcemeta::blaze::default_schema_compiler);
-    bundle.add<sourcemeta::blaze::ValidDefault>(
-        sourcemeta::blaze::default_schema_compiler);
-
+    auto &cache_entry{bundle_for(configuration, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
-    const auto result = bundle.check(
+    const auto result{cache_entry.bundle.check(
         contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        [&errors](const auto &pointer, const auto &name, const auto &message,
-                  const auto &outcome, const bool) {
+        [&errors, &cache_entry](const auto &pointer, const auto &name,
+                                const auto &message, const auto &outcome,
+                                const bool) {
           auto entry{sourcemeta::core::JSON::make_object()};
           entry.assign("name", sourcemeta::core::JSON{name});
           entry.assign("message", sourcemeta::core::JSON{message});
           entry.assign("description",
                        sourcemeta::core::to_json(outcome.description));
+          entry.assign("custom", sourcemeta::core::JSON{
+                                     cache_entry.custom_names.contains(name)});
 
           auto pointers{sourcemeta::core::JSON::make_array()};
           if (outcome.locations.empty()) {
@@ -366,7 +349,7 @@ struct GENERATE_HEALTH {
 
           entry.assign("pointers", std::move(pointers));
           errors.push_back(std::move(entry));
-        });
+        })};
 
     auto report{sourcemeta::core::JSON::make_object()};
     report.assign("score", sourcemeta::core::to_json(result.second));
@@ -379,6 +362,47 @@ struct GENERATE_HEALTH {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+  }
+
+private:
+  struct CacheEntry {
+    sourcemeta::core::SchemaTransformer bundle;
+    std::unordered_set<std::string_view> custom_names;
+  };
+
+  static auto
+  bundle_for(const sourcemeta::blaze::Configuration &configuration,
+             [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
+             [[maybe_unused]] const sourcemeta::core::BuildDynamicCallback<
+                 std::filesystem::path> &callback) -> CacheEntry & {
+    static std::mutex cache_mutex;
+    static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
+    const auto *key{static_cast<const void *>(&configuration)};
+    std::lock_guard<std::mutex> lock{cache_mutex};
+    const auto match{cache.find(key)};
+    if (match != cache.cend()) {
+      return *match->second;
+    }
+
+    auto entry{std::make_unique<CacheEntry>()};
+    sourcemeta::core::add(entry->bundle,
+                          sourcemeta::core::AlterSchemaMode::Linter);
+    entry->bundle.add<sourcemeta::blaze::ValidExamples>(
+        sourcemeta::blaze::default_schema_compiler);
+    entry->bundle.add<sourcemeta::blaze::ValidDefault>(
+        sourcemeta::blaze::default_schema_compiler);
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    sourcemeta::one::load_custom_lint_rules(entry->bundle, entry->custom_names,
+                                            configuration, resolver, callback);
+#else
+    if (!configuration.lint.rules.empty()) {
+      // TODO: Show enough information to know where the error is coming from
+      throw CustomRuleError();
+    }
+#endif
+
+    return *cache.emplace(key, std::move(entry)).first->second;
   }
 };
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "My Object",
+  "description": "An Object Example",
+  "examples": [ {} ],
+  "properties": {
+    "INVALID_PROPERTY_1": {
+      "type": "string"
+    },
+    "foo": {
+      "type": "string"
+    }
+  }
+}

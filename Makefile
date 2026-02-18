@@ -24,6 +24,7 @@ PARALLEL ?= 4
 # Only for local development
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
+EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 
 .PHONY: all
 all: configure compile test
@@ -67,7 +68,10 @@ test:
 HURL_TESTS += test/e2e/$(SANDBOX_CONFIGURATION)/*.hurl
 ifneq ($(SANDBOX_CONFIGURATION),empty)
 HURL_TESTS += test/e2e/populated/schemas/*.hurl
-HURL_TESTS += test/e2e/populated/api/*.hurl
+HURL_TESTS += test/e2e/populated/api/common/*.hurl
+ifeq ($(ENTERPRISE),ON)
+HURL_TESTS += test/e2e/populated/api/enterprise/*.hurl
+endif
 endif
 test-e2e:
 	$(HURL) --test \
@@ -84,13 +88,13 @@ test-ui: node_modules
 .PHONY: sandbox-index
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
-		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION).json \
+		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
 		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --configuration
 	$(PREFIX)/bin/sourcemeta-one-index \
-		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION).json \
+		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
 		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --profile
 	./test/sandbox/manifest-check.sh $(OUTPUT)/sandbox \
-		$(SANDBOX)/manifest-$(SANDBOX_CONFIGURATION).txt
+		$(SANDBOX)/manifest-$(SANDBOX_CONFIGURATION)-$(EDITION).txt
 
 .PHONY: sandbox
 sandbox: sandbox-index
@@ -99,9 +103,12 @@ sandbox: sandbox-index
 
 .PHONY: sandbox-manifest-refresh
 sandbox-manifest-refresh: configure compile
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) sandbox-index SANDBOX_CONFIGURATION=empty || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) sandbox-index SANDBOX_CONFIGURATION=headless || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) sandbox-index SANDBOX_CONFIGURATION=html || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=empty || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=headless || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=html || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=empty || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=headless || true
+	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=html || true
 
 .PHONY: docker
 docker: $(DOCKERFILE)
@@ -112,31 +119,37 @@ docker: $(DOCKERFILE)
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --file $< config
 	BUILDX_NO_DEFAULT_ATTESTATIONS=1 \
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --progress plain --file $< build
 
 .PHONY: docker-sandbox-up
 docker-sandbox-up: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --progress plain --file $< up --detach --wait
 
 .PHONY: docker-sandbox-down
 docker-sandbox-down: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --progress plain --file $< down
 
 .PHONY: docker-sandbox
 docker-sandbox: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --file $< config
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
+	SOURCEMETA_ONE_EDITION=$(EDITION) \
 	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
 		$(DOCKER) compose --progress plain --file $< up --build
 

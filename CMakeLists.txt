@@ -75,6 +75,10 @@ if(ONE_INDEX)
   add_subdirectory(collections)
   add_dependencies(sourcemeta_one_index
     sourcemeta_one_collections)
+
+  if(ONE_ENTERPRISE)
+    add_subdirectory(enterprise/index)
+  endif()
 endif()
 
 if(ONE_SERVER)
@@ -83,7 +87,11 @@ if(ONE_SERVER)
   add_subdirectory(src/server)
 endif()
 
-sourcemeta_target_clang_format(SOURCES src/*.h src/*.cc test/*.cc contrib/*.cc)
+sourcemeta_target_clang_format(SOURCES
+  src/*.h src/*.cc
+  contrib/*.cc
+  test/*.h test/*.cc
+  enterprise/*.h enterprise/*.cc)
 sourcemeta_target_shellcheck(SOURCES test/*.sh docker/*.sh enterprise/scripts/*.sh)
 
 set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")

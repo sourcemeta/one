@@ -12,6 +12,9 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.score" == 0
 jsonpath "$.errors" count == 3
+jsonpath "$.errors[0].custom" == false
+jsonpath "$.errors[1].custom" == false
+jsonpath "$.errors[2].custom" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

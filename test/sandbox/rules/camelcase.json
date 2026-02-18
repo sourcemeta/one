@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custom/all_properties_camelcase",
+  "description": "Ensure camelCase properties",
+  "properties": {
+    "properties": {
+      "propertyNames": {
+        "pattern": "^[a-z][a-zA-Z0-9]*$"
+      }
+    }
+  }
+}

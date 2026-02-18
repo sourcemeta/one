@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         SOURCEMETA_ONE_SANDBOX_CONFIGURATION: ${SOURCEMETA_ONE_SANDBOX_CONFIGURATION}
+        SOURCEMETA_ONE_SANDBOX_EDITION: ${SOURCEMETA_ONE_EDITION}
     environment:
       # Different from the default just to test this variable
       - SOURCEMETA_ONE_PORT=8001
