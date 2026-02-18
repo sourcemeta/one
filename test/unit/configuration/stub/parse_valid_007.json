@@ -1,0 +1,21 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Title",
+    "description": "Description"
+  },
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/schemas",
+      "path": "./schemas/example/extension",
+      "lint": {
+        "rules": [
+          "./rules/my_rule.py"
+        ]
+      },
+      "ignore": [
+        "./schemas/example/extension/draft"
+      ]
+    }
+  }
+}

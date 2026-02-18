@@ -448,9 +448,16 @@ auto GENERATE_WEB_SCHEMA::handler(
       error_children.emplace_back(
           code({{"class", "d-block text-primary"}},
                error.at("pointers").front().to_string()));
-      error_children.emplace_back(
-          small({{"class", "d-block text-body-secondary"}},
-                error.at("name").to_string()));
+      if (error.at("custom").to_boolean()) {
+        error_children.emplace_back(
+            small({{"class", "d-block text-body-secondary"}},
+                  span({{"class", "badge text-bg-info me-1"}}, "Custom"),
+                  span(error.at("name").to_string())));
+      } else {
+        error_children.emplace_back(
+            small({{"class", "d-block text-body-secondary"}},
+                  error.at("name").to_string()));
+      }
       error_children.emplace_back(
           p({{"class", "mb-0 mt-2"}}, error.at("message").to_string()));
       if (error.at("description").is_string()) {

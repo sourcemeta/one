@@ -1,3 +1,5 @@
+#include <sourcemeta/blaze/linter.h>
+
 #include <sourcemeta/core/build.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
@@ -272,8 +274,8 @@ static auto index_main(const std::string_view &program,
             base_path / "health.metapack",
             {base_path / "schema.metapack", base_path / "dependencies.metapack",
              mark_version_path},
-            resolver, mutex, "Analysing", schema.first, "health", adapter,
-            output);
+            {std::ref(resolver), std::cref(schema.second.collection.get())},
+            mutex, "Analysing", schema.first, "health", adapter, output);
 
         DISPATCH<sourcemeta::one::GENERATE_BUNDLE>(
             base_path / "bundle.metapack",
@@ -633,9 +635,25 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::ConfigurationValidationError &error) {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::MetaschemaError
-               &error) {
+  } catch (const sourcemeta::one::MetaschemaError &error) {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::CustomRuleError &error) {
+    std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
+    std::cerr << "error: " << error.what() << "\n  at name "
+              << error.identifier() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
+    std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::URIParseError &error) {
+    std::cerr << "error: " << error.what() << "\n  at column " << error.column()
+              << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
+    std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::cerr << "error: " << error.what() << "\n  at " << error.uri()

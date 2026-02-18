@@ -14,6 +14,7 @@
           "pointers": [ "/properties/name" ],
           "name": "missing-description",
           "message": "Property lacks a description",
+          "custom": false,
           "description": null
         }
       ]
@@ -26,7 +27,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": [ "pointers", "name", "message", "description" ],
+        "required": [ "pointers", "name", "message", "custom", "description" ],
         "properties": {
           "description": {
             "type": [ "string", "null" ]
@@ -36,6 +37,9 @@
           },
           "name": {
             "type": "string"
+          },
+          "custom": {
+            "type": "boolean"
           },
           "pointers": {
             "type": "array",

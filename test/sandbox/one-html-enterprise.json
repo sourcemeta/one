@@ -1,0 +1,11 @@
+{
+  "extends": [ "./one-html-community.json" ],
+  "contents": {
+    "enterprise": {
+      "path": "./schemas/enterprise",
+      "lint": {
+        "rules": [ "../../rules/camelcase.json" ]
+      }
+    }
+  }
+}

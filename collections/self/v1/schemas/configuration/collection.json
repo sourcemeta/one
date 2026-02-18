@@ -53,6 +53,24 @@
     },
     "website": {
       "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+    },
+    "lint": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+      }
     }
   },
   "additionalProperties": false
