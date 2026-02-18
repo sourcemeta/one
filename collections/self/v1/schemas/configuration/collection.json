@@ -24,6 +24,9 @@
     "x-sourcemeta-one:evaluate": {
       "type": "boolean"
     },
+    "x-sourcemeta-one:path": {
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+    },
     "x-sourcemeta-one:provenance": {
       "$ref": "./rpath.json"
     },

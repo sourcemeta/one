@@ -290,3 +290,33 @@ TEST(Configuration, valid_007) {
                         "example" / "extension" / "draft"));
   EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
 }
+
+TEST(Configuration, valid_008) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_008.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+
+  EXPECT_EQ(configuration.entries.size(), 1);
+
+  EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "folder" /
+                        "schemas" / "example" / "extension");
+  EXPECT_COLLECTION(configuration, "example", base,
+                    "https://example.com/schemas");
+  EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(0),
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "folder" / "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
+}

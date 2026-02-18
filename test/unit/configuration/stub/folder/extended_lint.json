@@ -1,0 +1,13 @@
+{
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/schemas",
+      "path": "./schemas/example/extension",
+      "lint": {
+        "rules": [
+          "./rules/my_rule.py"
+        ]
+      }
+    }
+  }
+}

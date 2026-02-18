@@ -1,0 +1,8 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Title",
+    "description": "Description"
+  },
+  "extends": [ "./folder/extended_lint.json" ]
+}

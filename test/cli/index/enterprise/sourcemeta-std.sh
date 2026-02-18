@@ -36,6 +36,7 @@ cat << EOF > "$TMP/expected.txt"
             "v0": {
               "x-sourcemeta-one:provenance": "@sourcemeta/std/v0",
               "path": "$ONE_PREFIX/share/sourcemeta/one/collections/sourcemeta/std/v0/schemas/2020-12",
+              "x-sourcemeta-one:path": "$ONE_PREFIX/share/sourcemeta/one/collections/sourcemeta/std/v0/jsonschema.json",
               "baseUri": "https://example.com/"
             }
           }

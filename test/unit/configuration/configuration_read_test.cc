@@ -36,6 +36,7 @@ TEST(Configuration_read, read_valid_001) {
             "title": "Test",
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_001.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#",
             "resolve": {
               "https://other.com/single.json": "/foo.json"
@@ -75,6 +76,7 @@ TEST(Configuration_read, read_valid_002) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -106,6 +108,7 @@ TEST(Configuration_read, read_valid_003) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -140,6 +143,7 @@ TEST(Configuration_read, read_valid_004) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -174,6 +178,7 @@ TEST(Configuration_read, read_valid_005) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -372,6 +377,7 @@ TEST(Configuration_read, read_valid_013) {
         "title": "Test",
         "baseUri": "https://example.com/extension",
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_013.json",
         "defaultDialect": "http://json-schema.org/draft-07/schema#",
         "resolve": {
           "https://other.com/single.json": "/foo.json"
@@ -403,6 +409,7 @@ TEST(Configuration_read, read_valid_014) {
         "title": "Test",
         "baseUri": "https://example.com/extension",
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_014.json",
         "defaultDialect": "http://json-schema.org/draft-07/schema#",
         "resolve": {
           "https://other.com/single.json": "/foo.json"
@@ -436,6 +443,7 @@ TEST(Configuration_read, read_valid_015) {
     "contents": {
       "example": {
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_015.json",
         "baseUri": "http://localhost:8000"
       }
     }

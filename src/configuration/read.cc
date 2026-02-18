@@ -101,6 +101,10 @@ auto dereference(const std::filesystem::path &collections_path,
         current_path.is_relative() ? base.parent_path() / current_path
                                    : current_path)};
     input.at("path").into(sourcemeta::core::JSON{absolute_path});
+    if (!input.defines("x-sourcemeta-one:path")) {
+      input.assign("x-sourcemeta-one:path",
+                   sourcemeta::core::JSON{base.string()});
+    }
 
     // Recurse on children, if any
   } else if (input.defines("contents") && input.at("contents").is_object()) {

@@ -41,7 +41,8 @@ cat << EOF > "$TMP/expected.txt"
       "contents": {
         "schemas": {
           "baseUri": "https://example.com/",
-          "path": "$(realpath "$TMP")/schemas"
+          "path": "$(realpath "$TMP")/schemas",
+          "x-sourcemeta-one:path": "$(realpath "$TMP")/one.json"
         }
       }
     }

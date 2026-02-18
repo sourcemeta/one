@@ -22,6 +22,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # Work around BuildKit snapshot corruption on GitHub Actions runners
+    - name: Prune BuildKit cache (${{ inputs.configuration }})
+      run: docker builder prune --all --force
+      shell: bash
     - name: Build Sandbox (${{ inputs.configuration }})
       run: make docker-sandbox-build
       shell: bash
