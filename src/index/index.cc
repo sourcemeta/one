@@ -101,8 +101,9 @@ static auto index_main(const std::string_view &program,
   const auto configuration_path{
       std::filesystem::canonical(app.positional().at(0))};
   std::cerr << "Using configuration: " << configuration_path.string() << "\n";
+  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, SOURCEMETA_ONE_COLLECTIONS)};
+      configuration_path, SOURCEMETA_ONE_COLLECTIONS, collection_base_paths)};
 
   if (app.contains("configuration")) {
     sourcemeta::core::prettify(raw_configuration, std::cout);
@@ -111,7 +112,8 @@ static auto index_main(const std::string_view &program,
   }
 
   auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, collection_base_paths,
+      configuration_path.parent_path())};
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Support overriding the target URL from the CLI

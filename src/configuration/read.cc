@@ -46,10 +46,11 @@ auto maybe_suffix(const std::filesystem::path &path,
   }
 }
 
-auto dereference(const std::filesystem::path &collections_path,
-                 const std::filesystem::path &base,
-                 sourcemeta::core::JSON &input,
-                 const sourcemeta::core::Pointer &location) -> void {
+auto dereference(
+    const std::filesystem::path &collections_path,
+    const std::filesystem::path &base, sourcemeta::core::JSON &input,
+    const sourcemeta::core::Pointer &location,
+    sourcemeta::one::Configuration::CollectionBasePaths &base_paths) -> void {
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
@@ -67,7 +68,8 @@ auto dereference(const std::filesystem::path &collections_path,
         auto extension{
             read_file(base, new_location, target_path, entry.to_string())};
         if (extension.is_object()) {
-          dereference(collections_path, target_path, extension, new_location);
+          dereference(collections_path, target_path, extension, new_location,
+                      base_paths);
           accumulator.merge(std::move(extension).as_object());
         }
       }
@@ -77,7 +79,7 @@ auto dereference(const std::filesystem::path &collections_path,
     accumulator.merge(input.as_object());
     input = std::move(accumulator);
     assert(!input.defines("extends"));
-    dereference(collections_path, base, input, location);
+    dereference(collections_path, base, input, location, base_paths);
 
     // Read included files
   } else if (!location.empty() && input.defines("include") &&
@@ -92,7 +94,7 @@ auto dereference(const std::filesystem::path &collections_path,
     input.into(read_file(base, new_location, target_path,
                          input.at("include").to_string()));
     assert(!input.defines("include"));
-    dereference(collections_path, target_path, input, new_location);
+    dereference(collections_path, target_path, input, new_location, base_paths);
 
     // Revisit and relativize paths
   } else if (input.defines("path") && input.at("path").is_string()) {
@@ -101,6 +103,7 @@ auto dereference(const std::filesystem::path &collections_path,
         current_path.is_relative() ? base.parent_path() / current_path
                                    : current_path)};
     input.at("path").into(sourcemeta::core::JSON{absolute_path});
+    base_paths.emplace(absolute_path, base.parent_path());
 
     // Recurse on children, if any
   } else if (input.defines("contents") && input.at("contents").is_object()) {
@@ -112,7 +115,7 @@ auto dereference(const std::filesystem::path &collections_path,
                            [](const auto &entry) { return entry.first; });
     for (const auto &key : keys) {
       dereference(collections_path, base, input.at("contents").at(key),
-                  location.concat({"contents", key}));
+                  location.concat({"contents", key}), base_paths);
     }
   }
 }
@@ -145,7 +148,8 @@ auto default_base_uri(sourcemeta::core::JSON &contents,
 namespace sourcemeta::one {
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
-                         const std::filesystem::path &collections_path)
+                         const std::filesystem::path &collections_path,
+                         CollectionBasePaths &base_paths)
     -> sourcemeta::core::JSON {
   auto data{sourcemeta::core::read_json(configuration_path)};
 
@@ -164,7 +168,7 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
-  dereference(collections_path, configuration_path, data, {});
+  dereference(collections_path, configuration_path, data, {}, base_paths);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
