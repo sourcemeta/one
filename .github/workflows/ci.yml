@@ -31,9 +31,6 @@ jobs:
 
       - run: make docker PRESET=Release ${{ matrix.edition.options }}
 
-      # Work around BuildKit snapshot corruption on GitHub Actions runners
-      - run: docker builder prune --all --force
-
       - name: Sandbox (headless)
         uses: ./.github/actions/sandbox
         with:
