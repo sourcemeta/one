@@ -181,6 +181,54 @@ auto Configuration::from_json(const sourcemeta::core::JSON &value,
     }
   }
 
+  CONFIGURATION_ENSURE(!value.defines("lint") || value.at("lint").is_object(),
+                       "The lint property must be an object", {"lint"});
+
+  if (value.defines("lint")) {
+    const auto &lint_value{value.at("lint")};
+    CONFIGURATION_ENSURE(!lint_value.defines("rules") ||
+                             lint_value.at("rules").is_array(),
+                         "The lint rules property must be an array",
+                         sourcemeta::core::Pointer({"lint", "rules"}));
+
+    if (lint_value.defines("rules")) {
+      std::size_t index{0};
+      for (const auto &element : lint_value.at("rules").as_array()) {
+        CONFIGURATION_ENSURE(
+            element.is_string(),
+            "The values in the lint rules array must be strings",
+            sourcemeta::core::Pointer({"lint", "rules", index}));
+
+        const std::filesystem::path path{element.to_string()};
+        result.lint.rules.push_back(
+            path.is_absolute() ? std::filesystem::weakly_canonical(path)
+                               : std::filesystem::weakly_canonical(
+                                     result.absolute_path / path));
+        index += 1;
+      }
+    }
+  }
+
+  CONFIGURATION_ENSURE(!value.defines("ignore") ||
+                           value.at("ignore").is_array(),
+                       "The ignore property must be an array", {"ignore"});
+
+  if (value.defines("ignore")) {
+    std::size_t index{0};
+    for (const auto &element : value.at("ignore").as_array()) {
+      CONFIGURATION_ENSURE(element.is_string(),
+                           "The values in the ignore array must be strings",
+                           sourcemeta::core::Pointer({"ignore", index}));
+
+      const std::filesystem::path path{element.to_string()};
+      result.ignore.push_back(
+          path.is_absolute()
+              ? std::filesystem::weakly_canonical(path)
+              : std::filesystem::weakly_canonical(result.absolute_path / path));
+      index += 1;
+    }
+  }
+
   assert(result.extra.is_object());
   for (const auto &subentry : value.as_object()) {
     if (subentry.first.starts_with("x-")) {
