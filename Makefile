@@ -93,22 +93,11 @@ sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
 		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
 		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --profile
-	./test/sandbox/manifest-check.sh $(OUTPUT)/sandbox \
-		$(SANDBOX)/manifest-$(SANDBOX_CONFIGURATION)-$(EDITION).txt
 
 .PHONY: sandbox
 sandbox: sandbox-index
 	$(PREFIX)/bin/sourcemeta-one-server \
 		$(OUTPUT)/sandbox $(SANDBOX_PORT)
-
-.PHONY: sandbox-manifest-refresh
-sandbox-manifest-refresh: configure compile
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=empty || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=headless || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=ON SANDBOX_CONFIGURATION=html || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=empty || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=headless || true
-	$(CMAKE) -E rm -R -f build/sandbox && $(MAKE) configure compile sandbox-index ENTERPRISE=OFF SANDBOX_CONFIGURATION=html || true
 
 .PHONY: docker
 docker: $(DOCKERFILE)

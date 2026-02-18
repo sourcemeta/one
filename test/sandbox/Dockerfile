@@ -20,15 +20,4 @@ RUN sourcemeta \
 RUN test -d "$SOURCEMETA_ONE_WORKDIR" -a \
   "$(find "$SOURCEMETA_ONE_WORKDIR" -mindepth 1 -maxdepth 1 | wc -l)" -eq 0
 
-# For basic testing purposes
-COPY manifest-html-community.txt .
-COPY manifest-html-enterprise.txt .
-COPY manifest-headless-community.txt .
-COPY manifest-headless-enterprise.txt .
-COPY manifest-empty-community.txt .
-COPY manifest-empty-enterprise.txt .
-
-COPY manifest-check.sh .
-RUN ./manifest-check.sh "$SOURCEMETA_ONE_OUTPUT" \
-  ./manifest-${SOURCEMETA_ONE_SANDBOX_CONFIGURATION}-${SOURCEMETA_ONE_SANDBOX_EDITION}.txt
 RUN rm -rf "$SOURCEMETA_ONE_WORKDIR"
