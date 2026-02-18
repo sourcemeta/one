@@ -9,14 +9,13 @@
 class ResolverTest : public testing::Test {
 protected:
   static auto SetUpTestSuite() -> void {
-    sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
     const auto raw_configuration{sourcemeta::one::Configuration::read(
         CONFIGURATION_PATH,
-        std::filesystem::path{CONFIGURATION_PATH}.parent_path() / "collections",
-        collection_base_paths)};
+        std::filesystem::path{CONFIGURATION_PATH}.parent_path() /
+            "collections")};
     shared_configuration = std::make_unique<sourcemeta::one::Configuration>(
         sourcemeta::one::Configuration::parse(
-            raw_configuration, collection_base_paths,
+            raw_configuration,
             std::filesystem::path{CONFIGURATION_PATH}.parent_path()));
   }
 

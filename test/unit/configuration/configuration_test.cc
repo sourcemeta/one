@@ -24,12 +24,10 @@
 TEST(Configuration, valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -78,12 +76,10 @@ TEST(Configuration, valid_001) {
 TEST(Configuration, valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_002.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -99,12 +95,10 @@ TEST(Configuration, valid_002) {
 TEST(Configuration, valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_003.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -136,12 +130,10 @@ TEST(Configuration, valid_003) {
 TEST(Configuration, valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_004.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -179,12 +171,10 @@ TEST(Configuration, valid_004) {
 TEST(Configuration, valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_005.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -222,12 +212,10 @@ TEST(Configuration, valid_005) {
 TEST(Configuration, valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_006.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -265,12 +253,10 @@ TEST(Configuration, valid_006) {
 TEST(Configuration, valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_007.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -308,12 +294,10 @@ TEST(Configuration, valid_007) {
 TEST(Configuration, valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_008.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, collection_base_paths,
-      configuration_path.parent_path())};
+      raw_configuration, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 

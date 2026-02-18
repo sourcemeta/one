@@ -7,7 +7,6 @@
 #include <sourcemeta/one/configuration_error.h>
 
 #include <filesystem>    // std::filesystem::path
-#include <map>           // std::map
 #include <optional>      // std::optional
 #include <unordered_map> // std::unordered_map
 #include <variant>       // std::variant
@@ -15,14 +14,10 @@
 namespace sourcemeta::one {
 
 struct Configuration {
-  using CollectionBasePaths =
-      std::map<std::filesystem::path, std::filesystem::path>;
-
   static auto read(const std::filesystem::path &configuration_path,
-                   const std::filesystem::path &collections_path,
-                   CollectionBasePaths &base_paths) -> sourcemeta::core::JSON;
+                   const std::filesystem::path &collections_path)
+      -> sourcemeta::core::JSON;
   static auto parse(const sourcemeta::core::JSON &data,
-                    const CollectionBasePaths &base_paths,
                     const std::filesystem::path &default_base_path)
       -> Configuration;
 

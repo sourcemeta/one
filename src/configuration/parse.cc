@@ -30,28 +30,31 @@ auto page_from_json(const sourcemeta::core::JSON &input)
 }
 
 template <typename T>
-auto entries_from_json(
-    T &result, const std::filesystem::path &location,
-    const sourcemeta::core::JSON &input,
-    const sourcemeta::one::Configuration::CollectionBasePaths &base_paths,
-    const std::filesystem::path &default_base_path) -> void {
+auto entries_from_json(T &result, const std::filesystem::path &location,
+                       const sourcemeta::core::JSON &input,
+                       const std::filesystem::path &default_base_path) -> void {
   // A heuristic to check if we are at the root or not
   if (input.defines("url")) {
     if (input.defines("contents")) {
       for (const auto &entry : input.at("contents").as_object()) {
         entries_from_json<T>(result, location / entry.first, entry.second,
-                             base_paths, default_base_path);
+                             default_base_path);
       }
     }
   } else {
     assert(!result.contains(location));
     if (input.defines("path")) {
-      const std::filesystem::path absolute_path{input.at("path").to_string()};
-      const auto match{base_paths.find(absolute_path)};
-      const auto &collection_base_path{
-          match != base_paths.end() ? match->second : default_base_path};
+      auto collection_input{input};
+      const auto base_path{
+          collection_input.defines("x-sourcemeta-one:path")
+              ? std::filesystem::path{collection_input
+                                          .at("x-sourcemeta-one:path")
+                                          .to_string()}
+                    .parent_path()
+              : default_base_path};
+      collection_input.erase("x-sourcemeta-one:path");
       auto collection{sourcemeta::blaze::Configuration::from_json(
-          input, collection_base_path)};
+          collection_input, base_path)};
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
       std::ranges::transform(
@@ -68,7 +71,7 @@ auto entries_from_json(
       if (input.defines("contents")) {
         for (const auto &entry : input.at("contents").as_object()) {
           entries_from_json<T>(result, location / entry.first, entry.second,
-                               base_paths, default_base_path);
+                               default_base_path);
         }
       }
     }
@@ -80,7 +83,6 @@ auto entries_from_json(
 namespace sourcemeta::one {
 
 auto Configuration::parse(const sourcemeta::core::JSON &data,
-                          const CollectionBasePaths &base_paths,
                           const std::filesystem::path &default_base_path)
     -> Configuration {
   const auto compiled_schema{sourcemeta::blaze::from_json(
@@ -119,7 +121,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
-  entries_from_json(result.entries, "", data, base_paths, default_base_path);
+  entries_from_json(result.entries, "", data, default_base_path);
 
   return result;
 }

@@ -15,9 +15,8 @@ auto replace_all(std::string &text, const std::string &from,
 TEST(Configuration_read, read_valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_001.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -37,6 +36,7 @@ TEST(Configuration_read, read_valid_001) {
             "title": "Test",
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_001.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#",
             "resolve": {
               "https://other.com/single.json": "/foo.json"
@@ -60,9 +60,8 @@ TEST(Configuration_read, read_valid_001) {
 TEST(Configuration_read, read_valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_002.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -77,6 +76,7 @@ TEST(Configuration_read, read_valid_002) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -92,9 +92,8 @@ TEST(Configuration_read, read_valid_002) {
 TEST(Configuration_read, read_valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_003.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -109,6 +108,7 @@ TEST(Configuration_read, read_valid_003) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -124,9 +124,8 @@ TEST(Configuration_read, read_valid_003) {
 TEST(Configuration_read, read_valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_004.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -144,6 +143,7 @@ TEST(Configuration_read, read_valid_004) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -159,9 +159,8 @@ TEST(Configuration_read, read_valid_004) {
 TEST(Configuration_read, read_valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_005.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -179,6 +178,7 @@ TEST(Configuration_read, read_valid_005) {
           "nested": {
             "baseUri": "https://example.com/extension",
             "path": "STUB_DIRECTORY/folder/schemas/example/extension",
+            "x-sourcemeta-one:path": "STUB_DIRECTORY/folder/jsonschema.json",
             "defaultDialect": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -194,9 +194,8 @@ TEST(Configuration_read, read_valid_005) {
 TEST(Configuration_read, read_valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_006.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -223,9 +222,8 @@ TEST(Configuration_read, read_valid_006) {
 TEST(Configuration_read, read_valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_007.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -248,9 +246,8 @@ TEST(Configuration_read, read_valid_007) {
 TEST(Configuration_read, read_valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_008.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -272,9 +269,8 @@ TEST(Configuration_read, read_valid_008) {
 TEST(Configuration_read, read_valid_009) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_009.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -299,9 +295,8 @@ TEST(Configuration_read, read_valid_009) {
 TEST(Configuration_read, read_valid_010) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_010.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -326,9 +321,8 @@ TEST(Configuration_read, read_valid_010) {
 TEST(Configuration_read, read_valid_011) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_011.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -350,9 +344,8 @@ TEST(Configuration_read, read_valid_011) {
 TEST(Configuration_read, read_valid_012) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_012.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "include": "./read_valid_001.json",
@@ -370,9 +363,8 @@ TEST(Configuration_read, read_valid_012) {
 TEST(Configuration_read, read_valid_013) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_013.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -385,6 +377,7 @@ TEST(Configuration_read, read_valid_013) {
         "title": "Test",
         "baseUri": "https://example.com/extension",
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_013.json",
         "defaultDialect": "http://json-schema.org/draft-07/schema#",
         "resolve": {
           "https://other.com/single.json": "/foo.json"
@@ -402,9 +395,8 @@ TEST(Configuration_read, read_valid_013) {
 TEST(Configuration_read, read_valid_014) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_014.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -417,6 +409,7 @@ TEST(Configuration_read, read_valid_014) {
         "title": "Test",
         "baseUri": "https://example.com/extension",
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_014.json",
         "defaultDialect": "http://json-schema.org/draft-07/schema#",
         "resolve": {
           "https://other.com/single.json": "/foo.json"
@@ -438,9 +431,8 @@ TEST(Configuration_read, read_valid_014) {
 TEST(Configuration_read, read_valid_015) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_015.json"};
-  sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths)};
+      configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -451,6 +443,7 @@ TEST(Configuration_read, read_valid_015) {
     "contents": {
       "example": {
         "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_015.json",
         "baseUri": "http://localhost:8000"
       }
     }
@@ -466,9 +459,8 @@ TEST(Configuration_read, read_invalid_001) {
                                 "read_invalid_001.json"};
 
   try {
-    sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
-    sourcemeta::one::Configuration::read(
-        configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths);
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     EXPECT_EQ(error.from(), configuration_path);
@@ -487,9 +479,8 @@ TEST(Configuration_read, read_invalid_002) {
                                 "read_invalid_002.json"};
 
   try {
-    sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
-    sourcemeta::one::Configuration::read(
-        configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths);
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
                &error) {
@@ -507,9 +498,8 @@ TEST(Configuration_read, read_invalid_003) {
                                 "read_invalid_003.json"};
 
   try {
-    sourcemeta::one::Configuration::CollectionBasePaths collection_base_paths;
-    sourcemeta::one::Configuration::read(
-        configuration_path, COLLECTIONS_DIRECTORY, collection_base_paths);
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
                &error) {
