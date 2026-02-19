@@ -2,7 +2,7 @@ FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
-  openssl libssl-dev openssl-provider-fips \
+  openssl libssl-dev openssl-provider-fips jq \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Enable the OpenSSL FIPS provider by running the module self-tests
@@ -63,6 +63,9 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel
 
+RUN mkdir -p /usr/share/sbom && /source/enterprise/scripts/sbom.sh \
+    /source "$(cat /build/VERSION)" > /usr/share/sbom/sourcemeta-one-enterprise.spdx
+
 FROM debian:trixie-slim
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
@@ -111,6 +114,13 @@ ARG SOURCEMETA_ONE_OUTPUT=/sourcemeta
 ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
+
+COPY --from=builder /usr/share/sbom/sourcemeta-one-enterprise.spdx \
+  /usr/share/sbom/sourcemeta-one-enterprise.spdx
+COPY enterprise/scripts/sbom-append-dpkg.sh /tmp/sbom-append-dpkg.sh
+RUN /tmp/sbom-append-dpkg.sh /usr/share/sbom/sourcemeta-one-enterprise.spdx \
+    && rm -f /tmp/sbom-append-dpkg.sh
+RUN cat /usr/share/sbom/sourcemeta-one-enterprise.spdx
 
 ENV SOURCEMETA_ONE_PORT=8000
 ENTRYPOINT [ "/usr/bin/sourcemeta-server" ]
