@@ -42,7 +42,7 @@ EOF
 "$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
-cat << EOF > "$TMP/expected.txt"
+cat << EOF > "$TMP/expected_ab.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
@@ -50,4 +50,13 @@ Detecting: $(realpath "$TMP")/schemas/b.json (#2)
 unexpected error: Cannot register the same identifier twice
 EOF
 
-diff "$TMP/output.txt" "$TMP/expected.txt"
+cat << EOF > "$TMP/expected_ba.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas/b.json (#1)
+Detecting: $(realpath "$TMP")/schemas/a.json (#2)
+unexpected error: Cannot register the same identifier twice
+EOF
+
+diff "$TMP/output.txt" "$TMP/expected_ab.txt" || \
+  diff "$TMP/output.txt" "$TMP/expected_ba.txt"
