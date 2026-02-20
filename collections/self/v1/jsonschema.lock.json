@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "dependencies": {
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path": {
+      "path": "./schemas/common/path.json",
+      "hash": "55291fcd6a20ad398fd8cce6e27637fb4dd861e823d9f6393bdcbac26e2d85c2",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address": {
+      "path": "./schemas/common/address.json",
+      "hash": "041d1dfe9d43875c554deef8122b5f0058c157cdc40c4234a9b6162a205476ae",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer": {
+      "path": "./schemas/common/pointer.json",
+      "hash": "b1effb8f523649a6d2d03c3dd5fc5767e38d902713fcfa0b7f76fc42d8028a58",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/problem-details/problem": {
+      "path": "./schemas/common/problem.json",
+      "hash": "72a4330808b19a576d827c28b684702b29adc4776e0bb8336ba1b79350ab91bc",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri": {
+      "path": "./schemas/common/uri.json",
+      "hash": "e836aeaccf3861c2df7c4a4af98fc4f3722cb61633d9226ca57f923408aa5313",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference": {
+      "path": "./schemas/common/uri-reference.json",
+      "hash": "d58515063a9ccff816f7de6a4911a8812f834b5cf0631f7342dcd3b2cb7fc53d",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative": {
+      "path": "./schemas/common/uri-relative.json",
+      "hash": "f97bf1ace564126a4dd0c7341600cef66ab38f83a8eae829e64738c9643291a5",
+      "hashAlgorithm": "sha256"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url": {
+      "path": "./schemas/common/url.json",
+      "hash": "0989e52749498030d5c96139cc407b5c5257dbc7e6c25aa8d05556113e828e2e",
+      "hashAlgorithm": "sha256"
+    }
+  }
+}

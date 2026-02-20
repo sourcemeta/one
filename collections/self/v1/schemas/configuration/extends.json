@@ -14,7 +14,7 @@
         "$ref": "./rpath.json"
       },
       {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+        "$ref": "../common/path.json"
       }
     ]
   }

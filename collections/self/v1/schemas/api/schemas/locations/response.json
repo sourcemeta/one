@@ -46,13 +46,13 @@
           "enum": [ "resource", "anchor", "pointer", "subschema" ]
         },
         "base": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$ref": "../../../common/url.json"
         },
         "baseDialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+          "$ref": "../../../common/uri.json"
         },
         "dialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$ref": "../../../common/url.json"
         },
         "parent": {
           "anyOf": [
@@ -60,21 +60,21 @@
               "type": "null"
             },
             {
-              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+              "$ref": "../../../common/pointer.json"
             }
           ]
         },
         "pointer": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+          "$ref": "../../../common/pointer.json"
         },
         "position": {
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+          "$ref": "../../../common/pointer.json"
         },
         "root": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$ref": "../../../common/url.json"
         },
         "propertyName": {
           "type": "boolean"

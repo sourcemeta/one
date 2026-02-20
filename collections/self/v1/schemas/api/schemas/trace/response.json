@@ -32,10 +32,10 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+            "$ref": "../../../common/pointer.json"
           },
           "instanceLocation": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+            "$ref": "../../../common/pointer.json"
           },
           "instancePositions": {
             "type": "array",
@@ -47,7 +47,7 @@
             }
           },
           "keywordLocation": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+            "$ref": "../../../common/url.json"
           },
           "message": {
             "type": [ "string", "null" ]
@@ -61,7 +61,7 @@
                 "type": "null"
               },
               {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+                "$ref": "../../../common/uri.json"
               }
             ]
           }

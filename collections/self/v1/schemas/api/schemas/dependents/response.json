@@ -16,10 +16,10 @@
     "required": [ "from", "to" ],
     "properties": {
       "from": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$ref": "../../../common/url.json"
       },
       "to": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$ref": "../../../common/url.json"
       }
     },
     "additionalProperties": false

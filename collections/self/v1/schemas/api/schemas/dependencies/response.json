@@ -17,13 +17,13 @@
     "required": [ "from", "to", "at" ],
     "properties": {
       "at": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+        "$ref": "../../../common/pointer.json"
       },
       "from": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$ref": "../../../common/url.json"
       },
       "to": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$ref": "../../../common/url.json"
       }
     },
     "additionalProperties": false
