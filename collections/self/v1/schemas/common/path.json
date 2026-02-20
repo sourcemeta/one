@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path",
+  "title": "IEEE Std 1003.1-2017 POSIX File Path)",
+  "description": "IEEE Std 1003.1-2017 POSIX pathname",
+  "examples": [
+    "/",
+    "/home/user/document.txt",
+    "/usr/local/bin/program",
+    "file.txt",
+    "documents/project/readme.md",
+    "../config/settings.conf"
+  ],
+  "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+  "x-links": [ "https://pubs.opengroup.org/onlinepubs/9699919799/" ],
+  "anyOf": [
+    {
+      "$ref": "./path-absolute"
+    },
+    {
+      "$ref": "./path-relative"
+    }
+  ],
+  "$defs": {
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-absolute": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-absolute",
+      "title": "IEEE Std 1003.1-2017 POSIX File Path (Absolute)",
+      "description": "IEEE Std 1003.1-2017 POSIX absolute pathname",
+      "examples": [
+        "/",
+        "/home/user/document.txt",
+        "/usr/local/bin/program",
+        "/etc/systemd/system/service.conf",
+        "/tmp/temp_file-123.tmp"
+      ],
+      "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+      "x-links": [ "https://pubs.opengroup.org/onlinepubs/9699919799/" ],
+      "type": "string",
+      "not": {
+        "$comment": "Cannot contain null bytes",
+        "pattern": "\u0000"
+      },
+      "pattern": "^/"
+    },
+    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-relative": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-relative",
+      "title": "IEEE Std 1003.1-2017 POSIX File Path (Relative)",
+      "description": "IEEE Std 1003.1-2017 POSIX relative pathname",
+      "examples": [
+        "",
+        "file.txt",
+        "documents/project/readme.md",
+        "../config/settings.conf",
+        ".ssh/id_rsa"
+      ],
+      "x-license": "https://github.com/sourcemeta/std/blob/main/LICENSE",
+      "x-links": [ "https://pubs.opengroup.org/onlinepubs/9699919799/" ],
+      "type": "string",
+      "not": {
+        "anyOf": [
+          {
+            "$comment": "Cannot contain null bytes",
+            "pattern": "\u0000"
+          },
+          {
+            "$comment": "Cannot start with slash",
+            "pattern": "^/"
+          }
+        ]
+      }
+    }
+  }
+}

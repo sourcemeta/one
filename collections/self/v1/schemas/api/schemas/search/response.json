@@ -23,7 +23,7 @@
         "type": "string"
       },
       "path": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+        "$ref": "../../../common/uri-relative.json"
       }
     },
     "additionalProperties": false

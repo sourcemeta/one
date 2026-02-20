@@ -33,7 +33,7 @@
               "type": "string"
             },
             "url": {
-              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+              "$ref": "../common/url.json"
             }
           },
           "additionalProperties": false
@@ -51,7 +51,7 @@
       "additionalProperties": false
     },
     "url": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$ref": "../common/url.json"
     }
   },
   "additionalProperties": false

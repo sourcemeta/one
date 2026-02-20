@@ -35,14 +35,14 @@
             "type": "string"
           },
           "path": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+            "$ref": "../../common/uri-relative.json"
           }
         },
         "additionalProperties": false
       }
     },
     "email": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+      "$ref": "../../common/address.json"
     },
     "entries": {
       "type": "array",
@@ -62,7 +62,7 @@
                 "const": "directory"
               },
               "email": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+                "$ref": "../../common/address.json"
               },
               "github": {
                 "type": "string"
@@ -76,10 +76,10 @@
                 "type": "string"
               },
               "path": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+                "$ref": "../../common/uri-relative.json"
               },
               "website": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+                "$ref": "../../common/url.json"
               }
             },
             "additionalProperties": false
@@ -109,13 +109,13 @@
       "minimum": 0
     },
     "path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+      "$ref": "../../common/uri-relative.json"
     },
     "url": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$ref": "../../common/url.json"
     },
     "website": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$ref": "../../common/url.json"
     }
   },
   "additionalProperties": false

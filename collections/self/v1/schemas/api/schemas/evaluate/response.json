@@ -36,17 +36,17 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+                "$ref": "../../../common/url.json"
               },
               "annotation": {
                 "type": "array",
                 "minItems": 1
               },
               "instanceLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+                "$ref": "../../../common/pointer.json"
               },
               "keywordLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+                "$ref": "../../../common/pointer.json"
               }
             },
             "additionalProperties": false
@@ -75,16 +75,16 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+                "$ref": "../../../common/url.json"
               },
               "error": {
                 "type": "string"
               },
               "instanceLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+                "$ref": "../../../common/pointer.json"
               },
               "keywordLocation": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+                "$ref": "../../../common/pointer.json"
               }
             },
             "additionalProperties": false

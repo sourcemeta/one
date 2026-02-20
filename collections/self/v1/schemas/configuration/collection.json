@@ -25,37 +25,37 @@
       "type": "boolean"
     },
     "x-sourcemeta-one:path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+      "$ref": "../common/path.json"
     },
     "x-sourcemeta-one:provenance": {
       "$ref": "./rpath.json"
     },
     "baseUri": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+      "$ref": "../common/uri-reference.json"
     },
     "defaultDialect": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+      "$ref": "../common/uri.json"
     },
     "email": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+      "$ref": "../common/address.json"
     },
     "github": {
       "type": "string"
     },
     "path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+      "$ref": "../common/path.json"
     },
     "resolve": {
       "type": "object",
       "propertyNames": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+        "$ref": "../common/uri-reference.json"
       },
       "additionalProperties": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+        "$ref": "../common/uri-reference.json"
       }
     },
     "website": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$ref": "../common/url.json"
     },
     "lint": {
       "type": "object",
@@ -63,7 +63,7 @@
         "rules": {
           "type": "array",
           "items": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+            "$ref": "../common/path.json"
           }
         }
       },
@@ -72,7 +72,7 @@
     "ignore": {
       "type": "array",
       "items": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+        "$ref": "../common/path.json"
       }
     }
   },

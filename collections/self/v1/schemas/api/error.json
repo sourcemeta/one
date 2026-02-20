@@ -9,7 +9,7 @@
       "detail": "The requested schema was not found"
     }
   ],
-  "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/problem-details/problem",
+  "$ref": "../common/problem.json",
   "required": [ "title", "status", "detail" ],
   "properties": {
     "title": {
