@@ -1,5 +1,5 @@
 /*
- * Authored by Alex Hultman, 2018-2022.
+ * Authored by Alex Hultman, 2018-2026.
  * Intellectual property of third-party.
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@
 
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <algorithm>
 #include <string_view>
 #include "MoveOnlyFunction.h"

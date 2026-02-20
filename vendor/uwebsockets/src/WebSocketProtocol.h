@@ -25,6 +25,10 @@
 #include <cstdlib>
 #include <string_view>
 
+#ifdef UWS_USE_SIMDUTF
+  #include <simdutf.h>
+#endif
+
 namespace uWS {
 
 /* We should not overcomplicate these */
@@ -95,22 +99,32 @@ T bit_cast(char *c) {
 /* Byte swap for little-endian systems */
 template <typename T>
 T cond_byte_swap(T value) {
+    static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
     uint32_t endian_test = 1;
-    if (*((char *)&endian_test)) {
-        union {
-            T i;
-            uint8_t b[sizeof(T)];
-        } src = { value }, dst;
+    if (*reinterpret_cast<char*>(&endian_test)) {
+        uint8_t src[sizeof(T)];
+        uint8_t dst[sizeof(T)];
 
-        for (unsigned int i = 0; i < sizeof(value); i++) {
-            dst.b[i] = src.b[sizeof(value) - 1 - i];
+        std::memcpy(src, &value, sizeof(T));
+        for (size_t i = 0; i < sizeof(T); ++i) {
+            dst[i] = src[sizeof(T) - 1 - i];
         }
 
-        return dst.i;
+        T result;
+        std::memcpy(&result, dst, sizeof(T));
+        return result;
     }
     return value;
 }
 
+#ifdef UWS_USE_SIMDUTF
+
+static bool isValidUtf8(unsigned char *s, size_t length)
+{
+    return simdutf::validate_utf8((const char *)s, length);
+}
+
+#else
 // Based on utf8_check.c by Markus Kuhn, 2005
 // https://www.cl.cam.ac.uk/~mgk25/ucs/utf8_check.c
 // Optimized for predominantly 7-bit content by Alex Hultman, 2016
@@ -157,6 +171,8 @@ static bool isValidUtf8(unsigned char *s, size_t length)
     }
     return true;
 }
+
+#endif
 
 struct CloseFrame {
     uint16_t code;
