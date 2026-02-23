@@ -22,6 +22,7 @@ target_link_libraries(sourcemeta_one_server PRIVATE uNetworking::uSockets)
 target_link_libraries(sourcemeta_one_server PRIVATE uNetworking::uWebSockets)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::gzip)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::shared)
+target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::storage)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::blaze::output)
 

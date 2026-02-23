@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 
 #include <sourcemeta/one/shared.h>
+#include <sourcemeta/one/storage.h>
 
 #include "helpers.h"
 #include "request.h"
@@ -11,18 +12,15 @@
 
 #include <algorithm>   // std::search
 #include <cassert>     // assert
-#include <filesystem>  // std::filesystem
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string, std::getline
 #include <string_view> // std::string_view
 
 namespace sourcemeta::one {
 
-static auto search(const std::filesystem::path &search_index,
+static auto search(const Storage &storage, const Storage::Key search_key,
                    const std::string_view query) -> sourcemeta::core::JSON {
-  assert(std::filesystem::exists(search_index));
-  assert(search_index.is_absolute());
-  auto file{read_stream_raw(search_index)};
+  auto file{storage.read_raw(search_key)};
   assert(file.has_value());
 
   auto result{sourcemeta::core::JSON::make_array()};
@@ -57,7 +55,7 @@ static auto search(const std::filesystem::path &search_index,
 
 } // namespace sourcemeta::one
 
-static auto action_schema_search(const std::filesystem::path &base,
+static auto action_schema_search(const sourcemeta::one::Storage &storage,
                                  sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response)
     -> void {
@@ -68,8 +66,9 @@ static auto action_schema_search(const std::filesystem::path &base,
                  "missing-query",
                  "You must provide a query parameter to search for");
     } else {
-      auto result{sourcemeta::one::search(
-          base / "explorer" / SENTINEL / "search.metapack", query)};
+      const auto search_key{sourcemeta::one::Storage::key("explorer", SENTINEL,
+                                                          "search.metapack")};
+      auto result{sourcemeta::one::search(storage, search_key, query)};
       response.write_status(sourcemeta::one::STATUS_OK);
       response.write_header("Access-Control-Allow-Origin", "*");
       response.write_header("Content-Type", "application/json");

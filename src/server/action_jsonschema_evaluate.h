@@ -8,14 +8,15 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/shared.h>
+#include <sourcemeta/one/storage.h>
 
 #include "helpers.h"
 #include "request.h"
 #include "response.h"
 
 #include <cassert>     // assert
-#include <filesystem>  // std::filesystem::path
 #include <sstream>     // std::ostringstream
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <type_traits> // std::underlying_type_t
 #include <utility>     // std::move
@@ -24,14 +25,14 @@ namespace {
 
 auto trace(sourcemeta::blaze::Evaluator &evaluator,
            const sourcemeta::blaze::Template &schema_template,
-           const std::string &instance,
-           const std::filesystem::path &template_path)
+           const std::string &instance, const sourcemeta::one::Storage &storage,
+           const sourcemeta::one::Storage::Key template_key)
     -> sourcemeta::core::JSON {
   auto steps{sourcemeta::core::JSON::make_array()};
 
-  auto locations_path{template_path.parent_path() / "locations.metapack"};
   // TODO: Cache this across runs?
-  const auto locations{sourcemeta::one::read_json(locations_path)};
+  const auto locations{
+      storage.read_sibling_json(template_key, "locations.metapack")};
   assert(locations.defines("static"));
   const auto &static_locations{locations.at("static")};
 
@@ -120,15 +121,13 @@ namespace sourcemeta::one {
 
 enum class EvaluateType { Standard, Trace };
 
-auto evaluate(const std::filesystem::path &template_path,
+auto evaluate(const Storage &storage, const Storage::Key template_key,
               const std::string &instance, const EvaluateType type)
     -> sourcemeta::core::JSON {
-  assert(std::filesystem::exists(template_path));
-
   // TODO: Cache this conversion across runs, potentially using the schema file
   // "checksum" as the cache key. This is important as the template might be
   // compressed
-  const auto template_json{read_json(template_path)};
+  const auto template_json{storage.read_json(template_key)};
   const auto schema_template{sourcemeta::blaze::from_json(template_json)};
   assert(schema_template.has_value());
 
@@ -141,7 +140,8 @@ auto evaluate(const std::filesystem::path &template_path,
           sourcemeta::core::parse_json(instance),
           sourcemeta::blaze::StandardOutput::Basic);
     case EvaluateType::Trace:
-      return trace(evaluator, schema_template.value(), instance, template_path);
+      return trace(evaluator, schema_template.value(), instance, storage,
+                   template_key);
     default:
       // We should never get here
       assert(false);
@@ -151,12 +151,13 @@ auto evaluate(const std::filesystem::path &template_path,
 
 } // namespace sourcemeta::one
 
-static auto
-action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
-                                    const sourcemeta::one::EvaluateType mode,
-                                    sourcemeta::one::HTTPRequest &request,
-                                    sourcemeta::one::HTTPResponse &response,
-                                    std::string &&body, bool too_big) -> void {
+static auto action_jsonschema_evaluate_callback(
+    const sourcemeta::one::Storage &storage,
+    const sourcemeta::one::Storage::Key template_key,
+    const sourcemeta::one::EvaluateType mode,
+    sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response, std::string &&body, bool too_big)
+    -> void {
   if (too_big) {
     json_error(request, response, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
                "payload-too-large", "The request body is too large");
@@ -170,7 +171,8 @@ action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
   }
 
   try {
-    const auto result{sourcemeta::one::evaluate(template_path, body, mode)};
+    const auto result{
+        sourcemeta::one::evaluate(storage, template_key, body, mode)};
     response.write_status(sourcemeta::one::STATUS_OK);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", "*");
@@ -192,7 +194,7 @@ action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
   }
 }
 
-static auto action_jsonschema_evaluate(const std::filesystem::path &base,
+static auto action_jsonschema_evaluate(const sourcemeta::one::Storage &storage,
                                        const std::string_view &path,
                                        sourcemeta::one::HTTPRequest &request,
                                        sourcemeta::one::HTTPResponse &response,
@@ -207,13 +209,10 @@ static auto action_jsonschema_evaluate(const std::filesystem::path &base,
     response.write_header("Access-Control-Max-Age", "3600");
     send_response(sourcemeta::one::STATUS_NO_CONTENT, request, response);
   } else if (request.method() == "post") {
-    auto template_path{base / "schemas"};
-    template_path /= path;
-    template_path /= SENTINEL;
-    template_path /= "blaze-exhaustive.metapack";
-    if (!std::filesystem::exists(template_path)) {
-      const auto schema_path{template_path.parent_path() / "schema.metapack"};
-      if (std::filesystem::exists(schema_path)) {
+    const auto template_key{sourcemeta::one::Storage::key(
+        "schemas", path, SENTINEL, "blaze-exhaustive.metapack")};
+    if (!storage.exists(template_key)) {
+      if (storage.sibling_exists(template_key, "schema.metapack")) {
         json_error(request, response,
                    sourcemeta::one::STATUS_METHOD_NOT_ALLOWED, "no-template",
                    "This schema was not precompiled for schema evaluation");
@@ -226,12 +225,12 @@ static auto action_jsonschema_evaluate(const std::filesystem::path &base,
     }
 
     request.body(
-        [mode, template_path = std::move(template_path)](
-            sourcemeta::one::HTTPRequest &callback_request,
-            sourcemeta::one::HTTPResponse &callback_response,
-            std::string &&body, bool too_big) {
+        [mode, &storage,
+         template_key](sourcemeta::one::HTTPRequest &callback_request,
+                       sourcemeta::one::HTTPResponse &callback_response,
+                       std::string &&body, bool too_big) {
           action_jsonschema_evaluate_callback(
-              template_path, mode, callback_request, callback_response,
+              storage, template_key, mode, callback_request, callback_response,
               std::move(body), too_big);
         },
         [](sourcemeta::one::HTTPRequest &callback_request,
