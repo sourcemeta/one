@@ -4,22 +4,23 @@
 #include <sourcemeta/core/time.h>
 
 #include <sourcemeta/one/shared.h>
+#include <sourcemeta/one/storage.h>
 
 #include "helpers.h"
 #include "request.h"
 #include "response.h"
 
-#include <chrono>     // std::chrono::seconds
-#include <filesystem> // std::filesystem
-#include <optional>   // std::optional
-#include <sstream>    // std::ostringstream
-#include <string>     // std::string
+#include <chrono>   // std::chrono::seconds
+#include <fstream>  // std::ifstream
+#include <optional> // std::optional
+#include <sstream>  // std::ostringstream
+#include <string>   // std::string
 
 static auto action_serve_metapack_file(
     const sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response,
-    const std::filesystem::path &absolute_path, const char *const code,
-    const bool enable_cors = false,
+    std::optional<sourcemeta::one::File<std::ifstream>> file,
+    const char *const code, const bool enable_cors = false,
     const std::optional<std::string> &mime = std::nullopt,
     const std::optional<std::string> &link = std::nullopt) -> void {
   if (request.method() != "get" && request.method() != "head") {
@@ -29,7 +30,6 @@ static auto action_serve_metapack_file(
     return;
   }
 
-  auto file{sourcemeta::one::read_stream_raw(absolute_path)};
   if (!file.has_value()) {
     json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
                "not-found", "There is nothing at this URL");
@@ -114,6 +114,30 @@ static auto action_serve_metapack_file(
     send_response(code, request, response, contents.str(),
                   sourcemeta::one::Encoding::Identity);
   }
+}
+
+static auto action_serve_metapack_file_local(
+    const sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response,
+    const std::filesystem::path &absolute_path, const char *const code,
+    const bool enable_cors = false,
+    const std::optional<std::string> &mime = std::nullopt,
+    const std::optional<std::string> &link = std::nullopt) -> void {
+  action_serve_metapack_file(request, response,
+                             sourcemeta::one::read_stream_raw(absolute_path),
+                             code, enable_cors, mime, link);
+}
+
+static auto action_serve_metapack_file(
+    const sourcemeta::one::Storage &storage,
+    const sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response,
+    const sourcemeta::one::Storage::Key key, const char *const code,
+    const bool enable_cors = false,
+    const std::optional<std::string> &mime = std::nullopt,
+    const std::optional<std::string> &link = std::nullopt) -> void {
+  action_serve_metapack_file(request, response, storage.read_raw(key), code,
+                             enable_cors, mime, link);
 }
 
 #endif
