@@ -169,6 +169,10 @@ static auto index_main(const std::string_view &program,
       continue;
     }
 
+    if (!std::filesystem::is_directory(collection->absolute_path)) {
+      continue;
+    }
+
     for (const auto &entry : std::filesystem::recursive_directory_iterator{
              collection->absolute_path}) {
       if (!entry.is_regular_file()) {
