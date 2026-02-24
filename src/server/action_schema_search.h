@@ -13,6 +13,7 @@
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem
 #include <sstream>     // std::ostringstream
+#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string, std::getline
 #include <string_view> // std::string_view
 
@@ -20,10 +21,16 @@ namespace sourcemeta::one {
 
 static auto search(const std::filesystem::path &search_index,
                    const std::string_view query) -> sourcemeta::core::JSON {
-  assert(std::filesystem::exists(search_index));
+  if (!std::filesystem::exists(search_index)) {
+    throw std::runtime_error("Search index not found");
+  }
+
   assert(search_index.is_absolute());
+
   auto file{read_stream_raw(search_index)};
-  assert(file.has_value());
+  if (!file.has_value()) {
+    throw std::runtime_error("Failed to read search index");
+  }
 
   auto result{sourcemeta::core::JSON::make_array()};
   // TODO: Extend the Core JSONL iterators to be able

@@ -10,6 +10,7 @@
 #include <functional> // std::functional
 #include <ostream>    // std::ostream
 #include <sstream>    // std::ostringstream
+#include <stdexcept>  // std::runtime_error
 #include <utility>    // std::move
 
 // TODO: There are lots of opportunities to optimise this file
@@ -81,30 +82,31 @@ auto read_stream_raw(const std::filesystem::path &path)
 
   auto stream{sourcemeta::core::read_file(path)};
   auto metadata{sourcemeta::core::parse_json(stream)};
-  assert(metadata.is_object());
-  assert(metadata.defines("version"));
-  assert(metadata.defines("checksum"));
-  assert(metadata.defines("lastModified"));
-  assert(metadata.defines("mime"));
-  assert(metadata.defines("bytes"));
-  assert(metadata.defines("duration"));
-  assert(metadata.defines("encoding"));
-  assert(metadata.at("version").is_integer());
-  assert(metadata.at("version").is_positive());
-  assert(metadata.at("checksum").is_string());
-  assert(metadata.at("lastModified").is_string());
-  assert(metadata.at("mime").is_string());
-  assert(metadata.at("bytes").is_integer());
-  assert(metadata.at("bytes").is_positive());
-  assert(metadata.at("duration").is_integer());
-  assert(metadata.at("duration").is_positive());
-  assert(metadata.at("encoding").is_string());
+  if (!metadata.is_object() || !metadata.defines("version") ||
+      !metadata.defines("checksum") || !metadata.defines("lastModified") ||
+      !metadata.defines("mime") || !metadata.defines("bytes") ||
+      !metadata.defines("duration") || !metadata.defines("encoding")) {
+    throw std::runtime_error("The file metadata is missing required fields");
+  }
+
+  if (!metadata.at("version").is_integer() ||
+      !metadata.at("version").is_positive() ||
+      !metadata.at("checksum").is_string() ||
+      !metadata.at("lastModified").is_string() ||
+      !metadata.at("mime").is_string() || !metadata.at("bytes").is_integer() ||
+      !metadata.at("bytes").is_positive() ||
+      !metadata.at("duration").is_integer() ||
+      !metadata.at("duration").is_positive() ||
+      !metadata.at("encoding").is_string()) {
+    throw std::runtime_error(
+        "The file metadata has fields with unexpected types");
+  }
 
   Encoding encoding{Encoding::Identity};
   if (metadata.at("encoding").to_string() == "gzip") {
     encoding = Encoding::GZIP;
   } else if (metadata.at("encoding").to_string() != "identity") {
-    assert(false);
+    throw std::runtime_error("Failed to determine file encoding");
   }
 
   return File{
@@ -134,7 +136,9 @@ auto read_json_with_metadata(
     const sourcemeta::core::JSON::ParseCallback &callback)
     -> File<sourcemeta::core::JSON> {
   auto file{read_stream_raw(path)};
-  assert(file.has_value());
+  if (!file.has_value()) {
+    throw std::runtime_error("Failed to read file");
+  }
   std::ostringstream buffer;
   if (file.value().encoding == Encoding::GZIP) {
     sourcemeta::one::gunzip(file.value().data, buffer);
