@@ -5,8 +5,6 @@
 #include <sourcemeta/core/uritemplate_export.h>
 #endif
 
-#include <sourcemeta/core/io.h>
-
 #include <cstdint>     // std::uint16_t, std::uint32_t, std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::function
@@ -85,7 +83,7 @@ private:
 };
 
 /// @ingroup uritemplate
-/// A read-only memory-mapped view of a serialized URI Template router
+/// A read-only view of a serialized URI Template router
 class SOURCEMETA_CORE_URITEMPLATE_EXPORT URITemplateRouterView {
 public:
   /// A serialized node in the binary format
@@ -127,7 +125,7 @@ public:
       -> URITemplateRouter::Identifier;
 
 private:
-  FileView file_view_;
+  std::vector<std::uint8_t> data_;
 };
 
 #if defined(_MSC_VER)
