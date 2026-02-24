@@ -30,7 +30,7 @@ echo "Cosign: Signing ${IMAGE}@${DIGEST}" 1>&2
 cosign sign --yes "${IMAGE}@${DIGEST}"
 
 echo "Cosign: Attaching SBOM attestation to ${IMAGE}@${DIGEST}" 1>&2
-cosign attest --yes --predicate "$SBOM_FILE" --type spdx "${IMAGE}@${DIGEST}"
+cosign attest --yes --predicate "$SBOM_FILE" --type spdxjson "${IMAGE}@${DIGEST}"
 
 echo "Cosign: Verifying signature for ${IMAGE}@${DIGEST}" 1>&2
 echo "Cosign: OIDC issuer: ${CERTIFICATE_OIDC_ISSUER}" 1>&2
@@ -43,7 +43,7 @@ cosign verify \
 echo "Cosign: Signature verified successfully" 1>&2
 
 echo "Cosign: Verifying SBOM attestation for ${IMAGE}@${DIGEST}" 1>&2
-cosign verify-attestation --type spdx \
+cosign verify-attestation --type spdxjson \
   --certificate-oidc-issuer "$CERTIFICATE_OIDC_ISSUER" \
   --certificate-identity "$CERTIFICATE_IDENTITY" \
   "${IMAGE}@${DIGEST}"
