@@ -31,6 +31,14 @@ jobs:
 
       - run: make docker PRESET=Release ${{ matrix.edition.options }}
 
+      - name: SBOM (Enterprise)
+        run: |
+          node ./enterprise/scripts/sbom.js one /tmp/sbom.spdx.json
+          cat /tmp/sbom.spdx.json
+          npx --yes @sourcemeta/jsonschema validate \
+            vendor/spdx/schemas/spdx-schema.json /tmp/sbom.spdx.json --verbose
+        if: matrix.edition.name == 'enterprise'
+
       - name: Sandbox (headless)
         uses: ./.github/actions/sandbox
         with:

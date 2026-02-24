@@ -168,11 +168,22 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/one-enterprise
 
       - run: >
+          node ./enterprise/scripts/sbom.js
+          "ghcr.io/${{ github.repository_owner }}/one-enterprise:${{ steps.meta.outputs.version }}"
+          /tmp/sbom.spdx.json
+
+      - run: >
+          npx --yes @sourcemeta/jsonschema validate
+          vendor/spdx/schemas/spdx-schema.json
+          /tmp/sbom.spdx.json --verbose
+
+      - run: >
           ./enterprise/scripts/cosign.sh
           "ghcr.io/${{ github.repository_owner }}/one-enterprise"
           "${{ steps.meta.outputs.version }}"
           "https://token.actions.githubusercontent.com"
           "https://github.com/${{ github.repository }}/.github/workflows/deploy.yml@${{ github.ref }}"
+          "/tmp/sbom.spdx.json"
 
   release:
     needs: docker-multi-arch
