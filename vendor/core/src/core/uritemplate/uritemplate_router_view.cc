@@ -1,6 +1,5 @@
 #include <sourcemeta/core/uritemplate.h>
 
-#include <cassert>       // assert
 #include <cstring>       // std::memcmp
 #include <fstream>       // std::ofstream, std::ifstream
 #include <limits>        // std::numeric_limits
@@ -27,15 +26,9 @@ struct RouterHeader {
 // Binary search for a literal child matching the given segment
 inline auto binary_search_literal_children(
     const URITemplateRouterView::Node *nodes, const char *string_table,
-    const std::uint32_t first_child, const std::uint32_t child_count,
-    const char *segment, const std::uint32_t segment_length,
-    const std::uint32_t node_count, const std::size_t string_table_size)
-    noexcept -> std::uint32_t {
-  if (first_child >= node_count ||
-      first_child + child_count > node_count) {
-    return NO_CHILD;
-  }
-
+    const std::size_t string_table_size, const std::uint32_t first_child,
+    const std::uint32_t child_count, const char *segment,
+    const std::uint32_t segment_length) noexcept -> std::uint32_t {
   std::uint32_t low = 0;
   std::uint32_t high = child_count;
 
@@ -43,7 +36,9 @@ inline auto binary_search_literal_children(
     const auto middle = low + (high - low) / 2;
     const auto child_index = first_child + middle;
     const auto &child = nodes[child_index];
-    if (child.string_offset + child.string_length > string_table_size) {
+
+    if (child.string_offset > string_table_size ||
+        child.string_length > string_table_size - child.string_offset) {
       return NO_CHILD;
     }
 
@@ -199,45 +194,45 @@ URITemplateRouterView::URITemplateRouterView(
   if (!file) {
     throw URITemplateRouterReadError{path};
   }
+}
 
-  if (size < sizeof(RouterHeader)) {
-    throw URITemplateRouterReadError{path};
+URITemplateRouterView::URITemplateRouterView(const std::uint8_t *data,
+                                             const std::size_t size)
+    : data_{data, data + size} {}
+
+auto URITemplateRouterView::match(const std::string_view path,
+                                  const URITemplateRouter::Callback &callback)
+    const -> URITemplateRouter::Identifier {
+  if (this->data_.size() < sizeof(RouterHeader)) {
+    return 0;
   }
 
   const auto *header =
       reinterpret_cast<const RouterHeader *>(this->data_.data());
   if (header->magic != ROUTER_MAGIC || header->version != ROUTER_VERSION) {
-    throw URITemplateRouterReadError{path};
+    return 0;
   }
 
-  const auto minimum_size =
-      sizeof(RouterHeader) + header->node_count * sizeof(Node);
-  if (minimum_size > size) {
-    throw URITemplateRouterReadError{path};
-  }
-}
-
-auto URITemplateRouterView::match(const std::string_view path,
-                                  const URITemplateRouter::Callback &callback)
-    const -> URITemplateRouter::Identifier {
-  const auto *header =
-      reinterpret_cast<const RouterHeader *>(this->data_.data());
-  const auto node_count = header->node_count;
-  if (node_count == 0) {
+  if (header->node_count == 0 ||
+      header->node_count >
+          (this->data_.size() - sizeof(RouterHeader)) / sizeof(Node)) {
     return 0;
   }
 
   const auto *nodes =
       reinterpret_cast<const Node *>(this->data_.data() + sizeof(RouterHeader));
-  const auto *string_table =
-      header->string_table_offset <= this->data_.size()
-          ? reinterpret_cast<const char *>(this->data_.data() +
-                                           header->string_table_offset)
-          : nullptr;
+  const auto nodes_size =
+      static_cast<std::size_t>(header->node_count) * sizeof(Node);
+  const auto expected_string_table_offset = sizeof(RouterHeader) + nodes_size;
+  if (header->string_table_offset < expected_string_table_offset ||
+      header->string_table_offset > this->data_.size()) {
+    return 0;
+  }
+
+  const auto *string_table = reinterpret_cast<const char *>(
+      this->data_.data() + header->string_table_offset);
   const auto string_table_size =
-      string_table != nullptr
-          ? this->data_.size() - header->string_table_offset
-          : 0;
+      this->data_.size() - header->string_table_offset;
 
   // Empty path matches empty template
   if (path.empty()) {
@@ -251,9 +246,15 @@ auto URITemplateRouterView::match(const std::string_view path,
       return 0;
     }
 
+    if (root.first_literal_child >= header->node_count ||
+        root.literal_child_count >
+            header->node_count - root.first_literal_child) {
+      return 0;
+    }
+
     const auto match = binary_search_literal_children(
-        nodes, string_table, root.first_literal_child, root.literal_child_count,
-        "", 0, node_count, string_table_size);
+        nodes, string_table, string_table_size, root.first_literal_child,
+        root.literal_child_count, "", 0);
     return match != NO_CHILD ? nodes[match].identifier : 0;
   }
 
@@ -284,18 +285,19 @@ auto URITemplateRouterView::match(const std::string_view path,
       return 0;
     }
 
-    if (current_node >= node_count) {
-      return 0;
-    }
-
     const auto &node = nodes[current_node];
+    const auto node_count = header->node_count;
 
     // Try literal children first
     if (node.first_literal_child != NO_CHILD) {
+      if (node.first_literal_child >= node_count ||
+          node.literal_child_count > node_count - node.first_literal_child) {
+        return 0;
+      }
+
       const auto literal_match = binary_search_literal_children(
-          nodes, string_table, node.first_literal_child,
-          node.literal_child_count, segment_start, segment_length,
-          node_count, string_table_size);
+          nodes, string_table, string_table_size, node.first_literal_child,
+          node.literal_child_count, segment_start, segment_length);
       if (literal_match != NO_CHILD) {
         current_node = literal_match;
         if (position >= path_end) {
@@ -307,15 +309,18 @@ auto URITemplateRouterView::match(const std::string_view path,
     }
 
     // Fall back to variable child
-    if (node.variable_child != NO_CHILD && node.variable_child < node_count) {
-      if (variable_index >
-          std::numeric_limits<URITemplateRouter::Index>::max()) {
+    if (node.variable_child != NO_CHILD) {
+      if (node.variable_child >= node_count ||
+          variable_index >
+              std::numeric_limits<URITemplateRouter::Index>::max()) {
         return 0;
       }
 
       const auto &variable_node = nodes[node.variable_child];
-      if (variable_node.string_offset + variable_node.string_length >
-          string_table_size) {
+
+      if (variable_node.string_offset > string_table_size ||
+          variable_node.string_length >
+              string_table_size - variable_node.string_offset) {
         return 0;
       }
 
@@ -345,10 +350,6 @@ auto URITemplateRouterView::match(const std::string_view path,
     }
 
     // No match
-    return 0;
-  }
-
-  if (current_node >= node_count) {
     return 0;
   }
 
