@@ -16,6 +16,7 @@
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem::path
 #include <sstream>     // std::ostringstream
+#include <stdexcept>   // std::runtime_error
 #include <string_view> // std::string_view
 #include <type_traits> // std::underlying_type_t
 #include <utility>     // std::move
@@ -32,7 +33,9 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
   auto locations_path{template_path.parent_path() / "locations.metapack"};
   // TODO: Cache this across runs?
   const auto locations{sourcemeta::one::read_json(locations_path)};
-  assert(locations.defines("static"));
+  if (!locations.is_object() || !locations.defines("static")) {
+    throw std::runtime_error("Failed to read schema locations metadata");
+  }
   const auto &static_locations{locations.at("static")};
 
   sourcemeta::core::PointerPositionTracker tracker;
@@ -68,7 +71,9 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
             // TODO: Can we avoid converting the weak pointer into a pointer
             // here?
             sourcemeta::core::to_pointer(instance_location))};
-        assert(instance_positions.has_value());
+        if (!instance_positions.has_value()) {
+          throw std::runtime_error("Failed to resolve instance positions");
+        }
         step.assign(
             "instancePositions",
             sourcemeta::core::to_json(std::move(instance_positions).value()));
@@ -88,9 +93,17 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
         // Determine keyword vocabulary
         const auto &current_location{
             static_locations.at(instruction.keyword_location)};
+        if (!current_location.is_object() ||
+            !current_location.defines("baseDialect") ||
+            !current_location.defines("dialect")) {
+          throw std::runtime_error("Failed to resolve base dialect");
+        }
+
         const auto base_dialect_result{sourcemeta::core::to_base_dialect(
             current_location.at("baseDialect").to_string())};
-        assert(base_dialect_result.has_value());
+        if (!base_dialect_result.has_value()) {
+          throw std::runtime_error("Failed to resolve base dialect");
+        }
         const auto vocabularies{sourcemeta::core::vocabularies(
             sourcemeta::core::schema_resolver, base_dialect_result.value(),
             current_location.at("dialect").to_string())};
@@ -123,14 +136,18 @@ enum class EvaluateType { Standard, Trace };
 auto evaluate(const std::filesystem::path &template_path,
               const std::string &instance, const EvaluateType type)
     -> sourcemeta::core::JSON {
-  assert(std::filesystem::exists(template_path));
+  if (!std::filesystem::exists(template_path)) {
+    throw std::runtime_error("Schema template not found");
+  }
 
   // TODO: Cache this conversion across runs, potentially using the schema file
   // "checksum" as the cache key. This is important as the template might be
   // compressed
   const auto template_json{read_json(template_path)};
   const auto schema_template{sourcemeta::blaze::from_json(template_json)};
-  assert(schema_template.has_value());
+  if (!schema_template.has_value()) {
+    throw std::runtime_error("Failed to parse schema template");
+  }
 
   sourcemeta::blaze::Evaluator evaluator;
 
