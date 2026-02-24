@@ -5,6 +5,7 @@
 #include <sourcemeta/core/uritemplate_export.h>
 #endif
 
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint16_t, std::uint32_t, std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::function
@@ -110,6 +111,7 @@ public:
                    const std::filesystem::path &path) -> void;
 
   URITemplateRouterView(const std::filesystem::path &path);
+  URITemplateRouterView(const std::uint8_t *data, std::size_t size);
 
   // To avoid mistakes
   URITemplateRouterView(const URITemplateRouterView &) = delete;
