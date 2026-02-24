@@ -282,7 +282,16 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches[index] = value;
           })};
 
-      HANDLERS[handler](base, matches, request, response);
+      // For backwards compatibility in case the generated routes
+      // don't match this server version
+      if (handler >= std::size(HANDLERS)) [[unlikely]] {
+        json_error(
+            request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
+            "unknown-handler-code",
+            "This server version does not implement the handler for this URL");
+      } else {
+        HANDLERS[handler](base, matches, request, response);
+      }
     } else {
       json_error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
                  "cannot-satisfy-content-encoding",
