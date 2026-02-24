@@ -1,5 +1,4 @@
 #include <sourcemeta/core/uritemplate.h>
-#include <sourcemeta/one/storage.h>
 
 #include "action_jsonschema_evaluate.h"
 #include "action_jsonschema_serve.h"
@@ -20,148 +19,147 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static auto handle_self_v1_api_list(const sourcemeta::one::Storage &storage,
+static auto handle_self_v1_api_list(const std::filesystem::path &base,
                                     const std::span<std::string_view>,
                                     sourcemeta::one::HTTPRequest &request,
                                     sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("explorer", SENTINEL,
-                                               "directory.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
-                             sourcemeta::one::STATUS_OK, true, std::nullopt,
-                             "/self/v1/schemas/api/list/response");
+  action_serve_metapack_file(
+      request, response, base / "explorer" / SENTINEL / "directory.metapack",
+      sourcemeta::one::STATUS_OK, true, std::nullopt,
+      "/self/v1/schemas/api/list/response");
 }
 
 static auto
-handle_self_v1_api_list_path(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_list_path(const std::filesystem::path &base,
                              const std::span<std::string_view> matches,
                              sourcemeta::one::HTTPRequest &request,
                              sourcemeta::one::HTTPResponse &response) -> void {
-  const auto key{sourcemeta::one::Storage::key("explorer", matches.front(),
-                                               SENTINEL, "directory.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "explorer" / matches.front() / SENTINEL /
+                           "directory.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/list/response");
 }
 
 static auto handle_self_v1_api_schemas_dependencies(
-    const sourcemeta::one::Storage &storage,
+    const std::filesystem::path &base,
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  const auto key{sourcemeta::one::Storage::key(
-      "schemas", matches.front(), SENTINEL, "dependencies.metapack")};
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "dependencies.metapack"};
   action_serve_metapack_file(
-      storage, request, response, key, sourcemeta::one::STATUS_OK, true,
+      request, response, absolute_path, sourcemeta::one::STATUS_OK, true,
       std::nullopt, "/self/v1/schemas/api/schemas/dependencies/response");
 }
 
 static auto
-handle_self_v1_api_schemas_dependents(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_dependents(const std::filesystem::path &base,
                                       const std::span<std::string_view> matches,
                                       sourcemeta::one::HTTPRequest &request,
                                       sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key(
-      "schemas", matches.front(), SENTINEL, "dependents.metapack")};
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "dependents.metapack"};
   action_serve_metapack_file(
-      storage, request, response, key, sourcemeta::one::STATUS_OK, true,
+      request, response, absolute_path, sourcemeta::one::STATUS_OK, true,
       std::nullopt, "/self/v1/schemas/api/schemas/dependents/response");
 }
 
 static auto
-handle_self_v1_api_schemas_health(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_health(const std::filesystem::path &base,
                                   const std::span<std::string_view> matches,
                                   sourcemeta::one::HTTPRequest &request,
                                   sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("schemas", matches.front(),
-                                               SENTINEL, "health.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "health.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/schemas/health/response");
 }
 
 static auto
-handle_self_v1_api_schemas_locations(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_locations(const std::filesystem::path &base,
                                      const std::span<std::string_view> matches,
                                      sourcemeta::one::HTTPRequest &request,
                                      sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("schemas", matches.front(),
-                                               SENTINEL, "locations.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "locations.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/schemas/locations/response");
 }
 
 static auto
-handle_self_v1_api_schemas_positions(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_positions(const std::filesystem::path &base,
                                      const std::span<std::string_view> matches,
                                      sourcemeta::one::HTTPRequest &request,
                                      sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("schemas", matches.front(),
-                                               SENTINEL, "positions.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "positions.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/schemas/positions/response");
 }
 
 static auto
-handle_self_v1_api_schemas_stats(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_stats(const std::filesystem::path &base,
                                  const std::span<std::string_view> matches,
                                  sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("schemas", matches.front(),
-                                               SENTINEL, "stats.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "schemas" / matches.front() / SENTINEL /
+                           "stats.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/schemas/stats/response");
 }
 
 static auto
-handle_self_v1_api_schemas_metadata(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_metadata(const std::filesystem::path &base,
                                     const std::span<std::string_view> matches,
                                     sourcemeta::one::HTTPRequest &request,
                                     sourcemeta::one::HTTPResponse &response)
     -> void {
-  const auto key{sourcemeta::one::Storage::key("explorer", matches.front(),
-                                               SENTINEL, "schema.metapack")};
-  action_serve_metapack_file(storage, request, response, key,
+  const auto absolute_path{base / "explorer" / matches.front() / SENTINEL /
+                           "schema.metapack"};
+  action_serve_metapack_file(request, response, absolute_path,
                              sourcemeta::one::STATUS_OK, true, std::nullopt,
                              "/self/v1/schemas/api/schemas/metadata/response");
 }
 
 static auto
-handle_self_v1_api_schemas_evaluate(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_evaluate(const std::filesystem::path &base,
                                     const std::span<std::string_view> matches,
                                     sourcemeta::one::HTTPRequest &request,
                                     sourcemeta::one::HTTPResponse &response)
     -> void {
-  action_jsonschema_evaluate(storage, matches.front(), request, response,
+  action_jsonschema_evaluate(base, matches.front(), request, response,
                              sourcemeta::one::EvaluateType::Standard);
 }
 
 static auto
-handle_self_v1_api_schemas_trace(const sourcemeta::one::Storage &storage,
+handle_self_v1_api_schemas_trace(const std::filesystem::path &base,
                                  const std::span<std::string_view> matches,
                                  sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response)
     -> void {
-  action_jsonschema_evaluate(storage, matches.front(), request, response,
+  action_jsonschema_evaluate(base, matches.front(), request, response,
                              sourcemeta::one::EvaluateType::Trace);
 }
 
 static auto handle_self_v1_api_schemas_search(
-    const sourcemeta::one::Storage &storage, const std::span<std::string_view>,
+    const std::filesystem::path &base, const std::span<std::string_view>,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  action_schema_search(storage, request, response);
+  action_schema_search(base, request, response);
 }
 
-static auto handle_self_api_not_found(const sourcemeta::one::Storage &,
+static auto handle_self_api_not_found(const std::filesystem::path &,
                                       const std::span<std::string_view>,
                                       sourcemeta::one::HTTPRequest &request,
                                       sourcemeta::one::HTTPResponse &response)
@@ -170,7 +168,7 @@ static auto handle_self_api_not_found(const sourcemeta::one::Storage &,
              "There is nothing at this URL");
 }
 
-static auto handle_self_static(const sourcemeta::one::Storage &,
+static auto handle_self_static(const std::filesystem::path &,
                                const std::span<std::string_view> matches,
                                sourcemeta::one::HTTPRequest &request,
                                sourcemeta::one::HTTPResponse &response)
@@ -179,19 +177,19 @@ static auto handle_self_static(const sourcemeta::one::Storage &,
   absolute_path << SOURCEMETA_ONE_STATIC;
   absolute_path << '/';
   absolute_path << matches.front();
-  action_serve_metapack_file_local(request, response, absolute_path.str(),
-                                   sourcemeta::one::STATUS_OK);
+  action_serve_metapack_file(request, response, absolute_path.str(),
+                             sourcemeta::one::STATUS_OK);
 }
 
-static auto handle_default(const sourcemeta::one::Storage &storage,
+static auto handle_default(const std::filesystem::path &base,
                            const std::span<std::string_view>,
                            sourcemeta::one::HTTPRequest &request,
                            sourcemeta::one::HTTPResponse &response) -> void {
   if (request.path() == "/") {
     if (request.prefers_html()) {
-      const auto key{sourcemeta::one::Storage::key("explorer", SENTINEL,
-                                                   "directory-html.metapack")};
-      action_serve_metapack_file(storage, request, response, key,
+      action_serve_metapack_file(request, response,
+                                 base / "explorer" / SENTINEL /
+                                     "directory-html.metapack",
                                  sourcemeta::one::STATUS_OK);
       return;
     } else if (request.method() == "get" || request.method() == "head") {
@@ -207,7 +205,7 @@ static auto handle_default(const sourcemeta::one::Storage &storage,
   }
 
   if (request.path().ends_with(".json")) {
-    action_jsonschema_serve(storage,
+    action_jsonschema_serve(base,
                             request.path().substr(1, request.path().size() - 6),
                             request, response);
     return;
@@ -216,31 +214,27 @@ static auto handle_default(const sourcemeta::one::Storage &storage,
   const auto path{request.path().substr(1)};
   if (request.method() == "get" || request.method() == "head") {
     if (request.prefers_html()) {
-      // To distinguish between entries that are both directories and schemas
-      if (!path.ends_with("/")) {
-        auto schema_html{storage.read_raw(sourcemeta::one::Storage::key(
-            "explorer", path, SENTINEL, "schema-html.metapack"))};
-        if (schema_html.has_value()) {
-          action_serve_metapack_file(request, response, std::move(schema_html),
-                                     sourcemeta::one::STATUS_OK);
-          return;
-        }
-      }
-
-      auto directory_html{storage.read_raw(sourcemeta::one::Storage::key(
-          "explorer", path, SENTINEL, "directory-html.metapack"))};
-      if (directory_html.has_value()) {
-        action_serve_metapack_file(request, response, std::move(directory_html),
+      auto absolute_path{base / "explorer" / path / SENTINEL};
+      if (std::filesystem::exists(absolute_path / "schema-html.metapack") &&
+          // To distinguish between entries that are both directories and
+          // schemas
+          !path.ends_with("/")) {
+        action_serve_metapack_file(request, response,
+                                   absolute_path / "schema-html.metapack",
                                    sourcemeta::one::STATUS_OK);
       } else {
-        action_serve_metapack_file(
-            request, response,
-            storage.read_raw(sourcemeta::one::Storage::key("explorer", SENTINEL,
-                                                           "404.metapack")),
-            sourcemeta::one::STATUS_NOT_FOUND);
+        absolute_path /= "directory-html.metapack";
+        if (std::filesystem::exists(absolute_path)) {
+          action_serve_metapack_file(request, response, absolute_path,
+                                     sourcemeta::one::STATUS_OK);
+        } else {
+          action_serve_metapack_file(
+              request, response, base / "explorer" / SENTINEL / "404.metapack",
+              sourcemeta::one::STATUS_NOT_FOUND);
+        }
       }
     } else {
-      action_jsonschema_serve(storage, path, request, response);
+      action_jsonschema_serve(base, path, request, response);
     }
   } else {
     json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
@@ -248,7 +242,7 @@ static auto handle_default(const sourcemeta::one::Storage &storage,
   }
 }
 
-using Handler = auto (*)(const sourcemeta::one::Storage &,
+using Handler = auto (*)(const std::filesystem::path &,
                          const std::span<std::string_view>,
                          sourcemeta::one::HTTPRequest &,
                          sourcemeta::one::HTTPResponse &) -> void;
@@ -270,7 +264,7 @@ static const Handler HANDLERS[] = {handle_default,
                                    handle_self_static};
 
 static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
-                     const sourcemeta::one::Storage &storage,
+                     const std::filesystem::path &base,
                      uWS::HttpResponse<true> *const raw_response,
                      uWS::HttpRequest *const raw_request) noexcept -> void {
   sourcemeta::one::HTTPResponse response{raw_response};
@@ -288,7 +282,7 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches[index] = value;
           })};
 
-      HANDLERS[handler](storage, matches, request, response);
+      HANDLERS[handler](base, matches, request, response);
     } else {
       json_error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
                  "cannot-satisfy-content-encoding",
@@ -331,15 +325,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const auto port{static_cast<std::uint32_t>(std::stoul(argv[2]))};
     const auto base{std::filesystem::canonical(argv[1])};
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
-    const sourcemeta::one::Storage storage{base};
 
     uWS::LocalCluster(
-        {},
-        [&router, &storage, port, timestamp_start](uWS::SSLApp &app) -> void {
+        {}, [&router, &base, port, timestamp_start](uWS::SSLApp &app) -> void {
           app.any("/*",
-                  [&router, &storage](auto *const response,
-                                      auto *const request) noexcept -> void {
-                    dispatch(router, storage, response, request);
+                  [&router, &base](auto *const response,
+                                   auto *const request) noexcept -> void {
+                    dispatch(router, base, response, request);
                   });
 
           app.listen(

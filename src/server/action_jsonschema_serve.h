@@ -2,7 +2,6 @@
 #define SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_SERVE_H
 
 #include <sourcemeta/one/shared.h>
-#include <sourcemeta/one/storage.h>
 
 #include "action_serve_metapack_file.h"
 #include "helpers.h"
@@ -11,10 +10,11 @@
 
 #include <algorithm>   // std::transform
 #include <cctype>      // std::tolower
+#include <filesystem>  // std::filesystem
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static auto action_jsonschema_serve(const sourcemeta::one::Storage &storage,
+static auto action_jsonschema_serve(const std::filesystem::path &base,
                                     const std::string_view &path,
                                     sourcemeta::one::HTTPRequest &request,
                                     sourcemeta::one::HTTPResponse &response)
@@ -33,33 +33,30 @@ static auto action_jsonschema_serve(const sourcemeta::one::Storage &storage,
                        user_agent.starts_with("VSCodium")};
   const auto is_deno{user_agent.starts_with("Deno/")};
   const auto bundle{!request.query("bundle").empty()};
-  std::string filename;
+  auto absolute_path{base / "schemas" / lowercase_path / SENTINEL};
   if (is_vscode) {
-    filename = "editor.metapack";
+    absolute_path /= "editor.metapack";
   } else if (bundle || is_deno) {
-    filename = "bundle.metapack";
+    absolute_path /= "bundle.metapack";
   } else {
-    filename = "schema.metapack";
+    absolute_path /= "schema.metapack";
   }
 
-  const auto key{sourcemeta::one::Storage::key("schemas", lowercase_path,
-                                               SENTINEL, filename)};
-
   if (request.method() != "get" && request.method() != "head" &&
-      !storage.exists(key)) {
+      !std::filesystem::exists(absolute_path)) {
     json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
                "not-found", "There is nothing at this URL");
     return;
   }
 
   if (is_deno) {
-    action_serve_metapack_file(storage, request, response, key,
+    action_serve_metapack_file(request, response, absolute_path,
                                sourcemeta::one::STATUS_OK, true,
                                // For HTTP imports, as Deno won't like the
                                // `application/schema+json` one
                                "application/json");
   } else {
-    action_serve_metapack_file(storage, request, response, key,
+    action_serve_metapack_file(request, response, absolute_path,
                                sourcemeta::one::STATUS_OK, true);
   }
 }
