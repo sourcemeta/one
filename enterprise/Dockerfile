@@ -100,6 +100,20 @@ RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
 RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
 RUN test -f /usr/lib/*/ossl-modules/fips.so
 
+# Remove packages not needed at runtime to reduce the image attack surface
+RUN apt-get --yes update \
+  && apt-get --yes purge --allow-remove-essential \
+    adduser bash debconf \
+    e2fsprogs findutils grep gzip hostname init-system-helpers \
+    login logsave mount ncurses-base ncurses-bin passwd perl-base \
+    sed sysvinit-utils tzdata util-linux util-linux-extra \
+  && apt-get --yes autoremove --allow-remove-essential \
+  && apt-get --yes purge --allow-remove-essential \
+    apt debian-archive-keyring gpgv \
+  && rm -rf /var/lib/apt/lists/*
+RUN dpkg-query --show --showformat='${Package}\t${Version}\t${Homepage}\n' \
+  > /usr/share/sourcemeta/one/dpkg-packages
+
 # We expect images that extend this one to use this directory
 ARG SOURCEMETA_ONE_WORKDIR=/source
 ENV SOURCEMETA_ONE_WORKDIR=${SOURCEMETA_ONE_WORKDIR}
