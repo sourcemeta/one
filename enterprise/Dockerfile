@@ -36,9 +36,6 @@ COPY test/unit /source/test/unit
 COPY test/js /source/test/js
 
 RUN cd /source && npm ci
-RUN mkdir -p /usr/share/sourcemeta/one \
-  && cd /source && npm sbom --sbom-format spdx --sbom-type library --omit dev \
-    > /usr/share/sourcemeta/one/npm-packages.spdx.json
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
@@ -73,6 +70,12 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel
+
+RUN mkdir -p /usr/share/sourcemeta/one \
+  && cd /source && npm sbom --sbom-format spdx --sbom-type library --omit dev \
+    > /usr/share/sourcemeta/one/npm-packages.spdx.json \
+  && node /source/enterprise/scripts/sbom-vendorpull.js /build/VERSION \
+    > /usr/share/sourcemeta/one/vendor-packages.spdx.json
 
 FROM debian:trixie-slim
 
