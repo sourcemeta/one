@@ -43,7 +43,7 @@ cosign verify \
 echo "Cosign: Signature verified successfully" 1>&2
 
 echo "Cosign: Verifying SBOM attestation for ${IMAGE}@${DIGEST}" 1>&2
-cosign verify-attestation --type spdxjson \
+cosign verify-attestation --type spdx \
   --certificate-oidc-issuer "$CERTIFICATE_OIDC_ISSUER" \
   --certificate-identity "$CERTIFICATE_IDENTITY" \
   "${IMAGE}@${DIGEST}"
