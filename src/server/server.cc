@@ -298,8 +298,11 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                  "The server cannot satisfy the request content encoding");
     }
   } catch (const std::exception &error) {
-    json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+    json_error(request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
                "uncaught-error", error.what());
+  } catch (...) {
+    json_error(request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+               "uncaught-error", "An unknown unexpected error occurred");
   }
 }
 
