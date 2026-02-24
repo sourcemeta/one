@@ -24,10 +24,55 @@ Sourcemeta One is available in two editions:
   hosting solution that competes with Sourcemeta. After four years from each
   release, the code transitions to AGPL-3.0.
 
-- **Enterprise**: Includes additional features not available in the Community
-  edition. Requires a [commercial
+- **Enterprise**: Includes additional features and supply chain security
+  capabilities not available in the Community edition. Requires a [commercial
   license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
   from Sourcemeta.
+
+## Supply Chain Security
+
+Starting with v4.2.2, the Enterprise container image ships with built-in
+supply chain security and regulatory compliance capabilities:
+
+- **Signed Container Images.** Every Enterprise image is cryptographically
+  signed using [Cosign](https://github.com/sigstore/cosign) and the
+  [Sigstore](https://www.sigstore.dev/) transparency log, allowing you to
+  verify image authenticity and integrity before deployment.
+
+- **Software Bill of Materials (SBOM).** Each release includes an SPDX SBOM
+  attached as a signed attestation to the container image, providing full
+  visibility into all vendored, npm, and system-level dependencies for
+  vulnerability management and audit purposes.
+
+- **FIPS-Ready Cryptography.** The Enterprise image is built with the OpenSSL
+  FIPS provider (`openssl-provider-fips`) for all cryptographic operations,
+  supporting organizations that require FIPS 140 compliance.
+
+### Verifying Image Signatures
+
+You can verify that an Enterprise container image was built and signed by
+Sourcemeta's official GitHub Actions pipeline using
+[Cosign](https://github.com/sigstore/cosign). For example:
+
+```sh
+cosign verify \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --certificate-identity-regexp "^https://github.com/sourcemeta/one/" \
+  ghcr.io/sourcemeta/one-enterprise:v4.2.2
+```
+
+### Retrieving the SBOM
+
+The SPDX SBOM is attached as a signed in-toto attestation. You can verify and
+extract it using Cosign. For example:
+
+```sh
+cosign verify-attestation --type spdx \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --certificate-identity-regexp "^https://github.com/sourcemeta/one/" \
+  ghcr.io/sourcemeta/one-enterprise:v4.2.2 \
+  | jq -r '.payload' | base64 -d | jq '.predicate'
+```
 
 ## Our Commitment to Excellence
 

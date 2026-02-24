@@ -103,6 +103,10 @@ concerns and ensuring no vendor lock-in. If Sourcemeta would ever cease
 operations, you retain full access to continue running and maintaining your
 instances.
 
+**Supply chain security**: The Enterprise container image is cryptographically
+signed with Cosign/Sigstore, includes a signed SPDX Software Bill of Materials
+(SBOM), and ships with the OpenSSL FIPS provider for FIPS-ready cryptography.
+
 **Expert commercial support & training**: [Commercial
 Licenses](./commercial.md) give you access to world-class JSON Schema expertise
 whenever you need it. Upon request, we provide managed hosting, and we also
