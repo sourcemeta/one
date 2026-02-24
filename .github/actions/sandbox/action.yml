@@ -8,6 +8,7 @@ inputs:
       - html
       - headless
       - empty
+      - chaos
   edition:
     description: Edition
     required: true

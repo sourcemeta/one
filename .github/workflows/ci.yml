@@ -60,6 +60,13 @@ jobs:
           edition: ${{ matrix.edition.name }}
           port: 8000
 
+      - name: Sandbox (chaos)
+        uses: ./.github/actions/sandbox
+        with:
+          configuration: chaos
+          edition: ${{ matrix.edition.name }}
+          port: 8000
+
       # Public instance
       - run: docker build .  --file public/Dockerfile --progress plain
         if: matrix.edition.name == 'enterprise'
