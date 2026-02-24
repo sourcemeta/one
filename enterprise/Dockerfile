@@ -1,8 +1,16 @@
 FROM debian:trixie AS builder
 
+# NodeSource provides npm >= 10, required for the "npm sbom" command
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
+  build-essential ca-certificates cmake sassc esbuild shellcheck curl gnupg \
   openssl libssl-dev openssl-provider-fips \
+  && curl --fail --silent --show-error --location \
+    https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+    | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
+    > /etc/apt/sources.list.d/nodesource.list \
+  && apt-get --yes update \
+  && apt-get install --yes --no-install-recommends nodejs \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Enable the OpenSSL FIPS provider by running the module self-tests
@@ -28,6 +36,9 @@ COPY test/unit /source/test/unit
 COPY test/js /source/test/js
 
 RUN cd /source && npm ci
+RUN mkdir -p /usr/share/sourcemeta/one \
+  && cd /source && npm sbom --sbom-format spdx --sbom-type library --omit dev \
+    > /usr/share/sourcemeta/one/npm-packages.spdx.json
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
