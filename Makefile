@@ -67,10 +67,12 @@ test:
 .PHONY: test-e2e
 HURL_TESTS += test/e2e/$(SANDBOX_CONFIGURATION)/*.hurl
 ifneq ($(SANDBOX_CONFIGURATION),empty)
+ifneq ($(SANDBOX_CONFIGURATION),chaos)
 HURL_TESTS += test/e2e/populated/schemas/*.hurl
 HURL_TESTS += test/e2e/populated/api/common/*.hurl
 ifeq ($(ENTERPRISE),ON)
 HURL_TESTS += test/e2e/populated/api/enterprise/*.hurl
+endif
 endif
 endif
 test-e2e:
@@ -93,6 +95,7 @@ sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
 		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
 		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --profile
+	./test/sandbox/postindex.sh $(SANDBOX_CONFIGURATION) $(EDITION) $(OUTPUT)/sandbox
 
 .PHONY: sandbox
 sandbox: sandbox-index
