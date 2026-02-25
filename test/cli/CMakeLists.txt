@@ -57,6 +57,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index string-directory-overlap)
   sourcemeta_one_test_cli(common index non-existent-collection-directory)
   sourcemeta_one_test_cli(common index collection-path-is-file)
+  sourcemeta_one_test_cli(common index deps-contents)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)
