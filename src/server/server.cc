@@ -328,14 +328,22 @@ auto main(int argc, char *argv[]) noexcept -> int {
   std::signal(SIGTERM, terminate);
 
   try {
-    if (argc != 3) {
+    if (argc != 3) [[unlikely]] {
       std::cout << "Usage: " << argv[0]
                 << " <path/to/output/directory> <port>\n";
       return EXIT_FAILURE;
     }
 
     const auto port{static_cast<std::uint32_t>(std::stoul(argv[2]))};
-    const auto base{std::filesystem::canonical(argv[1])};
+
+    // Note we purposely DO NOT canonicalise in order to NOT resolve
+    // symlinks in the output location
+    const std::filesystem::path base{argv[1]};
+    if (!base.is_absolute()) [[unlikely]] {
+      std::cout << "The output directory path must be absolute\n";
+      return EXIT_FAILURE;
+    }
+
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
     uWS::LocalCluster(
