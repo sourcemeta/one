@@ -2,22 +2,23 @@
 
 #include <sourcemeta/core/io.h>
 
-#include <cassert> // assert
-#include <fstream> // std::ofstream
-#include <mutex>   // std::unique_lock
+#include <cassert>     // assert
+#include <fstream>     // std::ofstream
+#include <mutex>       // std::unique_lock
+#include <string_view> // std::string_view
 
 namespace sourcemeta::one {
 
-BuildAdapterFilesystem::BuildAdapterFilesystem(std::string dependency_extension)
-    : extension{std::move(dependency_extension)} {
-  assert(!this->extension.empty());
-  assert(this->extension.starts_with("."));
-}
+constexpr std::string_view DEPS_EXTENSION{".deps"};
+
+BuildAdapterFilesystem::BuildAdapterFilesystem(
+    const std::filesystem::path &output_root)
+    : root{std::filesystem::canonical(output_root)} {}
 
 auto BuildAdapterFilesystem::dependencies_path(const node_type &path) const
     -> node_type {
   assert(path.is_absolute());
-  return path.string() + this->extension;
+  return path.string() + std::string{DEPS_EXTENSION};
 }
 
 auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
@@ -37,7 +38,13 @@ auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
       }
 
       if (!line.empty()) {
-        deps.emplace_back(line);
+        std::filesystem::path dependency{line};
+        if (!dependency.is_absolute()) {
+          dependency =
+              std::filesystem::weakly_canonical(this->root / dependency);
+        }
+
+        deps.emplace_back(std::move(dependency));
       }
     }
 
@@ -63,8 +70,13 @@ auto BuildAdapterFilesystem::write_dependencies(
   std::filesystem::create_directories(deps_path.parent_path());
   std::ofstream deps_stream{deps_path};
   assert(!deps_stream.fail());
-  for (const auto &node : dependencies) {
-    deps_stream << node.string() << "\n";
+  for (const auto &dependency : dependencies) {
+    const auto relative{dependency.lexically_relative(this->root)};
+    if (!relative.empty() && *relative.begin() != "..") {
+      deps_stream << relative.string() << "\n";
+    } else {
+      deps_stream << dependency.string() << "\n";
+    }
   }
 
   deps_stream.flush();

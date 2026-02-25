@@ -1,6 +1,6 @@
 sourcemeta_executable(NAMESPACE sourcemeta PROJECT one NAME index
   FOLDER "One/Index"
-  SOURCES index.cc adapter.h output.h generators.h explorer.h)
+  SOURCES index.cc output.h generators.h explorer.h)
 
 set_target_properties(sourcemeta_one_index PROPERTIES OUTPUT_NAME sourcemeta-one-index)
 

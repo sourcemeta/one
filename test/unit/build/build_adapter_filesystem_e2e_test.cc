@@ -52,7 +52,7 @@ auto HANDLER_MIRROR_CONTEXT_NODE_WITHOUT_CALLBACK(
 TEST(Build_Adapter_Filesystem_e2e, simple_cache_miss_hit) {
   using Adapter = sourcemeta::one::BuildAdapterFilesystem;
   using Context = std::uint64_t;
-  Adapter adapter;
+  Adapter adapter{BINARY_DIRECTORY};
 
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "simple_cache_miss_hit"};
@@ -111,7 +111,7 @@ TEST(Build_Adapter_Filesystem_e2e, simple_cache_miss_hit) {
 TEST(Build_Adapter_Filesystem_e2e, dynamic_dependency) {
   using Adapter = sourcemeta::one::BuildAdapterFilesystem;
   using Context = Adapter::node_type;
-  Adapter adapter;
+  Adapter adapter{BINARY_DIRECTORY};
 
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "dynamic_dependency"};
@@ -138,7 +138,7 @@ TEST(Build_Adapter_Filesystem_e2e, dynamic_dependency) {
 TEST(Build_Adapter_Filesystem_e2e, missing_dynamic_dependency) {
   using Adapter = sourcemeta::one::BuildAdapterFilesystem;
   using Context = Adapter::node_type;
-  Adapter adapter;
+  Adapter adapter{BINARY_DIRECTORY};
 
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "missing_dynamic_dependency"};
