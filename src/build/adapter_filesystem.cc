@@ -1,4 +1,4 @@
-#include <sourcemeta/core/build_adapter_filesystem.h>
+#include <sourcemeta/one/build_adapter_filesystem.h>
 
 #include <sourcemeta/core/io.h>
 
@@ -6,7 +6,7 @@
 #include <fstream> // std::ofstream
 #include <mutex>   // std::unique_lock
 
-namespace sourcemeta::core {
+namespace sourcemeta::one {
 
 BuildAdapterFilesystem::BuildAdapterFilesystem(std::string dependency_extension)
     : extension{std::move(dependency_extension)} {
@@ -57,7 +57,7 @@ auto BuildAdapterFilesystem::write_dependencies(
   assert(path.is_absolute());
   assert(std::filesystem::exists(path));
   // Try to make sure as much as we can that any write operation made to disk
-  flush(path);
+  sourcemeta::core::flush(path);
   this->refresh(path);
   const auto deps_path{this->dependencies_path(path)};
   std::filesystem::create_directories(deps_path.parent_path());
@@ -69,7 +69,7 @@ auto BuildAdapterFilesystem::write_dependencies(
 
   deps_stream.flush();
   deps_stream.close();
-  flush(deps_path);
+  sourcemeta::core::flush(deps_path);
 }
 
 auto BuildAdapterFilesystem::refresh(const node_type &path) -> void {
@@ -111,4 +111,4 @@ auto BuildAdapterFilesystem::is_newer_than(const mark_type left,
   return left > right;
 }
 
-} // namespace sourcemeta::core
+} // namespace sourcemeta::one
