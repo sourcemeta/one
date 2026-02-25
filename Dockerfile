@@ -90,4 +90,7 @@ COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 
 ENV SOURCEMETA_ONE_PORT=8000
+HEALTHCHECK CMD grep -qE \
+  "^\s*[0-9]+:\s+[0-9A-F]+:$(printf '%04X' $SOURCEMETA_ONE_PORT)\s+[0-9A-F:]+\s+0A\s" \
+  /proc/net/tcp /proc/net/tcp6
 ENTRYPOINT [ "/usr/bin/sourcemeta-server" ]
