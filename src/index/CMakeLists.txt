@@ -16,7 +16,7 @@ target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::configuration)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::web)
 
-target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::build)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::jsonschema)

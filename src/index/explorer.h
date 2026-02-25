@@ -112,9 +112,9 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       std::filesystem::path>;
   static auto
   handler(const std::filesystem::path &destination,
-          const sourcemeta::core::BuildDependencies<std::filesystem::path>
+          const sourcemeta::one::BuildDependencies<std::filesystem::path>
               &dependencies,
-          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path>
+          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
               &callback,
           const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
@@ -222,9 +222,9 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
   using Context = std::nullptr_t;
   static auto
   handler(const std::filesystem::path &destination,
-          const sourcemeta::core::BuildDependencies<std::filesystem::path>
+          const sourcemeta::one::BuildDependencies<std::filesystem::path>
               &dependencies,
-          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path> &,
+          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
           const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
@@ -295,8 +295,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
   static auto
   handler(const std::filesystem::path &destination,
-          const sourcemeta::core::BuildDependencies<std::filesystem::path> &,
-          const sourcemeta::core::BuildDynamicCallback<std::filesystem::path>
+          const sourcemeta::one::BuildDependencies<std::filesystem::path> &,
+          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
               &callback,
           const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};

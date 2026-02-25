@@ -31,7 +31,7 @@ find_package(JSONSchema REQUIRED)
 
 include(GNUInstallDirs)
 
-# Always optimize the current architecture
+# Always optimize for the current architecture
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=native")
 
@@ -69,6 +69,7 @@ if(ONE_INDEX)
   add_subdirectory(contrib/file2metapack)
   include(commands/file2metapack)
   include(commands/esbuild)
+  add_subdirectory(src/build)
   add_subdirectory(src/configuration)
   add_subdirectory(src/resolver)
   add_subdirectory(src/web)
@@ -126,6 +127,7 @@ if(ONE_TESTS)
   endif()
 
   if(ONE_INDEX)
+    add_subdirectory(test/unit/build)
     add_subdirectory(test/unit/configuration)
     add_subdirectory(test/unit/resolver)
   endif()

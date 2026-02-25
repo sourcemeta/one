@@ -5,7 +5,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME web
     pages/schema.cc
     pages/not_found.cc)
 
-target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::core::build)
+target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::html)
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::configuration)

@@ -1,17 +1,16 @@
-#ifndef SOURCEMETA_CORE_BUILD_TYPES_H_
-#define SOURCEMETA_CORE_BUILD_TYPES_H_
+#ifndef SOURCEMETA_ONE_BUILD_TYPES_H_
+#define SOURCEMETA_ONE_BUILD_TYPES_H_
 
 #include <functional> // std::function
 #include <vector>     // std::vector
 
-namespace sourcemeta::core {
+namespace sourcemeta::one {
 
 /// @ingroup build
 template <typename NodeType>
 using BuildDynamicCallback = std::function<void(const NodeType &)>;
 
 /// @ingroup build
-/// Dependencies are encoded using an ordered sequence type
 template <typename NodeType> using BuildDependencies = std::vector<NodeType>;
 
 /// @ingroup build
@@ -21,6 +20,6 @@ using BuildHandler =
                        const BuildDynamicCallback<NodeType> &,
                        const Context &)>;
 
-} // namespace sourcemeta::core
+} // namespace sourcemeta::one
 
-#endif // SOURCEMETA_CORE_OPTIONS_H_
+#endif // SOURCEMETA_ONE_BUILD_TYPES_H_

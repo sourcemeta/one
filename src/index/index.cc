@@ -1,6 +1,5 @@
 #include <sourcemeta/blaze/linter.h>
 
-#include <sourcemeta/core/build.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
@@ -8,6 +7,7 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
@@ -59,13 +59,13 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
 template <typename Handler, typename Adapter>
 static auto
 DISPATCH(const std::filesystem::path &destination,
-         const sourcemeta::core::BuildDependencies<typename Adapter::node_type>
+         const sourcemeta::one::BuildDependencies<typename Adapter::node_type>
              &dependencies,
          const typename Handler::Context &context, std::mutex &mutex,
          const std::string_view title, const std::string_view prefix,
          const std::string_view suffix, Adapter &adapter,
          sourcemeta::one::Output &output) -> void {
-  if (!sourcemeta::core::build<typename Handler::Context>(
+  if (!sourcemeta::one::build<typename Handler::Context>(
           adapter, Handler::handler, destination, dependencies, context)) {
     std::lock_guard<std::mutex> lock{mutex};
     std::cerr << "(skip) " << title << ": " << prefix << " [" << suffix

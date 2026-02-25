@@ -1,20 +1,20 @@
 #ifndef SOURCEMETA_ONE_INDEX_ADAPTER_H_
 #define SOURCEMETA_ONE_INDEX_ADAPTER_H_
 
-#include <sourcemeta/core/build.h>
+#include <sourcemeta/one/build.h>
 
 #include <filesystem> // std::filesystem
 #include <optional>   // std::optional
 
 namespace sourcemeta::one {
 
-class Adapter : public sourcemeta::core::BuildAdapterFilesystem {
+class Adapter : public sourcemeta::one::BuildAdapterFilesystem {
 public:
   Adapter(std::filesystem::path output_root)
       : root{std::filesystem::canonical(output_root)} {}
 
   [[nodiscard]] auto read_dependencies(const node_type &path) const
-      -> std::optional<sourcemeta::core::BuildDependencies<node_type>> {
+      -> std::optional<sourcemeta::one::BuildDependencies<node_type>> {
     auto result{BuildAdapterFilesystem::read_dependencies(path)};
     if (result.has_value()) {
       for (auto &dependency : result.value()) {
@@ -30,9 +30,9 @@ public:
 
   auto write_dependencies(
       const node_type &path,
-      const sourcemeta::core::BuildDependencies<node_type> &dependencies)
+      const sourcemeta::one::BuildDependencies<node_type> &dependencies)
       -> void {
-    sourcemeta::core::BuildDependencies<node_type> relativized;
+    sourcemeta::one::BuildDependencies<node_type> relativized;
     relativized.reserve(dependencies.size());
     for (const auto &dependency : dependencies) {
       const auto relative{dependency.lexically_relative(this->root)};

@@ -1,11 +1,11 @@
 #ifndef SOURCEMETA_ONE_ENTERPRISE_INDEX_H_
 #define SOURCEMETA_ONE_ENTERPRISE_INDEX_H_
 
+#include <sourcemeta/one/build.h>
 #include <sourcemeta/one/resolver.h>
 
 #include <sourcemeta/blaze/configuration.h>
 
-#include <sourcemeta/core/build.h>
 #include <sourcemeta/core/jsonschema.h>
 
 #include <filesystem>    // std::filesystem
@@ -19,7 +19,7 @@ auto load_custom_lint_rules(
     std::unordered_set<std::string_view> &custom_names,
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
-    const sourcemeta::core::BuildDynamicCallback<std::filesystem::path>
+    const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
         &callback) -> void;
 
 } // namespace sourcemeta::one

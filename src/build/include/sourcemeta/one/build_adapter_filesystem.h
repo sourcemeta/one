@@ -1,12 +1,12 @@
-#ifndef SOURCEMETA_CORE_BUILD_ADAPTER_FILESYSTEM_H_
-#define SOURCEMETA_CORE_BUILD_ADAPTER_FILESYSTEM_H_
+#ifndef SOURCEMETA_ONE_BUILD_ADAPTER_FILESYSTEM_H_
+#define SOURCEMETA_ONE_BUILD_ADAPTER_FILESYSTEM_H_
 
-#ifndef SOURCEMETA_CORE_BUILD_EXPORT
-#include <sourcemeta/core/build_export.h>
+#ifndef SOURCEMETA_ONE_BUILD_EXPORT
+#include <sourcemeta/one/build_export.h>
 #endif
 
 // NOLINTBEGIN(misc-include-cleaner)
-#include <sourcemeta/core/build_types.h>
+#include <sourcemeta/one/build_types.h>
 // NOLINTEND(misc-include-cleaner)
 
 #include <filesystem>    // std::filesystem
@@ -15,10 +15,10 @@
 #include <string>        // std::string
 #include <unordered_map> // std::unordered_map
 
-namespace sourcemeta::core {
+namespace sourcemeta::one {
 
 /// @ingroup build
-class SOURCEMETA_CORE_BUILD_EXPORT BuildAdapterFilesystem {
+class SOURCEMETA_ONE_BUILD_EXPORT BuildAdapterFilesystem {
 public:
   using node_type = std::filesystem::path;
   using mark_type = std::filesystem::file_time_type;
@@ -53,6 +53,6 @@ private:
 #endif
 };
 
-} // namespace sourcemeta::core
+} // namespace sourcemeta::one
 
-#endif // SOURCEMETA_CORE_OPTIONS_H_
+#endif // SOURCEMETA_ONE_BUILD_ADAPTER_FILESYSTEM_H_
