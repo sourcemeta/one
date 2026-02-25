@@ -58,6 +58,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index non-existent-collection-directory)
   sourcemeta_one_test_cli(common index collection-path-is-file)
   sourcemeta_one_test_cli(common index deps-contents)
+  sourcemeta_one_test_cli(common index inode-reset-on-rebuild)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)

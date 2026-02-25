@@ -57,6 +57,8 @@ auto write_stream(const std::filesystem::path &path,
     metadata.assign("extension", extension);
   }
 
+  // To reset the inode and correctly handle hard links
+  std::filesystem::remove(path);
   std::ofstream output{path};
   assert(!output.fail());
   sourcemeta::core::stringify(metadata, output);
