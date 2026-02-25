@@ -24,6 +24,7 @@ constexpr auto HANDLER_SELF_V1_API_SCHEMAS_TRACE = 11;
 constexpr auto HANDLER_SELF_V1_API_SCHEMAS_SEARCH = 12;
 constexpr auto HANDLER_SELF_V1_API_DEFAULT = 13;
 constexpr auto HANDLER_SELF_STATIC = 14;
+constexpr auto HANDLER_SELF_V1_HEALTH = 15;
 
 } // namespace sourcemeta::one
 

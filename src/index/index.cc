@@ -540,6 +540,7 @@ static auto index_main(const std::string_view &program,
              sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
   router.add("/self/v1/api/schemas/search",
              sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
+  router.add("/self/v1/health", sourcemeta::one::HANDLER_SELF_V1_HEALTH);
   router.add("/self/v1/api/{+any}",
              sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
 
