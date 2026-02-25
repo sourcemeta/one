@@ -13,6 +13,7 @@
 #include <sourcemeta/one/shared.h>
 #include <sourcemeta/one/web.h>
 
+#include "adapter.h"
 #include "explorer.h"
 #include "generators.h"
 #include "output.h"
@@ -207,7 +208,7 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   const auto schemas_path{output.path() / "schemas"};
-  sourcemeta::core::BuildAdapterFilesystem adapter;
+  sourcemeta::one::Adapter adapter{output.path()};
   // Mainly to not screw up the logs
   std::mutex mutex;
   const auto concurrency{app.contains("concurrency")
