@@ -12,19 +12,16 @@
 #include <filesystem>    // std::filesystem
 #include <optional>      // std::optional
 #include <shared_mutex>  // std::shared_mutex
-#include <string>        // std::string
 #include <unordered_map> // std::unordered_map
 
 namespace sourcemeta::one {
 
-/// @ingroup build
 class SOURCEMETA_ONE_BUILD_EXPORT BuildAdapterFilesystem {
 public:
   using node_type = std::filesystem::path;
   using mark_type = std::filesystem::file_time_type;
 
-  BuildAdapterFilesystem() = default;
-  BuildAdapterFilesystem(std::string dependency_extension);
+  BuildAdapterFilesystem(const std::filesystem::path &output_root);
 
   [[nodiscard]] auto dependencies_path(const node_type &path) const
       -> node_type;
@@ -39,18 +36,9 @@ public:
                                    const mark_type right) const -> bool;
 
 private:
-// Exporting symbols that depends on the standard C++ library is considered
-// safe.
-// https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-2-c4275?view=msvc-170&redirectedfrom=MSDN
-#if defined(_MSC_VER)
-#pragma warning(disable : 4251 4275)
-#endif
-  std::string extension{".deps"};
+  std::filesystem::path root;
   std::unordered_map<node_type, mark_type> marks;
   std::shared_mutex mutex;
-#if defined(_MSC_VER)
-#pragma warning(default : 4251 4275)
-#endif
 };
 
 } // namespace sourcemeta::one

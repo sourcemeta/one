@@ -6,14 +6,11 @@
 
 namespace sourcemeta::one {
 
-/// @ingroup build
 template <typename NodeType>
 using BuildDynamicCallback = std::function<void(const NodeType &)>;
 
-/// @ingroup build
 template <typename NodeType> using BuildDependencies = std::vector<NodeType>;
 
-/// @ingroup build
 template <typename Context, typename NodeType>
 using BuildHandler =
     std::function<void(const NodeType &, const BuildDependencies<NodeType> &,
