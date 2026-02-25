@@ -168,6 +168,23 @@ static auto handle_self_api_not_found(const std::filesystem::path &,
              "There is nothing at this URL");
 }
 
+static auto handle_self_v1_health(const std::filesystem::path &,
+                                  const std::span<std::string_view>,
+                                  sourcemeta::one::HTTPRequest &request,
+                                  sourcemeta::one::HTTPResponse &response)
+    -> void {
+  if (request.method() != "get" && request.method() != "head") {
+    json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+               "method-not-allowed",
+               "This HTTP method is invalid for this URL");
+    return;
+  }
+
+  response.write_status(sourcemeta::one::STATUS_OK);
+  response.write_header("Access-Control-Allow-Origin", "*");
+  send_response(sourcemeta::one::STATUS_OK, request, response);
+}
+
 static auto handle_self_static(const std::filesystem::path &,
                                const std::span<std::string_view> matches,
                                sourcemeta::one::HTTPRequest &request,
@@ -261,7 +278,8 @@ static const Handler HANDLERS[] = {handle_default,
                                    handle_self_v1_api_schemas_trace,
                                    handle_self_v1_api_schemas_search,
                                    handle_self_api_not_found,
-                                   handle_self_static};
+                                   handle_self_static,
+                                   handle_self_v1_health};
 
 static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                      const std::filesystem::path &base,

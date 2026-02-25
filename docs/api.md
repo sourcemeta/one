@@ -26,6 +26,25 @@ endpoints.
 
 ## General
 
+### Health
+
+*This endpoint can be used as a health check for infrastructure integration
+such as Docker
+[`HEALTHCHECK`](https://docs.docker.com/reference/dockerfile/#healthcheck) or
+load balancer probes.*
+
+```
+GET /self/v1/health
+```
+
+=== "200"
+
+    Empty response body.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
 ### List
 
 *This endpoint lists the contents of a directory at the specified `{path}`
