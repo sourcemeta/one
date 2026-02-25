@@ -100,7 +100,7 @@ sandbox-index: compile
 .PHONY: sandbox
 sandbox: sandbox-index
 	$(PREFIX)/bin/sourcemeta-one-server \
-		$(OUTPUT)/sandbox $(SANDBOX_PORT)
+		$(realpath $(OUTPUT)/sandbox) $(SANDBOX_PORT)
 
 .PHONY: docker
 docker: $(DOCKERFILE)
