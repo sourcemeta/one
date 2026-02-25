@@ -118,7 +118,7 @@ RUN test -f /usr/lib/*/ossl-modules/fips.so
 RUN apt-get --yes update \
   && apt-get --yes purge --allow-remove-essential \
     adduser bash debconf \
-    e2fsprogs findutils grep gzip hostname init-system-helpers \
+    e2fsprogs findutils gzip hostname init-system-helpers \
     login logsave mount ncurses-base ncurses-bin passwd perl-base \
     sed sysvinit-utils tzdata util-linux util-linux-extra \
   && apt-get --yes autoremove --allow-remove-essential \
@@ -141,4 +141,7 @@ COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 
 ENV SOURCEMETA_ONE_PORT=8000
+HEALTHCHECK CMD grep -qE \
+  "^\s*[0-9]+:\s+[0-9A-F]+:$(printf '%04X' $SOURCEMETA_ONE_PORT)\s+[0-9A-F:]+\s+0A\s" \
+  /proc/net/tcp /proc/net/tcp6
 ENTRYPOINT [ "/usr/bin/sourcemeta-server" ]
