@@ -29,6 +29,15 @@ EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 .PHONY: all
 all: configure compile test
 
+# Useful to run the entire main suite in a single command
+.PHONY: docker
+docker:
+	$(MAKE) docker-build
+	$(MAKE) docker-sandbox-build
+	$(MAKE) docker-sandbox-up
+	$(MAKE) test-e2e test-ui; \
+		status=$$?; $(MAKE) docker-sandbox-down; exit $$status
+
 node_modules: package.json package-lock.json
 	$(NPM) ci
 
@@ -102,8 +111,8 @@ sandbox: sandbox-index
 	$(PREFIX)/bin/sourcemeta-one-server \
 		$(realpath $(OUTPUT)/sandbox) $(SANDBOX_PORT)
 
-.PHONY: docker
-docker: $(DOCKERFILE)
+.PHONY: docker-build
+docker-build: $(DOCKERFILE)
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
 		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
