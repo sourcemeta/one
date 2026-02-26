@@ -207,6 +207,8 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   const auto schemas_path{output.path() / "schemas"};
+  const auto display_schemas_path{
+      std::filesystem::relative(schemas_path, output.path())};
   sourcemeta::one::BuildAdapterFilesystem adapter{output.path()};
   // Mainly to not screw up the logs
   std::mutex mutex;
@@ -245,6 +247,8 @@ static auto index_main(const std::string_view &program,
   constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
 
   const auto explorer_path{output.path() / "explorer"};
+  const auto display_explorer_path{
+      std::filesystem::relative(explorer_path, output.path())};
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&output, &schemas_path, &explorer_path, &resolver, &mutex, &adapter,
@@ -328,7 +332,8 @@ static auto index_main(const std::string_view &program,
   // This is a pretty fast step that will be useful for us to properly declare
   // dependencies for HTML and navigational targets
 
-  print_progress(mutex, concurrency, "Reviewing", schemas_path.string(), 1, 2);
+  print_progress(mutex, concurrency, "Reviewing", display_schemas_path.string(),
+                 1, 2);
   std::vector<std::filesystem::path> directories;
   // The top-level is itself a directory
   directories.emplace_back(schemas_path);
@@ -377,10 +382,12 @@ static auto index_main(const std::string_view &program,
     });
   }
 
-  print_progress(mutex, concurrency, "Reviewing", schemas_path.string(), 2, 2);
+  print_progress(mutex, concurrency, "Reviewing", display_schemas_path.string(),
+                 2, 2);
   DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
       output.path() / "dependency-tree.metapack", dependencies, resolver, mutex,
-      "Reviewing", schemas_path.string(), "dependencies", adapter, output);
+      "Reviewing", display_schemas_path.string(), "dependencies", adapter,
+      output);
 
   /////////////////////////////////////////////////////////////////////////////
   // (10) A further pass on the schemas after review
@@ -405,11 +412,11 @@ static auto index_main(const std::string_view &program,
   // (11) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
-  print_progress(mutex, concurrency, "Producing", explorer_path.string(), 0,
-                 100);
+  print_progress(mutex, concurrency, "Producing",
+                 display_explorer_path.string(), 0, 100);
   DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
       explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
-      "Producing", explorer_path.string(), "search", adapter, output);
+      "Producing", display_explorer_path.string(), "search", adapter, output);
 
   // Directory generation depends on the configuration for metadata
   summaries.emplace_back(mark_configuration_path);
@@ -549,9 +556,11 @@ static auto index_main(const std::string_view &program,
   }
 
   const auto routes_path{output.path() / "routes.bin"};
+  const auto display_routes_path{
+      std::filesystem::relative(routes_path, output.path())};
   DISPATCH<sourcemeta::one::GENERATE_URITEMPLATE_ROUTES>(
       routes_path, {mark_configuration_path, mark_version_path}, router, mutex,
-      "Producing", routes_path.string(), "routes", adapter, output);
+      "Producing", display_routes_path.string(), "routes", adapter, output);
 
   /////////////////////////////////////////////////////////////////////////////
   // Finish generation
