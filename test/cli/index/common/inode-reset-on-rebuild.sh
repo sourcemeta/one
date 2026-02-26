@@ -40,6 +40,20 @@ collect_inodes() {
 "$1" "$TMP/one.json" "$TMP/output"
 collect_inodes "$TMP/output" "$TMP/inodes_before.txt"
 
+# Pin the original inodes by hard-linking every file into a mirror
+# directory. This prevents the filesystem from reusing freed inode
+# numbers when the indexer removes and recreates files.
+cd "$TMP/output"
+find . -type d | while read -r directory
+do
+  mkdir -p "$TMP/mirror/$directory"
+done
+find . -type f | while read -r file
+do
+  ln "$file" "$TMP/mirror/$file"
+done
+cd -
+
 # Change the registry URL and modify the schema to force all targets to rebuild
 cat << EOF > "$TMP/one.json"
 {
