@@ -41,7 +41,7 @@ SOURCEMETA_CORE_JSONSCHEMA_EXPORT
 auto schema_resolver(const std::string_view identifier) -> std::optional<JSON>;
 
 /// @ingroup jsonschema
-/// A default schema walker with support for a wide range of drafs
+/// A default schema walker with support for a wide range of drafts
 SOURCEMETA_CORE_JSONSCHEMA_EXPORT
 auto schema_walker(const std::string_view keyword,
                    const Vocabularies &vocabularies)
@@ -408,7 +408,7 @@ auto wrap(std::string_view identifier) -> JSON;
 /// @ingroup jsonschema
 ///
 /// Wrap a schema to only access one of its subschemas. This is useful if you
-/// want to perform validation only a specific part of the schemaw without
+/// want to perform validation on only a specific part of the schema without
 /// having to reinvent the wheel. For example:
 ///
 /// ```cpp
