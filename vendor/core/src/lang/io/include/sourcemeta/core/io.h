@@ -8,6 +8,7 @@
 // NOLINTBEGIN(misc-include-cleaner)
 #include <sourcemeta/core/io_error.h>
 #include <sourcemeta/core/io_fileview.h>
+#include <sourcemeta/core/io_temporary.h>
 // NOLINTEND(misc-include-cleaner)
 
 #include <cassert>    // assert
@@ -98,6 +99,39 @@ auto read_file(const std::filesystem::path &path)
   assert(stream.is_open());
   return stream;
 }
+
+/// @ingroup io
+///
+/// Recursively mirror a directory tree using hard links for regular files.
+/// Directories are created, regular files are hard-linked. Both paths must
+/// reside on the same filesystem. The destination must not be inside the
+/// source tree, as that would cause infinite recursion.
+///
+/// ```cpp
+/// #include <sourcemeta/core/io.h>
+///
+/// sourcemeta::core::hardlink_directory("/source", "/destination");
+/// ```
+SOURCEMETA_CORE_IO_EXPORT
+auto hardlink_directory(const std::filesystem::path &source,
+                        const std::filesystem::path &destination) -> void;
+
+/// @ingroup io
+///
+/// Replace one directory with another, guaranteeing an atomic swap when
+/// possible. Both directories must reside on the same filesystem and the
+/// original path must not be a bare filename (it must have a parent
+/// component). If the original does not exist, the replacement is simply
+/// renamed into place.
+///
+/// ```cpp
+/// #include <sourcemeta/core/io.h>
+///
+/// sourcemeta::core::atomic_directory_replace("/output", "/staging");
+/// ```
+SOURCEMETA_CORE_IO_EXPORT
+auto atomic_directory_replace(const std::filesystem::path &original,
+                              const std::filesystem::path &replacement) -> void;
 
 /// @ingroup io
 ///
