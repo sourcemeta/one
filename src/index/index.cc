@@ -1,5 +1,6 @@
 #include <sourcemeta/blaze/linter.h>
 
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
@@ -88,11 +89,42 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (1) Prepare the output directory
+  // (1) Prepare the output directory via staging for atomic commits
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Output output{app.positional().at(1)};
-  std::cerr << "Writing output to: " << output.path().string() << "\n";
+  const auto final_output_path{
+      std::filesystem::weakly_canonical(app.positional().at(1))};
+
+  if (std::filesystem::exists(final_output_path) &&
+      !std::filesystem::is_directory(final_output_path)) {
+    throw std::filesystem::filesystem_error{
+        "file already exists", final_output_path,
+        std::make_error_code(std::errc::file_exists)};
+  }
+
+  std::cerr << "Writing output to: " << final_output_path.string() << "\n";
+
+  // Clean up stale staging directories from crashed previous runs
+  if (std::filesystem::exists(final_output_path.parent_path())) {
+    for (const auto &entry :
+         std::filesystem::directory_iterator{final_output_path.parent_path()}) {
+      if (entry.is_directory() &&
+          entry.path().filename().string().starts_with(".sourcemeta-one-")) {
+        std::cerr << "Removing stale staging directory: "
+                  << entry.path().string() << "\n";
+        std::filesystem::remove_all(entry.path());
+      }
+    }
+  }
+
+  sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
+                                               ".sourcemeta-one-"};
+
+  if (std::filesystem::exists(final_output_path)) {
+    sourcemeta::core::hardlink_directory(final_output_path, staging.path());
+  }
+
+  sourcemeta::one::Output output{staging.path()};
 
   /////////////////////////////////////////////////////////////////////////////
   // (2) Process the configuration file
@@ -607,6 +639,7 @@ static auto index_main(const std::string_view &program,
     }
   }
 
+  sourcemeta::core::atomic_directory_replace(final_output_path, staging.path());
   return EXIT_SUCCESS;
 }
 
