@@ -87,6 +87,8 @@ private:
       -> const std::filesystem::path & {
     assert(path.is_absolute());
     std::filesystem::create_directories(path.parent_path());
+    // To reset the inode and correctly handle hard links
+    std::filesystem::remove(path);
     std::ofstream stream{path};
     assert(!stream.fail());
     sourcemeta::core::stringify(document, stream);
