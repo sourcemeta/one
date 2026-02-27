@@ -111,6 +111,8 @@ static auto index_main(const std::string_view &program,
   sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
                                                STAGING_PATH_PREFIX};
   if (std::filesystem::exists(final_output_path)) {
+    std::cerr << "Hardlinking: " << final_output_path.string() << " => "
+              << staging.path().string() << "\n";
     sourcemeta::core::hardlink_directory(final_output_path, staging.path());
   }
 
