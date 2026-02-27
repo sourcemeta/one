@@ -62,6 +62,8 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index atomic-failure)
   sourcemeta_one_test_cli(common index stale-staging-cleanup)
   sourcemeta_one_test_cli(common index configuration-no-stale-cleanup)
+  sourcemeta_one_test_cli(common index rebuild-zero-to-one)
+  sourcemeta_one_test_cli(common index rebuild-one-to-zero)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)

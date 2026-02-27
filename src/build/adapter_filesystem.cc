@@ -9,7 +9,7 @@
 
 namespace sourcemeta::one {
 
-constexpr std::string_view DEPS_EXTENSION{".deps"};
+constexpr std::string_view DEPENDENCIES_EXTENSION{".deps"};
 
 BuildAdapterFilesystem::BuildAdapterFilesystem(
     const std::filesystem::path &output_root)
@@ -18,18 +18,18 @@ BuildAdapterFilesystem::BuildAdapterFilesystem(
 auto BuildAdapterFilesystem::dependencies_path(const node_type &path) const
     -> node_type {
   assert(path.is_absolute());
-  return path.string() + std::string{DEPS_EXTENSION};
+  return path.string() + std::string{DEPENDENCIES_EXTENSION};
 }
 
 auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
     -> std::optional<BuildDependencies<node_type>> {
   assert(path.is_absolute());
-  const auto deps_path{this->dependencies_path(path)};
-  if (std::filesystem::exists(deps_path)) {
-    auto stream{sourcemeta::core::read_file(deps_path)};
+  const auto dependencies_path{this->dependencies_path(path)};
+  if (std::filesystem::exists(dependencies_path)) {
+    auto stream{sourcemeta::core::read_file(dependencies_path)};
     assert(stream.is_open());
 
-    BuildDependencies<node_type> deps;
+    BuildDependencies<node_type> result;
     std::string line;
     while (std::getline(stream, line)) {
       // Prevent CRLF on Windows
@@ -38,20 +38,29 @@ auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
       }
 
       if (!line.empty()) {
-        std::filesystem::path dependency{line};
+        auto kind{BuildDependencyKind::Static};
+        std::filesystem::path dependency;
+        if (line.size() >= 2 && line[1] == ' ' &&
+            (line[0] == 's' || line[0] == 'd')) {
+          kind = (line[0] == 'd') ? BuildDependencyKind::Dynamic
+                                  : BuildDependencyKind::Static;
+          dependency = line.substr(2);
+        } else {
+          dependency = line;
+        }
         if (!dependency.is_absolute()) {
           dependency =
               std::filesystem::weakly_canonical(this->root / dependency);
         }
 
-        deps.emplace_back(std::move(dependency));
+        result.emplace_back(kind, std::move(dependency));
       }
     }
 
-    if (deps.empty()) {
+    if (result.empty()) {
       return std::nullopt;
     } else {
-      return deps;
+      return result;
     }
   } else {
     return std::nullopt;
@@ -66,24 +75,26 @@ auto BuildAdapterFilesystem::write_dependencies(
   // Try to make sure as much as we can that any write operation made to disk
   sourcemeta::core::flush(path);
   this->refresh(path);
-  const auto deps_path{this->dependencies_path(path)};
-  std::filesystem::create_directories(deps_path.parent_path());
+  const auto dependencies_path{this->dependencies_path(path)};
+  std::filesystem::create_directories(dependencies_path.parent_path());
   // To reset the inode and correctly handle hard links
-  std::filesystem::remove(deps_path);
-  std::ofstream deps_stream{deps_path};
-  assert(!deps_stream.fail());
+  std::filesystem::remove(dependencies_path);
+  std::ofstream dependencies_stream{dependencies_path};
+  assert(!dependencies_stream.fail());
   for (const auto &dependency : dependencies) {
-    const auto relative{dependency.lexically_relative(this->root)};
+    const auto prefix{dependency.first == BuildDependencyKind::Dynamic ? "d "
+                                                                       : "s "};
+    const auto relative{dependency.second.lexically_relative(this->root)};
     if (!relative.empty() && *relative.begin() != "..") {
-      deps_stream << relative.string() << "\n";
+      dependencies_stream << prefix << relative.string() << "\n";
     } else {
-      deps_stream << dependency.string() << "\n";
+      dependencies_stream << prefix << dependency.second.string() << "\n";
     }
   }
 
-  deps_stream.flush();
-  deps_stream.close();
-  sourcemeta::core::flush(deps_path);
+  dependencies_stream.flush();
+  dependencies_stream.close();
+  sourcemeta::core::flush(dependencies_path);
 }
 
 auto BuildAdapterFilesystem::refresh(const node_type &path) -> void {

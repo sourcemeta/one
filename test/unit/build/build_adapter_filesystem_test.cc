@@ -18,9 +18,11 @@ TEST(Build_Adapter_Filesystem, read_dependencies_stub_1) {
   EXPECT_TRUE(dependencies.has_value());
   EXPECT_EQ(dependencies.value().size(), 2);
   auto iterator{dependencies.value().cbegin()};
-  EXPECT_EQ(iterator->string(), "/foo/bar");
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->second.string(), "/foo/bar");
   std::advance(iterator, 1);
-  EXPECT_EQ(iterator->string(), "/test");
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->second.string(), "/test");
 }
 
 TEST(Build_Adapter_Filesystem, read_dependencies_not_exists) {
@@ -35,9 +37,12 @@ TEST(Build_Adapter_Filesystem, write_dependencies_1) {
   sourcemeta::one::BuildDependencies<
       sourcemeta::one::BuildAdapterFilesystem::node_type>
       dependencies;
-  dependencies.emplace_back("/foo/bar");
-  dependencies.emplace_back("/baz");
-  dependencies.emplace_back("/test");
+  dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+                            "/foo/bar");
+  dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+                            "/baz");
+  dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+                            "/test");
 
   const auto node{std::filesystem::path{BINARY_DIRECTORY} /
                   "write_dependencies_1"};
@@ -51,11 +56,14 @@ TEST(Build_Adapter_Filesystem, write_dependencies_1) {
   EXPECT_EQ(back.value().size(), 3);
 
   auto iterator{back.value().cbegin()};
-  EXPECT_EQ(iterator->string(), "/foo/bar");
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->second.string(), "/foo/bar");
   std::advance(iterator, 1);
-  EXPECT_EQ(iterator->string(), "/baz");
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->second.string(), "/baz");
   std::advance(iterator, 1);
-  EXPECT_EQ(iterator->string(), "/test");
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->second.string(), "/test");
 }
 
 TEST(Build_Adapter_Filesystem, mark_stub_1) {
