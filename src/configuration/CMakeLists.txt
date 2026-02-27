@@ -35,5 +35,4 @@ target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::json
 target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::blaze::configuration)
 target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::blaze::output)
-target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::blaze::evaluator)

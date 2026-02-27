@@ -402,3 +402,28 @@ TEST(Configuration_resolve_path,
   EXPECT_TRUE(result.has_value());
   EXPECT_EQ(result.value(), "/tmp/gamma/deep/file.json");
 }
+
+TEST(Configuration_resolve_path, longest_prefix_wins_over_shorter) {
+  sourcemeta::one::Configuration configuration;
+  configuration.url = "https://sourcemeta.com";
+  configuration.entries.emplace(
+      "schemas", make_collection("/tmp/schemas", "https://example.com"));
+  configuration.entries.emplace(
+      "schemas/v2", make_collection("/tmp/schemas-v2", "https://example.com"));
+
+  const sourcemeta::core::URI input{"/schemas/v2/test.json"};
+  const auto result{configuration.resolve_path(input)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), "/tmp/schemas-v2/test.json");
+}
+
+TEST(Configuration_resolve_path, path_traversal_dot_dot_rejected) {
+  sourcemeta::one::Configuration configuration;
+  configuration.url = "https://sourcemeta.com";
+  configuration.entries.emplace(
+      "schemas", make_collection("/tmp/schemas", "https://example.com"));
+
+  const sourcemeta::core::URI input{"/schemas/../other.json"};
+  const auto result{configuration.resolve_path(input)};
+  EXPECT_FALSE(result.has_value());
+}

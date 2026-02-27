@@ -1,13 +1,13 @@
 #include <sourcemeta/one/configuration.h>
 
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/uri.h>
 
 namespace sourcemeta::one {
 
 auto Configuration::resolve_path(const sourcemeta::core::URI &input) const
     -> std::optional<std::filesystem::path> {
-  sourcemeta::core::URI relative{input.recompose()};
+  sourcemeta::core::URI relative{input};
+  relative.canonicalize();
   relative.relative_to(sourcemeta::core::URI{this->url});
   if (relative.is_absolute()) {
     return std::nullopt;
@@ -24,16 +24,19 @@ auto Configuration::resolve_path(const sourcemeta::core::URI &input) const
     return std::nullopt;
   }
 
-  for (const auto &entry : this->entries) {
-    const auto *collection{std::get_if<Collection>(&entry.second)};
-    if (!collection ||
-        !sourcemeta::core::starts_with(relative_path, entry.first)) {
-      continue;
+  auto candidate{relative_path};
+  while (!candidate.empty()) {
+    const auto match{this->entries.find(candidate)};
+    if (match != this->entries.cend()) {
+      const auto *collection{std::get_if<Collection>(&match->second)};
+      if (collection) {
+        return (collection->absolute_path /
+                relative_path.lexically_relative(candidate))
+            .lexically_normal();
+      }
     }
 
-    return (collection->absolute_path /
-            relative_path.lexically_relative(entry.first))
-        .lexically_normal();
+    candidate = candidate.parent_path();
   }
 
   return std::nullopt;
