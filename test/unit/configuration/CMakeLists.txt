@@ -1,5 +1,5 @@
 sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME configuration
-  SOURCES configuration_read_test.cc configuration_test.cc)
+  SOURCES configuration_read_test.cc configuration_test.cc configuration_resolve_path_test.cc)
 
 target_link_libraries(sourcemeta_one_configuration_unit
   PRIVATE sourcemeta::one::configuration)
