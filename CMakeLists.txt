@@ -31,9 +31,6 @@ find_package(JSONSchema REQUIRED)
 
 include(GNUInstallDirs)
 
-# Always optimize for the current architecture
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=native")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(ONE_VERSION "${PROJECT_VERSION}")
