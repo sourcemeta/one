@@ -41,8 +41,18 @@ remove_threads_information() {
   fi
 }
 
+normalize_staging_path() {
+  expr='s|\.sourcemeta-one-[^/ ]*|.sourcemeta-one-XXXXXX|g'
+  if [ "$(uname -s)" = "Darwin" ]; then
+    sed -i '' "$expr" "$1"
+  else
+    sed -i "$expr" "$1"
+  fi
+}
+
 "$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -60,6 +70,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 ( 50%) Rendering: example
 ( 75%) Rendering: .
 (100%) Rendering: example/schemas/foo
+Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -67,6 +78,7 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 "$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -107,6 +119,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Rendering: example/schemas/foo
 (skip) Rendering: example/schemas/foo [schema]
 (skip) Producing: routes.bin [routes]
+Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -120,6 +133,7 @@ cat << 'EOF' > "$TMP/schemas/foo.json"
 EOF
 "$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -139,6 +153,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (skip) Rendering: . [not-found]
 (100%) Rendering: example/schemas/foo
 (skip) Producing: routes.bin [routes]
+Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -146,6 +161,7 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 touch "$TMP/output/configuration.json"
 "$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -163,5 +179,6 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 ( 50%) Rendering: example
 ( 75%) Rendering: .
 (100%) Rendering: example/schemas/foo
+Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

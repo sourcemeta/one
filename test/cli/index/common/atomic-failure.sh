@@ -28,14 +28,15 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
+hash_directory() {
+  { find "$1" -type f -exec md5sum {} \; 2>/dev/null \
+    || find "$1" -type f -exec md5 -r {} \; ; } \
+    | sort > "$2"
+}
+
 # Index successfully
 "$1" "$TMP/one.json" "$TMP/output"
-
-# Snapshot the output directory state
-find "$TMP/output" -type f | sort > "$TMP/files_before.txt"
-{ find "$TMP/output" -type f -exec md5sum {} \; 2>/dev/null \
-  || find "$TMP/output" -type f -exec md5 -r {} \; ; } \
-  | sort > "$TMP/checksums_before.txt"
+hash_directory "$TMP/output" "$TMP/snapshot_before.txt"
 
 # Break the schema so the next index run fails
 cat << 'EOF' > "$TMP/schemas/test.json"
@@ -51,14 +52,9 @@ EOF
 test "$CODE" = "1"
 
 # Verify the output directory is untouched
-find "$TMP/output" -type f | sort > "$TMP/files_after.txt"
-{ find "$TMP/output" -type f -exec md5sum {} \; 2>/dev/null \
-  || find "$TMP/output" -type f -exec md5 -r {} \; ; } \
-  | sort > "$TMP/checksums_after.txt"
+hash_directory "$TMP/output" "$TMP/snapshot_after.txt"
+diff "$TMP/snapshot_before.txt" "$TMP/snapshot_after.txt"
 
-diff "$TMP/files_before.txt" "$TMP/files_after.txt"
-diff "$TMP/checksums_before.txt" "$TMP/checksums_after.txt"
-
-# Verify no staging directories were left behind
-STALE="$(find "$TMP" -maxdepth 1 -type d -name '.sourcemeta-one-*' | wc -l | tr -d ' ')"
-test "$STALE" = "0"
+# Verify no hidden files or directories were left behind
+HIDDEN="$(find "$TMP" -maxdepth 1 -name '.*' ! -name '.' | wc -l | tr -d ' ')"
+test "$HIDDEN" = "0"

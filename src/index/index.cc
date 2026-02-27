@@ -35,6 +35,7 @@
 // the resolver will not unescape it back when computing the relative path to an
 // entry
 constexpr auto SENTINEL{"%"};
+constexpr std::string_view STAGING_PATH_PREFIX{".sourcemeta-one-"};
 
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
@@ -104,22 +105,11 @@ static auto index_main(const std::string_view &program,
 
   std::cerr << "Writing output to: " << final_output_path.string() << "\n";
 
-  // Clean up stale staging directories from crashed previous runs
-  if (std::filesystem::exists(final_output_path.parent_path())) {
-    for (const auto &entry :
-         std::filesystem::directory_iterator{final_output_path.parent_path()}) {
-      if (entry.is_directory() &&
-          entry.path().filename().string().starts_with(".sourcemeta-one-")) {
-        std::cerr << "Removing stale staging directory: "
-                  << entry.path().string() << "\n";
-        std::filesystem::remove_all(entry.path());
-      }
-    }
-  }
-
+  // Place the staging directory as a sibling of the final output path to
+  // guarantee both reside on the same filesystem volume, which is required
+  // for the atomic rename to succeed
   sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
-                                               ".sourcemeta-one-"};
-
+                                               STAGING_PATH_PREFIX};
   if (std::filesystem::exists(final_output_path)) {
     sourcemeta::core::hardlink_directory(final_output_path, staging.path());
   }
@@ -639,7 +629,26 @@ static auto index_main(const std::string_view &program,
     }
   }
 
+  std::cerr << "Committing: " << staging.path().string() << " => "
+            << final_output_path.string() << "\n";
   sourcemeta::core::atomic_directory_replace(final_output_path, staging.path());
+
+  // Clean up stale staging entries from crashed previous runs. We do this
+  // after committing so that we never interfere with a concurrent run
+  for (const auto &entry :
+       std::filesystem::directory_iterator{final_output_path.parent_path()}) {
+    if (entry.path() != staging.path() &&
+        entry.path().filename().string().starts_with(STAGING_PATH_PREFIX)) {
+      std::cerr << "Removing stale staging entry: " << entry.path().string()
+                << "\n";
+      std::error_code error;
+      std::filesystem::remove_all(entry.path(), error);
+      if (error) {
+        std::cerr << "warning: " << error.message() << "\n";
+      }
+    }
+  }
+
   return EXIT_SUCCESS;
 }
 

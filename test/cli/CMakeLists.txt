@@ -60,6 +60,8 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index deps-contents)
   sourcemeta_one_test_cli(common index inode-reset-on-rebuild)
   sourcemeta_one_test_cli(common index atomic-failure)
+  sourcemeta_one_test_cli(common index stale-staging-cleanup)
+  sourcemeta_one_test_cli(common index configuration-no-stale-cleanup)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)
