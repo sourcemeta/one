@@ -42,62 +42,62 @@ cd - > /dev/null
 
 cat << EOF > "$TMP/expected.txt"
 --- ./dependency-tree.metapack.deps
-schemas/example/test/%/dependencies.metapack
+s schemas/example/test/%/dependencies.metapack
 --- ./explorer/%/directory.metapack.deps
-configuration.json
-explorer/example/%/directory.metapack
-explorer/example/test/%/schema.metapack
-version.json
+d explorer/example/%/directory.metapack
+s configuration.json
+s explorer/example/test/%/schema.metapack
+s version.json
 --- ./explorer/%/search.metapack.deps
-explorer/example/test/%/schema.metapack
+s explorer/example/test/%/schema.metapack
 --- ./explorer/example/%/directory.metapack.deps
-configuration.json
-explorer/example/test/%/schema.metapack
-version.json
+s configuration.json
+s explorer/example/test/%/schema.metapack
+s version.json
 --- ./explorer/example/test/%/schema.metapack.deps
-configuration.json
-schemas/example/test/%/dependencies.metapack
-schemas/example/test/%/health.metapack
-schemas/example/test/%/schema.metapack
-version.json
+s configuration.json
+s schemas/example/test/%/dependencies.metapack
+s schemas/example/test/%/health.metapack
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./routes.bin.deps
-configuration.json
-version.json
+s configuration.json
+s version.json
 --- ./schemas/example/test/%/blaze-exhaustive.metapack.deps
-schemas/example/test/%/bundle.metapack
-version.json
+s schemas/example/test/%/bundle.metapack
+s version.json
 --- ./schemas/example/test/%/blaze-fast.metapack.deps
-schemas/example/test/%/bundle.metapack
-version.json
+s schemas/example/test/%/bundle.metapack
+s version.json
 --- ./schemas/example/test/%/bundle.metapack.deps
-schemas/example/test/%/dependencies.metapack
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/dependencies.metapack
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./schemas/example/test/%/dependencies.metapack.deps
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./schemas/example/test/%/dependents.metapack.deps
-dependency-tree.metapack
+s dependency-tree.metapack
 --- ./schemas/example/test/%/editor.metapack.deps
-schemas/example/test/%/bundle.metapack
-version.json
+s schemas/example/test/%/bundle.metapack
+s version.json
 --- ./schemas/example/test/%/health.metapack.deps
-schemas/example/test/%/dependencies.metapack
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/dependencies.metapack
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./schemas/example/test/%/locations.metapack.deps
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./schemas/example/test/%/positions.metapack.deps
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/schema.metapack
+s version.json
 --- ./schemas/example/test/%/schema.metapack.deps
-$REAL/schemas/test.json
-configuration.json
-version.json
+s $REAL/schemas/test.json
+s configuration.json
+s version.json
 --- ./schemas/example/test/%/stats.metapack.deps
-schemas/example/test/%/schema.metapack
-version.json
+s schemas/example/test/%/schema.metapack
+s version.json
 EOF
 
 diff "$TMP/deps.txt" "$TMP/expected.txt"

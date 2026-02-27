@@ -24,7 +24,23 @@ auto HANDLER_MULTIPLY(
     const sourcemeta::one::BuildDynamicCallback<typename Adapter::node_type> &,
     const Context &value) -> void {
   assert(dependencies.size() == 1);
-  write_uint64_t(destination, read_uint64_t(dependencies.front()) * value);
+  write_uint64_t(destination,
+                 read_uint64_t(dependencies.front().second) * value);
+}
+
+template <typename Context, typename Adapter>
+auto HANDLER_SUM(
+    const typename Adapter::node_type &destination,
+    const sourcemeta::one::BuildDependencies<typename Adapter::node_type>
+        &dependencies,
+    const sourcemeta::one::BuildDynamicCallback<typename Adapter::node_type> &,
+    const Context &) -> void {
+  std::uint64_t total{0};
+  for (const auto &dependency : dependencies) {
+    total += read_uint64_t(dependency.second);
+  }
+
+  write_uint64_t(destination, total);
 }
 
 template <typename Context, typename Adapter>
@@ -63,28 +79,28 @@ TEST(Build_Adapter_Filesystem_e2e, simple_cache_miss_hit) {
   // Create first.txt from initial.txt (cache miss)
   const auto result_1 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "first.txt",
-      {base_path / "initial.txt"}, 2);
+      {sourcemeta::one::make_dependency(base_path / "initial.txt")}, 2);
   EXPECT_TRUE(result_1);
   EXPECT_EQ(read_uint64_t(base_path / "first.txt"), 16);
 
   // Create second.txt from first.txt (cache miss)
   const auto result_2 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "second.txt",
-      {base_path / "first.txt"}, 3);
+      {sourcemeta::one::make_dependency(base_path / "first.txt")}, 3);
   EXPECT_TRUE(result_2);
   EXPECT_EQ(read_uint64_t(base_path / "second.txt"), 48);
 
   // Create first.txt from initial.txt (cache hit)
   const auto result_3 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "first.txt",
-      {base_path / "initial.txt"}, 2);
+      {sourcemeta::one::make_dependency(base_path / "initial.txt")}, 2);
   EXPECT_FALSE(result_3);
   EXPECT_EQ(read_uint64_t(base_path / "first.txt"), 16);
 
   // Create second.txt from first.txt (cache hit)
   const auto result_4 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "second.txt",
-      {base_path / "first.txt"}, 3);
+      {sourcemeta::one::make_dependency(base_path / "first.txt")}, 3);
   EXPECT_FALSE(result_4);
   EXPECT_EQ(read_uint64_t(base_path / "second.txt"), 48);
 
@@ -96,14 +112,14 @@ TEST(Build_Adapter_Filesystem_e2e, simple_cache_miss_hit) {
   // Create first.txt from initial.txt (cache miss)
   const auto result_5 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "first.txt",
-      {base_path / "initial.txt"}, 2);
+      {sourcemeta::one::make_dependency(base_path / "initial.txt")}, 2);
   EXPECT_TRUE(result_5);
   EXPECT_EQ(read_uint64_t(base_path / "first.txt"), 14);
 
   // Create second.txt from first.txt (cache miss)
   const auto result_6 = sourcemeta::one::build<Context>(
       adapter, HANDLER_MULTIPLY<Context, Adapter>, base_path / "second.txt",
-      {base_path / "first.txt"}, 3);
+      {sourcemeta::one::make_dependency(base_path / "first.txt")}, 3);
   EXPECT_TRUE(result_6);
   EXPECT_EQ(read_uint64_t(base_path / "second.txt"), 42);
 }
@@ -160,4 +176,276 @@ TEST(Build_Adapter_Filesystem_e2e, missing_dynamic_dependency) {
   // As the context was NOT dynamically registered
   EXPECT_TRUE(result_2);
   EXPECT_EQ(read_uint64_t(base_path / "copy.txt"), 8);
+}
+
+template <typename Context, typename Adapter>
+auto HANDLER_SUM_WITH_DYNAMIC(
+    const typename Adapter::node_type &destination,
+    const sourcemeta::one::BuildDependencies<typename Adapter::node_type>
+        &dependencies,
+    const sourcemeta::one::BuildDynamicCallback<typename Adapter::node_type>
+        &callback,
+    const Context &context) -> void {
+  std::uint64_t total{0};
+  for (const auto &dependency : dependencies) {
+    total += read_uint64_t(dependency.second);
+  }
+
+  total += read_uint64_t(context);
+  callback(context);
+  write_uint64_t(destination, total);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, new_dependency_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = std::nullptr_t;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "new_dependency_invalidates"};
+  write_uint64_t(base_path / "dep_a.txt", 10);
+  adapter.refresh(base_path / "dep_a.txt");
+
+  // Build with a single dependency (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Rebuild with the same single dependency (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Add a new dependency and rebuild (should be cache miss)
+  write_uint64_t(base_path / "dep_b.txt", 20);
+  adapter.refresh(base_path / "dep_b.txt");
+  const auto result_3 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_b.txt")},
+      nullptr);
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, removed_make_dependency_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = std::nullptr_t;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "removed_make_dependency_invalidates"};
+  write_uint64_t(base_path / "dep_a.txt", 10);
+  adapter.refresh(base_path / "dep_a.txt");
+  write_uint64_t(base_path / "dep_b.txt", 20);
+  adapter.refresh(base_path / "dep_b.txt");
+
+  // Build with two dependencies (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_b.txt")},
+      nullptr);
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+
+  // Rebuild with same two dependencies (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_b.txt")},
+      nullptr);
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+
+  // Remove dep_b and rebuild (should be cache miss)
+  const auto result_3 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, remove_all_static_dependencies_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = std::nullptr_t;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "remove_all_static_deps_invalidates"};
+  write_uint64_t(base_path / "dep_a.txt", 10);
+  adapter.refresh(base_path / "dep_a.txt");
+
+  // Build with one dependency (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Rebuild with same dependency (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Remove all static deps and rebuild (should be cache miss)
+  const auto result_3 =
+      sourcemeta::one::build<Context>(adapter, HANDLER_SUM<Context, Adapter>,
+                                      base_path / "target.txt", {}, nullptr);
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 0);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, replaced_make_dependency_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = std::nullptr_t;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "replaced_make_dependency_invalidates"};
+  write_uint64_t(base_path / "dep_a.txt", 10);
+  adapter.refresh(base_path / "dep_a.txt");
+  write_uint64_t(base_path / "dep_b.txt", 20);
+  adapter.refresh(base_path / "dep_b.txt");
+
+  // Build with dep_a (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Rebuild with dep_a (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt")}, nullptr);
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 10);
+
+  // Replace dep_a with dep_b (should be cache miss)
+  const auto result_3 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_b.txt")}, nullptr);
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 20);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, reordered_static_dependencies_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = std::nullptr_t;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "reordered_static_deps_invalidates"};
+  write_uint64_t(base_path / "dep_a.txt", 10);
+  adapter.refresh(base_path / "dep_a.txt");
+  write_uint64_t(base_path / "dep_b.txt", 20);
+  adapter.refresh(base_path / "dep_b.txt");
+
+  // Build with {a, b} (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_b.txt")},
+      nullptr);
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+
+  // Rebuild with {a, b} (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_a.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_b.txt")},
+      nullptr);
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+
+  // Reorder to {b, a} (should be cache miss)
+  const auto result_3 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM<Context, Adapter>, base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_b.txt"),
+       sourcemeta::one::make_dependency(base_path / "dep_a.txt")},
+      nullptr);
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 30);
+}
+
+TEST(Build_Adapter_Filesystem_e2e,
+     dynamic_deps_do_not_interfere_with_static_comparison) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = Adapter::node_type;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "dynamic_no_interfere_static"};
+  write_uint64_t(base_path / "dep_static.txt", 10);
+  adapter.refresh(base_path / "dep_static.txt");
+  write_uint64_t(base_path / "dep_dynamic.txt", 5);
+  adapter.refresh(base_path / "dep_dynamic.txt");
+
+  // Build with one static dep and one dynamic dep (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM_WITH_DYNAMIC<Context, Adapter>,
+      base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_static.txt")},
+      base_path / "dep_dynamic.txt");
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 15);
+
+  // Rebuild with same static dep (cache hit, dynamic dep in .deps is fine)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM_WITH_DYNAMIC<Context, Adapter>,
+      base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_static.txt")},
+      base_path / "dep_dynamic.txt");
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 15);
+}
+
+TEST(Build_Adapter_Filesystem_e2e, dynamic_dependency_stale_invalidates) {
+  using Adapter = sourcemeta::one::BuildAdapterFilesystem;
+  using Context = Adapter::node_type;
+  Adapter adapter{BINARY_DIRECTORY};
+
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "dynamic_dep_stale_invalidates"};
+  write_uint64_t(base_path / "dep_static.txt", 10);
+  adapter.refresh(base_path / "dep_static.txt");
+  write_uint64_t(base_path / "dep_dynamic.txt", 5);
+  adapter.refresh(base_path / "dep_dynamic.txt");
+
+  // Build (cache miss)
+  const auto result_1 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM_WITH_DYNAMIC<Context, Adapter>,
+      base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_static.txt")},
+      base_path / "dep_dynamic.txt");
+  EXPECT_TRUE(result_1);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 15);
+
+  // Rebuild unchanged (cache hit)
+  const auto result_2 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM_WITH_DYNAMIC<Context, Adapter>,
+      base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_static.txt")},
+      base_path / "dep_dynamic.txt");
+  EXPECT_FALSE(result_2);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 15);
+
+  // Update the dynamic dep file and rebuild (should be cache miss)
+  write_uint64_t(base_path / "dep_dynamic.txt", 100);
+  adapter.refresh(base_path / "dep_dynamic.txt");
+  const auto result_3 = sourcemeta::one::build<Context>(
+      adapter, HANDLER_SUM_WITH_DYNAMIC<Context, Adapter>,
+      base_path / "target.txt",
+      {sourcemeta::one::make_dependency(base_path / "dep_static.txt")},
+      base_path / "dep_dynamic.txt");
+  EXPECT_TRUE(result_3);
+  EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 110);
 }

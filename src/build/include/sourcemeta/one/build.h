@@ -19,22 +19,43 @@ auto build(Adapter &adapter,
            const Context &context) -> bool {
   const auto destination_mark{adapter.mark(destination)};
   const auto destination_dependencies{adapter.read_dependencies(destination)};
-  if (destination_mark.has_value() && destination_dependencies.has_value() &&
-      std::ranges::none_of(
-          destination_dependencies.value(),
-          [&adapter, &destination_mark](const auto &dependency) {
-            const auto dependency_mark = adapter.mark(dependency);
-            return !dependency_mark.has_value() ||
-                   adapter.is_newer_than(dependency_mark.value(),
-                                         destination_mark.value());
-          })) {
-    return false;
+  if (destination_mark.has_value() && destination_dependencies.has_value()) {
+    const auto &cached{destination_dependencies.value()};
+    std::size_t static_index{0};
+    bool static_dependencies_match{true};
+    for (const auto &entry : cached) {
+      if (entry.first == BuildDependencyKind::Static) {
+        if (static_index >= dependencies.size() ||
+            dependencies[static_index].second != entry.second) {
+          static_dependencies_match = false;
+          break;
+        }
+
+        static_index += 1;
+      }
+    }
+
+    if (static_dependencies_match && static_index != dependencies.size()) {
+      static_dependencies_match = false;
+    }
+
+    if (static_dependencies_match &&
+        std::ranges::none_of(
+            cached, [&adapter, &destination_mark](const auto &dependency) {
+              const auto dependency_mark{adapter.mark(dependency.second)};
+              return !dependency_mark.has_value() ||
+                     adapter.is_newer_than(dependency_mark.value(),
+                                           destination_mark.value());
+            })) {
+      return false;
+    }
   }
 
-  BuildDependencies<typename Adapter::node_type> deps;
+  BuildDependencies<typename Adapter::node_type> output_dependencies;
   for (const auto &dependency : dependencies) {
-    assert(adapter.mark(dependency).has_value());
-    deps.emplace_back(dependency);
+    assert(adapter.mark(dependency.second).has_value());
+    output_dependencies.emplace_back(BuildDependencyKind::Static,
+                                     dependency.second);
   }
 
   handler(
@@ -45,11 +66,12 @@ auto build(Adapter &adapter,
       // processing the handler
       [&](const auto &new_dependency) {
         assert(adapter.mark(new_dependency).has_value());
-        deps.emplace_back(new_dependency);
+        output_dependencies.emplace_back(BuildDependencyKind::Dynamic,
+                                         new_dependency);
       },
       context);
 
-  adapter.write_dependencies(destination, deps);
+  adapter.write_dependencies(destination, output_dependencies);
   return true;
 }
 

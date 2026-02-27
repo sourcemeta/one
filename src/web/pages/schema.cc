@@ -24,7 +24,7 @@ auto GENERATE_WEB_SCHEMA::handler(
     const Context &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto meta{read_json(dependencies.front())};
+  const auto meta{read_json(dependencies.front().second)};
   const auto &canonical{meta.at("identifier").to_string()};
   const auto &title{meta.defines("title") ? meta.at("title").to_string()
                                           : meta.at("path").to_string()};
@@ -197,11 +197,11 @@ auto GENERATE_WEB_SCHEMA::handler(
            {"data-sourcemeta-ui-editor-language", "json"}},
           "Loading schema..."));
 
-  const auto dependencies_json{read_json(dependencies.at(1))};
-  const auto health{read_json(dependencies.at(2))};
+  const auto dependencies_json{read_json(dependencies.at(1).second)};
+  const auto health{read_json(dependencies.at(2).second)};
   assert(health.is_object());
   assert(health.defines("errors"));
-  const auto dependents_json{read_json(dependencies.at(3))};
+  const auto dependents_json{read_json(dependencies.at(3).second)};
   assert(dependents_json.is_array());
 
   // Collect unique dependent schemas, preferring direct over indirect.

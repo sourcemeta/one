@@ -8,7 +8,6 @@
 
 #include <cassert>       // assert
 #include <filesystem>    // std::filesystem
-#include <iostream>      // std::cerr
 #include <shared_mutex>  // std::shared_mutex, std::shared_lock
 #include <unordered_map> // std::unordered_map
 
@@ -28,7 +27,6 @@ public:
   auto remove_unknown_files() const {
     for (const auto &entry : this->tracker) {
       if (!entry.second) {
-        std::cerr << "Removing unknown file: " << entry.first.string() << "\n";
         std::filesystem::remove_all(entry.first);
       }
     }
