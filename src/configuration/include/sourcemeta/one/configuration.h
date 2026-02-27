@@ -3,6 +3,7 @@
 
 #include <sourcemeta/blaze/configuration.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/configuration_error.h>
 
@@ -49,6 +50,9 @@ struct Configuration {
   };
 
   using Collection = sourcemeta::blaze::Configuration;
+
+  [[nodiscard]] auto resolve_path(const sourcemeta::core::URI &input) const
+      -> std::optional<std::filesystem::path>;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;

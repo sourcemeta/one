@@ -31,7 +31,6 @@ find_package(JSONSchema REQUIRED)
 
 include(GNUInstallDirs)
 
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(ONE_VERSION "${PROJECT_VERSION}")
 else()
