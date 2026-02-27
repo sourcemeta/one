@@ -50,7 +50,7 @@ normalize_staging_path() {
   fi
 }
 
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
@@ -76,7 +76,7 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Run it once more
 
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
@@ -132,7 +132,7 @@ cat << 'EOF' > "$TMP/schemas/foo.json"
   "type": "string"
 }
 EOF
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
@@ -161,7 +161,7 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Update the configuration summary
 touch "$TMP/output/configuration.json"
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"

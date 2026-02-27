@@ -7,7 +7,7 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-"$1" "$(realpath "$TMP")/nonexistent.json" "$TMP/output" 2> "$TMP/output.txt" \
+"$1" --skip-banner "$(realpath "$TMP")/nonexistent.json" "$TMP/output" 2> "$TMP/output.txt" \
   && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 

@@ -39,7 +39,7 @@ normalize_staging_path() {
 
 # First run: the schemas directory does not exist at all
 test ! -d "$TMP/schemas"
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 
@@ -89,7 +89,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 

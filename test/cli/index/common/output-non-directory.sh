@@ -33,7 +33,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 EOF
 
 echo "foobar" > "$TMP/output"
-"$1" "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"

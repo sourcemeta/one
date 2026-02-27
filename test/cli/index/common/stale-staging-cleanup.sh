@@ -63,7 +63,7 @@ echo "keep" > "$TMP/.hidden-directory/data.txt"
 mkdir "$TMP/.another-hidden"
 echo "keep" > "$TMP/.dotfile"
 
-"$1" "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 

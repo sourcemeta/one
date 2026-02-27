@@ -80,11 +80,13 @@ DISPATCH(const std::filesystem::path &destination,
 
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
-  std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-            << sourcemeta::one::version() << "\n";
+  if (!app.contains("skip-banner")) {
+    std::cerr << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+              << sourcemeta::one::version() << "\n";
+  }
 
   if (app.positional().size() != 2) {
-    std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
+    std::cerr << "Usage: " << std::filesystem::path{program}.filename().string()
               << " <one.json> <path/to/output/directory>\n";
     return EXIT_FAILURE;
   }
@@ -702,6 +704,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
     app.flag("configuration", {"g"});
+    app.flag("skip-banner", {"s"});
     app.parse(argc, argv);
     const std::string_view program{argv[0]};
 

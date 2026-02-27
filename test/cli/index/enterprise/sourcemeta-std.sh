@@ -14,7 +14,7 @@ cat << EOF > "$TMP/one.json"
 }
 EOF
 
-"$1" "$TMP/one.json" "$TMP/output" --configuration | tail -n +2 > "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --configuration > "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 {

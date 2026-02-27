@@ -50,7 +50,7 @@ normalize_staging_path() {
   fi
 }
 
-"$1" "$TMP/one.json" "$TMP/output" -v --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" -v --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"

@@ -37,7 +37,7 @@ mkdir "$TMP/.sourcemeta-one-aaa"
 mkdir "$TMP/.sourcemeta-one-bbb"
 mkdir "$TMP/.sourcemeta-one-ccc"
 
-"$1" "$TMP/one.json" "$TMP/output" --configuration > /dev/null 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --configuration > /dev/null 2> "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
