@@ -23,13 +23,10 @@ cat << EOF > "$TMP/one.json"
 }
 EOF
 
-"$1" "$TMP/one.json" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/one.json" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
-VERSION="$2"
-
 cat << EOF > "$TMP/expected.txt"
-Sourcemeta One Community v$VERSION
 Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 EOF
 

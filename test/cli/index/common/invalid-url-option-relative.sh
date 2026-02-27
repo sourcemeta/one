@@ -32,7 +32,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" "$TMP/one.json" "$TMP/output" --url foo 2> "$TMP/output.txt" \
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --url foo 2> "$TMP/output.txt" \
   && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
