@@ -136,7 +136,6 @@ static auto index_main(const std::string_view &program,
     sourcemeta::core::URI url{std::string{app.at("url").at(0)}};
     if (url.is_absolute() && url.scheme().has_value() &&
         (url.scheme().value() == "https" || url.scheme().value() == "http")) {
-      // TODO: Write a test that covers URL overriding
       configuration.url =
           sourcemeta::core::URI::canonicalize(std::string{app.at("url").at(0)});
     } else {
@@ -152,6 +151,7 @@ static auto index_main(const std::string_view &program,
   if (app.contains("resolve-path")) {
     const sourcemeta::core::URI input_uri{
         std::string{app.at("resolve-path").front()}};
+    std::cerr << "Resolving path for URI: " << input_uri.recompose() << "\n";
     const auto result{configuration.resolve_path(input_uri)};
     if (result.has_value()) {
       std::cout << result.value().string() << "\n";

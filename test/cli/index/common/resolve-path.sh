@@ -86,3 +86,15 @@ resolve_path_match_with_url "$1" "$TMP/one.json" \
 # --url override makes original URL stop matching
 resolve_path_no_match_with_url "$1" "$TMP/one.json" \
   "https://other.com/" "https://sourcemeta.com/schemas/foo.json"
+
+# A full run to assert on standard error output
+"$1" "$TMP/one.json" "$TMP/output" \
+  --skip-banner \
+  --resolve-path "https://sourcemeta.com/schemas/foo.json" > "$TMP/output.txt" 2>&1
+cat << EOF > "$TMP/expected.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Resolving path for URI: https://sourcemeta.com/schemas/foo.json
+$(realpath "$TMP")/schemas/foo.json
+EOF
+diff "$TMP/output.txt" "$TMP/expected.txt"
