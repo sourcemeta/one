@@ -201,7 +201,18 @@ static auto index_main(const std::string_view &program,
   output.write_json_if_different(mark_configuration_path, raw_configuration);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) First pass to locate all of the schemas we will be indexing
+  // (8) Store the optional comment for informational purposes
+  /////////////////////////////////////////////////////////////////////////////
+
+  if (app.contains("comment")) {
+    const auto comment_path{output.path() / "comment.json"};
+    output.write_json_if_different(
+        comment_path,
+        sourcemeta::core::JSON{std::string{app.at("comment").at(0)}});
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (9) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +258,7 @@ static auto index_main(const std::string_view &program,
   };
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Do a first analysis pass on the schemas and materialise them for
+  // (10) Do a first analysis pass on the schemas and materialise them for
   // further analysis. We do this so that we don't end up rebasing the same
   // schemas over and over again depending on the order of analysis later on
   /////////////////////////////////////////////////////////////////////////////
@@ -286,7 +297,7 @@ static auto index_main(const std::string_view &program,
       concurrency);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Generate all the artifacts that purely depend on the schemas
+  // (11) Generate all the artifacts that purely depend on the schemas
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -392,7 +403,7 @@ static auto index_main(const std::string_view &program,
       concurrency, THREAD_STACK_SIZE);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (11) Scan the generated files so far to prepare for more complex targets
+  // (12) Scan the generated files so far to prepare for more complex targets
   /////////////////////////////////////////////////////////////////////////////
 
   // This is a pretty fast step that will be useful for us to properly declare
@@ -458,7 +469,7 @@ static auto index_main(const std::string_view &program,
       output);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) A further pass on the schemas after review
+  // (13) A further pass on the schemas after review
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::parallel_for_each(
@@ -479,7 +490,7 @@ static auto index_main(const std::string_view &program,
       concurrency, THREAD_STACK_SIZE);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (13) Generate the JSON-based explorer
+  // (14) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing",
@@ -521,7 +532,7 @@ static auto index_main(const std::string_view &program,
   summaries.pop_back();
 
   /////////////////////////////////////////////////////////////////////////////
-  // (14) Generate the HTML web interface
+  // (15) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
@@ -602,7 +613,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (15) Generate the pre computed routes
+  // (16) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
@@ -726,6 +737,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.flag("configuration", {"g"});
     app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});
+    app.option("comment", {"m"});
     app.parse(argc, argv);
     const std::string_view program{argv[0]};
 

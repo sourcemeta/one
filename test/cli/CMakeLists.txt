@@ -65,6 +65,8 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index rebuild-zero-to-one)
   sourcemeta_one_test_cli(common index rebuild-one-to-zero)
   sourcemeta_one_test_cli(common index resolve-schema)
+  sourcemeta_one_test_cli(common index comment-removed-on-rebuild)
+  sourcemeta_one_test_cli(common index comment-updated-on-rebuild)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)
