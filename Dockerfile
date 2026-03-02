@@ -54,6 +54,11 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel
 
+FROM builder AS benchmark
+COPY benchmark /source/benchmark
+RUN /source/benchmark/index.sh /usr/bin/sourcemeta-one-index \
+  > /benchmark.json
+
 FROM debian:trixie-slim
 
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys

@@ -96,6 +96,10 @@ test-ui: node_modules
 	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
 		$(NPX) playwright test --config test/ui/playwright.config.js
 
+.PHONY: benchmark-index
+benchmark-index:
+	./benchmark/index.sh $(PREFIX)/bin/sourcemeta-one-index
+
 .PHONY: sandbox-index
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \

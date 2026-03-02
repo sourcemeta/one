@@ -31,6 +31,14 @@ jobs:
 
       - run: make docker-build PRESET=Release ${{ matrix.edition.options }}
 
+      - name: Benchmark
+        run: |
+          docker build . --progress plain \
+            --file ${{ matrix.edition.name == 'enterprise' && 'enterprise/Dockerfile' || 'Dockerfile' }} \
+            --build-arg SOURCEMETA_ONE_BUILD_TYPE=Release \
+            --target benchmark --output type=local,dest=.
+          cat benchmark.json
+
       - name: SBOM (Enterprise)
         run: |
           node ./enterprise/scripts/sbom.js one /tmp/sbom.spdx.json
@@ -70,6 +78,19 @@ jobs:
       # Public instance
       - run: docker build .  --file public/Dockerfile --progress plain
         if: matrix.edition.name == 'enterprise'
+
+      - uses: benchmark-action/github-action-benchmark@v1
+        if: github.event.pull_request.head.repo.fork == false
+        with:
+          name: Benchmark Index (${{ matrix.edition.name }})
+          tool: customSmallerIsBetter
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name != 'pull_request' }}
+          benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}/index
+          alert-threshold: '5%'
+          comment-always: true
+          fail-on-alert: false
 
   website:
     runs-on: ubuntu-latest
