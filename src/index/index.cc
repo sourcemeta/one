@@ -145,14 +145,14 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (4) Resolve a URI to a filesystem path
+  // (4) Resolve a URI to a schema filesystem path
   /////////////////////////////////////////////////////////////////////////////
 
-  if (app.contains("resolve-path")) {
+  if (app.contains("resolve-schema")) {
     const sourcemeta::core::URI input_uri{
-        std::string{app.at("resolve-path").front()}};
-    std::cerr << "Resolving path for URI: " << input_uri.recompose() << "\n";
-    const auto result{configuration.resolve_path(input_uri)};
+        std::string{app.at("resolve-schema").front()}};
+    std::cerr << "Resolving schema for URI: " << input_uri.recompose() << "\n";
+    const auto result{configuration.resolve_schema(input_uri)};
     if (result.has_value()) {
       std::cout << result.value().string() << "\n";
       return EXIT_SUCCESS;
@@ -724,7 +724,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
     app.flag("configuration", {"g"});
-    app.option("resolve-path", {"r"});
+    app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});
     app.parse(argc, argv);
     const std::string_view program{argv[0]};

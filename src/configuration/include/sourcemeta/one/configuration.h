@@ -51,7 +51,7 @@ struct Configuration {
 
   using Collection = sourcemeta::blaze::Configuration;
 
-  [[nodiscard]] auto resolve_path(const sourcemeta::core::URI &input) const
+  [[nodiscard]] auto resolve_schema(const sourcemeta::core::URI &input) const
       -> std::optional<std::filesystem::path>;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
