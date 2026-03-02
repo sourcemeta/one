@@ -95,8 +95,8 @@ normalize_staging_path "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
-Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-XXXXXX
 Using configuration: $(realpath "$TMP")/one.json
+Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-XXXXXX
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Ingesting: https://sourcemeta.com/schemas/test
 (100%) Analysing: https://sourcemeta.com/schemas/test
