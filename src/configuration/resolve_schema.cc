@@ -4,7 +4,7 @@
 
 namespace sourcemeta::one {
 
-auto Configuration::resolve_path(const sourcemeta::core::URI &input) const
+auto Configuration::resolve_schema(const sourcemeta::core::URI &input) const
     -> std::optional<std::filesystem::path> {
   sourcemeta::core::URI relative{input};
   relative.canonicalize();
@@ -30,9 +30,18 @@ auto Configuration::resolve_path(const sourcemeta::core::URI &input) const
     if (match != this->entries.cend()) {
       const auto *collection{std::get_if<Collection>(&match->second)};
       if (collection) {
-        return (collection->absolute_path /
-                relative_path.lexically_relative(candidate))
-            .lexically_normal();
+        auto result{(collection->absolute_path /
+                     relative_path.lexically_relative(candidate))
+                        .lexically_normal()};
+        if (!result.has_filename()) {
+          return std::nullopt;
+        }
+
+        if (result.extension() != ".json") {
+          result += ".json";
+        }
+
+        return result;
       }
     }
 

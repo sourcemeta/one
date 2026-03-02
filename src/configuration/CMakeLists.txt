@@ -1,6 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
   PRIVATE_HEADERS error.h
-  SOURCES parse.cc read.cc resolve_path.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
+  SOURCES parse.cc read.cc resolve_schema.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
 
 # Compile the configuration schema
 set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
