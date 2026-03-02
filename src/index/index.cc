@@ -92,7 +92,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (1) Prepare the output directory via staging for atomic commits
+  // (1) Parse the output directory
   /////////////////////////////////////////////////////////////////////////////
 
   const auto final_output_path{
@@ -106,19 +106,6 @@ static auto index_main(const std::string_view &program,
   }
 
   std::cerr << "Writing output to: " << final_output_path.string() << "\n";
-
-  // Place the staging directory as a sibling of the final output path to
-  // guarantee both reside on the same filesystem volume, which is required
-  // for the atomic rename to succeed
-  sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
-                                               STAGING_PATH_PREFIX};
-  if (std::filesystem::exists(final_output_path)) {
-    std::cerr << "Hardlinking: " << final_output_path.string() << " => "
-              << staging.path().string() << "\n";
-    sourcemeta::core::hardlink_directory(final_output_path, staging.path());
-  }
-
-  sourcemeta::one::Output output{staging.path()};
 
   /////////////////////////////////////////////////////////////////////////////
   // (2) Process the configuration file
@@ -175,7 +162,24 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Store a mark of the One version for target dependencies
+  // (5) Prepare the output directory via staging for atomic commits
+  /////////////////////////////////////////////////////////////////////////////
+
+  // Place the staging directory as a sibling of the final output path to
+  // guarantee both reside on the same filesystem volume, which is required
+  // for the atomic rename to succeed
+  sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
+                                               STAGING_PATH_PREFIX};
+  if (std::filesystem::exists(final_output_path)) {
+    std::cerr << "Hardlinking: " << final_output_path.string() << " => "
+              << staging.path().string() << "\n";
+    sourcemeta::core::hardlink_directory(final_output_path, staging.path());
+  }
+
+  sourcemeta::one::Output output{staging.path()};
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (6) Store a mark of the One version for target dependencies
   /////////////////////////////////////////////////////////////////////////////
 
   // We do this so that targets can be re-built if the One version changes
@@ -186,7 +190,7 @@ static auto index_main(const std::string_view &program,
       mark_version_path, sourcemeta::core::JSON{sourcemeta::one::version()});
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Store the full configuration file for target dependencies
+  // (7) Store the full configuration file for target dependencies
   /////////////////////////////////////////////////////////////////////////////
 
   // For targets that depend on the contents of the configuration or on anything
@@ -197,7 +201,7 @@ static auto index_main(const std::string_view &program,
   output.write_json_if_different(mark_configuration_path, raw_configuration);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (6) First pass to locate all of the schemas we will be indexing
+  // (8) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -243,7 +247,7 @@ static auto index_main(const std::string_view &program,
   };
 
   /////////////////////////////////////////////////////////////////////////////
-  // (7) Do a first analysis pass on the schemas and materialise them for
+  // (9) Do a first analysis pass on the schemas and materialise them for
   // further analysis. We do this so that we don't end up rebasing the same
   // schemas over and over again depending on the order of analysis later on
   /////////////////////////////////////////////////////////////////////////////
@@ -282,7 +286,7 @@ static auto index_main(const std::string_view &program,
       concurrency);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) Generate all the artifacts that purely depend on the schemas
+  // (10) Generate all the artifacts that purely depend on the schemas
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -388,7 +392,7 @@ static auto index_main(const std::string_view &program,
       concurrency, THREAD_STACK_SIZE);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Scan the generated files so far to prepare for more complex targets
+  // (11) Scan the generated files so far to prepare for more complex targets
   /////////////////////////////////////////////////////////////////////////////
 
   // This is a pretty fast step that will be useful for us to properly declare
@@ -454,7 +458,7 @@ static auto index_main(const std::string_view &program,
       output);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) A further pass on the schemas after review
+  // (12) A further pass on the schemas after review
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::parallel_for_each(
@@ -475,7 +479,7 @@ static auto index_main(const std::string_view &program,
       concurrency, THREAD_STACK_SIZE);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (11) Generate the JSON-based explorer
+  // (13) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing",
@@ -517,7 +521,7 @@ static auto index_main(const std::string_view &program,
   summaries.pop_back();
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) Generate the HTML web interface
+  // (14) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
@@ -598,7 +602,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (13) Generate the pre computed routes
+  // (15) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
