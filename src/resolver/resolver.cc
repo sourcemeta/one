@@ -9,6 +9,7 @@
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
 #include <mutex>     // std::mutex, std::lock_guard
+#include <string>    // std::string
 
 static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::JSON::String &uri,
@@ -294,12 +295,8 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
       sourcemeta::core::dialect(schema, default_dialect_str)};
   // If we couldn't determine the dialect, we would be in trouble!
   assert(!raw_dialect.empty());
-  // Don't modify references to official meta-schemas
-  // TODO: This line may be unnecessarily slow. We should have a different
-  // function that just checks for string equality in an `std::unordered_map`
-  // of official dialects without constructing the final object
   const auto is_official_dialect{
-      sourcemeta::core::schema_resolver(raw_dialect).has_value()};
+      sourcemeta::core::is_known_schema(raw_dialect)};
   auto current_dialect{is_official_dialect
                            ? std::string{raw_dialect}
                            : rebase(collection,
@@ -327,7 +324,6 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     throw sourcemeta::core::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
-
   return {result.first->second.original_identifier, result.first->first};
 }
 

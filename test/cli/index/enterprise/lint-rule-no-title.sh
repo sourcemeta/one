@@ -44,6 +44,7 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
+(100%) Resolving: test.json
 (100%) Ingesting: https://example.com/test/test
 (100%) Analysing: https://example.com/test/test
 error: The schema rule is missing a title

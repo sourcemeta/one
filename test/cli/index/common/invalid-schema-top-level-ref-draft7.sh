@@ -49,6 +49,7 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
+(100%) Resolving: test.json
 (100%) Ingesting: https://sourcemeta.com/example/schemas/test
 error: A schema with a top-level \`\$ref\` in JSON Schema Draft 7 and older dialects ignores every sibling keywords (like identifiers and meta-schema declarations) and therefore many operations, like bundling, are not possible without undefined behavior
   https://sourcemeta.com/example/schemas/test

@@ -255,14 +255,25 @@ static auto index_main(const std::string_view &program,
 
   PROFILE_END(profiling, "Startup");
 
+  // Mainly to not screw up the logs
+  std::mutex mutex;
+  const auto concurrency{app.contains("concurrency")
+                             ? std::stoull(app.at("concurrency").front().data())
+                             : std::thread::hardware_concurrency()};
+
   /////////////////////////////////////////////////////////////////////////////
   // (9) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Resolver resolver;
-  // This step is very fast, so going parallel about it seems overkill, even
-  // though in theory we could
+  struct DetectedSchema {
+    std::filesystem::path collection_relative_path;
+    std::reference_wrapper<const sourcemeta::one::Configuration::Collection>
+        collection;
+    std::filesystem::path path;
+  };
+
+  std::vector<DetectedSchema> detected_schemas;
   for (const auto &pair : configuration.entries) {
     const auto *collection{
         std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
@@ -282,29 +293,46 @@ static auto index_main(const std::string_view &program,
 
       const auto extension{entry.path().extension()};
       // TODO: Allow the configuration file to override this
-      const auto looks_like_schema_file{
-          extension == ".yaml" || extension == ".yml" || extension == ".json"};
-      if (!looks_like_schema_file) {
+      if (extension != ".yaml" && extension != ".yml" && extension != ".json") {
         continue;
       }
 
       std::cerr << "Detecting: " << entry.path().string() << " (#"
-                << resolver.size() + 1 << ")\n";
-
-      const auto mapping{resolver.add(configuration.url, pair.first,
-                                      *collection, entry.path())};
-      // Useful for debugging
-      if (app.contains("verbose")) {
-        std::cerr << mapping.first.get() << " => " << mapping.second.get()
-                  << "\n";
-      }
+                << detected_schemas.size() + 1 << ")\n";
+      detected_schemas.push_back(
+          {pair.first, std::cref(*collection), entry.path()});
     }
   };
 
   PROFILE_END(profiling, "Detect");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Do a first analysis pass on the schemas and materialise them for
+  // (10) Resolve all detected schemas in parallel
+  /////////////////////////////////////////////////////////////////////////////
+
+  sourcemeta::one::Resolver resolver;
+  sourcemeta::core::parallel_for_each(
+      detected_schemas.begin(), detected_schemas.end(),
+      [&configuration, &resolver, &mutex, &detected_schemas,
+       &app](const auto &detected, const auto threads, const auto cursor) {
+        print_progress(mutex, threads, "Resolving",
+                       detected.path.filename().string(), cursor,
+                       detected_schemas.size());
+        const auto mapping{
+            resolver.add(configuration.url, detected.collection_relative_path,
+                         detected.collection.get(), detected.path)};
+        if (app.contains("verbose")) {
+          std::lock_guard<std::mutex> lock{mutex};
+          std::cerr << mapping.first.get() << " => " << mapping.second.get()
+                    << "\n";
+        }
+      },
+      concurrency);
+
+  PROFILE_END(profiling, "Resolve");
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (11) Do a first analysis pass on the schemas and materialise them for
   // further analysis. We do this so that we don't end up rebasing the same
   // schemas over and over again depending on the order of analysis later on
   /////////////////////////////////////////////////////////////////////////////
@@ -313,11 +341,6 @@ static auto index_main(const std::string_view &program,
   const auto display_schemas_path{
       std::filesystem::relative(schemas_path, output.path())};
   sourcemeta::one::BuildAdapterFilesystem adapter{output.path()};
-  // Mainly to not screw up the logs
-  std::mutex mutex;
-  const auto concurrency{app.contains("concurrency")
-                             ? std::stoull(app.at("concurrency").front().data())
-                             : std::thread::hardware_concurrency()};
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&output, &schemas_path, &resolver, &mutex, &adapter,
@@ -345,7 +368,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Ingest");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (11) Generate all the artifacts that purely depend on the schemas
+  // (12) Generate all the artifacts that purely depend on the schemas
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -453,7 +476,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Analyse");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) Scan the generated files so far to prepare for more complex targets
+  // (13) Scan the generated files so far to prepare for more complex targets
   /////////////////////////////////////////////////////////////////////////////
 
   // This is a pretty fast step that will be useful for us to properly declare
@@ -521,7 +544,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Review");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (13) A further pass on the schemas after review
+  // (14) A further pass on the schemas after review
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::parallel_for_each(
@@ -544,7 +567,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Rework");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (14) Generate the JSON-based explorer
+  // (15) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing",
@@ -588,7 +611,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Produce");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (15) Generate the HTML web interface
+  // (16) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
@@ -671,7 +694,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Render");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (16) Generate the pre computed routes
+  // (17) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
