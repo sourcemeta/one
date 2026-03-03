@@ -117,6 +117,10 @@ docker-build: $(DOCKERFILE)
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
 		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
 
+.PHONY: docker-benchmark
+docker-benchmark: benchmark/Dockerfile
+	$(DOCKER) build --tag one-benchmark . --file $< --progress plain
+
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml
 	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \

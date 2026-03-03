@@ -71,6 +71,23 @@ jobs:
       - run: docker build .  --file public/Dockerfile --progress plain
         if: matrix.edition.name == 'enterprise'
 
+      - name: Benchmark
+        run: |
+          make docker-benchmark PRESET=Release ${{ matrix.edition.options }}
+          docker run --rm one-benchmark > benchmark.json
+      - uses: benchmark-action/github-action-benchmark@v1
+        if: github.event.pull_request.head.repo.fork == false
+        with:
+          name: Benchmark Index (${{ matrix.edition.name }})
+          tool: customSmallerIsBetter
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name != 'pull_request' }}
+          benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}/index
+          alert-threshold: '5%'
+          comment-always: true
+          fail-on-alert: false
+
   website:
     runs-on: ubuntu-latest
     steps:
