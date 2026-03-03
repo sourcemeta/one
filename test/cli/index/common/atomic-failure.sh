@@ -55,6 +55,8 @@ test "$CODE" = "1"
 hash_directory "$TMP/output" "$TMP/snapshot_after.txt"
 diff "$TMP/snapshot_before.txt" "$TMP/snapshot_after.txt"
 
-# Verify no hidden files or directories were left behind
-HIDDEN="$(find "$TMP" -maxdepth 1 -name '.*' ! -name '.' | wc -l | tr -d ' ')"
+# Verify no hidden files or directories were left behind other than
+# the persistent staging directory and its sentinel
+HIDDEN="$(find "$TMP" -maxdepth 1 -name '.*' ! -name '.' \
+  ! -name '.sourcemeta-one-staging*' | wc -l | tr -d ' ')"
 test "$HIDDEN" = "0"

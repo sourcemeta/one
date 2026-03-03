@@ -22,20 +22,10 @@ remove_threads_information() {
   fi
 }
 
-normalize_staging_path() {
-  expr='s|\.sourcemeta-one-[^/ ]*|.sourcemeta-one-XXXXXX|g'
-  if [ "$(uname -s)" = "Darwin" ]; then
-    sed -i '' "$expr" "$1"
-  else
-    sed -i "$expr" "$1"
-  fi
-}
-
 # First run with --comment "first"
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --comment "first" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_staging_path "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
@@ -45,7 +35,7 @@ Using configuration: $(realpath "$TMP")/one.json
 (  0%) Producing: explorer
 (100%) Producing: .
 (100%) Rendering: .
-Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
+Committing: $(realpath "$TMP")/.sourcemeta-one-staging => $(realpath "$TMP")/output
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
@@ -57,12 +47,11 @@ diff "$TMP/output/comment.json" "$TMP/expected_comment.txt"
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --comment "second" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_staging_path "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-XXXXXX
+Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-staging
 ( 50%) Reviewing: schemas
 (100%) Reviewing: schemas
 (  0%) Producing: explorer
@@ -72,7 +61,7 @@ Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-XXX
 (skip) Rendering: . [index]
 (skip) Rendering: . [not-found]
 (skip) Producing: routes.bin [routes]
-Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
+Committing: $(realpath "$TMP")/.sourcemeta-one-staging => $(realpath "$TMP")/output
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

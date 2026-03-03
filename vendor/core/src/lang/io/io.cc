@@ -72,9 +72,8 @@ auto hardlink_directory(const std::filesystem::path &source,
   }
 }
 
-auto atomic_directory_replace(const std::filesystem::path &original,
-                              const std::filesystem::path &replacement)
-    -> void {
+auto atomic_directory_swap(const std::filesystem::path &original,
+                           const std::filesystem::path &replacement) -> void {
   assert(std::filesystem::is_directory(replacement));
   assert(!std::filesystem::exists(original) ||
          std::filesystem::is_directory(original));
@@ -94,7 +93,6 @@ auto atomic_directory_replace(const std::filesystem::path &original,
         std::error_code{errno, std::generic_category()}};
   }
 
-  std::filesystem::remove_all(replacement);
   // Atomic swap via renameatx_np with RENAME_SWAP
 #elif defined(__APPLE__)
   if (renameatx_np(AT_FDCWD, replacement.c_str(), AT_FDCWD, original.c_str(),
@@ -104,21 +102,22 @@ auto atomic_directory_replace(const std::filesystem::path &original,
         std::error_code{errno, std::generic_category()}};
   }
 
-  std::filesystem::remove_all(replacement);
 #else
-  // Non-atomic fallback: two-rename approach with rollback.
-
+  // Non-atomic fallback: two-rename approach with rollback
+  //
   // Note we cannot safely use the temporary directory of the system as it
   // might be in another volume
-  TemporaryDirectory backup{original.parent_path(), ".backup-"};
-  std::filesystem::remove(backup.path());
-  std::filesystem::rename(original, backup.path());
+  TemporaryDirectory temporary{original.parent_path(), ".swap-"};
+  std::filesystem::remove(temporary.path());
+  std::filesystem::rename(original, temporary.path());
   try {
     std::filesystem::rename(replacement, original);
   } catch (...) {
-    std::filesystem::rename(backup.path(), original);
+    std::filesystem::rename(temporary.path(), original);
     throw;
   }
+
+  std::filesystem::rename(temporary.path(), replacement);
 #endif
 }
 

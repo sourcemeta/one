@@ -118,20 +118,21 @@ auto hardlink_directory(const std::filesystem::path &source,
 
 /// @ingroup io
 ///
-/// Replace one directory with another, guaranteeing an atomic swap when
-/// possible. Both directories must reside on the same filesystem and the
-/// original path must not be a bare filename (it must have a parent
-/// component). If the original does not exist, the replacement is simply
-/// renamed into place.
+/// Atomically swap two directories. Both directories must reside on the same
+/// filesystem and the original path must not be a bare filename (it must have
+/// a parent component). After the call, the original path holds the contents
+/// of the replacement and the replacement path holds the former contents of
+/// the original. If the original does not exist, the replacement is simply
+/// renamed into place and the replacement path will no longer exist.
 ///
 /// ```cpp
 /// #include <sourcemeta/core/io.h>
 ///
-/// sourcemeta::core::atomic_directory_replace("/output", "/staging");
+/// sourcemeta::core::atomic_directory_swap("/output", "/staging");
 /// ```
 SOURCEMETA_CORE_IO_EXPORT
-auto atomic_directory_replace(const std::filesystem::path &original,
-                              const std::filesystem::path &replacement) -> void;
+auto atomic_directory_swap(const std::filesystem::path &original,
+                           const std::filesystem::path &replacement) -> void;
 
 /// @ingroup io
 ///
