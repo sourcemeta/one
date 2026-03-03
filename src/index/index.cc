@@ -24,6 +24,7 @@
 #include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
+#include <fstream>     // std::ofstream
 #include <iomanip>     // std::setw, std::setfill
 #include <iostream>    // std::cerr, std::cout
 #include <string>      // std::string
@@ -36,6 +37,8 @@
 // entry
 constexpr auto SENTINEL{"%"};
 constexpr std::string_view STAGING_DIRECTORY{".sourcemeta-one-staging"};
+constexpr std::string_view STAGING_COMMITTED{
+    ".sourcemeta-one-staging-committed"};
 
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
@@ -171,9 +174,18 @@ static auto index_main(const std::string_view &program,
   const auto staging_path{final_output_path.parent_path() /
                           std::string{STAGING_DIRECTORY}};
   // After an atomic swap, the staging directory already contains the previous
-  // output, so we can reuse it directly. On the very first run, or if
-  // staging was manually deleted, we bootstrap it from the live output
-  // (if any) to preserve the build cache
+  // committed output, so we can reuse it directly. However, if the process
+  // crashed mid-build, staging may be in a dirty state. We use a sentinel
+  // file to distinguish clean staging (from a completed swap) from dirty
+  // staging (from a crash). If dirty, we discard and re-bootstrap.
+  const auto staging_sentinel{final_output_path.parent_path() /
+                              std::string{STAGING_COMMITTED}};
+  if (std::filesystem::exists(staging_path) &&
+      !std::filesystem::exists(staging_sentinel)) {
+    std::cerr << "Discarding dirty staging directory\n";
+    std::filesystem::remove_all(staging_path);
+  }
+
   if (!std::filesystem::exists(staging_path)) {
     if (std::filesystem::exists(final_output_path)) {
       std::cerr << "Hardlinking: " << final_output_path.string() << " => "
@@ -183,6 +195,10 @@ static auto index_main(const std::string_view &program,
       std::filesystem::create_directories(staging_path);
     }
   }
+
+  // Remove the sentinel before building so that a crash leaves staging
+  // recognizable as dirty
+  std::filesystem::remove(staging_sentinel);
 
   sourcemeta::one::Output output{staging_path};
 
@@ -714,6 +730,13 @@ static auto index_main(const std::string_view &program,
   std::cerr << "Committing: " << staging_path.string() << " => "
             << final_output_path.string() << "\n";
   sourcemeta::core::atomic_directory_swap(final_output_path, staging_path);
+
+  // Mark the staging directory as clean so the next run knows it can be
+  // safely reused. On the very first run the swap is a plain rename and
+  // staging no longer exists, but writing the sentinel is still harmless
+  // because the next run will see no staging directory and bootstrap fresh.
+  std::ofstream sentinel_stream(staging_sentinel);
+  sentinel_stream.close();
 
   return EXIT_SUCCESS;
 }
