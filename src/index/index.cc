@@ -35,7 +35,7 @@
 // the resolver will not unescape it back when computing the relative path to an
 // entry
 constexpr auto SENTINEL{"%"};
-constexpr std::string_view STAGING_SUFFIX{".staging"};
+constexpr std::string_view STAGING_DIRECTORY{".sourcemeta-one-staging"};
 
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
@@ -168,9 +168,8 @@ static auto index_main(const std::string_view &program,
   // Place the staging directory as a sibling of the final output path to
   // guarantee both reside on the same filesystem volume, which is required
   // for the atomic rename to succeed
-  const auto staging_path{
-      final_output_path.parent_path() /
-      (final_output_path.filename().string() + std::string{STAGING_SUFFIX})};
+  const auto staging_path{final_output_path.parent_path() /
+                          std::string{STAGING_DIRECTORY}};
   // After an atomic swap, the staging directory already contains the previous
   // output, so we can reuse it directly. On the very first run, or if
   // staging was manually deleted, we bootstrap it from the live output
