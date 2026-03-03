@@ -39,14 +39,26 @@ cat << 'EOF' > "$TMP/schemas/b.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+remove_threads_information() {
+  expr='s/ \[[^]]*[^a-z-][^]]*\]//g'
+  if [ "$(uname -s)" = "Darwin" ]; then
+    sed -i '' "$expr" "$1"
+  else
+    sed -i "$expr" "$1"
+  fi
+}
+
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
+remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected_ab.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 Detecting: $(realpath "$TMP")/schemas/b.json (#2)
+( 50%) Resolving: a.json
+(100%) Resolving: b.json
 unexpected error: Cannot register the same identifier twice
 EOF
 
@@ -55,6 +67,8 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/b.json (#1)
 Detecting: $(realpath "$TMP")/schemas/a.json (#2)
+( 50%) Resolving: b.json
+(100%) Resolving: a.json
 unexpected error: Cannot register the same identifier twice
 EOF
 

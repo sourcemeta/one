@@ -32,13 +32,24 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+remove_threads_information() {
+  expr='s/ \[[^]]*[^a-z-][^]]*\]//g'
+  if [ "$(uname -s)" = "Darwin" ]; then
+    sed -i '' "$expr" "$1"
+  else
+    sed -i "$expr" "$1"
+  fi
+}
+
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
+remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
+(100%) Resolving: test.json
 error: The schema identifier is not relative to the corresponding base
   at https://other.com/test
   with base https://example.com/

@@ -41,6 +41,11 @@ SOURCEMETA_CORE_JSONSCHEMA_EXPORT
 auto schema_resolver(const std::string_view identifier) -> std::optional<JSON>;
 
 /// @ingroup jsonschema
+/// Check if a given identifier corresponds to a known built-in schema
+SOURCEMETA_CORE_JSONSCHEMA_EXPORT
+auto is_known_schema(const std::string_view identifier) noexcept -> bool;
+
+/// @ingroup jsonschema
 /// A default schema walker with support for a wide range of drafts
 SOURCEMETA_CORE_JSONSCHEMA_EXPORT
 auto schema_walker(const std::string_view keyword,
