@@ -117,13 +117,11 @@ RUN test -f /usr/lib/*/ossl-modules/fips.so
 # Remove packages not needed at runtime to reduce the image attack surface
 RUN apt-get --yes update \
   && apt-get --yes purge --allow-remove-essential \
-    adduser bash debconf \
+    adduser debconf \
     e2fsprogs findutils gzip hostname init-system-helpers \
     login logsave mount ncurses-base ncurses-bin passwd perl-base \
     sed sysvinit-utils tzdata util-linux util-linux-extra \
   && apt-get --yes autoremove --allow-remove-essential \
-  && apt-get --yes purge --allow-remove-essential \
-    apt debian-archive-keyring gpgv \
   && rm -rf /var/lib/apt/lists/*
 RUN dpkg-query --show --showformat='${Package}\t${Version}\t${Homepage}\n' \
   > /usr/share/sourcemeta/one/dpkg-packages
