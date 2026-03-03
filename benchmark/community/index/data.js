@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772566549471,
+  "lastUpdate": 1772567619215,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (community)": [
@@ -221,6 +221,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "Add one schema (1000 existing)",
             "value": 12770,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17bb92c659294d288883dd0ab238a5b9776c477c",
+          "message": "Speed up the detection and resolution indexing phases by ~3x (#697)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-03-03T15:42:28-04:00",
+          "tree_id": "8d28b206437286e488acd0509a1608c866ed42ff",
+          "url": "https://github.com/sourcemeta/one/commit/17bb92c659294d288883dd0ab238a5b9776c477c"
+        },
+        "date": 1772567618353,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 44,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 921,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 9290,
             "unit": "ms"
           }
         ]
