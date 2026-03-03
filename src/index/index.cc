@@ -780,7 +780,7 @@ static auto index_main(const std::string_view &program,
 
   PROFILE_END(profiling, "Commit");
 
-  if (app.contains("profile")) {
+  if (app.contains("time")) {
     for (const auto &entry : profiling.first) {
       std::cout << entry.second.count() << "ms " << entry.first << "\n";
     }
@@ -797,6 +797,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
+    app.flag("time", {"t"});
     app.flag("configuration", {"g"});
     app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});

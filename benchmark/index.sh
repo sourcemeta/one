@@ -31,7 +31,7 @@ EOF
 measure_add_one() {
   generate_schema "$1"
   START="$(nanoseconds)"
-  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --profile >&2
+  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
   END="$(nanoseconds)"
   echo "$(( (END - START) / 1000000 ))"
 }
