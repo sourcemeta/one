@@ -96,10 +96,6 @@ test-ui: node_modules
 	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
 		$(NPX) playwright test --config test/ui/playwright.config.js
 
-.PHONY: benchmark-index
-benchmark-index:
-	./benchmark/index.sh $(PREFIX)/bin/sourcemeta-one-index
-
 .PHONY: sandbox-index
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
@@ -120,6 +116,10 @@ docker-build: $(DOCKERFILE)
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
 		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+
+.PHONY: docker-benchmark
+docker-benchmark: benchmark/Dockerfile
+	$(DOCKER) build --tag one-benchmark . --file $< --progress plain
 
 .PHONY: docker-sandbox-build
 docker-sandbox-build: test/sandbox/compose.yaml

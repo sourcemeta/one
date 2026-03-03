@@ -77,11 +77,6 @@ RUN mkdir -p /usr/share/sourcemeta/one \
   && node /source/enterprise/scripts/sbom-vendorpull.js /build/VERSION \
     > /usr/share/sourcemeta/one/vendor-packages.spdx.json
 
-FROM builder AS benchmark
-COPY benchmark /source/benchmark
-RUN /source/benchmark/index.sh /usr/bin/sourcemeta-one-index \
-  > /benchmark.json
-
 FROM debian:trixie-slim
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \

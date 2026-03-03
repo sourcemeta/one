@@ -90,7 +90,8 @@ sourcemeta_target_clang_format(SOURCES
   contrib/*.cc
   test/*.h test/*.cc
   enterprise/*.h enterprise/*.cc)
-sourcemeta_target_shellcheck(SOURCES test/*.sh docker/*.sh enterprise/scripts/*.sh)
+sourcemeta_target_shellcheck(SOURCES
+  test/*.sh docker/*.sh enterprise/scripts/*.sh benchmark/*.sh)
 
 set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
 add_custom_target(jsonschema_fmt_test

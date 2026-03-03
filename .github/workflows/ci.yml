@@ -31,14 +31,6 @@ jobs:
 
       - run: make docker-build PRESET=Release ${{ matrix.edition.options }}
 
-      - name: Benchmark
-        run: |
-          docker build . --progress plain \
-            --file ${{ matrix.edition.name == 'enterprise' && 'enterprise/Dockerfile' || 'Dockerfile' }} \
-            --build-arg SOURCEMETA_ONE_BUILD_TYPE=Release \
-            --target benchmark --output type=local,dest=.
-          cat benchmark.json
-
       - name: SBOM (Enterprise)
         run: |
           node ./enterprise/scripts/sbom.js one /tmp/sbom.spdx.json
@@ -79,6 +71,10 @@ jobs:
       - run: docker build .  --file public/Dockerfile --progress plain
         if: matrix.edition.name == 'enterprise'
 
+      - name: Benchmark
+        run: |
+          make docker-benchmark PRESET=Release ${{ matrix.edition.options }}
+          docker run --rm one-benchmark > benchmark.json
       - uses: benchmark-action/github-action-benchmark@v1
         if: github.event.pull_request.head.repo.fork == false
         with:

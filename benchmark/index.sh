@@ -3,6 +3,21 @@
 set -o errexit
 set -o nounset
 
+if [ "$(uname -s)" = "Darwin" ]
+then
+  IS_DARWIN=1
+else
+  IS_DARWIN=0
+fi
+
+nanoseconds() {
+  if [ "$IS_DARWIN" = "1" ]; then
+    perl -MTime::HiRes=time -e 'printf "%d\n", time * 1000000000'
+  else
+    date +%s%N
+  fi
+}
+
 TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
@@ -39,17 +54,17 @@ cat << 'EOF' > "$TMP/schemas/second.json"
 }
 EOF
 
-START="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')"
+START="$(nanoseconds)"
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> /dev/null
-END="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')"
+END="$(nanoseconds)"
 
-ELAPSED="$(perl -e "printf '%.6f', ($END - $START) * 1000")"
+ELAPSED="$(( (END - START) / 1000000 ))"
 
 cat << EOF
 [
     {
-        "name": "Index / Add One Schema",
-        "unit": "Milliseconds",
+        "name": "Add One Schema",
+        "unit": "ms",
         "value": $ELAPSED
     }
 ]
