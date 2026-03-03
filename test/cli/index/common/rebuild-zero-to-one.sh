@@ -28,20 +28,10 @@ remove_threads_information() {
   fi
 }
 
-normalize_staging_path() {
-  expr='s|\.sourcemeta-one-[^/ ]*|.sourcemeta-one-XXXXXX|g'
-  if [ "$(uname -s)" = "Darwin" ]; then
-    sed -i '' "$expr" "$1"
-  else
-    sed -i "$expr" "$1"
-  fi
-}
-
 # First run: the schemas directory does not exist at all
 test ! -d "$TMP/schemas"
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_staging_path "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
@@ -51,7 +41,7 @@ Using configuration: $(realpath "$TMP")/one.json
 (  0%) Producing: explorer
 (100%) Producing: .
 (100%) Rendering: .
-Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
+Committing: $(realpath "$TMP")/output.staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -91,12 +81,11 @@ EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_staging_path "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-XXXXXX
+Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/output.staging
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Ingesting: https://sourcemeta.com/schemas/test
 (100%) Analysing: https://sourcemeta.com/schemas/test
@@ -111,7 +100,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (skip) Rendering: . [not-found]
 (100%) Rendering: schemas/test
 (skip) Producing: routes.bin [routes]
-Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
+Committing: $(realpath "$TMP")/output.staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

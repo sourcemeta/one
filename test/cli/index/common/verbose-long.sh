@@ -41,18 +41,8 @@ remove_threads_information() {
   fi
 }
 
-normalize_staging_path() {
-  expr='s|\.sourcemeta-one-[^/ ]*|.sourcemeta-one-XXXXXX|g'
-  if [ "$(uname -s)" = "Darwin" ]; then
-    sed -i '' "$expr" "$1"
-  else
-    sed -i "$expr" "$1"
-  fi
-}
-
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --verbose --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_staging_path "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -71,6 +61,6 @@ https://example.com/foo => https://sourcemeta.com/example/schemas/foo
 ( 50%) Rendering: example
 ( 75%) Rendering: .
 (100%) Rendering: example/schemas/foo
-Committing: $(realpath "$TMP")/.sourcemeta-one-XXXXXX => $(realpath "$TMP")/output
+Committing: $(realpath "$TMP")/output.staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

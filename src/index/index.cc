@@ -35,7 +35,7 @@
 // the resolver will not unescape it back when computing the relative path to an
 // entry
 constexpr auto SENTINEL{"%"};
-constexpr std::string_view STAGING_PATH_PREFIX{".sourcemeta-one-"};
+constexpr std::string_view STAGING_SUFFIX{".staging"};
 
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
@@ -168,15 +168,24 @@ static auto index_main(const std::string_view &program,
   // Place the staging directory as a sibling of the final output path to
   // guarantee both reside on the same filesystem volume, which is required
   // for the atomic rename to succeed
-  sourcemeta::core::TemporaryDirectory staging{final_output_path.parent_path(),
-                                               STAGING_PATH_PREFIX};
-  if (std::filesystem::exists(final_output_path)) {
-    std::cerr << "Hardlinking: " << final_output_path.string() << " => "
-              << staging.path().string() << "\n";
-    sourcemeta::core::hardlink_directory(final_output_path, staging.path());
+  const auto staging_path{
+      final_output_path.parent_path() /
+      (final_output_path.filename().string() + std::string{STAGING_SUFFIX})};
+  // After an atomic swap, the staging directory already contains the previous
+  // output, so we can reuse it directly. On the very first run, or if
+  // staging was manually deleted, we bootstrap it from the live output
+  // (if any) to preserve the build cache
+  if (!std::filesystem::exists(staging_path)) {
+    if (std::filesystem::exists(final_output_path)) {
+      std::cerr << "Hardlinking: " << final_output_path.string() << " => "
+                << staging_path.string() << "\n";
+      sourcemeta::core::hardlink_directory(final_output_path, staging_path);
+    } else {
+      std::filesystem::create_directories(staging_path);
+    }
   }
 
-  sourcemeta::one::Output output{staging.path()};
+  sourcemeta::one::Output output{staging_path};
 
   /////////////////////////////////////////////////////////////////////////////
   // (6) Store a mark of the One version for target dependencies
@@ -703,25 +712,9 @@ static auto index_main(const std::string_view &program,
     }
   }
 
-  std::cerr << "Committing: " << staging.path().string() << " => "
+  std::cerr << "Committing: " << staging_path.string() << " => "
             << final_output_path.string() << "\n";
-  sourcemeta::core::atomic_directory_replace(final_output_path, staging.path());
-
-  // Clean up stale staging entries from crashed previous runs. We do this
-  // after committing so that we never interfere with a concurrent run
-  for (const auto &entry :
-       std::filesystem::directory_iterator{final_output_path.parent_path()}) {
-    if (entry.path() != staging.path() &&
-        entry.path().filename().string().starts_with(STAGING_PATH_PREFIX)) {
-      std::cerr << "Removing stale staging entry: " << entry.path().string()
-                << "\n";
-      std::error_code error;
-      std::filesystem::remove_all(entry.path(), error);
-      if (error) {
-        std::cerr << "warning: " << error.message() << "\n";
-      }
-    }
-  }
+  sourcemeta::core::atomic_directory_swap(final_output_path, staging_path);
 
   return EXIT_SUCCESS;
 }
