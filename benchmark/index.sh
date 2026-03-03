@@ -31,7 +31,7 @@ EOF
 measure_add_one() {
   generate_schema "$1"
   START="$(nanoseconds)"
-  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" >&2
+  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
   END="$(nanoseconds)"
   echo "$(( (END - START) / 1000000 ))"
 }
@@ -68,7 +68,8 @@ do
   generate_schema "schema-$index"
   index=$((index + 1))
 done
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" >&2
+echo "Reindexing outside measurements..." >&2
+"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
 # Measure adding one schema to a 100-schema registry
 echo "Measuring: add one schema (100 existing)..." >&2
@@ -83,7 +84,8 @@ do
   generate_schema "schema-$index"
   index=$((index + 1))
 done
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" >&2
+echo "Reindexing outside measurements..." >&2
+"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
 # Measure adding one schema to a 1000-schema registry
 echo "Measuring: add one schema (1000 existing)..." >&2

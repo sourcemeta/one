@@ -31,6 +31,22 @@
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define PROFILE_INIT(state)                                                    \
+  std::pair<                                                                   \
+      std::vector<std::pair<std::string_view, std::chrono::milliseconds>>,     \
+      std::chrono::steady_clock::time_point>                                   \
+      state {                                                                  \
+    {}, std::chrono::steady_clock::now()                                       \
+  }
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define PROFILE_END(state, label)                                              \
+  (state).first.emplace_back(                                                  \
+      (label), std::chrono::duration_cast<std::chrono::milliseconds>(          \
+                   std::chrono::steady_clock::now() - (state).second));        \
+  (state).second = std::chrono::steady_clock::now()
+
 // We rely on this special prefix to avoid file system collisions. The reason it
 // works is that URIs cannot have "%" without percent-encoding it as "%25", and
 // the resolver will not unescape it back when computing the relative path to an
@@ -93,6 +109,8 @@ static auto index_main(const std::string_view &program,
               << " <one.json> <path/to/output/directory>\n";
     return EXIT_FAILURE;
   }
+
+  PROFILE_INIT(profiling);
 
   /////////////////////////////////////////////////////////////////////////////
   // (1) Parse the output directory
@@ -235,6 +253,8 @@ static auto index_main(const std::string_view &program,
         sourcemeta::core::JSON{std::string{app.at("comment").at(0)}});
   }
 
+  PROFILE_END(profiling, "Startup");
+
   /////////////////////////////////////////////////////////////////////////////
   // (9) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
@@ -281,6 +301,8 @@ static auto index_main(const std::string_view &program,
     }
   };
 
+  PROFILE_END(profiling, "Detect");
+
   /////////////////////////////////////////////////////////////////////////////
   // (10) Do a first analysis pass on the schemas and materialise them for
   // further analysis. We do this so that we don't end up rebasing the same
@@ -319,6 +341,8 @@ static auto index_main(const std::string_view &program,
         resolver.cache_path(schema.first, destination);
       },
       concurrency);
+
+  PROFILE_END(profiling, "Ingest");
 
   /////////////////////////////////////////////////////////////////////////////
   // (11) Generate all the artifacts that purely depend on the schemas
@@ -426,6 +450,8 @@ static auto index_main(const std::string_view &program,
       },
       concurrency, THREAD_STACK_SIZE);
 
+  PROFILE_END(profiling, "Analyse");
+
   /////////////////////////////////////////////////////////////////////////////
   // (12) Scan the generated files so far to prepare for more complex targets
   /////////////////////////////////////////////////////////////////////////////
@@ -492,6 +518,8 @@ static auto index_main(const std::string_view &program,
       "Reviewing", display_schemas_path.string(), "dependencies", adapter,
       output);
 
+  PROFILE_END(profiling, "Review");
+
   /////////////////////////////////////////////////////////////////////////////
   // (13) A further pass on the schemas after review
   /////////////////////////////////////////////////////////////////////////////
@@ -512,6 +540,8 @@ static auto index_main(const std::string_view &program,
             adapter, output);
       },
       concurrency, THREAD_STACK_SIZE);
+
+  PROFILE_END(profiling, "Rework");
 
   /////////////////////////////////////////////////////////////////////////////
   // (14) Generate the JSON-based explorer
@@ -554,6 +584,8 @@ static auto index_main(const std::string_view &program,
   // Restore the summaries list as it was before
   summaries.pop_back();
   summaries.pop_back();
+
+  PROFILE_END(profiling, "Produce");
 
   /////////////////////////////////////////////////////////////////////////////
   // (15) Generate the HTML web interface
@@ -636,6 +668,8 @@ static auto index_main(const std::string_view &program,
         concurrency);
   }
 
+  PROFILE_END(profiling, "Render");
+
   /////////////////////////////////////////////////////////////////////////////
   // (16) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
@@ -682,6 +716,8 @@ static auto index_main(const std::string_view &program,
       router, mutex, "Producing", display_routes_path.string(), "routes",
       adapter, output);
 
+  PROFILE_END(profiling, "Routes");
+
   /////////////////////////////////////////////////////////////////////////////
   // Finish generation
   /////////////////////////////////////////////////////////////////////////////
@@ -689,6 +725,8 @@ static auto index_main(const std::string_view &program,
   // TODO: Print the size of the output directory here
 
   output.remove_unknown_files();
+
+  PROFILE_END(profiling, "Cleanup");
 
   // TODO: Add a test for this
   if (app.contains("profile")) {
@@ -727,6 +765,8 @@ static auto index_main(const std::string_view &program,
     }
   }
 
+  PROFILE_END(profiling, "Profile");
+
   std::cerr << "Committing: " << staging_path.string() << " => "
             << final_output_path.string() << "\n";
   sourcemeta::core::atomic_directory_swap(final_output_path, staging_path);
@@ -737,6 +777,14 @@ static auto index_main(const std::string_view &program,
   // because the next run will see no staging directory and bootstrap fresh.
   std::ofstream sentinel_stream(staging_sentinel);
   sentinel_stream.close();
+
+  PROFILE_END(profiling, "Commit");
+
+  if (app.contains("time")) {
+    for (const auto &entry : profiling.first) {
+      std::cout << entry.second.count() << "ms " << entry.first << "\n";
+    }
+  }
 
   return EXIT_SUCCESS;
 }
@@ -749,6 +797,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
+    app.flag("time", {"t"});
     app.flag("configuration", {"g"});
     app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});
