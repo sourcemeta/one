@@ -261,7 +261,7 @@ public:
     // Registering the top-level schema is not enough. We need to check
     // and register every embedded schema resource too
     sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::References};
+        sourcemeta::core::SchemaFrame::Mode::Locations};
     frame.analyse(schema, sourcemeta::core::schema_walker, *this,
                   default_dialect, default_id);
 
