@@ -550,8 +550,9 @@ static auto index_main(const std::string_view &program,
     const auto relative_path{std::filesystem::relative(entry, schemas_path)};
     print_progress(mutex, 1, "Producing", relative_path.string(), cursor + 1,
                    directories.size());
-    const auto destination{std::filesystem::weakly_canonical(
-        explorer_path / relative_path / SENTINEL / "directory.metapack")};
+    const auto destination{
+        (explorer_path / relative_path / SENTINEL / "directory.metapack")
+            .lexically_normal()};
     DISPATCH<sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST>(
         destination,
         // If any of the entry summary files changes, by definition we need to

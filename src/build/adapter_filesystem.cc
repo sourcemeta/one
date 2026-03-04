@@ -3,8 +3,9 @@
 #include <sourcemeta/core/io.h>
 
 #include <cassert>     // assert
-#include <fstream>     // std::ofstream
+#include <fstream>     // std::ofstream, std::ifstream
 #include <mutex>       // std::unique_lock
+#include <string>      // std::string
 #include <string_view> // std::string_view
 
 namespace sourcemeta::one {
@@ -25,45 +26,55 @@ auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
     -> std::optional<BuildDependencies<node_type>> {
   assert(path.is_absolute());
   const auto dependencies_path{this->dependencies_path(path)};
-  if (std::filesystem::exists(dependencies_path)) {
-    auto stream{sourcemeta::core::read_file(dependencies_path)};
-    assert(stream.is_open());
 
-    BuildDependencies<node_type> result;
-    std::string line;
-    while (std::getline(stream, line)) {
-      // Prevent CRLF on Windows
-      if (!line.empty() && line.back() == '\r') {
-        line.pop_back();
-      }
-
-      if (!line.empty()) {
-        auto kind{BuildDependencyKind::Static};
-        std::filesystem::path dependency;
-        if (line.size() >= 2 && line[1] == ' ' &&
-            (line[0] == 's' || line[0] == 'd')) {
-          kind = (line[0] == 'd') ? BuildDependencyKind::Dynamic
-                                  : BuildDependencyKind::Static;
-          dependency = line.substr(2);
-        } else {
-          dependency = line;
-        }
-        if (!dependency.is_absolute()) {
-          dependency =
-              std::filesystem::weakly_canonical(this->root / dependency);
-        }
-
-        result.emplace_back(kind, std::move(dependency));
-      }
-    }
-
-    if (result.empty()) {
-      return std::nullopt;
-    } else {
-      return result;
-    }
-  } else {
+  std::ifstream stream{dependencies_path};
+  if (!stream.is_open()) {
     return std::nullopt;
+  }
+
+  std::string contents{std::istreambuf_iterator<char>(stream),
+                       std::istreambuf_iterator<char>()};
+
+  BuildDependencies<node_type> result;
+  std::size_t position{0};
+  while (position < contents.size()) {
+    auto newline{contents.find('\n', position)};
+    if (newline == std::string::npos) {
+      newline = contents.size();
+    }
+
+    auto end{newline};
+    // Prevent CRLF on Windows
+    if (end > position && contents[end - 1] == '\r') {
+      end -= 1;
+    }
+
+    if (end > position) {
+      auto kind{BuildDependencyKind::Static};
+      std::filesystem::path dependency;
+      const auto length{end - position};
+      if (length >= 2 && contents[position + 1] == ' ' &&
+          (contents[position] == 's' || contents[position] == 'd')) {
+        kind = (contents[position] == 'd') ? BuildDependencyKind::Dynamic
+                                           : BuildDependencyKind::Static;
+        dependency = contents.substr(position + 2, end - position - 2);
+      } else {
+        dependency = contents.substr(position, length);
+      }
+      if (!dependency.is_absolute()) {
+        dependency = (this->root / dependency).lexically_normal();
+      }
+
+      result.emplace_back(kind, std::move(dependency));
+    }
+
+    position = newline + 1;
+  }
+
+  if (result.empty()) {
+    return std::nullopt;
+  } else {
+    return result;
   }
 }
 
