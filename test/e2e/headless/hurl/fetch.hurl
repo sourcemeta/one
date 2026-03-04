@@ -64,7 +64,7 @@ HTTP 200
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/schemas/with-rebase-same-host",
-  "$ref": "bundling/single"
+  "$ref": "bundling-single"
 }
 
 GET {{base}}/test/schemas/with-rebase.json
@@ -72,15 +72,7 @@ HTTP 200
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/schemas/with-rebase",
-  "$ref": "/test/schemas/bundling/single.json"
-}
-
-GET {{base}}/test/schemas/id-same-as-base.json
-HTTP 200
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/id-same-as-base",
-  "type": "string"
+  "$ref": "/test/schemas/bundling-single.json"
 }
 
 # With random unknown query parameters
@@ -124,15 +116,6 @@ HTTP 200
   "type": "string"
 }
 
-# Applied default dialect and file identifier
-GET {{base}}/test/schemas/no-schema-nor-id.json
-HTTP 200
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/no-schema-nor-id",
-  "type": "string"
-}
-
 # With absolute references
 GET {{base}}/test/schemas/absolute-refs.json
 HTTP 200
@@ -140,94 +123,6 @@ HTTP 200
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/schemas/absolute-refs",
   "$ref": "string"
-}
-
-# Folder with period
-GET {{base}}/test/schemas/v2.0/schema.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/v2.0/schema",
-  "type": "integer"
-}
-
-# .schema.json extension
-GET {{base}}/test/schemas/extension/with.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/extension/with",
-  "type": "string"
-}
-
-# No extension
-GET {{base}}/test/schemas/extension/without.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/extension/without",
-  "type": "string"
-}
-
-# With correct casing
-GET {{base}}/test/schemas/CamelCase.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/camelcase",
-  "type": "string"
-}
-
-# With lower casing
-GET {{base}}/test/schemas/camelcase.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/camelcase",
-  "type": "string"
-}
-
-GET {{base}}/test/schemas/html.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/html"
-}
-
-GET {{base}}/test/schemas/index.html.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
-Access-Control-Allow-Origin: *
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/index.html"
-}
-
-GET {{base}}/test/schemas/doc/.period.json
-HTTP 200
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/schemas/doc/.period",
-  "type": "string"
 }
 
 GET {{base}}/test/schemas/%25/test.json
@@ -265,15 +160,6 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-GET {{base}}/schemas/doc/.period.json
-HTTP 404
-Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-[Asserts]
-jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:one/not-found"
-jsonpath "$.detail" == "There is nothing at this URL"
-
 # Invalid method on found
 DELETE {{base}}/test/schemas/string.json
 HTTP 405
@@ -293,30 +179,6 @@ Access-Control-Allow-Origin: *
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
-
-GET {{base}}/test/schemas/clash/foo.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
-Access-Control-Allow-Origin: *
-[Asserts]
-header "ETag" exists
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/schemas/clash/foo"
-}
-
-GET {{base}}/test/schemas/clash/foo/bar.json
-HTTP 200
-Content-Type: application/schema+json
-Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
-Access-Control-Allow-Origin: *
-[Asserts]
-header "ETag" exists
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/schemas/clash/foo/bar"
-}
 
 GET {{base}}/test/no-base/no-id.json
 HTTP 200

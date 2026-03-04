@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/stats/test/schemas/v2.0/schema
+GET {{base}}/self/v1/api/schemas/stats/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -23,7 +23,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/stats/test/schemas/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/stats/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -34,7 +34,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/stats/test/schemas/v2.0/schema
+POST {{base}}/self/v1/api/schemas/stats/test/schemas/no-id
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

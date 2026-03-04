@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/health/test/schemas/v2.0/schema
+GET {{base}}/self/v1/api/schemas/health/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json

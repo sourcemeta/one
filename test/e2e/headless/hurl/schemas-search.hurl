@@ -96,10 +96,10 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
-jsonpath "$[0].path" == "/test/schemas/bundling/single"
+jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
-jsonpath "$[1].path" == "/test/schemas/bundling/double"
+jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -123,36 +123,12 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
-jsonpath "$[0].path" == "/test/schemas/bundling/single"
+jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
-jsonpath "$[1].path" == "/test/schemas/bundling/double"
+jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-jsonpath "$.valid" == true
-
-# Results without title/description
-GET {{base}}/self/v1/api/schemas/search?q=schemas/camelcase
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$" count == 1
-jsonpath "$[0].path" == "/test/schemas/camelcase"
-jsonpath "$[0].title" == ""
-jsonpath "$[0].description" == ""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/positions/test/schemas/v2.0/schema
+GET {{base}}/self/v1/api/schemas/positions/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -19,7 +19,7 @@ jsonpath "$['/$id']" count == 4
 jsonpath "$['/$id'][0]" == 3
 jsonpath "$['/$id'][1]" == 3
 jsonpath "$['/$id'][2]" == 3
-jsonpath "$['/$id'][3]" == 57
+jsonpath "$['/$id'][3]" == 51
 jsonpath "$['/$schema']" count == 4
 jsonpath "$['/$schema'][0]" == 2
 jsonpath "$['/$schema'][1]" == 3
@@ -29,7 +29,7 @@ jsonpath "$['/type']" count == 4
 jsonpath "$['/type'][0]" == 4
 jsonpath "$['/type'][1]" == 3
 jsonpath "$['/type'][2]" == 4
-jsonpath "$['/type'][3]" == 19
+jsonpath "$['/type'][3]" == 18
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -40,7 +40,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/positions/test/schemas/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/positions/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -51,7 +51,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/positions/test/schemas/v2.0/schema
+POST {{base}}/self/v1/api/schemas/positions/test/schemas/no-id
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

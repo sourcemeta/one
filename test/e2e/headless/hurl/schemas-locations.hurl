@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/locations/test/schemas/v2.0/schema
+GET {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -10,58 +10,58 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].base" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].parent" == null
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].pointer" == ""
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].relativePointer" == ""
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].root" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].type" == "resource"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].position" count == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].position[0]" == 1
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].position[1]" == 1
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].position[2]" == 5
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema'].position[3]" == 1
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].base" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].parent" == ""
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].pointer" == "/$id"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].relativePointer" == "/$id"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].root" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].type" == "pointer"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].position" count == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].position[0]" == 3
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].position[1]" == 3
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].position[2]" == 3
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$id'].position[3]" == 57
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].base" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].parent" == ""
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].pointer" == "/$schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].relativePointer" == "/$schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].root" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].type" == "pointer"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].position" count == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].position[0]" == 2
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].position[1]" == 3
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].position[2]" == 2
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/$schema'].position[3]" == 54
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].base" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].baseDialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].parent" == ""
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].pointer" == "/type"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].relativePointer" == "/type"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].root" == "{{base}}/test/schemas/v2.0/schema"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].type" == "pointer"
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].position" count == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].position[0]" == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].position[1]" == 3
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].position[2]" == 4
-jsonpath "$.static['{{base}}/test/schemas/v2.0/schema#/type'].position[3]" == 19
+jsonpath "$.static['{{base}}/test/schemas/no-id'].base" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id'].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id'].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id'].parent" == null
+jsonpath "$.static['{{base}}/test/schemas/no-id'].pointer" == ""
+jsonpath "$.static['{{base}}/test/schemas/no-id'].relativePointer" == ""
+jsonpath "$.static['{{base}}/test/schemas/no-id'].root" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id'].type" == "resource"
+jsonpath "$.static['{{base}}/test/schemas/no-id'].position" count == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id'].position[0]" == 1
+jsonpath "$.static['{{base}}/test/schemas/no-id'].position[1]" == 1
+jsonpath "$.static['{{base}}/test/schemas/no-id'].position[2]" == 5
+jsonpath "$.static['{{base}}/test/schemas/no-id'].position[3]" == 1
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].base" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].parent" == ""
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].pointer" == "/$id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].relativePointer" == "/$id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].root" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].type" == "pointer"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].position" count == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].position[0]" == 3
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].position[1]" == 3
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].position[2]" == 3
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$id'].position[3]" == 51
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].base" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].parent" == ""
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].pointer" == "/$schema"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].relativePointer" == "/$schema"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].root" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].type" == "pointer"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].position" count == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].position[0]" == 2
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].position[1]" == 3
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].position[2]" == 2
+jsonpath "$.static['{{base}}/test/schemas/no-id#/$schema'].position[3]" == 54
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].base" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].parent" == ""
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].pointer" == "/type"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].relativePointer" == "/type"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].root" == "{{base}}/test/schemas/no-id"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].type" == "pointer"
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].position" count == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].position[0]" == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].position[1]" == 3
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].position[2]" == 4
+jsonpath "$.static['{{base}}/test/schemas/no-id#/type'].position[3]" == 18
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -72,7 +72,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/locations/test/schemas/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -83,7 +83,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/locations/test/schemas/v2.0/schema
+POST {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
