@@ -1,5 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/with-rebase-same-host.json",
-  "$ref": "https://example.com/bundling/single.json"
-}
