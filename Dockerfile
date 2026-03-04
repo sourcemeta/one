@@ -88,6 +88,7 @@ ARG SOURCEMETA_ONE_OUTPUT=/sourcemeta
 ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
+COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK CMD grep -qE \
