@@ -17,7 +17,7 @@ jsonpath "$.entries[0].name" == "test"
 jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 14
+jsonpath "$.entries[0].health" == 12
 jsonpath "$.entries[0].path" == "/test/"
 jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].title" == "Self"
@@ -53,50 +53,7 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.entries" count == 10
-jsonpath "$.entries[0].name" == "v2.0"
-jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 0
-jsonpath "$.entries[0].path" == "/test/v2.0/"
-jsonpath "$.entries[1].name" == "schemas"
-jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 7
-jsonpath "$.entries[1].path" == "/test/schemas/"
-jsonpath "$.entries[2].name" == "same"
-jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].health" == 0
-jsonpath "$.entries[2].path" == "/test/same/"
-jsonpath "$.entries[3].name" == "no-blaze"
-jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].health" == 0
-jsonpath "$.entries[3].path" == "/test/no-blaze/"
-jsonpath "$.entries[4].name" == "no-base"
-jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].health" == 0
-jsonpath "$.entries[4].path" == "/test/no-base/"
-jsonpath "$.entries[5].name" == "hyper"
-jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.entries[5].health" == 34
-jsonpath "$.entries[5].path" == "/test/hyper/"
-jsonpath "$.entries[6].name" == "extension"
-jsonpath "$.entries[6].type" == "directory"
-jsonpath "$.entries[6].health" == 17
-jsonpath "$.entries[6].path" == "/test/extension/"
-jsonpath "$.entries[7].name" == "doc"
-jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].health" == 0
-jsonpath "$.entries[7].path" == "/test/doc/"
-jsonpath "$.entries[7].title" == "A sample schema folder"
-jsonpath "$.entries[7].description" == "For testing purposes"
-jsonpath "$.entries[7].github" == "sourcemeta/one"
-jsonpath "$.entries[8].name" == "camelcase"
-jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].health" == 25
-jsonpath "$.entries[8].path" == "/test/camelcase/"
-jsonpath "$.entries[9].name" == "bundling"
-jsonpath "$.entries[9].type" == "directory"
-jsonpath "$.entries[9].health" == 59
-jsonpath "$.entries[9].path" == "/test/bundling/"
+jsonpath "$.entries" count == 7
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

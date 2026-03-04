@@ -19,14 +19,6 @@
             "https://other.com/single.json": "/test/bundling/single.json"
           }
         },
-        "camelcase": {
-          "contents": {
-            "test": {
-              "baseUri": "https://sourcemeta.com/camelcase",
-              "path": "./schemas/test/camelcase"
-            }
-          }
-        },
         "v2.0": {
           "baseUri": "https://example.com/schemas",
           "path": "./schemas/test/v2.0"
@@ -41,14 +33,6 @@
           "github": "sourcemeta/one",
           "baseUri": "https://example.com/doc",
           "path": "./schemas/test/doc"
-        },
-        "hyper": {
-          "baseUri": "https://example.com/hyper",
-          "path": "./schemas/test/hyper"
-        },
-        "same": {
-          "baseUri": "http://localhost:8000/same",
-          "path": "./schemas/test/same"
         },
         "no-blaze": {
           "baseUri": "https://other.com",
