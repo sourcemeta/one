@@ -22,12 +22,7 @@ ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 EDITION_DISPLAY = $(if $(filter ON,$(ENTERPRISE)),Enterprise,Community)
-
-ifeq ($(ENTERPRISE),ON)
-SANDBOX ?= test/e2e/enterprise
-else
 SANDBOX ?= test/e2e/html
-endif
 SANDBOX_PORT ?= 8000
 
 .PHONY: all
