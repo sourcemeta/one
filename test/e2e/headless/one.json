@@ -1,0 +1,29 @@
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "extends": [ "@self/v1" ],
+  "contents": {
+    "test": {
+      "title": "Test",
+      "description": "A directory full of testing schemas",
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/schemas",
+          "path": "./schemas/test",
+          "defaultDialect": "http://json-schema.org/draft-07/schema#",
+          "resolve": {
+            "https://other.com/single.json": "/test/schemas/bundling-single.json"
+          }
+        },
+        "no-blaze": {
+          "baseUri": "https://other.com",
+          "path": "./schemas/no-blaze",
+          "x-sourcemeta-one:evaluate": false
+        },
+        "no-base": {
+          "path": "./schemas/no-base"
+        }
+      }
+    }
+  }
+}

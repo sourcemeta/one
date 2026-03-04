@@ -1,0 +1,15 @@
+{
+  "url": "http://localhost:8000",
+  "extends": [ "@self/v1" ],
+  "contents": {
+    "test": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/schemas",
+          "path": "./schemas",
+          "defaultDialect": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    }
+  }
+}

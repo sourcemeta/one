@@ -1,0 +1,12 @@
+{
+  "url": "http://localhost:8000",
+  "extends": [ "@self/v1" ],
+  "contents": {
+    "test": {
+      "path": "./schemas/test",
+      "lint": {
+        "rules": [ "./rules/camelcase.json" ]
+      }
+    }
+  }
+}

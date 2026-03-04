@@ -15,28 +15,18 @@ SERVER ?= ON
 PRESET ?= Debug
 OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
-SANDBOX ?= ./test/sandbox
-SANDBOX_CONFIGURATION ?= html
-SANDBOX_PORT ?= 8000
-SANDBOX_URL ?= http://localhost:$(SANDBOX_PORT)
 PUBLIC ?= ./public
 PARALLEL ?= 4
 # Only for local development
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
+EDITION_DISPLAY = $(if $(filter ON,$(ENTERPRISE)),Enterprise,Community)
+SANDBOX ?= test/e2e/html
+SANDBOX_PORT ?= 8000
 
 .PHONY: all
 all: configure compile test
-
-# Useful to run the entire main suite in a single command
-.PHONY: docker
-docker:
-	$(MAKE) docker-build
-	$(MAKE) docker-sandbox-build
-	$(MAKE) docker-sandbox-up
-	$(MAKE) test-e2e test-ui; \
-		status=$$?; $(MAKE) docker-sandbox-down; exit $$status
 
 node_modules: package.json package-lock.json
 	$(NPM) ci
@@ -73,28 +63,26 @@ lint:
 test:
 	$(CTEST) --test-dir $(OUTPUT) --build-config $(PRESET) --output-on-failure --parallel
 
-.PHONY: test-e2e
-HURL_TESTS += test/e2e/$(SANDBOX_CONFIGURATION)/*.hurl
-ifneq ($(SANDBOX_CONFIGURATION),empty)
-ifneq ($(SANDBOX_CONFIGURATION),chaos)
-HURL_TESTS += test/e2e/populated/schemas/*.hurl
-HURL_TESTS += test/e2e/populated/api/common/*.hurl
-ifeq ($(ENTERPRISE),ON)
-HURL_TESTS += test/e2e/populated/api/enterprise/*.hurl
-endif
-endif
-endif
-test-e2e:
-	$(HURL) --test \
-		--variable base=$(SANDBOX_URL) \
-		--variable edition=$(if $(filter ON,$(ENTERPRISE)),Enterprise,Community) \
-		$(HURL_TESTS)
+.PHONY: docker-build
+docker-build: $(DOCKERFILE)
+	$(DOCKER) build --tag one . --file $< --progress plain \
+		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
 
-.PHONY: test-ui
-test-ui: node_modules
-	$(NPX) playwright install --with-deps
-	env PLAYWRIGHT_BASE_URL=$(SANDBOX_URL) \
-		$(NPX) playwright test --config test/ui/playwright.config.js
+# Useful to run the entire main suite in a single command
+.PHONY: docker
+docker: docker-build
+	$(MAKE) -C test/e2e/empty EDITION=$(EDITION)
+	$(MAKE) -C test/e2e/headless EDITION=$(EDITION)
+	$(MAKE) -C test/e2e/html EDITION=$(EDITION)
+	$(MAKE) -C test/e2e/chaos EDITION=$(EDITION)
+ifeq ($(ENTERPRISE),ON)
+	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
+endif
+
+.PHONY: docker-benchmark
+docker-benchmark: benchmark/Dockerfile
+	$(DOCKER) build --tag one-benchmark . --file $< --progress plain
 
 .PHONY: benchmark
 benchmark:
@@ -103,64 +91,27 @@ benchmark:
 .PHONY: sandbox-index
 sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
-		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
-		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --configuration
+		$(SANDBOX)/one.json $(OUTPUT)/sandbox --configuration
 	$(PREFIX)/bin/sourcemeta-one-index \
-		$(SANDBOX)/one-$(SANDBOX_CONFIGURATION)-$(EDITION).json \
-		$(OUTPUT)/sandbox --url $(SANDBOX_URL) --profile
-	./test/sandbox/postindex.sh $(SANDBOX_CONFIGURATION) $(EDITION) $(OUTPUT)/sandbox
+		$(SANDBOX)/one.json $(OUTPUT)/sandbox --profile
 
 .PHONY: sandbox
 sandbox: sandbox-index
 	$(PREFIX)/bin/sourcemeta-one-server \
 		$(realpath $(OUTPUT)/sandbox) $(SANDBOX_PORT)
 
-.PHONY: docker-build
-docker-build: $(DOCKERFILE)
-	$(DOCKER) build --tag one . --file $< --progress plain \
-		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+.PHONY: test-e2e
+test-e2e:
+	$(HURL) --test \
+		--variable base=http://localhost:$(SANDBOX_PORT) \
+		--variable edition=$(EDITION_DISPLAY) \
+		$(SANDBOX)/hurl/*.hurl
 
-.PHONY: docker-benchmark
-docker-benchmark: benchmark/Dockerfile
-	$(DOCKER) build --tag one-benchmark . --file $< --progress plain
-
-.PHONY: docker-sandbox-build
-docker-sandbox-build: test/sandbox/compose.yaml
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --file $< config
-	BUILDX_NO_DEFAULT_ATTESTATIONS=1 \
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --progress plain --file $< build
-
-.PHONY: docker-sandbox-up
-docker-sandbox-up: test/sandbox/compose.yaml
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --progress plain --file $< up --detach --wait
-
-.PHONY: docker-sandbox-down
-docker-sandbox-down: test/sandbox/compose.yaml
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --progress plain --file $< down
-
-.PHONY: docker-sandbox
-docker-sandbox: test/sandbox/compose.yaml
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --file $< config
-	SOURCEMETA_ONE_SANDBOX_CONFIGURATION=$(SANDBOX_CONFIGURATION) \
-	SOURCEMETA_ONE_EDITION=$(EDITION) \
-	SOURCEMETA_ONE_SANDBOX_PORT=$(SANDBOX_PORT) \
-		$(DOCKER) compose --progress plain --file $< up --build
+.PHONY: test-ui
+test-ui: node_modules
+	$(NPX) playwright install --with-deps
+	env PLAYWRIGHT_BASE_URL=http://localhost:$(SANDBOX_PORT) \
+		$(NPX) playwright test --config $(SANDBOX)/playwright/playwright.config.js
 
 .PHONY: docs
 docs: mkdocs.yml
