@@ -16,8 +16,7 @@ namespace sourcemeta::one {
 
 class Output {
 public:
-  Output(std::filesystem::path path)
-      : path_{std::filesystem::weakly_canonical(path)} {
+  Output(std::filesystem::path path) : path_{path.lexically_normal()} {
     std::filesystem::create_directories(this->path_);
     for (const auto &entry :
          std::filesystem::recursive_directory_iterator(this->path_)) {
