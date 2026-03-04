@@ -3,6 +3,7 @@ project(core VERSION 0.0.0 LANGUAGES C CXX ASM_MASM DESCRIPTION "Sourcemeta Core
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 # Options
+option(SOURCEMETA_CORE_LANG_PREPROCESSOR "Build the Sourcemeta Core language preprocessor library" ON)
 option(SOURCEMETA_CORE_LANG_IO "Build the Sourcemeta Core language I/O library" ON)
 option(SOURCEMETA_CORE_LANG_PROCESS "Build the Sourcemeta Core language Process library" ON)
 option(SOURCEMETA_CORE_LANG_PARALLEL "Build the Sourcemeta Core language parallel library" ON)
@@ -56,6 +57,10 @@ if(SOURCEMETA_CORE_INSTALL)
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT sourcemeta_${PROJECT_NAME}_dev)
+endif()
+
+if(SOURCEMETA_CORE_LANG_PREPROCESSOR)
+  add_subdirectory(src/lang/preprocessor)
 endif()
 
 if(SOURCEMETA_CORE_LANG_IO)
