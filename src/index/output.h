@@ -8,6 +8,7 @@
 
 #include <cassert>       // assert
 #include <filesystem>    // std::filesystem
+#include <fstream>       // std::ofstream
 #include <shared_mutex>  // std::shared_mutex, std::shared_lock
 #include <unordered_map> // std::unordered_map
 
@@ -85,8 +86,6 @@ private:
       -> const std::filesystem::path & {
     assert(path.is_absolute());
     std::filesystem::create_directories(path.parent_path());
-    // To reset the inode and correctly handle hard links
-    std::filesystem::remove(path);
     std::ofstream stream{path};
     assert(!stream.fail());
     sourcemeta::core::stringify(document, stream);

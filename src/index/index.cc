@@ -1,6 +1,5 @@
 #include <sourcemeta/blaze/linter.h>
 
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
@@ -24,7 +23,6 @@
 #include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
-#include <fstream>     // std::ofstream
 #include <iomanip>     // std::setw, std::setfill
 #include <iostream>    // std::cerr, std::cout
 #include <string>      // std::string
@@ -52,9 +50,6 @@
 // the resolver will not unescape it back when computing the relative path to an
 // entry
 constexpr auto SENTINEL{"%"};
-constexpr std::string_view STAGING_DIRECTORY{".sourcemeta-one-staging"};
-constexpr std::string_view STAGING_COMMITTED{
-    ".sourcemeta-one-staging-committed"};
 
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
@@ -116,17 +111,17 @@ static auto index_main(const std::string_view &program,
   // (1) Parse the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  const auto final_output_path{
+  const auto output_path{
       std::filesystem::weakly_canonical(app.positional().at(1))};
 
-  if (std::filesystem::exists(final_output_path) &&
-      !std::filesystem::is_directory(final_output_path)) {
+  if (std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     throw std::filesystem::filesystem_error{
-        "file already exists", final_output_path,
+        "file already exists", output_path,
         std::make_error_code(std::errc::file_exists)};
   }
 
-  std::cerr << "Writing output to: " << final_output_path.string() << "\n";
+  std::cerr << "Writing output to: " << output_path.string() << "\n";
 
   /////////////////////////////////////////////////////////////////////////////
   // (2) Process the configuration file
@@ -183,42 +178,10 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Prepare the output directory via staging for atomic commits
+  // (5) Prepare the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  // Place the staging directory as a sibling of the final output path to
-  // guarantee both reside on the same filesystem volume, which is required
-  // for the atomic rename to succeed
-  const auto staging_path{final_output_path.parent_path() /
-                          std::string{STAGING_DIRECTORY}};
-  // After an atomic swap, the staging directory already contains the previous
-  // committed output, so we can reuse it directly. However, if the process
-  // crashed mid-build, staging may be in a dirty state. We use a sentinel
-  // file to distinguish clean staging (from a completed swap) from dirty
-  // staging (from a crash). If dirty, we discard and re-bootstrap.
-  const auto staging_sentinel{final_output_path.parent_path() /
-                              std::string{STAGING_COMMITTED}};
-  if (std::filesystem::exists(staging_path) &&
-      !std::filesystem::exists(staging_sentinel)) {
-    std::cerr << "Discarding dirty staging directory\n";
-    std::filesystem::remove_all(staging_path);
-  }
-
-  if (!std::filesystem::exists(staging_path)) {
-    if (std::filesystem::exists(final_output_path)) {
-      std::cerr << "Hardlinking: " << final_output_path.string() << " => "
-                << staging_path.string() << "\n";
-      sourcemeta::core::hardlink_directory(final_output_path, staging_path);
-    } else {
-      std::filesystem::create_directories(staging_path);
-    }
-  }
-
-  // Remove the sentinel before building so that a crash leaves staging
-  // recognizable as dirty
-  std::filesystem::remove(staging_sentinel);
-
-  sourcemeta::one::Output output{staging_path};
+  sourcemeta::one::Output output{output_path};
 
   /////////////////////////////////////////////////////////////////////////////
   // (6) Store a mark of the One version for target dependencies
@@ -789,19 +752,6 @@ static auto index_main(const std::string_view &program,
   }
 
   PROFILE_END(profiling, "Profile");
-
-  std::cerr << "Committing: " << staging_path.string() << " => "
-            << final_output_path.string() << "\n";
-  sourcemeta::core::atomic_directory_swap(final_output_path, staging_path);
-
-  // Mark the staging directory as clean so the next run knows it can be
-  // safely reused. On the very first run the swap is a plain rename and
-  // staging no longer exists, but writing the sentinel is still harmless
-  // because the next run will see no staging directory and bootstrap fresh.
-  std::ofstream sentinel_stream(staging_sentinel);
-  sentinel_stream.close();
-
-  PROFILE_END(profiling, "Commit");
 
   if (app.contains("time")) {
     for (const auto &entry : profiling.first) {

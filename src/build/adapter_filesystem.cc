@@ -77,8 +77,6 @@ auto BuildAdapterFilesystem::write_dependencies(
   this->refresh(path);
   const auto dependencies_path{this->dependencies_path(path)};
   std::filesystem::create_directories(dependencies_path.parent_path());
-  // To reset the inode and correctly handle hard links
-  std::filesystem::remove(dependencies_path);
   std::ofstream dependencies_stream{dependencies_path};
   assert(!dependencies_stream.fail());
   for (const auto &dependency : dependencies) {
