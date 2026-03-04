@@ -48,27 +48,27 @@ jobs:
       - name: E2E (empty)
         uses: ./.github/actions/e2e
         with:
-          suite: empty
+          path: test/e2e/empty
           edition: ${{ matrix.edition.name }}
       - name: E2E (headless)
         uses: ./.github/actions/e2e
         with:
-          suite: headless
+          path: test/e2e/headless
           edition: ${{ matrix.edition.name }}
       - name: E2E (html)
         uses: ./.github/actions/e2e
         with:
-          suite: html
+          path: test/e2e/html
           edition: ${{ matrix.edition.name }}
       - name: E2E (chaos)
         uses: ./.github/actions/e2e
         with:
-          suite: chaos
+          path: test/e2e/chaos
           edition: ${{ matrix.edition.name }}
       - name: E2E (enterprise)
         uses: ./.github/actions/e2e
         with:
-          suite: enterprise
+          path: enterprise/e2e/html
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
 

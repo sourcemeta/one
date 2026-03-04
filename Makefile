@@ -77,7 +77,7 @@ docker: docker-build
 	$(MAKE) -C test/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/chaos EDITION=$(EDITION)
 ifeq ($(ENTERPRISE),ON)
-	$(MAKE) -C test/e2e/enterprise EDITION=$(EDITION)
+	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 endif
 
 .PHONY: docker-benchmark
