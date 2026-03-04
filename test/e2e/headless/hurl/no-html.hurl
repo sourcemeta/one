@@ -1,4 +1,4 @@
-GET {{base}}/test/doc/string-1.html
+GET {{base}}/test/schemas/doc/string-1.html
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

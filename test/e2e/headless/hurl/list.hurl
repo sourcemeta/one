@@ -17,7 +17,7 @@ jsonpath "$.entries[0].name" == "test"
 jsonpath "$.entries[0].title" == "Test"
 jsonpath "$.entries[0].description" == "A directory full of testing schemas"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 12
+jsonpath "$.entries[0].health" == 3
 jsonpath "$.entries[0].path" == "/test/"
 jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].title" == "Self"
@@ -53,7 +53,7 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.entries" count == 7
+jsonpath "$.entries" count == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -64,7 +64,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/list/test/v2.0
+GET {{base}}/self/v1/api/list/test/schemas/v2.0
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -75,23 +75,25 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.path" == "/test/v2.0"
-jsonpath "$.url" == "{{base}}/test/v2.0"
-jsonpath "$.breadcrumb" count == 2
+jsonpath "$.path" == "/test/schemas/v2.0"
+jsonpath "$.url" == "{{base}}/test/schemas/v2.0"
+jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.breadcrumb[1].name" == "v2.0"
-jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "v2.0"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/v2.0/"
 jsonpath "$.entries" count == 1
-jsonpath "$.entries[0].bytes" == 130
+jsonpath "$.entries[0].bytes" == 138
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.entries[0].identifier" == "{{base}}/test/v2.0/schema"
+jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/v2.0/schema"
 jsonpath "$.entries[0].name" == "schema"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].provenance" == null
-jsonpath "$.entries[0].path" == "/test/v2.0/schema"
+jsonpath "$.entries[0].path" == "/test/schemas/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 
@@ -104,7 +106,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/list/test/v2.0.json
+GET {{base}}/self/v1/api/list/test/schemas/v2.0.json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -261,7 +263,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/list/test/extension
+GET {{base}}/self/v1/api/list/test/schemas/extension
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -272,46 +274,48 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.path" == "/test/extension"
-jsonpath "$.url" == "{{base}}/test/extension"
+jsonpath "$.path" == "/test/schemas/extension"
+jsonpath "$.url" == "{{base}}/test/schemas/extension"
 jsonpath "$.health" == 17
-jsonpath "$.breadcrumb" count == 2
+jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.breadcrumb[1].name" == "extension"
-jsonpath "$.breadcrumb[1].path" == "/test/extension/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "extension"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/extension/"
 jsonpath "$.entries" count == 3
-jsonpath "$.entries[0].bytes" == 135
+jsonpath "$.entries[0].bytes" == 143
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.entries[0].identifier" == "{{base}}/test/extension/without"
+jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/extension/without"
 jsonpath "$.entries[0].name" == "without"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].provenance" == null
-jsonpath "$.entries[0].path" == "/test/extension/without"
+jsonpath "$.entries[0].path" == "/test/schemas/extension/without"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
-jsonpath "$.entries[1].bytes" == 132
+jsonpath "$.entries[1].bytes" == 140
 jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.entries[1].identifier" == "{{base}}/test/extension/with"
+jsonpath "$.entries[1].identifier" == "{{base}}/test/schemas/extension/with"
 jsonpath "$.entries[1].name" == "with"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].alert" == null
 jsonpath "$.entries[1].provenance" == null
-jsonpath "$.entries[1].path" == "/test/extension/with"
+jsonpath "$.entries[1].path" == "/test/schemas/extension/with"
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
-jsonpath "$.entries[2].bytes" == 172
+jsonpath "$.entries[2].bytes" == 180
 jsonpath "$.entries[2].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.entries[2].identifier" == "{{base}}/test/extension/to-without"
+jsonpath "$.entries[2].identifier" == "{{base}}/test/schemas/extension/to-without"
 jsonpath "$.entries[2].name" == "to-without"
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].alert" == null
 jsonpath "$.entries[2].provenance" == null
-jsonpath "$.entries[2].path" == "/test/extension/to-without"
+jsonpath "$.entries[2].path" == "/test/schemas/extension/to-without"
 jsonpath "$.entries[2].health" == 50
 jsonpath "$.entries[2].dependencies" == 1
 

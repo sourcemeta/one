@@ -64,7 +64,7 @@ HTTP 200
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/schemas/with-rebase-same-host",
-  "$ref": "../bundling/single"
+  "$ref": "bundling/single"
 }
 
 GET {{base}}/test/schemas/with-rebase.json
@@ -72,7 +72,7 @@ HTTP 200
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/schemas/with-rebase",
-  "$ref": "/test/bundling/single.json"
+  "$ref": "/test/schemas/bundling/single.json"
 }
 
 GET {{base}}/test/schemas/id-same-as-base.json
@@ -143,38 +143,38 @@ HTTP 200
 }
 
 # Folder with period
-GET {{base}}/test/v2.0/schema.json
+GET {{base}}/test/schemas/v2.0/schema.json
 HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/v2.0/schema",
+  "$id": "{{base}}/test/schemas/v2.0/schema",
   "type": "integer"
 }
 
 # .schema.json extension
-GET {{base}}/test/extension/with.json
+GET {{base}}/test/schemas/extension/with.json
 HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/extension/with",
+  "$id": "{{base}}/test/schemas/extension/with",
   "type": "string"
 }
 
 # No extension
-GET {{base}}/test/extension/without.json
+GET {{base}}/test/schemas/extension/without.json
 HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/extension/without",
+  "$id": "{{base}}/test/schemas/extension/without",
   "type": "string"
 }
 
@@ -222,11 +222,11 @@ Access-Control-Allow-Origin: *
   "$id": "{{base}}/test/schemas/index.html"
 }
 
-GET {{base}}/test/doc/.period.json
+GET {{base}}/test/schemas/doc/.period.json
 HTTP 200
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/doc/.period",
+  "$id": "{{base}}/test/schemas/doc/.period",
   "type": "string"
 }
 

@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/dependents/test/bundling/single
+GET {{base}}/self/v1/api/schemas/dependents/test/schemas/bundling/single
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -10,12 +10,12 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 3
-jsonpath "$[0].from" == "{{base}}/test/bundling/double"
-jsonpath "$[0].to" == "{{base}}/test/bundling/single"
+jsonpath "$[0].from" == "{{base}}/test/schemas/bundling/double"
+jsonpath "$[0].to" == "{{base}}/test/schemas/bundling/single"
 jsonpath "$[1].from" == "{{base}}/test/schemas/with-rebase"
-jsonpath "$[1].to" == "{{base}}/test/bundling/single"
+jsonpath "$[1].to" == "{{base}}/test/schemas/bundling/single"
 jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase-same-host"
-jsonpath "$[2].to" == "{{base}}/test/bundling/single"
+jsonpath "$[2].to" == "{{base}}/test/schemas/bundling/single"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -26,7 +26,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependents/test/v2.0/schema
+GET {{base}}/self/v1/api/schemas/dependents/test/schemas/v2.0/schema
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -38,14 +38,14 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 4
-jsonpath "$[0].from" == "{{base}}/test/bundling/double"
-jsonpath "$[0].to" == "{{base}}/test/bundling/single"
-jsonpath "$[1].from" == "{{base}}/test/bundling/single"
-jsonpath "$[1].to" == "{{base}}/test/v2.0/schema"
+jsonpath "$[0].from" == "{{base}}/test/schemas/bundling/double"
+jsonpath "$[0].to" == "{{base}}/test/schemas/bundling/single"
+jsonpath "$[1].from" == "{{base}}/test/schemas/bundling/single"
+jsonpath "$[1].to" == "{{base}}/test/schemas/v2.0/schema"
 jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase"
-jsonpath "$[2].to" == "{{base}}/test/bundling/single"
+jsonpath "$[2].to" == "{{base}}/test/schemas/bundling/single"
 jsonpath "$[3].from" == "{{base}}/test/schemas/with-rebase-same-host"
-jsonpath "$[3].to" == "{{base}}/test/bundling/single"
+jsonpath "$[3].to" == "{{base}}/test/schemas/bundling/single"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -56,7 +56,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/dependents/test/bundling/double
+GET {{base}}/self/v1/api/schemas/dependents/test/schemas/bundling/double
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -128,7 +128,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/dependents/test/bundling/double
+HEAD {{base}}/self/v1/api/schemas/dependents/test/schemas/bundling/double
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
@@ -138,7 +138,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/dependents/test/bundling/double
+POST {{base}}/self/v1/api/schemas/dependents/test/schemas/bundling/double
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

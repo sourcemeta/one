@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/extension/to-without.json",
+  "$id": "https://example.com/schemas/extension/to-without.json",
   "allOf": [
-    { "$ref": "https://example.com/extension/without" }
+    { "$ref": "https://example.com/schemas/extension/without" }
   ]
 }

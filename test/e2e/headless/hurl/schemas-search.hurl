@@ -96,10 +96,10 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
-jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].path" == "/test/schemas/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
-jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].path" == "/test/schemas/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -123,10 +123,10 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
-jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].path" == "/test/schemas/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
-jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].path" == "/test/schemas/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 

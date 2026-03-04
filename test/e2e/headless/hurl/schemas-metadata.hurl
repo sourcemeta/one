@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/v2.0/schema
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -10,23 +10,25 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.bytes" == 130
+jsonpath "$.bytes" == 138
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.identifier" == "{{base}}/test/v2.0/schema"
-jsonpath "$.path" == "/test/v2.0/schema"
+jsonpath "$.identifier" == "{{base}}/test/schemas/v2.0/schema"
+jsonpath "$.path" == "/test/schemas/v2.0/schema"
 jsonpath "$.alert" == null
 jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
-jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb" count == 4
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.breadcrumb[1].name" == "v2.0"
-jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
-jsonpath "$.breadcrumb[2].name" == "schema"
-jsonpath "$.breadcrumb[2].path" == "/test/v2.0/schema"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "v2.0"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/v2.0/"
+jsonpath "$.breadcrumb[3].name" == "schema"
+jsonpath "$.breadcrumb[3].path" == "/test/schemas/v2.0/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -86,7 +88,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
+HEAD {{base}}/self/v1/api/schemas/metadata/test/schemas/v2.0/schema
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -97,7 +99,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/metadata/test/v2.0/schema
+POST {{base}}/self/v1/api/schemas/metadata/test/schemas/v2.0/schema
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -210,7 +212,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/test/bundling/double
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/bundling/double
 Accept: application/json
 HTTP 200
 Content-Type: application/json
@@ -222,23 +224,25 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.bytes" == 269
+jsonpath "$.bytes" == 285
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 67
 jsonpath "$.dependencies" == 3
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.identifier" == "{{base}}/test/bundling/double"
-jsonpath "$.path" == "/test/bundling/double"
+jsonpath "$.identifier" == "{{base}}/test/schemas/bundling/double"
+jsonpath "$.path" == "/test/schemas/bundling/double"
 jsonpath "$.alert" == null
 jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
-jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb" count == 4
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.breadcrumb[1].name" == "bundling"
-jsonpath "$.breadcrumb[1].path" == "/test/bundling/"
-jsonpath "$.breadcrumb[2].name" == "double"
-jsonpath "$.breadcrumb[2].path" == "/test/bundling/double"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "bundling"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/bundling/"
+jsonpath "$.breadcrumb[3].name" == "double"
+jsonpath "$.breadcrumb[3].path" == "/test/schemas/bundling/double"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

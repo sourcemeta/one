@@ -7,40 +7,21 @@
       "title": "Test",
       "description": "A directory full of testing schemas",
       "contents": {
-        "extension": {
-          "baseUri": "https://example.com/extension",
-          "path": "./schemas/test/extension"
-        },
         "schemas": {
           "baseUri": "https://example.com/schemas",
-          "path": "./schemas/test/folder",
+          "path": "./schemas/test",
           "defaultDialect": "http://json-schema.org/draft-07/schema#",
           "resolve": {
-            "https://other.com/single.json": "/test/bundling/single.json"
+            "https://other.com/single.json": "/test/schemas/bundling/single.json"
           }
-        },
-        "v2.0": {
-          "baseUri": "https://example.com/schemas",
-          "path": "./schemas/test/v2.0"
-        },
-        "bundling": {
-          "baseUri": "https://example.com/bundling",
-          "path": "./schemas/test/bundling"
-        },
-        "doc": {
-          "title": "A sample schema folder",
-          "description": "For testing purposes",
-          "github": "sourcemeta/one",
-          "baseUri": "https://example.com/doc",
-          "path": "./schemas/test/doc"
         },
         "no-blaze": {
           "baseUri": "https://other.com",
-          "path": "./schemas/test/no-blaze",
+          "path": "./schemas/no-blaze",
           "x-sourcemeta-one:evaluate": false
         },
         "no-base": {
-          "path": "./schemas/test/no-base"
+          "path": "./schemas/no-base"
         }
       }
     }
