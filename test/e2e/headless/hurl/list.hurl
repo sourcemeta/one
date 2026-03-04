@@ -336,7 +336,7 @@ jsonpath "$.entries[0].path" == "/test/extension/without"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 jsonpath "$.entries[1].bytes" == 132
-jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].identifier" == "{{base}}/test/extension/with"
 jsonpath "$.entries[1].name" == "with"

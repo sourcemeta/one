@@ -18,9 +18,8 @@ EDITION_DISPLAY = $(if $(filter enterprise,$(EDITION)),Enterprise,Community)
 all:
 	$(MAKE) down
 	$(MAKE) up
-	$(MAKE) test-hurl
-	$(MAKE) test-playwright
-	$(MAKE) down
+	$(MAKE) test-hurl test-playwright; \
+		status=$$?; $(MAKE) down; exit $$status
 
 .PHONY: up
 up: $(COMPOSE)
