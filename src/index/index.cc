@@ -111,17 +111,17 @@ static auto index_main(const std::string_view &program,
   // (1) Parse the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  const auto final_output_path{
+  const auto output_path{
       std::filesystem::weakly_canonical(app.positional().at(1))};
 
-  if (std::filesystem::exists(final_output_path) &&
-      !std::filesystem::is_directory(final_output_path)) {
+  if (std::filesystem::exists(output_path) &&
+      !std::filesystem::is_directory(output_path)) {
     throw std::filesystem::filesystem_error{
-        "file already exists", final_output_path,
+        "file already exists", output_path,
         std::make_error_code(std::errc::file_exists)};
   }
 
-  std::cerr << "Writing output to: " << final_output_path.string() << "\n";
+  std::cerr << "Writing output to: " << output_path.string() << "\n";
 
   /////////////////////////////////////////////////////////////////////////////
   // (2) Process the configuration file
@@ -181,7 +181,7 @@ static auto index_main(const std::string_view &program,
   // (5) Prepare the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Output output{final_output_path};
+  sourcemeta::one::Output output{output_path};
 
   /////////////////////////////////////////////////////////////////////////////
   // (6) Store a mark of the One version for target dependencies
@@ -752,8 +752,6 @@ static auto index_main(const std::string_view &program,
   }
 
   PROFILE_END(profiling, "Profile");
-
-  PROFILE_END(profiling, "Commit");
 
   if (app.contains("time")) {
     for (const auto &entry : profiling.first) {
