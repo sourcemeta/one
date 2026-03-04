@@ -114,15 +114,17 @@ RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
 RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
 RUN test -f /usr/lib/*/ossl-modules/fips.so
 
-# Remove packages not needed at runtime to reduce the image attack surface
-RUN apt-get --yes update \
+# Remove packages not needed at runtime to reduce the image attack surface.
+RUN cp /bin/mount /bin/umount /tmp/ \
+  && apt-get --yes update \
   && apt-get --yes purge --allow-remove-essential \
     adduser debconf \
     e2fsprogs findutils gzip hostname init-system-helpers \
     login logsave mount ncurses-base ncurses-bin passwd perl-base \
     sed sysvinit-utils tzdata util-linux util-linux-extra \
   && apt-get --yes autoremove --allow-remove-essential \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && mv /tmp/mount /tmp/umount /bin/
 RUN dpkg-query --show --showformat='${Package}\t${Version}\t${Homepage}\n' \
   > /usr/share/sourcemeta/one/dpkg-packages
 
