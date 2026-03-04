@@ -45,33 +45,32 @@ jobs:
             vendor/spdx/schemas/spdx-schema.json /tmp/sbom.spdx.json --verbose
         if: matrix.edition.name == 'enterprise'
 
-      - name: Sandbox (headless)
-        uses: ./.github/actions/sandbox
+      - name: E2E (empty)
+        uses: ./.github/actions/e2e
         with:
-          configuration: headless
+          suite: empty
           edition: ${{ matrix.edition.name }}
-          port: 8000
-
-      - name: Sandbox (html)
-        uses: ./.github/actions/sandbox
+      - name: E2E (headless)
+        uses: ./.github/actions/e2e
         with:
-          configuration: html
+          suite: headless
           edition: ${{ matrix.edition.name }}
-          port: 8000
-
-      - name: Sandbox (empty)
-        uses: ./.github/actions/sandbox
+      - name: E2E (html)
+        uses: ./.github/actions/e2e
         with:
-          configuration: empty
+          suite: html
           edition: ${{ matrix.edition.name }}
-          port: 8000
-
-      - name: Sandbox (chaos)
-        uses: ./.github/actions/sandbox
+      - name: E2E (chaos)
+        uses: ./.github/actions/e2e
         with:
-          configuration: chaos
+          suite: chaos
           edition: ${{ matrix.edition.name }}
-          port: 8000
+      - name: E2E (enterprise)
+        uses: ./.github/actions/e2e
+        with:
+          suite: enterprise
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
 
       # Public instance
       - run: docker build .  --file public/Dockerfile --progress plain

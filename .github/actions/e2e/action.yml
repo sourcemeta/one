@@ -1,0 +1,23 @@
+name: E2E
+inputs:
+  suite:
+    description: Test name
+    required: true
+  edition:
+    description: Edition
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Work around BuildKit snapshot corruption on GitHub Actions runners
+    - name: Prune BuildKit cache (${{ inputs.suite }})
+      run: docker builder prune --all --force
+      shell: bash
+
+    - name: E2E (${{ inputs.suite }})
+      run: >
+        make -C test/e2e/${{ inputs.suite }}
+        EDITION=${{ inputs.edition }}
+        HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:7.0.0'
+      shell: bash
