@@ -31,73 +31,52 @@ EOF
 
 "$1" "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
-REAL="$(realpath "$TMP")"
+test -f "$TMP/output/deps.txt"
+awk '/^t /{target=substr($0,3)} /^[sd] /{print target "|" $0}' \
+  "$TMP/output/deps.txt" | sed "s|$(realpath "$TMP")|REAL|g" \
+  | LC_ALL=C sort > "$TMP/deps.txt"
 
-cd "$TMP/output"
-find . -name "*.deps" -type f | LC_ALL=C sort | while read -r deps_file; do
-  echo "--- $deps_file"
-  LC_ALL=C sort "$deps_file"
-done > "$TMP/deps.txt"
-cd - > /dev/null
-
-cat << EOF > "$TMP/expected.txt"
---- ./dependency-tree.metapack.deps
-s schemas/example/test/%/dependencies.metapack
---- ./explorer/%/directory.metapack.deps
-d explorer/example/%/directory.metapack
-s configuration.json
-s explorer/example/%/directory.metapack
-s version.json
---- ./explorer/%/search.metapack.deps
-s explorer/example/test/%/schema.metapack
---- ./explorer/example/%/directory.metapack.deps
-s configuration.json
-s explorer/example/test/%/schema.metapack
-s version.json
---- ./explorer/example/test/%/schema.metapack.deps
-s configuration.json
-s schemas/example/test/%/dependencies.metapack
-s schemas/example/test/%/health.metapack
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./routes.bin.deps
-s configuration.json
-s version.json
---- ./schemas/example/test/%/blaze-exhaustive.metapack.deps
-s schemas/example/test/%/bundle.metapack
-s version.json
---- ./schemas/example/test/%/blaze-fast.metapack.deps
-s schemas/example/test/%/bundle.metapack
-s version.json
---- ./schemas/example/test/%/bundle.metapack.deps
-s schemas/example/test/%/dependencies.metapack
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./schemas/example/test/%/dependencies.metapack.deps
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./schemas/example/test/%/dependents.metapack.deps
-s dependency-tree.metapack
---- ./schemas/example/test/%/editor.metapack.deps
-s schemas/example/test/%/bundle.metapack
-s version.json
---- ./schemas/example/test/%/health.metapack.deps
-s schemas/example/test/%/dependencies.metapack
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./schemas/example/test/%/locations.metapack.deps
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./schemas/example/test/%/positions.metapack.deps
-s schemas/example/test/%/schema.metapack
-s version.json
---- ./schemas/example/test/%/schema.metapack.deps
-s $REAL/schemas/test.json
-s configuration.json
-s version.json
---- ./schemas/example/test/%/stats.metapack.deps
-s schemas/example/test/%/schema.metapack
-s version.json
+cat << 'EOF' > "$TMP/expected.txt"
+dependency-tree.metapack|s schemas/example/test/%/dependencies.metapack
+explorer/%/directory.metapack|d explorer/example/%/directory.metapack
+explorer/%/directory.metapack|s configuration.json
+explorer/%/directory.metapack|s explorer/example/%/directory.metapack
+explorer/%/directory.metapack|s version.json
+explorer/%/search.metapack|s explorer/example/test/%/schema.metapack
+explorer/example/%/directory.metapack|s configuration.json
+explorer/example/%/directory.metapack|s explorer/example/test/%/schema.metapack
+explorer/example/%/directory.metapack|s version.json
+explorer/example/test/%/schema.metapack|s configuration.json
+explorer/example/test/%/schema.metapack|s schemas/example/test/%/dependencies.metapack
+explorer/example/test/%/schema.metapack|s schemas/example/test/%/health.metapack
+explorer/example/test/%/schema.metapack|s schemas/example/test/%/schema.metapack
+explorer/example/test/%/schema.metapack|s version.json
+routes.bin|s configuration.json
+routes.bin|s version.json
+schemas/example/test/%/blaze-exhaustive.metapack|s schemas/example/test/%/bundle.metapack
+schemas/example/test/%/blaze-exhaustive.metapack|s version.json
+schemas/example/test/%/blaze-fast.metapack|s schemas/example/test/%/bundle.metapack
+schemas/example/test/%/blaze-fast.metapack|s version.json
+schemas/example/test/%/bundle.metapack|s schemas/example/test/%/dependencies.metapack
+schemas/example/test/%/bundle.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/bundle.metapack|s version.json
+schemas/example/test/%/dependencies.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/dependencies.metapack|s version.json
+schemas/example/test/%/dependents.metapack|s dependency-tree.metapack
+schemas/example/test/%/editor.metapack|s schemas/example/test/%/bundle.metapack
+schemas/example/test/%/editor.metapack|s version.json
+schemas/example/test/%/health.metapack|s schemas/example/test/%/dependencies.metapack
+schemas/example/test/%/health.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/health.metapack|s version.json
+schemas/example/test/%/locations.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/locations.metapack|s version.json
+schemas/example/test/%/positions.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/positions.metapack|s version.json
+schemas/example/test/%/schema.metapack|s REAL/schemas/test.json
+schemas/example/test/%/schema.metapack|s configuration.json
+schemas/example/test/%/schema.metapack|s version.json
+schemas/example/test/%/stats.metapack|s schemas/example/test/%/schema.metapack
+schemas/example/test/%/stats.metapack|s version.json
 EOF
 
 diff "$TMP/deps.txt" "$TMP/expected.txt"

@@ -94,7 +94,6 @@ DISPATCH(const std::filesystem::path &destination,
 
   // We need to mark files regardless of whether they were generated or not
   output.track(destination);
-  output.track(destination.string() + ".deps");
   return was_built;
 }
 
@@ -193,12 +192,17 @@ static auto index_main(const std::string_view &program,
   // (6) Store a mark of the One version for target dependencies
   /////////////////////////////////////////////////////////////////////////////
 
+  sourcemeta::one::BuildAdapterFilesystem adapter{output.path()};
+
   // We do this so that targets can be re-built if the One version changes
   const auto mark_version_path{output.path() / "version.json"};
   // Note we only write back if the content changed in order to not accidentally
   // bump up the file modified time
-  output.write_json_if_different(
-      mark_version_path, sourcemeta::core::JSON{sourcemeta::one::version()});
+  if (output.write_json_if_different(
+          mark_version_path,
+          sourcemeta::core::JSON{sourcemeta::one::version()})) {
+    adapter.refresh(mark_version_path);
+  };
 
   /////////////////////////////////////////////////////////////////////////////
   // (7) Store the full configuration file for target dependencies
@@ -209,17 +213,21 @@ static auto index_main(const std::string_view &program,
   const auto mark_configuration_path{output.path() / "configuration.json"};
   // Note we only write back if the content changed in order to not accidentally
   // bump up the file modified time
-  output.write_json_if_different(mark_configuration_path, raw_configuration);
+  if (output.write_json_if_different(mark_configuration_path,
+                                     raw_configuration)) {
+    adapter.refresh(mark_configuration_path);
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // (8) Store the optional comment for informational purposes
   /////////////////////////////////////////////////////////////////////////////
 
-  if (app.contains("comment")) {
-    const auto comment_path{output.path() / "comment.json"};
-    output.write_json_if_different(
-        comment_path,
-        sourcemeta::core::JSON{std::string{app.at("comment").at(0)}});
+  const auto comment_path{output.path() / "comment.json"};
+  if (app.contains("comment") &&
+      output.write_json_if_different(
+          comment_path,
+          sourcemeta::core::JSON{std::string{app.at("comment").at(0)}})) {
+    adapter.refresh(comment_path);
   }
 
   PROFILE_END(profiling, "Startup");
@@ -309,7 +317,6 @@ static auto index_main(const std::string_view &program,
   const auto schemas_path{output.path() / "schemas"};
   const auto display_schemas_path{
       std::filesystem::relative(schemas_path, output.path())};
-  sourcemeta::one::BuildAdapterFilesystem adapter{output.path()};
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&output, &schemas_path, &resolver, &mutex, &adapter,
@@ -322,8 +329,6 @@ static auto index_main(const std::string_view &program,
         DISPATCH<sourcemeta::one::GENERATE_MATERIALISED_SCHEMA>(
             destination,
             {sourcemeta::one::make_dependency(schema.second.path),
-             // This target depends on the configuration file given things like
-             // resolve maps and base URIs
              sourcemeta::one::make_dependency(mark_configuration_path),
              sourcemeta::one::make_dependency(mark_version_path)},
             {schema.first, resolver}, mutex, "Ingesting", schema.first,
@@ -573,15 +578,14 @@ static auto index_main(const std::string_view &program,
   for (const auto &schema : resolver) {
     auto dependents_path{schemas_path / schema.second.relative_path / SENTINEL /
                          "dependents.metapack"};
-    const auto dependents_deps_path{dependents_path.string() + ".deps"};
     if (affected_dependents.contains(schema.first) ||
         !std::filesystem::exists(dependents_path) ||
-        !std::filesystem::exists(dependents_deps_path)) {
+        // TODO: This is potentially pretty slow?
+        !adapter.read_dependencies(dependents_path).has_value()) {
       rework_entries.push_back(
           {std::cref(schema.first), std::move(dependents_path)});
     } else {
       output.track(dependents_path);
-      output.track(dependents_path.string() + ".deps");
     }
   }
 
@@ -792,6 +796,12 @@ static auto index_main(const std::string_view &program,
 
   // TODO: Print the size of the output directory here
 
+  // TODO: This level of coupling means that the output and the adapter should
+  // be one
+  adapter.flush_dependencies([&output](const auto &target) {
+    return !output.is_untracked_file(target);
+  });
+  output.track(output.path() / "deps.txt");
   output.remove_unknown_files();
 
   PROFILE_END(profiling, "Cleanup");

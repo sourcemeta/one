@@ -3,79 +3,118 @@
 #include <sourcemeta/core/io.h>
 
 #include <cassert>     // assert
+#include <chrono>      // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint>     // std::int64_t
 #include <fstream>     // std::ofstream, std::ifstream
 #include <mutex>       // std::unique_lock
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-namespace sourcemeta::one {
+static constexpr std::string_view DEPENDENCIES_FILE{"deps.txt"};
 
-constexpr std::string_view DEPENDENCIES_EXTENSION{".deps"};
+namespace sourcemeta::one {
 
 BuildAdapterFilesystem::BuildAdapterFilesystem(
     const std::filesystem::path &output_root)
-    : root{std::filesystem::canonical(output_root)} {}
+    : root{std::filesystem::canonical(output_root)} {
+  const auto deps_path{this->root / DEPENDENCIES_FILE};
+  if (!std::filesystem::exists(deps_path)) {
+    return;
+  }
 
-auto BuildAdapterFilesystem::dependencies_path(const node_type &path) const
-    -> node_type {
-  assert(path.is_absolute());
-  return path.string() + std::string{DEPENDENCIES_EXTENSION};
+  try {
+    std::ifstream stream{deps_path};
+    if (!stream.is_open()) {
+      return;
+    }
+
+    std::string contents{std::istreambuf_iterator<char>(stream),
+                         std::istreambuf_iterator<char>()};
+
+    std::string current_key;
+    BuildDependencies<node_type> current_deps;
+    std::size_t position{0};
+
+    while (position < contents.size()) {
+      auto newline{contents.find('\n', position)};
+      if (newline == std::string::npos) {
+        newline = contents.size();
+      }
+
+      if (newline <= position + 2 || contents[position + 1] != ' ') {
+        position = newline + 1;
+        continue;
+      }
+
+      const char tag{contents[position]};
+      const std::string_view value{contents.data() + position + 2,
+                                   newline - position - 2};
+
+      switch (tag) {
+        case 't':
+          if (!current_key.empty()) {
+            this->dependencies_map.insert_or_assign(current_key,
+                                                    std::move(current_deps));
+            current_deps = {};
+          }
+
+          current_key = value;
+          break;
+        case 's':
+          current_deps.emplace_back(
+              BuildDependencyKind::Static,
+              (this->root / std::string{value}).lexically_normal());
+          break;
+        case 'd':
+          current_deps.emplace_back(
+              BuildDependencyKind::Dynamic,
+              (this->root / std::string{value}).lexically_normal());
+          break;
+        case 'm': {
+          const auto space{value.find(' ')};
+          if (space != std::string_view::npos) {
+            const auto path_part{value.substr(0, space)};
+            const auto ns_part{value.substr(space + 1)};
+            const std::chrono::nanoseconds nanoseconds{
+                std::stoll(std::string{ns_part})};
+            const auto mark_value{mark_type{
+                std::chrono::duration_cast<mark_type::duration>(nanoseconds)}};
+            this->marks.insert_or_assign(
+                (this->root / std::string{path_part}).lexically_normal(),
+                mark_value);
+          }
+
+          break;
+        }
+        default:
+          break;
+      }
+
+      position = newline + 1;
+    }
+
+    if (!current_key.empty()) {
+      this->dependencies_map.insert_or_assign(current_key,
+                                              std::move(current_deps));
+    }
+    this->has_previous_run = true;
+  } catch (...) {
+    this->dependencies_map.clear();
+    this->marks.clear();
+  }
 }
 
 auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
     -> std::optional<BuildDependencies<node_type>> {
   assert(path.is_absolute());
-  const auto dependencies_path{this->dependencies_path(path)};
-
-  std::ifstream stream{dependencies_path};
-  if (!stream.is_open()) {
+  const auto key{path.lexically_relative(this->root).string()};
+  std::shared_lock lock{this->dependencies_mutex};
+  const auto match{this->dependencies_map.find(key)};
+  if (match == this->dependencies_map.end() || match->second.empty()) {
     return std::nullopt;
   }
 
-  std::string contents{std::istreambuf_iterator<char>(stream),
-                       std::istreambuf_iterator<char>()};
-
-  BuildDependencies<node_type> result;
-  std::size_t position{0};
-  while (position < contents.size()) {
-    auto newline{contents.find('\n', position)};
-    if (newline == std::string::npos) {
-      newline = contents.size();
-    }
-
-    auto end{newline};
-    // Prevent CRLF on Windows
-    if (end > position && contents[end - 1] == '\r') {
-      end -= 1;
-    }
-
-    if (end > position) {
-      auto kind{BuildDependencyKind::Static};
-      std::filesystem::path dependency;
-      const auto length{end - position};
-      if (length >= 2 && contents[position + 1] == ' ' &&
-          (contents[position] == 's' || contents[position] == 'd')) {
-        kind = (contents[position] == 'd') ? BuildDependencyKind::Dynamic
-                                           : BuildDependencyKind::Static;
-        dependency = contents.substr(position + 2, end - position - 2);
-      } else {
-        dependency = contents.substr(position, length);
-      }
-      if (!dependency.is_absolute()) {
-        dependency = (this->root / dependency).lexically_normal();
-      }
-
-      result.emplace_back(kind, std::move(dependency));
-    }
-
-    position = newline + 1;
-  }
-
-  if (result.empty()) {
-    return std::nullopt;
-  } else {
-    return result;
-  }
+  return match->second;
 }
 
 auto BuildAdapterFilesystem::write_dependencies(
@@ -83,27 +122,51 @@ auto BuildAdapterFilesystem::write_dependencies(
     -> void {
   assert(path.is_absolute());
   assert(std::filesystem::exists(path));
-  // Try to make sure as much as we can that any write operation made to disk
   sourcemeta::core::flush(path);
   this->refresh(path);
-  const auto dependencies_path{this->dependencies_path(path)};
-  std::filesystem::create_directories(dependencies_path.parent_path());
-  std::ofstream dependencies_stream{dependencies_path};
-  assert(!dependencies_stream.fail());
-  for (const auto &dependency : dependencies) {
-    const auto prefix{dependency.first == BuildDependencyKind::Dynamic ? "d "
-                                                                       : "s "};
-    const auto relative{dependency.second.lexically_relative(this->root)};
-    if (!relative.empty() && *relative.begin() != "..") {
-      dependencies_stream << prefix << relative.string() << "\n";
-    } else {
-      dependencies_stream << prefix << dependency.second.string() << "\n";
+  const auto key{path.lexically_relative(this->root).string()};
+  std::unique_lock lock{this->dependencies_mutex};
+  this->dependencies_map.insert_or_assign(key, dependencies);
+}
+
+auto BuildAdapterFilesystem::flush_dependencies(
+    const std::function<bool(const node_type &)> &filter) -> void {
+  const auto deps_path{this->root / DEPENDENCIES_FILE};
+  std::ofstream stream{deps_path};
+  assert(!stream.fail());
+
+  for (const auto &entry : this->dependencies_map) {
+    if (!filter(this->root / entry.first)) {
+      continue;
+    }
+
+    stream << "t " << entry.first << '\n';
+    for (const auto &dependency : entry.second) {
+      const char kind_char{
+          dependency.first == BuildDependencyKind::Dynamic ? 'd' : 's'};
+      const auto relative{dependency.second.lexically_relative(this->root)};
+      if (!relative.empty() && *relative.begin() != "..") {
+        stream << kind_char << ' ' << relative.string() << '\n';
+      } else {
+        stream << kind_char << ' ' << dependency.second.string() << '\n';
+      }
     }
   }
 
-  dependencies_stream.flush();
-  dependencies_stream.close();
-  sourcemeta::core::flush(dependencies_path);
+  for (const auto &entry : this->marks) {
+    const auto relative{entry.first.lexically_relative(this->root)};
+    if (!relative.empty() && *relative.begin() != "..") {
+      const auto nanoseconds{
+          std::chrono::duration_cast<std::chrono::nanoseconds>(
+              entry.second.time_since_epoch())
+              .count()};
+      stream << "m " << relative.string() << ' '
+             << static_cast<std::int64_t>(nanoseconds) << '\n';
+    }
+  }
+
+  stream.flush();
+  stream.close();
 }
 
 auto BuildAdapterFilesystem::refresh(const node_type &path) -> void {
@@ -129,11 +192,15 @@ auto BuildAdapterFilesystem::mark(const node_type &path)
     }
   }
 
+  // Output files should always have their marks cached
+  // Only input files  or new output files are not
+  assert(!this->has_previous_run ||
+         !path.string().starts_with(this->root.string()) ||
+         !std::filesystem::exists(path));
+
   try {
     const auto value{std::filesystem::last_write_time(path)};
-    // Within a single run, if we didn't build this file, its mtime won't
-    // change. If we did build it, refreshing already set a synthetic timestamp
-    // that the cache lookup above would have returned instead
+    // Cache for the rest of this run since input files don't change
     std::unique_lock lock{this->mutex};
     this->marks.emplace(path, value);
     return value;
