@@ -130,10 +130,13 @@ auto BuildAdapterFilesystem::mark(const node_type &path)
   }
 
   try {
-    // Keep in mind that depending on the OS, filesystem, and even standard
-    // library implementation, this value might not be very reliable. In fact,
-    // in many cases it can be outdated. Therefore, we never cache this value
-    return std::filesystem::last_write_time(path);
+    const auto value{std::filesystem::last_write_time(path)};
+    // Within a single run, if we didn't build this file, its mtime won't
+    // change. If we did build it, refreshing already set a synthetic timestamp
+    // that the cache lookup above would have returned instead
+    std::unique_lock lock{this->mutex};
+    this->marks.emplace(path, value);
+    return value;
   } catch (const std::filesystem::filesystem_error &) {
     return std::nullopt;
   }
