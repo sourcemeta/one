@@ -119,7 +119,7 @@ RUN cp /bin/mount /bin/umount /tmp/ \
   && apt-get --yes update \
   && apt-get --yes purge --allow-remove-essential \
     adduser debconf \
-    e2fsprogs findutils gzip hostname init-system-helpers \
+    e2fsprogs gzip hostname init-system-helpers \
     login logsave mount ncurses-base ncurses-bin passwd perl-base \
     sed sysvinit-utils tzdata util-linux util-linux-extra \
   && apt-get --yes autoremove --allow-remove-essential \
