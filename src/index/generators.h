@@ -562,8 +562,6 @@ struct GENERATE_URITEMPLATE_ROUTES {
           const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
           const Context &router) -> void {
     std::filesystem::create_directories(destination.parent_path());
-    // To reset the inode and correctly handle hard links
-    std::filesystem::remove(destination);
     sourcemeta::core::URITemplateRouterView::save(router, destination);
   }
 };

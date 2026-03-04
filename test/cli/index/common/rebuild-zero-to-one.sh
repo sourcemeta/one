@@ -41,7 +41,6 @@ Using configuration: $(realpath "$TMP")/one.json
 (  0%) Producing: explorer
 (100%) Producing: .
 (100%) Rendering: .
-Committing: $(realpath "$TMP")/.sourcemeta-one-staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -85,7 +84,6 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Hardlinking: $(realpath "$TMP")/output => $(realpath "$TMP")/.sourcemeta-one-staging
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (100%) Ingesting: https://sourcemeta.com/schemas/test
@@ -101,7 +99,6 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (skip) Rendering: . [not-found]
 (100%) Rendering: schemas/test
 (skip) Producing: routes.bin [routes]
-Committing: $(realpath "$TMP")/.sourcemeta-one-staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

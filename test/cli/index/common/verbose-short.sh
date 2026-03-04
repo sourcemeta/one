@@ -62,6 +62,5 @@ https://example.com/foo => https://sourcemeta.com/example/schemas/foo
 ( 50%) Rendering: example
 ( 75%) Rendering: .
 (100%) Rendering: example/schemas/foo
-Committing: $(realpath "$TMP")/.sourcemeta-one-staging => $(realpath "$TMP")/output
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
