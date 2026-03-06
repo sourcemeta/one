@@ -36,7 +36,8 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 50%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (100%) Reviewing: schemas
 (  0%) Producing: explorer
 (100%) Producing: .
@@ -88,7 +89,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (100%) Ingesting: https://sourcemeta.com/schemas/test
 (100%) Analysing: https://sourcemeta.com/schemas/test
-( 50%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (100%) Reviewing: schemas
 (100%) Reworking: https://sourcemeta.com/schemas/test
 (  0%) Producing: explorer

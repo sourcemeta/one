@@ -32,6 +32,13 @@ cat << 'EOF' > "$TMP/schemas/a.json"
 }
 EOF
 
+cat << 'EOF' > "$TMP/schemas/b.json"
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/b"
+}
+EOF
+
 remove_threads_information() {
   expr='s/ \[[^]]*[^a-z-][^]]*\]//g'
   if [ "$(uname -s)" = "Darwin" ]; then
@@ -41,31 +48,26 @@ remove_threads_information() {
   fi
 }
 
-# Run 1: index one schema from scratch
+# Run 1: index two schemas from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-# Run 2: modify the schema and re-index
-cat << 'EOF' > "$TMP/schemas/a.json"
+# Run 2: add a third schema that references schema a
+cat << 'EOF' > "$TMP/schemas/c.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/a",
-  "type": "string"
+  "$id": "https://example.com/c",
+  "properties": {
+    "foo": { "$ref": "https://example.com/a" }
+  }
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
-
-# Run 3: re-index with no changes. Everything should be fully cached.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
-cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/a.json (#1)
-(100%) Resolving: a.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/a
+grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
+cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
 (skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
-(100%) Analysing: https://sourcemeta.com/example/schemas/a
+(skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
@@ -76,28 +78,19 @@ Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(skip) Reviewing: schemas [dependencies]
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(skip) Producing: explorer [search]
-( 33%) Producing: example/schemas
-(skip) Producing: example/schemas [directory]
-( 66%) Producing: example
-(skip) Producing: example [directory]
-(100%) Producing: .
-(skip) Producing: . [directory]
-( 25%) Rendering: example/schemas
-(skip) Rendering: example/schemas [directory]
-( 50%) Rendering: example
-(skip) Rendering: example [directory]
-( 75%) Rendering: .
-(skip) Rendering: . [index]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
 (skip) Rendering: . [not-found]
-(100%) Rendering: example/schemas/a
-(skip) Rendering: example/schemas/a [schema]
+(skip) Rendering: example/schemas/b [schema]
 (skip) Producing: routes.bin [routes]
 EOF
 
-diff "$TMP/output.txt" "$TMP/expected.txt"
+diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"

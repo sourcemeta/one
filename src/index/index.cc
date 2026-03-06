@@ -17,17 +17,20 @@
 #include "generators.h"
 #include "output.h"
 
-#include <algorithm>   // std::sort
-#include <cassert>     // assert
-#include <chrono>      // std::chrono
-#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
-#include <exception>   // std::exception
-#include <filesystem>  // std::filesystem
-#include <iomanip>     // std::setw, std::setfill
-#include <iostream>    // std::cerr, std::cout
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <vector>      // std::vector
+#include <algorithm>     // std::sort
+#include <cassert>       // assert
+#include <chrono>        // std::chrono
+#include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
+#include <exception>     // std::exception
+#include <filesystem>    // std::filesystem
+#include <functional>    // std::reference_wrapper, std::cref
+#include <iomanip>       // std::setw, std::setfill
+#include <iostream>      // std::cerr, std::cout
+#include <optional>      // std::optional
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_set> // std::unordered_set
+#include <vector>        // std::vector
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PROFILE_INIT(state)                                                    \
@@ -79,9 +82,10 @@ DISPATCH(const std::filesystem::path &destination,
          const typename Handler::Context &context, std::mutex &mutex,
          const std::string_view title, const std::string_view prefix,
          const std::string_view suffix, Adapter &adapter,
-         sourcemeta::one::Output &output) -> void {
-  if (!sourcemeta::one::build<typename Handler::Context>(
-          adapter, Handler::handler, destination, dependencies, context)) {
+         sourcemeta::one::Output &output) -> bool {
+  const auto was_built{sourcemeta::one::build<typename Handler::Context>(
+      adapter, Handler::handler, destination, dependencies, context)};
+  if (!was_built) {
     std::lock_guard<std::mutex> lock{mutex};
     std::cerr << "(skip) " << title << ": " << prefix << " [" << suffix
               << "]\n";
@@ -90,6 +94,7 @@ DISPATCH(const std::filesystem::path &destination,
   // We need to mark files regardless of whether they were generated or not
   output.track(destination);
   output.track(destination.string() + ".deps");
+  return was_built;
 }
 
 static auto index_main(const std::string_view &program,
@@ -446,7 +451,7 @@ static auto index_main(const std::string_view &program,
   // dependencies for HTML and navigational targets
 
   print_progress(mutex, concurrency, "Reviewing", display_schemas_path.string(),
-                 1, 2);
+                 1, 3);
   std::vector<std::filesystem::path> directories;
   // The top-level is itself a directory
   directories.emplace_back(schemas_path);
@@ -498,11 +503,72 @@ static auto index_main(const std::string_view &program,
   }
 
   print_progress(mutex, concurrency, "Reviewing", display_schemas_path.string(),
-                 2, 2);
-  DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
-      output.path() / "dependency-tree.metapack", dependencies, resolver, mutex,
-      "Reviewing", display_schemas_path.string(), "dependencies", adapter,
-      output);
+                 2, 3);
+
+  const auto dependency_tree_path{output.path() / "dependency-tree.metapack"};
+
+  // Read the old dependency tree before DISPATCH overwrites it, so we can
+  // diff against the new tree to find which schemas' dependents changed
+  std::optional<sourcemeta::core::JSON> old_dependency_tree;
+  if (std::filesystem::exists(dependency_tree_path)) {
+    old_dependency_tree = sourcemeta::one::read_json(dependency_tree_path);
+  }
+
+  const auto dependency_tree_rebuilt{
+      DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
+          dependency_tree_path, dependencies, resolver, mutex, "Reviewing",
+          display_schemas_path.string(), "dependencies", adapter, output)};
+
+  // Determine which schemas' dependents actually changed by diffing
+  // the old and new dependency trees per key. We keep new_dependency_tree
+  // alive so affected_dependents can hold string_views into its keys.
+  std::optional<sourcemeta::core::JSON> new_dependency_tree;
+  std::unordered_set<std::string_view> affected_dependents;
+  if (dependency_tree_rebuilt) {
+    new_dependency_tree = sourcemeta::one::read_json(dependency_tree_path);
+    if (old_dependency_tree.has_value()) {
+      for (const auto &entry : new_dependency_tree->as_object()) {
+        const auto *old_value{old_dependency_tree->try_at(entry.first)};
+        if (!old_value || *old_value != entry.second) {
+          affected_dependents.insert(entry.first);
+        }
+      }
+
+      for (const auto &entry : old_dependency_tree->as_object()) {
+        if (!new_dependency_tree->defines(entry.first)) {
+          affected_dependents.insert(entry.first);
+        }
+      }
+    } else {
+      for (const auto &entry : new_dependency_tree->as_object()) {
+        affected_dependents.insert(entry.first);
+      }
+    }
+  }
+
+  struct ReworkEntry {
+    std::reference_wrapper<const sourcemeta::core::JSON::String> uri;
+    std::filesystem::path dependents_path;
+  };
+
+  std::vector<ReworkEntry> rework_entries;
+  for (const auto &schema : resolver) {
+    auto dependents_path{schemas_path / schema.second.relative_path / SENTINEL /
+                         "dependents.metapack"};
+    const auto dependents_deps_path{dependents_path.string() + ".deps"};
+    if (affected_dependents.contains(schema.first) ||
+        !std::filesystem::exists(dependents_path) ||
+        !std::filesystem::exists(dependents_deps_path)) {
+      rework_entries.push_back(
+          {std::cref(schema.first), std::move(dependents_path)});
+    } else {
+      output.track(dependents_path);
+      output.track(dependents_path.string() + ".deps");
+    }
+  }
+
+  print_progress(mutex, concurrency, "Reviewing", display_schemas_path.string(),
+                 3, 3);
 
   PROFILE_END(profiling, "Review");
 
@@ -511,18 +577,15 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::parallel_for_each(
-      resolver.begin(), resolver.end(),
-      [&output, &schemas_path, &resolver, &mutex,
-       &adapter](const auto &schema, const auto threads, const auto cursor) {
-        print_progress(mutex, threads, "Reworking", schema.first, cursor,
-                       resolver.size());
-        const auto base_path{schemas_path / schema.second.relative_path /
-                             SENTINEL};
+      rework_entries.begin(), rework_entries.end(),
+      [&output, &rework_entries, &mutex, &adapter, &dependency_tree_path](
+          const auto &entry, const auto threads, const auto cursor) {
+        print_progress(mutex, threads, "Reworking", entry.uri.get(), cursor,
+                       rework_entries.size());
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENTS>(
-            base_path / "dependents.metapack",
-            {sourcemeta::one::make_dependency(output.path() /
-                                              "dependency-tree.metapack")},
-            schema.first, mutex, "Reworking", schema.first, "dependents",
+            entry.dependents_path,
+            {sourcemeta::one::make_dependency(dependency_tree_path)},
+            entry.uri.get(), mutex, "Reworking", entry.uri.get(), "dependents",
             adapter, output);
       },
       concurrency, THREAD_STACK_SIZE);

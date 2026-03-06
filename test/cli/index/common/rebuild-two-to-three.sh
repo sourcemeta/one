@@ -51,14 +51,49 @@ remove_threads_information() {
 # Run 1: index two schemas from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-# Run 2: add a third schema and re-index
+# Run 2: add a third schema
+# The existing schemas' dependents and HTML should be cache hits
+# because the new schema does not affect the dependency tree
 cat << 'EOF' > "$TMP/schemas/c.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/c"
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+remove_threads_information "$TMP/output.txt"
+
+grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
+cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
+(skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
+(skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
+(skip) Rendering: . [not-found]
+(skip) Rendering: example/schemas/a [schema]
+(skip) Rendering: example/schemas/b [schema]
+(skip) Producing: routes.bin [routes]
+EOF
+
+diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"
 
 # Run 3: re-index with no changes. All three schemas should be fully cached.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
