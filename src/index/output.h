@@ -41,16 +41,19 @@ public:
   auto path() const -> const std::filesystem::path & { return this->path_; }
 
   auto write_json_if_different(const std::filesystem::path &path,
-                               const sourcemeta::core::JSON &document) -> void {
+                               const sourcemeta::core::JSON &document) -> bool {
     if (std::filesystem::exists(path)) {
       const auto current{sourcemeta::core::read_json(path)};
       if (current != document) {
         this->write_json(path, document);
+        return true;
       } else {
         this->track(path);
+        return false;
       }
     } else {
       this->write_json(path, document);
+      return true;
     }
   }
 

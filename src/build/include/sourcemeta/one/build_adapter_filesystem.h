@@ -10,8 +10,10 @@
 // NOLINTEND(misc-include-cleaner)
 
 #include <filesystem>    // std::filesystem
+#include <functional>    // std::function
 #include <optional>      // std::optional
 #include <shared_mutex>  // std::shared_mutex
+#include <string>        // std::string
 #include <unordered_map> // std::unordered_map
 
 namespace sourcemeta::one {
@@ -23,12 +25,12 @@ public:
 
   BuildAdapterFilesystem(const std::filesystem::path &output_root);
 
-  [[nodiscard]] auto dependencies_path(const node_type &path) const
-      -> node_type;
   [[nodiscard]] auto read_dependencies(const node_type &path) const
       -> std::optional<BuildDependencies<node_type>>;
   auto write_dependencies(const node_type &path,
                           const BuildDependencies<node_type> &dependencies)
+      -> void;
+  auto flush_dependencies(const std::function<bool(const node_type &)> &filter)
       -> void;
   auto refresh(const node_type &path) -> void;
   [[nodiscard]] auto mark(const node_type &path) -> std::optional<mark_type>;
@@ -39,6 +41,10 @@ private:
   std::filesystem::path root;
   std::unordered_map<node_type, mark_type> marks;
   std::shared_mutex mutex;
+  std::unordered_map<std::string, BuildDependencies<node_type>>
+      dependencies_map;
+  mutable std::shared_mutex dependencies_mutex;
+  bool has_previous_run{false};
 };
 
 } // namespace sourcemeta::one

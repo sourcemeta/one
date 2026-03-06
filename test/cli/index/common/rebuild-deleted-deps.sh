@@ -32,52 +32,12 @@ cat << 'EOF' > "$TMP/schemas/a.json"
 }
 EOF
 
-# Run 1: index one schema from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-# Assert the full list of .deps files
-cd "$TMP/output"
-find . -name "*.deps" | LC_ALL=C sort > "$TMP/deps_actual.txt"
-cd - > /dev/null
+test -f "$TMP/output/deps.txt"
+rm "$TMP/output/deps.txt"
+test ! -f "$TMP/output/deps.txt"
 
-cat << 'EOF' > "$TMP/deps_expected.txt"
-./dependency-tree.metapack.deps
-./explorer/%/404.metapack.deps
-./explorer/%/directory-html.metapack.deps
-./explorer/%/directory.metapack.deps
-./explorer/%/search.metapack.deps
-./explorer/example/%/directory-html.metapack.deps
-./explorer/example/%/directory.metapack.deps
-./explorer/example/schemas/%/directory-html.metapack.deps
-./explorer/example/schemas/%/directory.metapack.deps
-./explorer/example/schemas/a/%/schema-html.metapack.deps
-./explorer/example/schemas/a/%/schema.metapack.deps
-./routes.bin.deps
-./schemas/example/schemas/a/%/blaze-exhaustive.metapack.deps
-./schemas/example/schemas/a/%/blaze-fast.metapack.deps
-./schemas/example/schemas/a/%/bundle.metapack.deps
-./schemas/example/schemas/a/%/dependencies.metapack.deps
-./schemas/example/schemas/a/%/dependents.metapack.deps
-./schemas/example/schemas/a/%/editor.metapack.deps
-./schemas/example/schemas/a/%/health.metapack.deps
-./schemas/example/schemas/a/%/locations.metapack.deps
-./schemas/example/schemas/a/%/positions.metapack.deps
-./schemas/example/schemas/a/%/schema.metapack.deps
-./schemas/example/schemas/a/%/stats.metapack.deps
-EOF
-
-diff "$TMP/deps_actual.txt" "$TMP/deps_expected.txt"
-
-while IFS= read -r deps_file
-do
-  rm "$TMP/output/${deps_file#./}"
-done < "$TMP/deps_expected.txt"
-
-# Run 2: re-index. All .deps files should be restored.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-cd "$TMP/output"
-find . -name "*.deps" | LC_ALL=C sort > "$TMP/deps_after.txt"
-cd - > /dev/null
-
-diff "$TMP/deps_after.txt" "$TMP/deps_expected.txt"
+test -f "$TMP/output/deps.txt"

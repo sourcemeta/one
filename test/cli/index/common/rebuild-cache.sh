@@ -145,7 +145,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
-# Update the configuration summary
+# Touch an output file (the indexer trusts its own marks, so this is a no-op)
 touch "$TMP/output/configuration.json"
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
@@ -155,17 +155,39 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
+(skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
 ( 33%) Reviewing: schemas
 ( 66%) Reviewing: schemas
+(skip) Reviewing: schemas [dependencies]
 (100%) Reviewing: schemas
 (  0%) Producing: explorer
+(skip) Producing: explorer [search]
 ( 33%) Producing: example/schemas
+(skip) Producing: example/schemas [directory]
 ( 66%) Producing: example
+(skip) Producing: example [directory]
 (100%) Producing: .
+(skip) Producing: . [directory]
 ( 25%) Rendering: example/schemas
+(skip) Rendering: example/schemas [directory]
 ( 50%) Rendering: example
+(skip) Rendering: example [directory]
 ( 75%) Rendering: .
+(skip) Rendering: . [index]
+(skip) Rendering: . [not-found]
 (100%) Rendering: example/schemas/foo
+(skip) Rendering: example/schemas/foo [schema]
+(skip) Producing: routes.bin [routes]
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -4,27 +4,6 @@
 
 #include "build_test_utils.h"
 
-TEST(Build_Adapter_Filesystem, dependencies_path) {
-  sourcemeta::one::BuildAdapterFilesystem adapter{BINARY_DIRECTORY};
-  const auto result{adapter.dependencies_path("/foo/bar.baz")};
-  EXPECT_EQ(result, "/foo/bar.baz.deps");
-}
-
-TEST(Build_Adapter_Filesystem, read_dependencies_stub_1) {
-  const std::filesystem::path stub{std::filesystem::path{TEST_DIRECTORY} /
-                                   "deps_stub_1.json"};
-  sourcemeta::one::BuildAdapterFilesystem adapter{BINARY_DIRECTORY};
-  const auto dependencies{adapter.read_dependencies(stub)};
-  EXPECT_TRUE(dependencies.has_value());
-  EXPECT_EQ(dependencies.value().size(), 2);
-  auto iterator{dependencies.value().cbegin()};
-  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
-  EXPECT_EQ(iterator->second.string(), "/foo/bar");
-  std::advance(iterator, 1);
-  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
-  EXPECT_EQ(iterator->second.string(), "/test");
-}
-
 TEST(Build_Adapter_Filesystem, read_dependencies_not_exists) {
   const std::filesystem::path stub{std::filesystem::path{TEST_DIRECTORY} /
                                    "unknown"};
@@ -33,19 +12,19 @@ TEST(Build_Adapter_Filesystem, read_dependencies_not_exists) {
   EXPECT_FALSE(dependencies.has_value());
 }
 
-TEST(Build_Adapter_Filesystem, write_dependencies_1) {
+TEST(Build_Adapter_Filesystem, write_then_read_dependencies) {
   sourcemeta::one::BuildDependencies<
       sourcemeta::one::BuildAdapterFilesystem::node_type>
       dependencies;
   dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
                             "/foo/bar");
-  dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+  dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Dynamic,
                             "/baz");
   dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
                             "/test");
 
   const auto node{std::filesystem::path{BINARY_DIRECTORY} /
-                  "write_dependencies_1"};
+                  "write_then_read_dependencies"};
 
   WRITE_FILE(node, "test");
 
@@ -59,16 +38,16 @@ TEST(Build_Adapter_Filesystem, write_dependencies_1) {
   EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
   EXPECT_EQ(iterator->second.string(), "/foo/bar");
   std::advance(iterator, 1);
-  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
+  EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Dynamic);
   EXPECT_EQ(iterator->second.string(), "/baz");
   std::advance(iterator, 1);
   EXPECT_EQ(iterator->first, sourcemeta::one::BuildDependencyKind::Static);
   EXPECT_EQ(iterator->second.string(), "/test");
 }
 
-TEST(Build_Adapter_Filesystem, mark_stub_1) {
+TEST(Build_Adapter_Filesystem, mark_existing_file) {
   const std::filesystem::path stub{std::filesystem::path{TEST_DIRECTORY} /
-                                   "deps_stub_1.json.deps"};
+                                   "build_test_utils.h"};
   sourcemeta::one::BuildAdapterFilesystem adapter{BINARY_DIRECTORY};
   const auto mark{adapter.mark(stub)};
   EXPECT_TRUE(mark.has_value());

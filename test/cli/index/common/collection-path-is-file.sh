@@ -31,15 +31,12 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./dependency-tree.metapack.deps
+./deps.txt
 ./explorer
 ./explorer/%
 ./explorer/%/directory.metapack
-./explorer/%/directory.metapack.deps
 ./explorer/%/search.metapack
-./explorer/%/search.metapack.deps
 ./routes.bin
-./routes.bin.deps
 ./version.json
 EOF
 
