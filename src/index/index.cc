@@ -15,7 +15,6 @@
 
 #include "explorer.h"
 #include "generators.h"
-#include "output.h"
 
 #include <algorithm>     // std::sort
 #include <cassert>       // assert
@@ -76,14 +75,14 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
 }
 
 template <typename Handler>
-static auto
-DISPATCH(const std::filesystem::path &destination,
-         const sourcemeta::one::Build::Dependencies &dependencies,
-         const typename Handler::Context &context, std::mutex &mutex,
-         const std::string_view title, const std::string_view prefix,
-         const std::string_view suffix, sourcemeta::one::Build &adapter,
-         sourcemeta::one::Output &output) -> bool {
-  const auto was_built{adapter.dispatch<typename Handler::Context>(
+static auto DISPATCH(const std::filesystem::path &destination,
+                     const sourcemeta::one::Build::Dependencies &dependencies,
+                     const typename Handler::Context &context,
+                     std::mutex &mutex, const std::string_view title,
+                     const std::string_view prefix,
+                     const std::string_view suffix,
+                     sourcemeta::one::Build &output) -> bool {
+  const auto was_built{output.dispatch<typename Handler::Context>(
       Handler::handler, destination, dependencies, context)};
   if (!was_built) {
     std::lock_guard<std::mutex> lock{mutex};
@@ -91,8 +90,6 @@ DISPATCH(const std::filesystem::path &destination,
               << "]\n";
   }
 
-  // We need to mark files regardless of whether they were generated or not
-  output.track(destination);
   return was_built;
 }
 
@@ -185,26 +182,17 @@ static auto index_main(const std::string_view &program,
   // (5) Prepare the output directory
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Output output{output_path};
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (6) Store a mark of the One version for target dependencies
-  /////////////////////////////////////////////////////////////////////////////
-
-  sourcemeta::one::Build adapter{output.path()};
+  sourcemeta::one::Build output{output_path};
 
   // We do this so that targets can be re-built if the One version changes
   const auto mark_version_path{output.path() / "version.json"};
   // Note we only write back if the content changed in order to not accidentally
   // bump up the file modified time
-  if (output.write_json_if_different(
-          mark_version_path,
-          sourcemeta::core::JSON{sourcemeta::one::version()})) {
-    adapter.refresh(mark_version_path);
-  };
+  output.write_json_if_different(
+      mark_version_path, sourcemeta::core::JSON{sourcemeta::one::version()});
 
   /////////////////////////////////////////////////////////////////////////////
-  // (7) Store the full configuration file for target dependencies
+  // (6) Store the full configuration file for target dependencies
   /////////////////////////////////////////////////////////////////////////////
 
   // For targets that depend on the contents of the configuration or on anything
@@ -212,21 +200,17 @@ static auto index_main(const std::string_view &program,
   const auto mark_configuration_path{output.path() / "configuration.json"};
   // Note we only write back if the content changed in order to not accidentally
   // bump up the file modified time
-  if (output.write_json_if_different(mark_configuration_path,
-                                     raw_configuration)) {
-    adapter.refresh(mark_configuration_path);
-  }
+  output.write_json_if_different(mark_configuration_path, raw_configuration);
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) Store the optional comment for informational purposes
+  // (7) Store the optional comment for informational purposes
   /////////////////////////////////////////////////////////////////////////////
 
   const auto comment_path{output.path() / "comment.json"};
-  if (app.contains("comment") &&
-      output.write_json_if_different(
-          comment_path,
-          sourcemeta::core::JSON{std::string{app.at("comment").at(0)}})) {
-    adapter.refresh(comment_path);
+  if (app.contains("comment")) {
+    output.write_json_if_different(
+        comment_path,
+        sourcemeta::core::JSON{std::string{app.at("comment").at(0)}});
   }
 
   PROFILE_END(profiling, "Startup");
@@ -238,7 +222,7 @@ static auto index_main(const std::string_view &program,
                              : std::thread::hardware_concurrency()};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) First pass to locate all of the schemas we will be indexing
+  // (8) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -283,7 +267,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Detect");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Resolve all detected schemas in parallel
+  // (9) Resolve all detected schemas in parallel
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver;
@@ -308,7 +292,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Resolve");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (11) Do a first analysis pass on the schemas and materialise them for
+  // (10) Do a first analysis pass on the schemas and materialise them for
   // further analysis. We do this so that we don't end up rebasing the same
   // schemas over and over again depending on the order of analysis later on
   /////////////////////////////////////////////////////////////////////////////
@@ -318,9 +302,9 @@ static auto index_main(const std::string_view &program,
       std::filesystem::relative(schemas_path, output.path())};
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
-      [&output, &schemas_path, &resolver, &mutex, &adapter,
-       &mark_configuration_path, &mark_version_path](
-          const auto &schema, const auto threads, const auto cursor) {
+      [&schemas_path, &resolver, &mutex, &output, &mark_configuration_path,
+       &mark_version_path](const auto &schema, const auto threads,
+                           const auto cursor) {
         print_progress(mutex, threads, "Ingesting", schema.first, cursor,
                        resolver.size());
         const auto destination{schemas_path / schema.second.relative_path /
@@ -331,7 +315,7 @@ static auto index_main(const std::string_view &program,
              sourcemeta::one::Build::dependency(mark_configuration_path),
              sourcemeta::one::Build::dependency(mark_version_path)},
             {schema.first, resolver}, mutex, "Ingesting", schema.first,
-            "materialise", adapter, output);
+            "materialise", output);
 
         // Mark the materialised schema in the resolver
         resolver.cache_path(schema.first, destination);
@@ -341,7 +325,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Ingest");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) Generate all the artifacts that purely depend on the schemas
+  // (11) Generate all the artifacts that purely depend on the schemas
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -353,7 +337,7 @@ static auto index_main(const std::string_view &program,
       std::filesystem::relative(explorer_path, output.path())};
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
-      [&output, &schemas_path, &explorer_path, &resolver, &mutex, &adapter,
+      [&schemas_path, &explorer_path, &resolver, &mutex, &output,
        &mark_configuration_path, &mark_version_path](
           const auto &schema, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Analysing", schema.first, cursor,
@@ -365,29 +349,25 @@ static auto index_main(const std::string_view &program,
             base_path / "positions.metapack",
             {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "positions", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "positions", output);
 
         DISPATCH<sourcemeta::one::GENERATE_FRAME_LOCATIONS>(
             base_path / "locations.metapack",
             {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "locations", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "locations", output);
 
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENCIES>(
             base_path / "dependencies.metapack",
             {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "dependencies", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "dependencies", output);
 
         DISPATCH<sourcemeta::one::GENERATE_STATS>(
             base_path / "stats.metapack",
             {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "stats", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "stats", output);
 
         DISPATCH<sourcemeta::one::GENERATE_HEALTH>(
             base_path / "health.metapack",
@@ -396,7 +376,7 @@ static auto index_main(const std::string_view &program,
                                                 "dependencies.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
             {std::ref(resolver), std::cref(schema.second.collection.get())},
-            mutex, "Analysing", schema.first, "health", adapter, output);
+            mutex, "Analysing", schema.first, "health", output);
 
         DISPATCH<sourcemeta::one::GENERATE_BUNDLE>(
             base_path / "bundle.metapack",
@@ -404,15 +384,13 @@ static auto index_main(const std::string_view &program,
              sourcemeta::one::Build::dependency(base_path /
                                                 "dependencies.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "bundle", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "bundle", output);
 
         DISPATCH<sourcemeta::one::GENERATE_EDITOR>(
             base_path / "editor.metapack",
             {sourcemeta::one::Build::dependency(base_path / "bundle.metapack"),
              sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "editor", adapter,
-            output);
+            resolver, mutex, "Analysing", schema.first, "editor", output);
 
         if (attribute_not_disabled(schema.second.collection.get(),
                                    "x-sourcemeta-one:evaluate")) {
@@ -422,14 +400,14 @@ static auto index_main(const std::string_view &program,
                                                   "bundle.metapack"),
                sourcemeta::one::Build::dependency(mark_version_path)},
               sourcemeta::blaze::Mode::Exhaustive, mutex, "Analysing",
-              schema.first, "blaze-exhaustive", adapter, output);
+              schema.first, "blaze-exhaustive", output);
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-fast.metapack",
               {sourcemeta::one::Build::dependency(base_path /
                                                   "bundle.metapack"),
                sourcemeta::one::Build::dependency(mark_version_path)},
               sourcemeta::blaze::Mode::FastValidation, mutex, "Analysing",
-              schema.first, "blaze-fast", adapter, output);
+              schema.first, "blaze-fast", output);
         }
 
         DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA>(
@@ -444,14 +422,14 @@ static auto index_main(const std::string_view &program,
              sourcemeta::one::Build::dependency(mark_version_path)},
             {resolver, schema.second.collection.get(),
              schema.second.relative_path},
-            mutex, "Analysing", schema.first, "metadata", adapter, output);
+            mutex, "Analysing", schema.first, "metadata", output);
       },
       concurrency, THREAD_STACK_SIZE);
 
   PROFILE_END(profiling, "Analyse");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (13) Scan the generated files so far to prepare for more complex targets
+  // (12) Scan the generated files so far to prepare for more complex targets
   /////////////////////////////////////////////////////////////////////////////
 
   // This is a pretty fast step that will be useful for us to properly declare
@@ -540,7 +518,7 @@ static auto index_main(const std::string_view &program,
   const auto dependency_tree_rebuilt{
       DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
           dependency_tree_path, dependencies, resolver, mutex, "Reviewing",
-          display_schemas_path.string(), "dependencies", adapter, output)};
+          display_schemas_path.string(), "dependencies", output)};
 
   // Determine which schemas' dependents actually changed by diffing
   // the old and new dependency trees per key. We keep new_dependency_tree
@@ -580,7 +558,7 @@ static auto index_main(const std::string_view &program,
                          "dependents.metapack"};
     if (affected_dependents.contains(schema.first) ||
         !std::filesystem::exists(dependents_path) ||
-        !adapter.has_dependencies(dependents_path)) {
+        !output.has_dependencies(dependents_path)) {
       rework_entries.push_back(
           {std::cref(schema.first), std::move(dependents_path)});
     } else {
@@ -594,12 +572,12 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Review");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (14) A further pass on the schemas after review
+  // (13) A further pass on the schemas after review
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::parallel_for_each(
       rework_entries.begin(), rework_entries.end(),
-      [&output, &rework_entries, &mutex, &adapter, &dependency_tree_path](
+      [&rework_entries, &mutex, &output, &dependency_tree_path](
           const auto &entry, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Reworking", entry.uri.get(), cursor,
                        rework_entries.size());
@@ -607,26 +585,26 @@ static auto index_main(const std::string_view &program,
             entry.dependents_path,
             {sourcemeta::one::Build::dependency(dependency_tree_path)},
             entry.uri.get(), mutex, "Reworking", entry.uri.get(), "dependents",
-            adapter, output);
+            output);
       },
       concurrency, THREAD_STACK_SIZE);
 
   PROFILE_END(profiling, "Rework");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (15) Generate the search index
+  // (14) Generate the search index
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing",
                  display_explorer_path.string(), 0, 100);
   DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
       explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
-      "Producing", display_explorer_path.string(), "search", adapter, output);
+      "Producing", display_explorer_path.string(), "search", output);
 
   PROFILE_END(profiling, "Search");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (16) Generate the JSON-based explorer
+  // (15) Generate the JSON-based explorer
   /////////////////////////////////////////////////////////////////////////////
 
   // Note that we can't parallelise this loop, as we need to do it bottom-up
@@ -650,8 +628,7 @@ static auto index_main(const std::string_view &program,
          .output = output,
          .explorer_path = explorer_path,
          .schemas_path = schemas_path},
-        mutex, "Producing", relative_path.string(), "directory", adapter,
-        output);
+        mutex, "Producing", relative_path.string(), "directory", output);
     local_summaries.pop_back();
     local_summaries.pop_back();
   }
@@ -659,14 +636,14 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Produce");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (17) Generate the HTML web interface
+  // (16) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
     sourcemeta::core::parallel_for_each(
         directories.begin(), directories.end(),
-        [&configuration, &output, &schemas_path, &explorer_path, &directories,
-         &summaries, &mutex, &adapter, &mark_configuration_path,
+        [&configuration, &schemas_path, &explorer_path, &directories,
+         &summaries, &mutex, &output, &mark_configuration_path,
          &mark_version_path](const auto &entry, const auto threads,
                              const auto cursor) {
           const auto relative_path{
@@ -683,14 +660,14 @@ static auto index_main(const std::string_view &program,
                  sourcemeta::one::Build::dependency(mark_configuration_path),
                  sourcemeta::one::Build::dependency(mark_version_path)},
                 configuration, mutex, "Rendering", relative_path.string(),
-                "index", adapter, output);
+                "index", output);
             DISPATCH<sourcemeta::one::GENERATE_WEB_NOT_FOUND>(
                 explorer_path / SENTINEL / "404.metapack",
                 {// We rely on the configuration for site metadata
                  sourcemeta::one::Build::dependency(mark_configuration_path),
                  sourcemeta::one::Build::dependency(mark_version_path)},
                 configuration, mutex, "Rendering", relative_path.string(),
-                "not-found", adapter, output);
+                "not-found", output);
           } else {
             DISPATCH<sourcemeta::one::GENERATE_WEB_DIRECTORY>(
                 explorer_path / relative_path / SENTINEL /
@@ -702,15 +679,15 @@ static auto index_main(const std::string_view &program,
                  sourcemeta::one::Build::dependency(mark_configuration_path),
                  sourcemeta::one::Build::dependency(mark_version_path)},
                 configuration, mutex, "Rendering", relative_path.string(),
-                "directory", adapter, output);
+                "directory", output);
           }
         },
         concurrency);
 
     sourcemeta::core::parallel_for_each(
         summaries.begin(), summaries.end(),
-        [&configuration, &output, &schemas_path, &explorer_path, &directories,
-         &summaries, &mutex, &adapter, &mark_configuration_path,
+        [&configuration, &schemas_path, &explorer_path, &directories,
+         &summaries, &mutex, &output, &mark_configuration_path,
          &mark_version_path](const auto &entry, const auto threads,
                              const auto cursor) {
           const auto relative_path{
@@ -734,7 +711,7 @@ static auto index_main(const std::string_view &program,
                sourcemeta::one::Build::dependency(mark_configuration_path),
                sourcemeta::one::Build::dependency(mark_version_path)},
               configuration, mutex, "Rendering", relative_path.string(),
-              "schema", adapter, output);
+              "schema", output);
         },
         concurrency);
   }
@@ -742,7 +719,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Render");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (18) Generate the pre computed routes
+  // (17) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
@@ -785,7 +762,7 @@ static auto index_main(const std::string_view &program,
       {sourcemeta::one::Build::dependency(mark_configuration_path),
        sourcemeta::one::Build::dependency(mark_version_path)},
       router, mutex, "Producing", display_routes_path.string(), "routes",
-      adapter, output);
+      output);
 
   PROFILE_END(profiling, "Routes");
 
@@ -793,15 +770,7 @@ static auto index_main(const std::string_view &program,
   // Finish generation
   /////////////////////////////////////////////////////////////////////////////
 
-  // TODO: Print the size of the output directory here
-
-  // TODO: This level of coupling means that the output and the adapter should
-  // be one
-  adapter.write_dependencies([&output](const auto &target) {
-    return !output.is_untracked_file(target);
-  });
-  output.track(output.path() / "deps.txt");
-  output.remove_unknown_files();
+  output.finish();
 
   PROFILE_END(profiling, "Cleanup");
 
