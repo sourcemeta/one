@@ -87,8 +87,6 @@ cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
-(skip) Reworking: https://sourcemeta.com/example/schemas/a [dependents]
-(skip) Reworking: https://sourcemeta.com/example/schemas/b [dependents]
 (skip) Rendering: . [not-found]
 (skip) Rendering: example/schemas/a [schema]
 (skip) Rendering: example/schemas/b [schema]

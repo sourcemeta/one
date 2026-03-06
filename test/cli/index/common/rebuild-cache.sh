@@ -50,7 +50,8 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 50%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (100%) Reviewing: schemas
 (100%) Reworking: https://sourcemeta.com/example/schemas/foo
 (  0%) Producing: explorer
@@ -86,11 +87,10 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
-( 50%) Reviewing: schemas
-(100%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (skip) Reviewing: schemas [dependencies]
-(100%) Reworking: https://sourcemeta.com/example/schemas/foo
-(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
+(100%) Reviewing: schemas
 (  0%) Producing: explorer
 (skip) Producing: explorer [search]
 ( 33%) Producing: example/schemas
@@ -129,10 +129,9 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 50%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/example/schemas/foo
-(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
 (  0%) Producing: explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example
@@ -157,10 +156,9 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 50%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/example/schemas/foo
-(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
 (  0%) Producing: explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example

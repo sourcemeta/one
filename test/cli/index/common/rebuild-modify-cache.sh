@@ -76,11 +76,10 @@ Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
-( 50%) Reviewing: schemas
-(100%) Reviewing: schemas
+( 33%) Reviewing: schemas
+( 66%) Reviewing: schemas
 (skip) Reviewing: schemas [dependencies]
-(100%) Reworking: https://sourcemeta.com/example/schemas/a
-(skip) Reworking: https://sourcemeta.com/example/schemas/a [dependents]
+(100%) Reviewing: schemas
 (  0%) Producing: explorer
 (skip) Producing: explorer [search]
 ( 33%) Producing: example/schemas
