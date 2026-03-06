@@ -132,6 +132,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 ( 50%) Reviewing: schemas
 (100%) Reviewing: schemas
 (100%) Reworking: https://sourcemeta.com/example/schemas/foo
+(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
 (  0%) Producing: explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example
@@ -159,6 +160,7 @@ Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 ( 50%) Reviewing: schemas
 (100%) Reviewing: schemas
 (100%) Reworking: https://sourcemeta.com/example/schemas/foo
+(skip) Reworking: https://sourcemeta.com/example/schemas/foo [dependents]
 (  0%) Producing: explorer
 ( 33%) Producing: example/schemas
 ( 66%) Producing: example

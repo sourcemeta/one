@@ -51,14 +51,31 @@ remove_threads_information() {
 # Run 1: index two schemas from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-# Run 2: add a third schema and re-index
+# Run 2: add a third schema (no $ref) and re-index.
+# The existing schemas' dependents and HTML should be cache hits
+# because the new schema does not affect the dependency tree.
 cat << 'EOF' > "$TMP/schemas/c.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/c"
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+remove_threads_information "$TMP/output.txt"
+
+grep '(skip) Reworking:' "$TMP/output.txt" | sort > "$TMP/rework_actual.txt"
+cat << 'EOF' | sort > "$TMP/rework_expected.txt"
+(skip) Reworking: https://sourcemeta.com/example/schemas/a [dependents]
+(skip) Reworking: https://sourcemeta.com/example/schemas/b [dependents]
+EOF
+diff "$TMP/rework_actual.txt" "$TMP/rework_expected.txt"
+
+grep '(skip) Rendering:.*\[schema\]' "$TMP/output.txt" | sort > "$TMP/render_actual.txt"
+cat << 'EOF' | sort > "$TMP/render_expected.txt"
+(skip) Rendering: example/schemas/a [schema]
+(skip) Rendering: example/schemas/b [schema]
+EOF
+diff "$TMP/render_actual.txt" "$TMP/render_expected.txt"
 
 # Run 3: re-index with no changes. All three schemas should be fully cached.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
