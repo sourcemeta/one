@@ -5,6 +5,8 @@
 #include <sourcemeta/one/build_export.h>
 #endif
 
+#include <sourcemeta/core/json.h>
+
 #include <algorithm>     // std::ranges::none_of
 #include <cassert>       // assert
 #include <cstdint>       // std::uint8_t
@@ -38,13 +40,14 @@ public:
 
   Build(const std::filesystem::path &output_root);
 
+  auto path() const -> const std::filesystem::path & { return this->root; }
+
   static auto dependency(std::filesystem::path node)
       -> std::pair<DependencyKind, std::filesystem::path>;
 
   [[nodiscard]] auto has_dependencies(const std::filesystem::path &path) const
       -> bool;
-  auto write_dependencies(
-      const std::function<bool(const std::filesystem::path &)> &filter) -> void;
+  auto finish() -> void;
   auto refresh(const std::filesystem::path &path) -> void;
   [[nodiscard]] auto mark(const std::filesystem::path &path)
       -> std::optional<mark_type>;
@@ -88,6 +91,7 @@ public:
                 return !dependency_mark.has_value() ||
                        dependency_mark.value() > destination_mark.value();
               })) {
+        this->track(destination);
         return false;
       }
     }
@@ -113,6 +117,7 @@ public:
     assert(destination.is_absolute());
     assert(std::filesystem::exists(destination));
     this->refresh(destination);
+    this->track(destination);
     const auto key{destination.lexically_relative(this->root).string()};
     {
       std::unique_lock lock{this->dependencies_mutex};
@@ -123,13 +128,31 @@ public:
     return true;
   }
 
+  // TODO: Continue refactoring and cleaning up these interfaces
+
+  auto track(const std::filesystem::path &path)
+      -> const std::filesystem::path &;
+  [[nodiscard]] auto is_untracked_file(const std::filesystem::path &path) const
+      -> bool;
+
+  // TODO: Turn into a proper DISPATCH on index.cc
+  auto output_write_json_if_different(const std::filesystem::path &path,
+                                      const sourcemeta::core::JSON &document)
+      -> void;
+
 private:
+  auto output_write_json(const std::filesystem::path &path,
+                         const sourcemeta::core::JSON &document)
+      -> const std::filesystem::path &;
+
   std::filesystem::path root;
   std::unordered_map<std::filesystem::path, mark_type> marks;
   std::shared_mutex mutex;
   std::unordered_map<std::string, Dependencies> dependencies_map;
   mutable std::shared_mutex dependencies_mutex;
   bool has_previous_run{false};
+  std::unordered_map<std::filesystem::path, bool> tracker;
+  mutable std::shared_mutex tracker_mutex;
 };
 
 } // namespace sourcemeta::one
