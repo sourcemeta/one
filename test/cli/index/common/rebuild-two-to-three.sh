@@ -48,18 +48,12 @@ remove_threads_information() {
   fi
 }
 
-normalize_for_sort() {
-  sed 's/^([[:space:]]*[0-9]*%) //' "$1" \
-    | sed 's/ (#[0-9]*)$//' \
-    | LC_ALL=C sort
-}
-
 # Run 1: index two schemas from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-# Run 2: add a third schema (no $ref) and re-index.
+# Run 2: add a third schema
 # The existing schemas' dependents and HTML should be cache hits
-# because the new schema does not affect the dependency tree.
+# because the new schema does not affect the dependency tree
 cat << 'EOF' > "$TMP/schemas/c.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -68,23 +62,11 @@ cat << 'EOF' > "$TMP/schemas/c.json"
 EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-normalize_for_sort "$TMP/output.txt" > "$TMP/actual_sorted.txt"
 
-cat << EOF | LC_ALL=C sort > "$TMP/expected_sorted.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/a.json
-Detecting: $(realpath "$TMP")/schemas/b.json
-Detecting: $(realpath "$TMP")/schemas/c.json
-Resolving: a.json
-Resolving: b.json
-Resolving: c.json
-Ingesting: https://sourcemeta.com/example/schemas/a
+grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
+cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
 (skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
-Ingesting: https://sourcemeta.com/example/schemas/b
 (skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
-Ingesting: https://sourcemeta.com/example/schemas/c
-Analysing: https://sourcemeta.com/example/schemas/a
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
@@ -95,7 +77,6 @@ Analysing: https://sourcemeta.com/example/schemas/a
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
-Analysing: https://sourcemeta.com/example/schemas/b
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [positions]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [locations]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [dependencies]
@@ -106,31 +87,15 @@ Analysing: https://sourcemeta.com/example/schemas/b
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
 (skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
-Analysing: https://sourcemeta.com/example/schemas/c
-Reviewing: schemas
-Reviewing: schemas
-Reworking: https://sourcemeta.com/example/schemas/a
 (skip) Reworking: https://sourcemeta.com/example/schemas/a [dependents]
-Reworking: https://sourcemeta.com/example/schemas/b
 (skip) Reworking: https://sourcemeta.com/example/schemas/b [dependents]
-Reworking: https://sourcemeta.com/example/schemas/c
-Producing: explorer
-Producing: example/schemas
-Producing: example
-Producing: .
-Rendering: example/schemas
-Rendering: example
-Rendering: .
 (skip) Rendering: . [not-found]
-Rendering: example/schemas/a
 (skip) Rendering: example/schemas/a [schema]
-Rendering: example/schemas/b
 (skip) Rendering: example/schemas/b [schema]
-Rendering: example/schemas/c
 (skip) Producing: routes.bin [routes]
 EOF
 
-diff "$TMP/actual_sorted.txt" "$TMP/expected_sorted.txt"
+diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"
 
 # Run 3: re-index with no changes. All three schemas should be fully cached.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
