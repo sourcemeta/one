@@ -48,6 +48,12 @@ remove_threads_information() {
   fi
 }
 
+normalize_for_sort() {
+  sed 's/^([[:space:]]*[0-9]*%) //' "$1" \
+    | sed 's/ (#[0-9]*)$//' \
+    | LC_ALL=C sort
+}
+
 # Run 1: index two schemas from scratch
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
@@ -62,20 +68,69 @@ cat << 'EOF' > "$TMP/schemas/c.json"
 EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+normalize_for_sort "$TMP/output.txt" > "$TMP/actual_sorted.txt"
 
-grep '(skip) Reworking:' "$TMP/output.txt" | sort > "$TMP/rework_actual.txt"
-cat << 'EOF' | sort > "$TMP/rework_expected.txt"
+cat << EOF | LC_ALL=C sort > "$TMP/expected_sorted.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas/a.json
+Detecting: $(realpath "$TMP")/schemas/b.json
+Detecting: $(realpath "$TMP")/schemas/c.json
+Resolving: a.json
+Resolving: b.json
+Resolving: c.json
+Ingesting: https://sourcemeta.com/example/schemas/a
+(skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
+Ingesting: https://sourcemeta.com/example/schemas/b
+(skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
+Ingesting: https://sourcemeta.com/example/schemas/c
+Analysing: https://sourcemeta.com/example/schemas/a
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
+Analysing: https://sourcemeta.com/example/schemas/b
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [positions]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [locations]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [dependencies]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [stats]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [health]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [bundle]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [editor]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
+(skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
+Analysing: https://sourcemeta.com/example/schemas/c
+Reviewing: schemas
+Reviewing: schemas
+Reworking: https://sourcemeta.com/example/schemas/a
 (skip) Reworking: https://sourcemeta.com/example/schemas/a [dependents]
+Reworking: https://sourcemeta.com/example/schemas/b
 (skip) Reworking: https://sourcemeta.com/example/schemas/b [dependents]
-EOF
-diff "$TMP/rework_actual.txt" "$TMP/rework_expected.txt"
-
-grep '(skip) Rendering:.*\[schema\]' "$TMP/output.txt" | sort > "$TMP/render_actual.txt"
-cat << 'EOF' | sort > "$TMP/render_expected.txt"
+Reworking: https://sourcemeta.com/example/schemas/c
+Producing: explorer
+Producing: example/schemas
+Producing: example
+Producing: .
+Rendering: example/schemas
+Rendering: example
+Rendering: .
+(skip) Rendering: . [not-found]
+Rendering: example/schemas/a
 (skip) Rendering: example/schemas/a [schema]
+Rendering: example/schemas/b
 (skip) Rendering: example/schemas/b [schema]
+Rendering: example/schemas/c
+(skip) Producing: routes.bin [routes]
 EOF
-diff "$TMP/render_actual.txt" "$TMP/render_expected.txt"
+
+diff "$TMP/actual_sorted.txt" "$TMP/expected_sorted.txt"
 
 # Run 3: re-index with no changes. All three schemas should be fully cached.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
