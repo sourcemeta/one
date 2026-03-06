@@ -68,30 +68,10 @@ EOF
 
 diff "$TMP/deps_actual.txt" "$TMP/deps_expected.txt"
 
-# Delete every .deps file
-rm "$TMP/output/dependency-tree.metapack.deps"
-rm "$TMP/output/explorer/%/404.metapack.deps"
-rm "$TMP/output/explorer/%/directory-html.metapack.deps"
-rm "$TMP/output/explorer/%/directory.metapack.deps"
-rm "$TMP/output/explorer/%/search.metapack.deps"
-rm "$TMP/output/explorer/example/%/directory-html.metapack.deps"
-rm "$TMP/output/explorer/example/%/directory.metapack.deps"
-rm "$TMP/output/explorer/example/schemas/%/directory-html.metapack.deps"
-rm "$TMP/output/explorer/example/schemas/%/directory.metapack.deps"
-rm "$TMP/output/explorer/example/schemas/a/%/schema-html.metapack.deps"
-rm "$TMP/output/explorer/example/schemas/a/%/schema.metapack.deps"
-rm "$TMP/output/routes.bin.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/blaze-exhaustive.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/blaze-fast.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/bundle.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/dependencies.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/dependents.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/editor.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/health.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/locations.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/positions.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/schema.metapack.deps"
-rm "$TMP/output/schemas/example/schemas/a/%/stats.metapack.deps"
+while IFS= read -r deps_file
+do
+  rm "$TMP/output/${deps_file#./}"
+done < "$TMP/deps_expected.txt"
 
 # Run 2: re-index. All .deps files should be restored.
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
