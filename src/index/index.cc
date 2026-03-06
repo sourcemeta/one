@@ -555,8 +555,10 @@ static auto index_main(const std::string_view &program,
   for (const auto &schema : resolver) {
     auto dependents_path{schemas_path / schema.second.relative_path / SENTINEL /
                          "dependents.metapack"};
+    const auto dependents_deps_path{dependents_path.string() + ".deps"};
     if (affected_dependents.contains(schema.first) ||
-        !std::filesystem::exists(dependents_path)) {
+        !std::filesystem::exists(dependents_path) ||
+        !std::filesystem::exists(dependents_deps_path)) {
       rework_entries.push_back(
           {std::cref(schema.first), std::move(dependents_path)});
     } else {
