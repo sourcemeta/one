@@ -3,6 +3,7 @@
 #include <sourcemeta/one/build.h>
 
 #include <cassert>
+#include <chrono> // std::chrono::seconds
 #include <string>
 
 #include "build_test_utils.h"
@@ -447,8 +448,12 @@ TEST(Build_e2e, persistence_invalidates_on_change) {
         [](const std::filesystem::path &) { return true; });
   }
 
-  // Modify the input between runs
+  // Modify the input between runs and ensure the timestamp is
+  // clearly newer, as some filesystems have second-level resolution
   write_uint64_t(input_path / "initial.txt", 100);
+  std::filesystem::last_write_time(
+      input_path / "initial.txt",
+      std::filesystem::file_time_type::clock::now() + std::chrono::seconds(10));
 
   // Second run: should cache miss because initial.txt changed
   {
