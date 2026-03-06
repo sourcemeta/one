@@ -611,7 +611,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Rework");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (15) Generate the JSON-based explorer
+  // (15) Generate the search index
   /////////////////////////////////////////////////////////////////////////////
 
   print_progress(mutex, concurrency, "Producing",
@@ -619,6 +619,12 @@ static auto index_main(const std::string_view &program,
   DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
       explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
       "Producing", display_explorer_path.string(), "search", adapter, output);
+
+  PROFILE_END(profiling, "Search");
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (16) Generate the JSON-based explorer
+  /////////////////////////////////////////////////////////////////////////////
 
   // Note that we can't parallelise this loop, as we need to do it bottom-up
   for (std::size_t cursor = 0; cursor < directories.size(); cursor++) {
@@ -650,7 +656,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Produce");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (16) Generate the HTML web interface
+  // (17) Generate the HTML web interface
   /////////////////////////////////////////////////////////////////////////////
 
   if (configuration.html.has_value()) {
@@ -733,7 +739,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Render");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (17) Generate the pre computed routes
+  // (18) Generate the pre computed routes
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::URITemplateRouter router;
