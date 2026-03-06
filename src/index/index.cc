@@ -29,6 +29,7 @@
 #include <optional>      // std::optional
 #include <string>        // std::string
 #include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
@@ -456,6 +457,9 @@ static auto index_main(const std::string_view &program,
   // The top-level is itself a directory
   directories.emplace_back(schemas_path);
   sourcemeta::one::BuildDependencies<std::filesystem::path> summaries;
+  std::unordered_map<std::string,
+                     sourcemeta::one::BuildDependencies<std::filesystem::path>>
+      directory_summaries;
   sourcemeta::one::BuildDependencies<std::filesystem::path> dependencies;
   if (std::filesystem::exists(schemas_path)) {
     for (const auto &entry :
@@ -476,12 +480,26 @@ static auto index_main(const std::string_view &program,
 
         assert(entry.path().is_absolute());
         directories.emplace_back(entry.path());
+        const auto child_directory_metapack{
+            explorer_path /
+            std::filesystem::relative(entry.path(), schemas_path) / SENTINEL /
+            "directory.metapack"};
+        directory_summaries[entry.path().parent_path().string()].emplace_back(
+            sourcemeta::one::BuildDependencyKind::Static,
+            child_directory_metapack);
       } else if (entry.is_regular_file() &&
                  entry.path().filename() == "schema.metapack" &&
                  entry.path().parent_path().filename() == SENTINEL) {
+        const auto explorer_summary_path{
+            explorer_path /
+            std::filesystem::relative(entry.path(), schemas_path)};
         summaries.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
-                               explorer_path / std::filesystem::relative(
-                                                   entry.path(), schemas_path));
+                               explorer_summary_path);
+        const auto containing_directory{
+            entry.path().parent_path().parent_path().parent_path().string()};
+        directory_summaries[containing_directory].emplace_back(
+            sourcemeta::one::BuildDependencyKind::Static,
+            explorer_summary_path);
         dependencies.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
                                   entry.path().parent_path() /
                                       "dependencies.metapack");
@@ -602,11 +620,6 @@ static auto index_main(const std::string_view &program,
       explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
       "Producing", display_explorer_path.string(), "search", adapter, output);
 
-  // Directory generation depends on the configuration for metadata
-  summaries.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
-                         mark_configuration_path);
-  summaries.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
-                         mark_version_path);
   // Note that we can't parallelise this loop, as we need to do it bottom-up
   for (std::size_t cursor = 0; cursor < directories.size(); cursor++) {
     const auto &entry{directories[cursor]};
@@ -616,12 +629,13 @@ static auto index_main(const std::string_view &program,
     const auto destination{
         (explorer_path / relative_path / SENTINEL / "directory.metapack")
             .lexically_normal()};
+    auto &local_summaries{directory_summaries[entry.string()]};
+    local_summaries.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+                                 mark_configuration_path);
+    local_summaries.emplace_back(sourcemeta::one::BuildDependencyKind::Static,
+                                 mark_version_path);
     DISPATCH<sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST>(
-        destination,
-        // If any of the entry summary files changes, by definition we need to
-        // re-compute. This is a good enough dependency we can use without
-        // having to manually scan the entire directory structure once more
-        summaries,
+        destination, local_summaries,
         {.directory = entry,
          .configuration = configuration,
          .output = output,
@@ -629,11 +643,9 @@ static auto index_main(const std::string_view &program,
          .schemas_path = schemas_path},
         mutex, "Producing", relative_path.string(), "directory", adapter,
         output);
+    local_summaries.pop_back();
+    local_summaries.pop_back();
   }
-
-  // Restore the summaries list as it was before
-  summaries.pop_back();
-  summaries.pop_back();
 
   PROFILE_END(profiling, "Produce");
 

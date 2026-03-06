@@ -46,7 +46,7 @@ s schemas/example/test/%/dependencies.metapack
 --- ./explorer/%/directory.metapack.deps
 d explorer/example/%/directory.metapack
 s configuration.json
-s explorer/example/test/%/schema.metapack
+s explorer/example/%/directory.metapack
 s version.json
 --- ./explorer/%/search.metapack.deps
 s explorer/example/test/%/schema.metapack
