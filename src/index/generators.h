@@ -39,12 +39,10 @@ namespace sourcemeta::one {
 struct GENERATE_MATERIALISED_SCHEMA {
   using Context = std::pair<std::string_view,
                             std::reference_wrapper<sourcemeta::one::Resolver>>;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path> &,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &data) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &data) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{data.second.get()(data.first)};
     assert(schema.has_value());
@@ -106,12 +104,10 @@ private:
 
 struct GENERATE_POINTER_POSITIONS {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
     sourcemeta::one::read_json(dependencies.front().second, std::ref(tracker));
@@ -128,13 +124,10 @@ struct GENERATE_POINTER_POSITIONS {
 
 struct GENERATE_FRAME_LOCATIONS {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &resolver) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
     const auto contents{sourcemeta::one::read_json(dependencies.front().second,
@@ -158,13 +151,10 @@ struct GENERATE_FRAME_LOCATIONS {
 
 struct GENERATE_DEPENDENCIES {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &resolver) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(dependencies.front().second)};
@@ -207,12 +197,10 @@ private:
 
 struct GENERATE_DEPENDENCY_TREE {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
     // Direct dependencies
@@ -272,12 +260,10 @@ struct GENERATE_DEPENDENCY_TREE {
 
 struct GENERATE_DEPENDENTS {
   using Context = sourcemeta::core::JSON::String;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &context) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(dependencies.front().second)};
@@ -309,13 +295,10 @@ struct GENERATE_HEALTH {
   using Context =
       std::pair<std::reference_wrapper<sourcemeta::one::Resolver>,
                 std::reference_wrapper<const sourcemeta::blaze::Configuration>>;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &context) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &context) -> void {
     const auto &resolver{context.first.get()};
     const auto &configuration{context.second.get()};
     const auto timestamp_start{std::chrono::steady_clock::now()};
@@ -373,11 +356,11 @@ private:
     std::unordered_set<std::string_view> custom_names;
   };
 
-  static auto
-  bundle_for(const sourcemeta::blaze::Configuration &configuration,
-             [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
-             [[maybe_unused]] const sourcemeta::one::BuildDynamicCallback<
-                 std::filesystem::path> &callback) -> CacheEntry & {
+  static auto bundle_for(
+      const sourcemeta::blaze::Configuration &configuration,
+      [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
+      [[maybe_unused]] const sourcemeta::one::Build::DynamicCallback &callback)
+      -> CacheEntry & {
     static std::mutex cache_mutex;
     static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
     const auto *key{static_cast<const void *>(&configuration)};
@@ -411,13 +394,10 @@ private:
 
 struct GENERATE_BUNDLE {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &resolver) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(dependencies.front().second)};
     sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
@@ -446,13 +426,10 @@ struct GENERATE_BUNDLE {
 
 struct GENERATE_EDITOR {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &resolver) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(dependencies.front().second)};
     sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
@@ -481,12 +458,10 @@ struct GENERATE_EDITOR {
 
 struct GENERATE_BLAZE_TEMPLATE {
   using Context = sourcemeta::blaze::Mode;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &mode) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &mode) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(dependencies.front().second)};
@@ -511,13 +486,10 @@ struct GENERATE_BLAZE_TEMPLATE {
 
 struct GENERATE_STATS {
   using Context = sourcemeta::one::Resolver;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &resolver) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{sourcemeta::one::read_json(dependencies.front().second)};
     std::map<sourcemeta::core::JSON::String,
@@ -556,11 +528,10 @@ struct GENERATE_STATS {
 
 struct GENERATE_URITEMPLATE_ROUTES {
   using Context = sourcemeta::core::URITemplateRouter;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path> &,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &router) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &router) -> void {
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::core::URITemplateRouterView::save(router, destination);
   }

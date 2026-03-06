@@ -8,7 +8,6 @@
 
 #include <sourcemeta/core/jsonschema.h>
 
-#include <filesystem>    // std::filesystem
 #include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
 
@@ -19,8 +18,7 @@ auto load_custom_lint_rules(
     std::unordered_set<std::string_view> &custom_names,
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
-    const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-        &callback) -> void;
+    const sourcemeta::one::Build::DynamicCallback &callback) -> void;
 
 } // namespace sourcemeta::one
 

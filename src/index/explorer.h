@@ -110,13 +110,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       std::reference_wrapper<const sourcemeta::one::Resolver>,
       std::reference_wrapper<const sourcemeta::one::Configuration::Collection>,
       std::filesystem::path>;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &context) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{
         sourcemeta::one::read_json_with_metadata(dependencies.front().second)};
@@ -220,12 +217,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
   using Context = std::nullptr_t;
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path>
-              &dependencies,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
-          const Context &) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &dependencies,
+                      const sourcemeta::one::Build::DynamicCallback &,
+                      const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
     result.reserve(dependencies.size());
@@ -293,12 +288,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     const std::filesystem::path &schemas_path;
   };
 
-  static auto
-  handler(const std::filesystem::path &destination,
-          const sourcemeta::one::BuildDependencies<std::filesystem::path> &,
-          const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-              &callback,
-          const Context &context) -> void {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::Build::Dependencies &,
+                      const sourcemeta::one::Build::DynamicCallback &callback,
+                      const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     assert(
         context.directory.string().starts_with(context.schemas_path.string()));
