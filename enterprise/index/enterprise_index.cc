@@ -14,8 +14,7 @@ auto load_custom_lint_rules(
     std::unordered_set<std::string_view> &custom_names,
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
-    const sourcemeta::one::BuildDynamicCallback<std::filesystem::path>
-        &callback) -> void {
+    const sourcemeta::one::Build::DynamicCallback &callback) -> void {
   const auto default_dialect{
       configuration.default_dialect.value_or(std::string{})};
   for (const auto &rule_path : configuration.lint.rules) {

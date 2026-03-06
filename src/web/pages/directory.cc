@@ -13,9 +13,8 @@ namespace sourcemeta::one {
 
 auto GENERATE_WEB_DIRECTORY::handler(
     const std::filesystem::path &destination,
-    const sourcemeta::one::BuildDependencies<std::filesystem::path>
-        &dependencies,
-    const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
+    const sourcemeta::one::Build::Dependencies &dependencies,
+    const sourcemeta::one::Build::DynamicCallback &,
     const Context &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 

@@ -14,8 +14,8 @@ namespace sourcemeta::one {
 
 auto GENERATE_WEB_NOT_FOUND::handler(
     const std::filesystem::path &destination,
-    const sourcemeta::one::BuildDependencies<std::filesystem::path> &,
-    const sourcemeta::one::BuildDynamicCallback<std::filesystem::path> &,
+    const sourcemeta::one::Build::Dependencies &,
+    const sourcemeta::one::Build::DynamicCallback &,
     const Context &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 

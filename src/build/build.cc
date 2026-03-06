@@ -1,6 +1,4 @@
-#include <sourcemeta/one/build_adapter_filesystem.h>
-
-#include <sourcemeta/core/io.h>
+#include <sourcemeta/one/build.h>
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::nanoseconds, std::chrono::duration_cast
@@ -14,8 +12,12 @@ static constexpr std::string_view DEPENDENCIES_FILE{"deps.txt"};
 
 namespace sourcemeta::one {
 
-BuildAdapterFilesystem::BuildAdapterFilesystem(
-    const std::filesystem::path &output_root)
+auto Build::dependency(std::filesystem::path node)
+    -> std::pair<DependencyKind, std::filesystem::path> {
+  return {DependencyKind::Static, std::move(node)};
+}
+
+Build::Build(const std::filesystem::path &output_root)
     : root{std::filesystem::canonical(output_root)} {
   const auto deps_path{this->root / DEPENDENCIES_FILE};
   if (!std::filesystem::exists(deps_path)) {
@@ -32,7 +34,7 @@ BuildAdapterFilesystem::BuildAdapterFilesystem(
                          std::istreambuf_iterator<char>()};
 
     std::string current_key;
-    BuildDependencies<node_type> current_deps;
+    Build::Dependencies current_deps;
     std::size_t position{0};
 
     while (position < contents.size()) {
@@ -62,12 +64,12 @@ BuildAdapterFilesystem::BuildAdapterFilesystem(
           break;
         case 's':
           current_deps.emplace_back(
-              BuildDependencyKind::Static,
+              Build::DependencyKind::Static,
               (this->root / std::string{value}).lexically_normal());
           break;
         case 'd':
           current_deps.emplace_back(
-              BuildDependencyKind::Dynamic,
+              Build::DependencyKind::Dynamic,
               (this->root / std::string{value}).lexically_normal());
           break;
         case 'm': {
@@ -104,33 +106,16 @@ BuildAdapterFilesystem::BuildAdapterFilesystem(
   }
 }
 
-auto BuildAdapterFilesystem::read_dependencies(const node_type &path) const
-    -> std::optional<BuildDependencies<node_type>> {
+auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
   assert(path.is_absolute());
   const auto key{path.lexically_relative(this->root).string()};
   std::shared_lock lock{this->dependencies_mutex};
   const auto match{this->dependencies_map.find(key)};
-  if (match == this->dependencies_map.end() || match->second.empty()) {
-    return std::nullopt;
-  }
-
-  return match->second;
+  return match != this->dependencies_map.end() && !match->second.empty();
 }
 
-auto BuildAdapterFilesystem::write_dependencies(
-    const node_type &path, const BuildDependencies<node_type> &dependencies)
-    -> void {
-  assert(path.is_absolute());
-  assert(std::filesystem::exists(path));
-  sourcemeta::core::flush(path);
-  this->refresh(path);
-  const auto key{path.lexically_relative(this->root).string()};
-  std::unique_lock lock{this->dependencies_mutex};
-  this->dependencies_map.insert_or_assign(key, dependencies);
-}
-
-auto BuildAdapterFilesystem::flush_dependencies(
-    const std::function<bool(const node_type &)> &filter) -> void {
+auto Build::write_dependencies(
+    const std::function<bool(const std::filesystem::path &)> &filter) -> void {
   const auto deps_path{this->root / DEPENDENCIES_FILE};
   std::ofstream stream{deps_path};
   assert(!stream.fail());
@@ -143,7 +128,7 @@ auto BuildAdapterFilesystem::flush_dependencies(
     stream << "t " << entry.first << '\n';
     for (const auto &dependency : entry.second) {
       const char kind_char{
-          dependency.first == BuildDependencyKind::Dynamic ? 'd' : 's'};
+          dependency.first == Build::DependencyKind::Dynamic ? 'd' : 's'};
       const auto relative{dependency.second.lexically_relative(this->root)};
       if (!relative.empty() && *relative.begin() != "..") {
         stream << kind_char << ' ' << relative.string() << '\n';
@@ -169,7 +154,7 @@ auto BuildAdapterFilesystem::flush_dependencies(
   stream.close();
 }
 
-auto BuildAdapterFilesystem::refresh(const node_type &path) -> void {
+auto Build::refresh(const std::filesystem::path &path) -> void {
   // We prefer our own computed marks so that we don't have to rely
   // too much on file-system specific non-sense
   const auto value{std::filesystem::file_time_type::clock::now()};
@@ -178,7 +163,7 @@ auto BuildAdapterFilesystem::refresh(const node_type &path) -> void {
   this->marks.insert_or_assign(path, value);
 }
 
-auto BuildAdapterFilesystem::mark(const node_type &path)
+auto Build::mark(const std::filesystem::path &path)
     -> std::optional<mark_type> {
   assert(path.is_absolute());
 
@@ -193,7 +178,7 @@ auto BuildAdapterFilesystem::mark(const node_type &path)
   }
 
   // Output files should always have their marks cached
-  // Only input files  or new output files are not
+  // Only input files or new output files are not
   assert(!this->has_previous_run ||
          !path.string().starts_with(this->root.string()) ||
          !std::filesystem::exists(path));
@@ -207,12 +192,6 @@ auto BuildAdapterFilesystem::mark(const node_type &path)
   } catch (const std::filesystem::filesystem_error &) {
     return std::nullopt;
   }
-}
-
-auto BuildAdapterFilesystem::is_newer_than(const mark_type left,
-                                           const mark_type right) const
-    -> bool {
-  return left > right;
 }
 
 } // namespace sourcemeta::one
