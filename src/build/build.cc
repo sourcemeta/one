@@ -120,6 +120,7 @@ auto Build::write_dependencies(
   std::ofstream stream{deps_path};
   assert(!stream.fail());
 
+  std::shared_lock dependencies_lock{this->dependencies_mutex};
   for (const auto &entry : this->dependencies_map) {
     if (!filter(this->root / entry.first)) {
       continue;
@@ -138,6 +139,9 @@ auto Build::write_dependencies(
     }
   }
 
+  dependencies_lock.unlock();
+
+  std::shared_lock marks_lock{this->mutex};
   for (const auto &entry : this->marks) {
     const auto relative{entry.first.lexically_relative(this->root)};
     if (!relative.empty() && *relative.begin() != "..") {
@@ -179,9 +183,9 @@ auto Build::mark(const std::filesystem::path &path)
 
   // Output files should always have their marks cached
   // Only input files or new output files are not
-  assert(!this->has_previous_run ||
-         !path.string().starts_with(this->root.string()) ||
-         !std::filesystem::exists(path));
+  const auto relative{path.lexically_relative(this->root)};
+  assert(!this->has_previous_run || relative.empty() ||
+         *relative.begin() == ".." || !std::filesystem::exists(path));
 
   try {
     const auto value{std::filesystem::last_write_time(path)};

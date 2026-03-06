@@ -74,10 +74,11 @@ static auto handler_sum_with_dynamic(
 }
 
 TEST(Build_e2e, simple_cache_miss_hit) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "simple_cache_miss_hit"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "initial.txt", 8);
   EXPECT_EQ(read_uint64_t(base_path / "initial.txt"), 8);
   build.refresh(base_path / "initial.txt");
@@ -131,10 +132,11 @@ TEST(Build_e2e, simple_cache_miss_hit) {
 }
 
 TEST(Build_e2e, dynamic_dependency) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "dynamic_dependency"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "initial.txt", 8);
   EXPECT_EQ(read_uint64_t(base_path / "initial.txt"), 8);
   build.refresh(base_path / "initial.txt");
@@ -156,10 +158,11 @@ TEST(Build_e2e, dynamic_dependency) {
 }
 
 TEST(Build_e2e, missing_dynamic_dependency) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "missing_dynamic_dependency"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "initial.txt", 8);
   EXPECT_EQ(read_uint64_t(base_path / "initial.txt"), 8);
   build.refresh(base_path / "initial.txt");
@@ -181,10 +184,11 @@ TEST(Build_e2e, missing_dynamic_dependency) {
 }
 
 TEST(Build_e2e, new_dependency_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "new_dependency_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_a.txt", 10);
   build.refresh(base_path / "dep_a.txt");
 
@@ -215,10 +219,11 @@ TEST(Build_e2e, new_dependency_invalidates) {
 }
 
 TEST(Build_e2e, removed_make_dependency_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "removed_make_dependency_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_a.txt", 10);
   build.refresh(base_path / "dep_a.txt");
   write_uint64_t(base_path / "dep_b.txt", 20);
@@ -251,10 +256,11 @@ TEST(Build_e2e, removed_make_dependency_invalidates) {
 }
 
 TEST(Build_e2e, remove_all_static_dependencies_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "remove_all_static_deps_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_a.txt", 10);
   build.refresh(base_path / "dep_a.txt");
 
@@ -280,10 +286,11 @@ TEST(Build_e2e, remove_all_static_dependencies_invalidates) {
 }
 
 TEST(Build_e2e, replaced_make_dependency_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "replaced_make_dependency_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_a.txt", 10);
   build.refresh(base_path / "dep_a.txt");
   write_uint64_t(base_path / "dep_b.txt", 20);
@@ -312,10 +319,11 @@ TEST(Build_e2e, replaced_make_dependency_invalidates) {
 }
 
 TEST(Build_e2e, reordered_static_dependencies_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "reordered_static_deps_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_a.txt", 10);
   build.refresh(base_path / "dep_a.txt");
   write_uint64_t(base_path / "dep_b.txt", 20);
@@ -350,10 +358,11 @@ TEST(Build_e2e, reordered_static_dependencies_invalidates) {
 }
 
 TEST(Build_e2e, dynamic_deps_do_not_interfere_with_static_comparison) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
-
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "dynamic_no_interfere_static"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_static.txt", 10);
   build.refresh(base_path / "dep_static.txt");
   write_uint64_t(base_path / "dep_dynamic.txt", 5);
@@ -376,11 +385,127 @@ TEST(Build_e2e, dynamic_deps_do_not_interfere_with_static_comparison) {
   EXPECT_EQ(read_uint64_t(base_path / "target.txt"), 15);
 }
 
-TEST(Build_e2e, dynamic_dependency_stale_invalidates) {
-  sourcemeta::one::Build build{BINARY_DIRECTORY};
+TEST(Build_e2e, persistence_across_runs) {
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "persistence_across_runs"};
+  std::filesystem::remove_all(base_path);
+  const auto output_path{base_path / "output"};
+  const auto input_path{base_path / "input"};
+  std::filesystem::create_directories(output_path);
+  std::filesystem::create_directories(input_path);
+  write_uint64_t(input_path / "initial.txt", 8);
 
+  // First run: build and write dependencies
+  {
+    sourcemeta::one::Build build{output_path};
+    build.refresh(input_path / "initial.txt");
+
+    const auto result = build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "first.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+
+    build.write_dependencies(
+        [](const std::filesystem::path &) { return true; });
+  }
+
+  // Second run: new Build instance reads deps.txt, should cache hit
+  {
+    sourcemeta::one::Build build{output_path};
+
+    const auto result = build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "first.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+  }
+}
+
+TEST(Build_e2e, persistence_invalidates_on_change) {
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "persistence_invalidates_on_change"};
+  std::filesystem::remove_all(base_path);
+  const auto output_path{base_path / "output"};
+  const auto input_path{base_path / "input"};
+  std::filesystem::create_directories(output_path);
+  std::filesystem::create_directories(input_path);
+  write_uint64_t(input_path / "initial.txt", 8);
+
+  // First run
+  {
+    sourcemeta::one::Build build{output_path};
+    build.refresh(input_path / "initial.txt");
+
+    const auto result = build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "first.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+
+    build.write_dependencies(
+        [](const std::filesystem::path &) { return true; });
+  }
+
+  // Modify the input between runs
+  write_uint64_t(input_path / "initial.txt", 100);
+
+  // Second run: should cache miss because initial.txt changed
+  {
+    sourcemeta::one::Build build{output_path};
+
+    const auto result = build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "first.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 200);
+  }
+}
+
+TEST(Build_e2e, persistence_filtered_entry_not_restored) {
+  const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
+                       "persistence_filtered"};
+  std::filesystem::remove_all(base_path);
+  const auto output_path{base_path / "output"};
+  const auto input_path{base_path / "input"};
+  std::filesystem::create_directories(output_path);
+  std::filesystem::create_directories(input_path);
+  write_uint64_t(input_path / "initial.txt", 8);
+
+  // First run: build two targets, filter one out during write
+  {
+    sourcemeta::one::Build build{output_path};
+    build.refresh(input_path / "initial.txt");
+
+    build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "kept.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+
+    build.dispatch<std::uint64_t>(
+        handler_multiply, output_path / "dropped.txt",
+        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 3);
+
+    const auto kept_path{(output_path / "kept.txt").lexically_normal()};
+    build.write_dependencies([&kept_path](const std::filesystem::path &path) {
+      return path == kept_path;
+    });
+  }
+
+  // Second run: kept should be cached, dropped should not
+  {
+    sourcemeta::one::Build build{output_path};
+
+    EXPECT_TRUE(build.has_dependencies(output_path / "kept.txt"));
+    EXPECT_FALSE(build.has_dependencies(output_path / "dropped.txt"));
+  }
+}
+
+TEST(Build_e2e, dynamic_dependency_stale_invalidates) {
   const auto base_path{std::filesystem::path{BINARY_DIRECTORY} /
                        "dynamic_dep_stale_invalidates"};
+  std::filesystem::remove_all(base_path);
+
+  sourcemeta::one::Build build{BINARY_DIRECTORY};
   write_uint64_t(base_path / "dep_static.txt", 10);
   build.refresh(base_path / "dep_static.txt");
   write_uint64_t(base_path / "dep_dynamic.txt", 5);
