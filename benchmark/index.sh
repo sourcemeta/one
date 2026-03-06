@@ -28,6 +28,20 @@ generate_schema() {
 EOF
 }
 
+generate_schema_with_ref() {
+  cat << EOF > "$TMP/schemas/$1.json"
+{
+  "\$schema": "http://json-schema.org/draft-07/schema#",
+  "\$id": "https://example.com/$1",
+  "properties": {
+    "foo": {
+      "\$ref": "https://example.com/$2"
+    }
+  }
+}
+EOF
+}
+
 measure_add_one() {
   generate_schema "$1"
   START="$(nanoseconds)"
@@ -71,9 +85,13 @@ done
 echo "Reindexing outside measurements..." >&2
 "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
-# Measure adding one schema to a 100-schema registry
+# Measure adding one schema (with a $ref) to a 100-schema registry
 echo "Measuring: add one schema (100 existing)..." >&2
-RESULT_100_TO_101="$(measure_add_one "schema-100")"
+generate_schema_with_ref "schema-100" "schema-0"
+START="$(nanoseconds)"
+"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
+END="$(nanoseconds)"
+RESULT_100_TO_101="$(( (END - START) / 1000000 ))"
 echo "  Result: ${RESULT_100_TO_101}ms" >&2
 
 # Fill up to 1000 schemas
@@ -87,9 +105,13 @@ done
 echo "Reindexing outside measurements..." >&2
 "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
-# Measure adding one schema to a 1000-schema registry
+# Measure adding one schema (with a $ref) to a 1000-schema registry
 echo "Measuring: add one schema (1000 existing)..." >&2
-RESULT_1000_TO_1001="$(measure_add_one "schema-1000")"
+generate_schema_with_ref "schema-1000" "schema-0"
+START="$(nanoseconds)"
+"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
+END="$(nanoseconds)"
+RESULT_1000_TO_1001="$(( (END - START) / 1000000 ))"
 echo "  Result: ${RESULT_1000_TO_1001}ms" >&2
 
 cat << EOF
