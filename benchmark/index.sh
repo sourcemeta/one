@@ -42,8 +42,7 @@ generate_schema_with_ref() {
 EOF
 }
 
-measure_add_one() {
-  generate_schema "$1"
+measure() {
   START="$(nanoseconds)"
   "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
   END="$(nanoseconds)"
@@ -71,8 +70,14 @@ mkdir "$TMP/schemas"
 
 # Measure adding one schema to an empty registry
 echo "Measuring: add one schema (0 existing)..." >&2
-RESULT_0_TO_1="$(measure_add_one "schema-0")"
+generate_schema "schema-0"
+RESULT_0_TO_1="$(measure)"
 echo "  Result: ${RESULT_0_TO_1}ms" >&2
+
+# Measure a fully cached rebuild (nothing changed, 1 schema)
+echo "Measuring: cached rebuild (1 existing)..." >&2
+RESULT_CACHED_1="$(measure)"
+echo "  Result: ${RESULT_CACHED_1}ms" >&2
 
 # Fill up to 100 schemas
 echo "Filling registry to 100 schemas..." >&2
@@ -88,11 +93,13 @@ echo "Reindexing outside measurements..." >&2
 # Measure adding one schema (with a $ref) to a 100-schema registry
 echo "Measuring: add one schema (100 existing)..." >&2
 generate_schema_with_ref "schema-100" "schema-0"
-START="$(nanoseconds)"
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
-END="$(nanoseconds)"
-RESULT_100_TO_101="$(( (END - START) / 1000000 ))"
+RESULT_100_TO_101="$(measure)"
 echo "  Result: ${RESULT_100_TO_101}ms" >&2
+
+# Measure a fully cached rebuild (nothing changed, 101 schemas)
+echo "Measuring: cached rebuild (101 existing)..." >&2
+RESULT_CACHED_101="$(measure)"
+echo "  Result: ${RESULT_CACHED_101}ms" >&2
 
 # Fill up to 1000 schemas
 echo "Filling registry to 1000 schemas..." >&2
@@ -108,11 +115,13 @@ echo "Reindexing outside measurements..." >&2
 # Measure adding one schema (with a $ref) to a 1000-schema registry
 echo "Measuring: add one schema (1000 existing)..." >&2
 generate_schema_with_ref "schema-1000" "schema-0"
-START="$(nanoseconds)"
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
-END="$(nanoseconds)"
-RESULT_1000_TO_1001="$(( (END - START) / 1000000 ))"
+RESULT_1000_TO_1001="$(measure)"
 echo "  Result: ${RESULT_1000_TO_1001}ms" >&2
+
+# Measure a fully cached rebuild (nothing changed, 1001 schemas)
+echo "Measuring: cached rebuild (1001 existing)..." >&2
+RESULT_CACHED_1001="$(measure)"
+echo "  Result: ${RESULT_CACHED_1001}ms" >&2
 
 cat << EOF
 [
@@ -122,14 +131,29 @@ cat << EOF
     "value": $RESULT_0_TO_1
   },
   {
+    "name": "Cached rebuild (1 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_1
+  },
+  {
     "name": "Add one schema (100 existing)",
     "unit": "ms",
     "value": $RESULT_100_TO_101
   },
   {
+    "name": "Cached rebuild (101 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_101
+  },
+  {
     "name": "Add one schema (1000 existing)",
     "unit": "ms",
     "value": $RESULT_1000_TO_1001
+  },
+  {
+    "name": "Cached rebuild (1001 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_1001
   }
 ]
 EOF
