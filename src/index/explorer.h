@@ -10,23 +10,25 @@
 
 #include <sourcemeta/one/build.h>
 
-#include <algorithm>  // std::sort
-#include <cassert>    // assert
-#include <cmath>      // std::lround
-#include <filesystem> // std::filesystem
-#include <numeric>    // std::accumulate
-#include <optional>   // std::optional
-#include <regex>      // std::regex, std::regex_search, std::smatch
-#include <string>     // std::string, std::stoul
-#include <tuple>      // std::tuple, std::make_tuple
-#include <utility>    // std::move
-#include <vector>     // std::vector
+#include <algorithm>   // std::sort
+#include <cassert>     // assert
+#include <chrono>      // std::chrono
+#include <cmath>       // std::lround
+#include <filesystem>  // std::filesystem
+#include <numeric>     // std::accumulate
+#include <optional>    // std::optional
+#include <regex>       // std::regex, std::regex_search, std::smatch
+#include <string>      // std::string, std::stoul
+#include <string_view> // std::string_view
+#include <tuple>       // std::tuple, std::make_tuple
+#include <utility>     // std::move
+#include <vector>      // std::vector
 
 // TODO: We need a SemVer module in Core
 
 static auto try_parse_version(const sourcemeta::core::JSON::String &name)
     -> std::optional<std::tuple<unsigned, unsigned, unsigned>> {
-  std::regex version_regex(R"(v?(\d+)\.(\d+)\.(\d+))");
+  static const std::regex version_regex(R"(v?(\d+)\.(\d+)\.(\d+))");
   std::smatch match;
   if (std::regex_search(name, match, version_regex)) {
     return std::make_tuple(std::stoul(match[1]), std::stoul(match[2]),
@@ -349,6 +351,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           schema_nav_path /= "schema.metapack";
 
           auto nav{sourcemeta::one::read_json(schema_nav_path)};
+
           entry_json.merge(nav.as_object());
           assert(!entry_json.defines("entries"));
           // No need to show these on children
@@ -367,27 +370,50 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
       }
     }
+    // Pre-compute sort keys once per entry to avoid calling
+    // try_parse_version O(N log N) times inside the comparator
+    struct SortKey {
+      std::string_view type;
+      std::optional<std::tuple<unsigned, unsigned, unsigned>> version;
+      std::string_view name;
+    };
 
-    std::sort(
-        entries.as_array().begin(), entries.as_array().end(),
-        [](const auto &left, const auto &right) {
-          if (left.at("type") == right.at("type")) {
-            const auto &left_name{left.at("name")};
-            const auto &right_name{right.at("name")};
+    std::vector<SortKey> sort_keys;
+    sort_keys.reserve(entries.size());
+    for (const auto &entry : entries.as_array()) {
+      const auto &type{entry.at("type").to_string()};
+      const auto &name{entry.at("name").to_string()};
+      sort_keys.push_back({type, try_parse_version(name), name});
+    }
 
-            // If the schema/directories represent SemVer versions,
-            // attempt to parse them as such and provide better sorting
-            const auto left_version{try_parse_version(left_name.to_string())};
-            const auto right_version{try_parse_version(right_name.to_string())};
-            if (left_version.has_value() && right_version.has_value()) {
-              return left_version.value() > right_version.value();
-            }
+    // Sort indices so we can reorder the JSON array accordingly
+    std::vector<std::size_t> indices(entries.size());
+    for (std::size_t index = 0; index < indices.size(); index++) {
+      indices[index] = index;
+    }
 
-            return left_name > right_name;
-          }
+    std::sort(indices.begin(), indices.end(),
+              [&sort_keys](const auto left, const auto right) {
+                const auto &left_key{sort_keys[left]};
+                const auto &right_key{sort_keys[right]};
+                if (left_key.type == right_key.type) {
+                  if (left_key.version.has_value() &&
+                      right_key.version.has_value()) {
+                    return left_key.version.value() > right_key.version.value();
+                  }
 
-          return left.at("type") < right.at("type");
-        });
+                  return left_key.name > right_key.name;
+                }
+
+                return left_key.type < right_key.type;
+              });
+
+    auto sorted_entries{sourcemeta::core::JSON::make_array()};
+    for (const auto index : indices) {
+      sorted_entries.push_back(entries.at(index));
+    }
+
+    entries = std::move(sorted_entries);
 
     auto meta{sourcemeta::core::JSON::make_object()};
 
