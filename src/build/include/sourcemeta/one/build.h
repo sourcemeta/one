@@ -57,9 +57,9 @@ public:
                 const std::filesystem::path &destination,
                 const Dependencies &dependencies, const Context &context)
       -> bool {
-    const auto destination_key{this->key(destination)};
+    const auto &destination_string{destination.native()};
     std::shared_lock lock{this->mutex};
-    const auto cached_match{this->entries.find(destination_key)};
+    const auto cached_match{this->entries.find(destination_string)};
     if (cached_match != this->entries.end()) {
       const auto &entry{cached_match->second};
       if (entry.file_mark.has_value() && !entry.dependencies.empty()) {
@@ -120,7 +120,7 @@ public:
     this->track(destination);
     {
       std::unique_lock write_lock{this->mutex};
-      this->entries[destination_key].dependencies =
+      this->entries[destination_string].dependencies =
           std::move(output_dependencies);
     }
 
@@ -135,7 +135,6 @@ public:
                                const sourcemeta::core::JSON &document) -> void;
 
 private:
-  auto key(const std::filesystem::path &path) const -> std::string;
   [[nodiscard]] auto mark_locked(const std::filesystem::path &path) const
       -> std::optional<mark_type>;
   auto output_write_json(const std::filesystem::path &path,
@@ -148,6 +147,7 @@ private:
   };
 
   std::filesystem::path root;
+  std::string root_string;
   std::unordered_map<std::string, Entry> entries;
   mutable std::shared_mutex mutex;
   bool has_previous_run{false};
