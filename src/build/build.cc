@@ -1,5 +1,6 @@
 #include <sourcemeta/one/build.h>
 
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jsonschema.h>
 
 #include <algorithm> // std::ranges::none_of
@@ -7,7 +8,7 @@
 #include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint>   // std::int64_t, std::uint32_t, std::uint8_t
 #include <cstring>   // std::memcpy
-#include <fstream>   // std::ofstream, std::ifstream
+#include <fstream>   // std::ofstream
 
 #include <mutex>  // std::unique_lock
 #include <string> // std::string
@@ -53,18 +54,18 @@ static auto append_string(std::string &buffer, const std::string &value)
   buffer.append(value);
 }
 
-static auto read_uint32(const std::string &buffer, std::size_t &offset)
+static auto read_uint32(const std::uint8_t *data, std::size_t &offset)
     -> std::uint32_t {
   std::uint32_t value;
-  std::memcpy(&value, buffer.data() + offset, sizeof(value));
+  std::memcpy(&value, data + offset, sizeof(value));
   offset += sizeof(value);
   return value;
 }
 
-static auto read_int64(const std::string &buffer, std::size_t &offset)
+static auto read_int64(const std::uint8_t *data, std::size_t &offset)
     -> std::int64_t {
   std::int64_t value;
-  std::memcpy(&value, buffer.data() + offset, sizeof(value));
+  std::memcpy(&value, data + offset, sizeof(value));
   offset += sizeof(value);
   return value;
 }
@@ -89,62 +90,59 @@ Build::Build(const std::filesystem::path &output_root)
   }
 
   try {
-    std::ifstream stream{dependencies_path, std::ios::binary};
-    if (!stream.is_open()) {
-      return;
-    }
+    const sourcemeta::core::FileView view{dependencies_path};
+    const auto *data{view.as<std::uint8_t>()};
+    const auto file_size{view.size()};
 
-    std::string contents{std::istreambuf_iterator<char>(stream),
-                         std::istreambuf_iterator<char>()};
-
-    if (contents.size() < 12) {
+    if (file_size < 12) {
       return;
     }
 
     std::size_t offset{0};
-    const auto magic{read_uint32(contents, offset)};
+    const auto magic{read_uint32(data, offset)};
     if (magic != DEPS_MAGIC) {
       return;
     }
 
-    const auto version{read_uint32(contents, offset)};
+    const auto version{read_uint32(data, offset)};
     if (version != DEPS_VERSION) {
       return;
     }
 
-    const auto entry_count{read_uint32(contents, offset)};
+    const auto entry_count{read_uint32(data, offset)};
     for (std::uint32_t index = 0; index < entry_count; ++index) {
-      const auto path_length{read_uint32(contents, offset)};
-      std::string entry_path{contents.data() + offset, path_length};
+      const auto path_length{read_uint32(data, offset)};
+      std::string entry_path{reinterpret_cast<const char *>(data + offset),
+                             path_length};
       offset += path_length;
 
-      const auto flags{static_cast<std::uint8_t>(contents[offset++])};
+      const auto flags{data[offset++]};
       auto &map_entry{this->entries_[std::move(entry_path)]};
 
       if ((flags & FLAG_HAS_DEPENDENCIES) != 0) {
-        const auto static_count{read_uint32(contents, offset)};
+        const auto static_count{read_uint32(data, offset)};
         map_entry.static_dependencies.reserve(static_count);
         for (std::uint32_t static_index = 0; static_index < static_count;
              ++static_index) {
-          const auto dep_length{read_uint32(contents, offset)};
-          map_entry.static_dependencies.emplace_back(
-              std::string{contents.data() + offset, dep_length});
+          const auto dep_length{read_uint32(data, offset)};
+          map_entry.static_dependencies.emplace_back(std::string{
+              reinterpret_cast<const char *>(data + offset), dep_length});
           offset += dep_length;
         }
 
-        const auto dynamic_count{read_uint32(contents, offset)};
+        const auto dynamic_count{read_uint32(data, offset)};
         map_entry.dynamic_dependencies.reserve(dynamic_count);
         for (std::uint32_t dynamic_index = 0; dynamic_index < dynamic_count;
              ++dynamic_index) {
-          const auto dep_length{read_uint32(contents, offset)};
-          map_entry.dynamic_dependencies.emplace_back(
-              std::string{contents.data() + offset, dep_length});
+          const auto dep_length{read_uint32(data, offset)};
+          map_entry.dynamic_dependencies.emplace_back(std::string{
+              reinterpret_cast<const char *>(data + offset), dep_length});
           offset += dep_length;
         }
       }
 
       if ((flags & FLAG_HAS_MARK) != 0) {
-        const auto nanoseconds{read_int64(contents, offset)};
+        const auto nanoseconds{read_int64(data, offset)};
         map_entry.file_mark =
             mark_type{std::chrono::duration_cast<mark_type::duration>(
                 std::chrono::nanoseconds{nanoseconds})};
