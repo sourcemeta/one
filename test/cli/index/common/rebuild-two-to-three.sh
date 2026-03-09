@@ -115,7 +115,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./deps.bin
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
@@ -185,6 +184,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/example/schemas/c/%/positions.metapack
 ./schemas/example/schemas/c/%/schema.metapack
 ./schemas/example/schemas/c/%/stats.metapack
+./state.bin
 ./version.json
 EOF
 

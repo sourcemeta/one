@@ -13,7 +13,7 @@
 #include <mutex>  // std::unique_lock
 #include <string> // std::string
 
-static constexpr std::string_view DEPENDENCIES_FILE{"deps.bin"};
+static constexpr std::string_view DEPENDENCIES_FILE{"state.bin"};
 static constexpr std::uint32_t DEPS_MAGIC{0x44455053};
 static constexpr std::uint32_t DEPS_VERSION{1};
 static constexpr std::uint8_t FLAG_HAS_DEPENDENCIES{0x01};

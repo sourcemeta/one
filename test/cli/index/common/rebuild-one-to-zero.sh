@@ -68,7 +68,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./deps.bin
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
@@ -99,6 +98,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/schemas/test/%/positions.metapack
 ./schemas/schemas/test/%/schema.metapack
 ./schemas/schemas/test/%/stats.metapack
+./state.bin
 ./version.json
 EOF
 diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"
@@ -130,7 +130,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./deps.bin
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
@@ -138,6 +137,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/%/directory.metapack
 ./explorer/%/search.metapack
 ./routes.bin
+./state.bin
 ./version.json
 EOF
 diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"
