@@ -8,7 +8,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 
-#include "output.h"
+#include <sourcemeta/one/build.h>
 
 #include <algorithm>  // std::sort
 #include <cassert>    // assert
@@ -283,7 +283,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
   struct Context {
     const std::filesystem::path &directory;
     const sourcemeta::one::Configuration &configuration;
-    const sourcemeta::one::Output &output;
+    const sourcemeta::one::Build &output;
     const std::filesystem::path &explorer_path;
     const std::filesystem::path &schemas_path;
   };

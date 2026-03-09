@@ -1,5 +1,7 @@
 #include <sourcemeta/one/build.h>
 
+#include <sourcemeta/core/jsonschema.h>
+
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint>     // std::int64_t
@@ -18,7 +20,13 @@ auto Build::dependency(std::filesystem::path node)
 }
 
 Build::Build(const std::filesystem::path &output_root)
-    : root{std::filesystem::canonical(output_root)} {
+    : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
+            std::filesystem::canonical(output_root))} {
+  for (const auto &entry :
+       std::filesystem::recursive_directory_iterator(this->root)) {
+    this->tracker.emplace(entry.path(), false);
+  }
+
   const auto deps_path{this->root / DEPENDENCIES_FILE};
   if (!std::filesystem::exists(deps_path)) {
     return;
@@ -114,15 +122,14 @@ auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
   return match != this->dependencies_map.end() && !match->second.empty();
 }
 
-auto Build::write_dependencies(
-    const std::function<bool(const std::filesystem::path &)> &filter) -> void {
+auto Build::finish() -> void {
   const auto deps_path{this->root / DEPENDENCIES_FILE};
   std::ofstream stream{deps_path};
   assert(!stream.fail());
 
   std::shared_lock dependencies_lock{this->dependencies_mutex};
   for (const auto &entry : this->dependencies_map) {
-    if (!filter(this->root / entry.first)) {
+    if (this->is_untracked_file(this->root / entry.first)) {
       continue;
     }
 
@@ -156,6 +163,13 @@ auto Build::write_dependencies(
 
   stream.flush();
   stream.close();
+  this->track(deps_path);
+
+  for (const auto &entry : this->tracker) {
+    if (!entry.second) {
+      std::filesystem::remove_all(entry.first);
+    }
+  }
 }
 
 auto Build::refresh(const std::filesystem::path &path) -> void {
@@ -195,6 +209,55 @@ auto Build::mark(const std::filesystem::path &path)
     return value;
   } catch (const std::filesystem::filesystem_error &) {
     return std::nullopt;
+  }
+}
+
+auto Build::track(const std::filesystem::path &path)
+    -> const std::filesystem::path & {
+  assert(path.is_absolute());
+  assert(std::filesystem::exists(path));
+  std::unique_lock lock{this->tracker_mutex};
+  assert(!this->tracker.contains(path) || !this->tracker.at(path));
+  const auto &result{this->tracker.insert_or_assign(path, true).first->first};
+  for (auto current = path; !current.empty() && current != this->root;
+       current = current.parent_path()) {
+    this->tracker.insert_or_assign(current, true);
+  }
+
+  return result;
+}
+
+auto Build::is_untracked_file(const std::filesystem::path &path) const -> bool {
+  std::shared_lock lock{this->tracker_mutex};
+  const auto match{this->tracker.find(path)};
+  return match == this->tracker.cend() || !match->second;
+}
+
+auto Build::output_write_json(const std::filesystem::path &path,
+                              const sourcemeta::core::JSON &document)
+    -> const std::filesystem::path & {
+  assert(path.is_absolute());
+  std::filesystem::create_directories(path.parent_path());
+  std::ofstream stream{path};
+  assert(!stream.fail());
+  sourcemeta::core::stringify(document, stream);
+  return this->track(path);
+}
+
+auto Build::write_json_if_different(const std::filesystem::path &path,
+                                    const sourcemeta::core::JSON &document)
+    -> void {
+  if (std::filesystem::exists(path)) {
+    const auto current{sourcemeta::core::read_json(path)};
+    if (current != document) {
+      this->output_write_json(path, document);
+      this->refresh(path);
+    } else {
+      this->track(path);
+    }
+  } else {
+    this->output_write_json(path, document);
+    this->refresh(path);
   }
 }
 
