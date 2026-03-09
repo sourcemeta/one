@@ -24,7 +24,7 @@ handler_multiply(const std::filesystem::path &destination,
                  const std::uint64_t &value) -> void {
   assert(dependencies.size() == 1);
   write_uint64_t(destination,
-                 read_uint64_t(dependencies.front().second) * value);
+                 read_uint64_t(dependencies.front().get()) * value);
 }
 
 static auto
@@ -34,7 +34,7 @@ handler_sum(const std::filesystem::path &destination,
             const std::nullptr_t &) -> void {
   std::uint64_t total{0};
   for (const auto &dependency : dependencies) {
-    total += read_uint64_t(dependency.second);
+    total += read_uint64_t(dependency.get());
   }
 
   write_uint64_t(destination, total);
@@ -66,7 +66,7 @@ static auto handler_sum_with_dynamic(
     const std::filesystem::path &context) -> void {
   std::uint64_t total{0};
   for (const auto &dependency : dependencies) {
-    total += read_uint64_t(dependency.second);
+    total += read_uint64_t(dependency.get());
   }
 
   total += read_uint64_t(context);
@@ -83,22 +83,25 @@ TEST(Build_e2e, simple_cache_miss_hit) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "initial.txt", 8);
 
+  const auto initial_txt{input_path / "initial.txt"};
+  const auto first_txt{output_path / "first.txt"};
+  const auto second_txt{output_path / "second.txt"};
+
   // First run: build first.txt and second.txt (cache miss)
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "initial.txt");
+    build.refresh(initial_txt);
 
     const auto result_1 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_TRUE(result_1);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+    EXPECT_EQ(read_uint64_t(first_txt), 16);
 
     const auto result_2 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "second.txt",
-        {sourcemeta::one::Build::dependency(output_path / "first.txt")}, 3);
+        handler_multiply, second_txt, static_cast<std::uint64_t>(3), first_txt);
     EXPECT_TRUE(result_2);
-    EXPECT_EQ(read_uint64_t(output_path / "second.txt"), 48);
+    EXPECT_EQ(read_uint64_t(second_txt), 48);
 
     build.finish();
   }
@@ -108,40 +111,38 @@ TEST(Build_e2e, simple_cache_miss_hit) {
     sourcemeta::one::Build build{output_path};
 
     const auto result_1 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_FALSE(result_1);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+    EXPECT_EQ(read_uint64_t(first_txt), 16);
 
     const auto result_2 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "second.txt",
-        {sourcemeta::one::Build::dependency(output_path / "first.txt")}, 3);
+        handler_multiply, second_txt, static_cast<std::uint64_t>(3), first_txt);
     EXPECT_FALSE(result_2);
-    EXPECT_EQ(read_uint64_t(output_path / "second.txt"), 48);
+    EXPECT_EQ(read_uint64_t(second_txt), 48);
 
     build.finish();
   }
 
   // Third run: update initial.txt, should cache miss
-  write_uint64_t(input_path / "initial.txt", 7);
+  write_uint64_t(initial_txt, 7);
   std::filesystem::last_write_time(
-      input_path / "initial.txt",
+      initial_txt,
       std::filesystem::file_time_type::clock::now() + std::chrono::seconds(10));
 
   {
     sourcemeta::one::Build build{output_path};
 
     const auto result_1 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_TRUE(result_1);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 14);
+    EXPECT_EQ(read_uint64_t(first_txt), 14);
 
     const auto result_2 = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "second.txt",
-        {sourcemeta::one::Build::dependency(output_path / "first.txt")}, 3);
+        handler_multiply, second_txt, static_cast<std::uint64_t>(3), first_txt);
     EXPECT_TRUE(result_2);
-    EXPECT_EQ(read_uint64_t(output_path / "second.txt"), 42);
+    EXPECT_EQ(read_uint64_t(second_txt), 42);
   }
 }
 
@@ -154,16 +155,18 @@ TEST(Build_e2e, dynamic_dependency) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "initial.txt", 8);
 
+  const auto initial_txt{input_path / "initial.txt"};
+  const auto copy_txt{output_path / "copy.txt"};
+
   // First run: cache miss, dynamic dependency registered
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "initial.txt");
+    build.refresh(initial_txt);
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_mirror_context_node, output_path / "copy.txt", {},
-        input_path / "initial.txt");
+        handler_mirror_context_node, copy_txt, initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "copy.txt"), 8);
+    EXPECT_EQ(read_uint64_t(copy_txt), 8);
 
     build.finish();
   }
@@ -173,10 +176,9 @@ TEST(Build_e2e, dynamic_dependency) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_mirror_context_node, output_path / "copy.txt", {},
-        input_path / "initial.txt");
+        handler_mirror_context_node, copy_txt, initial_txt);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "copy.txt"), 8);
+    EXPECT_EQ(read_uint64_t(copy_txt), 8);
   }
 }
 
@@ -189,16 +191,18 @@ TEST(Build_e2e, missing_dynamic_dependency) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "initial.txt", 8);
 
+  const auto initial_txt{input_path / "initial.txt"};
+  const auto copy_txt{output_path / "copy.txt"};
+
   // First run: cache miss, dynamic dependency NOT registered
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "initial.txt");
+    build.refresh(initial_txt);
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_mirror_context_node_without_callback, output_path / "copy.txt",
-        {}, input_path / "initial.txt");
+        handler_mirror_context_node_without_callback, copy_txt, initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "copy.txt"), 8);
+    EXPECT_EQ(read_uint64_t(copy_txt), 8);
 
     build.finish();
   }
@@ -208,10 +212,9 @@ TEST(Build_e2e, missing_dynamic_dependency) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_mirror_context_node_without_callback, output_path / "copy.txt",
-        {}, input_path / "initial.txt");
+        handler_mirror_context_node_without_callback, copy_txt, initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "copy.txt"), 8);
+    EXPECT_EQ(read_uint64_t(copy_txt), 8);
   }
 }
 
@@ -224,17 +227,19 @@ TEST(Build_e2e, new_dependency_invalidates) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "dep_a.txt", 10);
 
+  const auto dep_a{input_path / "dep_a.txt"};
+  const auto dep_b{input_path / "dep_b.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with one dependency
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_a.txt");
+    build.refresh(dep_a);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
@@ -243,30 +248,25 @@ TEST(Build_e2e, new_dependency_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
 
   // Third run: add a new dependency, cache miss
-  write_uint64_t(input_path / "dep_b.txt", 20);
+  write_uint64_t(dep_b, 20);
 
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_b.txt");
+    build.refresh(dep_b);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_a, dep_b);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
   }
 }
 
@@ -280,19 +280,20 @@ TEST(Build_e2e, removed_make_dependency_invalidates) {
   write_uint64_t(input_path / "dep_a.txt", 10);
   write_uint64_t(input_path / "dep_b.txt", 20);
 
+  const auto dep_a{input_path / "dep_a.txt"};
+  const auto dep_b{input_path / "dep_b.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with two dependencies
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_a.txt");
-    build.refresh(input_path / "dep_b.txt");
+    build.refresh(dep_a);
+    build.refresh(dep_b);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_a, dep_b);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
 
     build.finish();
   }
@@ -301,13 +302,10 @@ TEST(Build_e2e, removed_make_dependency_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_a, dep_b);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
 
     build.finish();
   }
@@ -316,12 +314,10 @@ TEST(Build_e2e, removed_make_dependency_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
   }
 }
 
@@ -334,17 +330,18 @@ TEST(Build_e2e, remove_all_static_dependencies_invalidates) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "dep_a.txt", 10);
 
+  const auto dep_a{input_path / "dep_a.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with one dependency
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_a.txt");
+    build.refresh(dep_a);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
@@ -353,12 +350,10 @@ TEST(Build_e2e, remove_all_static_dependencies_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
@@ -367,10 +362,10 @@ TEST(Build_e2e, remove_all_static_dependencies_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt", {}, nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 0);
+    EXPECT_EQ(read_uint64_t(target), 0);
   }
 }
 
@@ -384,18 +379,20 @@ TEST(Build_e2e, replaced_make_dependency_invalidates) {
   write_uint64_t(input_path / "dep_a.txt", 10);
   write_uint64_t(input_path / "dep_b.txt", 20);
 
+  const auto dep_a{input_path / "dep_a.txt"};
+  const auto dep_b{input_path / "dep_b.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with dep_a
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_a.txt");
-    build.refresh(input_path / "dep_b.txt");
+    build.refresh(dep_a);
+    build.refresh(dep_b);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
@@ -404,12 +401,10 @@ TEST(Build_e2e, replaced_make_dependency_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_a);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 10);
+    EXPECT_EQ(read_uint64_t(target), 10);
 
     build.finish();
   }
@@ -418,12 +413,10 @@ TEST(Build_e2e, replaced_make_dependency_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result =
+        build.dispatch<std::nullptr_t>(handler_sum, target, nullptr, dep_b);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 20);
+    EXPECT_EQ(read_uint64_t(target), 20);
   }
 }
 
@@ -437,19 +430,20 @@ TEST(Build_e2e, reordered_static_dependencies_invalidates) {
   write_uint64_t(input_path / "dep_a.txt", 10);
   write_uint64_t(input_path / "dep_b.txt", 20);
 
+  const auto dep_a{input_path / "dep_a.txt"};
+  const auto dep_b{input_path / "dep_b.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with {a, b}
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_a.txt");
-    build.refresh(input_path / "dep_b.txt");
+    build.refresh(dep_a);
+    build.refresh(dep_b);
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_a, dep_b);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
 
     build.finish();
   }
@@ -458,13 +452,10 @@ TEST(Build_e2e, reordered_static_dependencies_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_a.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_b.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_a, dep_b);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
 
     build.finish();
   }
@@ -473,13 +464,10 @@ TEST(Build_e2e, reordered_static_dependencies_invalidates) {
   {
     sourcemeta::one::Build build{output_path};
 
-    const auto result = build.dispatch<std::nullptr_t>(
-        handler_sum, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_b.txt"),
-         sourcemeta::one::Build::dependency(input_path / "dep_a.txt")},
-        nullptr);
+    const auto result = build.dispatch<std::nullptr_t>(handler_sum, target,
+                                                       nullptr, dep_b, dep_a);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 30);
+    EXPECT_EQ(read_uint64_t(target), 30);
   }
 }
 
@@ -493,18 +481,20 @@ TEST(Build_e2e, dynamic_deps_do_not_interfere_with_static_comparison) {
   write_uint64_t(input_path / "dep_static.txt", 10);
   write_uint64_t(input_path / "dep_dynamic.txt", 5);
 
+  const auto dep_static{input_path / "dep_static.txt"};
+  const auto dep_dynamic{input_path / "dep_dynamic.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build with one static dep and one dynamic dep
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_static.txt");
-    build.refresh(input_path / "dep_dynamic.txt");
+    build.refresh(dep_static);
+    build.refresh(dep_dynamic);
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_sum_with_dynamic, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_static.txt")},
-        input_path / "dep_dynamic.txt");
+        handler_sum_with_dynamic, target, dep_dynamic, dep_static);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 15);
+    EXPECT_EQ(read_uint64_t(target), 15);
 
     build.finish();
   }
@@ -514,11 +504,9 @@ TEST(Build_e2e, dynamic_deps_do_not_interfere_with_static_comparison) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_sum_with_dynamic, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_static.txt")},
-        input_path / "dep_dynamic.txt");
+        handler_sum_with_dynamic, target, dep_dynamic, dep_static);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 15);
+    EXPECT_EQ(read_uint64_t(target), 15);
   }
 }
 
@@ -531,16 +519,19 @@ TEST(Build_e2e, persistence_across_runs) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "initial.txt", 8);
 
+  const auto initial_txt{input_path / "initial.txt"};
+  const auto first_txt{output_path / "first.txt"};
+
   // First run: build and write dependencies
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "initial.txt");
+    build.refresh(initial_txt);
 
     const auto result = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+    EXPECT_EQ(read_uint64_t(first_txt), 16);
 
     build.finish();
   }
@@ -550,10 +541,10 @@ TEST(Build_e2e, persistence_across_runs) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+    EXPECT_EQ(read_uint64_t(first_txt), 16);
   }
 }
 
@@ -566,25 +557,28 @@ TEST(Build_e2e, persistence_invalidates_on_change) {
   std::filesystem::create_directories(input_path);
   write_uint64_t(input_path / "initial.txt", 8);
 
+  const auto initial_txt{input_path / "initial.txt"};
+  const auto first_txt{output_path / "first.txt"};
+
   // First run
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "initial.txt");
+    build.refresh(initial_txt);
 
     const auto result = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 16);
+    EXPECT_EQ(read_uint64_t(first_txt), 16);
 
     build.finish();
   }
 
   // Modify the input between runs and ensure the timestamp is
   // clearly newer, as some filesystems have second-level resolution
-  write_uint64_t(input_path / "initial.txt", 100);
+  write_uint64_t(initial_txt, 100);
   std::filesystem::last_write_time(
-      input_path / "initial.txt",
+      initial_txt,
       std::filesystem::file_time_type::clock::now() + std::chrono::seconds(10));
 
   // Second run: should cache miss because initial.txt changed
@@ -592,10 +586,10 @@ TEST(Build_e2e, persistence_invalidates_on_change) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::uint64_t>(
-        handler_multiply, output_path / "first.txt",
-        {sourcemeta::one::Build::dependency(input_path / "initial.txt")}, 2);
+        handler_multiply, first_txt, static_cast<std::uint64_t>(2),
+        initial_txt);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "first.txt"), 200);
+    EXPECT_EQ(read_uint64_t(first_txt), 200);
   }
 }
 
@@ -609,18 +603,20 @@ TEST(Build_e2e, dynamic_dependency_stale_invalidates) {
   write_uint64_t(input_path / "dep_static.txt", 10);
   write_uint64_t(input_path / "dep_dynamic.txt", 5);
 
+  const auto dep_static{input_path / "dep_static.txt"};
+  const auto dep_dynamic{input_path / "dep_dynamic.txt"};
+  const auto target{output_path / "target.txt"};
+
   // First run: build
   {
     sourcemeta::one::Build build{output_path};
-    build.refresh(input_path / "dep_static.txt");
-    build.refresh(input_path / "dep_dynamic.txt");
+    build.refresh(dep_static);
+    build.refresh(dep_dynamic);
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_sum_with_dynamic, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_static.txt")},
-        input_path / "dep_dynamic.txt");
+        handler_sum_with_dynamic, target, dep_dynamic, dep_static);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 15);
+    EXPECT_EQ(read_uint64_t(target), 15);
 
     build.finish();
   }
@@ -630,19 +626,17 @@ TEST(Build_e2e, dynamic_dependency_stale_invalidates) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_sum_with_dynamic, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_static.txt")},
-        input_path / "dep_dynamic.txt");
+        handler_sum_with_dynamic, target, dep_dynamic, dep_static);
     EXPECT_FALSE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 15);
+    EXPECT_EQ(read_uint64_t(target), 15);
 
     build.finish();
   }
 
   // Update the dynamic dep file between runs
-  write_uint64_t(input_path / "dep_dynamic.txt", 100);
+  write_uint64_t(dep_dynamic, 100);
   std::filesystem::last_write_time(
-      input_path / "dep_dynamic.txt",
+      dep_dynamic,
       std::filesystem::file_time_type::clock::now() + std::chrono::seconds(10));
 
   // Third run: should cache miss because dynamic dep changed
@@ -650,10 +644,8 @@ TEST(Build_e2e, dynamic_dependency_stale_invalidates) {
     sourcemeta::one::Build build{output_path};
 
     const auto result = build.dispatch<std::filesystem::path>(
-        handler_sum_with_dynamic, output_path / "target.txt",
-        {sourcemeta::one::Build::dependency(input_path / "dep_static.txt")},
-        input_path / "dep_dynamic.txt");
+        handler_sum_with_dynamic, target, dep_dynamic, dep_static);
     EXPECT_TRUE(result);
-    EXPECT_EQ(read_uint64_t(output_path / "target.txt"), 110);
+    EXPECT_EQ(read_uint64_t(target), 110);
   }
 }

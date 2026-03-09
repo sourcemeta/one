@@ -2,10 +2,11 @@
 
 #include <sourcemeta/core/jsonschema.h>
 
-#include <cassert> // assert
-#include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint> // std::int64_t
-#include <fstream> // std::ofstream, std::ifstream
+#include <algorithm> // std::ranges::none_of
+#include <cassert>   // assert
+#include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint>   // std::int64_t
+#include <fstream>   // std::ofstream, std::ifstream
 
 #include <mutex>       // std::unique_lock
 #include <string>      // std::string
@@ -13,12 +14,26 @@
 
 static constexpr std::string_view DEPENDENCIES_FILE{"deps.txt"};
 
-namespace sourcemeta::one {
+using mark_type = sourcemeta::one::Build::mark_type;
+using Entry = sourcemeta::one::Build::Entry;
 
-auto Build::dependency(std::filesystem::path node)
-    -> std::pair<DependencyKind, std::filesystem::path> {
-  return {DependencyKind::Static, std::move(node)};
+static auto mark_locked(const std::unordered_map<std::string, Entry> &entries,
+                        const std::filesystem::path &path)
+    -> std::optional<mark_type> {
+  assert(path.is_absolute());
+  const auto match{entries.find(path.native())};
+  if (match != entries.end() && match->second.file_mark.has_value()) {
+    return match->second.file_mark;
+  }
+
+  try {
+    return std::filesystem::last_write_time(path);
+  } catch (const std::filesystem::filesystem_error &) {
+    return std::nullopt;
+  }
 }
+
+namespace sourcemeta::one {
 
 Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
@@ -31,13 +46,13 @@ Build::Build(const std::filesystem::path &output_root)
     map_entry.is_directory = entry.is_directory();
   }
 
-  const auto deps_path{this->root / DEPENDENCIES_FILE};
-  if (!std::filesystem::exists(deps_path)) {
+  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
+  if (!std::filesystem::exists(dependencies_path)) {
     return;
   }
 
   try {
-    std::ifstream stream{deps_path};
+    std::ifstream stream{dependencies_path};
     if (!stream.is_open()) {
       return;
     }
@@ -46,7 +61,8 @@ Build::Build(const std::filesystem::path &output_root)
                          std::istreambuf_iterator<char>()};
 
     std::string current_key;
-    Build::Dependencies current_deps;
+    std::vector<std::filesystem::path> current_static_dependencies;
+    std::vector<std::filesystem::path> current_dynamic_dependencies;
     std::size_t position{0};
 
     while (position < contents.size()) {
@@ -67,8 +83,13 @@ Build::Build(const std::filesystem::path &output_root)
       switch (tag) {
         case 't':
           if (!current_key.empty()) {
-            this->entries_[current_key].dependencies = std::move(current_deps);
-            current_deps = {};
+            auto &previous_entry{this->entries_[current_key]};
+            previous_entry.static_dependencies =
+                std::move(current_static_dependencies);
+            previous_entry.dynamic_dependencies =
+                std::move(current_dynamic_dependencies);
+            current_static_dependencies = {};
+            current_dynamic_dependencies = {};
           }
 
           current_key = this->root_string;
@@ -76,24 +97,20 @@ Build::Build(const std::filesystem::path &output_root)
           current_key += value;
           break;
         case 's':
-          current_deps.emplace_back(
-              Build::DependencyKind::Static,
+          current_static_dependencies.emplace_back(
               (this->root / std::string{value}).lexically_normal());
-
           break;
         case 'd':
-          current_deps.emplace_back(
-              Build::DependencyKind::Dynamic,
+          current_dynamic_dependencies.emplace_back(
               (this->root / std::string{value}).lexically_normal());
-
           break;
         case 'm': {
           const auto space{value.find(' ')};
           if (space != std::string_view::npos) {
             const auto path_part{value.substr(0, space)};
-            const auto ns_part{value.substr(space + 1)};
+            const auto nanoseconds_part{value.substr(space + 1)};
             const std::chrono::nanoseconds nanoseconds{
-                std::stoll(std::string{ns_part})};
+                std::stoll(std::string{nanoseconds_part})};
             const auto mark_value{mark_type{
                 std::chrono::duration_cast<mark_type::duration>(nanoseconds)}};
             std::string absolute_key{this->root_string};
@@ -112,7 +129,9 @@ Build::Build(const std::filesystem::path &output_root)
     }
 
     if (!current_key.empty()) {
-      this->entries_[current_key].dependencies = std::move(current_deps);
+      auto &last_entry{this->entries_[current_key]};
+      last_entry.static_dependencies = std::move(current_static_dependencies);
+      last_entry.dynamic_dependencies = std::move(current_dynamic_dependencies);
     }
     this->has_previous_run = true;
   } catch (...) {
@@ -124,12 +143,14 @@ auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
   assert(path.is_absolute());
   std::shared_lock lock{this->mutex};
   const auto match{this->entries_.find(path.native())};
-  return match != this->entries_.end() && !match->second.dependencies.empty();
+  return match != this->entries_.end() &&
+         (!match->second.static_dependencies.empty() ||
+          !match->second.dynamic_dependencies.empty());
 }
 
 auto Build::finish() -> void {
-  const auto deps_path{this->root / DEPENDENCIES_FILE};
-  std::ofstream stream{deps_path};
+  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
+  std::ofstream stream{dependencies_path};
   assert(!stream.fail());
 
   const auto root_prefix_size{this->root_string.size() + 1};
@@ -139,7 +160,8 @@ auto Build::finish() -> void {
       continue;
     }
 
-    if (!entry.second.dependencies.empty()) {
+    if (!entry.second.static_dependencies.empty() ||
+        !entry.second.dynamic_dependencies.empty()) {
       if (entry.first.size() > root_prefix_size &&
           entry.first.starts_with(this->root_string)) {
         stream << "t " << std::string_view{entry.first}.substr(root_prefix_size)
@@ -148,17 +170,27 @@ auto Build::finish() -> void {
         stream << "t " << entry.first << '\n';
       }
 
-      for (const auto &dependency : entry.second.dependencies) {
-        const char kind_char{
-            dependency.first == Build::DependencyKind::Dynamic ? 'd' : 's'};
-        const auto &dep_string{dependency.second.native()};
-        if (dep_string.size() > root_prefix_size &&
-            dep_string.starts_with(this->root_string)) {
-          stream << kind_char << ' '
-                 << std::string_view{dep_string}.substr(root_prefix_size)
+      for (const auto &dependency : entry.second.static_dependencies) {
+        const auto &dependency_string{dependency.native()};
+        if (dependency_string.size() > root_prefix_size &&
+            dependency_string.starts_with(this->root_string)) {
+          stream << "s "
+                 << std::string_view{dependency_string}.substr(root_prefix_size)
                  << '\n';
         } else {
-          stream << kind_char << ' ' << dep_string << '\n';
+          stream << "s " << dependency_string << '\n';
+        }
+      }
+
+      for (const auto &dependency : entry.second.dynamic_dependencies) {
+        const auto &dependency_string{dependency.native()};
+        if (dependency_string.size() > root_prefix_size &&
+            dependency_string.starts_with(this->root_string)) {
+          stream << "d "
+                 << std::string_view{dependency_string}.substr(root_prefix_size)
+                 << '\n';
+        } else {
+          stream << "d " << dependency_string << '\n';
         }
       }
     }
@@ -179,7 +211,7 @@ auto Build::finish() -> void {
   stream.flush();
   stream.close();
   lock.unlock();
-  this->track(deps_path);
+  this->track(dependencies_path);
 
   // Remove untracked files inside the output directory
   std::shared_lock read_lock{this->mutex};
@@ -192,55 +224,42 @@ auto Build::finish() -> void {
   }
 }
 
+auto Build::dispatch_is_cached(const Entry &entry,
+                               const bool static_dependencies_match) const
+    -> bool {
+  if (!static_dependencies_match) {
+    return false;
+  }
+
+  const auto check_mtime{[this, &entry](
+                             const std::filesystem::path &dependency_path) {
+    const auto dependency_mark{mark_locked(this->entries_, dependency_path)};
+    return !dependency_mark.has_value() ||
+           dependency_mark.value() > entry.file_mark.value();
+  }};
+
+  return std::ranges::none_of(entry.static_dependencies, check_mtime) &&
+         std::ranges::none_of(entry.dynamic_dependencies, check_mtime);
+}
+
+auto Build::dispatch_commit(
+    const std::filesystem::path &destination,
+    std::vector<std::filesystem::path> &&static_dependencies,
+    std::vector<std::filesystem::path> &&dynamic_dependencies) -> void {
+  assert(destination.is_absolute());
+  assert(std::filesystem::exists(destination));
+  this->refresh(destination);
+  this->track(destination);
+  std::unique_lock lock{this->mutex};
+  auto &entry{this->entries_[destination.native()]};
+  entry.static_dependencies = std::move(static_dependencies);
+  entry.dynamic_dependencies = std::move(dynamic_dependencies);
+}
+
 auto Build::refresh(const std::filesystem::path &path) -> void {
   const auto value{std::filesystem::file_time_type::clock::now()};
   std::unique_lock lock{this->mutex};
   this->entries_[path.native()].file_mark = value;
-}
-
-auto Build::mark(const std::filesystem::path &path)
-    -> std::optional<mark_type> {
-  assert(path.is_absolute());
-
-  {
-    std::shared_lock lock{this->mutex};
-    const auto match{this->entries_.find(path.native())};
-    if (match != this->entries_.end() && match->second.file_mark.has_value()) {
-      return match->second.file_mark;
-    }
-  }
-
-  // Output files should always have their marks cached
-  // Only input files or new output files are not
-  assert(!this->has_previous_run ||
-         path.native().starts_with(this->root_string) == false ||
-         !std::filesystem::exists(path));
-
-  try {
-    const auto value{std::filesystem::last_write_time(path)};
-    std::unique_lock lock{this->mutex};
-    this->entries_[path.native()].file_mark = value;
-    return value;
-  } catch (const std::filesystem::filesystem_error &) {
-    return std::nullopt;
-  }
-}
-
-auto Build::mark_locked(const std::filesystem::path &path) const
-    -> std::optional<mark_type> {
-  assert(path.is_absolute());
-  const auto match{this->entries_.find(path.native())};
-  if (match != this->entries_.end() && match->second.file_mark.has_value()) {
-    return match->second.file_mark;
-  }
-
-  // For the locked variant used in dispatch cache-hit checks,
-  // if the mark isn't cached, fall back to stat
-  try {
-    return std::filesystem::last_write_time(path);
-  } catch (const std::filesystem::filesystem_error &) {
-    return std::nullopt;
-  }
 }
 
 auto Build::track(const std::filesystem::path &path) -> void {
@@ -272,31 +291,24 @@ auto Build::is_untracked_file(const std::filesystem::path &path) const -> bool {
   return match == this->entries_.cend() || !match->second.tracked;
 }
 
-auto Build::output_write_json(const std::filesystem::path &path,
-                              const sourcemeta::core::JSON &document) -> void {
+auto Build::write_json_if_different(const std::filesystem::path &path,
+                                    const sourcemeta::core::JSON &document)
+    -> void {
+  if (std::filesystem::exists(path)) {
+    const auto current{sourcemeta::core::read_json(path)};
+    if (current == document) {
+      this->track(path);
+      return;
+    }
+  }
+
   assert(path.is_absolute());
   std::filesystem::create_directories(path.parent_path());
   std::ofstream stream{path};
   assert(!stream.fail());
   sourcemeta::core::stringify(document, stream);
   this->track(path);
-}
-
-auto Build::write_json_if_different(const std::filesystem::path &path,
-                                    const sourcemeta::core::JSON &document)
-    -> void {
-  if (std::filesystem::exists(path)) {
-    const auto current{sourcemeta::core::read_json(path)};
-    if (current != document) {
-      this->output_write_json(path, document);
-      this->refresh(path);
-    } else {
-      this->track(path);
-    }
-  } else {
-    this->output_write_json(path, document);
-    this->refresh(path);
-  }
+  this->refresh(path);
 }
 
 } // namespace sourcemeta::one
