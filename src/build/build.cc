@@ -92,17 +92,13 @@ Build::Build(const std::filesystem::path &output_root)
             current_dynamic_dependencies = {};
           }
 
-          current_key = this->root_string;
-          current_key += '/';
-          current_key += value;
+          current_key = value;
           break;
         case 's':
-          current_static_dependencies.emplace_back(
-              (this->root / std::string{value}).lexically_normal());
+          current_static_dependencies.emplace_back(std::string{value});
           break;
         case 'd':
-          current_dynamic_dependencies.emplace_back(
-              (this->root / std::string{value}).lexically_normal());
+          current_dynamic_dependencies.emplace_back(std::string{value});
           break;
         case 'm': {
           const auto space{value.find(' ')};
@@ -113,10 +109,7 @@ Build::Build(const std::filesystem::path &output_root)
                 std::stoll(std::string{nanoseconds_part})};
             const auto mark_value{mark_type{
                 std::chrono::duration_cast<mark_type::duration>(nanoseconds)}};
-            std::string absolute_key{this->root_string};
-            absolute_key += '/';
-            absolute_key += path_part;
-            this->entries_[absolute_key].file_mark = mark_value;
+            this->entries_[std::string{path_part}].file_mark = mark_value;
           }
 
           break;
@@ -153,7 +146,6 @@ auto Build::finish() -> void {
   std::ofstream stream{dependencies_path};
   assert(!stream.fail());
 
-  const auto root_prefix_size{this->root_string.size() + 1};
   std::shared_lock lock{this->mutex};
   for (const auto &entry : this->entries_) {
     if (!entry.second.tracked) {
@@ -162,49 +154,24 @@ auto Build::finish() -> void {
 
     if (!entry.second.static_dependencies.empty() ||
         !entry.second.dynamic_dependencies.empty()) {
-      if (entry.first.size() > root_prefix_size &&
-          entry.first.starts_with(this->root_string)) {
-        stream << "t " << std::string_view{entry.first}.substr(root_prefix_size)
-               << '\n';
-      } else {
-        stream << "t " << entry.first << '\n';
-      }
+      stream << "t " << entry.first << '\n';
 
       for (const auto &dependency : entry.second.static_dependencies) {
-        const auto &dependency_string{dependency.native()};
-        if (dependency_string.size() > root_prefix_size &&
-            dependency_string.starts_with(this->root_string)) {
-          stream << "s "
-                 << std::string_view{dependency_string}.substr(root_prefix_size)
-                 << '\n';
-        } else {
-          stream << "s " << dependency_string << '\n';
-        }
+        stream << "s " << dependency.native() << '\n';
       }
 
       for (const auto &dependency : entry.second.dynamic_dependencies) {
-        const auto &dependency_string{dependency.native()};
-        if (dependency_string.size() > root_prefix_size &&
-            dependency_string.starts_with(this->root_string)) {
-          stream << "d "
-                 << std::string_view{dependency_string}.substr(root_prefix_size)
-                 << '\n';
-        } else {
-          stream << "d " << dependency_string << '\n';
-        }
+        stream << "d " << dependency.native() << '\n';
       }
     }
 
     if (entry.second.file_mark.has_value()) {
-      if (entry.first.size() > root_prefix_size &&
-          entry.first.starts_with(this->root_string)) {
-        const auto nanoseconds{
-            std::chrono::duration_cast<std::chrono::nanoseconds>(
-                entry.second.file_mark.value().time_since_epoch())
-                .count()};
-        stream << "m " << std::string_view{entry.first}.substr(root_prefix_size)
-               << ' ' << static_cast<std::int64_t>(nanoseconds) << '\n';
-      }
+      const auto nanoseconds{
+          std::chrono::duration_cast<std::chrono::nanoseconds>(
+              entry.second.file_mark.value().time_since_epoch())
+              .count()};
+      stream << "m " << entry.first << ' '
+             << static_cast<std::int64_t>(nanoseconds) << '\n';
     }
   }
 
