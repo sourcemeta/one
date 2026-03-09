@@ -44,7 +44,7 @@ EOF
 
 measure() {
   START="$(nanoseconds)"
-  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2
+  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2 2>/dev/null
   END="$(nanoseconds)"
   echo "$(( (END - START) / 1000000 ))"
 }
@@ -131,24 +131,24 @@ cat << EOF
     "value": $RESULT_0_TO_1
   },
   {
-    "name": "Cached rebuild (1 existing)",
-    "unit": "ms",
-    "value": $RESULT_CACHED_1
-  },
-  {
     "name": "Add one schema (100 existing)",
     "unit": "ms",
     "value": $RESULT_100_TO_101
   },
   {
-    "name": "Cached rebuild (101 existing)",
-    "unit": "ms",
-    "value": $RESULT_CACHED_101
-  },
-  {
     "name": "Add one schema (1000 existing)",
     "unit": "ms",
     "value": $RESULT_1000_TO_1001
+  },
+  {
+    "name": "Cached rebuild (1 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_1
+  },
+  {
+    "name": "Cached rebuild (101 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_101
   },
   {
     "name": "Cached rebuild (1001 existing)",
