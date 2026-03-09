@@ -233,13 +233,21 @@ auto Build::track(const std::filesystem::path &path) -> void {
   assert(path.is_absolute());
   const auto entry_key{this->key(path)};
   std::unique_lock lock{this->mutex};
-  auto &entry{this->entries[entry_key]};
-  assert(!entry.tracked);
-  entry.tracked = true;
-  for (auto current = path.parent_path();
-       !current.empty() && current != this->root;
-       current = current.parent_path()) {
-    this->entries[this->key(current)].tracked = true;
+  this->entries[entry_key].tracked = true;
+  auto parent_key{entry_key};
+  while (true) {
+    const auto slash{parent_key.rfind('/')};
+    if (slash == std::string::npos) {
+      break;
+    }
+
+    parent_key = parent_key.substr(0, slash);
+    auto &parent_entry{this->entries[parent_key]};
+    if (parent_entry.tracked) {
+      break;
+    }
+
+    parent_entry.tracked = true;
   }
 }
 
