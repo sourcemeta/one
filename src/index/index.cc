@@ -74,16 +74,16 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
             << " [" << std::this_thread::get_id() << "/" << threads << "]\n";
 }
 
-template <typename Handler>
+template <typename Handler, typename... Deps>
 static auto DISPATCH(const std::filesystem::path &destination,
-                     const sourcemeta::one::Build::Dependencies &dependencies,
                      const typename Handler::Context &context,
                      std::mutex &mutex, const std::string_view title,
                      const std::string_view prefix,
                      const std::string_view suffix,
-                     sourcemeta::one::Build &output) -> bool {
+                     sourcemeta::one::Build &output, const Deps &...deps)
+    -> bool {
   const auto was_built{output.dispatch<typename Handler::Context>(
-      Handler::handler, destination, dependencies, context)};
+      Handler::handler, destination, context, deps...)};
   if (!was_built) {
     std::lock_guard<std::mutex> lock{mutex};
     std::cerr << "(skip) " << title << ": " << prefix << " [" << suffix
@@ -310,12 +310,9 @@ static auto index_main(const std::string_view &program,
         const auto destination{schemas_path / schema.second.relative_path /
                                SENTINEL / "schema.metapack"};
         DISPATCH<sourcemeta::one::GENERATE_MATERIALISED_SCHEMA>(
-            destination,
-            {sourcemeta::one::Build::dependency(schema.second.path),
-             sourcemeta::one::Build::dependency(mark_configuration_path),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            {schema.first, resolver}, mutex, "Ingesting", schema.first,
-            "materialise", output);
+            destination, {schema.first, resolver}, mutex, "Ingesting",
+            schema.first, "materialise", output, schema.second.path,
+            mark_configuration_path, mark_version_path);
 
         // Mark the materialised schema in the resolver
         resolver.cache_path(schema.first, destination);
@@ -344,85 +341,67 @@ static auto index_main(const std::string_view &program,
                        resolver.size());
         const auto base_path{schemas_path / schema.second.relative_path /
                              SENTINEL};
+        const auto schema_metapack{base_path / "schema.metapack"};
+        const auto dependencies_metapack{base_path / "dependencies.metapack"};
+        const auto bundle_metapack{base_path / "bundle.metapack"};
+
+        const auto health_metapack{base_path / "health.metapack"};
 
         DISPATCH<sourcemeta::one::GENERATE_POINTER_POSITIONS>(
-            base_path / "positions.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "positions", output);
+            base_path / "positions.metapack", resolver, mutex, "Analysing",
+            schema.first, "positions", output, schema_metapack,
+            mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_FRAME_LOCATIONS>(
-            base_path / "locations.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "locations", output);
+            base_path / "locations.metapack", resolver, mutex, "Analysing",
+            schema.first, "locations", output, schema_metapack,
+            mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENCIES>(
-            base_path / "dependencies.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "dependencies", output);
+            dependencies_metapack, resolver, mutex, "Analysing", schema.first,
+            "dependencies", output, schema_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_STATS>(
-            base_path / "stats.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "stats", output);
+            base_path / "stats.metapack", resolver, mutex, "Analysing",
+            schema.first, "stats", output, schema_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_HEALTH>(
-            base_path / "health.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(base_path /
-                                                "dependencies.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
+            health_metapack,
             {std::ref(resolver), std::cref(schema.second.collection.get())},
-            mutex, "Analysing", schema.first, "health", output);
+            mutex, "Analysing", schema.first, "health", output, schema_metapack,
+            dependencies_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_BUNDLE>(
-            base_path / "bundle.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(base_path /
-                                                "dependencies.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "bundle", output);
+            bundle_metapack, resolver, mutex, "Analysing", schema.first,
+            "bundle", output, schema_metapack, dependencies_metapack,
+            mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_EDITOR>(
-            base_path / "editor.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "bundle.metapack"),
-             sourcemeta::one::Build::dependency(mark_version_path)},
-            resolver, mutex, "Analysing", schema.first, "editor", output);
+            base_path / "editor.metapack", resolver, mutex, "Analysing",
+            schema.first, "editor", output, bundle_metapack, mark_version_path);
 
         if (attribute_not_disabled(schema.second.collection.get(),
                                    "x-sourcemeta-one:evaluate")) {
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-exhaustive.metapack",
-              {sourcemeta::one::Build::dependency(base_path /
-                                                  "bundle.metapack"),
-               sourcemeta::one::Build::dependency(mark_version_path)},
               sourcemeta::blaze::Mode::Exhaustive, mutex, "Analysing",
-              schema.first, "blaze-exhaustive", output);
+              schema.first, "blaze-exhaustive", output, bundle_metapack,
+              mark_version_path);
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-fast.metapack",
-              {sourcemeta::one::Build::dependency(base_path /
-                                                  "bundle.metapack"),
-               sourcemeta::one::Build::dependency(mark_version_path)},
               sourcemeta::blaze::Mode::FastValidation, mutex, "Analysing",
-              schema.first, "blaze-fast", output);
+              schema.first, "blaze-fast", output, bundle_metapack,
+              mark_version_path);
         }
 
         DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA>(
             explorer_path / schema.second.relative_path / SENTINEL /
                 "schema.metapack",
-            {sourcemeta::one::Build::dependency(base_path / "schema.metapack"),
-             sourcemeta::one::Build::dependency(base_path / "health.metapack"),
-             sourcemeta::one::Build::dependency(base_path /
-                                                "dependencies.metapack"),
-             // As this target reads the alert from the configuration file
-             sourcemeta::one::Build::dependency(mark_configuration_path),
-             sourcemeta::one::Build::dependency(mark_version_path)},
             {resolver, schema.second.collection.get(),
              schema.second.relative_path},
-            mutex, "Analysing", schema.first, "metadata", output);
+            mutex, "Analysing", schema.first, "metadata", output,
+            schema_metapack, health_metapack, dependencies_metapack,
+            mark_configuration_path, mark_version_path);
       },
       concurrency, THREAD_STACK_SIZE);
 
@@ -440,10 +419,10 @@ static auto index_main(const std::string_view &program,
   std::vector<std::filesystem::path> directories;
   // The top-level is itself a directory
   directories.emplace_back(schemas_path);
-  sourcemeta::one::Build::Dependencies summaries;
-  std::unordered_map<std::string, sourcemeta::one::Build::Dependencies>
+  std::vector<std::filesystem::path> summaries;
+  std::unordered_map<std::string, std::vector<std::filesystem::path>>
       directory_summaries;
-  sourcemeta::one::Build::Dependencies dependencies;
+  std::vector<std::filesystem::path> dependencies;
   if (std::filesystem::exists(schemas_path)) {
     const auto &entries{output.entries()};
     const auto &schemas_path_string{schemas_path.native()};
@@ -511,7 +490,6 @@ static auto index_main(const std::string_view &program,
                                             std::filesystem::path{relative} /
                                             SENTINEL / "directory.metapack"};
         directory_summaries[path_key.substr(0, last_slash)].emplace_back(
-            sourcemeta::one::Build::DependencyKind::Static,
             child_directory_metapack);
       } else if (!schema_entry.is_directory && filename == "schema.metapack") {
         const std::string_view parent_path{path_key.data(), last_slash};
@@ -531,21 +509,18 @@ static auto index_main(const std::string_view &program,
                                         path_key.size() - schemas_prefix_size};
         const auto explorer_summary_path{explorer_path /
                                          std::filesystem::path{relative}};
-        summaries.emplace_back(sourcemeta::one::Build::DependencyKind::Static,
-                               explorer_summary_path);
+        summaries.emplace_back(explorer_summary_path);
 
         const auto grandparent_slash{
             parent_path.substr(0, parent_last_slash).rfind('/')};
         if (grandparent_slash != std::string_view::npos) {
           directory_summaries[std::string{
                                   parent_path.substr(0, grandparent_slash)}]
-              .emplace_back(sourcemeta::one::Build::DependencyKind::Static,
-                            explorer_summary_path);
+              .emplace_back(explorer_summary_path);
         }
 
-        dependencies.emplace_back(
-            sourcemeta::one::Build::DependencyKind::Static,
-            std::filesystem::path{parent_path} / "dependencies.metapack");
+        dependencies.emplace_back(std::filesystem::path{parent_path} /
+                                  "dependencies.metapack");
       }
     }
 
@@ -577,8 +552,8 @@ static auto index_main(const std::string_view &program,
 
   const auto dependency_tree_rebuilt{
       DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
-          dependency_tree_path, dependencies, resolver, mutex, "Reviewing",
-          display_schemas_path.string(), "dependencies", output)};
+          dependency_tree_path, resolver, mutex, "Reviewing",
+          display_schemas_path.string(), "dependencies", output, dependencies)};
 
   // Determine which schemas' dependents actually changed by diffing
   // the old and new dependency trees per key. We keep new_dependency_tree
@@ -642,10 +617,8 @@ static auto index_main(const std::string_view &program,
         print_progress(mutex, threads, "Reworking", entry.uri.get(), cursor,
                        rework_entries.size());
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENTS>(
-            entry.dependents_path,
-            {sourcemeta::one::Build::dependency(dependency_tree_path)},
-            entry.uri.get(), mutex, "Reworking", entry.uri.get(), "dependents",
-            output);
+            entry.dependents_path, entry.uri.get(), mutex, "Reworking",
+            entry.uri.get(), "dependents", output, dependency_tree_path);
       },
       concurrency, THREAD_STACK_SIZE);
 
@@ -658,8 +631,8 @@ static auto index_main(const std::string_view &program,
   print_progress(mutex, concurrency, "Producing",
                  display_explorer_path.string(), 0, 100);
   DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
-      explorer_path / SENTINEL / "search.metapack", summaries, nullptr, mutex,
-      "Producing", display_explorer_path.string(), "search", output);
+      explorer_path / SENTINEL / "search.metapack", nullptr, mutex, "Producing",
+      display_explorer_path.string(), "search", output, summaries);
 
   PROFILE_END(profiling, "Search");
 
@@ -677,18 +650,17 @@ static auto index_main(const std::string_view &program,
         (explorer_path / relative_path / SENTINEL / "directory.metapack")
             .lexically_normal()};
     auto &local_summaries{directory_summaries[entry.string()]};
-    local_summaries.emplace_back(sourcemeta::one::Build::DependencyKind::Static,
-                                 mark_configuration_path);
-    local_summaries.emplace_back(sourcemeta::one::Build::DependencyKind::Static,
-                                 mark_version_path);
+    local_summaries.emplace_back(mark_configuration_path);
+    local_summaries.emplace_back(mark_version_path);
     DISPATCH<sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST>(
-        destination, local_summaries,
+        destination,
         {.directory = entry,
          .configuration = configuration,
          .output = output,
          .explorer_path = explorer_path,
          .schemas_path = schemas_path},
-        mutex, "Producing", relative_path.string(), "directory", output);
+        mutex, "Producing", relative_path.string(), "directory", output,
+        local_summaries);
     local_summaries.pop_back();
     local_summaries.pop_back();
   }
@@ -712,34 +684,26 @@ static auto index_main(const std::string_view &program,
                          cursor, directories.size() + summaries.size());
 
           if (relative_path == ".") {
+            const auto directory_metapack{explorer_path / SENTINEL /
+                                          "directory.metapack"};
             DISPATCH<sourcemeta::one::GENERATE_WEB_INDEX>(
                 explorer_path / SENTINEL / "directory-html.metapack",
-                {sourcemeta::one::Build::dependency(explorer_path / SENTINEL /
-                                                    "directory.metapack"),
-                 // We rely on the configuration for site metadata
-                 sourcemeta::one::Build::dependency(mark_configuration_path),
-                 sourcemeta::one::Build::dependency(mark_version_path)},
                 configuration, mutex, "Rendering", relative_path.string(),
-                "index", output);
+                "index", output, directory_metapack, mark_configuration_path,
+                mark_version_path);
             DISPATCH<sourcemeta::one::GENERATE_WEB_NOT_FOUND>(
-                explorer_path / SENTINEL / "404.metapack",
-                {// We rely on the configuration for site metadata
-                 sourcemeta::one::Build::dependency(mark_configuration_path),
-                 sourcemeta::one::Build::dependency(mark_version_path)},
-                configuration, mutex, "Rendering", relative_path.string(),
-                "not-found", output);
+                explorer_path / SENTINEL / "404.metapack", configuration, mutex,
+                "Rendering", relative_path.string(), "not-found", output,
+                mark_configuration_path, mark_version_path);
           } else {
+            const auto directory_metapack{explorer_path / relative_path /
+                                          SENTINEL / "directory.metapack"};
             DISPATCH<sourcemeta::one::GENERATE_WEB_DIRECTORY>(
                 explorer_path / relative_path / SENTINEL /
                     "directory-html.metapack",
-                {sourcemeta::one::Build::dependency(explorer_path /
-                                                    relative_path / SENTINEL /
-                                                    "directory.metapack"),
-                 // We rely on the configuration for site metadata
-                 sourcemeta::one::Build::dependency(mark_configuration_path),
-                 sourcemeta::one::Build::dependency(mark_version_path)},
                 configuration, mutex, "Rendering", relative_path.string(),
-                "directory", output);
+                "directory", output, directory_metapack,
+                mark_configuration_path, mark_version_path);
           }
         },
         concurrency);
@@ -751,27 +715,24 @@ static auto index_main(const std::string_view &program,
          &mark_version_path](const auto &entry, const auto threads,
                              const auto cursor) {
           const auto relative_path{
-              std::filesystem::relative(entry.second, explorer_path)
+              std::filesystem::relative(entry, explorer_path)
                   .parent_path()
                   .parent_path()};
           print_progress(mutex, threads, "Rendering", relative_path.string(),
                          cursor + directories.size(),
                          summaries.size() + directories.size());
           const auto schema_path{schemas_path / relative_path / SENTINEL};
+          const auto schema_deps_metapack{schema_path /
+                                          "dependencies.metapack"};
+          const auto schema_health_metapack{schema_path / "health.metapack"};
+          const auto schema_dependents_metapack{schema_path /
+                                                "dependents.metapack"};
           DISPATCH<sourcemeta::one::GENERATE_WEB_SCHEMA>(
-              entry.second.parent_path() / "schema-html.metapack",
-              {sourcemeta::one::Build::dependency(entry.second),
-               sourcemeta::one::Build::dependency(schema_path /
-                                                  "dependencies.metapack"),
-               sourcemeta::one::Build::dependency(schema_path /
-                                                  "health.metapack"),
-               sourcemeta::one::Build::dependency(schema_path /
-                                                  "dependents.metapack"),
-               // We rely on the configuration for site metadata
-               sourcemeta::one::Build::dependency(mark_configuration_path),
-               sourcemeta::one::Build::dependency(mark_version_path)},
-              configuration, mutex, "Rendering", relative_path.string(),
-              "schema", output);
+              entry.parent_path() / "schema-html.metapack", configuration,
+              mutex, "Rendering", relative_path.string(), "schema", output,
+              entry, schema_deps_metapack, schema_health_metapack,
+              schema_dependents_metapack, mark_configuration_path,
+              mark_version_path);
         },
         concurrency);
   }
@@ -818,11 +779,8 @@ static auto index_main(const std::string_view &program,
   const auto display_routes_path{
       std::filesystem::relative(routes_path, output.path())};
   DISPATCH<sourcemeta::one::GENERATE_URITEMPLATE_ROUTES>(
-      routes_path,
-      {sourcemeta::one::Build::dependency(mark_configuration_path),
-       sourcemeta::one::Build::dependency(mark_version_path)},
-      router, mutex, "Producing", display_routes_path.string(), "routes",
-      output);
+      routes_path, router, mutex, "Producing", display_routes_path.string(),
+      "routes", output, mark_configuration_path, mark_version_path);
 
   PROFILE_END(profiling, "Routes");
 

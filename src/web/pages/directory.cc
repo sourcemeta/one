@@ -18,7 +18,7 @@ auto GENERATE_WEB_DIRECTORY::handler(
     const Context &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory{read_json(dependencies.front().second)};
+  const auto directory{read_json(dependencies.front().get())};
   const auto &canonical{directory.at("url").to_string()};
   const auto &title{directory.defines("title")
                         ? directory.at("title").to_string()
