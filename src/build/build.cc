@@ -19,12 +19,16 @@ auto Build::dependency(std::filesystem::path node)
   return {DependencyKind::Static, std::move(node)};
 }
 
+auto Build::key(const std::filesystem::path &path) const -> std::string {
+  return path.lexically_relative(this->root).string();
+}
+
 Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
             std::filesystem::canonical(output_root))} {
   for (const auto &entry :
        std::filesystem::recursive_directory_iterator(this->root)) {
-    this->tracker.emplace(entry.path(), false);
+    this->entries[this->key(entry.path())].tracked = false;
   }
 
   const auto deps_path{this->root / DEPENDENCIES_FILE};
@@ -63,8 +67,7 @@ Build::Build(const std::filesystem::path &output_root)
       switch (tag) {
         case 't':
           if (!current_key.empty()) {
-            this->dependencies_map.insert_or_assign(current_key,
-                                                    std::move(current_deps));
+            this->entries[current_key].dependencies = std::move(current_deps);
             current_deps = {};
           }
 
@@ -89,9 +92,7 @@ Build::Build(const std::filesystem::path &output_root)
                 std::stoll(std::string{ns_part})};
             const auto mark_value{mark_type{
                 std::chrono::duration_cast<mark_type::duration>(nanoseconds)}};
-            this->marks.insert_or_assign(
-                (this->root / std::string{path_part}).lexically_normal(),
-                mark_value);
+            this->entries[std::string{path_part}].file_mark = mark_value;
           }
 
           break;
@@ -104,22 +105,20 @@ Build::Build(const std::filesystem::path &output_root)
     }
 
     if (!current_key.empty()) {
-      this->dependencies_map.insert_or_assign(current_key,
-                                              std::move(current_deps));
+      this->entries[current_key].dependencies = std::move(current_deps);
     }
     this->has_previous_run = true;
   } catch (...) {
-    this->dependencies_map.clear();
-    this->marks.clear();
+    this->entries.clear();
   }
 }
 
 auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
   assert(path.is_absolute());
-  const auto key{path.lexically_relative(this->root).string()};
-  std::shared_lock lock{this->dependencies_mutex};
-  const auto match{this->dependencies_map.find(key)};
-  return match != this->dependencies_map.end() && !match->second.empty();
+  const auto entry_key{this->key(path)};
+  std::shared_lock lock{this->mutex};
+  const auto match{this->entries.find(entry_key)};
+  return match != this->entries.end() && !match->second.dependencies.empty();
 }
 
 auto Build::finish() -> void {
@@ -127,71 +126,72 @@ auto Build::finish() -> void {
   std::ofstream stream{deps_path};
   assert(!stream.fail());
 
-  std::shared_lock dependencies_lock{this->dependencies_mutex};
-  for (const auto &entry : this->dependencies_map) {
-    if (this->is_untracked_file(this->root / entry.first)) {
+  std::shared_lock lock{this->mutex};
+  for (const auto &entry : this->entries) {
+    if (!entry.second.tracked) {
       continue;
     }
 
-    stream << "t " << entry.first << '\n';
-    for (const auto &dependency : entry.second) {
-      const char kind_char{
-          dependency.first == Build::DependencyKind::Dynamic ? 'd' : 's'};
-      const auto relative{dependency.second.lexically_relative(this->root)};
-      if (!relative.empty() && *relative.begin() != "..") {
-        stream << kind_char << ' ' << relative.string() << '\n';
-      } else {
-        stream << kind_char << ' ' << dependency.second.string() << '\n';
+    if (!entry.second.dependencies.empty()) {
+      stream << "t " << entry.first << '\n';
+      for (const auto &dependency : entry.second.dependencies) {
+        const char kind_char{
+            dependency.first == Build::DependencyKind::Dynamic ? 'd' : 's'};
+        const auto relative{dependency.second.lexically_relative(this->root)};
+        if (!relative.empty() && *relative.begin() != "..") {
+          stream << kind_char << ' ' << relative.string() << '\n';
+        } else {
+          stream << kind_char << ' ' << dependency.second.string() << '\n';
+        }
       }
     }
-  }
 
-  dependencies_lock.unlock();
-
-  std::shared_lock marks_lock{this->mutex};
-  for (const auto &entry : this->marks) {
-    const auto relative{entry.first.lexically_relative(this->root)};
-    if (!relative.empty() && *relative.begin() != "..") {
-      const auto nanoseconds{
-          std::chrono::duration_cast<std::chrono::nanoseconds>(
-              entry.second.time_since_epoch())
-              .count()};
-      stream << "m " << relative.string() << ' '
-             << static_cast<std::int64_t>(nanoseconds) << '\n';
+    if (entry.second.file_mark.has_value()) {
+      // Only persist marks for files inside the output directory
+      if (!entry.first.empty() && entry.first.front() != '.') {
+        const auto nanoseconds{
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                entry.second.file_mark.value().time_since_epoch())
+                .count()};
+        stream << "m " << entry.first << ' '
+               << static_cast<std::int64_t>(nanoseconds) << '\n';
+      }
     }
   }
 
   stream.flush();
   stream.close();
+  lock.unlock();
   this->track(deps_path);
 
-  for (const auto &entry : this->tracker) {
-    if (!entry.second) {
-      std::filesystem::remove_all(entry.first);
+  // Remove untracked files inside the output directory
+  std::shared_lock read_lock{this->mutex};
+  for (const auto &entry : this->entries) {
+    if (!entry.second.tracked && !entry.first.empty() &&
+        entry.first.front() != '.') {
+      const auto absolute_path{(this->root / entry.first).lexically_normal()};
+      std::filesystem::remove_all(absolute_path);
     }
   }
 }
 
 auto Build::refresh(const std::filesystem::path &path) -> void {
-  // We prefer our own computed marks so that we don't have to rely
-  // too much on file-system specific non-sense
   const auto value{std::filesystem::file_time_type::clock::now()};
-  // Because builds are typically ran in parallel
+  const auto entry_key{this->key(path)};
   std::unique_lock lock{this->mutex};
-  this->marks.insert_or_assign(path, value);
+  this->entries[entry_key].file_mark = value;
 }
 
 auto Build::mark(const std::filesystem::path &path)
     -> std::optional<mark_type> {
   assert(path.is_absolute());
+  const auto entry_key{this->key(path)};
 
   {
-    // Because a read operation while a write operation is taking place is
-    // undefined behaviour
     std::shared_lock lock{this->mutex};
-    const auto match{this->marks.find(path)};
-    if (match != this->marks.end()) {
-      return match->second;
+    const auto match{this->entries.find(entry_key)};
+    if (match != this->entries.end() && match->second.file_mark.has_value()) {
+      return match->second.file_mark;
     }
   }
 
@@ -203,45 +203,61 @@ auto Build::mark(const std::filesystem::path &path)
 
   try {
     const auto value{std::filesystem::last_write_time(path)};
-    // Cache for the rest of this run since input files don't change
     std::unique_lock lock{this->mutex};
-    this->marks.emplace(path, value);
+    this->entries[entry_key].file_mark = value;
     return value;
   } catch (const std::filesystem::filesystem_error &) {
     return std::nullopt;
   }
 }
 
-auto Build::track(const std::filesystem::path &path)
-    -> const std::filesystem::path & {
+auto Build::mark_locked(const std::filesystem::path &path) const
+    -> std::optional<mark_type> {
   assert(path.is_absolute());
-  assert(std::filesystem::exists(path));
-  std::unique_lock lock{this->tracker_mutex};
-  assert(!this->tracker.contains(path) || !this->tracker.at(path));
-  const auto &result{this->tracker.insert_or_assign(path, true).first->first};
-  for (auto current = path; !current.empty() && current != this->root;
-       current = current.parent_path()) {
-    this->tracker.insert_or_assign(current, true);
+  const auto entry_key{this->key(path)};
+  const auto match{this->entries.find(entry_key)};
+  if (match != this->entries.end() && match->second.file_mark.has_value()) {
+    return match->second.file_mark;
   }
 
-  return result;
+  // For the locked variant used in dispatch cache-hit checks,
+  // if the mark isn't cached, fall back to stat
+  try {
+    return std::filesystem::last_write_time(path);
+  } catch (const std::filesystem::filesystem_error &) {
+    return std::nullopt;
+  }
+}
+
+auto Build::track(const std::filesystem::path &path) -> void {
+  assert(path.is_absolute());
+  const auto entry_key{this->key(path)};
+  std::unique_lock lock{this->mutex};
+  auto &entry{this->entries[entry_key]};
+  assert(!entry.tracked);
+  entry.tracked = true;
+  for (auto current = path.parent_path();
+       !current.empty() && current != this->root;
+       current = current.parent_path()) {
+    this->entries[this->key(current)].tracked = true;
+  }
 }
 
 auto Build::is_untracked_file(const std::filesystem::path &path) const -> bool {
-  std::shared_lock lock{this->tracker_mutex};
-  const auto match{this->tracker.find(path)};
-  return match == this->tracker.cend() || !match->second;
+  const auto entry_key{this->key(path)};
+  std::shared_lock lock{this->mutex};
+  const auto match{this->entries.find(entry_key)};
+  return match == this->entries.cend() || !match->second.tracked;
 }
 
 auto Build::output_write_json(const std::filesystem::path &path,
-                              const sourcemeta::core::JSON &document)
-    -> const std::filesystem::path & {
+                              const sourcemeta::core::JSON &document) -> void {
   assert(path.is_absolute());
   std::filesystem::create_directories(path.parent_path());
   std::ofstream stream{path};
   assert(!stream.fail());
   sourcemeta::core::stringify(document, stream);
-  return this->track(path);
+  this->track(path);
 }
 
 auto Build::write_json_if_different(const std::filesystem::path &path,
