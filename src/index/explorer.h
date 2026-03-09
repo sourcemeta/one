@@ -370,8 +370,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
       }
     }
-    // Pre-compute sort keys once per entry to avoid calling
-    // try_parse_version O(N log N) times inside the comparator
+
     struct SortKey {
       std::string_view type;
       std::optional<std::tuple<unsigned, unsigned, unsigned>> version;

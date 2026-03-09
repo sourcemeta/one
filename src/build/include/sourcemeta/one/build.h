@@ -59,8 +59,8 @@ public:
       -> bool {
     const auto &destination_string{destination.native()};
     std::shared_lock lock{this->mutex};
-    const auto cached_match{this->entries.find(destination_string)};
-    if (cached_match != this->entries.end()) {
+    const auto cached_match{this->entries_.find(destination_string)};
+    if (cached_match != this->entries_.end()) {
       const auto &entry{cached_match->second};
       if (entry.file_mark.has_value() && !entry.dependencies.empty()) {
         std::size_t static_index{0};
@@ -120,16 +120,27 @@ public:
     this->track(destination);
     {
       std::unique_lock write_lock{this->mutex};
-      this->entries[destination_string].dependencies =
+      this->entries_[destination_string].dependencies =
           std::move(output_dependencies);
     }
 
     return true;
   }
 
+  struct Entry {
+    std::optional<mark_type> file_mark;
+    Dependencies dependencies;
+    bool tracked{false};
+    bool is_directory{false};
+  };
+
   auto track(const std::filesystem::path &path) -> void;
   [[nodiscard]] auto is_untracked_file(const std::filesystem::path &path) const
       -> bool;
+
+  auto entries() const -> const std::unordered_map<std::string, Entry> & {
+    return this->entries_;
+  }
 
   auto write_json_if_different(const std::filesystem::path &path,
                                const sourcemeta::core::JSON &document) -> void;
@@ -140,15 +151,9 @@ private:
   auto output_write_json(const std::filesystem::path &path,
                          const sourcemeta::core::JSON &document) -> void;
 
-  struct Entry {
-    std::optional<mark_type> file_mark;
-    Dependencies dependencies;
-    bool tracked{false};
-  };
-
   std::filesystem::path root;
   std::string root_string;
-  std::unordered_map<std::string, Entry> entries;
+  std::unordered_map<std::string, Entry> entries_;
   mutable std::shared_mutex mutex;
   bool has_previous_run{false};
 };
