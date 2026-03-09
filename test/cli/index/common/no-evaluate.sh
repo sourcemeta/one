@@ -39,7 +39,7 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./deps.txt
+./deps.bin
 ./explorer
 ./explorer/%
 ./explorer/%/directory.metapack

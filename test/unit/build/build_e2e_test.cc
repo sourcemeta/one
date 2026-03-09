@@ -536,7 +536,7 @@ TEST(Build_e2e, persistence_across_runs) {
     build.finish();
   }
 
-  // Second run: new Build instance reads deps.txt, should cache hit
+  // Second run: new Build instance reads deps.bin, should cache hit
   {
     sourcemeta::one::Build build{output_path};
 
