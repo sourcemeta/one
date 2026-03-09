@@ -445,47 +445,107 @@ static auto index_main(const std::string_view &program,
       directory_summaries;
   sourcemeta::one::Build::Dependencies dependencies;
   if (std::filesystem::exists(schemas_path)) {
-    for (const auto &entry :
-         std::filesystem::recursive_directory_iterator{schemas_path}) {
-      if (output.is_untracked_file(entry.path())) {
+    const auto &entries{output.entries()};
+    const auto &schemas_path_string{schemas_path.native()};
+    const auto schemas_prefix_size{schemas_path_string.size() + 1};
+
+    // Collect tracked entries under schemas_path into a sorted vector
+    // so that dependency ordering is deterministic across runs
+    struct SchemaEntry {
+      const std::string *path;
+      bool is_directory;
+    };
+
+    std::vector<SchemaEntry> schema_entries;
+    std::unordered_map<std::string, std::size_t> child_counts;
+    std::unordered_set<std::string> has_sentinel;
+
+    for (const auto &[path_key, entry] : entries) {
+      if (!entry.tracked || path_key.size() <= schemas_path_string.size() ||
+          !path_key.starts_with(schemas_path_string) ||
+          path_key[schemas_path_string.size()] != '/') {
         continue;
       }
 
-      if (entry.is_directory() && entry.path().filename() != SENTINEL) {
+      schema_entries.push_back({&path_key, entry.is_directory});
+
+      const auto last_slash{path_key.rfind('/')};
+      if (last_slash == std::string::npos) {
+        continue;
+      }
+
+      child_counts[path_key.substr(0, last_slash)]++;
+      if (entry.is_directory &&
+          std::string_view{path_key}.substr(last_slash + 1) == SENTINEL) {
+        has_sentinel.insert(path_key.substr(0, last_slash));
+      }
+    }
+
+    std::ranges::sort(schema_entries, [](const auto &left, const auto &right) {
+      return *left.path < *right.path;
+    });
+
+    for (const auto &schema_entry : schema_entries) {
+      const auto &path_key{*schema_entry.path};
+      if (path_key.size() <= schemas_prefix_size) {
+        continue;
+      }
+
+      const auto last_slash{path_key.rfind('/')};
+      const std::string_view filename{path_key.data() + last_slash + 1,
+                                      path_key.size() - last_slash - 1};
+
+      if (schema_entry.is_directory && filename != SENTINEL) {
+        const auto count_match{child_counts.find(path_key)};
         const auto children{
-            std::distance(std::filesystem::directory_iterator(entry.path()),
-                          std::filesystem::directory_iterator{})};
+            count_match != child_counts.end() ? count_match->second : 0u};
         if (children == 0 ||
-            (std::filesystem::exists(entry.path() / SENTINEL) &&
-             children == 1)) {
+            (has_sentinel.count(path_key) > 0 && children == 1)) {
           continue;
         }
 
-        assert(entry.path().is_absolute());
-        directories.emplace_back(entry.path());
-        const auto child_directory_metapack{
-            explorer_path /
-            std::filesystem::relative(entry.path(), schemas_path) / SENTINEL /
-            "directory.metapack"};
-        directory_summaries[entry.path().parent_path().string()].emplace_back(
+        directories.emplace_back(path_key);
+        const std::string_view relative{path_key.data() + schemas_prefix_size,
+                                        path_key.size() - schemas_prefix_size};
+        const auto child_directory_metapack{explorer_path /
+                                            std::filesystem::path{relative} /
+                                            SENTINEL / "directory.metapack"};
+        directory_summaries[path_key.substr(0, last_slash)].emplace_back(
             sourcemeta::one::Build::DependencyKind::Static,
             child_directory_metapack);
-      } else if (entry.is_regular_file() &&
-                 entry.path().filename() == "schema.metapack" &&
-                 entry.path().parent_path().filename() == SENTINEL) {
-        const auto explorer_summary_path{
-            explorer_path /
-            std::filesystem::relative(entry.path(), schemas_path)};
+      } else if (!schema_entry.is_directory && filename == "schema.metapack") {
+        const std::string_view parent_path{path_key.data(), last_slash};
+        const auto parent_last_slash{parent_path.rfind('/')};
+        if (parent_last_slash == std::string_view::npos) {
+          continue;
+        }
+
+        const std::string_view parent_filename{
+            parent_path.data() + parent_last_slash + 1,
+            parent_path.size() - parent_last_slash - 1};
+        if (parent_filename != SENTINEL) {
+          continue;
+        }
+
+        const std::string_view relative{path_key.data() + schemas_prefix_size,
+                                        path_key.size() - schemas_prefix_size};
+        const auto explorer_summary_path{explorer_path /
+                                         std::filesystem::path{relative}};
         summaries.emplace_back(sourcemeta::one::Build::DependencyKind::Static,
                                explorer_summary_path);
-        const auto containing_directory{
-            entry.path().parent_path().parent_path().parent_path().string()};
-        directory_summaries[containing_directory].emplace_back(
-            sourcemeta::one::Build::DependencyKind::Static,
-            explorer_summary_path);
+
+        const auto grandparent_slash{
+            parent_path.substr(0, parent_last_slash).rfind('/')};
+        if (grandparent_slash != std::string_view::npos) {
+          directory_summaries[std::string{
+                                  parent_path.substr(0, grandparent_slash)}]
+              .emplace_back(sourcemeta::one::Build::DependencyKind::Static,
+                            explorer_summary_path);
+        }
+
         dependencies.emplace_back(
             sourcemeta::one::Build::DependencyKind::Static,
-            entry.path().parent_path() / "dependencies.metapack");
+            std::filesystem::path{parent_path} / "dependencies.metapack");
       }
     }
 

@@ -26,7 +26,9 @@ Build::Build(const std::filesystem::path &output_root)
       root_string{this->root.string()} {
   for (const auto &entry :
        std::filesystem::recursive_directory_iterator(this->root)) {
-    this->entries[entry.path().native()].tracked = false;
+    auto &map_entry{this->entries_[entry.path().native()]};
+    map_entry.tracked = false;
+    map_entry.is_directory = entry.is_directory();
   }
 
   const auto deps_path{this->root / DEPENDENCIES_FILE};
@@ -65,7 +67,7 @@ Build::Build(const std::filesystem::path &output_root)
       switch (tag) {
         case 't':
           if (!current_key.empty()) {
-            this->entries[current_key].dependencies = std::move(current_deps);
+            this->entries_[current_key].dependencies = std::move(current_deps);
             current_deps = {};
           }
 
@@ -97,7 +99,7 @@ Build::Build(const std::filesystem::path &output_root)
             std::string absolute_key{this->root_string};
             absolute_key += '/';
             absolute_key += path_part;
-            this->entries[absolute_key].file_mark = mark_value;
+            this->entries_[absolute_key].file_mark = mark_value;
           }
 
           break;
@@ -110,19 +112,19 @@ Build::Build(const std::filesystem::path &output_root)
     }
 
     if (!current_key.empty()) {
-      this->entries[current_key].dependencies = std::move(current_deps);
+      this->entries_[current_key].dependencies = std::move(current_deps);
     }
     this->has_previous_run = true;
   } catch (...) {
-    this->entries.clear();
+    this->entries_.clear();
   }
 }
 
 auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
   assert(path.is_absolute());
   std::shared_lock lock{this->mutex};
-  const auto match{this->entries.find(path.native())};
-  return match != this->entries.end() && !match->second.dependencies.empty();
+  const auto match{this->entries_.find(path.native())};
+  return match != this->entries_.end() && !match->second.dependencies.empty();
 }
 
 auto Build::finish() -> void {
@@ -132,7 +134,7 @@ auto Build::finish() -> void {
 
   const auto root_prefix_size{this->root_string.size() + 1};
   std::shared_lock lock{this->mutex};
-  for (const auto &entry : this->entries) {
+  for (const auto &entry : this->entries_) {
     if (!entry.second.tracked) {
       continue;
     }
@@ -181,7 +183,7 @@ auto Build::finish() -> void {
 
   // Remove untracked files inside the output directory
   std::shared_lock read_lock{this->mutex};
-  for (const auto &entry : this->entries) {
+  for (const auto &entry : this->entries_) {
     if (!entry.second.tracked &&
         entry.first.size() > this->root_string.size() &&
         entry.first.starts_with(this->root_string)) {
@@ -193,7 +195,7 @@ auto Build::finish() -> void {
 auto Build::refresh(const std::filesystem::path &path) -> void {
   const auto value{std::filesystem::file_time_type::clock::now()};
   std::unique_lock lock{this->mutex};
-  this->entries[path.native()].file_mark = value;
+  this->entries_[path.native()].file_mark = value;
 }
 
 auto Build::mark(const std::filesystem::path &path)
@@ -202,8 +204,8 @@ auto Build::mark(const std::filesystem::path &path)
 
   {
     std::shared_lock lock{this->mutex};
-    const auto match{this->entries.find(path.native())};
-    if (match != this->entries.end() && match->second.file_mark.has_value()) {
+    const auto match{this->entries_.find(path.native())};
+    if (match != this->entries_.end() && match->second.file_mark.has_value()) {
       return match->second.file_mark;
     }
   }
@@ -217,7 +219,7 @@ auto Build::mark(const std::filesystem::path &path)
   try {
     const auto value{std::filesystem::last_write_time(path)};
     std::unique_lock lock{this->mutex};
-    this->entries[path.native()].file_mark = value;
+    this->entries_[path.native()].file_mark = value;
     return value;
   } catch (const std::filesystem::filesystem_error &) {
     return std::nullopt;
@@ -227,8 +229,8 @@ auto Build::mark(const std::filesystem::path &path)
 auto Build::mark_locked(const std::filesystem::path &path) const
     -> std::optional<mark_type> {
   assert(path.is_absolute());
-  const auto match{this->entries.find(path.native())};
-  if (match != this->entries.end() && match->second.file_mark.has_value()) {
+  const auto match{this->entries_.find(path.native())};
+  if (match != this->entries_.end() && match->second.file_mark.has_value()) {
     return match->second.file_mark;
   }
 
@@ -245,7 +247,7 @@ auto Build::track(const std::filesystem::path &path) -> void {
   assert(path.is_absolute());
   const auto &path_string{path.native()};
   std::unique_lock lock{this->mutex};
-  this->entries[path_string].tracked = true;
+  this->entries_[path_string].tracked = true;
   auto parent_key{path_string};
   while (true) {
     const auto slash{parent_key.rfind('/')};
@@ -254,19 +256,20 @@ auto Build::track(const std::filesystem::path &path) -> void {
     }
 
     parent_key = parent_key.substr(0, slash);
-    auto &parent_entry{this->entries[parent_key]};
+    auto &parent_entry{this->entries_[parent_key]};
     if (parent_entry.tracked) {
       break;
     }
 
     parent_entry.tracked = true;
+    parent_entry.is_directory = true;
   }
 }
 
 auto Build::is_untracked_file(const std::filesystem::path &path) const -> bool {
   std::shared_lock lock{this->mutex};
-  const auto match{this->entries.find(path.native())};
-  return match == this->entries.cend() || !match->second.tracked;
+  const auto match{this->entries_.find(path.native())};
+  return match == this->entries_.cend() || !match->second.tracked;
 }
 
 auto Build::output_write_json(const std::filesystem::path &path,
