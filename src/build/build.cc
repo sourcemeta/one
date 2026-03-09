@@ -39,15 +39,16 @@ Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
             std::filesystem::canonical(output_root))},
       root_string{this->root.string()} {
-  for (const auto &entry :
-       std::filesystem::recursive_directory_iterator(this->root)) {
-    auto &map_entry{this->entries_[entry.path().native()]};
-    map_entry.tracked = false;
-    map_entry.is_directory = entry.is_directory();
-  }
-
   const auto dependencies_path{this->root / DEPENDENCIES_FILE};
   if (!std::filesystem::exists(dependencies_path)) {
+    // First run or crash recovery: scan directory for orphaned files
+    for (const auto &entry :
+         std::filesystem::recursive_directory_iterator(this->root)) {
+      auto &map_entry{this->entries_[entry.path().native()]};
+      map_entry.tracked = false;
+      map_entry.is_directory = entry.is_directory();
+    }
+
     return;
   }
 
@@ -99,6 +100,9 @@ Build::Build(const std::filesystem::path &output_root)
           break;
         case 'd':
           current_dynamic_dependencies.emplace_back(std::string{value});
+          break;
+        case 'e':
+          this->entries_[std::string{value}];
           break;
         case 'm': {
           const auto space{value.find(' ')};
@@ -172,6 +176,9 @@ auto Build::finish() -> void {
               .count()};
       stream << "m " << entry.first << ' '
              << static_cast<std::int64_t>(nanoseconds) << '\n';
+    } else if (entry.second.static_dependencies.empty() &&
+               entry.second.dynamic_dependencies.empty()) {
+      stream << "e " << entry.first << '\n';
     }
   }
 
