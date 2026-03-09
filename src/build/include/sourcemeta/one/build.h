@@ -57,46 +57,46 @@ public:
                 const std::filesystem::path &destination,
                 const Dependencies &dependencies, const Context &context)
       -> bool {
-    const auto destination_mark{this->mark(destination)};
-    const auto destination_key{
-        destination.lexically_relative(this->root).string()};
-    std::shared_lock dependencies_lock{this->dependencies_mutex};
-    const auto cached_match{this->dependencies_map.find(destination_key)};
-    const auto has_cached{cached_match != this->dependencies_map.end() &&
-                          !cached_match->second.empty()};
-    if (destination_mark.has_value() && has_cached) {
-      const auto &cached{cached_match->second};
-      std::size_t static_index{0};
-      bool static_dependencies_match{true};
-      for (const auto &entry : cached) {
-        if (entry.first == DependencyKind::Static) {
-          if (static_index >= dependencies.size() ||
-              dependencies[static_index].second != entry.second) {
-            static_dependencies_match = false;
-            break;
+    const auto destination_key{this->key(destination)};
+    std::shared_lock lock{this->mutex};
+    const auto cached_match{this->entries.find(destination_key)};
+    if (cached_match != this->entries.end()) {
+      const auto &entry{cached_match->second};
+      if (entry.file_mark.has_value() && !entry.dependencies.empty()) {
+        std::size_t static_index{0};
+        bool static_dependencies_match{true};
+        for (const auto &cached_dependency : entry.dependencies) {
+          if (cached_dependency.first == DependencyKind::Static) {
+            if (static_index >= dependencies.size() ||
+                dependencies[static_index].second != cached_dependency.second) {
+              static_dependencies_match = false;
+              break;
+            }
+
+            static_index += 1;
           }
-
-          static_index += 1;
         }
-      }
 
-      if (static_dependencies_match && static_index != dependencies.size()) {
-        static_dependencies_match = false;
-      }
+        if (static_dependencies_match && static_index != dependencies.size()) {
+          static_dependencies_match = false;
+        }
 
-      if (static_dependencies_match &&
-          std::ranges::none_of(
-              cached, [this, &destination_mark](const auto &dependency) {
-                const auto dependency_mark{this->mark(dependency.second)};
-                return !dependency_mark.has_value() ||
-                       dependency_mark.value() > destination_mark.value();
-              })) {
-        this->track(destination);
-        return false;
+        if (static_dependencies_match &&
+            std::ranges::none_of(
+                entry.dependencies, [this, &entry](const auto &dependency) {
+                  const auto dependency_mark{
+                      this->mark_locked(dependency.second)};
+                  return !dependency_mark.has_value() ||
+                         dependency_mark.value() > entry.file_mark.value();
+                })) {
+          lock.unlock();
+          this->track(destination);
+          return false;
+        }
       }
     }
 
-    dependencies_lock.unlock();
+    lock.unlock();
 
     Dependencies output_dependencies;
     for (const auto &dependency : dependencies) {
@@ -118,18 +118,16 @@ public:
     assert(std::filesystem::exists(destination));
     this->refresh(destination);
     this->track(destination);
-    const auto key{destination.lexically_relative(this->root).string()};
     {
-      std::unique_lock lock{this->dependencies_mutex};
-      this->dependencies_map.insert_or_assign(key,
-                                              std::move(output_dependencies));
+      std::unique_lock write_lock{this->mutex};
+      this->entries[destination_key].dependencies =
+          std::move(output_dependencies);
     }
 
     return true;
   }
 
-  auto track(const std::filesystem::path &path)
-      -> const std::filesystem::path &;
+  auto track(const std::filesystem::path &path) -> void;
   [[nodiscard]] auto is_untracked_file(const std::filesystem::path &path) const
       -> bool;
 
@@ -137,18 +135,22 @@ public:
                                const sourcemeta::core::JSON &document) -> void;
 
 private:
+  auto key(const std::filesystem::path &path) const -> std::string;
+  [[nodiscard]] auto mark_locked(const std::filesystem::path &path) const
+      -> std::optional<mark_type>;
   auto output_write_json(const std::filesystem::path &path,
-                         const sourcemeta::core::JSON &document)
-      -> const std::filesystem::path &;
+                         const sourcemeta::core::JSON &document) -> void;
+
+  struct Entry {
+    std::optional<mark_type> file_mark;
+    Dependencies dependencies;
+    bool tracked{false};
+  };
 
   std::filesystem::path root;
-  std::unordered_map<std::filesystem::path, mark_type> marks;
-  std::shared_mutex mutex;
-  std::unordered_map<std::string, Dependencies> dependencies_map;
-  mutable std::shared_mutex dependencies_mutex;
+  std::unordered_map<std::string, Entry> entries;
+  mutable std::shared_mutex mutex;
   bool has_previous_run{false};
-  std::unordered_map<std::filesystem::path, bool> tracker;
-  mutable std::shared_mutex tracker_mutex;
 };
 
 } // namespace sourcemeta::one
