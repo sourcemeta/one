@@ -75,16 +75,15 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
 }
 
 template <typename Handler, typename... Deps>
-static auto DISPATCH(const std::filesystem::path &destination,
-                     const typename Handler::Context &context,
-                     std::mutex &mutex, const std::string_view title,
-                     const std::string_view prefix,
-                     const std::string_view suffix,
-                     sourcemeta::one::Build &output, const Deps &...deps)
-    -> bool {
+static auto
+DISPATCH(const std::filesystem::path &destination,
+         const typename Handler::Context &context, std::mutex &mutex,
+         const bool verbose, const std::string_view title,
+         const std::string_view prefix, const std::string_view suffix,
+         sourcemeta::one::Build &output, const Deps &...deps) -> bool {
   const auto was_built{output.dispatch<typename Handler::Context>(
       Handler::handler, destination, context, deps...)};
-  if (!was_built) {
+  if (!was_built && verbose) {
     std::lock_guard<std::mutex> lock{mutex};
     std::cerr << "(skip) " << title << ": " << prefix << " [" << suffix
               << "]\n";
@@ -220,6 +219,7 @@ static auto index_main(const std::string_view &program,
   const auto concurrency{app.contains("concurrency")
                              ? std::stoull(app.at("concurrency").front().data())
                              : std::thread::hardware_concurrency()};
+  const auto verbose{app.contains("verbose")};
 
   /////////////////////////////////////////////////////////////////////////////
   // (8) First pass to locate all of the schemas we will be indexing
@@ -274,14 +274,14 @@ static auto index_main(const std::string_view &program,
   sourcemeta::core::parallel_for_each(
       detected_schemas.begin(), detected_schemas.end(),
       [&configuration, &resolver, &mutex, &detected_schemas,
-       &app](const auto &detected, const auto threads, const auto cursor) {
+       verbose](const auto &detected, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Resolving",
                        detected.path.filename().string(), cursor,
                        detected_schemas.size());
         const auto mapping{
             resolver.add(configuration.url, detected.collection_relative_path,
                          detected.collection.get(), detected.path)};
-        if (app.contains("verbose")) {
+        if (verbose) {
           std::lock_guard<std::mutex> lock{mutex};
           std::cerr << mapping.first.get() << " => " << mapping.second.get()
                     << "\n";
@@ -303,14 +303,14 @@ static auto index_main(const std::string_view &program,
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&schemas_path, &resolver, &mutex, &output, &mark_configuration_path,
-       &mark_version_path](const auto &schema, const auto threads,
-                           const auto cursor) {
+       &mark_version_path,
+       verbose](const auto &schema, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Ingesting", schema.first, cursor,
                        resolver.size());
         const auto destination{schemas_path / schema.second.relative_path /
                                SENTINEL / "schema.metapack"};
         DISPATCH<sourcemeta::one::GENERATE_MATERIALISED_SCHEMA>(
-            destination, {schema.first, resolver}, mutex, "Ingesting",
+            destination, {schema.first, resolver}, mutex, verbose, "Ingesting",
             schema.first, "materialise", output, schema.second.path,
             mark_configuration_path, mark_version_path);
 
@@ -335,8 +335,8 @@ static auto index_main(const std::string_view &program,
   sourcemeta::core::parallel_for_each(
       resolver.begin(), resolver.end(),
       [&schemas_path, &explorer_path, &resolver, &mutex, &output,
-       &mark_configuration_path, &mark_version_path](
-          const auto &schema, const auto threads, const auto cursor) {
+       &mark_configuration_path, &mark_version_path,
+       verbose](const auto &schema, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Analysing", schema.first, cursor,
                        resolver.size());
         const auto base_path{schemas_path / schema.second.relative_path /
@@ -348,49 +348,51 @@ static auto index_main(const std::string_view &program,
         const auto health_metapack{base_path / "health.metapack"};
 
         DISPATCH<sourcemeta::one::GENERATE_POINTER_POSITIONS>(
-            base_path / "positions.metapack", resolver, mutex, "Analysing",
-            schema.first, "positions", output, schema_metapack,
+            base_path / "positions.metapack", resolver, mutex, verbose,
+            "Analysing", schema.first, "positions", output, schema_metapack,
             mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_FRAME_LOCATIONS>(
-            base_path / "locations.metapack", resolver, mutex, "Analysing",
-            schema.first, "locations", output, schema_metapack,
+            base_path / "locations.metapack", resolver, mutex, verbose,
+            "Analysing", schema.first, "locations", output, schema_metapack,
             mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENCIES>(
-            dependencies_metapack, resolver, mutex, "Analysing", schema.first,
-            "dependencies", output, schema_metapack, mark_version_path);
+            dependencies_metapack, resolver, mutex, verbose, "Analysing",
+            schema.first, "dependencies", output, schema_metapack,
+            mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_STATS>(
-            base_path / "stats.metapack", resolver, mutex, "Analysing",
+            base_path / "stats.metapack", resolver, mutex, verbose, "Analysing",
             schema.first, "stats", output, schema_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_HEALTH>(
             health_metapack,
             {std::ref(resolver), std::cref(schema.second.collection.get())},
-            mutex, "Analysing", schema.first, "health", output, schema_metapack,
-            dependencies_metapack, mark_version_path);
+            mutex, verbose, "Analysing", schema.first, "health", output,
+            schema_metapack, dependencies_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_BUNDLE>(
-            bundle_metapack, resolver, mutex, "Analysing", schema.first,
-            "bundle", output, schema_metapack, dependencies_metapack,
-            mark_version_path);
+            bundle_metapack, resolver, mutex, verbose, "Analysing",
+            schema.first, "bundle", output, schema_metapack,
+            dependencies_metapack, mark_version_path);
 
         DISPATCH<sourcemeta::one::GENERATE_EDITOR>(
-            base_path / "editor.metapack", resolver, mutex, "Analysing",
-            schema.first, "editor", output, bundle_metapack, mark_version_path);
+            base_path / "editor.metapack", resolver, mutex, verbose,
+            "Analysing", schema.first, "editor", output, bundle_metapack,
+            mark_version_path);
 
         if (attribute_not_disabled(schema.second.collection.get(),
                                    "x-sourcemeta-one:evaluate")) {
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-exhaustive.metapack",
-              sourcemeta::blaze::Mode::Exhaustive, mutex, "Analysing",
+              sourcemeta::blaze::Mode::Exhaustive, mutex, verbose, "Analysing",
               schema.first, "blaze-exhaustive", output, bundle_metapack,
               mark_version_path);
           DISPATCH<sourcemeta::one::GENERATE_BLAZE_TEMPLATE>(
               base_path / "blaze-fast.metapack",
-              sourcemeta::blaze::Mode::FastValidation, mutex, "Analysing",
-              schema.first, "blaze-fast", output, bundle_metapack,
+              sourcemeta::blaze::Mode::FastValidation, mutex, verbose,
+              "Analysing", schema.first, "blaze-fast", output, bundle_metapack,
               mark_version_path);
         }
 
@@ -399,7 +401,7 @@ static auto index_main(const std::string_view &program,
                 "schema.metapack",
             {resolver, schema.second.collection.get(),
              schema.second.relative_path},
-            mutex, "Analysing", schema.first, "metadata", output,
+            mutex, verbose, "Analysing", schema.first, "metadata", output,
             schema_metapack, health_metapack, dependencies_metapack,
             mark_configuration_path, mark_version_path);
       },
@@ -552,7 +554,7 @@ static auto index_main(const std::string_view &program,
 
   const auto dependency_tree_rebuilt{
       DISPATCH<sourcemeta::one::GENERATE_DEPENDENCY_TREE>(
-          dependency_tree_path, resolver, mutex, "Reviewing",
+          dependency_tree_path, resolver, mutex, verbose, "Reviewing",
           display_schemas_path.string(), "dependencies", output, dependencies)};
 
   // Determine which schemas' dependents actually changed by diffing
@@ -612,12 +614,12 @@ static auto index_main(const std::string_view &program,
 
   sourcemeta::core::parallel_for_each(
       rework_entries.begin(), rework_entries.end(),
-      [&rework_entries, &mutex, &output, &dependency_tree_path](
-          const auto &entry, const auto threads, const auto cursor) {
+      [&rework_entries, &mutex, &output, &dependency_tree_path,
+       verbose](const auto &entry, const auto threads, const auto cursor) {
         print_progress(mutex, threads, "Reworking", entry.uri.get(), cursor,
                        rework_entries.size());
         DISPATCH<sourcemeta::one::GENERATE_DEPENDENTS>(
-            entry.dependents_path, entry.uri.get(), mutex, "Reworking",
+            entry.dependents_path, entry.uri.get(), mutex, verbose, "Reworking",
             entry.uri.get(), "dependents", output, dependency_tree_path);
       },
       concurrency, THREAD_STACK_SIZE);
@@ -631,8 +633,8 @@ static auto index_main(const std::string_view &program,
   print_progress(mutex, concurrency, "Producing",
                  display_explorer_path.string(), 0, 100);
   DISPATCH<sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX>(
-      explorer_path / SENTINEL / "search.metapack", nullptr, mutex, "Producing",
-      display_explorer_path.string(), "search", output, summaries);
+      explorer_path / SENTINEL / "search.metapack", nullptr, mutex, verbose,
+      "Producing", display_explorer_path.string(), "search", output, summaries);
 
   PROFILE_END(profiling, "Search");
 
@@ -659,8 +661,8 @@ static auto index_main(const std::string_view &program,
          .output = output,
          .explorer_path = explorer_path,
          .schemas_path = schemas_path},
-        mutex, "Producing", relative_path.string(), "directory", output,
-        local_summaries);
+        mutex, verbose, "Producing", relative_path.string(), "directory",
+        output, local_summaries);
     local_summaries.pop_back();
     local_summaries.pop_back();
   }
@@ -676,8 +678,8 @@ static auto index_main(const std::string_view &program,
         directories.begin(), directories.end(),
         [&configuration, &schemas_path, &explorer_path, &directories,
          &summaries, &mutex, &output, &mark_configuration_path,
-         &mark_version_path](const auto &entry, const auto threads,
-                             const auto cursor) {
+         &mark_version_path,
+         verbose](const auto &entry, const auto threads, const auto cursor) {
           const auto relative_path{
               std::filesystem::relative(entry, schemas_path)};
           print_progress(mutex, threads, "Rendering", relative_path.string(),
@@ -688,21 +690,21 @@ static auto index_main(const std::string_view &program,
                                           "directory.metapack"};
             DISPATCH<sourcemeta::one::GENERATE_WEB_INDEX>(
                 explorer_path / SENTINEL / "directory-html.metapack",
-                configuration, mutex, "Rendering", relative_path.string(),
-                "index", output, directory_metapack, mark_configuration_path,
-                mark_version_path);
+                configuration, mutex, verbose, "Rendering",
+                relative_path.string(), "index", output, directory_metapack,
+                mark_configuration_path, mark_version_path);
             DISPATCH<sourcemeta::one::GENERATE_WEB_NOT_FOUND>(
                 explorer_path / SENTINEL / "404.metapack", configuration, mutex,
-                "Rendering", relative_path.string(), "not-found", output,
-                mark_configuration_path, mark_version_path);
+                verbose, "Rendering", relative_path.string(), "not-found",
+                output, mark_configuration_path, mark_version_path);
           } else {
             const auto directory_metapack{explorer_path / relative_path /
                                           SENTINEL / "directory.metapack"};
             DISPATCH<sourcemeta::one::GENERATE_WEB_DIRECTORY>(
                 explorer_path / relative_path / SENTINEL /
                     "directory-html.metapack",
-                configuration, mutex, "Rendering", relative_path.string(),
-                "directory", output, directory_metapack,
+                configuration, mutex, verbose, "Rendering",
+                relative_path.string(), "directory", output, directory_metapack,
                 mark_configuration_path, mark_version_path);
           }
         },
@@ -712,8 +714,8 @@ static auto index_main(const std::string_view &program,
         summaries.begin(), summaries.end(),
         [&configuration, &schemas_path, &explorer_path, &directories,
          &summaries, &mutex, &output, &mark_configuration_path,
-         &mark_version_path](const auto &entry, const auto threads,
-                             const auto cursor) {
+         &mark_version_path,
+         verbose](const auto &entry, const auto threads, const auto cursor) {
           const auto relative_path{
               std::filesystem::relative(entry, explorer_path)
                   .parent_path()
@@ -729,8 +731,8 @@ static auto index_main(const std::string_view &program,
                                                 "dependents.metapack"};
           DISPATCH<sourcemeta::one::GENERATE_WEB_SCHEMA>(
               entry.parent_path() / "schema-html.metapack", configuration,
-              mutex, "Rendering", relative_path.string(), "schema", output,
-              entry, schema_deps_metapack, schema_health_metapack,
+              mutex, verbose, "Rendering", relative_path.string(), "schema",
+              output, entry, schema_deps_metapack, schema_health_metapack,
               schema_dependents_metapack, mark_configuration_path,
               mark_version_path);
         },
@@ -779,8 +781,9 @@ static auto index_main(const std::string_view &program,
   const auto display_routes_path{
       std::filesystem::relative(routes_path, output.path())};
   DISPATCH<sourcemeta::one::GENERATE_URITEMPLATE_ROUTES>(
-      routes_path, router, mutex, "Producing", display_routes_path.string(),
-      "routes", output, mark_configuration_path, mark_version_path);
+      routes_path, router, mutex, verbose, "Producing",
+      display_routes_path.string(), "routes", output, mark_configuration_path,
+      mark_version_path);
 
   PROFILE_END(profiling, "Routes");
 

@@ -45,7 +45,7 @@ diff "$TMP/output/comment.json" "$TMP/expected_comment.txt"
 
 # Second run without --comment
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"

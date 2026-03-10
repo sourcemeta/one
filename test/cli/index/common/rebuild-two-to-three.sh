@@ -60,7 +60,7 @@ cat << 'EOF' > "$TMP/schemas/c.json"
   "$id": "https://example.com/c"
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
 grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
@@ -96,7 +96,7 @@ EOF
 diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"
 
 # Run 3: re-index with no changes. All three schemas should be fully cached.
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 grep '(skip) Ingesting:' "$TMP/output.txt" | sort > "$TMP/ingest_actual.txt"
 

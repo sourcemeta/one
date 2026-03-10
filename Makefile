@@ -93,7 +93,7 @@ sandbox-index: compile
 	$(PREFIX)/bin/sourcemeta-one-index \
 		$(SANDBOX)/one.json $(OUTPUT)/sandbox --configuration
 	$(PREFIX)/bin/sourcemeta-one-index \
-		$(SANDBOX)/one.json $(OUTPUT)/sandbox --profile
+		$(SANDBOX)/one.json $(OUTPUT)/sandbox --profile --verbose
 
 .PHONY: sandbox
 sandbox: sandbox-index

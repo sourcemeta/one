@@ -67,13 +67,14 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Run it once more
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
+https://example.com/foo => https://sourcemeta.com/example/schemas/foo
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
@@ -120,13 +121,14 @@ cat << 'EOF' > "$TMP/schemas/foo.json"
   "type": "string"
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
+https://example.com/foo => https://sourcemeta.com/example/schemas/foo
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo
 ( 33%) Reviewing: schemas
@@ -147,13 +149,14 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Touch an output file (the indexer trusts its own marks, so this is a no-op)
 touch "$TMP/output/configuration.json"
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
+https://example.com/foo => https://sourcemeta.com/example/schemas/foo
 (100%) Ingesting: https://sourcemeta.com/example/schemas/foo
 (skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
 (100%) Analysing: https://sourcemeta.com/example/schemas/foo

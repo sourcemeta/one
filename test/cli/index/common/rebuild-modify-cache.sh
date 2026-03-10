@@ -55,7 +55,7 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
 # Run 3: re-index with no changes. Everything should be fully cached.
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
@@ -63,6 +63,7 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 (100%) Resolving: a.json
+https://example.com/a => https://sourcemeta.com/example/schemas/a
 (100%) Ingesting: https://sourcemeta.com/example/schemas/a
 (skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
 (100%) Analysing: https://sourcemeta.com/example/schemas/a

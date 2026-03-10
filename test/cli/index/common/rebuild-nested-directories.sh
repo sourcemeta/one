@@ -91,7 +91,7 @@ cat << 'EOF' > "$TMP/schemas-left-a/s5.json"
   "$id": "https://example.com/left/left-a/s5"
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
 grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"

@@ -106,7 +106,7 @@ diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"
 # Second run: delete the schema file
 rm "$TMP/schemas/test.json"
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 --verbose 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
