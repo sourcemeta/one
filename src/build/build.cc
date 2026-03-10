@@ -1,18 +1,15 @@
 #include <sourcemeta/one/build.h>
 
+#include "build_state.h"
+
 #include <sourcemeta/core/jsonschema.h>
 
 #include <algorithm> // std::ranges::none_of
 #include <cassert>   // assert
-#include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint>   // std::int64_t
-#include <fstream>   // std::ofstream, std::ifstream
+#include <fstream>   // std::ofstream
 
-#include <mutex>       // std::unique_lock
-#include <string>      // std::string
-#include <string_view> // std::string_view
-
-static constexpr std::string_view DEPENDENCIES_FILE{"deps.txt"};
+#include <mutex>  // std::unique_lock
+#include <string> // std::string
 
 using mark_type = sourcemeta::one::Build::mark_type;
 using Entry = sourcemeta::one::Build::Entry;
@@ -39,101 +36,21 @@ Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
             std::filesystem::canonical(output_root))},
       root_string{this->root.string()} {
-  for (const auto &entry :
-       std::filesystem::recursive_directory_iterator(this->root)) {
-    auto &map_entry{this->entries_[entry.path().native()]};
-    map_entry.tracked = false;
-    map_entry.is_directory = entry.is_directory();
-  }
+  const auto state_path{this->root / STATE_FILENAME};
+  if (!std::filesystem::exists(state_path)) {
+    // First run or crash recovery: scan directory for orphaned files
+    for (const auto &entry :
+         std::filesystem::recursive_directory_iterator(this->root)) {
+      auto &map_entry{this->entries_[entry.path().native()]};
+      map_entry.tracked = false;
+      map_entry.is_directory = entry.is_directory();
+    }
 
-  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
-  if (!std::filesystem::exists(dependencies_path)) {
     return;
   }
 
   try {
-    std::ifstream stream{dependencies_path};
-    if (!stream.is_open()) {
-      return;
-    }
-
-    std::string contents{std::istreambuf_iterator<char>(stream),
-                         std::istreambuf_iterator<char>()};
-
-    std::string current_key;
-    std::vector<std::filesystem::path> current_static_dependencies;
-    std::vector<std::filesystem::path> current_dynamic_dependencies;
-    std::size_t position{0};
-
-    while (position < contents.size()) {
-      auto newline{contents.find('\n', position)};
-      if (newline == std::string::npos) {
-        newline = contents.size();
-      }
-
-      if (newline <= position + 2 || contents[position + 1] != ' ') {
-        position = newline + 1;
-        continue;
-      }
-
-      const char tag{contents[position]};
-      const std::string_view value{contents.data() + position + 2,
-                                   newline - position - 2};
-
-      switch (tag) {
-        case 't':
-          if (!current_key.empty()) {
-            auto &previous_entry{this->entries_[current_key]};
-            previous_entry.static_dependencies =
-                std::move(current_static_dependencies);
-            previous_entry.dynamic_dependencies =
-                std::move(current_dynamic_dependencies);
-            current_static_dependencies = {};
-            current_dynamic_dependencies = {};
-          }
-
-          current_key = this->root_string;
-          current_key += '/';
-          current_key += value;
-          break;
-        case 's':
-          current_static_dependencies.emplace_back(
-              (this->root / std::string{value}).lexically_normal());
-          break;
-        case 'd':
-          current_dynamic_dependencies.emplace_back(
-              (this->root / std::string{value}).lexically_normal());
-          break;
-        case 'm': {
-          const auto space{value.find(' ')};
-          if (space != std::string_view::npos) {
-            const auto path_part{value.substr(0, space)};
-            const auto nanoseconds_part{value.substr(space + 1)};
-            const std::chrono::nanoseconds nanoseconds{
-                std::stoll(std::string{nanoseconds_part})};
-            const auto mark_value{mark_type{
-                std::chrono::duration_cast<mark_type::duration>(nanoseconds)}};
-            std::string absolute_key{this->root_string};
-            absolute_key += '/';
-            absolute_key += path_part;
-            this->entries_[absolute_key].file_mark = mark_value;
-          }
-
-          break;
-        }
-        default:
-          break;
-      }
-
-      position = newline + 1;
-    }
-
-    if (!current_key.empty()) {
-      auto &last_entry{this->entries_[current_key]};
-      last_entry.static_dependencies = std::move(current_static_dependencies);
-      last_entry.dynamic_dependencies = std::move(current_dynamic_dependencies);
-    }
-    this->has_previous_run = true;
+    this->has_previous_run = load_state(state_path, this->entries_);
   } catch (...) {
     this->entries_.clear();
   }
@@ -149,69 +66,14 @@ auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
 }
 
 auto Build::finish() -> void {
-  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
-  std::ofstream stream{dependencies_path};
-  assert(!stream.fail());
+  const auto state_path{this->root / STATE_FILENAME};
 
-  const auto root_prefix_size{this->root_string.size() + 1};
-  std::shared_lock lock{this->mutex};
-  for (const auto &entry : this->entries_) {
-    if (!entry.second.tracked) {
-      continue;
-    }
-
-    if (!entry.second.static_dependencies.empty() ||
-        !entry.second.dynamic_dependencies.empty()) {
-      if (entry.first.size() > root_prefix_size &&
-          entry.first.starts_with(this->root_string)) {
-        stream << "t " << std::string_view{entry.first}.substr(root_prefix_size)
-               << '\n';
-      } else {
-        stream << "t " << entry.first << '\n';
-      }
-
-      for (const auto &dependency : entry.second.static_dependencies) {
-        const auto &dependency_string{dependency.native()};
-        if (dependency_string.size() > root_prefix_size &&
-            dependency_string.starts_with(this->root_string)) {
-          stream << "s "
-                 << std::string_view{dependency_string}.substr(root_prefix_size)
-                 << '\n';
-        } else {
-          stream << "s " << dependency_string << '\n';
-        }
-      }
-
-      for (const auto &dependency : entry.second.dynamic_dependencies) {
-        const auto &dependency_string{dependency.native()};
-        if (dependency_string.size() > root_prefix_size &&
-            dependency_string.starts_with(this->root_string)) {
-          stream << "d "
-                 << std::string_view{dependency_string}.substr(root_prefix_size)
-                 << '\n';
-        } else {
-          stream << "d " << dependency_string << '\n';
-        }
-      }
-    }
-
-    if (entry.second.file_mark.has_value()) {
-      if (entry.first.size() > root_prefix_size &&
-          entry.first.starts_with(this->root_string)) {
-        const auto nanoseconds{
-            std::chrono::duration_cast<std::chrono::nanoseconds>(
-                entry.second.file_mark.value().time_since_epoch())
-                .count()};
-        stream << "m " << std::string_view{entry.first}.substr(root_prefix_size)
-               << ' ' << static_cast<std::int64_t>(nanoseconds) << '\n';
-      }
-    }
+  {
+    std::shared_lock lock{this->mutex};
+    save_state(state_path, this->entries_);
   }
 
-  stream.flush();
-  stream.close();
-  lock.unlock();
-  this->track(dependencies_path);
+  this->track(state_path);
 
   // Remove untracked files inside the output directory
   std::shared_lock read_lock{this->mutex};

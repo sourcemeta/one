@@ -38,7 +38,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected.txt"
 ./configuration.json
 ./dependency-tree.metapack
-./deps.txt
 ./explorer
 ./explorer/%
 ./explorer/%/directory.metapack
@@ -65,6 +64,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/.period/%/positions.metapack
 ./schemas/example/.period/%/schema.metapack
 ./schemas/example/.period/%/stats.metapack
+./state.bin
 ./version.json
 EOF
 

@@ -34,10 +34,10 @@ EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-test -f "$TMP/output/deps.txt"
-rm "$TMP/output/deps.txt"
-test ! -f "$TMP/output/deps.txt"
+test -f "$TMP/output/state.bin"
+rm "$TMP/output/state.bin"
+test ! -f "$TMP/output/state.bin"
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-test -f "$TMP/output/deps.txt"
+test -f "$TMP/output/state.bin"
