@@ -13,18 +13,9 @@
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 
-namespace sourcemeta::one::state {
+namespace {
 
-static constexpr std::string_view FILENAME{"state.bin"};
-static constexpr std::uint32_t MAGIC{0x44455053};
-static constexpr std::uint32_t VERSION{1};
-static constexpr std::uint8_t FLAG_HAS_DEPENDENCIES{0x01};
-static constexpr std::uint8_t FLAG_HAS_MARK{0x02};
-
-using mark_type = Build::mark_type;
-using Entry = Build::Entry;
-
-static auto read_uint32(const std::uint8_t *data, std::size_t &offset)
+auto read_uint32(const std::uint8_t *data, std::size_t &offset)
     -> std::uint32_t {
   std::uint32_t value;
   std::memcpy(&value, data + offset, sizeof(value));
@@ -32,32 +23,42 @@ static auto read_uint32(const std::uint8_t *data, std::size_t &offset)
   return value;
 }
 
-static auto read_int64(const std::uint8_t *data, std::size_t &offset)
-    -> std::int64_t {
+auto read_int64(const std::uint8_t *data, std::size_t &offset) -> std::int64_t {
   std::int64_t value;
   std::memcpy(&value, data + offset, sizeof(value));
   offset += sizeof(value);
   return value;
 }
 
-static auto append_uint32(std::string &buffer, const std::uint32_t value)
-    -> void {
+auto append_uint32(std::string &buffer, const std::uint32_t value) -> void {
   buffer.append(reinterpret_cast<const char *>(&value), sizeof(value));
 }
 
-static auto append_int64(std::string &buffer, const std::int64_t value)
-    -> void {
+auto append_int64(std::string &buffer, const std::int64_t value) -> void {
   buffer.append(reinterpret_cast<const char *>(&value), sizeof(value));
 }
 
-static auto append_string(std::string &buffer, const std::string &value)
-    -> void {
+auto append_string(std::string &buffer, const std::string &value) -> void {
   append_uint32(buffer, static_cast<std::uint32_t>(value.size()));
   buffer.append(value);
 }
 
-inline auto load(const std::filesystem::path &path,
-                 std::unordered_map<std::string, Entry> &entries) -> bool {
+} // anonymous namespace
+
+namespace sourcemeta::one {
+
+static constexpr std::string_view STATE_FILENAME{"state.bin"};
+static constexpr std::uint32_t STATE_MAGIC{0x44455053};
+static constexpr std::uint32_t STATE_VERSION{1};
+static constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
+static constexpr std::uint8_t STATE_FLAG_HAS_MARK{0x02};
+
+using mark_type = Build::mark_type;
+using Entry = Build::Entry;
+
+inline auto load_state(const std::filesystem::path &path,
+                       std::unordered_map<std::string, Entry> &entries)
+    -> bool {
   const sourcemeta::core::FileView view{path};
   const auto *data{view.as<std::uint8_t>()};
   const auto file_size{view.size()};
@@ -67,11 +68,11 @@ inline auto load(const std::filesystem::path &path,
   }
 
   std::size_t offset{0};
-  if (read_uint32(data, offset) != MAGIC) {
+  if (read_uint32(data, offset) != STATE_MAGIC) {
     return false;
   }
 
-  if (read_uint32(data, offset) != VERSION) {
+  if (read_uint32(data, offset) != STATE_VERSION) {
     return false;
   }
 
@@ -85,7 +86,7 @@ inline auto load(const std::filesystem::path &path,
     const auto flags{data[offset++]};
     auto &map_entry{entries[std::move(entry_path)]};
 
-    if ((flags & FLAG_HAS_DEPENDENCIES) != 0) {
+    if ((flags & STATE_FLAG_HAS_DEPENDENCIES) != 0) {
       const auto static_count{read_uint32(data, offset)};
       map_entry.static_dependencies.reserve(static_count);
       for (std::uint32_t static_index = 0; static_index < static_count;
@@ -107,7 +108,7 @@ inline auto load(const std::filesystem::path &path,
       }
     }
 
-    if ((flags & FLAG_HAS_MARK) != 0) {
+    if ((flags & STATE_FLAG_HAS_MARK) != 0) {
       const auto nanoseconds{read_int64(data, offset)};
       map_entry.file_mark =
           mark_type{std::chrono::duration_cast<mark_type::duration>(
@@ -118,13 +119,13 @@ inline auto load(const std::filesystem::path &path,
   return true;
 }
 
-inline auto save(const std::filesystem::path &path,
-                 const std::unordered_map<std::string, Entry> &entries)
+inline auto save_state(const std::filesystem::path &path,
+                       const std::unordered_map<std::string, Entry> &entries)
     -> void {
   std::string buffer;
   buffer.resize(12);
-  std::memcpy(buffer.data(), &MAGIC, sizeof(MAGIC));
-  std::memcpy(buffer.data() + 4, &VERSION, sizeof(VERSION));
+  std::memcpy(buffer.data(), &STATE_MAGIC, sizeof(STATE_MAGIC));
+  std::memcpy(buffer.data() + 4, &STATE_VERSION, sizeof(STATE_VERSION));
 
   std::uint32_t count{0};
   for (const auto &entry : entries) {
@@ -132,7 +133,7 @@ inline auto save(const std::filesystem::path &path,
       continue;
     }
 
-    ++count;
+    count += 1;
     append_string(buffer, entry.first);
 
     const bool has_dependencies{!entry.second.static_dependencies.empty() ||
@@ -141,10 +142,10 @@ inline auto save(const std::filesystem::path &path,
 
     std::uint8_t flags{0};
     if (has_dependencies) {
-      flags |= FLAG_HAS_DEPENDENCIES;
+      flags |= STATE_FLAG_HAS_DEPENDENCIES;
     }
     if (has_mark) {
-      flags |= FLAG_HAS_MARK;
+      flags |= STATE_FLAG_HAS_MARK;
     }
 
     buffer.push_back(static_cast<char>(flags));
@@ -179,6 +180,6 @@ inline auto save(const std::filesystem::path &path,
   stream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
 }
 
-} // namespace sourcemeta::one::state
+} // namespace sourcemeta::one
 
 #endif

@@ -36,7 +36,7 @@ Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
             std::filesystem::canonical(output_root))},
       root_string{this->root.string()} {
-  const auto state_path{this->root / state::FILENAME};
+  const auto state_path{this->root / STATE_FILENAME};
   if (!std::filesystem::exists(state_path)) {
     // First run or crash recovery: scan directory for orphaned files
     for (const auto &entry :
@@ -50,7 +50,7 @@ Build::Build(const std::filesystem::path &output_root)
   }
 
   try {
-    this->has_previous_run = state::load(state_path, this->entries_);
+    this->has_previous_run = load_state(state_path, this->entries_);
   } catch (...) {
     this->entries_.clear();
   }
@@ -66,11 +66,11 @@ auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
 }
 
 auto Build::finish() -> void {
-  const auto state_path{this->root / state::FILENAME};
+  const auto state_path{this->root / STATE_FILENAME};
 
   {
     std::shared_lock lock{this->mutex};
-    state::save(state_path, this->entries_);
+    save_state(state_path, this->entries_);
   }
 
   this->track(state_path);
