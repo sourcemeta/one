@@ -1,23 +1,15 @@
 #include <sourcemeta/one/build.h>
 
-#include <sourcemeta/core/io.h>
+#include "build_state.h"
+
 #include <sourcemeta/core/jsonschema.h>
 
 #include <algorithm> // std::ranges::none_of
 #include <cassert>   // assert
-#include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint>   // std::int64_t, std::uint32_t, std::uint8_t
-#include <cstring>   // std::memcpy
 #include <fstream>   // std::ofstream
 
 #include <mutex>  // std::unique_lock
 #include <string> // std::string
-
-static constexpr std::string_view DEPENDENCIES_FILE{"state.bin"};
-static constexpr std::uint32_t DEPS_MAGIC{0x44455053};
-static constexpr std::uint32_t DEPS_VERSION{1};
-static constexpr std::uint8_t FLAG_HAS_DEPENDENCIES{0x01};
-static constexpr std::uint8_t FLAG_HAS_MARK{0x02};
 
 using mark_type = sourcemeta::one::Build::mark_type;
 using Entry = sourcemeta::one::Build::Entry;
@@ -38,46 +30,14 @@ static auto mark_locked(const std::unordered_map<std::string, Entry> &entries,
   }
 }
 
-static auto append_uint32(std::string &buffer, const std::uint32_t value)
-    -> void {
-  buffer.append(reinterpret_cast<const char *>(&value), sizeof(value));
-}
-
-static auto append_int64(std::string &buffer, const std::int64_t value)
-    -> void {
-  buffer.append(reinterpret_cast<const char *>(&value), sizeof(value));
-}
-
-static auto append_string(std::string &buffer, const std::string &value)
-    -> void {
-  append_uint32(buffer, static_cast<std::uint32_t>(value.size()));
-  buffer.append(value);
-}
-
-static auto read_uint32(const std::uint8_t *data, std::size_t &offset)
-    -> std::uint32_t {
-  std::uint32_t value;
-  std::memcpy(&value, data + offset, sizeof(value));
-  offset += sizeof(value);
-  return value;
-}
-
-static auto read_int64(const std::uint8_t *data, std::size_t &offset)
-    -> std::int64_t {
-  std::int64_t value;
-  std::memcpy(&value, data + offset, sizeof(value));
-  offset += sizeof(value);
-  return value;
-}
-
 namespace sourcemeta::one {
 
 Build::Build(const std::filesystem::path &output_root)
     : root{(static_cast<void>(std::filesystem::create_directories(output_root)),
             std::filesystem::canonical(output_root))},
       root_string{this->root.string()} {
-  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
-  if (!std::filesystem::exists(dependencies_path)) {
+  const auto state_path{this->root / state::FILENAME};
+  if (!std::filesystem::exists(state_path)) {
     // First run or crash recovery: scan directory for orphaned files
     for (const auto &entry :
          std::filesystem::recursive_directory_iterator(this->root)) {
@@ -90,66 +50,7 @@ Build::Build(const std::filesystem::path &output_root)
   }
 
   try {
-    const sourcemeta::core::FileView view{dependencies_path};
-    const auto *data{view.as<std::uint8_t>()};
-    const auto file_size{view.size()};
-
-    if (file_size < 12) {
-      return;
-    }
-
-    std::size_t offset{0};
-    const auto magic{read_uint32(data, offset)};
-    if (magic != DEPS_MAGIC) {
-      return;
-    }
-
-    const auto version{read_uint32(data, offset)};
-    if (version != DEPS_VERSION) {
-      return;
-    }
-
-    const auto entry_count{read_uint32(data, offset)};
-    for (std::uint32_t index = 0; index < entry_count; ++index) {
-      const auto path_length{read_uint32(data, offset)};
-      std::string entry_path{reinterpret_cast<const char *>(data + offset),
-                             path_length};
-      offset += path_length;
-
-      const auto flags{data[offset++]};
-      auto &map_entry{this->entries_[std::move(entry_path)]};
-
-      if ((flags & FLAG_HAS_DEPENDENCIES) != 0) {
-        const auto static_count{read_uint32(data, offset)};
-        map_entry.static_dependencies.reserve(static_count);
-        for (std::uint32_t static_index = 0; static_index < static_count;
-             ++static_index) {
-          const auto dep_length{read_uint32(data, offset)};
-          map_entry.static_dependencies.emplace_back(std::string{
-              reinterpret_cast<const char *>(data + offset), dep_length});
-          offset += dep_length;
-        }
-
-        const auto dynamic_count{read_uint32(data, offset)};
-        map_entry.dynamic_dependencies.reserve(dynamic_count);
-        for (std::uint32_t dynamic_index = 0; dynamic_index < dynamic_count;
-             ++dynamic_index) {
-          const auto dep_length{read_uint32(data, offset)};
-          map_entry.dynamic_dependencies.emplace_back(std::string{
-              reinterpret_cast<const char *>(data + offset), dep_length});
-          offset += dep_length;
-        }
-      }
-
-      if ((flags & FLAG_HAS_MARK) != 0) {
-        const auto nanoseconds{read_int64(data, offset)};
-        map_entry.file_mark =
-            mark_type{std::chrono::duration_cast<mark_type::duration>(
-                std::chrono::nanoseconds{nanoseconds})};
-      }
-    }
-
-    this->has_previous_run = true;
+    this->has_previous_run = state::load(state_path, this->entries_);
   } catch (...) {
     this->entries_.clear();
   }
@@ -165,69 +66,14 @@ auto Build::has_dependencies(const std::filesystem::path &path) const -> bool {
 }
 
 auto Build::finish() -> void {
-  const auto dependencies_path{this->root / DEPENDENCIES_FILE};
+  const auto state_path{this->root / state::FILENAME};
 
-  std::string buffer;
-  // Reserve header space
-  buffer.resize(12);
-  std::memcpy(buffer.data(), &DEPS_MAGIC, sizeof(DEPS_MAGIC));
-  std::memcpy(buffer.data() + 4, &DEPS_VERSION, sizeof(DEPS_VERSION));
-
-  std::uint32_t count{0};
-  std::shared_lock lock{this->mutex};
-  for (const auto &entry : this->entries_) {
-    if (!entry.second.tracked) {
-      continue;
-    }
-
-    ++count;
-    append_string(buffer, entry.first);
-
-    const bool has_dependencies{!entry.second.static_dependencies.empty() ||
-                                !entry.second.dynamic_dependencies.empty()};
-    const bool has_mark{entry.second.file_mark.has_value()};
-
-    std::uint8_t flags{0};
-    if (has_dependencies) {
-      flags |= FLAG_HAS_DEPENDENCIES;
-    }
-    if (has_mark) {
-      flags |= FLAG_HAS_MARK;
-    }
-
-    buffer.push_back(static_cast<char>(flags));
-
-    if (has_dependencies) {
-      append_uint32(buffer, static_cast<std::uint32_t>(
-                                entry.second.static_dependencies.size()));
-      for (const auto &dependency : entry.second.static_dependencies) {
-        append_string(buffer, dependency.native());
-      }
-
-      append_uint32(buffer, static_cast<std::uint32_t>(
-                                entry.second.dynamic_dependencies.size()));
-      for (const auto &dependency : entry.second.dynamic_dependencies) {
-        append_string(buffer, dependency.native());
-      }
-    }
-
-    if (has_mark) {
-      const auto nanoseconds{
-          std::chrono::duration_cast<std::chrono::nanoseconds>(
-              entry.second.file_mark.value().time_since_epoch())
-              .count()};
-      append_int64(buffer, static_cast<std::int64_t>(nanoseconds));
-    }
+  {
+    std::shared_lock lock{this->mutex};
+    state::save(state_path, this->entries_);
   }
 
-  std::memcpy(buffer.data() + 8, &count, sizeof(count));
-
-  std::ofstream stream{dependencies_path, std::ios::binary};
-  assert(!stream.fail());
-  stream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-  stream.close();
-  lock.unlock();
-  this->track(dependencies_path);
+  this->track(state_path);
 
   // Remove untracked files inside the output directory
   std::shared_lock read_lock{this->mutex};
