@@ -123,6 +123,28 @@ echo "Measuring: cached rebuild (1001 existing)..." >&2
 RESULT_CACHED_1001="$(measure)"
 echo "  Result: ${RESULT_CACHED_1001}ms" >&2
 
+# Fill up to 10000 schemas
+echo "Filling registry to 10000 schemas..." >&2
+index=1001
+while [ "$index" -lt 10000 ]
+do
+  generate_schema "schema-$index"
+  index=$((index + 1))
+done
+echo "Reindexing outside measurements..." >&2
+"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
+
+# Measure adding one schema (with a $ref) to a 10000-schema registry
+echo "Measuring: add one schema (10000 existing)..." >&2
+generate_schema_with_ref "schema-10000" "schema-0"
+RESULT_10000_TO_10001="$(measure)"
+echo "  Result: ${RESULT_10000_TO_10001}ms" >&2
+
+# Measure a fully cached rebuild (nothing changed, 10001 schemas)
+echo "Measuring: cached rebuild (10001 existing)..." >&2
+RESULT_CACHED_10001="$(measure)"
+echo "  Result: ${RESULT_CACHED_10001}ms" >&2
+
 cat << EOF
 [
   {
@@ -141,6 +163,11 @@ cat << EOF
     "value": $RESULT_1000_TO_1001
   },
   {
+    "name": "Add one schema (10000 existing)",
+    "unit": "ms",
+    "value": $RESULT_10000_TO_10001
+  },
+  {
     "name": "Cached rebuild (1 existing)",
     "unit": "ms",
     "value": $RESULT_CACHED_1
@@ -154,6 +181,11 @@ cat << EOF
     "name": "Cached rebuild (1001 existing)",
     "unit": "ms",
     "value": $RESULT_CACHED_1001
+  },
+  {
+    "name": "Cached rebuild (10001 existing)",
+    "unit": "ms",
+    "value": $RESULT_CACHED_10001
   }
 ]
 EOF
