@@ -83,8 +83,7 @@ remove_threads_information() {
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
 # Run 2: add a fifth schema to left/left-a
-# Sibling directories (left-b, right, right-a, right-b) should be fully cached
-# Only left/left-a, left, and root directory listings should rebuild
+# Only the new schema's artifacts and affected directories should rebuild
 cat << 'EOF' > "$TMP/schemas-left-a/s5.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -94,66 +93,76 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
-grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
-cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
-(skip) Ingesting: https://sourcemeta.com/left/left-a/s1 [materialise]
-(skip) Ingesting: https://sourcemeta.com/left/left-b/s2 [materialise]
-(skip) Ingesting: https://sourcemeta.com/right/right-a/s3 [materialise]
-(skip) Ingesting: https://sourcemeta.com/right/right-b/s4 [materialise]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [positions]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [locations]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [dependencies]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [stats]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [health]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [bundle]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [editor]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/left/left-a/s1 [metadata]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [positions]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [locations]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [dependencies]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [stats]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [health]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [bundle]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [editor]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/left/left-b/s2 [metadata]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [positions]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [locations]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [dependencies]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [stats]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [health]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [bundle]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [editor]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/right/right-a/s3 [metadata]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [positions]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [locations]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [dependencies]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [stats]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [health]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [bundle]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [editor]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/right/right-b/s4 [metadata]
-(skip) Producing: left/left-b [directory]
-(skip) Producing: right [directory]
-(skip) Producing: right/right-a [directory]
-(skip) Producing: right/right-b [directory]
-(skip) Producing: routes.bin [routes]
-(skip) Rendering: . [not-found]
-(skip) Rendering: left/left-a/s1 [schema]
-(skip) Rendering: left/left-b [directory]
-(skip) Rendering: left/left-b/s2 [schema]
-(skip) Rendering: right [directory]
-(skip) Rendering: right/right-a [directory]
-(skip) Rendering: right/right-a/s3 [schema]
-(skip) Rendering: right/right-b [directory]
-(skip) Rendering: right/right-b/s4 [schema]
+cat << EOF > "$TMP/expected_a.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas-left-b/s2.json (#1)
+Detecting: $(realpath "$TMP")/schemas-left-a/s1.json (#2)
+Detecting: $(realpath "$TMP")/schemas-left-a/s5.json (#3)
+Detecting: $(realpath "$TMP")/schemas-right-b/s4.json (#4)
+Detecting: $(realpath "$TMP")/schemas-right-a/s3.json (#5)
+( 20%) Resolving: s2.json
+( 40%) Resolving: s1.json
+( 60%) Resolving: s5.json
+( 80%) Resolving: s4.json
+(100%) Resolving: s3.json
+(  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
+(  9%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+( 14%) Producing: schemas/left/left-a/s5/%/locations.metapack
+( 19%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 23%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 28%) Producing: dependency-tree.metapack
+( 33%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 38%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 42%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 57%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+( 61%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 71%) Producing: explorer/left/left-a/%/directory.metapack
+( 76%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 80%) Producing: explorer/left/%/directory.metapack
+( 85%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory.metapack
+( 95%) Producing: explorer/left/%/directory-html.metapack
+(100%) Producing: explorer/%/directory-html.metapack
 EOF
 
-diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"
+cat << EOF > "$TMP/expected_b.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas-right-b/s4.json (#1)
+Detecting: $(realpath "$TMP")/schemas-right-a/s3.json (#2)
+Detecting: $(realpath "$TMP")/schemas-left-b/s2.json (#3)
+Detecting: $(realpath "$TMP")/schemas-left-a/s1.json (#4)
+Detecting: $(realpath "$TMP")/schemas-left-a/s5.json (#5)
+( 20%) Resolving: s4.json
+( 40%) Resolving: s3.json
+( 60%) Resolving: s2.json
+( 80%) Resolving: s1.json
+(100%) Resolving: s5.json
+(  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
+(  9%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+( 14%) Producing: schemas/left/left-a/s5/%/locations.metapack
+( 19%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 23%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 28%) Producing: dependency-tree.metapack
+( 33%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 38%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 42%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 57%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+( 61%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 71%) Producing: explorer/left/left-a/%/directory.metapack
+( 76%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 80%) Producing: explorer/left/%/directory.metapack
+( 85%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory.metapack
+( 95%) Producing: explorer/left/%/directory-html.metapack
+(100%) Producing: explorer/%/directory-html.metapack
+EOF
+
+diff "$TMP/output.txt" "$TMP/expected_a.txt" || diff "$TMP/output.txt" "$TMP/expected_b.txt"

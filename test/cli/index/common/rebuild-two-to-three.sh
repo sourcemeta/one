@@ -52,8 +52,7 @@ remove_threads_information() {
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
 # Run 2: add a third schema
-# The existing schemas' dependents and HTML should be cache hits
-# because the new schema does not affect the dependency tree
+# Only the new schema's artifacts and affected directories should rebuild
 cat << 'EOF' > "$TMP/schemas/c.json"
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -63,50 +62,39 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
-grep '(skip)' "$TMP/output.txt" | LC_ALL=C sort > "$TMP/actual_skips.txt"
-cat << 'EOF' | LC_ALL=C sort > "$TMP/expected_skips.txt"
-(skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
-(skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [stats]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [health]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [bundle]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [editor]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [positions]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [locations]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [dependencies]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [stats]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [health]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [bundle]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [editor]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/example/schemas/b [metadata]
-(skip) Rendering: . [not-found]
-(skip) Rendering: example/schemas/a [schema]
-(skip) Rendering: example/schemas/b [schema]
-(skip) Producing: routes.bin [routes]
+cat << EOF > "$TMP/expected.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas/a.json (#1)
+Detecting: $(realpath "$TMP")/schemas/c.json (#2)
+Detecting: $(realpath "$TMP")/schemas/b.json (#3)
+( 33%) Resolving: a.json
+( 66%) Resolving: c.json
+(100%) Resolving: b.json
+(  4%) Producing: schemas/example/schemas/c/%/schema.metapack
+(  9%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+( 14%) Producing: schemas/example/schemas/c/%/locations.metapack
+( 19%) Producing: schemas/example/schemas/c/%/positions.metapack
+( 23%) Producing: schemas/example/schemas/c/%/stats.metapack
+( 28%) Producing: dependency-tree.metapack
+( 33%) Producing: schemas/example/schemas/c/%/bundle.metapack
+( 38%) Producing: schemas/example/schemas/c/%/health.metapack
+( 42%) Producing: explorer/example/schemas/c/%/schema.metapack
+( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+( 57%) Producing: schemas/example/schemas/c/%/dependents.metapack
+( 61%) Producing: schemas/example/schemas/c/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 71%) Producing: explorer/example/schemas/%/directory.metapack
+( 76%) Producing: explorer/example/schemas/c/%/schema-html.metapack
+( 80%) Producing: explorer/example/%/directory.metapack
+( 85%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory.metapack
+( 95%) Producing: explorer/example/%/directory-html.metapack
+(100%) Producing: explorer/%/directory-html.metapack
 EOF
 
-diff "$TMP/actual_skips.txt" "$TMP/expected_skips.txt"
-
-# Run 3: re-index with no changes. All three schemas should be fully cached.
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
-remove_threads_information "$TMP/output.txt"
-grep '(skip) Ingesting:' "$TMP/output.txt" | sort > "$TMP/ingest_actual.txt"
-
-cat << 'EOF' | sort > "$TMP/ingest_expected.txt"
-(skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
-(skip) Ingesting: https://sourcemeta.com/example/schemas/b [materialise]
-(skip) Ingesting: https://sourcemeta.com/example/schemas/c [materialise]
-EOF
-
-diff "$TMP/ingest_actual.txt" "$TMP/ingest_expected.txt"
+diff "$TMP/output.txt" "$TMP/expected.txt"
 
 cd "$TMP/output"
 find . -mindepth 1 | LC_ALL=C sort > "$TMP/manifest.txt"

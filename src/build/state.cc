@@ -1,19 +1,20 @@
-#ifndef SOURCEMETA_ONE_BUILD_STATE_H_
-#define SOURCEMETA_ONE_BUILD_STATE_H_
-
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/one/build.h>
 
-#include <chrono>        // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint>       // std::int64_t, std::uint32_t, std::uint8_t
-#include <cstring>       // std::memcpy
-#include <filesystem>    // std::filesystem::path
-#include <fstream>       // std::ofstream
-#include <string>        // std::string
-#include <string_view>   // std::string_view
-#include <unordered_map> // std::unordered_map
+#include <sourcemeta/core/io.h>
+
+#include <cassert> // assert
+#include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint> // std::int64_t, std::uint32_t, std::uint8_t
+#include <cstring> // std::memcpy
+#include <fstream> // std::ofstream
+#include <string>  // std::string
 
 namespace {
+
+constexpr std::uint32_t STATE_MAGIC{0x44455053};
+constexpr std::uint32_t STATE_VERSION{1};
+constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
+constexpr std::uint8_t STATE_FLAG_HAS_MARK{0x02};
 
 auto read_uint32(const std::uint8_t *data, std::size_t &offset)
     -> std::uint32_t {
@@ -47,17 +48,9 @@ auto append_string(std::string &buffer, const std::string &value) -> void {
 
 namespace sourcemeta::one {
 
-static constexpr std::string_view STATE_FILENAME{"state.bin"};
-static constexpr std::uint32_t STATE_MAGIC{0x44455053};
-static constexpr std::uint32_t STATE_VERSION{1};
-static constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
-static constexpr std::uint8_t STATE_FLAG_HAS_MARK{0x02};
+using mark_type = std::filesystem::file_time_type;
 
-using mark_type = Build::mark_type;
-using Entry = Build::Entry;
-
-inline auto load_state(const std::filesystem::path &path,
-                       std::unordered_map<std::string, Entry> &entries)
+auto load_state(const std::filesystem::path &path, BuildEntries &entries)
     -> bool {
   const sourcemeta::core::FileView view{path};
   const auto *data{view.as<std::uint8_t>()};
@@ -119,8 +112,7 @@ inline auto load_state(const std::filesystem::path &path,
   return true;
 }
 
-inline auto save_state(const std::filesystem::path &path,
-                       const std::unordered_map<std::string, Entry> &entries)
+auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
     -> void {
   std::string buffer;
   buffer.resize(12);
@@ -181,5 +173,3 @@ inline auto save_state(const std::filesystem::path &path,
 }
 
 } // namespace sourcemeta::one
-
-#endif

@@ -18,7 +18,7 @@ auto load_custom_lint_rules(
     std::unordered_set<std::string_view> &custom_names,
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
-    const sourcemeta::one::Build::DynamicCallback &callback) -> void;
+    const sourcemeta::one::BuildDynamicCallback &callback) -> void;
 
 } // namespace sourcemeta::one
 

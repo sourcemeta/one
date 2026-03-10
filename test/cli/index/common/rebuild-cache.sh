@@ -48,20 +48,31 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/foo
-(100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/example/schemas/foo
-(  0%) Producing: explorer
-( 33%) Producing: example/schemas
-( 66%) Producing: example
-(100%) Producing: .
-( 25%) Rendering: example/schemas
-( 50%) Rendering: example
-( 75%) Rendering: .
-(100%) Rendering: example/schemas/foo
+(  4%) Producing: configuration.json
+(  8%) Producing: version.json
+( 12%) Producing: explorer/%/404.metapack
+( 16%) Producing: schemas/example/schemas/foo/%/schema.metapack
+( 20%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
+( 24%) Producing: schemas/example/schemas/foo/%/locations.metapack
+( 28%) Producing: schemas/example/schemas/foo/%/positions.metapack
+( 32%) Producing: schemas/example/schemas/foo/%/stats.metapack
+( 36%) Producing: dependency-tree.metapack
+( 40%) Producing: schemas/example/schemas/foo/%/bundle.metapack
+( 44%) Producing: schemas/example/schemas/foo/%/health.metapack
+( 48%) Producing: explorer/example/schemas/foo/%/schema.metapack
+( 52%) Producing: schemas/example/schemas/foo/%/blaze-exhaustive.metapack
+( 56%) Producing: schemas/example/schemas/foo/%/blaze-fast.metapack
+( 60%) Producing: schemas/example/schemas/foo/%/dependents.metapack
+( 64%) Producing: schemas/example/schemas/foo/%/editor.metapack
+( 68%) Producing: explorer/%/search.metapack
+( 72%) Producing: explorer/example/schemas/%/directory.metapack
+( 76%) Producing: explorer/example/schemas/foo/%/schema-html.metapack
+( 80%) Producing: explorer/example/%/directory.metapack
+( 84%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 88%) Producing: explorer/%/directory.metapack
+( 92%) Producing: explorer/example/%/directory-html.metapack
+( 96%) Producing: explorer/%/directory-html.metapack
+(100%) Producing: routes.bin
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -74,41 +85,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/foo
-(skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
-(100%) Analysing: https://sourcemeta.com/example/schemas/foo
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [positions]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [locations]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [dependencies]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [stats]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [health]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [bundle]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [editor]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(skip) Reviewing: schemas [dependencies]
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(skip) Producing: explorer [search]
-( 33%) Producing: example/schemas
-(skip) Producing: example/schemas [directory]
-( 66%) Producing: example
-(skip) Producing: example [directory]
-(100%) Producing: .
-(skip) Producing: . [directory]
-( 25%) Rendering: example/schemas
-(skip) Rendering: example/schemas [directory]
-( 50%) Rendering: example
-(skip) Rendering: example [directory]
-( 75%) Rendering: .
-(skip) Rendering: . [index]
-(skip) Rendering: . [not-found]
-(100%) Rendering: example/schemas/foo
-(skip) Rendering: example/schemas/foo [schema]
-(skip) Producing: routes.bin [routes]
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -127,21 +103,27 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/foo
-(100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-( 33%) Producing: example/schemas
-( 66%) Producing: example
-(100%) Producing: .
-( 25%) Rendering: example/schemas
-( 50%) Rendering: example
-( 75%) Rendering: .
-(skip) Rendering: . [not-found]
-(100%) Rendering: example/schemas/foo
-(skip) Producing: routes.bin [routes]
+(  4%) Producing: schemas/example/schemas/foo/%/schema.metapack
+(  9%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
+( 14%) Producing: schemas/example/schemas/foo/%/locations.metapack
+( 19%) Producing: schemas/example/schemas/foo/%/positions.metapack
+( 23%) Producing: schemas/example/schemas/foo/%/stats.metapack
+( 28%) Producing: dependency-tree.metapack
+( 33%) Producing: schemas/example/schemas/foo/%/bundle.metapack
+( 38%) Producing: schemas/example/schemas/foo/%/health.metapack
+( 42%) Producing: explorer/example/schemas/foo/%/schema.metapack
+( 47%) Producing: schemas/example/schemas/foo/%/blaze-exhaustive.metapack
+( 52%) Producing: schemas/example/schemas/foo/%/blaze-fast.metapack
+( 57%) Producing: schemas/example/schemas/foo/%/dependents.metapack
+( 61%) Producing: schemas/example/schemas/foo/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 71%) Producing: explorer/example/schemas/%/directory.metapack
+( 76%) Producing: explorer/example/schemas/foo/%/schema-html.metapack
+( 80%) Producing: explorer/example/%/directory.metapack
+( 85%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory.metapack
+( 95%) Producing: explorer/example/%/directory-html.metapack
+(100%) Producing: explorer/%/directory-html.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -154,40 +136,5 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/foo
-(skip) Ingesting: https://sourcemeta.com/example/schemas/foo [materialise]
-(100%) Analysing: https://sourcemeta.com/example/schemas/foo
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [positions]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [locations]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [dependencies]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [stats]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [health]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [bundle]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [editor]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/example/schemas/foo [metadata]
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(skip) Reviewing: schemas [dependencies]
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(skip) Producing: explorer [search]
-( 33%) Producing: example/schemas
-(skip) Producing: example/schemas [directory]
-( 66%) Producing: example
-(skip) Producing: example [directory]
-(100%) Producing: .
-(skip) Producing: . [directory]
-( 25%) Rendering: example/schemas
-(skip) Rendering: example/schemas [directory]
-( 50%) Rendering: example
-(skip) Rendering: example [directory]
-( 75%) Rendering: .
-(skip) Rendering: . [index]
-(skip) Rendering: . [not-found]
-(100%) Rendering: example/schemas/foo
-(skip) Rendering: example/schemas/foo [schema]
-(skip) Producing: routes.bin [routes]
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

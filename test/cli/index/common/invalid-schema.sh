@@ -33,7 +33,7 @@ cat << 'EOF' > "$TMP/schemas/test.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 # Remove thread information
@@ -49,7 +49,10 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/test
+(  4%) Producing: configuration.json
+(  8%) Producing: version.json
+( 12%) Producing: explorer/%/404.metapack
+( 16%) Producing: schemas/example/schemas/test/%/schema.metapack
 error: The schema does not adhere to its metaschema
 The integer value 1 was expected to equal one of the following values: "array", "boolean", "integer", "null", "number", "object", and "string"
   at instance location "/type"
