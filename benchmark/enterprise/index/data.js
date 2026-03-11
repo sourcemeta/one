@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773171405160,
+  "lastUpdate": 1773257925933,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (enterprise)": [
@@ -1313,6 +1313,68 @@ window.BENCHMARK_DATA = {
           {
             "name": "Cached rebuild (10001 existing)",
             "value": 2910,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti",
+            "email": "jv@jviotti.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "8337eca1c1e87e844314b0c269607e708aed989e",
+          "message": "Benchmark adding and rebuilding a 10k directory of schemas (#724)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-03-10T16:20:13Z",
+          "url": "https://github.com/sourcemeta/one/commit/8337eca1c1e87e844314b0c269607e708aed989e"
+        },
+        "date": 1773257924684,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 25,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 73,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 537,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 5352,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 15,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 45,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 309,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 2992,
             "unit": "ms"
           }
         ]
