@@ -652,6 +652,7 @@ auto delta(
   const auto comment_string{comment_path.string()};
   const auto configuration_string{configuration_path.string()};
 
+  std::unordered_set<std::string> stale_roots;
   for (const auto &[entry_path, entry] : entries) {
     if (!entry_path.starts_with(output_prefix)) {
       continue;
@@ -673,9 +674,37 @@ auto delta(
     }
 
     if (!is_known) {
-      remove_wave.push_back(
-          {BuildAction::Remove, std::filesystem::path{entry_path}, {}});
+      std::filesystem::path stale{entry_path};
+      while (stale.has_parent_path()) {
+        const auto parent{stale.parent_path()};
+        if (parent == output) {
+          break;
+        }
+
+        bool parent_is_known{false};
+        const auto parent_string{parent.string()};
+        for (const auto &base : known_bases) {
+          if (parent_string == base || parent_string.starts_with(base + "/") ||
+              base.starts_with(parent_string + "/")) {
+            parent_is_known = true;
+            break;
+          }
+        }
+
+        if (parent_is_known) {
+          break;
+        }
+
+        stale = parent;
+      }
+
+      stale_roots.insert(stale.string());
     }
+  }
+
+  for (auto &root : stale_roots) {
+    remove_wave.push_back(
+        {BuildAction::Remove, std::filesystem::path{root}, {}});
   }
 
   bool web_removed{false};

@@ -671,8 +671,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
   ADD_ENTRY(entries, output, output / "schemas" / "ghost" / "%",
             {.file_mark = MTIME(100),
              .static_dependencies = {},
-             .dynamic_dependencies = {},
-             .is_directory = true});
+             .dynamic_dependencies = {}});
   const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};

@@ -94,41 +94,19 @@ static auto uri_for_destination(
   return match->second;
 }
 
-// After a handler executes, record the result in the entries map
 static auto
 commit_entry(std::mutex &entries_mutex, sourcemeta::one::BuildEntries &entries,
              const std::filesystem::path &destination,
              const std::vector<std::filesystem::path> &static_dependencies,
-             std::vector<std::filesystem::path> &&dynamic_dependencies,
-             const std::filesystem::path &output_root) -> void {
+             std::vector<std::filesystem::path> &&dynamic_dependencies)
+    -> void {
   const auto now{std::filesystem::file_time_type::clock::now()};
-  const auto &destination_string{destination.native()};
-  const auto &root_string{output_root.native()};
-
   std::lock_guard<std::mutex> lock{entries_mutex};
-  auto &entry{entries[destination_string]};
+  auto &entry{entries[destination.native()]};
   entry.file_mark = now;
   entry.static_dependencies = static_dependencies;
   entry.dynamic_dependencies = std::move(dynamic_dependencies);
   entry.tracked = true;
-
-  // Track parent directories up to the output root
-  auto parent_key{destination_string};
-  while (true) {
-    const auto slash{parent_key.rfind('/')};
-    if (slash == std::string::npos || slash < root_string.size()) {
-      break;
-    }
-
-    parent_key = parent_key.substr(0, slash);
-    auto &parent_entry{entries[parent_key]};
-    if (parent_entry.tracked) {
-      break;
-    }
-
-    parent_entry.tracked = true;
-    parent_entry.is_directory = true;
-  }
 }
 
 static auto index_main(const std::string_view &program,
@@ -678,8 +656,7 @@ static auto index_main(const std::string_view &program,
           }
 
           commit_entry(entries_mutex, entries, action.destination,
-                       action.dependencies, std::move(dynamic_dependencies),
-                       canonical_output);
+                       action.dependencies, std::move(dynamic_dependencies));
         },
         concurrency, THREAD_STACK_SIZE);
   }

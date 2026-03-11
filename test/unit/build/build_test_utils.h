@@ -150,16 +150,10 @@ check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
 }
 
 static auto ADD_ENTRY_IMPL(sourcemeta::one::BuildEntries &entries,
-                           const std::filesystem::path &output,
+                           const std::filesystem::path &,
                            const std::filesystem::path &path,
                            sourcemeta::one::BuildEntry entry) -> void {
   entries[path.string()] = std::move(entry);
-  auto parent{path.parent_path()};
-  while (parent != output && parent.has_parent_path() &&
-         parent != parent.parent_path()) {
-    entries[parent.string()].is_directory = true;
-    parent = parent.parent_path();
-  }
 }
 
 static auto ADD_ENTRY(sourcemeta::one::BuildEntries &entries,
@@ -259,9 +253,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildEntries &entries,
   do {                                                                         \
     std::set<std::filesystem::path> total_files_result;                        \
     for (const auto &[total_files_path, total_files_entry] : (entries)) {      \
-      if (!total_files_entry.is_directory) {                                   \
-        total_files_result.insert(total_files_path);                           \
-      }                                                                        \
+      total_files_result.insert(total_files_path);                             \
     }                                                                          \
     for (const auto &total_files_wave : (plan).waves) {                        \
       for (const auto &total_files_action : total_files_wave) {                \

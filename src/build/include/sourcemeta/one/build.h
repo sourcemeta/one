@@ -25,8 +25,6 @@ struct BuildEntry {
   std::vector<std::filesystem::path> dynamic_dependencies;
   // TODO: Do we need this?
   bool tracked{false};
-  // TODO: Do we even need to track directories now?
-  bool is_directory{false};
 };
 
 enum class BuildType : std::uint8_t { Headless, Full };
