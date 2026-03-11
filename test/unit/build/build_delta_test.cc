@@ -2234,8 +2234,8 @@ TEST(Build_delta, mtime_no_file_mark) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  entries[(output / "schemas" / "foo" / "%" / "schema.metapack").string()]
-      .file_mark.reset();
+  entries.erase(
+      (output / "schemas" / "foo" / "%" / "schema.metapack").string());
   const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;

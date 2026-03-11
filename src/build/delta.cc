@@ -110,8 +110,7 @@ static auto is_dirty(const std::string &target_path, const TargetMap &targets,
   }
 
   const auto entry_match{entries.find(target_path)};
-  if (entry_match == entries.end() ||
-      !entry_match->second.file_mark.has_value()) {
+  if (entry_match == entries.end()) {
     cache[target_path] = DirtyState::Dirty;
     return true;
   }
@@ -304,8 +303,7 @@ auto delta(
           (schema_base_path(output, info.relative_output) / "schema.metapack")
               .string()};
       const auto match{entries.find(metapack_path)};
-      if (match == entries.end() || !match->second.file_mark.has_value() ||
-          info.mtime > match->second.file_mark.value()) {
+      if (match == entries.end() || info.mtime > match->second.file_mark) {
         force_dirty.insert(metapack_path);
       }
     }
@@ -319,8 +317,7 @@ auto delta(
           (schema_base_path(output, info.relative_output) / "schema.metapack")
               .string()};
       const auto match{entries.find(metapack_path)};
-      if (match == entries.end() || !match->second.file_mark.has_value() ||
-          info.mtime > match->second.file_mark.value()) {
+      if (match == entries.end() || info.mtime > match->second.file_mark) {
         force_dirty.insert(metapack_path);
       }
     }

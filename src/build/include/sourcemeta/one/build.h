@@ -10,7 +10,6 @@
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
 #include <functional>  // std::function, std::reference_wrapper
-#include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <unordered_map> // std::unordered_map
@@ -19,8 +18,7 @@
 namespace sourcemeta::one {
 
 struct BuildEntry {
-  // TODO: Is it only optional for directories?
-  std::optional<std::filesystem::file_time_type> file_mark;
+  std::filesystem::file_time_type file_mark;
   std::vector<std::filesystem::path> static_dependencies;
   std::vector<std::filesystem::path> dynamic_dependencies;
   // TODO: Do we need this?

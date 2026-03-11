@@ -12,9 +12,8 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{1};
+constexpr std::uint32_t STATE_VERSION{2};
 constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
-constexpr std::uint8_t STATE_FLAG_HAS_MARK{0x02};
 
 auto read_uint32(const std::uint8_t *data, std::size_t &offset)
     -> std::uint32_t {
@@ -101,12 +100,10 @@ auto load_state(const std::filesystem::path &path, BuildEntries &entries)
       }
     }
 
-    if ((flags & STATE_FLAG_HAS_MARK) != 0) {
-      const auto nanoseconds{read_int64(data, offset)};
-      map_entry.file_mark =
-          mark_type{std::chrono::duration_cast<mark_type::duration>(
-              std::chrono::nanoseconds{nanoseconds})};
-    }
+    const auto nanoseconds{read_int64(data, offset)};
+    map_entry.file_mark =
+        mark_type{std::chrono::duration_cast<mark_type::duration>(
+            std::chrono::nanoseconds{nanoseconds})};
   }
 
   return true;
@@ -130,14 +127,9 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
 
     const bool has_dependencies{!entry.second.static_dependencies.empty() ||
                                 !entry.second.dynamic_dependencies.empty()};
-    const bool has_mark{entry.second.file_mark.has_value()};
-
     std::uint8_t flags{0};
     if (has_dependencies) {
       flags |= STATE_FLAG_HAS_DEPENDENCIES;
-    }
-    if (has_mark) {
-      flags |= STATE_FLAG_HAS_MARK;
     }
 
     buffer.push_back(static_cast<char>(flags));
@@ -156,13 +148,10 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
       }
     }
 
-    if (has_mark) {
-      const auto nanoseconds{
-          std::chrono::duration_cast<std::chrono::nanoseconds>(
-              entry.second.file_mark.value().time_since_epoch())
-              .count()};
-      append_int64(buffer, static_cast<std::int64_t>(nanoseconds));
-    }
+    const auto nanoseconds{std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               entry.second.file_mark.time_since_epoch())
+                               .count()};
+    append_int64(buffer, static_cast<std::int64_t>(nanoseconds));
   }
 
   std::memcpy(buffer.data() + 8, &count, sizeof(count));
