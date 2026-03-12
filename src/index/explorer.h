@@ -108,15 +108,14 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  using Context = std::pair<
-      std::reference_wrapper<const sourcemeta::one::Configuration::Collection>,
-      std::filesystem::path>;
+  using Context = std::string_view;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const sourcemeta::one::Resolver &resolver,
-                      const Context &context) -> void {
+                      const Context &uri) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
+    const auto &resolver_entry{resolver.entry(uri)};
     const auto schema{
         sourcemeta::one::read_json_with_metadata(dependencies.front())};
     const auto id{sourcemeta::core::identify(
@@ -128,8 +127,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     result.assign("bytes", sourcemeta::core::JSON{schema.bytes});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
-    result.assign("path",
-                  sourcemeta::core::JSON{"/" + context.second.string()});
+    result.assign("path", sourcemeta::core::JSON{
+                              "/" + resolver_entry.relative_path.string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
         schema.data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
@@ -187,7 +186,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
-    const auto &collection{context.first.get()};
+    const auto &collection{resolver_entry.collection.get()};
 
     if (collection.extra.defines("x-sourcemeta-one:alert")) {
       assert(collection.extra.at("x-sourcemeta-one:alert").is_string());
@@ -204,7 +203,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("provenance", sourcemeta::core::JSON{nullptr});
     }
 
-    result.assign("breadcrumb", make_breadcrumb(context.second, false));
+    result.assign("breadcrumb",
+                  make_breadcrumb(resolver_entry.relative_path, false));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 

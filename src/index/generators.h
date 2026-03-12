@@ -287,16 +287,16 @@ struct GENERATE_DEPENDENTS {
 };
 
 struct GENERATE_HEALTH {
-  using Context = sourcemeta::blaze::Configuration;
+  using Context = std::string_view;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const sourcemeta::one::Resolver &resolver,
-                      const Context &configuration) -> void {
+                      const Context &uri) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
-
-    auto &cache_entry{bundle_for(configuration, resolver, callback)};
+    const auto &collection{resolver.entry(uri).collection.get()};
+    auto &cache_entry{bundle_for(collection, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
     const auto result{cache_entry.bundle.check(
         contents, sourcemeta::core::schema_walker,

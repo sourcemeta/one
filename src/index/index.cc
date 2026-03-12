@@ -435,7 +435,7 @@ static auto index_main(const std::string_view &program,
                   uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_HEALTH::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, resolver.entry(uri).collection.get());
+                  resolver, uri);
               break;
             }
 
@@ -470,13 +470,9 @@ static auto index_main(const std::string_view &program,
             case BuildAction::SchemaMetadata: {
               const auto &uri{
                   uri_for_destination(action.destination, path_to_uri)};
-              const auto &resolver_entry{resolver.entry(uri)};
-              const sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::Context
-                  context{resolver_entry.collection.get(),
-                          resolver_entry.relative_path};
               sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, context);
+                  resolver, uri);
               break;
             }
 
