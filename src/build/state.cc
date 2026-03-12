@@ -2,13 +2,12 @@
 
 #include <sourcemeta/core/io.h>
 
-#include <algorithm> // std::none_of, std::find
-#include <cassert>   // assert
-#include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint>   // std::int64_t, std::uint32_t, std::uint8_t
-#include <cstring>   // std::memcpy
-#include <fstream>   // std::ofstream
-#include <string>    // std::string
+#include <cassert> // assert
+#include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint> // std::int64_t, std::uint32_t, std::uint8_t
+#include <cstring> // std::memcpy
+#include <fstream> // std::ofstream
+#include <string>  // std::string
 
 namespace {
 
@@ -120,13 +119,6 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
   std::uint32_t count{0};
   for (const auto &entry : entries) {
     count += 1;
-
-    assert(std::ranges::none_of(
-        entry.second.dynamic_dependencies, [&](const auto &dependency) {
-          return std::ranges::find(entry.second.static_dependencies,
-                                   dependency) !=
-                 entry.second.static_dependencies.end();
-        }));
 
     append_string(buffer, entry.first);
 
