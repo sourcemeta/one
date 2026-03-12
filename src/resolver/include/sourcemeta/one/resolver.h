@@ -49,15 +49,15 @@ public:
   [[nodiscard]] auto size() const -> auto { return this->views.size(); }
 
   struct Entry {
-    std::optional<std::filesystem::path> cache_path;
     std::filesystem::path path;
-    sourcemeta::core::JSON::String dialect;
     // This is the collection name plus the final schema path component
     std::filesystem::path relative_path;
-    sourcemeta::core::JSON::String original_identifier;
-    std::reference_wrapper<const Configuration::Collection> collection;
     std::filesystem::file_time_type mtime;
-    bool evaluate;
+    bool evaluate{true};
+    std::optional<std::filesystem::path> cache_path{};
+    sourcemeta::core::JSON::String dialect{};
+    sourcemeta::core::JSON::String original_identifier{};
+    const Configuration::Collection *collection{nullptr};
   };
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;

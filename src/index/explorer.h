@@ -185,7 +185,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
-    const auto &collection{resolver_entry.collection.get()};
+    const auto &collection{*resolver_entry.collection};
 
     if (collection.extra.defines("x-sourcemeta-one:alert")) {
       assert(collection.extra.at("x-sourcemeta-one:alert").is_string());

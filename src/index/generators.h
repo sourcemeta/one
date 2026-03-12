@@ -342,7 +342,7 @@ struct GENERATE_HEALTH {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(action.dependencies.front())};
-    const auto &collection{resolver.entry(action.data).collection.get()};
+    const auto &collection{*resolver.entry(action.data).collection};
     auto &cache_entry{bundle_for(collection, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
     const auto result{cache_entry.bundle.check(

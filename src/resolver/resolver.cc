@@ -188,7 +188,7 @@ auto Resolver::operator()(
           // This is safe, as at this point we have validated all schemas
           // against their meta-schemas
           assert(maybe_ref->is_string());
-          normalise_ref(result->second.collection.get(), entry.second.base,
+          normalise_ref(*result->second.collection, entry.second.base,
                         subschema, "$ref", maybe_ref->to_string());
         }
 
@@ -200,7 +200,7 @@ auto Resolver::operator()(
             // This is safe, as at this point we have validated all schemas
             // against their meta-schemas
             assert(maybe_dynamic_ref->is_string());
-            normalise_ref(result->second.collection.get(), entry.second.base,
+            normalise_ref(*result->second.collection, entry.second.base,
                           subschema, "$dynamicRef",
                           maybe_dynamic_ref->to_string());
           }
@@ -319,16 +319,16 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   std::unique_lock lock{this->mutex};
   auto result{this->views.emplace(
       new_identifier,
-      Entry{.cache_path = std::nullopt,
-            .path = path,
-            .dialect = std::move(current_dialect),
+      Entry{.path = path,
             .relative_path = sourcemeta::core::URI{new_identifier}
                                  .relative_to(server_url)
                                  .recompose(),
-            .original_identifier = identifier,
-            .collection = collection,
             .mtime = std::filesystem::last_write_time(path),
-            .evaluate = evaluate})};
+            .evaluate = evaluate,
+            .cache_path = std::nullopt,
+            .dialect = std::move(current_dialect),
+            .original_identifier = identifier,
+            .collection = &collection})};
   lock.unlock();
   if (!result.second && result.first->second.path != path) {
     throw sourcemeta::core::SchemaFrameError(
@@ -340,6 +340,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   const auto result{this->views.find(std::string{identifier})};
   assert(result != this->views.cend());
+  assert(!result->second.dialect.empty());
+  assert(!result->second.original_identifier.empty());
+  assert(result->second.collection != nullptr);
   return result->second;
 }
 
