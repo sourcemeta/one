@@ -58,6 +58,8 @@ public:
     std::reference_wrapper<const Configuration::Collection> collection;
   };
 
+  [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
+
 private:
   std::unordered_map<sourcemeta::core::JSON::String, Entry> views;
   std::shared_mutex mutex;

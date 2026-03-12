@@ -339,8 +339,6 @@ static auto index_main(const std::string_view &program,
   // We add entries for both schemas/ and explorer/ bases so that
   // uri_for_destination works for any destination under either tree
   std::unordered_map<std::string, std::string> path_to_uri;
-  std::unordered_map<std::string, const sourcemeta::one::Resolver::Entry *>
-      uri_to_entry;
   for (const auto &[uri, resolver_entry] : resolver) {
     const auto schemas_base{schemas_path / resolver_entry.relative_path /
                             SENTINEL};
@@ -348,7 +346,6 @@ static auto index_main(const std::string_view &program,
     const auto explorer_base{explorer_path / resolver_entry.relative_path /
                              SENTINEL};
     path_to_uri[(explorer_base / "schema.metapack").string()] = uri;
-    uri_to_entry[uri] = &resolver_entry;
   }
 
   // Compute the delta plan (empty changed/removed for now)
@@ -436,10 +433,9 @@ static auto index_main(const std::string_view &program,
             case BuildAction::Health: {
               const auto &uri{
                   uri_for_destination(action.destination, path_to_uri)};
-              const auto *resolver_entry{uri_to_entry.at(uri)};
               sourcemeta::one::GENERATE_HEALTH::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, resolver_entry->collection.get());
+                  resolver, resolver.entry(uri).collection.get());
               break;
             }
 
@@ -474,10 +470,10 @@ static auto index_main(const std::string_view &program,
             case BuildAction::SchemaMetadata: {
               const auto &uri{
                   uri_for_destination(action.destination, path_to_uri)};
-              const auto *resolver_entry{uri_to_entry.at(uri)};
+              const auto &resolver_entry{resolver.entry(uri)};
               const sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::Context
-                  context{resolver_entry->collection.get(),
-                          resolver_entry->relative_path};
+                  context{resolver_entry.collection.get(),
+                          resolver_entry.relative_path};
               sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
                   action.destination, action.dependencies, dynamic_callback,
                   resolver, context);

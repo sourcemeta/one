@@ -327,6 +327,12 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   return {result.first->second.original_identifier, result.first->first};
 }
 
+auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
+  const auto result{this->views.find(std::string{identifier})};
+  assert(result != this->views.cend());
+  return result->second;
+}
+
 auto Resolver::cache_path(const sourcemeta::core::JSON::String &uri,
                           const std::filesystem::path &path) -> void {
   assert(std::filesystem::exists(path));

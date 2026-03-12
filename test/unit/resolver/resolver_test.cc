@@ -538,6 +538,18 @@ TEST_F(ResolverTest, meta_draft4_override) {
   })JSON");
 }
 
+TEST_F(ResolverTest, entry_lookup) {
+  RESOLVER_INIT(resolver);
+  RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
+
+  const auto &entry{
+      resolver.entry("http://localhost:8000/example/2020-12-with-id")};
+  EXPECT_EQ(entry.relative_path,
+            std::filesystem::path{"example/2020-12-with-id"});
+  EXPECT_EQ(entry.original_identifier,
+            "https://example.com/schemas/2020-12-with-id");
+}
+
 TEST_F(ResolverTest, no_base_anonymous) {
   RESOLVER_INIT(resolver);
   RESOLVER_ADD(resolver, "no-base", "anonymous.json",
