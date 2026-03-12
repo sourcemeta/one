@@ -390,7 +390,7 @@ auto delta(
       plan.waves.push_back({{.type = BuildAction::Comment,
                              .destination = comment_path,
                              .dependencies = {},
-                             .data = {}}});
+                             .data = comment}});
       plan.size = 1;
       return plan;
     }
@@ -773,7 +773,7 @@ auto delta(
     init_wave.push_back({.type = BuildAction::Version,
                          .destination = version_path,
                          .dependencies = {},
-                         .data = {}});
+                         .data = version});
     init_wave.push_back({.type = BuildAction::Configuration,
                          .destination = configuration_path,
                          .dependencies = {},
@@ -782,7 +782,7 @@ auto delta(
       init_wave.push_back({.type = BuildAction::Comment,
                            .destination = comment_path,
                            .dependencies = {},
-                           .data = {}});
+                           .data = comment});
     } else if (entries.contains(comment_string)) {
       remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
     }
@@ -791,7 +791,7 @@ auto delta(
     plan.waves.push_back({{.type = BuildAction::Comment,
                            .destination = comment_path,
                            .dependencies = {},
-                           .data = {}}});
+                           .data = comment}});
   } else if (entries.contains(comment_string)) {
     remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
   }

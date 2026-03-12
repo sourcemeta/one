@@ -26,7 +26,7 @@ TEST(Build_delta, full_empty_registry) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack", "");
@@ -72,7 +72,7 @@ TEST(Build_delta, full_single_schema) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
@@ -607,7 +607,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
@@ -737,7 +737,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
@@ -860,10 +860,10 @@ TEST(Build_delta, full_with_comment) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
 
-  EXPECT_ACTION(plan, 0, 0, 3, Comment, output / "comment.json", "");
+  EXPECT_ACTION(plan, 0, 0, 3, Comment, output / "comment.json", "Hello world");
   EXPECT_ACTION(plan, 0, 1, 3, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 2, 3, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 2, 3, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack", "");
@@ -909,7 +909,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack", "");
@@ -957,7 +957,7 @@ TEST(Build_delta, incremental_with_comment) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "");
+  EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "Hello world");
 
   EXPECT_ACTION(plan, 1, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1210,7 +1210,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "");
+  EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "hello");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "comment.json",
@@ -1366,7 +1366,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack", "");
@@ -1414,7 +1414,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
@@ -1534,7 +1534,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
@@ -3336,7 +3336,7 @@ TEST(Build_delta, headless_full_empty_registry) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 3, DependencyTree,
                 output / "dependency-tree.metapack", "");
@@ -3372,7 +3372,7 @@ TEST(Build_delta, headless_full_single_schema) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3996,7 +3996,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "2.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -4110,7 +4110,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
-  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
   EXPECT_ACTION(plan, 1, 0, 1, Materialise,
                 output / "schemas" / "example" / "test" / "%" /

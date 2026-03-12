@@ -487,7 +487,7 @@ static auto index_main(const std::string_view &program,
               std::ofstream stream{action.destination};
               assert(!stream.fail());
               sourcemeta::core::stringify(
-                  sourcemeta::core::JSON{sourcemeta::one::version()}, stream);
+                  sourcemeta::core::JSON{std::string{action.data}}, stream);
               break;
             }
 
@@ -505,8 +505,8 @@ static auto index_main(const std::string_view &program,
                   action.destination.parent_path());
               std::ofstream stream{action.destination};
               assert(!stream.fail());
-              sourcemeta::core::stringify(sourcemeta::core::JSON{comment},
-                                          stream);
+              sourcemeta::core::stringify(
+                  sourcemeta::core::JSON{std::string{action.data}}, stream);
               break;
             }
 
