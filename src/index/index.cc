@@ -351,18 +351,17 @@ static auto index_main(const std::string_view &program,
     sourcemeta::core::parallel_for_each(
         wave.begin(), wave.end(),
         [&](auto &action, const auto threads, const auto) {
-          using sourcemeta::one::BuildAction;
-
           const auto current{
               progress_counter.fetch_add(1, std::memory_order_relaxed) + 1};
           const std::string_view destination_view{action.destination.native()};
           print_progress(
               mutex, threads,
-              action.type == BuildAction::Remove ? "Disposing" : "Producing",
+              action.type == sourcemeta::one::BuildAction::Remove ? "Disposing"
+                                                                  : "Producing",
               destination_view.substr(canonical_output.native().size() + 1),
               current, plan.size);
 
-          if (action.type == BuildAction::Remove) {
+          if (action.type == sourcemeta::one::BuildAction::Remove) {
             std::filesystem::remove_all(action.destination);
             std::lock_guard<std::mutex> lock{entries_mutex};
             entries.erase(action.destination.string());
@@ -370,15 +369,14 @@ static auto index_main(const std::string_view &program,
           }
 
           std::vector<std::filesystem::path> dynamic_dependencies;
-          const sourcemeta::one::BuildDynamicCallback dynamic_callback{
-              [&dynamic_dependencies](const auto &path) {
-                dynamic_dependencies.emplace_back(path);
-              }};
-
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
-          handler(action, dynamic_callback, resolver, configuration,
-                  raw_configuration);
+          handler(
+              action,
+              [&dynamic_dependencies](const auto &path) {
+                dynamic_dependencies.emplace_back(path);
+              },
+              resolver, configuration, raw_configuration);
 
           {
             const auto now{std::filesystem::file_time_type::clock::now()};
