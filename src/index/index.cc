@@ -503,7 +503,7 @@ static auto index_main(const std::string_view &program,
             case BuildAction::DirectoryList: {
               sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, explorer_path);
+                  resolver, configuration);
               break;
             }
 

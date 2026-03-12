@@ -283,27 +283,35 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  using Context = std::filesystem::path;
-
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
-                      const Context &explorer_path) -> void {
+                      const sourcemeta::one::Configuration &configuration)
+      -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
 
-    // The dependencies list contains the exact child entries for this
-    // directory: explorer/<relative>/%/schema.metapack for schemas and
-    // explorer/<relative>/%/directory.metapack for child directories
+    // Derive this directory's relative path from the destination
+    // destination = <output>/explorer/<relative>/%/directory.metapack
+    // Strip /%/directory.metapack to get the directory, then find "explorer"
+    const auto directory_path{destination.parent_path().parent_path()};
+    std::filesystem::path relative_path;
+    auto current{directory_path};
+    while (current.has_filename()) {
+      if (current.filename() == "explorer") {
+        relative_path = std::filesystem::relative(directory_path, current);
+        break;
+      }
+
+      current = current.parent_path();
+    }
+
     for (const auto &dep : dependencies) {
       const auto filename{dep.filename().string()};
-      // dep = explorer_path / child_relative / % / filename
-      const auto child_relative{std::filesystem::relative(
-          dep.parent_path().parent_path(), explorer_path)};
-      const auto child_name{child_relative.filename()};
+      const auto child_name{
+          dep.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
         auto directory_json{sourcemeta::one::read_json(dep)};
@@ -315,11 +323,24 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("health", directory_json.at("health"));
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
-        inflate_metadata(configuration, child_relative, entry_json);
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
-        entry_json.assign(
-            "path", sourcemeta::core::JSON{std::string{"/"} +
-                                           child_relative.string() + "/"});
+        assert(directory_json.defines("path"));
+        entry_json.assign("path", directory_json.at("path"));
+        if (directory_json.defines("title")) {
+          entry_json.assign("title", directory_json.at("title"));
+        }
+        if (directory_json.defines("description")) {
+          entry_json.assign("description", directory_json.at("description"));
+        }
+        if (directory_json.defines("email")) {
+          entry_json.assign("email", directory_json.at("email"));
+        }
+        if (directory_json.defines("github")) {
+          entry_json.assign("github", directory_json.at("github"));
+        }
+        if (directory_json.defines("website")) {
+          entry_json.assign("website", directory_json.at("website"));
+        }
         entries.push_back(std::move(entry_json));
       } else if (filename == "schema.metapack") {
         auto nav{sourcemeta::one::read_json(dep)};
@@ -385,11 +406,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     entries = std::move(sorted_entries);
 
     auto meta{sourcemeta::core::JSON::make_object()};
-
-    // Derive this directory's relative path from the destination
-    // destination = explorer_path / relative / % / directory.metapack
-    const std::filesystem::path relative_path{std::filesystem::relative(
-        destination.parent_path().parent_path(), explorer_path)};
 
     inflate_metadata(configuration, relative_path, meta);
 
