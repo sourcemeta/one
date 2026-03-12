@@ -306,13 +306,11 @@ static auto index_main(const std::string_view &program,
   // (8) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
-  const auto schemas_path{canonical_output / "schemas"};
-
   std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
       schemas;
   for (const auto &[uri, resolver_entry] : resolver) {
-    schemas[uri] = {.source = resolver_entry.path,
-                    .relative_output = resolver_entry.relative_path,
+    schemas[uri] = {.path = resolver_entry.path,
+                    .relative_path = resolver_entry.relative_path,
                     .mtime = resolver_entry.mtime,
                     .evaluate = resolver_entry.evaluate};
   }

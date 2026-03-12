@@ -221,8 +221,8 @@ auto delta(
     const std::vector<std::filesystem::path> &removed) -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
-    return entry.second.source.is_absolute() &&
-           !entry.second.relative_output.is_absolute();
+    return entry.second.path.is_absolute() &&
+           !entry.second.relative_path.is_absolute();
   }));
   assert(std::ranges::all_of(
       changed, [](const auto &path) { return path.is_absolute(); }));
@@ -254,7 +254,7 @@ auto delta(
     }
 
     for (const auto &[uri, info] : schemas) {
-      if (removed_set.contains(info.source.string())) {
+      if (removed_set.contains(info.path.string())) {
         removed_uris.insert(uri);
       }
     }
@@ -270,9 +270,9 @@ auto delta(
       continue;
     }
 
-    declare_schema_targets(targets, output, info.source, info.relative_output,
+    declare_schema_targets(targets, output, info.path, info.relative_path,
                            info.evaluate, configuration_path, uri);
-    all_relative_paths.emplace_back(info.relative_output);
+    all_relative_paths.emplace_back(info.relative_path);
   }
 
   std::unordered_set<std::string> force_dirty;
@@ -284,7 +284,7 @@ auto delta(
       }
 
       force_dirty.insert(
-          (schema_base_path(output, info.relative_output) / "schema.metapack")
+          (schema_base_path(output, info.relative_path) / "schema.metapack")
               .string());
     }
   } else if (!changed.empty()) {
@@ -299,12 +299,12 @@ auto delta(
         continue;
       }
 
-      if (!changed_set.contains(info.source.string())) {
+      if (!changed_set.contains(info.path.string())) {
         continue;
       }
 
       const auto metapack_path{
-          (schema_base_path(output, info.relative_output) / "schema.metapack")
+          (schema_base_path(output, info.relative_path) / "schema.metapack")
               .string()};
       const auto match{entries.find(metapack_path)};
       if (match == entries.end() || info.mtime > match->second.file_mark) {
@@ -318,7 +318,7 @@ auto delta(
       }
 
       const auto metapack_path{
-          (schema_base_path(output, info.relative_output) / "schema.metapack")
+          (schema_base_path(output, info.relative_path) / "schema.metapack")
               .string()};
       const auto match{entries.find(metapack_path)};
       if (match == entries.end() || info.mtime > match->second.file_mark) {
@@ -344,7 +344,7 @@ auto delta(
       }
 
       const auto web_schema_path{
-          (explorer_base_path(output, info.relative_output) /
+          (explorer_base_path(output, info.relative_path) /
            "schema-html.metapack")
               .string()};
       if (!entries.contains(web_schema_path)) {
@@ -359,7 +359,7 @@ auto delta(
     std::unordered_set<std::string> current_schema_bases;
     for (const auto &[uri, info] : schemas) {
       current_schema_bases.insert(
-          schema_base_path(output, info.relative_output).string());
+          schema_base_path(output, info.relative_path).string());
     }
 
     const auto schemas_prefix{schemas_path.string() + "/"};
@@ -421,13 +421,13 @@ auto delta(
       }
 
       if (is_full) {
-        affected_relative_paths.emplace_back(info.relative_output);
+        affected_relative_paths.emplace_back(info.relative_path);
         continue;
       }
 
-      const auto base{schema_base_path(output, info.relative_output)};
+      const auto base{schema_base_path(output, info.relative_path)};
       if (dirty_set.contains((base / "schema.metapack").string())) {
-        affected_relative_paths.emplace_back(info.relative_output);
+        affected_relative_paths.emplace_back(info.relative_path);
       }
     }
 
@@ -439,7 +439,7 @@ auto delta(
       }
 
       all_dependencies.emplace_back(
-          schema_base_path(output, info.relative_output) /
+          schema_base_path(output, info.relative_path) /
           "dependencies.metapack");
     }
 
@@ -452,13 +452,12 @@ auto delta(
         continue;
       }
 
-      const auto dependents_path{
-          schema_base_path(output, info.relative_output) /
-          "dependents.metapack"};
+      const auto dependents_path{schema_base_path(output, info.relative_path) /
+                                 "dependents.metapack"};
       declare_target(targets, BuildAction::Dependents, dependents_path,
                      {dependency_tree_path}, uri);
 
-      const auto base{schema_base_path(output, info.relative_output)};
+      const auto base{schema_base_path(output, info.relative_path)};
       if (is_full || dirty_set.contains((base / "schema.metapack").string()) ||
           !entries.contains(dependents_path.string())) {
         dirty_set.insert(dependents_path.string());
@@ -473,7 +472,7 @@ auto delta(
       }
 
       all_summaries.emplace_back(
-          explorer_base_path(output, info.relative_output) / "schema.metapack");
+          explorer_base_path(output, info.relative_path) / "schema.metapack");
     }
 
     const auto search_path{explorer_path / SENTINEL / "search.metapack"};
@@ -551,9 +550,9 @@ auto delta(
           continue;
         }
 
-        const auto schema_base{schema_base_path(output, info.relative_output)};
+        const auto schema_base{schema_base_path(output, info.relative_path)};
         const auto explorer_base{
-            explorer_base_path(output, info.relative_output)};
+            explorer_base_path(output, info.relative_path)};
         const auto web_schema_path{explorer_base / "schema-html.metapack"};
         declare_target(targets, BuildAction::WebSchema, web_schema_path,
                        {explorer_base / "schema.metapack",
@@ -612,12 +611,12 @@ auto delta(
 
     remove_wave.push_back(
         {BuildAction::Remove,
-         schema_base_path(output, match->second.relative_output),
+         schema_base_path(output, match->second.relative_path),
          {},
          {}});
     remove_wave.push_back(
         {BuildAction::Remove,
-         explorer_base_path(output, match->second.relative_output),
+         explorer_base_path(output, match->second.relative_path),
          {},
          {}});
   }
@@ -627,7 +626,7 @@ auto delta(
       continue;
     }
 
-    const auto base{schema_base_path(output, info.relative_output)};
+    const auto base{schema_base_path(output, info.relative_path)};
     const auto exhaustive_path{base / "blaze-exhaustive.metapack"};
     const auto fast_path{base / "blaze-fast.metapack"};
     const auto schema_dirty{
@@ -644,10 +643,9 @@ auto delta(
 
   std::unordered_set<std::string> known_bases;
   for (const auto &[uri, info] : schemas) {
-    known_bases.insert(schema_base_path(output, info.relative_output).string());
-    known_bases.insert(
-        explorer_base_path(output, info.relative_output).string());
-    auto current{info.relative_output};
+    known_bases.insert(schema_base_path(output, info.relative_path).string());
+    known_bases.insert(explorer_base_path(output, info.relative_path).string());
+    auto current{info.relative_path};
     while (current.has_parent_path() && current.parent_path() != current) {
       current = current.parent_path();
       known_bases.insert((explorer_path / current / SENTINEL).string());

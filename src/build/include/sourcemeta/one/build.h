@@ -19,6 +19,7 @@ namespace sourcemeta::one {
 
 struct BuildEntry {
   std::filesystem::file_time_type file_mark;
+  // TODO: Do we still need this distinction now?
   std::vector<std::filesystem::path> static_dependencies;
   std::vector<std::filesystem::path> dynamic_dependencies;
 };
@@ -53,8 +54,8 @@ enum class BuildAction : std::uint8_t {
 };
 
 struct BuildSchemaInformation {
-  std::filesystem::path source;
-  std::filesystem::path relative_output;
+  std::filesystem::path path;
+  std::filesystem::path relative_path;
   std::filesystem::file_time_type mtime;
   bool evaluate{true};
 };
