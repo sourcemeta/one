@@ -482,12 +482,9 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::Version: {
-              std::filesystem::create_directories(
-                  action.destination.parent_path());
-              std::ofstream stream{action.destination};
-              assert(!stream.fail());
-              sourcemeta::core::stringify(
-                  sourcemeta::core::JSON{std::string{action.data}}, stream);
+              sourcemeta::one::GENERATE_VERSION::handler(
+                  action.destination, action.dependencies, dynamic_callback,
+                  resolver, configuration, action.data);
               break;
             }
 
@@ -501,12 +498,9 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::Comment: {
-              std::filesystem::create_directories(
-                  action.destination.parent_path());
-              std::ofstream stream{action.destination};
-              assert(!stream.fail());
-              sourcemeta::core::stringify(
-                  sourcemeta::core::JSON{std::string{action.data}}, stream);
+              sourcemeta::one::GENERATE_COMMENT::handler(
+                  action.destination, action.dependencies, dynamic_callback,
+                  resolver, configuration, action.data);
               break;
             }
 

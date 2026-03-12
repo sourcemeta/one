@@ -25,6 +25,7 @@
 
 #include <cassert>       // assert
 #include <filesystem>    // std::filesystem
+#include <fstream>       // std::ofstream
 #include <memory>        // std::unique_ptr
 #include <mutex>         // std::mutex, std::lock_guard
 #include <queue>         // std::queue
@@ -35,6 +36,36 @@
 #include <variant>       // std::visit
 
 namespace sourcemeta::one {
+
+struct GENERATE_VERSION {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::BuildDependencies &,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      const sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const std::string_view data) -> void {
+    std::filesystem::create_directories(destination.parent_path());
+    std::ofstream stream{destination};
+    assert(!stream.fail());
+    sourcemeta::core::stringify(sourcemeta::core::JSON{std::string{data}},
+                                stream);
+  }
+};
+
+struct GENERATE_COMMENT {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::BuildDependencies &,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      const sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const std::string_view data) -> void {
+    std::filesystem::create_directories(destination.parent_path());
+    std::ofstream stream{destination};
+    assert(!stream.fail());
+    sourcemeta::core::stringify(sourcemeta::core::JSON{std::string{data}},
+                                stream);
+  }
+};
 
 struct GENERATE_MATERIALISED_SCHEMA {
   using Context = std::string_view;
