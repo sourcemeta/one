@@ -284,7 +284,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
   struct Context {
     const sourcemeta::one::Configuration &configuration;
     const std::filesystem::path &explorer_path;
-    const std::filesystem::path &schemas_path;
   };
 
   static auto handler(const std::filesystem::path &destination,

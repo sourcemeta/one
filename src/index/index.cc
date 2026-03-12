@@ -510,8 +510,7 @@ static auto index_main(const std::string_view &program,
             case BuildAction::DirectoryList: {
               const sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::Context
                   context{.configuration = configuration,
-                          .explorer_path = explorer_path,
-                          .schemas_path = schemas_path};
+                          .explorer_path = explorer_path};
               sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler(
                   action.destination, action.dependencies, dynamic_callback,
                   resolver, context);
