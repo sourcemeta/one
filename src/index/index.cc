@@ -308,22 +308,13 @@ static auto index_main(const std::string_view &program,
 
   const auto schemas_path{canonical_output / "schemas"};
 
-  // Build BuildSchemaInformation map from resolver
   std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
       schemas;
   for (const auto &[uri, resolver_entry] : resolver) {
     schemas[uri] = {.source = resolver_entry.path,
                     .relative_output = resolver_entry.relative_path,
-                    .mtime =
-                        std::filesystem::last_write_time(resolver_entry.path),
-                    .evaluate = !resolver_entry.collection.get().extra.defines(
-                                    "x-sourcemeta-one:evaluate") ||
-                                !resolver_entry.collection.get()
-                                     .extra.at("x-sourcemeta-one:evaluate")
-                                     .is_boolean() ||
-                                resolver_entry.collection.get()
-                                    .extra.at("x-sourcemeta-one:evaluate")
-                                    .to_boolean()};
+                    .mtime = resolver_entry.mtime,
+                    .evaluate = resolver_entry.evaluate};
   }
 
   // Compute the delta plan (empty changed/removed for now)

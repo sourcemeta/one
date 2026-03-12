@@ -56,6 +56,8 @@ public:
     std::filesystem::path relative_path;
     sourcemeta::core::JSON::String original_identifier;
     std::reference_wrapper<const Configuration::Collection> collection;
+    std::filesystem::file_time_type mtime;
+    bool evaluate;
   };
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
