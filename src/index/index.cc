@@ -52,14 +52,6 @@
 
 // We rely on this special prefix to avoid file system collisions. The reason it
 // works is that URIs cannot have "%" without percent-encoding it as "%25", and
-static auto attribute_not_disabled(
-    const sourcemeta::one::Configuration::Collection &collection,
-    const sourcemeta::core::JSON::String &property) -> bool {
-  return !collection.extra.defines(property) ||
-         !collection.extra.at(property).is_boolean() ||
-         collection.extra.at(property).to_boolean();
-}
-
 static auto print_progress(std::mutex &mutex, const std::size_t threads,
                            const std::string_view title,
                            const std::string_view prefix,
@@ -70,20 +62,6 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
   std::cerr << "(" << std::setfill(' ') << std::setw(3)
             << static_cast<int>(percentage) << "%) " << title << ": " << prefix
             << " [" << std::this_thread::get_id() << "/" << threads << "]\n";
-}
-
-static auto
-commit_entry(std::mutex &entries_mutex, sourcemeta::one::BuildEntries &entries,
-             const std::filesystem::path &destination,
-             const std::vector<std::filesystem::path> &static_dependencies,
-             std::vector<std::filesystem::path> &&dynamic_dependencies)
-    -> void {
-  const auto now{std::filesystem::file_time_type::clock::now()};
-  std::lock_guard<std::mutex> lock{entries_mutex};
-  auto &entry{entries[destination.native()]};
-  entry.file_mark = now;
-  entry.static_dependencies = static_dependencies;
-  entry.dynamic_dependencies = std::move(dynamic_dependencies);
 }
 
 static auto index_main(const std::string_view &program,
@@ -304,12 +282,18 @@ static auto index_main(const std::string_view &program,
   std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
       schemas;
   for (const auto &[uri, resolver_entry] : resolver) {
-    schemas[uri] = {
-        .source = resolver_entry.path,
-        .relative_output = resolver_entry.relative_path,
-        .mtime = std::filesystem::last_write_time(resolver_entry.path),
-        .evaluate = attribute_not_disabled(resolver_entry.collection.get(),
-                                           "x-sourcemeta-one:evaluate")};
+    schemas[uri] = {.source = resolver_entry.path,
+                    .relative_output = resolver_entry.relative_path,
+                    .mtime =
+                        std::filesystem::last_write_time(resolver_entry.path),
+                    .evaluate = !resolver_entry.collection.get().extra.defines(
+                                    "x-sourcemeta-one:evaluate") ||
+                                !resolver_entry.collection.get()
+                                     .extra.at("x-sourcemeta-one:evaluate")
+                                     .is_boolean() ||
+                                resolver_entry.collection.get()
+                                    .extra.at("x-sourcemeta-one:evaluate")
+                                    .to_boolean()};
   }
 
   // Compute the delta plan (empty changed/removed for now)
@@ -534,8 +518,14 @@ static auto index_main(const std::string_view &program,
             }
           }
 
-          commit_entry(entries_mutex, entries, action.destination,
-                       action.dependencies, std::move(dynamic_dependencies));
+          {
+            const auto now{std::filesystem::file_time_type::clock::now()};
+            std::lock_guard<std::mutex> lock{entries_mutex};
+            auto &entry{entries[action.destination.native()]};
+            entry.file_mark = now;
+            entry.static_dependencies = action.dependencies;
+            entry.dynamic_dependencies = std::move(dynamic_dependencies);
+          }
         },
         concurrency, THREAD_STACK_SIZE);
   }
