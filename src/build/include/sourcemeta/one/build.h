@@ -72,7 +72,6 @@ struct BuildPlan {
 
 using BuildDependencies = std::vector<std::filesystem::path>;
 
-// TODO: We can get rid of this by making handlers return the dynamic ones?
 using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 
 // TODO: Maybe this should be its own class?

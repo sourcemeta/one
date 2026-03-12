@@ -247,7 +247,7 @@ static auto index_main(const std::string_view &program,
                              : std::thread::hardware_concurrency()};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) First pass to locate all of the schemas we will be indexing
+  // (6) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -292,7 +292,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Detect");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Resolve all detected schemas in parallel
+  // (7) Resolve all detected schemas in parallel
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver;
@@ -317,7 +317,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Resolve");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Build schema info map and compute the delta plan
+  // (8) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
   const auto schemas_path{canonical_output / "schemas"};
@@ -339,6 +339,8 @@ static auto index_main(const std::string_view &program,
   // We add entries for both schemas/ and explorer/ bases so that
   // uri_for_destination works for any destination under either tree
   std::unordered_map<std::string, std::string> path_to_uri;
+  std::unordered_map<std::string, const sourcemeta::one::Resolver::Entry *>
+      uri_to_entry;
   for (const auto &[uri, resolver_entry] : resolver) {
     const auto schemas_base{schemas_path / resolver_entry.relative_path /
                             SENTINEL};
@@ -346,6 +348,7 @@ static auto index_main(const std::string_view &program,
     const auto explorer_base{explorer_path / resolver_entry.relative_path /
                              SENTINEL};
     path_to_uri[(explorer_base / "schema.metapack").string()] = uri;
+    uri_to_entry[uri] = &resolver_entry;
   }
 
   // Compute the delta plan (empty changed/removed for now)
@@ -356,44 +359,10 @@ static auto index_main(const std::string_view &program,
                                    current_version, comment, raw_configuration,
                                    current_configuration, changed, removed)};
 
-  /////////////////////////////////////////////////////////////////////////////
-  // (11) Build the URI template router (needed by Routes actions)
-  /////////////////////////////////////////////////////////////////////////////
-
-  sourcemeta::core::URITemplateRouter router;
-  router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
-  router.add("/self/v1/api/list/{+path}",
-             sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
-  router.add("/self/v1/api/schemas/dependencies/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
-  router.add("/self/v1/api/schemas/dependents/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS);
-  router.add("/self/v1/api/schemas/health/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
-  router.add("/self/v1/api/schemas/locations/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
-  router.add("/self/v1/api/schemas/positions/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
-  router.add("/self/v1/api/schemas/stats/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
-  router.add("/self/v1/api/schemas/metadata/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
-  router.add("/self/v1/api/schemas/evaluate/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
-  router.add("/self/v1/api/schemas/trace/{+schema}",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
-  router.add("/self/v1/api/schemas/search",
-             sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
-  router.add("/self/v1/health", sourcemeta::one::HANDLER_SELF_V1_HEALTH);
-  router.add("/self/v1/api/{+any}",
-             sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
-
-  if (configuration.html.has_value()) {
-    router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC);
-  }
+  PROFILE_END(profiling, "Prepare");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (12) Execute the plan wave by wave
+  // (9) Execute the plan wave by wave
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -411,11 +380,11 @@ static auto index_main(const std::string_view &program,
 
           const auto current{
               progress_counter.fetch_add(1, std::memory_order_relaxed) + 1};
+          const std::string_view destination_view{action.destination.native()};
           print_progress(
               mutex, threads,
               action.type == BuildAction::Remove ? "Disposing" : "Producing",
-              std::filesystem::relative(action.destination, canonical_output)
-                  .string(),
+              destination_view.substr(canonical_output.native().size() + 1),
               current, plan.size);
 
           // Collect dynamic dependencies from handler callbacks
@@ -469,17 +438,7 @@ static auto index_main(const std::string_view &program,
             case BuildAction::Health: {
               const auto &uri{
                   uri_for_destination(action.destination, path_to_uri)};
-              // Find the resolver entry for this URI to get its collection
-              const sourcemeta::one::Resolver::Entry *resolver_entry{nullptr};
-              for (auto iterator = resolver.begin(); iterator != resolver.end();
-                   ++iterator) {
-                if (iterator->first == uri) {
-                  resolver_entry = &iterator->second;
-                  break;
-                }
-              }
-
-              assert(resolver_entry != nullptr);
+              const auto *resolver_entry{uri_to_entry.at(uri)};
               const sourcemeta::one::GENERATE_HEALTH::Context context{
                   std::ref(resolver),
                   std::cref(resolver_entry->collection.get())};
@@ -520,16 +479,7 @@ static auto index_main(const std::string_view &program,
             case BuildAction::SchemaMetadata: {
               const auto &uri{
                   uri_for_destination(action.destination, path_to_uri)};
-              const sourcemeta::one::Resolver::Entry *resolver_entry{nullptr};
-              for (auto iterator = resolver.begin(); iterator != resolver.end();
-                   ++iterator) {
-                if (iterator->first == uri) {
-                  resolver_entry = &iterator->second;
-                  break;
-                }
-              }
-
-              assert(resolver_entry != nullptr);
+              const auto *resolver_entry{uri_to_entry.at(uri)};
               const sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::Context
                   context{resolver, resolver_entry->collection.get(),
                           resolver_entry->relative_path};
@@ -602,6 +552,45 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::Routes: {
+              sourcemeta::core::URITemplateRouter router;
+              router.add("/self/v1/api/list",
+                         sourcemeta::one::HANDLER_SELF_V1_API_LIST);
+              router.add("/self/v1/api/list/{+path}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
+              router.add(
+                  "/self/v1/api/schemas/dependencies/{+schema}",
+                  sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
+              router.add(
+                  "/self/v1/api/schemas/dependents/{+schema}",
+                  sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS);
+              router.add("/self/v1/api/schemas/health/{+schema}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
+              router.add(
+                  "/self/v1/api/schemas/locations/{+schema}",
+                  sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
+              router.add(
+                  "/self/v1/api/schemas/positions/{+schema}",
+                  sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
+              router.add("/self/v1/api/schemas/stats/{+schema}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
+              router.add("/self/v1/api/schemas/metadata/{+schema}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
+              router.add("/self/v1/api/schemas/evaluate/{+schema}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
+              router.add("/self/v1/api/schemas/trace/{+schema}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
+              router.add("/self/v1/api/schemas/search",
+                         sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
+              router.add("/self/v1/health",
+                         sourcemeta::one::HANDLER_SELF_V1_HEALTH);
+              router.add("/self/v1/api/{+any}",
+                         sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
+
+              if (build_type == sourcemeta::one::BuildType::Full) {
+                router.add("/self/static/{+path}",
+                           sourcemeta::one::HANDLER_SELF_STATIC);
+              }
+
               sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler(
                   action.destination, action.dependencies, dynamic_callback,
                   router);
