@@ -647,6 +647,19 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   }
   known_bases.insert((explorer_path / SENTINEL).string());
 
+  std::unordered_set<std::string> known_ancestors;
+  known_ancestors.reserve(known_bases.size() * 3);
+  for (const auto &base : known_bases) {
+    auto slash_pos{base.rfind('/')};
+    while (slash_pos != std::string::npos && slash_pos > 0) {
+      const auto ancestor{base.substr(0, slash_pos)};
+      if (!known_ancestors.insert(ancestor).second) {
+        break;
+      }
+      slash_pos = ancestor.rfind('/');
+    }
+  }
+
   const auto output_prefix{output.string() + "/"};
   const auto version_string{version_path.string()};
   const auto dependency_tree_string{dependency_tree_path.string()};
@@ -667,40 +680,32 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
 
     bool is_known{false};
-    for (const auto &base : known_bases) {
-      if (entry_path == base || entry_path.starts_with(base + "/") ||
-          base.starts_with(entry_path + "/")) {
-        is_known = true;
-        break;
-      }
+    const auto sentinel_pos{entry_path.find("/%/")};
+    if (sentinel_pos != std::string::npos) {
+      is_known = known_bases.contains(entry_path.substr(0, sentinel_pos + 2));
     }
 
     if (!is_known) {
-      std::filesystem::path stale{entry_path};
-      while (stale.has_parent_path()) {
-        const auto parent{stale.parent_path()};
-        if (parent == output) {
+      is_known = known_bases.contains(entry_path) ||
+                 known_ancestors.contains(entry_path);
+    }
+
+    if (!is_known) {
+      auto stale_end{entry_path.size()};
+      while (true) {
+        const auto slash_pos{entry_path.rfind('/', stale_end - 1)};
+        if (slash_pos == std::string::npos ||
+            slash_pos < output_prefix.size()) {
           break;
         }
-
-        bool parent_is_known{false};
-        const auto parent_string{parent.string()};
-        for (const auto &base : known_bases) {
-          if (parent_string == base || parent_string.starts_with(base + "/") ||
-              base.starts_with(parent_string + "/")) {
-            parent_is_known = true;
-            break;
-          }
-        }
-
-        if (parent_is_known) {
+        const auto parent{entry_path.substr(0, slash_pos)};
+        if (known_bases.contains(parent) || known_ancestors.contains(parent)) {
           break;
         }
-
-        stale = parent;
+        stale_end = slash_pos;
       }
 
-      stale_roots.insert(stale.string());
+      stale_roots.insert(entry_path.substr(0, stale_end));
     }
   }
 
