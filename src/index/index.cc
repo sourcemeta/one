@@ -348,6 +348,8 @@ static auto index_main(const std::string_view &program,
   std::mutex entries_mutex;
 
   for (auto &wave : plan.waves) {
+    // TODO: Maybe we can optimise this for waves of a single action
+    // by avoiding the creation of a whole thread plus the locks?
     sourcemeta::core::parallel_for_each(
         wave.begin(), wave.end(),
         [&](auto &action, const auto threads, const auto) {

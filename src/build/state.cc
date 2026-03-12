@@ -2,12 +2,13 @@
 
 #include <sourcemeta/core/io.h>
 
-#include <cassert> // assert
-#include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint> // std::int64_t, std::uint32_t, std::uint8_t
-#include <cstring> // std::memcpy
-#include <fstream> // std::ofstream
-#include <string>  // std::string
+#include <algorithm> // std::none_of, std::find
+#include <cassert>   // assert
+#include <chrono>    // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint>   // std::int64_t, std::uint32_t, std::uint8_t
+#include <cstring>   // std::memcpy
+#include <fstream>   // std::ofstream
+#include <string>    // std::string
 
 namespace {
 
@@ -41,20 +42,6 @@ auto append_int64(std::string &buffer, const std::int64_t value) -> void {
 auto append_string(std::string &buffer, const std::string &value) -> void {
   append_uint32(buffer, static_cast<std::uint32_t>(value.size()));
   buffer.append(value);
-}
-
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-auto has_no_duplicate_dependencies(const sourcemeta::one::BuildEntry &entry)
-    -> bool {
-  for (const auto &dynamic_dependency : entry.dynamic_dependencies) {
-    for (const auto &static_dependency : entry.static_dependencies) {
-      if (dynamic_dependency == static_dependency) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 } // anonymous namespace
@@ -134,7 +121,12 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
   for (const auto &entry : entries) {
     count += 1;
 
-    assert(has_no_duplicate_dependencies(entry.second));
+    assert(std::ranges::none_of(
+        entry.second.dynamic_dependencies, [&](const auto &dependency) {
+          return std::ranges::find(entry.second.static_dependencies,
+                                   dependency) !=
+                 entry.second.static_dependencies.end();
+        }));
 
     append_string(buffer, entry.first);
 
