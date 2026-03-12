@@ -108,17 +108,14 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  using Context = std::string_view;
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &,
-                      const Context &uri) -> void {
+                      const sourcemeta::one::Configuration &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto &resolver_entry{resolver.entry(uri)};
+    const auto &resolver_entry{resolver.entry(action.data)};
     const auto schema{
-        sourcemeta::one::read_json_with_metadata(dependencies.front())};
+        sourcemeta::one::read_json_with_metadata(action.dependencies.front())};
     const auto id{sourcemeta::core::identify(
         schema.data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
@@ -179,11 +176,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{sourcemeta::one::read_json(dependencies.at(1))};
+    const auto health{sourcemeta::one::read_json(action.dependencies.at(1))};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::one::read_json(dependencies.at(2))};
+        sourcemeta::one::read_json(action.dependencies.at(2))};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
@@ -209,9 +206,9 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_pretty_json(
-        destination, result, "application/json",
+        action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -219,16 +216,15 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 };
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
-    result.reserve(dependencies.size());
+    result.reserve(action.dependencies.size());
 
-    for (const auto &dependency : dependencies) {
+    for (const auto &dependency : action.dependencies) {
       auto metadata_json{sourcemeta::one::read_json(dependency)};
       if (!sourcemeta::core::is_schema(metadata_json)) {
         continue;
@@ -271,9 +267,9 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_jsonl(
-        destination, result, "application/jsonl",
+        action.destination, result, "application/jsonl",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
         sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
@@ -283,8 +279,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration)
@@ -296,7 +291,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     // Derive this directory's relative path from the destination
     // destination = <output>/explorer/<relative>/%/directory.metapack
     // Strip /%/directory.metapack to get the directory, then find "explorer"
-    const auto directory_path{destination.parent_path().parent_path()};
+    const auto directory_path{action.destination.parent_path().parent_path()};
     std::filesystem::path relative_path;
     auto current{directory_path};
     while (current.has_filename()) {
@@ -308,7 +303,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       current = current.parent_path();
     }
 
-    for (const auto &dep : dependencies) {
+    for (const auto &dep : action.dependencies) {
       const auto filename{dep.filename().string()};
       const auto child_name{
           dep.parent_path().parent_path().filename().string()};
@@ -434,10 +429,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_pretty_json(
-        destination, meta, "application/json", sourcemeta::one::Encoding::GZIP,
-        sourcemeta::core::JSON{nullptr},
+        action.destination, meta, "application/json",
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }

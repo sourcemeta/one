@@ -17,14 +17,13 @@
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_SCHEMA::handler(
-    const std::filesystem::path &destination,
-    const sourcemeta::one::BuildDependencies &dependencies,
+    const sourcemeta::one::BuildActionEntry &action,
     const sourcemeta::one::BuildDynamicCallback &,
     const sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto meta{read_json(dependencies.front())};
+  const auto meta{read_json(action.dependencies.front())};
   const auto &canonical{meta.at("identifier").to_string()};
   const auto &title{meta.defines("title") ? meta.at("title").to_string()
                                           : meta.at("path").to_string()};
@@ -197,11 +196,11 @@ auto GENERATE_WEB_SCHEMA::handler(
            {"data-sourcemeta-ui-editor-language", "json"}},
           "Loading schema..."));
 
-  const auto dependencies_json{read_json(dependencies.at(1))};
-  const auto health{read_json(dependencies.at(2))};
+  const auto dependencies_json{read_json(action.dependencies.at(1))};
+  const auto health{read_json(action.dependencies.at(2))};
   assert(health.is_object());
   assert(health.defines("errors"));
-  const auto dependents_json{read_json(dependencies.at(3))};
+  const auto dependents_json{read_json(action.dependencies.at(3))};
   assert(dependents_json.is_array());
 
   // Collect unique dependent schemas, preferring direct over indirect.
@@ -491,9 +490,9 @@ auto GENERATE_WEB_SCHEMA::handler(
                                             container_children));
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
-  std::filesystem::create_directories(destination.parent_path());
-  write_text(destination, html_content.str(), "text/html", Encoding::GZIP,
-             sourcemeta::core::JSON{nullptr},
+  std::filesystem::create_directories(action.destination.parent_path());
+  write_text(action.destination, html_content.str(), "text/html",
+             Encoding::GZIP, sourcemeta::core::JSON{nullptr},
              std::chrono::duration_cast<std::chrono::milliseconds>(
                  timestamp_end - timestamp_start));
 }

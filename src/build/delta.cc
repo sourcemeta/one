@@ -805,7 +805,10 @@ auto delta(
   if (is_full || web_added || web_removed) {
     std::vector<BuildActionEntry> routes_wave;
     routes_wave.push_back(
-        {BuildAction::Routes, output / "routes.bin", {configuration_path}, {}});
+        {BuildAction::Routes,
+         output / "routes.bin",
+         {configuration_path},
+         build_type == BuildType::Full ? "Full" : "Headless"});
     plan.waves.push_back(std::move(routes_wave));
   }
 

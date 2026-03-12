@@ -342,149 +342,128 @@ static auto index_main(const std::string_view &program,
           switch (action.type) {
             case BuildAction::Materialise: {
               sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               resolver.cache_path(action.data, action.destination);
               break;
             }
 
             case BuildAction::Positions: {
               sourcemeta::one::GENERATE_POINTER_POSITIONS::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Locations: {
               sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Dependencies: {
               sourcemeta::one::GENERATE_DEPENDENCIES::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Stats: {
-              sourcemeta::one::GENERATE_STATS::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+              sourcemeta::one::GENERATE_STATS::handler(action, dynamic_callback,
+                                                       resolver, configuration);
               break;
             }
 
             case BuildAction::Health: {
               sourcemeta::one::GENERATE_HEALTH::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Bundle: {
               sourcemeta::one::GENERATE_BUNDLE::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Editor: {
               sourcemeta::one::GENERATE_EDITOR::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::BlazeExhaustive: {
               sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::BlazeFast: {
               sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::SchemaMetadata: {
               sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::DependencyTree: {
               sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Dependents: {
               sourcemeta::one::GENERATE_DEPENDENTS::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::SearchIndex: {
               sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::DirectoryList: {
               sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::WebIndex: {
               sourcemeta::one::GENERATE_WEB_INDEX::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::WebNotFound: {
               sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::WebDirectory: {
               sourcemeta::one::GENERATE_WEB_DIRECTORY::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::WebSchema: {
               sourcemeta::one::GENERATE_WEB_SCHEMA::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Routes: {
               sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, build_type);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
             case BuildAction::Version: {
               sourcemeta::one::GENERATE_VERSION::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 
@@ -499,8 +478,7 @@ static auto index_main(const std::string_view &program,
 
             case BuildAction::Comment: {
               sourcemeta::one::GENERATE_COMMENT::handler(
-                  action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, action.data);
+                  action, dynamic_callback, resolver, configuration);
               break;
             }
 

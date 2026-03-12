@@ -5,13 +5,10 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 
-#include <filesystem> // std::filesystem
-
 namespace sourcemeta::one {
 
 struct GENERATE_WEB_DIRECTORY {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration)
@@ -19,8 +16,7 @@ struct GENERATE_WEB_DIRECTORY {
 };
 
 struct GENERATE_WEB_NOT_FOUND {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration)
@@ -28,8 +24,7 @@ struct GENERATE_WEB_NOT_FOUND {
 };
 
 struct GENERATE_WEB_INDEX {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration)
@@ -37,8 +32,7 @@ struct GENERATE_WEB_INDEX {
 };
 
 struct GENERATE_WEB_SCHEMA {
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::BuildDependencies &dependencies,
+  static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration)

@@ -13,8 +13,7 @@
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_NOT_FOUND::handler(
-    const std::filesystem::path &destination,
-    const sourcemeta::one::BuildDependencies &,
+    const sourcemeta::one::BuildActionEntry &action,
     const sourcemeta::one::BuildDynamicCallback &,
     const sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration) -> void {
@@ -36,9 +35,9 @@ auto GENERATE_WEB_NOT_FOUND::handler(
                        html::a({{"href", "/"}}, "Get back to the home page")));
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
-  std::filesystem::create_directories(destination.parent_path());
-  write_text(destination, html_content.str(), "text/html", Encoding::GZIP,
-             sourcemeta::core::JSON{nullptr},
+  std::filesystem::create_directories(action.destination.parent_path());
+  write_text(action.destination, html_content.str(), "text/html",
+             Encoding::GZIP, sourcemeta::core::JSON{nullptr},
              std::chrono::duration_cast<std::chrono::milliseconds>(
                  timestamp_end - timestamp_start));
 }
