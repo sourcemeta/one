@@ -364,7 +364,7 @@ static auto index_main(const std::string_view &program,
             std::lock_guard<std::mutex> lock{entries_mutex};
             auto &entry{entries[action.destination.native()]};
             entry.file_mark = now;
-            entry.static_dependencies = action.dependencies;
+            entry.static_dependencies = std::move(action.dependencies);
             entry.dynamic_dependencies = std::move(dynamic_dependencies);
           }
         },
