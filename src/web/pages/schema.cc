@@ -18,8 +18,7 @@ namespace sourcemeta::one {
 
 auto GENERATE_WEB_SCHEMA::handler(
     const sourcemeta::one::BuildActionEntry &action,
-    const sourcemeta::one::BuildDynamicCallback &,
-    const sourcemeta::one::Resolver &,
+    const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};

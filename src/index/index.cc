@@ -52,12 +52,11 @@
 
 using BuildHandlerFunction = void (*)(
     const sourcemeta::one::BuildActionEntry &,
-    const sourcemeta::one::BuildDynamicCallback &,
-    const sourcemeta::one::Resolver &, const sourcemeta::one::Configuration &,
-    const sourcemeta::core::JSON &);
+    const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
+    const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &);
 
 static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
-    nullptr,
+    &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
     &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
     &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
     &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
@@ -370,14 +369,6 @@ static auto index_main(const std::string_view &program,
               }};
 
           switch (action.type) {
-            case BuildAction::Materialise: {
-              sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler(
-                  action, dynamic_callback, resolver, configuration,
-                  raw_configuration);
-              resolver.cache_path(action.data, action.destination);
-              break;
-            }
-
             case BuildAction::Remove: {
               std::filesystem::remove_all(action.destination);
               std::lock_guard<std::mutex> lock{entries_mutex};
