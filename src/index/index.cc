@@ -306,23 +306,14 @@ static auto index_main(const std::string_view &program,
   // (8) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Resolver::Views schemas;
-  for (const auto &[uri, resolver_entry] : resolver) {
-    schemas[uri] = {.path = resolver_entry.path,
-                    .relative_path = resolver_entry.relative_path,
-                    .mtime = resolver_entry.mtime,
-                    .evaluate = resolver_entry.evaluate};
-  }
-
-  // Compute the delta plan (empty changed/removed for now)
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   auto plan{sourcemeta::one::delta(build_type, entries, canonical_output,
-                                   schemas, sourcemeta::one::version(),
+                                   resolver.data(), sourcemeta::one::version(),
                                    current_version, comment, raw_configuration,
                                    current_configuration, changed, removed)};
 
-  PROFILE_END(profiling, "Prepare");
+  PROFILE_END(profiling, "Delta");
 
   /////////////////////////////////////////////////////////////////////////////
   // (9) Execute the plan wave by wave

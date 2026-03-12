@@ -44,10 +44,6 @@ public:
   auto cache_path(std::string_view uri, const std::filesystem::path &path)
       -> void;
 
-  [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
-  [[nodiscard]] auto end() const -> auto { return this->views.end(); }
-  [[nodiscard]] auto size() const -> auto { return this->views.size(); }
-
   struct Entry {
     std::filesystem::path path;
     // This is the collection name plus the final schema path component
@@ -61,6 +57,11 @@ public:
   };
 
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
+
+  [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
+  [[nodiscard]] auto end() const -> auto { return this->views.end(); }
+  [[nodiscard]] auto size() const -> auto { return this->views.size(); }
+  [[nodiscard]] auto data() const -> const Views & { return this->views; }
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
