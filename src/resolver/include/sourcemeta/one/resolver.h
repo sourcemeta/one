@@ -60,10 +60,12 @@ public:
     const Configuration::Collection *collection{nullptr};
   };
 
+  using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
+
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
 private:
-  std::unordered_map<sourcemeta::core::JSON::String, Entry> views;
+  Views views;
   std::shared_mutex mutex;
 };
 

@@ -77,8 +77,7 @@ using BuildEntries = std::unordered_map<std::string, BuildEntry>;
 
 SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildType build_type, const BuildEntries &entries,
-           const std::filesystem::path &output,
-           const std::unordered_map<std::string, Resolver::Entry> &schemas,
+           const std::filesystem::path &output, const Resolver::Views &schemas,
            const std::string_view version,
            const std::string_view current_version,
            const std::string_view comment,
