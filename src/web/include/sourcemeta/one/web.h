@@ -10,39 +10,39 @@
 namespace sourcemeta::one {
 
 struct GENERATE_WEB_DIRECTORY {
-  using Context = Configuration;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const Context &configuration) -> void;
+                      const sourcemeta::one::Configuration &configuration)
+      -> void;
 };
 
 struct GENERATE_WEB_NOT_FOUND {
-  using Context = Configuration;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const Context &configuration) -> void;
+                      const sourcemeta::one::Configuration &configuration)
+      -> void;
 };
 
 struct GENERATE_WEB_INDEX {
-  using Context = Configuration;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const Context &configuration) -> void;
+                      const sourcemeta::one::Configuration &configuration)
+      -> void;
 };
 
 struct GENERATE_WEB_SCHEMA {
-  using Context = Configuration;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const Context &configuration) -> void;
+                      const sourcemeta::one::Configuration &configuration)
+      -> void;
 };
 
 } // namespace sourcemeta::one

@@ -16,7 +16,8 @@ auto GENERATE_WEB_NOT_FOUND::handler(
     const std::filesystem::path &destination,
     const sourcemeta::one::BuildDependencies &,
     const sourcemeta::one::BuildDynamicCallback &,
-    const sourcemeta::one::Resolver &, const Context &configuration) -> void {
+    const sourcemeta::one::Resolver &,
+    const sourcemeta::one::Configuration &configuration) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   const auto &canonical{configuration.url};

@@ -397,7 +397,7 @@ static auto index_main(const std::string_view &program,
                   uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, uri);
+                  resolver, configuration, uri);
               resolver.cache_path(uri, action.destination);
               break;
             }
@@ -405,28 +405,28 @@ static auto index_main(const std::string_view &program,
             case BuildAction::Positions: {
               sourcemeta::one::GENERATE_POINTER_POSITIONS::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::Locations: {
               sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::Dependencies: {
               sourcemeta::one::GENERATE_DEPENDENCIES::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::Stats: {
               sourcemeta::one::GENERATE_STATS::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
@@ -435,35 +435,36 @@ static auto index_main(const std::string_view &program,
                   uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_HEALTH::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, uri);
+                  resolver, configuration, uri);
               break;
             }
 
             case BuildAction::Bundle: {
               sourcemeta::one::GENERATE_BUNDLE::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::Editor: {
               sourcemeta::one::GENERATE_EDITOR::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::BlazeExhaustive: {
               sourcemeta::one::GENERATE_BLAZE_TEMPLATE::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, sourcemeta::blaze::Mode::Exhaustive);
+                  resolver, configuration, sourcemeta::blaze::Mode::Exhaustive);
               break;
             }
 
             case BuildAction::BlazeFast: {
               sourcemeta::one::GENERATE_BLAZE_TEMPLATE::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, sourcemeta::blaze::Mode::FastValidation);
+                  resolver, configuration,
+                  sourcemeta::blaze::Mode::FastValidation);
               break;
             }
 
@@ -472,14 +473,14 @@ static auto index_main(const std::string_view &program,
                   uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, uri);
+                  resolver, configuration, uri);
               break;
             }
 
             case BuildAction::DependencyTree: {
               sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
@@ -488,24 +489,21 @@ static auto index_main(const std::string_view &program,
                   uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_DEPENDENTS::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, uri);
+                  resolver, configuration, uri);
               break;
             }
 
             case BuildAction::SearchIndex: {
               sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::DirectoryList: {
-              const sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::Context
-                  context{.configuration = configuration,
-                          .explorer_path = explorer_path};
               sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, context);
+                  resolver, configuration, explorer_path);
               break;
             }
 
@@ -540,7 +538,7 @@ static auto index_main(const std::string_view &program,
             case BuildAction::Routes: {
               sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, build_type);
+                  resolver, configuration, build_type);
               break;
             }
 

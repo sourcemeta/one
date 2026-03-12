@@ -113,6 +113,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
                       const Context &uri) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(uri)};
@@ -221,7 +222,8 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
-                      const sourcemeta::one::Resolver &) -> void {
+                      const sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
     result.reserve(dependencies.size());
@@ -281,16 +283,14 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  struct Context {
-    const sourcemeta::one::Configuration &configuration;
-    const std::filesystem::path &explorer_path;
-  };
+  using Context = std::filesystem::path;
 
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
-                      const sourcemeta::one::Resolver &, const Context &context)
-      -> void {
+                      const sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const Context &explorer_path) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
@@ -302,7 +302,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       const auto filename{dep.filename().string()};
       // dep = explorer_path / child_relative / % / filename
       const auto child_relative{std::filesystem::relative(
-          dep.parent_path().parent_path(), context.explorer_path)};
+          dep.parent_path().parent_path(), explorer_path)};
       const auto child_name{child_relative.filename()};
 
       if (filename == "directory.metapack") {
@@ -316,7 +316,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("health", directory_json.at("health"));
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
-        inflate_metadata(context.configuration, child_relative, entry_json);
+        inflate_metadata(configuration, child_relative, entry_json);
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
         entry_json.assign(
             "path", sourcemeta::core::JSON{std::string{"/"} +
@@ -390,9 +390,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     // Derive this directory's relative path from the destination
     // destination = explorer_path / relative / % / directory.metapack
     const std::filesystem::path relative_path{std::filesystem::relative(
-        destination.parent_path().parent_path(), context.explorer_path)};
+        destination.parent_path().parent_path(), explorer_path)};
 
-    inflate_metadata(context.configuration, relative_path, meta);
+    inflate_metadata(configuration, relative_path, meta);
 
     if (!scores.empty()) {
       const auto accumulated_health = static_cast<int>(
@@ -408,13 +408,13 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
     if (relative_path == ".") {
       meta.assign("path", sourcemeta::core::JSON{"/"});
-      meta.assign("url", sourcemeta::core::JSON{context.configuration.url});
+      meta.assign("url", sourcemeta::core::JSON{configuration.url});
       meta.assign("breadcrumb", make_breadcrumb(std::filesystem::path{}, true));
     } else {
       meta.assign("path", sourcemeta::core::JSON{std::string{"/"} +
                                                  relative_path.string()});
-      meta.assign("url", sourcemeta::core::JSON{context.configuration.url +
-                                                "/" + relative_path.string()});
+      meta.assign("url", sourcemeta::core::JSON{configuration.url + "/" +
+                                                relative_path.string()});
       meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
     }
 
