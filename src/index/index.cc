@@ -362,29 +362,23 @@ static auto index_main(const std::string_view &program,
               destination_view.substr(canonical_output.native().size() + 1),
               current, plan.size);
 
+          if (action.type == BuildAction::Remove) {
+            std::filesystem::remove_all(action.destination);
+            std::lock_guard<std::mutex> lock{entries_mutex};
+            entries.erase(action.destination.string());
+            return;
+          }
+
           std::vector<std::filesystem::path> dynamic_dependencies;
           const sourcemeta::one::BuildDynamicCallback dynamic_callback{
               [&dynamic_dependencies](const auto &path) {
                 dynamic_dependencies.emplace_back(path);
               }};
 
-          switch (action.type) {
-            case BuildAction::Remove: {
-              std::filesystem::remove_all(action.destination);
-              std::lock_guard<std::mutex> lock{entries_mutex};
-              entries.erase(action.destination.string());
-              return;
-            }
-
-            default: {
-              const auto handler{
-                  HANDLERS[static_cast<std::uint8_t>(action.type)]};
-              assert(handler);
-              handler(action, dynamic_callback, resolver, configuration,
-                      raw_configuration);
-              break;
-            }
-          }
+          const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
+          assert(handler);
+          handler(action, dynamic_callback, resolver, configuration,
+                  raw_configuration);
 
           {
             const auto now{std::filesystem::file_time_type::clock::now()};
