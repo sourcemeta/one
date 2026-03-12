@@ -23,40 +23,37 @@ public:
 
   BuildState() = default;
 
-  auto load(const std::filesystem::path &path) -> bool;
+  auto load(const std::filesystem::path &path) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
   [[nodiscard]] auto empty() const -> bool { return this->data.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return this->data.size(); }
-  auto clear() -> void { this->data.clear(); }
-  auto erase(const std::string &key) -> void { this->data.erase(key); }
-  [[nodiscard]] auto contains(const std::string &key) const -> bool {
+
+  [[nodiscard]] auto contains(const Container::key_type &key) const -> bool {
     return this->data.contains(key);
   }
 
-  [[nodiscard]] auto find(const std::string &key) -> Container::iterator {
-    return this->data.find(key);
+  [[nodiscard]] auto entry(const Container::key_type &key) const
+      -> const Entry * {
+    const auto match{this->data.find(key)};
+    return match == this->data.end() ? nullptr : &match->second;
   }
 
-  [[nodiscard]] auto find(const std::string &key) const
-      -> Container::const_iterator {
-    return this->data.find(key);
+  [[nodiscard]] auto
+  is_stale(const Container::key_type &key,
+           const std::filesystem::file_time_type source_mtime) const -> bool {
+    const auto *result{this->entry(key)};
+    return result == nullptr || source_mtime > result->file_mark;
   }
 
-  [[nodiscard]] auto at(const std::string &key) const -> const Entry & {
-    return this->data.at(key);
+  auto commit(const std::filesystem::path &path,
+              std::vector<std::filesystem::path> dependencies) -> void {
+    auto &result{this->data[path.native()]};
+    result.file_mark = std::filesystem::file_time_type::clock::now();
+    result.dependencies = std::move(dependencies);
   }
 
-  auto add(const std::filesystem::path &path,
-           const std::filesystem::file_time_type mark) -> void {
-    this->data[path.string()].file_mark = mark;
-  }
-
-  auto add(const std::filesystem::path &path, Entry entry) -> void {
-    this->data[path.string()] = std::move(entry);
-  }
-
-  auto operator[](const std::string &key) -> Entry & { return this->data[key]; }
+  auto forget(const Container::key_type &key) -> void { this->data.erase(key); }
 
   [[nodiscard]] auto begin() const -> Container::const_iterator {
     return this->data.begin();
@@ -64,6 +61,10 @@ public:
 
   [[nodiscard]] auto end() const -> Container::const_iterator {
     return this->data.end();
+  }
+
+  auto emplace(const std::filesystem::path &path, Entry entry) -> void {
+    this->data[path.native()] = std::move(entry);
   }
 
 private:

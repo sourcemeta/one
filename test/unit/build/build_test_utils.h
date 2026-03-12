@@ -158,23 +158,25 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     -> void {
   const auto base{output / "schemas" / relative_output / "%"};
   const auto explorer_base{output / "explorer" / relative_output / "%"};
-  entries.add(base / "schema.metapack", mark);
-  entries.add(base / "dependencies.metapack", mark);
-  entries.add(base / "locations.metapack", mark);
-  entries.add(base / "positions.metapack", mark);
-  entries.add(base / "stats.metapack", mark);
-  entries.add(base / "bundle.metapack", mark);
-  entries.add(base / "health.metapack", mark);
-  entries.add(base / "editor.metapack", mark);
-  entries.add(base / "dependents.metapack", mark);
-  entries.add(explorer_base / "schema.metapack", mark);
+  entries.emplace(base / "schema.metapack", {.file_mark = mark});
+  entries.emplace(base / "dependencies.metapack", {.file_mark = mark});
+  entries.emplace(base / "locations.metapack", {.file_mark = mark});
+  entries.emplace(base / "positions.metapack", {.file_mark = mark});
+  entries.emplace(base / "stats.metapack", {.file_mark = mark});
+  entries.emplace(base / "bundle.metapack", {.file_mark = mark});
+  entries.emplace(base / "health.metapack", {.file_mark = mark});
+  entries.emplace(base / "editor.metapack", {.file_mark = mark});
+  entries.emplace(base / "dependents.metapack", {.file_mark = mark});
+  entries.emplace(explorer_base / "schema.metapack", {.file_mark = mark});
   if (evaluate) {
-    entries.add(base / "blaze-exhaustive.metapack", mark);
-    entries.add(base / "blaze-fast.metapack", mark);
+    entries.emplace(base / "blaze-exhaustive.metapack", {.file_mark = mark});
+    entries.emplace(base / "blaze-fast.metapack", {.file_mark = mark});
   }
   if (web) {
-    entries.add(explorer_base / "schema-html.metapack", mark);
-    entries.add(explorer_base / "directory-html.metapack", mark);
+    entries.emplace(explorer_base / "schema-html.metapack",
+                    {.file_mark = mark});
+    entries.emplace(explorer_base / "directory-html.metapack",
+                    {.file_mark = mark});
   }
 }
 

@@ -18,7 +18,7 @@ TEST(Build_state, round_trip_empty) {
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(loaded_entries.load(path));
+  loaded_entries.load(path);
   EXPECT_TRUE(loaded_entries.empty());
 }
 
@@ -28,20 +28,20 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
 
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
-  original_entries["/output/schemas/foo/%/schema.metapack"] = {
-      .file_mark = now,
-      .dependencies = {},
-  };
+  original_entries.emplace("/output/schemas/foo/%/schema.metapack",
+                           {.file_mark = now});
 
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(loaded_entries.load(path));
+  loaded_entries.load(path);
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
-  const auto &entry{loaded_entries.at("/output/schemas/foo/%/schema.metapack")};
-  EXPECT_TRUE(entry.dependencies.empty());
+  const auto *result{
+      loaded_entries.entry("/output/schemas/foo/%/schema.metapack")};
+  EXPECT_NE(result, nullptr);
+  EXPECT_TRUE(result->dependencies.empty());
 }
 
 TEST(Build_state, round_trip_with_file_mark) {
@@ -50,24 +50,24 @@ TEST(Build_state, round_trip_with_file_mark) {
 
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
-  original_entries["/output/schemas/foo/%/schema.metapack"] = {
-      .file_mark = now,
-      .dependencies = {},
-  };
+  original_entries.emplace("/output/schemas/foo/%/schema.metapack",
+                           {.file_mark = now});
 
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(loaded_entries.load(path));
+  loaded_entries.load(path);
   EXPECT_EQ(loaded_entries.size(), 1);
 
-  const auto &entry{loaded_entries.at("/output/schemas/foo/%/schema.metapack")};
+  const auto *result{
+      loaded_entries.entry("/output/schemas/foo/%/schema.metapack")};
+  EXPECT_NE(result, nullptr);
 
   const auto original_ns{std::chrono::duration_cast<std::chrono::nanoseconds>(
                              now.time_since_epoch())
                              .count()};
   const auto loaded_ns{std::chrono::duration_cast<std::chrono::nanoseconds>(
-                           entry.file_mark.time_since_epoch())
+                           result->file_mark.time_since_epoch())
                            .count()};
   EXPECT_EQ(original_ns, loaded_ns);
 }
@@ -78,25 +78,26 @@ TEST(Build_state, round_trip_with_dependencies) {
 
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
-  original_entries["/output/schemas/foo/%/dependencies.metapack"] = {
-      .file_mark = now,
-      .dependencies = {"/output/schemas/bar/%/schema.metapack",
-                       "/output/schemas/baz/%/schema.metapack",
-                       "/output/schemas/qux/%/schema.metapack"},
-  };
+  original_entries.emplace(
+      "/output/schemas/foo/%/dependencies.metapack",
+      {.file_mark = now,
+       .dependencies = {"/output/schemas/bar/%/schema.metapack",
+                        "/output/schemas/baz/%/schema.metapack",
+                        "/output/schemas/qux/%/schema.metapack"}});
 
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(loaded_entries.load(path));
+  loaded_entries.load(path);
   EXPECT_EQ(loaded_entries.size(), 1);
 
-  const auto &entry{
-      loaded_entries.at("/output/schemas/foo/%/dependencies.metapack")};
-  EXPECT_EQ(entry.dependencies.size(), 3);
-  EXPECT_EQ(entry.dependencies[0], "/output/schemas/bar/%/schema.metapack");
-  EXPECT_EQ(entry.dependencies[1], "/output/schemas/baz/%/schema.metapack");
-  EXPECT_EQ(entry.dependencies[2], "/output/schemas/qux/%/schema.metapack");
+  const auto *result{
+      loaded_entries.entry("/output/schemas/foo/%/dependencies.metapack")};
+  EXPECT_NE(result, nullptr);
+  EXPECT_EQ(result->dependencies.size(), 3);
+  EXPECT_EQ(result->dependencies[0], "/output/schemas/bar/%/schema.metapack");
+  EXPECT_EQ(result->dependencies[1], "/output/schemas/baz/%/schema.metapack");
+  EXPECT_EQ(result->dependencies[2], "/output/schemas/qux/%/schema.metapack");
 }
 
 TEST(Build_state, round_trip_multiple_entries) {
@@ -105,30 +106,26 @@ TEST(Build_state, round_trip_multiple_entries) {
 
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
-  original_entries["/output/schemas/foo/%/schema.metapack"] = {
-      .file_mark = now,
-      .dependencies = {},
-  };
-  original_entries["/output/schemas/foo/%/dependencies.metapack"] = {
-      .file_mark = now,
-      .dependencies = {"/output/schemas/bar/%/schema.metapack"},
-  };
-  original_entries["/output/configuration.json"] = {
-      .file_mark = now,
-      .dependencies = {},
-  };
+  original_entries.emplace("/output/schemas/foo/%/schema.metapack",
+                           {.file_mark = now});
+  original_entries.emplace(
+      "/output/schemas/foo/%/dependencies.metapack",
+      {.file_mark = now,
+       .dependencies = {"/output/schemas/bar/%/schema.metapack"}});
+  original_entries.emplace("/output/configuration.json", {.file_mark = now});
 
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(loaded_entries.load(path));
+  loaded_entries.load(path);
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(
       loaded_entries.contains("/output/schemas/foo/%/dependencies.metapack"));
   EXPECT_TRUE(loaded_entries.contains("/output/configuration.json"));
 
-  EXPECT_EQ(loaded_entries.at("/output/schemas/foo/%/dependencies.metapack")
-                .dependencies.size(),
-            1);
+  const auto *dependencies_entry{
+      loaded_entries.entry("/output/schemas/foo/%/dependencies.metapack")};
+  EXPECT_NE(dependencies_entry, nullptr);
+  EXPECT_EQ(dependencies_entry->dependencies.size(), 1);
 }

@@ -186,17 +186,11 @@ static auto index_main(const std::string_view &program,
 
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
-  if (std::filesystem::exists(state_path)) {
-    try {
-      entries.load(state_path);
-    } catch (...) {
-      entries.clear();
-    }
-  }
+  entries.load(state_path);
 
-  // Read current version from existing version.json (if present)
-  // Only trust on-disk files when state.bin was loaded successfully,
+  // Only trust on-disk files when the state was loaded successfully,
   // otherwise the entries map and the on-disk artefacts are out of sync
+
   std::string current_version;
   const auto version_path{canonical_output / "version.json"};
   if (!entries.empty() && std::filesystem::exists(version_path)) {
@@ -204,7 +198,6 @@ static auto index_main(const std::string_view &program,
     current_version = version_json.to_string();
   }
 
-  // Read current configuration from existing configuration.json (if present)
   auto current_configuration{sourcemeta::core::JSON{nullptr}};
   const auto configuration_json_path{canonical_output / "configuration.json"};
   if (!entries.empty() && std::filesystem::exists(configuration_json_path)) {
@@ -344,7 +337,7 @@ static auto index_main(const std::string_view &program,
           if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
             std::filesystem::remove_all(action.destination);
             std::lock_guard<std::mutex> lock{entries_mutex};
-            entries.erase(action.destination.string());
+            entries.forget(action.destination.native());
             return;
           }
 
@@ -358,11 +351,8 @@ static auto index_main(const std::string_view &program,
               resolver, configuration, raw_configuration);
 
           {
-            const auto now{std::filesystem::file_time_type::clock::now()};
             std::lock_guard<std::mutex> lock{entries_mutex};
-            auto &entry{entries[action.destination.native()]};
-            entry.file_mark = now;
-            entry.dependencies = std::move(action.dependencies);
+            entries.commit(action.destination, std::move(action.dependencies));
           }
         },
         concurrency, THREAD_STACK_SIZE);

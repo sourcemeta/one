@@ -49,54 +49,61 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-auto BuildState::load(const std::filesystem::path &path) -> bool {
-  const sourcemeta::core::FileView view{path};
-  const auto *file_data{view.as<std::uint8_t>()};
-  const auto file_size{view.size()};
-
-  if (file_size < 12) {
-    return false;
+auto BuildState::load(const std::filesystem::path &path) -> void {
+  if (!std::filesystem::exists(path)) {
+    return;
   }
 
-  std::size_t offset{0};
-  if (read_uint32(file_data, offset) != STATE_MAGIC) {
-    return false;
-  }
+  try {
+    const sourcemeta::core::FileView view{path};
+    const auto *file_data{view.as<std::uint8_t>()};
+    const auto file_size{view.size()};
 
-  if (read_uint32(file_data, offset) != STATE_VERSION) {
-    return false;
-  }
-
-  const auto entry_count{read_uint32(file_data, offset)};
-  for (std::uint32_t index = 0; index < entry_count; ++index) {
-    const auto path_length{read_uint32(file_data, offset)};
-    std::string entry_path{reinterpret_cast<const char *>(file_data + offset),
-                           path_length};
-    offset += path_length;
-
-    const auto flags{file_data[offset++]};
-    auto &map_entry{(*this)[entry_path]};
-
-    if ((flags & STATE_FLAG_HAS_DEPENDENCIES) != 0) {
-      const auto dependency_count{read_uint32(file_data, offset)};
-      map_entry.dependencies.reserve(dependency_count);
-      for (std::uint32_t dependency_index = 0;
-           dependency_index < dependency_count; ++dependency_index) {
-        const auto dependency_length{read_uint32(file_data, offset)};
-        map_entry.dependencies.emplace_back(
-            std::string{reinterpret_cast<const char *>(file_data + offset),
-                        dependency_length});
-        offset += dependency_length;
-      }
+    if (file_size < 12) {
+      return;
     }
 
-    const auto nanoseconds{read_int64(file_data, offset)};
-    map_entry.file_mark =
-        mark_type{std::chrono::duration_cast<mark_type::duration>(
-            std::chrono::nanoseconds{nanoseconds})};
-  }
+    std::size_t offset{0};
+    if (read_uint32(file_data, offset) != STATE_MAGIC) {
+      return;
+    }
 
-  return true;
+    if (read_uint32(file_data, offset) != STATE_VERSION) {
+      return;
+    }
+
+    const auto entry_count{read_uint32(file_data, offset)};
+    for (std::uint32_t index = 0; index < entry_count; ++index) {
+      const auto path_length{read_uint32(file_data, offset)};
+      std::string entry_path{reinterpret_cast<const char *>(file_data + offset),
+                             path_length};
+      offset += path_length;
+
+      const auto flags{file_data[offset++]};
+      auto &map_entry{this->data[entry_path]};
+
+      if ((flags & STATE_FLAG_HAS_DEPENDENCIES) != 0) {
+        const auto dependency_count{read_uint32(file_data, offset)};
+        map_entry.dependencies.reserve(dependency_count);
+        for (std::uint32_t dependency_index = 0;
+             dependency_index < dependency_count; ++dependency_index) {
+          const auto dependency_length{read_uint32(file_data, offset)};
+          map_entry.dependencies.emplace_back(
+              std::string{reinterpret_cast<const char *>(file_data + offset),
+                          dependency_length});
+          offset += dependency_length;
+        }
+      }
+
+      const auto nanoseconds{read_int64(file_data, offset)};
+      map_entry.file_mark =
+          mark_type{std::chrono::duration_cast<mark_type::duration>(
+              std::chrono::nanoseconds{nanoseconds})};
+    }
+  } catch (...) {
+    this->data.clear();
+    throw;
+  }
 }
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {

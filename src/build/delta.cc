@@ -114,8 +114,8 @@ static auto is_dirty(const std::string &target_path, const TargetMap &targets,
     return true;
   }
 
-  const auto entry_match{entries.find(target_path)};
-  if (entry_match == entries.end()) {
+  const auto *state_entry{entries.entry(target_path)};
+  if (state_entry == nullptr) {
     cache[target_path] = DirtyState::Dirty;
     return true;
   }
@@ -127,8 +127,7 @@ static auto is_dirty(const std::string &target_path, const TargetMap &targets,
     }
   }
 
-  const auto &entry{entry_match->second};
-  for (const auto &dependency : entry.dependencies) {
+  for (const auto &dependency : state_entry->dependencies) {
     if (is_dirty(dependency.string(), targets, entries, force_dirty, cache)) {
       cache[target_path] = DirtyState::Dirty;
       return true;
@@ -228,9 +227,9 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   const auto version_path{output / "version.json"};
   const auto configuration_path{output / "configuration.json"};
   const auto comment_path{output / "comment.json"};
-  assert(current_version.empty() == !entries.contains(version_path.string()));
+  assert(current_version.empty() == !entries.contains(version_path.native()));
   assert(current_configuration.is_null() ==
-         !entries.contains(configuration_path.string()));
+         !entries.contains(configuration_path.native()));
   const auto version_changed{current_version != version};
   const auto configuration_changed{current_configuration.is_null() ||
                                    configuration != current_configuration};
@@ -300,8 +299,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       const auto metapack_path{
           (schema_base_path(output, info.relative_path) / "schema.metapack")
               .string()};
-      const auto match{entries.find(metapack_path)};
-      if (match == entries.end() || info.mtime > match->second.file_mark) {
+      if (entries.is_stale(metapack_path, info.mtime)) {
         force_dirty.insert(metapack_path);
       }
     }
@@ -314,8 +312,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       const auto metapack_path{
           (schema_base_path(output, info.relative_path) / "schema.metapack")
               .string()};
-      const auto match{entries.find(metapack_path)};
-      if (match == entries.end() || info.mtime > match->second.file_mark) {
+      if (entries.is_stale(metapack_path, info.mtime)) {
         force_dirty.insert(metapack_path);
       }
     }
@@ -389,7 +386,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       return plan;
     }
 
-    if (comment.empty() && entries.contains(comment_path.string())) {
+    if (comment.empty() && entries.contains(comment_path.native())) {
       BuildPlan plan;
       plan.output = output;
       plan.type = build_type;
@@ -453,7 +450,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
       const auto base{schema_base_path(output, info.relative_path)};
       if (is_full || dirty_set.contains((base / "schema.metapack").string()) ||
-          !entries.contains(dependents_path.string())) {
+          !entries.contains(dependents_path.native())) {
         dirty_set.insert(dependents_path.string());
       }
     }
@@ -558,7 +555,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
         if (is_full ||
             dirty_set.contains((schema_base / "schema.metapack").string()) ||
-            !entries.contains(web_schema_path.string())) {
+            !entries.contains(web_schema_path.native())) {
           dirty_set.insert(web_schema_path.string());
         }
       }
@@ -627,11 +624,11 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     const auto schema_dirty{
         dirty_set.contains((base / "schema.metapack").string())};
     if (schema_dirty || is_full) {
-      if (entries.contains(exhaustive_path.string())) {
+      if (entries.contains(exhaustive_path.native())) {
         remove_wave.push_back(
             {BuildPlan::Action::Type::Remove, exhaustive_path, {}, {}});
       }
-      if (entries.contains(fast_path.string())) {
+      if (entries.contains(fast_path.native())) {
         remove_wave.push_back(
             {BuildPlan::Action::Type::Remove, fast_path, {}, {}});
       }
