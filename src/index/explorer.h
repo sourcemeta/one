@@ -290,9 +290,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
 
-    // Derive this directory's relative path from the destination
-    // destination = <output>/explorer/<relative>/%/directory.metapack
-    // Strip /%/directory.metapack to get the directory, then find "explorer"
     const auto directory_path{action.destination.parent_path().parent_path()};
     std::filesystem::path relative_path;
     auto current{directory_path};
