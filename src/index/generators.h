@@ -454,32 +454,49 @@ struct GENERATE_EDITOR {
   }
 };
 
-struct GENERATE_BLAZE_TEMPLATE {
-  using Context = sourcemeta::blaze::Mode;
+static auto
+generate_blaze_template(const std::filesystem::path &destination,
+                        const sourcemeta::one::BuildDependencies &dependencies,
+                        const sourcemeta::blaze::Mode mode) -> void {
+  const auto timestamp_start{std::chrono::steady_clock::now()};
+  const auto contents{sourcemeta::one::read_json(dependencies.front())};
+  sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::References};
+  frame.analyse(contents, sourcemeta::core::schema_walker,
+                sourcemeta::core::schema_resolver);
+  const auto schema_template{sourcemeta::blaze::compile(
+      contents, sourcemeta::core::schema_walker,
+      sourcemeta::core::schema_resolver,
+      sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
+  const auto result{sourcemeta::blaze::to_json(schema_template)};
+  const auto timestamp_end{std::chrono::steady_clock::now()};
+  std::filesystem::create_directories(destination.parent_path());
+  sourcemeta::one::write_json(
+      destination, result, "application/json", sourcemeta::one::Encoding::GZIP,
+      sourcemeta::core::JSON{nullptr},
+      std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                            timestamp_start));
+}
+
+struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &,
-                      const Context &mode) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::one::read_json(dependencies.front())};
-    sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::References};
-    frame.analyse(contents, sourcemeta::core::schema_walker,
-                  sourcemeta::core::schema_resolver);
-    const auto schema_template{sourcemeta::blaze::compile(
-        contents, sourcemeta::core::schema_walker,
-        sourcemeta::core::schema_resolver,
-        sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
-    const auto result{sourcemeta::blaze::to_json(schema_template)};
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-    std::filesystem::create_directories(destination.parent_path());
-    sourcemeta::one::write_json(
-        destination, result, "application/json",
-        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                      const sourcemeta::one::Configuration &) -> void {
+    generate_blaze_template(destination, dependencies,
+                            sourcemeta::blaze::Mode::Exhaustive);
+  }
+};
+
+struct GENERATE_BLAZE_TEMPLATE_FAST {
+  static auto handler(const std::filesystem::path &destination,
+                      const sourcemeta::one::BuildDependencies &dependencies,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      const sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &) -> void {
+    generate_blaze_template(destination, dependencies,
+                            sourcemeta::blaze::Mode::FastValidation);
   }
 };
 

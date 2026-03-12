@@ -454,17 +454,16 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::BlazeExhaustive: {
-              sourcemeta::one::GENERATE_BLAZE_TEMPLATE::handler(
+              sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, sourcemeta::blaze::Mode::Exhaustive);
+                  resolver, configuration);
               break;
             }
 
             case BuildAction::BlazeFast: {
-              sourcemeta::one::GENERATE_BLAZE_TEMPLATE::handler(
+              sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration,
-                  sourcemeta::blaze::Mode::FastValidation);
+                  resolver, configuration);
               break;
             }
 
