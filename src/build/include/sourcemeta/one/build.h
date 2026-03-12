@@ -66,6 +66,8 @@ struct BuildActionEntry {
 };
 
 struct BuildPlan {
+  std::filesystem::path output;
+  BuildType type;
   std::vector<std::vector<BuildActionEntry>> waves;
   std::size_t size{0};
 };

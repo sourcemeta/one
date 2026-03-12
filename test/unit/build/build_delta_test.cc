@@ -22,7 +22,7 @@ TEST(Build_delta, full_empty_registry) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 4, 8);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -67,7 +67,7 @@ TEST(Build_delta, full_single_schema) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 21);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -195,7 +195,7 @@ TEST(Build_delta, incremental_changed_same_mtime) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 0, 0);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -242,7 +242,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "bar" / "%" / "schema.metapack",
@@ -400,7 +400,7 @@ TEST(Build_delta, incremental_one_schema_changed) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -522,7 +522,7 @@ TEST(Build_delta, incremental_removed_schema) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 4, 7);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 7);
 
   EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
                 output / "dependency-tree.metapack");
@@ -565,7 +565,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 9, 22);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -682,7 +682,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 9, 22);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -794,7 +794,7 @@ TEST(Build_delta, full_with_comment) {
       "Hello world", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 4, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
 
   EXPECT_ACTION(plan, 0, 0, 3, Comment, output / "comment.json");
   EXPECT_ACTION(plan, 0, 1, 3, Configuration, output / "configuration.json");
@@ -840,7 +840,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 5, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -889,7 +889,7 @@ TEST(Build_delta, incremental_with_comment) {
       "1.0.0", "Hello world", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json");
 
@@ -1000,7 +1000,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1118,7 +1118,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
       "1.0.0", "hello", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 1, 1);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
   EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json");
 
@@ -1156,7 +1156,7 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 1, 1);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
   EXPECT_ACTION(plan, 0, 0, 1, Remove, output / "comment.json");
 
@@ -1194,7 +1194,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 1, 2);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 2);
 
   EXPECT_ACTION(plan, 0, 0, 2, Remove, output / "explorer" / "foo");
   EXPECT_ACTION(plan, 0, 1, 2, Remove, output / "schemas");
@@ -1233,7 +1233,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 1, 2);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 2);
 
   EXPECT_ACTION(plan, 0, 0, 2, Remove, output / "explorer" / "foo");
   EXPECT_ACTION(plan, 0, 1, 2, Remove, output / "schemas");
@@ -1272,7 +1272,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
       "1.0.0", "", sourcemeta::core::JSON{{"a", sourcemeta::core::JSON{1}}},
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 5, 10);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 10);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -1319,7 +1319,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -1428,7 +1428,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
       "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 9, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -1538,7 +1538,7 @@ TEST(Build_delta, incremental_evaluate_false) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1652,7 +1652,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 2, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 5);
 
   EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack",
@@ -1724,7 +1724,7 @@ TEST(Build_delta, incremental_missing_bundle) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 2, 8);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 8);
 
   EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack",
@@ -1806,7 +1806,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 2, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 5);
 
   EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
                 output / "dependency-tree.metapack",
@@ -1875,7 +1875,7 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 0, 0);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 0, 0);
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1925,7 +1925,7 @@ TEST(Build_delta, mtime_nothing_changed) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 0, 0);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1979,7 +1979,7 @@ TEST(Build_delta, mtime_source_newer) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2112,7 +2112,7 @@ TEST(Build_delta, mtime_no_entry) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2246,7 +2246,7 @@ TEST(Build_delta, mtime_no_file_mark) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2362,7 +2362,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 31);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 31);
 
   EXPECT_ACTION(plan, 0, 0, 2, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2552,7 +2552,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 44);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 44);
 
   EXPECT_ACTION(plan, 0, 0, 3, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2800,7 +2800,7 @@ TEST(Build_delta, mtime_reverse_dep) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 30);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 30);
 
   EXPECT_ACTION(plan, 0, 0, 5, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2971,7 +2971,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3072,7 +3072,7 @@ TEST(Build_delta, headless_full_empty_registry) {
       "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 3, 6);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 3, 6);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -3107,7 +3107,7 @@ TEST(Build_delta, headless_full_single_schema) {
       "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 18);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -3204,7 +3204,7 @@ TEST(Build_delta, headless_incremental) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 5, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 15);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3308,7 +3308,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 20);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 20);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3411,7 +3411,7 @@ TEST(Build_delta, headless_to_full_incremental) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3557,7 +3557,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3672,7 +3672,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 21);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -3774,7 +3774,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 19);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json");
@@ -3926,7 +3926,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 21);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /

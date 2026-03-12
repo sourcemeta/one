@@ -202,9 +202,11 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildEntries &entries,
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define EXPECT_CONSISTENT_PLAN(plan, entries, output, expected_waves,          \
-                               expected_size)                                  \
+#define EXPECT_CONSISTENT_PLAN(plan, entries, output, build_type,              \
+                               expected_waves, expected_size)                  \
   do {                                                                         \
+    EXPECT_EQ((plan).output, (output));                                        \
+    EXPECT_EQ((plan).type, sourcemeta::one::BuildType::build_type);            \
     EXPECT_EQ((plan).waves.size(), (expected_waves));                          \
     EXPECT_EQ((plan).size, (expected_size));                                   \
     __check_no_intra_wave_dependencies(plan);                                  \

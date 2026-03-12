@@ -381,6 +381,8 @@ auto delta(
       !has_missing_web && !has_potential_stale) {
     if (!comment.empty()) {
       BuildPlan plan;
+      plan.output = output;
+      plan.type = build_type;
       plan.waves.push_back({{.type = BuildAction::Comment,
                              .destination = comment_path,
                              .dependencies = {}}});
@@ -390,6 +392,8 @@ auto delta(
 
     if (comment.empty() && entries.contains(comment_path.string())) {
       BuildPlan plan;
+      plan.output = output;
+      plan.type = build_type;
       plan.waves.push_back({{.type = BuildAction::Remove,
                              .destination = comment_path,
                              .dependencies = {}}});
@@ -397,7 +401,7 @@ auto delta(
       return plan;
     }
 
-    return {};
+    return {.output = output, .type = build_type, .waves = {}};
   }
 
   const auto has_schema_work{is_full || !dirty_set.empty() ||
@@ -752,6 +756,8 @@ auto delta(
   }
 
   BuildPlan plan;
+  plan.output = output;
+  plan.type = build_type;
 
   if (is_full) {
     std::vector<BuildActionEntry> init_wave;
