@@ -110,7 +110,7 @@ struct GENERATE_POINTER_POSITIONS {
                       const Context &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::one::read_json(dependencies.front().get(), std::ref(tracker));
+    sourcemeta::one::read_json(dependencies.front(), std::ref(tracker));
     const auto result{sourcemeta::core::to_json(tracker)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     std::filesystem::create_directories(destination.parent_path());
@@ -130,8 +130,8 @@ struct GENERATE_FRAME_LOCATIONS {
                       const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
-    const auto contents{sourcemeta::one::read_json(dependencies.front().get(),
-                                                   std::ref(tracker))};
+    const auto contents{
+        sourcemeta::one::read_json(dependencies.front(), std::ref(tracker))};
     sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::Locations};
     frame.analyse(contents, sourcemeta::core::schema_walker,
@@ -156,7 +156,7 @@ struct GENERATE_DEPENDENCIES {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::one::read_json(dependencies.front().get())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
     auto result{sourcemeta::core::JSON::make_array()};
     sourcemeta::core::dependencies(
         contents, sourcemeta::core::schema_walker,
@@ -208,7 +208,7 @@ struct GENERATE_DEPENDENCY_TREE {
                            std::unordered_set<sourcemeta::core::JSON::String>>;
     DirectMap direct;
     for (const auto &dependency : dependencies) {
-      const auto contents{sourcemeta::one::read_json(dependency.get())};
+      const auto contents{sourcemeta::one::read_json(dependency)};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
         direct[entry.at("to").to_string()].emplace(
@@ -264,7 +264,7 @@ struct GENERATE_DEPENDENTS {
                       const sourcemeta::one::BuildDynamicCallback &,
                       const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::one::read_json(dependencies.front().get())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
     assert(contents.is_object());
     auto result{sourcemeta::core::JSON::make_array()};
     const auto *match{contents.try_at(context)};
@@ -300,7 +300,7 @@ struct GENERATE_HEALTH {
     const auto &resolver{context.first.get()};
     const auto &configuration{context.second.get()};
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::one::read_json(dependencies.front().get())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
 
     auto &cache_entry{bundle_for(configuration, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
@@ -396,7 +396,7 @@ struct GENERATE_BUNDLE {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{sourcemeta::one::read_json(dependencies.front().get())};
+    auto schema{sourcemeta::one::read_json(dependencies.front())};
     sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
                              [&callback, &resolver](const auto identifier) {
                                return resolver(identifier, callback);
@@ -428,7 +428,7 @@ struct GENERATE_EDITOR {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{sourcemeta::one::read_json(dependencies.front().get())};
+    auto schema{sourcemeta::one::read_json(dependencies.front())};
     sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
                                  [&callback, &resolver](const auto identifier) {
                                    return resolver(identifier, callback);
@@ -460,7 +460,7 @@ struct GENERATE_BLAZE_TEMPLATE {
                       const sourcemeta::one::BuildDynamicCallback &,
                       const Context &mode) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{sourcemeta::one::read_json(dependencies.front().get())};
+    const auto contents{sourcemeta::one::read_json(dependencies.front())};
     sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::References};
     frame.analyse(contents, sourcemeta::core::schema_walker,
@@ -487,7 +487,7 @@ struct GENERATE_STATS {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const Context &resolver) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto schema{sourcemeta::one::read_json(dependencies.front().get())};
+    const auto schema{sourcemeta::one::read_json(dependencies.front())};
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;

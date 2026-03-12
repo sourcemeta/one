@@ -9,7 +9,7 @@
 
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
-#include <functional>  // std::function, std::reference_wrapper
+#include <functional>  // std::function
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <unordered_map> // std::unordered_map
@@ -70,8 +70,7 @@ struct BuildPlan {
   std::size_t size{0};
 };
 
-using BuildDependencies =
-    std::vector<std::reference_wrapper<const std::filesystem::path>>;
+using BuildDependencies = std::vector<std::filesystem::path>;
 
 // TODO: We can get rid of this by making handlers return the dynamic ones?
 using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;

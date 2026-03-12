@@ -35,7 +35,7 @@ auto GENERATE_WEB_INDEX::handler(
     -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory{read_json(dependencies.front().get())};
+  const auto directory{read_json(dependencies.front())};
   const auto &canonical{directory.at("url").to_string()};
   const auto title{configuration.html->name + " Schemas"};
   const auto &description{configuration.html->description};

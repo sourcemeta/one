@@ -118,7 +118,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
                       const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{
-        sourcemeta::one::read_json_with_metadata(dependencies.front().get())};
+        sourcemeta::one::read_json_with_metadata(dependencies.front())};
     const auto id{sourcemeta::core::identify(
         schema.data, [&callback, &context](const auto identifier) {
           return std::get<0>(context).get()(identifier, callback);
@@ -179,11 +179,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{sourcemeta::one::read_json(dependencies.at(1).get())};
+    const auto health{sourcemeta::one::read_json(dependencies.at(1))};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::one::read_json(dependencies.at(2).get())};
+        sourcemeta::one::read_json(dependencies.at(2))};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
@@ -228,7 +228,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
     result.reserve(dependencies.size());
 
     for (const auto &dependency : dependencies) {
-      auto metadata_json{sourcemeta::one::read_json(dependency.get())};
+      auto metadata_json{sourcemeta::one::read_json(dependency)};
       if (!sourcemeta::core::is_schema(metadata_json)) {
         continue;
       }
@@ -299,8 +299,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     // The dependencies list contains the exact child entries for this
     // directory: explorer/<relative>/%/schema.metapack for schemas and
     // explorer/<relative>/%/directory.metapack for child directories
-    for (const auto &dep_ref : dependencies) {
-      const auto &dep{dep_ref.get()};
+    for (const auto &dep : dependencies) {
       const auto filename{dep.filename().string()};
       // dep = explorer_path / child_relative / % / filename
       const auto child_relative{std::filesystem::relative(
