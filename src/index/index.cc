@@ -17,6 +17,7 @@
 #include "generators.h"
 
 #include <algorithm>     // std::sort
+#include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
 #include <chrono>        // std::chrono
@@ -50,8 +51,38 @@
                    std::chrono::steady_clock::now() - (state).second));        \
   (state).second = std::chrono::steady_clock::now()
 
-// We rely on this special prefix to avoid file system collisions. The reason it
-// works is that URIs cannot have "%" without percent-encoding it as "%25", and
+using BuildHandlerFunction = void (*)(
+    const sourcemeta::one::BuildActionEntry &,
+    const sourcemeta::one::BuildDynamicCallback &,
+    const sourcemeta::one::Resolver &, const sourcemeta::one::Configuration &);
+
+static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
+    nullptr,
+    &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
+    &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
+    &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
+    &sourcemeta::one::GENERATE_STATS::handler,
+    &sourcemeta::one::GENERATE_HEALTH::handler,
+    &sourcemeta::one::GENERATE_BUNDLE::handler,
+    &sourcemeta::one::GENERATE_EDITOR::handler,
+    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
+    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
+    &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
+    &sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler,
+    &sourcemeta::one::GENERATE_DEPENDENTS::handler,
+    &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
+    &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
+    &sourcemeta::one::GENERATE_WEB_INDEX::handler,
+    &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
+    &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
+    &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
+    &sourcemeta::one::GENERATE_COMMENT::handler,
+    nullptr,
+    &sourcemeta::one::GENERATE_VERSION::handler,
+    &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
+    nullptr,
+}};
+
 static auto print_progress(std::mutex &mutex, const std::size_t threads,
                            const std::string_view title,
                            const std::string_view prefix,
@@ -347,126 +378,6 @@ static auto index_main(const std::string_view &program,
               break;
             }
 
-            case BuildAction::Positions: {
-              sourcemeta::one::GENERATE_POINTER_POSITIONS::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Locations: {
-              sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Dependencies: {
-              sourcemeta::one::GENERATE_DEPENDENCIES::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Stats: {
-              sourcemeta::one::GENERATE_STATS::handler(action, dynamic_callback,
-                                                       resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Health: {
-              sourcemeta::one::GENERATE_HEALTH::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Bundle: {
-              sourcemeta::one::GENERATE_BUNDLE::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Editor: {
-              sourcemeta::one::GENERATE_EDITOR::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::BlazeExhaustive: {
-              sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::BlazeFast: {
-              sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::SchemaMetadata: {
-              sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::DependencyTree: {
-              sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Dependents: {
-              sourcemeta::one::GENERATE_DEPENDENTS::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::SearchIndex: {
-              sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::DirectoryList: {
-              sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::WebIndex: {
-              sourcemeta::one::GENERATE_WEB_INDEX::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::WebNotFound: {
-              sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::WebDirectory: {
-              sourcemeta::one::GENERATE_WEB_DIRECTORY::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::WebSchema: {
-              sourcemeta::one::GENERATE_WEB_SCHEMA::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Routes: {
-              sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
-            case BuildAction::Version: {
-              sourcemeta::one::GENERATE_VERSION::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
             case BuildAction::Configuration: {
               std::filesystem::create_directories(
                   action.destination.parent_path());
@@ -476,17 +387,19 @@ static auto index_main(const std::string_view &program,
               break;
             }
 
-            case BuildAction::Comment: {
-              sourcemeta::one::GENERATE_COMMENT::handler(
-                  action, dynamic_callback, resolver, configuration);
-              break;
-            }
-
             case BuildAction::Remove: {
               std::filesystem::remove_all(action.destination);
               std::lock_guard<std::mutex> lock{entries_mutex};
               entries.erase(action.destination.string());
               return;
+            }
+
+            default: {
+              const auto handler{
+                  HANDLERS[static_cast<std::uint8_t>(action.type)]};
+              assert(handler);
+              handler(action, dynamic_callback, resolver, configuration);
+              break;
             }
           }
 
