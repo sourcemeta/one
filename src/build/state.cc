@@ -49,7 +49,7 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-auto load_state(const std::filesystem::path &path, BuildEntries &entries)
+auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
     -> bool {
   const sourcemeta::core::FileView view{path};
   const auto *data{view.as<std::uint8_t>()};
@@ -109,8 +109,8 @@ auto load_state(const std::filesystem::path &path, BuildEntries &entries)
   return true;
 }
 
-auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
-    -> void {
+auto build_state_save(const std::filesystem::path &path,
+                      const BuildEntries &entries) -> void {
   std::string buffer;
   buffer.resize(12);
   std::memcpy(buffer.data(), &STATE_MAGIC, sizeof(STATE_MAGIC));

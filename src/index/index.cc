@@ -190,7 +190,7 @@ static auto index_main(const std::string_view &program,
   const auto state_path{canonical_output / "state.bin"};
   if (std::filesystem::exists(state_path)) {
     try {
-      sourcemeta::one::load_state(state_path, entries);
+      sourcemeta::one::build_state_load(state_path, entries);
     } catch (...) {
       entries.clear();
     }
@@ -377,7 +377,7 @@ static auto index_main(const std::string_view &program,
   // (9) Save state
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::save_state(state_path, entries);
+  sourcemeta::one::build_state_save(state_path, entries);
 
   PROFILE_END(profiling, "Cleanup");
 

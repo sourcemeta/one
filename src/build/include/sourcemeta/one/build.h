@@ -87,12 +87,12 @@ auto delta(const BuildType build_type, const BuildEntries &entries,
            const std::vector<std::filesystem::path> &removed) -> BuildPlan;
 
 SOURCEMETA_ONE_BUILD_EXPORT
-auto load_state(const std::filesystem::path &path, BuildEntries &entries)
+auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
     -> bool;
 
 SOURCEMETA_ONE_BUILD_EXPORT
-auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
-    -> void;
+auto build_state_save(const std::filesystem::path &path,
+                      const BuildEntries &entries) -> void;
 
 } // namespace sourcemeta::one
 

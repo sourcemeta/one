@@ -15,10 +15,10 @@ TEST(Build_state, round_trip_empty) {
   std::filesystem::create_directories(path.parent_path());
 
   const sourcemeta::one::BuildEntries original_entries;
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_TRUE(loaded_entries.empty());
 }
 
@@ -34,10 +34,10 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
       .dynamic_dependencies = {},
   };
 
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
@@ -58,10 +58,10 @@ TEST(Build_state, round_trip_with_file_mark) {
       .dynamic_dependencies = {},
   };
 
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto &entry{loaded_entries.at("/output/schemas/foo/%/schema.metapack")};
@@ -88,10 +88,10 @@ TEST(Build_state, round_trip_with_static_dependencies) {
       .dynamic_dependencies = {},
   };
 
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto &entry{
@@ -116,10 +116,10 @@ TEST(Build_state, round_trip_with_dynamic_dependencies) {
       .dynamic_dependencies = {"/output/schemas/qux/%/schema.metapack"},
   };
 
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto &entry{
@@ -154,10 +154,10 @@ TEST(Build_state, round_trip_multiple_entries) {
       .dynamic_dependencies = {},
   };
 
-  sourcemeta::one::save_state(path, original_entries);
+  sourcemeta::one::build_state_save(path, original_entries);
 
   sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
+  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(
