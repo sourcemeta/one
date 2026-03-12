@@ -287,7 +287,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
-                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const Context &explorer_path) -> void {
@@ -306,7 +306,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       const auto child_name{child_relative.filename()};
 
       if (filename == "directory.metapack") {
-        callback(dep);
         auto directory_json{sourcemeta::one::read_json(dep)};
         assert(directory_json.is_object());
         assert(directory_json.defines("health"));

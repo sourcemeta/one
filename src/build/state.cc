@@ -43,6 +43,20 @@ auto append_string(std::string &buffer, const std::string &value) -> void {
   buffer.append(value);
 }
 
+// NOLINTNEXTLINE(misc-use-internal-linkage)
+auto has_no_duplicate_dependencies(const sourcemeta::one::BuildEntry &entry)
+    -> bool {
+  for (const auto &dynamic_dependency : entry.dynamic_dependencies) {
+    for (const auto &static_dependency : entry.static_dependencies) {
+      if (dynamic_dependency == static_dependency) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 } // anonymous namespace
 
 namespace sourcemeta::one {
@@ -119,6 +133,9 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
   std::uint32_t count{0};
   for (const auto &entry : entries) {
     count += 1;
+
+    assert(has_no_duplicate_dependencies(entry.second));
+
     append_string(buffer, entry.first);
 
     const bool has_dependencies{!entry.second.static_dependencies.empty() ||
