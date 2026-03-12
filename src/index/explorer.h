@@ -319,7 +319,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
         assert(directory_json.defines("path"));
-        entry_json.assign("path", directory_json.at("path"));
+        entry_json.assign("path",
+                          sourcemeta::core::JSON{
+                              directory_json.at("path").to_string() + "/"});
         if (directory_json.defines("title")) {
           entry_json.assign("title", directory_json.at("title"));
         }
