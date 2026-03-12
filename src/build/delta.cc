@@ -63,25 +63,25 @@ declare_schema_targets(TargetMap &targets, const std::filesystem::path &output,
   declare_target(targets, BuildAction::Materialise, schema_metapack,
                  {source, configuration_path}, uri);
   declare_target(targets, BuildAction::Positions, base / "positions.metapack",
-                 {schema_metapack});
+                 {schema_metapack}, uri);
   declare_target(targets, BuildAction::Locations, base / "locations.metapack",
-                 {schema_metapack});
+                 {schema_metapack}, uri);
   declare_target(targets, BuildAction::Dependencies, dependencies_metapack,
-                 {schema_metapack});
+                 {schema_metapack}, uri);
   declare_target(targets, BuildAction::Stats, base / "stats.metapack",
-                 {schema_metapack});
+                 {schema_metapack}, uri);
   declare_target(targets, BuildAction::Health, health_metapack,
                  {schema_metapack, dependencies_metapack}, uri);
   declare_target(targets, BuildAction::Bundle, bundle_metapack,
-                 {schema_metapack, dependencies_metapack});
+                 {schema_metapack, dependencies_metapack}, uri);
   declare_target(targets, BuildAction::Editor, base / "editor.metapack",
-                 {bundle_metapack});
+                 {bundle_metapack}, uri);
 
   if (evaluate) {
     declare_target(targets, BuildAction::BlazeExhaustive,
-                   base / "blaze-exhaustive.metapack", {bundle_metapack});
+                   base / "blaze-exhaustive.metapack", {bundle_metapack}, uri);
     declare_target(targets, BuildAction::BlazeFast,
-                   base / "blaze-fast.metapack", {bundle_metapack});
+                   base / "blaze-fast.metapack", {bundle_metapack}, uri);
   }
 
   declare_target(
@@ -559,7 +559,8 @@ auto delta(
                        {explorer_base / "schema.metapack",
                         schema_base / "dependencies.metapack",
                         schema_base / "health.metapack",
-                        schema_base / "dependents.metapack"});
+                        schema_base / "dependents.metapack"},
+                       uri);
 
         if (is_full ||
             dirty_set.contains((schema_base / "schema.metapack").string()) ||

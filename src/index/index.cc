@@ -550,6 +550,10 @@ static auto index_main(const std::string_view &program,
 
   PROFILE_END(profiling, "Cleanup");
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Metrics
+  /////////////////////////////////////////////////////////////////////////////
+
   // TODO: Add a test for this
   if (app.contains("profile")) {
     std::cerr << "Profiling...\n";
