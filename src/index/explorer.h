@@ -111,7 +111,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       const sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &) -> void {
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
     const auto schema{
@@ -219,7 +220,8 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &) -> void {
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
     result.reserve(action.dependencies.size());
@@ -282,8 +284,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration)
-      -> void {
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;

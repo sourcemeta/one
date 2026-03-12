@@ -11,32 +11,32 @@ struct GENERATE_WEB_DIRECTORY {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration)
-      -> void;
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_NOT_FOUND {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration)
-      -> void;
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_INDEX {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration)
-      -> void;
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_SCHEMA {
   static auto handler(const sourcemeta::one::BuildActionEntry &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       const sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration)
-      -> void;
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 } // namespace sourcemeta::one

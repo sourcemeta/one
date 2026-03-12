@@ -24,7 +24,6 @@
 #include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem
-#include <fstream>       // std::ofstream
 #include <functional>    // std::reference_wrapper, std::cref
 #include <iomanip>       // std::setw, std::setfill
 #include <iostream>      // std::cerr, std::cout
@@ -54,7 +53,8 @@
 using BuildHandlerFunction = void (*)(
     const sourcemeta::one::BuildActionEntry &,
     const sourcemeta::one::BuildDynamicCallback &,
-    const sourcemeta::one::Resolver &, const sourcemeta::one::Configuration &);
+    const sourcemeta::one::Resolver &, const sourcemeta::one::Configuration &,
+    const sourcemeta::core::JSON &);
 
 static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     nullptr,
@@ -77,7 +77,7 @@ static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
     &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
     &sourcemeta::one::GENERATE_COMMENT::handler,
-    nullptr,
+    &sourcemeta::one::GENERATE_CONFIGURATION::handler,
     &sourcemeta::one::GENERATE_VERSION::handler,
     &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
     nullptr,
@@ -363,7 +363,6 @@ static auto index_main(const std::string_view &program,
               destination_view.substr(canonical_output.native().size() + 1),
               current, plan.size);
 
-          // Collect dynamic dependencies from handler callbacks
           std::vector<std::filesystem::path> dynamic_dependencies;
           const sourcemeta::one::BuildDynamicCallback dynamic_callback{
               [&dynamic_dependencies](const auto &path) {
@@ -373,17 +372,9 @@ static auto index_main(const std::string_view &program,
           switch (action.type) {
             case BuildAction::Materialise: {
               sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler(
-                  action, dynamic_callback, resolver, configuration);
+                  action, dynamic_callback, resolver, configuration,
+                  raw_configuration);
               resolver.cache_path(action.data, action.destination);
-              break;
-            }
-
-            case BuildAction::Configuration: {
-              std::filesystem::create_directories(
-                  action.destination.parent_path());
-              std::ofstream stream{action.destination};
-              assert(!stream.fail());
-              sourcemeta::core::stringify(raw_configuration, stream);
               break;
             }
 
@@ -398,7 +389,8 @@ static auto index_main(const std::string_view &program,
               const auto handler{
                   HANDLERS[static_cast<std::uint8_t>(action.type)]};
               assert(handler);
-              handler(action, dynamic_callback, resolver, configuration);
+              handler(action, dynamic_callback, resolver, configuration,
+                      raw_configuration);
               break;
             }
           }
