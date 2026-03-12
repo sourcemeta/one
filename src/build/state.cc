@@ -118,10 +118,6 @@ auto save_state(const std::filesystem::path &path, const BuildEntries &entries)
 
   std::uint32_t count{0};
   for (const auto &entry : entries) {
-    if (!entry.second.tracked) {
-      continue;
-    }
-
     count += 1;
     append_string(buffer, entry.first);
 

@@ -21,8 +21,6 @@ struct BuildEntry {
   std::filesystem::file_time_type file_mark;
   std::vector<std::filesystem::path> static_dependencies;
   std::vector<std::filesystem::path> dynamic_dependencies;
-  // TODO: Do we need this?
-  bool tracked{false};
 };
 
 enum class BuildType : std::uint8_t { Headless, Full };

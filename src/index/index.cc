@@ -106,7 +106,6 @@ commit_entry(std::mutex &entries_mutex, sourcemeta::one::BuildEntries &entries,
   entry.file_mark = now;
   entry.static_dependencies = static_dependencies;
   entry.dynamic_dependencies = std::move(dynamic_dependencies);
-  entry.tracked = true;
 }
 
 static auto index_main(const std::string_view &program,
@@ -206,9 +205,6 @@ static auto index_main(const std::string_view &program,
   if (std::filesystem::exists(state_path)) {
     try {
       sourcemeta::one::load_state(state_path, entries);
-      for (auto &[key, entry] : entries) {
-        entry.tracked = true;
-      }
     } catch (...) {
       entries.clear();
     }
@@ -668,10 +664,6 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::save_state(state_path, entries);
-  {
-    std::lock_guard<std::mutex> lock{entries_mutex};
-    entries[state_path.native()].tracked = true;
-  }
 
   PROFILE_END(profiling, "Cleanup");
 

@@ -32,7 +32,7 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
       .file_mark = now,
       .static_dependencies = {},
       .dynamic_dependencies = {},
-      .tracked = true};
+  };
 
   sourcemeta::one::save_state(path, original_entries);
 
@@ -56,7 +56,7 @@ TEST(Build_state, round_trip_with_file_mark) {
       .file_mark = now,
       .static_dependencies = {},
       .dynamic_dependencies = {},
-      .tracked = true};
+  };
 
   sourcemeta::one::save_state(path, original_entries);
 
@@ -86,7 +86,7 @@ TEST(Build_state, round_trip_with_static_dependencies) {
       .static_dependencies = {"/output/schemas/bar/%/schema.metapack",
                               "/output/schemas/baz/%/schema.metapack"},
       .dynamic_dependencies = {},
-      .tracked = true};
+  };
 
   sourcemeta::one::save_state(path, original_entries);
 
@@ -114,7 +114,7 @@ TEST(Build_state, round_trip_with_dynamic_dependencies) {
       .file_mark = now,
       .static_dependencies = {"/output/schemas/bar/%/schema.metapack"},
       .dynamic_dependencies = {"/output/schemas/qux/%/schema.metapack"},
-      .tracked = true};
+  };
 
   sourcemeta::one::save_state(path, original_entries);
 
@@ -142,16 +142,17 @@ TEST(Build_state, round_trip_multiple_entries) {
       .file_mark = now,
       .static_dependencies = {},
       .dynamic_dependencies = {},
-      .tracked = true};
+  };
   original_entries["/output/schemas/foo/%/dependencies.metapack"] = {
       .file_mark = now,
       .static_dependencies = {"/output/schemas/bar/%/schema.metapack"},
       .dynamic_dependencies = {},
-      .tracked = true};
-  original_entries["/output/configuration.json"] = {.file_mark = now,
-                                                    .static_dependencies = {},
-                                                    .dynamic_dependencies = {},
-                                                    .tracked = true};
+  };
+  original_entries["/output/configuration.json"] = {
+      .file_mark = now,
+      .static_dependencies = {},
+      .dynamic_dependencies = {},
+  };
 
   sourcemeta::one::save_state(path, original_entries);
 
@@ -166,31 +167,4 @@ TEST(Build_state, round_trip_multiple_entries) {
   EXPECT_EQ(loaded_entries.at("/output/schemas/foo/%/dependencies.metapack")
                 .static_dependencies.size(),
             1);
-}
-
-TEST(Build_state, untracked_entries_not_saved) {
-  const auto path{state_path("untracked")};
-  std::filesystem::create_directories(path.parent_path());
-
-  const auto now{std::filesystem::file_time_type::clock::now()};
-  sourcemeta::one::BuildEntries original_entries;
-  original_entries["/output/schemas/foo/%/schema.metapack"] = {
-      .file_mark = now,
-      .static_dependencies = {},
-      .dynamic_dependencies = {},
-      .tracked = true};
-  original_entries["/output/schemas/bar/%/schema.metapack"] = {
-      .file_mark = now,
-      .static_dependencies = {},
-      .dynamic_dependencies = {},
-      .tracked = false};
-
-  sourcemeta::one::save_state(path, original_entries);
-
-  sourcemeta::one::BuildEntries loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::load_state(path, loaded_entries));
-  EXPECT_EQ(loaded_entries.size(), 1);
-  EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
-  EXPECT_FALSE(
-      loaded_entries.contains("/output/schemas/bar/%/schema.metapack"));
 }
