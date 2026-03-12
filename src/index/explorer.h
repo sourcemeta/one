@@ -108,20 +108,20 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  using Context = std::tuple<
-      std::reference_wrapper<const sourcemeta::one::Resolver>,
+  using Context = std::pair<
       std::reference_wrapper<const sourcemeta::one::Configuration::Collection>,
       std::filesystem::path>;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
+                      const sourcemeta::one::Resolver &resolver,
                       const Context &context) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{
         sourcemeta::one::read_json_with_metadata(dependencies.front())};
     const auto id{sourcemeta::core::identify(
-        schema.data, [&callback, &context](const auto identifier) {
-          return std::get<0>(context).get()(identifier, callback);
+        schema.data, [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
         })};
     assert(!id.empty());
     auto result{sourcemeta::core::JSON::make_object()};
@@ -129,10 +129,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("bytes", sourcemeta::core::JSON{schema.bytes});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
     result.assign("path",
-                  sourcemeta::core::JSON{"/" + std::get<2>(context).string()});
+                  sourcemeta::core::JSON{"/" + context.second.string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
-        schema.data, [&callback, &context](const auto identifier) {
-          return std::get<0>(context).get()(identifier, callback);
+        schema.data, [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
         })};
     assert(base_dialect.has_value());
     result.assign("baseDialect",
@@ -157,8 +157,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       const auto *examples{schema.data.try_at("examples")};
       if (examples && examples->is_array() && !examples->empty()) {
         const auto vocabularies{sourcemeta::core::vocabularies(
-            [&callback, &context](const auto identifier) {
-              return std::get<0>(context).get()(identifier, callback);
+            [&callback, &resolver](const auto identifier) {
+              return resolver(identifier, callback);
             },
             base_dialect.value(), dialect)};
         const auto &walker_result{
@@ -187,7 +187,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
-    const auto &collection{std::get<1>(context).get()};
+    const auto &collection{context.first.get()};
 
     if (collection.extra.defines("x-sourcemeta-one:alert")) {
       assert(collection.extra.at("x-sourcemeta-one:alert").is_string());
@@ -204,7 +204,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("provenance", sourcemeta::core::JSON{nullptr});
     }
 
-    result.assign("breadcrumb", make_breadcrumb(std::get<2>(context), false));
+    result.assign("breadcrumb", make_breadcrumb(context.second, false));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -218,11 +218,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 };
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
-  using Context = std::nullptr_t;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
-                      const Context &) -> void {
+                      const sourcemeta::one::Resolver &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
     result.reserve(dependencies.size());
@@ -291,7 +290,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &callback,
-                      const Context &context) -> void {
+                      const sourcemeta::one::Resolver &, const Context &context)
+      -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
