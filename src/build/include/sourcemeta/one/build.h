@@ -54,8 +54,6 @@ enum class BuildAction : std::uint8_t {
   Remove
 };
 
-using BuildSchemaInformation = Resolver::Entry;
-
 struct BuildActionEntry {
   BuildAction type;
   std::filesystem::path destination;
@@ -78,15 +76,16 @@ using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 using BuildEntries = std::unordered_map<std::string, BuildEntry>;
 
 SOURCEMETA_ONE_BUILD_EXPORT
-auto delta(
-    const BuildType build_type, const BuildEntries &entries,
-    const std::filesystem::path &output,
-    const std::unordered_map<std::string, BuildSchemaInformation> &schemas,
-    const std::string_view version, const std::string_view current_version,
-    const std::string_view comment, const sourcemeta::core::JSON &configuration,
-    const sourcemeta::core::JSON &current_configuration,
-    const std::vector<std::filesystem::path> &changed,
-    const std::vector<std::filesystem::path> &removed) -> BuildPlan;
+auto delta(const BuildType build_type, const BuildEntries &entries,
+           const std::filesystem::path &output,
+           const std::unordered_map<std::string, Resolver::Entry> &schemas,
+           const std::string_view version,
+           const std::string_view current_version,
+           const std::string_view comment,
+           const sourcemeta::core::JSON &configuration,
+           const sourcemeta::core::JSON &current_configuration,
+           const std::vector<std::filesystem::path> &changed,
+           const std::vector<std::filesystem::path> &removed) -> BuildPlan;
 
 SOURCEMETA_ONE_BUILD_EXPORT
 auto load_state(const std::filesystem::path &path, BuildEntries &entries)

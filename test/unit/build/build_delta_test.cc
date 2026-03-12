@@ -13,7 +13,7 @@
 TEST(Build_delta, full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -58,7 +58,7 @@ TEST(Build_delta, full_empty_registry) {
 TEST(Build_delta, full_single_schema) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -198,7 +198,7 @@ TEST(Build_delta, incremental_changed_same_mtime) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -245,7 +245,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "bar" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -414,7 +414,7 @@ TEST(Build_delta, incremental_one_schema_changed) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
           {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
@@ -549,7 +549,7 @@ TEST(Build_delta, incremental_removed_schema) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -593,7 +593,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output,
             output / "schemas" / "ghost" / "%" / "schema.metapack", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -723,7 +723,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
             {.file_mark = MTIME(100),
              .static_dependencies = {},
              .dynamic_dependencies = {}});
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -849,7 +849,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
 TEST(Build_delta, full_with_comment) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -896,7 +896,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -945,7 +945,7 @@ TEST(Build_delta, incremental_with_comment) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1068,7 +1068,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1199,7 +1199,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
             MTIME(100));
   ADD_ENTRY(entries, output,
             output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1237,7 +1237,7 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
             MTIME(100));
   ADD_ENTRY(entries, output,
             output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1275,7 +1275,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1314,7 +1314,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1353,7 +1353,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1400,7 +1400,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
 TEST(Build_delta, full_single_schema_evaluate_false) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo",
                {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
@@ -1520,7 +1520,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
   ADD_ENTRY(entries, output,
             output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
             MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo",
                {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
@@ -1642,7 +1642,7 @@ TEST(Build_delta, incremental_evaluate_false) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo",
                {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1767,7 +1767,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1840,7 +1840,7 @@ TEST(Build_delta, incremental_missing_bundle) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1926,7 +1926,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1996,7 +1996,7 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -2046,7 +2046,7 @@ TEST(Build_delta, mtime_nothing_changed) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(50));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -2098,7 +2098,7 @@ TEST(Build_delta, mtime_source_newer) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(50));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(50)}},
               {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -2243,7 +2243,7 @@ TEST(Build_delta, mtime_no_entry) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
             MTIME(50));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}},
               {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -2390,7 +2390,7 @@ TEST(Build_delta, mtime_no_file_mark) {
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
   entries.erase(
       (output / "schemas" / "foo" / "%" / "schema.metapack").string());
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -2517,7 +2517,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
               {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/a.json"};
@@ -2730,7 +2730,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "c" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
               {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
               {"https://example.com/c", {"/src/c.json", "c", MTIME(100)}}};
@@ -3015,7 +3015,7 @@ TEST(Build_delta, mtime_reverse_dep) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/a", {"/src/a.json", "a", MTIME(30)}},
               {"https://example.com/b", {"/src/b.json", "b", MTIME(30)}}};
   const std::vector<std::filesystem::path> changed;
@@ -3210,7 +3210,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
             output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/foo",
                {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3323,7 +3323,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
 TEST(Build_delta, headless_full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -3358,7 +3358,7 @@ TEST(Build_delta, headless_full_empty_registry) {
 TEST(Build_delta, headless_full_single_schema) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -3467,7 +3467,7 @@ TEST(Build_delta, headless_incremental) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3582,7 +3582,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3697,7 +3697,7 @@ TEST(Build_delta, headless_to_full_incremental) {
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3855,7 +3855,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
   ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
             MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed;
@@ -3982,7 +3982,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
   ADD_ENTRY(entries, output,
             output / "explorer" / "foo" / "%" / "schema-html.metapack",
             MTIME(100));
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{
           {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -4096,7 +4096,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
 TEST(Build_delta, full_single_schema_nested_path_headless) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildEntries entries;
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/test",
                {"/src/test.json", "example/test", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -4256,7 +4256,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   ADD_SCHEMA_ENTRIES(entries, output, "example/schemas/b", true, true,
                      MTIME(100));
 
-  const std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
+  const std::unordered_map<std::string, sourcemeta::one::Resolver::Entry>
       schemas{{"https://example.com/a",
                {"/src/a.json", "example/schemas/a", MTIME(100)}},
               {"https://example.com/b",

@@ -210,15 +210,16 @@ static auto collect_affected_directories(
   return result;
 }
 
-auto delta(
-    const BuildType build_type, const BuildEntries &entries,
-    const std::filesystem::path &output,
-    const std::unordered_map<std::string, BuildSchemaInformation> &schemas,
-    const std::string_view version, const std::string_view current_version,
-    const std::string_view comment, const sourcemeta::core::JSON &configuration,
-    const sourcemeta::core::JSON &current_configuration,
-    const std::vector<std::filesystem::path> &changed,
-    const std::vector<std::filesystem::path> &removed) -> BuildPlan {
+auto delta(const BuildType build_type, const BuildEntries &entries,
+           const std::filesystem::path &output,
+           const std::unordered_map<std::string, Resolver::Entry> &schemas,
+           const std::string_view version,
+           const std::string_view current_version,
+           const std::string_view comment,
+           const sourcemeta::core::JSON &configuration,
+           const sourcemeta::core::JSON &current_configuration,
+           const std::vector<std::filesystem::path> &changed,
+           const std::vector<std::filesystem::path> &removed) -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
     return entry.second.path.is_absolute() &&
