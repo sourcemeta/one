@@ -30,25 +30,29 @@ struct Target {
   BuildAction action;
   std::filesystem::path destination;
   std::vector<std::filesystem::path> dependencies;
+  std::string_view data;
 };
 
 using TargetMap = std::unordered_map<std::string, Target>;
 
 static auto declare_target(TargetMap &targets, BuildAction action,
                            std::filesystem::path destination,
-                           std::vector<std::filesystem::path> dependencies)
-    -> void {
+                           std::vector<std::filesystem::path> dependencies,
+                           const std::string_view data = {}) -> void {
   const auto key{destination.string()};
   targets.emplace(key, Target{.action = action,
                               .destination = std::move(destination),
-                              .dependencies = std::move(dependencies)});
+                              .dependencies = std::move(dependencies),
+                              .data = data});
 }
 
-static auto declare_schema_targets(
-    TargetMap &targets, const std::filesystem::path &output,
-    const std::filesystem::path &source,
-    const std::filesystem::path &relative_path, const bool evaluate,
-    const std::filesystem::path &configuration_path) -> void {
+static auto
+declare_schema_targets(TargetMap &targets, const std::filesystem::path &output,
+                       const std::filesystem::path &source,
+                       const std::filesystem::path &relative_path,
+                       const bool evaluate,
+                       const std::filesystem::path &configuration_path,
+                       const std::string_view uri) -> void {
   const auto base{schema_base_path(output, relative_path)};
   const auto explorer_base{explorer_base_path(output, relative_path)};
   const auto schema_metapack{base / "schema.metapack"};
@@ -57,7 +61,7 @@ static auto declare_schema_targets(
   const auto health_metapack{base / "health.metapack"};
 
   declare_target(targets, BuildAction::Materialise, schema_metapack,
-                 {source, configuration_path});
+                 {source, configuration_path}, uri);
   declare_target(targets, BuildAction::Positions, base / "positions.metapack",
                  {schema_metapack});
   declare_target(targets, BuildAction::Locations, base / "locations.metapack",
@@ -67,7 +71,7 @@ static auto declare_schema_targets(
   declare_target(targets, BuildAction::Stats, base / "stats.metapack",
                  {schema_metapack});
   declare_target(targets, BuildAction::Health, health_metapack,
-                 {schema_metapack, dependencies_metapack});
+                 {schema_metapack, dependencies_metapack}, uri);
   declare_target(targets, BuildAction::Bundle, bundle_metapack,
                  {schema_metapack, dependencies_metapack});
   declare_target(targets, BuildAction::Editor, base / "editor.metapack",
@@ -80,9 +84,9 @@ static auto declare_schema_targets(
                    base / "blaze-fast.metapack", {bundle_metapack});
   }
 
-  declare_target(targets, BuildAction::SchemaMetadata,
-                 explorer_base / "schema.metapack",
-                 {schema_metapack, health_metapack, dependencies_metapack});
+  declare_target(
+      targets, BuildAction::SchemaMetadata, explorer_base / "schema.metapack",
+      {schema_metapack, health_metapack, dependencies_metapack}, uri);
 }
 
 enum class DirtyState : std::uint8_t { Unknown, Clean, Dirty };
@@ -267,7 +271,7 @@ auto delta(
     }
 
     declare_schema_targets(targets, output, info.source, info.relative_output,
-                           info.evaluate, configuration_path);
+                           info.evaluate, configuration_path, uri);
     all_relative_paths.emplace_back(info.relative_output);
   }
 
@@ -385,7 +389,8 @@ auto delta(
       plan.type = build_type;
       plan.waves.push_back({{.type = BuildAction::Comment,
                              .destination = comment_path,
-                             .dependencies = {}}});
+                             .dependencies = {},
+                             .data = {}}});
       plan.size = 1;
       return plan;
     }
@@ -396,7 +401,8 @@ auto delta(
       plan.type = build_type;
       plan.waves.push_back({{.type = BuildAction::Remove,
                              .destination = comment_path,
-                             .dependencies = {}}});
+                             .dependencies = {},
+                             .data = {}}});
       plan.size = 1;
       return plan;
     }
@@ -450,7 +456,7 @@ auto delta(
           schema_base_path(output, info.relative_output) /
           "dependents.metapack"};
       declare_target(targets, BuildAction::Dependents, dependents_path,
-                     {dependency_tree_path});
+                     {dependency_tree_path}, uri);
 
       const auto base{schema_base_path(output, info.relative_output)};
       if (is_full || dirty_set.contains((base / "schema.metapack").string()) ||
@@ -590,8 +596,8 @@ auto delta(
       const auto wave_it{wave_cache.find(target_path)};
       const auto wave{wave_it != wave_cache.end() ? wave_it->second
                                                   : std::size_t{0}};
-      dag_waves[wave].push_back(
-          {target.action, target.destination, target.dependencies});
+      dag_waves[wave].push_back({target.action, target.destination,
+                                 target.dependencies, target.data});
     }
   }
 
@@ -606,10 +612,12 @@ auto delta(
     remove_wave.push_back(
         {BuildAction::Remove,
          schema_base_path(output, match->second.relative_output),
+         {},
          {}});
     remove_wave.push_back(
         {BuildAction::Remove,
          explorer_base_path(output, match->second.relative_output),
+         {},
          {}});
   }
 
@@ -625,10 +633,10 @@ auto delta(
         dirty_set.contains((base / "schema.metapack").string())};
     if (schema_dirty || is_full) {
       if (entries.contains(exhaustive_path.string())) {
-        remove_wave.push_back({BuildAction::Remove, exhaustive_path, {}});
+        remove_wave.push_back({BuildAction::Remove, exhaustive_path, {}, {}});
       }
       if (entries.contains(fast_path.string())) {
-        remove_wave.push_back({BuildAction::Remove, fast_path, {}});
+        remove_wave.push_back({BuildAction::Remove, fast_path, {}, {}});
       }
     }
   }
@@ -705,7 +713,7 @@ auto delta(
 
   for (auto &root : stale_roots) {
     remove_wave.push_back(
-        {BuildAction::Remove, std::filesystem::path{root}, {}});
+        {BuildAction::Remove, std::filesystem::path{root}, {}, {}});
   }
 
   bool web_removed{false};
@@ -726,7 +734,7 @@ auto delta(
       if (filename == "directory-html.metapack" ||
           filename == "schema-html.metapack" || filename == "404.metapack") {
         remove_wave.push_back(
-            {BuildAction::Remove, std::filesystem::path{entry_path}, {}});
+            {BuildAction::Remove, std::filesystem::path{entry_path}, {}, {}});
         web_removed = true;
       }
     }
@@ -763,24 +771,28 @@ auto delta(
     std::vector<BuildActionEntry> init_wave;
     init_wave.push_back({.type = BuildAction::Version,
                          .destination = version_path,
-                         .dependencies = {}});
+                         .dependencies = {},
+                         .data = {}});
     init_wave.push_back({.type = BuildAction::Configuration,
                          .destination = configuration_path,
-                         .dependencies = {}});
+                         .dependencies = {},
+                         .data = {}});
     if (!comment.empty()) {
       init_wave.push_back({.type = BuildAction::Comment,
                            .destination = comment_path,
-                           .dependencies = {}});
+                           .dependencies = {},
+                           .data = {}});
     } else if (entries.contains(comment_string)) {
-      remove_wave.push_back({BuildAction::Remove, comment_path, {}});
+      remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
     }
     plan.waves.push_back(std::move(init_wave));
   } else if (!comment.empty()) {
     plan.waves.push_back({{.type = BuildAction::Comment,
                            .destination = comment_path,
-                           .dependencies = {}}});
+                           .dependencies = {},
+                           .data = {}}});
   } else if (entries.contains(comment_string)) {
-    remove_wave.push_back({BuildAction::Remove, comment_path, {}});
+    remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
   }
 
   for (auto &wave : dag_waves) {
@@ -792,7 +804,7 @@ auto delta(
   if (is_full || web_added || web_removed) {
     std::vector<BuildActionEntry> routes_wave;
     routes_wave.push_back(
-        {BuildAction::Routes, output / "routes.bin", {configuration_path}});
+        {BuildAction::Routes, output / "routes.bin", {configuration_path}, {}});
     plan.waves.push_back(std::move(routes_wave));
   }
 

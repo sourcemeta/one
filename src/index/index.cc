@@ -52,10 +52,6 @@
 
 // We rely on this special prefix to avoid file system collisions. The reason it
 // works is that URIs cannot have "%" without percent-encoding it as "%25", and
-// the resolver will not unescape it back when computing the relative path to an
-// entry
-constexpr auto SENTINEL{"%"};
-
 static auto attribute_not_disabled(
     const sourcemeta::one::Configuration::Collection &collection,
     const sourcemeta::core::JSON::String &property) -> bool {
@@ -74,24 +70,6 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
   std::cerr << "(" << std::setfill(' ') << std::setw(3)
             << static_cast<int>(percentage) << "%) " << title << ": " << prefix
             << " [" << std::this_thread::get_id() << "/" << threads << "]\n";
-}
-
-// Walk up from a destination path until the "%" sentinel is found,
-// then look up the URI via path_to_uri keyed by
-// <base>/<relative>/%/schema.metapack
-static auto uri_for_destination(
-    const std::filesystem::path &destination,
-    const std::unordered_map<std::string, std::string> &path_to_uri)
-    -> const std::string & {
-  auto current{destination};
-  while (current.filename() != SENTINEL) {
-    current = current.parent_path();
-  }
-
-  const auto schema_metapack{current / "schema.metapack"};
-  const auto match{path_to_uri.find(schema_metapack.string())};
-  assert(match != path_to_uri.end());
-  return match->second;
 }
 
 static auto
@@ -321,7 +299,6 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   const auto schemas_path{canonical_output / "schemas"};
-  const auto explorer_path{canonical_output / "explorer"};
 
   // Build BuildSchemaInformation map from resolver
   std::unordered_map<std::string, sourcemeta::one::BuildSchemaInformation>
@@ -333,19 +310,6 @@ static auto index_main(const std::string_view &program,
         .mtime = std::filesystem::last_write_time(resolver_entry.path),
         .evaluate = attribute_not_disabled(resolver_entry.collection.get(),
                                            "x-sourcemeta-one:evaluate")};
-  }
-
-  // Build reverse map: schema.metapack path -> URI
-  // We add entries for both schemas/ and explorer/ bases so that
-  // uri_for_destination works for any destination under either tree
-  std::unordered_map<std::string, std::string> path_to_uri;
-  for (const auto &[uri, resolver_entry] : resolver) {
-    const auto schemas_base{schemas_path / resolver_entry.relative_path /
-                            SENTINEL};
-    path_to_uri[(schemas_base / "schema.metapack").string()] = uri;
-    const auto explorer_base{explorer_path / resolver_entry.relative_path /
-                             SENTINEL};
-    path_to_uri[(explorer_base / "schema.metapack").string()] = uri;
   }
 
   // Compute the delta plan (empty changed/removed for now)
@@ -393,12 +357,10 @@ static auto index_main(const std::string_view &program,
 
           switch (action.type) {
             case BuildAction::Materialise: {
-              const auto &uri{
-                  uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, uri);
-              resolver.cache_path(uri, action.destination);
+                  resolver, configuration, action.data);
+              resolver.cache_path(action.data, action.destination);
               break;
             }
 
@@ -431,11 +393,9 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::Health: {
-              const auto &uri{
-                  uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_HEALTH::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, uri);
+                  resolver, configuration, action.data);
               break;
             }
 
@@ -468,11 +428,9 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::SchemaMetadata: {
-              const auto &uri{
-                  uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, uri);
+                  resolver, configuration, action.data);
               break;
             }
 
@@ -484,11 +442,9 @@ static auto index_main(const std::string_view &program,
             }
 
             case BuildAction::Dependents: {
-              const auto &uri{
-                  uri_for_destination(action.destination, path_to_uri)};
               sourcemeta::one::GENERATE_DEPENDENTS::handler(
                   action.destination, action.dependencies, dynamic_callback,
-                  resolver, configuration, uri);
+                  resolver, configuration, action.data);
               break;
             }
 

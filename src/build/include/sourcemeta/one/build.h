@@ -63,6 +63,7 @@ struct BuildActionEntry {
   BuildAction type;
   std::filesystem::path destination;
   std::vector<std::filesystem::path> dependencies;
+  std::string_view data;
 };
 
 struct BuildPlan {

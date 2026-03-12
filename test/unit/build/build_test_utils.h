@@ -218,13 +218,15 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildEntries &entries,
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define EXPECT_ACTION(plan, wave, index, wave_size, expected_type,             \
-                      expected_dest, ...)                                      \
+                      expected_dest, expected_data, ...)                       \
   do {                                                                         \
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
     EXPECT_EQ(action_ref_##wave##_##index.type,                                \
               sourcemeta::one::BuildAction::expected_type);                    \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
+    EXPECT_EQ(action_ref_##wave##_##index.data,                                \
+              std::string_view{expected_data});                                \
     const std::vector<std::filesystem::path> expected_deps_##wave##_##index{   \
         __VA_ARGS__};                                                          \
     EXPECT_EQ(action_ref_##wave##_##index.dependencies,                        \
@@ -233,13 +235,15 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildEntries &entries,
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define EXPECT_ACTION_UNORDERED(plan, wave, index, wave_size, expected_type,   \
-                                expected_dest, ...)                            \
+                                expected_dest, expected_data, ...)             \
   do {                                                                         \
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
     EXPECT_EQ(action_ref_##wave##_##index.type,                                \
               sourcemeta::one::BuildAction::expected_type);                    \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
+    EXPECT_EQ(action_ref_##wave##_##index.data,                                \
+              std::string_view{expected_data});                                \
     auto actual_deps_##wave##_##index{                                         \
         action_ref_##wave##_##index.dependencies};                             \
     std::sort(actual_deps_##wave##_##index.begin(),                            \

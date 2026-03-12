@@ -41,8 +41,8 @@ public:
           std::reference_wrapper<const sourcemeta::core::JSON::String>,
           std::reference_wrapper<const sourcemeta::core::JSON::String>>;
 
-  auto cache_path(const sourcemeta::core::JSON::String &uri,
-                  const std::filesystem::path &path) -> void;
+  auto cache_path(std::string_view uri, const std::filesystem::path &path)
+      -> void;
 
   [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
   [[nodiscard]] auto end() const -> auto { return this->views.end(); }

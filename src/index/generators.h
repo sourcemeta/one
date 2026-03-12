@@ -259,7 +259,7 @@ struct GENERATE_DEPENDENCY_TREE {
 };
 
 struct GENERATE_DEPENDENTS {
-  using Context = sourcemeta::core::JSON::String;
+  using Context = std::string_view;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &dependencies,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -270,7 +270,7 @@ struct GENERATE_DEPENDENTS {
     const auto contents{sourcemeta::one::read_json(dependencies.front())};
     assert(contents.is_object());
     auto result{sourcemeta::core::JSON::make_array()};
-    const auto *match{contents.try_at(context)};
+    const auto *match{contents.try_at(std::string{context})};
     if (match) {
       assert(match->is_array());
       for (const auto &entry : match->as_array()) {

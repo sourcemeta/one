@@ -333,12 +333,12 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   return result->second;
 }
 
-auto Resolver::cache_path(const sourcemeta::core::JSON::String &uri,
+auto Resolver::cache_path(const std::string_view uri,
                           const std::filesystem::path &path) -> void {
   assert(std::filesystem::exists(path));
   // As we are modifying the actual map
   std::unique_lock lock{this->mutex};
-  auto entry{this->views.find(uri)};
+  auto entry{this->views.find(std::string{uri})};
   assert(entry != this->views.cend());
   assert(!entry->second.cache_path.has_value());
   entry->second.cache_path = path;
