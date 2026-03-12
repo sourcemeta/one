@@ -6,6 +6,7 @@
 #endif
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/one/resolver.h>
 
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
@@ -53,12 +54,7 @@ enum class BuildAction : std::uint8_t {
   Remove
 };
 
-struct BuildSchemaInformation {
-  std::filesystem::path path;
-  std::filesystem::path relative_path;
-  std::filesystem::file_time_type mtime;
-  bool evaluate{true};
-};
+using BuildSchemaInformation = Resolver::Entry;
 
 struct BuildActionEntry {
   BuildAction type;
