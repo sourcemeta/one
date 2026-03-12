@@ -17,8 +17,8 @@ TEST(Build_delta, full_empty_registry) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
@@ -62,8 +62,8 @@ TEST(Build_delta, full_single_schema) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 21);
@@ -180,29 +180,25 @@ TEST(Build_delta, full_single_schema) {
 TEST(Build_delta, incremental_changed_same_mtime) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -235,20 +231,19 @@ TEST(Build_delta, incremental_changed_same_mtime) {
 TEST(Build_delta, incremental_missing_schema_metapack) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "dependencies.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "bar" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "dependencies.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "bar" / "%" / "schema.metapack",
+              MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -359,57 +354,40 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
 TEST(Build_delta, incremental_one_schema_changed) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "dependencies.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "locations.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "positions.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "stats.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "bundle.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "health.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "blaze-exhaustive.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "blaze-fast.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "editor.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "bar" / "%" / "dependents.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "bar" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "bar" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "bar" / "%" / "directory-html.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "bar" / "%" / "schema-html.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "dependencies.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "locations.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "positions.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "stats.metapack", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "bundle.metapack", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "health.metapack", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "blaze-exhaustive.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "blaze-fast.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "editor.metapack", MTIME(100));
+  entries.add(output / "schemas" / "bar" / "%" / "dependents.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "bar" / "%" / "schema.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "bar" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "bar" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "bar" / "%" / "schema-html.metapack",
+              MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
@@ -417,7 +395,7 @@ TEST(Build_delta, incremental_one_schema_changed) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -542,15 +520,15 @@ TEST(Build_delta, incremental_one_schema_changed) {
 TEST(Build_delta, incremental_removed_schema) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed{"/src/foo.json"};
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -585,15 +563,15 @@ TEST(Build_delta, incremental_removed_schema) {
 TEST(Build_delta, full_stale_file_in_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "ghost" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "schemas" / "ghost" / "%" / "schema.metapack",
+              MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
@@ -712,15 +690,15 @@ TEST(Build_delta, full_stale_file_in_entries) {
 TEST(Build_delta, full_stale_directory_in_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "schemas" / "ghost" / "%",
-            {.file_mark = MTIME(100), .dependencies = {}});
+  entries.add(output / "schemas" / "ghost" / "%",
+              {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
@@ -843,8 +821,8 @@ TEST(Build_delta, full_with_comment) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "Hello world", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "Hello world", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
@@ -884,13 +862,13 @@ TEST(Build_delta, full_with_comment) {
 TEST(Build_delta, full_without_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
+  entries.add(output / "comment.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
@@ -931,14 +909,14 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 TEST(Build_delta, incremental_with_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "Hello world", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1052,15 +1030,15 @@ TEST(Build_delta, incremental_with_comment) {
 TEST(Build_delta, incremental_empty_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "comment.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1173,23 +1151,20 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
 TEST(Build_delta, incremental_no_changes_adds_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "hello", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1209,24 +1184,21 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
 TEST(Build_delta, incremental_no_changes_removes_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "comment.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1246,24 +1218,21 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
 TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1284,24 +1253,21 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1322,24 +1288,21 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 TEST(Build_delta, full_config_change_to_empty_schemas) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON{{"a", sourcemeta::core::JSON{1}}},
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1386,8 +1349,8 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
@@ -1494,19 +1457,17 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
 TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-            MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+              MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0", "",
-      "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
@@ -1619,14 +1580,14 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
 TEST(Build_delta, incremental_evaluate_false) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1727,30 +1688,26 @@ TEST(Build_delta, incremental_evaluate_false) {
 TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.erase((output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack")
                     .string());
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1800,30 +1757,26 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
 TEST(Build_delta, incremental_missing_bundle) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.erase(
       (output / "schemas" / "foo" / "%" / "bundle.metapack").string());
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1886,30 +1839,26 @@ TEST(Build_delta, incremental_missing_bundle) {
 TEST(Build_delta, incremental_missing_web_schema) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.erase(
       (output / "explorer" / "foo" / "%" / "schema-html.metapack").string());
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -1962,25 +1911,22 @@ TEST(Build_delta, incremental_missing_web_schema) {
 TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, false, MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 0, 0);
@@ -2008,28 +1954,23 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
 TEST(Build_delta, mtime_nothing_changed) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(50));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
+  entries.add(output / "dependency-tree.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(50));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(50));
+  entries.add(output / "routes.bin", MTIME(50));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2062,20 +2003,16 @@ TEST(Build_delta, mtime_nothing_changed) {
 TEST(Build_delta, mtime_source_newer) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(10));
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
+  entries.add(output / "dependency-tree.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(50));
+  entries.add(output / "routes.bin", MTIME(50));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(50)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
@@ -2083,7 +2020,7 @@ TEST(Build_delta, mtime_source_newer) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2208,19 +2145,15 @@ TEST(Build_delta, mtime_source_newer) {
 TEST(Build_delta, mtime_no_entry) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(50));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(50));
+  entries.add(output / "dependency-tree.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack", MTIME(50));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(50));
+  entries.add(output / "routes.bin", MTIME(50));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
@@ -2228,7 +2161,7 @@ TEST(Build_delta, mtime_no_entry) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2353,19 +2286,16 @@ TEST(Build_delta, mtime_no_file_mark) {
   const std::filesystem::path output{"/output"};
 
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   entries.erase(
       (output / "schemas" / "foo" / "%" / "schema.metapack").string());
   const sourcemeta::one::Resolver::Views schemas{
@@ -2374,7 +2304,7 @@ TEST(Build_delta, mtime_no_file_mark) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2483,16 +2413,14 @@ TEST(Build_delta, mtime_no_file_mark) {
 TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(
-      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(
+      output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}}};
@@ -2500,7 +2428,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2686,22 +2614,19 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
 TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(
-      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(
+      output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
-  ADD_ENTRY(
-      entries, output, output / "schemas" / "c" / "%" / "dependencies.metapack",
+  entries.add(
+      output / "schemas" / "c" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "b" / "%" / "schema.metapack"}});
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "c" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "explorer" / "c" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
@@ -2710,7 +2635,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -2971,20 +2896,16 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
 TEST(Build_delta, mtime_reverse_dep) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "schemas" / "a" / "%" / "schema.metapack",
-            MTIME(10));
-  ADD_ENTRY(entries, output, output / "schemas" / "b" / "%" / "schema.metapack",
-            MTIME(50));
-  ADD_ENTRY(
-      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "schemas" / "a" / "%" / "schema.metapack", MTIME(10));
+  entries.add(output / "schemas" / "b" / "%" / "schema.metapack", MTIME(50));
+  entries.add(
+      output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "explorer" / "b" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(30)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(30)}}};
@@ -2992,7 +2913,7 @@ TEST(Build_delta, mtime_reverse_dep) {
   const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -3172,20 +3093,18 @@ TEST(Build_delta, mtime_reverse_dep) {
 TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+              MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -3296,8 +3215,8 @@ TEST(Build_delta, headless_full_empty_registry) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 3, 6);
@@ -3331,8 +3250,8 @@ TEST(Build_delta, headless_full_single_schema) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 18);
@@ -3432,15 +3351,15 @@ TEST(Build_delta, headless_full_single_schema) {
 TEST(Build_delta, headless_incremental) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 15);
@@ -3533,28 +3452,24 @@ TEST(Build_delta, headless_incremental) {
 TEST(Build_delta, full_to_headless_removes_web) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory-html.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "schema-html.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "schema-html.metapack",
+              MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 20);
@@ -3660,14 +3575,14 @@ TEST(Build_delta, full_to_headless_removes_web) {
 TEST(Build_delta, headless_to_full_incremental) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -3778,53 +3693,39 @@ TEST(Build_delta, headless_to_full_incremental) {
 TEST(Build_delta, headless_to_full_full_rebuild) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "dependencies.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "locations.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "positions.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "stats.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "bundle.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "health.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "editor.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "schema.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "foo" / "%" / "dependents.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "schema.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "dependencies.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "locations.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "positions.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "stats.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "bundle.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "health.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "editor.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+              MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "schema.metapack",
+              MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "schemas" / "foo" / "%" / "dependents.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
@@ -3936,22 +3837,20 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
 TEST(Build_delta, full_to_headless_full_rebuild) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "foo" / "%" / "schema-html.metapack",
-            MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "foo" / "%" / "schema-html.metapack",
+              MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "2.0.0",
-      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "2.0.0", "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 21);
@@ -4064,8 +3963,8 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Headless, entries, output, schemas, "1.0.0",
-      "", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON{nullptr}, changed, removed)};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 19);
@@ -4187,32 +4086,25 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
 
-  ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
-  ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
-  ADD_ENTRY(entries, output, output / "dependency-tree.metapack", MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "search.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output, output / "explorer" / "%" / "404.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "%" / "directory-html.metapack", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "example" / "%" / "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "example" / "%" / "directory-html.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "example" / "schemas" / "%" /
-                "directory.metapack",
-            MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "explorer" / "example" / "schemas" / "%" /
-                "directory-html.metapack",
-            MTIME(100));
+  entries.add(output / "version.json", MTIME(100));
+  entries.add(output / "configuration.json", MTIME(100));
+  entries.add(output / "routes.bin", MTIME(100));
+  entries.add(output / "dependency-tree.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "search.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "404.metapack", MTIME(100));
+  entries.add(output / "explorer" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "example" / "%" / "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "example" / "%" / "directory-html.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "example" / "schemas" / "%" /
+                  "directory.metapack",
+              MTIME(100));
+  entries.add(output / "explorer" / "example" / "schemas" / "%" /
+                  "directory-html.metapack",
+              MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "example/schemas/a", true, true,
                      MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "example/schemas/b", true, true,
@@ -4228,7 +4120,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   const std::vector<std::filesystem::path> changed{"/src/c.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildType::Full, entries, output, schemas, "1.0.0",
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 

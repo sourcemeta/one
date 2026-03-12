@@ -76,7 +76,7 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
   std::vector<const std::filesystem::path *> remove_destinations;
   for (const auto &wave : plan.waves) {
     for (const auto &action : wave) {
-      if (action.type == sourcemeta::one::BuildAction::Remove) {
+      if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
         remove_destinations.push_back(&action.destination);
       }
     }
@@ -84,7 +84,7 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
 
   for (const auto &wave : plan.waves) {
     for (const auto &action : wave) {
-      if (action.type == sourcemeta::one::BuildAction::Remove) {
+      if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
         continue;
       }
 
@@ -150,29 +150,6 @@ __check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
   }
 }
 
-static auto __ADD_ENTRY_IMPL(sourcemeta::one::BuildState &entries,
-                             const std::filesystem::path &,
-                             const std::filesystem::path &path,
-                             sourcemeta::one::BuildEntry entry) -> void {
-  entries[path.string()] = std::move(entry);
-}
-
-static auto ADD_ENTRY(sourcemeta::one::BuildState &entries,
-                      const std::filesystem::path &output,
-                      const std::filesystem::path &path,
-                      const std::filesystem::file_time_type mark) -> void {
-  sourcemeta::one::BuildEntry entry;
-  entry.file_mark = mark;
-  __ADD_ENTRY_IMPL(entries, output, path, std::move(entry));
-}
-
-static auto ADD_ENTRY(sourcemeta::one::BuildState &entries,
-                      const std::filesystem::path &output,
-                      const std::filesystem::path &path,
-                      sourcemeta::one::BuildEntry entry) -> void {
-  __ADD_ENTRY_IMPL(entries, output, path, std::move(entry));
-}
-
 static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
                                const std::filesystem::path &output,
                                const std::filesystem::path &relative_output,
@@ -181,23 +158,23 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     -> void {
   const auto base{output / "schemas" / relative_output / "%"};
   const auto explorer_base{output / "explorer" / relative_output / "%"};
-  ADD_ENTRY(entries, output, base / "schema.metapack", mark);
-  ADD_ENTRY(entries, output, base / "dependencies.metapack", mark);
-  ADD_ENTRY(entries, output, base / "locations.metapack", mark);
-  ADD_ENTRY(entries, output, base / "positions.metapack", mark);
-  ADD_ENTRY(entries, output, base / "stats.metapack", mark);
-  ADD_ENTRY(entries, output, base / "bundle.metapack", mark);
-  ADD_ENTRY(entries, output, base / "health.metapack", mark);
-  ADD_ENTRY(entries, output, base / "editor.metapack", mark);
-  ADD_ENTRY(entries, output, base / "dependents.metapack", mark);
-  ADD_ENTRY(entries, output, explorer_base / "schema.metapack", mark);
+  entries.add(base / "schema.metapack", mark);
+  entries.add(base / "dependencies.metapack", mark);
+  entries.add(base / "locations.metapack", mark);
+  entries.add(base / "positions.metapack", mark);
+  entries.add(base / "stats.metapack", mark);
+  entries.add(base / "bundle.metapack", mark);
+  entries.add(base / "health.metapack", mark);
+  entries.add(base / "editor.metapack", mark);
+  entries.add(base / "dependents.metapack", mark);
+  entries.add(explorer_base / "schema.metapack", mark);
   if (evaluate) {
-    ADD_ENTRY(entries, output, base / "blaze-exhaustive.metapack", mark);
-    ADD_ENTRY(entries, output, base / "blaze-fast.metapack", mark);
+    entries.add(base / "blaze-exhaustive.metapack", mark);
+    entries.add(base / "blaze-fast.metapack", mark);
   }
   if (web) {
-    ADD_ENTRY(entries, output, explorer_base / "schema-html.metapack", mark);
-    ADD_ENTRY(entries, output, explorer_base / "directory-html.metapack", mark);
+    entries.add(explorer_base / "schema-html.metapack", mark);
+    entries.add(explorer_base / "directory-html.metapack", mark);
   }
 }
 
@@ -206,7 +183,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
                                expected_waves, expected_size)                  \
   do {                                                                         \
     EXPECT_EQ((plan).output, (output));                                        \
-    EXPECT_EQ((plan).type, sourcemeta::one::BuildType::build_type);            \
+    EXPECT_EQ((plan).type, sourcemeta::one::BuildPlan::Type::build_type);      \
     EXPECT_EQ((plan).waves.size(), (expected_waves));                          \
     EXPECT_EQ((plan).size, (expected_size));                                   \
     __check_no_intra_wave_dependencies(plan);                                  \
@@ -223,7 +200,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
     EXPECT_EQ(action_ref_##wave##_##index.type,                                \
-              sourcemeta::one::BuildAction::expected_type);                    \
+              sourcemeta::one::BuildPlan::Action::Type::expected_type);        \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
     EXPECT_EQ(action_ref_##wave##_##index.data,                                \
               std::string_view{expected_data});                                \
@@ -240,7 +217,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
     EXPECT_EQ(action_ref_##wave##_##index.type,                                \
-              sourcemeta::one::BuildAction::expected_type);                    \
+              sourcemeta::one::BuildPlan::Action::Type::expected_type);        \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
     EXPECT_EQ(action_ref_##wave##_##index.data,                                \
               std::string_view{expected_data});                                \
@@ -264,7 +241,8 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     }                                                                          \
     for (const auto &total_files_wave : (plan).waves) {                        \
       for (const auto &total_files_action : total_files_wave) {                \
-        if (total_files_action.type == sourcemeta::one::BuildAction::Remove) { \
+        if (total_files_action.type ==                                         \
+            sourcemeta::one::BuildPlan::Action::Type::Remove) {                \
           total_files_result.erase(total_files_action.destination);            \
           const auto total_files_prefix{                                       \
               total_files_action.destination.string() + "/"};                  \

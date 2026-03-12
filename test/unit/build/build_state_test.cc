@@ -15,10 +15,10 @@ TEST(Build_state, round_trip_empty) {
   std::filesystem::create_directories(path.parent_path());
 
   const sourcemeta::one::BuildState original_entries;
-  sourcemeta::one::build_state_save(path, original_entries);
+  original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
+  EXPECT_TRUE(loaded_entries.load(path));
   EXPECT_TRUE(loaded_entries.empty());
 }
 
@@ -33,10 +33,10 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
       .dependencies = {},
   };
 
-  sourcemeta::one::build_state_save(path, original_entries);
+  original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
+  EXPECT_TRUE(loaded_entries.load(path));
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
@@ -55,10 +55,10 @@ TEST(Build_state, round_trip_with_file_mark) {
       .dependencies = {},
   };
 
-  sourcemeta::one::build_state_save(path, original_entries);
+  original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
+  EXPECT_TRUE(loaded_entries.load(path));
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto &entry{loaded_entries.at("/output/schemas/foo/%/schema.metapack")};
@@ -85,10 +85,10 @@ TEST(Build_state, round_trip_with_dependencies) {
                        "/output/schemas/qux/%/schema.metapack"},
   };
 
-  sourcemeta::one::build_state_save(path, original_entries);
+  original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
+  EXPECT_TRUE(loaded_entries.load(path));
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto &entry{
@@ -118,10 +118,10 @@ TEST(Build_state, round_trip_multiple_entries) {
       .dependencies = {},
   };
 
-  sourcemeta::one::build_state_save(path, original_entries);
+  original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
+  EXPECT_TRUE(loaded_entries.load(path));
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(

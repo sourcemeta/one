@@ -38,7 +38,7 @@
 namespace sourcemeta::one {
 
 struct GENERATE_VERSION {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -52,7 +52,7 @@ struct GENERATE_VERSION {
 };
 
 struct GENERATE_COMMENT {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -66,7 +66,7 @@ struct GENERATE_COMMENT {
 };
 
 struct GENERATE_CONFIGURATION {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -79,7 +79,7 @@ struct GENERATE_CONFIGURATION {
 };
 
 struct GENERATE_MATERIALISED_SCHEMA {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -145,7 +145,7 @@ private:
 };
 
 struct GENERATE_POINTER_POSITIONS {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -165,7 +165,7 @@ struct GENERATE_POINTER_POSITIONS {
 };
 
 struct GENERATE_FRAME_LOCATIONS {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -192,7 +192,7 @@ struct GENERATE_FRAME_LOCATIONS {
 };
 
 struct GENERATE_DEPENDENCIES {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -238,7 +238,7 @@ private:
 };
 
 struct GENERATE_DEPENDENCY_TREE {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -301,7 +301,7 @@ struct GENERATE_DEPENDENCY_TREE {
 };
 
 struct GENERATE_DEPENDENTS {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -334,7 +334,7 @@ struct GENERATE_DEPENDENTS {
 };
 
 struct GENERATE_HEALTH {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -431,7 +431,7 @@ private:
 };
 
 struct GENERATE_BUNDLE {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -463,7 +463,7 @@ struct GENERATE_BUNDLE {
 };
 
 struct GENERATE_EDITOR {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -494,10 +494,10 @@ struct GENERATE_EDITOR {
   }
 };
 
-static auto
-generate_blaze_template(const std::filesystem::path &destination,
-                        const sourcemeta::one::BuildDependencies &dependencies,
-                        const sourcemeta::blaze::Mode mode) -> void {
+static auto generate_blaze_template(
+    const std::filesystem::path &destination,
+    const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
+    const sourcemeta::blaze::Mode mode) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   const auto contents{sourcemeta::one::read_json(dependencies.front())};
   sourcemeta::core::SchemaFrame frame{
@@ -519,7 +519,7 @@ generate_blaze_template(const std::filesystem::path &destination,
 }
 
 struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -530,7 +530,7 @@ struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
 };
 
 struct GENERATE_BLAZE_TEMPLATE_FAST {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -541,7 +541,7 @@ struct GENERATE_BLAZE_TEMPLATE_FAST {
 };
 
 struct GENERATE_STATS {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -584,7 +584,7 @@ struct GENERATE_STATS {
 };
 
 struct GENERATE_URITEMPLATE_ROUTES {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,

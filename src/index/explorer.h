@@ -108,7 +108,7 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
@@ -217,7 +217,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 };
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
@@ -281,7 +281,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  static auto handler(const sourcemeta::one::BuildActionEntry &action,
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,

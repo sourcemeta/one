@@ -27,7 +27,7 @@ static auto explorer_base_path(const std::filesystem::path &output,
 }
 
 struct Target {
-  BuildAction action;
+  BuildPlan::Action::Type action;
   std::filesystem::path destination;
   std::vector<std::filesystem::path> dependencies;
   std::string_view data;
@@ -35,7 +35,7 @@ struct Target {
 
 using TargetMap = std::unordered_map<std::string, Target>;
 
-static auto declare_target(TargetMap &targets, BuildAction action,
+static auto declare_target(TargetMap &targets, BuildPlan::Action::Type action,
                            std::filesystem::path destination,
                            std::vector<std::filesystem::path> dependencies,
                            const std::string_view data = {}) -> void {
@@ -60,33 +60,34 @@ declare_schema_targets(TargetMap &targets, const std::filesystem::path &output,
   const auto bundle_metapack{base / "bundle.metapack"};
   const auto health_metapack{base / "health.metapack"};
 
-  declare_target(targets, BuildAction::Materialise, schema_metapack,
+  declare_target(targets, BuildPlan::Action::Type::Materialise, schema_metapack,
                  {source, configuration_path}, uri);
-  declare_target(targets, BuildAction::Positions, base / "positions.metapack",
-                 {schema_metapack}, uri);
-  declare_target(targets, BuildAction::Locations, base / "locations.metapack",
-                 {schema_metapack}, uri);
-  declare_target(targets, BuildAction::Dependencies, dependencies_metapack,
-                 {schema_metapack}, uri);
-  declare_target(targets, BuildAction::Stats, base / "stats.metapack",
-                 {schema_metapack}, uri);
-  declare_target(targets, BuildAction::Health, health_metapack,
+  declare_target(targets, BuildPlan::Action::Type::Positions,
+                 base / "positions.metapack", {schema_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::Locations,
+                 base / "locations.metapack", {schema_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::Dependencies,
+                 dependencies_metapack, {schema_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::Stats,
+                 base / "stats.metapack", {schema_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::Health, health_metapack,
                  {schema_metapack, dependencies_metapack}, uri);
-  declare_target(targets, BuildAction::Bundle, bundle_metapack,
+  declare_target(targets, BuildPlan::Action::Type::Bundle, bundle_metapack,
                  {schema_metapack, dependencies_metapack}, uri);
-  declare_target(targets, BuildAction::Editor, base / "editor.metapack",
-                 {bundle_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::Editor,
+                 base / "editor.metapack", {bundle_metapack}, uri);
 
   if (evaluate) {
-    declare_target(targets, BuildAction::BlazeExhaustive,
+    declare_target(targets, BuildPlan::Action::Type::BlazeExhaustive,
                    base / "blaze-exhaustive.metapack", {bundle_metapack}, uri);
-    declare_target(targets, BuildAction::BlazeFast,
+    declare_target(targets, BuildPlan::Action::Type::BlazeFast,
                    base / "blaze-fast.metapack", {bundle_metapack}, uri);
   }
 
-  declare_target(
-      targets, BuildAction::SchemaMetadata, explorer_base / "schema.metapack",
-      {schema_metapack, health_metapack, dependencies_metapack}, uri);
+  declare_target(targets, BuildPlan::Action::Type::SchemaMetadata,
+                 explorer_base / "schema.metapack",
+                 {schema_metapack, health_metapack, dependencies_metapack},
+                 uri);
 }
 
 enum class DirtyState : std::uint8_t { Unknown, Clean, Dirty };
@@ -203,7 +204,7 @@ static auto collect_affected_directories(
   return result;
 }
 
-auto delta(const BuildType build_type, const BuildState &entries,
+auto delta(const BuildPlan::Type build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,
            const std::string_view version,
            const std::string_view current_version,
@@ -330,7 +331,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
   }
 
   bool has_missing_web{false};
-  if (build_type == BuildType::Full && dirty_set.empty() && !is_full) {
+  if (build_type == BuildPlan::Type::Full && dirty_set.empty() && !is_full) {
     for (const auto &[uri, info] : schemas) {
       if (removed_uris.contains(uri)) {
         continue;
@@ -380,7 +381,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
       BuildPlan plan;
       plan.output = output;
       plan.type = build_type;
-      plan.waves.push_back({{.type = BuildAction::Comment,
+      plan.waves.push_back({{.type = BuildPlan::Action::Type::Comment,
                              .destination = comment_path,
                              .dependencies = {},
                              .data = comment}});
@@ -392,7 +393,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
       BuildPlan plan;
       plan.output = output;
       plan.type = build_type;
-      plan.waves.push_back({{.type = BuildAction::Remove,
+      plan.waves.push_back({{.type = BuildPlan::Action::Type::Remove,
                              .destination = comment_path,
                              .dependencies = {},
                              .data = {}}});
@@ -436,8 +437,8 @@ auto delta(const BuildType build_type, const BuildState &entries,
           "dependencies.metapack");
     }
 
-    declare_target(targets, BuildAction::DependencyTree, dependency_tree_path,
-                   all_dependencies);
+    declare_target(targets, BuildPlan::Action::Type::DependencyTree,
+                   dependency_tree_path, all_dependencies);
     dirty_set.insert(dependency_tree_path.string());
 
     for (const auto &[uri, info] : schemas) {
@@ -447,8 +448,8 @@ auto delta(const BuildType build_type, const BuildState &entries,
 
       const auto dependents_path{schema_base_path(output, info.relative_path) /
                                  "dependents.metapack"};
-      declare_target(targets, BuildAction::Dependents, dependents_path,
-                     {dependency_tree_path}, uri);
+      declare_target(targets, BuildPlan::Action::Type::Dependents,
+                     dependents_path, {dependency_tree_path}, uri);
 
       const auto base{schema_base_path(output, info.relative_path)};
       if (is_full || dirty_set.contains((base / "schema.metapack").string()) ||
@@ -469,7 +470,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
     }
 
     const auto search_path{explorer_path / SENTINEL / "search.metapack"};
-    declare_target(targets, BuildAction::SearchIndex, search_path,
+    declare_target(targets, BuildPlan::Action::Type::SearchIndex, search_path,
                    all_summaries);
     dirty_set.insert(search_path.string());
 
@@ -505,12 +506,12 @@ auto delta(const BuildType build_type, const BuildState &entries,
         }
       }
 
-      declare_target(targets, BuildAction::DirectoryList, destination,
-                     std::move(directory_dependencies));
+      declare_target(targets, BuildPlan::Action::Type::DirectoryList,
+                     destination, std::move(directory_dependencies));
       dirty_set.insert(destination.string());
     }
 
-    if (build_type == BuildType::Full) {
+    if (build_type == BuildPlan::Type::Full) {
       for (const auto &directory : affected_dirs) {
         const auto relative{std::filesystem::relative(directory, schemas_path)};
         const auto directory_metapack{
@@ -519,21 +520,21 @@ auto delta(const BuildType build_type, const BuildState &entries,
         if (relative == ".") {
           const auto web_index_path{explorer_path / SENTINEL /
                                     "directory-html.metapack"};
-          declare_target(targets, BuildAction::WebIndex, web_index_path,
-                         {directory_metapack});
+          declare_target(targets, BuildPlan::Action::Type::WebIndex,
+                         web_index_path, {directory_metapack});
           dirty_set.insert(web_index_path.string());
           if (is_full) {
             const auto not_found_path{explorer_path / SENTINEL /
                                       "404.metapack"};
-            declare_target(targets, BuildAction::WebNotFound, not_found_path,
-                           {configuration_path});
+            declare_target(targets, BuildPlan::Action::Type::WebNotFound,
+                           not_found_path, {configuration_path});
             dirty_set.insert(not_found_path.string());
           }
         } else {
           const auto web_dir_path{explorer_path / relative / SENTINEL /
                                   "directory-html.metapack"};
-          declare_target(targets, BuildAction::WebDirectory, web_dir_path,
-                         {directory_metapack});
+          declare_target(targets, BuildPlan::Action::Type::WebDirectory,
+                         web_dir_path, {directory_metapack});
           dirty_set.insert(web_dir_path.string());
         }
       }
@@ -547,7 +548,8 @@ auto delta(const BuildType build_type, const BuildState &entries,
         const auto explorer_base{
             explorer_base_path(output, info.relative_path)};
         const auto web_schema_path{explorer_base / "schema-html.metapack"};
-        declare_target(targets, BuildAction::WebSchema, web_schema_path,
+        declare_target(targets, BuildPlan::Action::Type::WebSchema,
+                       web_schema_path,
                        {explorer_base / "schema.metapack",
                         schema_base / "dependencies.metapack",
                         schema_base / "health.metapack",
@@ -577,7 +579,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
     }
   }
 
-  std::vector<std::vector<BuildActionEntry>> dag_waves;
+  std::vector<std::vector<BuildPlan::Action>> dag_waves;
   if (!dirty_set.empty()) {
     dag_waves.resize(max_wave + 1);
     for (const auto &target_path : dirty_set) {
@@ -594,7 +596,7 @@ auto delta(const BuildType build_type, const BuildState &entries,
     }
   }
 
-  std::vector<BuildActionEntry> remove_wave;
+  std::vector<BuildPlan::Action> remove_wave;
 
   for (const auto &uri : removed_uris) {
     const auto match{schemas.find(uri)};
@@ -603,12 +605,12 @@ auto delta(const BuildType build_type, const BuildState &entries,
     }
 
     remove_wave.push_back(
-        {BuildAction::Remove,
+        {BuildPlan::Action::Type::Remove,
          schema_base_path(output, match->second.relative_path),
          {},
          {}});
     remove_wave.push_back(
-        {BuildAction::Remove,
+        {BuildPlan::Action::Type::Remove,
          explorer_base_path(output, match->second.relative_path),
          {},
          {}});
@@ -626,10 +628,12 @@ auto delta(const BuildType build_type, const BuildState &entries,
         dirty_set.contains((base / "schema.metapack").string())};
     if (schema_dirty || is_full) {
       if (entries.contains(exhaustive_path.string())) {
-        remove_wave.push_back({BuildAction::Remove, exhaustive_path, {}, {}});
+        remove_wave.push_back(
+            {BuildPlan::Action::Type::Remove, exhaustive_path, {}, {}});
       }
       if (entries.contains(fast_path.string())) {
-        remove_wave.push_back({BuildAction::Remove, fast_path, {}, {}});
+        remove_wave.push_back(
+            {BuildPlan::Action::Type::Remove, fast_path, {}, {}});
       }
     }
   }
@@ -705,11 +709,11 @@ auto delta(const BuildType build_type, const BuildState &entries,
 
   for (auto &root : stale_roots) {
     remove_wave.push_back(
-        {BuildAction::Remove, std::filesystem::path{root}, {}, {}});
+        {BuildPlan::Action::Type::Remove, std::filesystem::path{root}, {}, {}});
   }
 
   bool web_removed{false};
-  if (build_type == BuildType::Headless) {
+  if (build_type == BuildPlan::Type::Headless) {
     const auto explorer_prefix{explorer_path.string() + "/"};
     for (const auto &[entry_path, entry] : entries) {
       if (!entry_path.starts_with(explorer_prefix)) {
@@ -725,15 +729,17 @@ auto delta(const BuildType build_type, const BuildState &entries,
                                       entry_path.size() - last_slash - 1};
       if (filename == "directory-html.metapack" ||
           filename == "schema-html.metapack" || filename == "404.metapack") {
-        remove_wave.push_back(
-            {BuildAction::Remove, std::filesystem::path{entry_path}, {}, {}});
+        remove_wave.push_back({BuildPlan::Action::Type::Remove,
+                               std::filesystem::path{entry_path},
+                               {},
+                               {}});
         web_removed = true;
       }
     }
   }
 
   bool web_added{false};
-  if (build_type == BuildType::Full && !is_full) {
+  if (build_type == BuildPlan::Type::Full && !is_full) {
     const auto explorer_prefix{explorer_path.string() + "/"};
     bool had_web_entries{false};
     for (const auto &[entry_path, entry] : entries) {
@@ -760,31 +766,33 @@ auto delta(const BuildType build_type, const BuildState &entries,
   plan.type = build_type;
 
   if (is_full) {
-    std::vector<BuildActionEntry> init_wave;
-    init_wave.push_back({.type = BuildAction::Version,
+    std::vector<BuildPlan::Action> init_wave;
+    init_wave.push_back({.type = BuildPlan::Action::Type::Version,
                          .destination = version_path,
                          .dependencies = {},
                          .data = version});
-    init_wave.push_back({.type = BuildAction::Configuration,
+    init_wave.push_back({.type = BuildPlan::Action::Type::Configuration,
                          .destination = configuration_path,
                          .dependencies = {},
                          .data = {}});
     if (!comment.empty()) {
-      init_wave.push_back({.type = BuildAction::Comment,
+      init_wave.push_back({.type = BuildPlan::Action::Type::Comment,
                            .destination = comment_path,
                            .dependencies = {},
                            .data = comment});
     } else if (entries.contains(comment_string)) {
-      remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
+      remove_wave.push_back(
+          {BuildPlan::Action::Type::Remove, comment_path, {}, {}});
     }
     plan.waves.push_back(std::move(init_wave));
   } else if (!comment.empty()) {
-    plan.waves.push_back({{.type = BuildAction::Comment,
+    plan.waves.push_back({{.type = BuildPlan::Action::Type::Comment,
                            .destination = comment_path,
                            .dependencies = {},
                            .data = comment}});
   } else if (entries.contains(comment_string)) {
-    remove_wave.push_back({BuildAction::Remove, comment_path, {}, {}});
+    remove_wave.push_back(
+        {BuildPlan::Action::Type::Remove, comment_path, {}, {}});
   }
 
   for (auto &wave : dag_waves) {
@@ -794,21 +802,21 @@ auto delta(const BuildType build_type, const BuildState &entries,
   }
 
   if (is_full || web_added || web_removed) {
-    std::vector<BuildActionEntry> routes_wave;
+    std::vector<BuildPlan::Action> routes_wave;
     routes_wave.push_back(
-        {BuildAction::Routes,
+        {BuildPlan::Action::Type::Routes,
          output / "routes.bin",
          {configuration_path},
-         build_type == BuildType::Full ? "Full" : "Headless"});
+         build_type == BuildPlan::Type::Full ? "Full" : "Headless"});
     plan.waves.push_back(std::move(routes_wave));
   }
 
   if (!remove_wave.empty()) {
-    std::ranges::sort(remove_wave, [](const BuildActionEntry &left,
-                                      const BuildActionEntry &right) {
+    std::ranges::sort(remove_wave, [](const BuildPlan::Action &left,
+                                      const BuildPlan::Action &right) {
       return left.destination < right.destination;
     });
-    std::vector<BuildActionEntry> deduped_remove;
+    std::vector<BuildPlan::Action> deduped_remove;
     deduped_remove.reserve(remove_wave.size());
     for (auto &entry : remove_wave) {
       const auto &path{entry.destination.string()};
@@ -831,10 +839,10 @@ auto delta(const BuildType build_type, const BuildState &entries,
   }
 
   for (auto &wave : plan.waves) {
-    std::ranges::sort(
-        wave, [](const BuildActionEntry &left, const BuildActionEntry &right) {
-          return left.destination < right.destination;
-        });
+    std::ranges::sort(wave, [](const BuildPlan::Action &left,
+                               const BuildPlan::Action &right) {
+      return left.destination < right.destination;
+    });
     plan.size += wave.size();
   }
 

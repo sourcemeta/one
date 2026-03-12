@@ -29,7 +29,7 @@ auto make_hero(const sourcemeta::one::Configuration &configuration)
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_INDEX::handler(
-    const sourcemeta::one::BuildActionEntry &action,
+    const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {

@@ -16,23 +16,21 @@
 #include "explorer.h"
 #include "generators.h"
 
-#include <algorithm>     // std::sort
-#include <array>         // std::array
-#include <atomic>        // std::atomic
-#include <cassert>       // assert
-#include <chrono>        // std::chrono
-#include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
-#include <exception>     // std::exception
-#include <filesystem>    // std::filesystem
-#include <functional>    // std::reference_wrapper, std::cref
-#include <iomanip>       // std::setw, std::setfill
-#include <iostream>      // std::cerr, std::cout
-#include <mutex>         // std::mutex, std::lock_guard
-#include <optional>      // std::optional
-#include <string>        // std::string
-#include <string_view>   // std::string_view
-#include <unordered_map> // std::unordered_map
-#include <vector>        // std::vector
+#include <algorithm>   // std::sort
+#include <array>       // std::array
+#include <atomic>      // std::atomic
+#include <cassert>     // assert
+#include <chrono>      // std::chrono
+#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
+#include <exception>   // std::exception
+#include <filesystem>  // std::filesystem
+#include <functional>  // std::reference_wrapper, std::cref
+#include <iomanip>     // std::setw, std::setfill
+#include <iostream>    // std::cerr, std::cout
+#include <mutex>       // std::mutex, std::lock_guard
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PROFILE_INIT(state)                                                    \
@@ -51,7 +49,7 @@
   (state).second = std::chrono::steady_clock::now()
 
 using BuildHandlerFunction = void (*)(
-    const sourcemeta::one::BuildActionEntry &,
+    const sourcemeta::one::BuildPlan::Action &,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &);
 
@@ -190,7 +188,7 @@ static auto index_main(const std::string_view &program,
   const auto state_path{canonical_output / "state.bin"};
   if (std::filesystem::exists(state_path)) {
     try {
-      sourcemeta::one::build_state_load(state_path, entries);
+      entries.load(state_path);
     } catch (...) {
       entries.clear();
     }
@@ -221,8 +219,8 @@ static auto index_main(const std::string_view &program,
 
   // Determine build type
   const auto build_type{configuration.html.has_value()
-                            ? sourcemeta::one::BuildType::Full
-                            : sourcemeta::one::BuildType::Headless};
+                            ? sourcemeta::one::BuildPlan::Type::Full
+                            : sourcemeta::one::BuildPlan::Type::Headless};
 
   PROFILE_END(profiling, "Startup");
 
@@ -337,12 +335,13 @@ static auto index_main(const std::string_view &program,
           const std::string_view destination_view{action.destination.native()};
           print_progress(
               mutex, threads,
-              action.type == sourcemeta::one::BuildAction::Remove ? "Disposing"
-                                                                  : "Producing",
+              action.type == sourcemeta::one::BuildPlan::Action::Type::Remove
+                  ? "Disposing"
+                  : "Producing",
               destination_view.substr(canonical_output.native().size() + 1),
               current, plan.size);
 
-          if (action.type == sourcemeta::one::BuildAction::Remove) {
+          if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
             std::filesystem::remove_all(action.destination);
             std::lock_guard<std::mutex> lock{entries_mutex};
             entries.erase(action.destination.string());
@@ -375,7 +374,7 @@ static auto index_main(const std::string_view &program,
   // (9) Save state
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::build_state_save(state_path, entries);
+  entries.save(state_path);
 
   PROFILE_END(profiling, "Cleanup");
 

@@ -13,7 +13,7 @@
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_NOT_FOUND::handler(
-    const sourcemeta::one::BuildActionEntry &action,
+    const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {

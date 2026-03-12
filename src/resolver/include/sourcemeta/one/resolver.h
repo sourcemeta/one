@@ -7,9 +7,9 @@
 
 #include <sourcemeta/one/resolver_error.h>
 
-#include <filesystem>    // std::filesystem
-#include <functional>    // std::reference_wrapper
-#include <optional>      // std::optional
+#include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
+#include <functional> // std::function, std::reference_wrapper
+#include <optional>   // std::optional
 #include <shared_mutex>  // std::shared_mutex
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map

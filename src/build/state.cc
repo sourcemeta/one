@@ -1,4 +1,4 @@
-#include <sourcemeta/one/build.h>
+#include <sourcemeta/one/build_state.h>
 
 #include <sourcemeta/core/io.h>
 
@@ -49,10 +49,9 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-auto build_state_load(const std::filesystem::path &path, BuildState &entries)
-    -> bool {
+auto BuildState::load(const std::filesystem::path &path) -> bool {
   const sourcemeta::core::FileView view{path};
-  const auto *data{view.as<std::uint8_t>()};
+  const auto *file_data{view.as<std::uint8_t>()};
   const auto file_size{view.size()};
 
   if (file_size < 12) {
@@ -60,37 +59,38 @@ auto build_state_load(const std::filesystem::path &path, BuildState &entries)
   }
 
   std::size_t offset{0};
-  if (read_uint32(data, offset) != STATE_MAGIC) {
+  if (read_uint32(file_data, offset) != STATE_MAGIC) {
     return false;
   }
 
-  if (read_uint32(data, offset) != STATE_VERSION) {
+  if (read_uint32(file_data, offset) != STATE_VERSION) {
     return false;
   }
 
-  const auto entry_count{read_uint32(data, offset)};
+  const auto entry_count{read_uint32(file_data, offset)};
   for (std::uint32_t index = 0; index < entry_count; ++index) {
-    const auto path_length{read_uint32(data, offset)};
-    std::string entry_path{reinterpret_cast<const char *>(data + offset),
+    const auto path_length{read_uint32(file_data, offset)};
+    std::string entry_path{reinterpret_cast<const char *>(file_data + offset),
                            path_length};
     offset += path_length;
 
-    const auto flags{data[offset++]};
-    auto &map_entry{entries[std::move(entry_path)]};
+    const auto flags{file_data[offset++]};
+    auto &map_entry{(*this)[entry_path]};
 
     if ((flags & STATE_FLAG_HAS_DEPENDENCIES) != 0) {
-      const auto dependency_count{read_uint32(data, offset)};
+      const auto dependency_count{read_uint32(file_data, offset)};
       map_entry.dependencies.reserve(dependency_count);
       for (std::uint32_t dependency_index = 0;
            dependency_index < dependency_count; ++dependency_index) {
-        const auto dependency_length{read_uint32(data, offset)};
-        map_entry.dependencies.emplace_back(std::string{
-            reinterpret_cast<const char *>(data + offset), dependency_length});
+        const auto dependency_length{read_uint32(file_data, offset)};
+        map_entry.dependencies.emplace_back(
+            std::string{reinterpret_cast<const char *>(file_data + offset),
+                        dependency_length});
         offset += dependency_length;
       }
     }
 
-    const auto nanoseconds{read_int64(data, offset)};
+    const auto nanoseconds{read_int64(file_data, offset)};
     map_entry.file_mark =
         mark_type{std::chrono::duration_cast<mark_type::duration>(
             std::chrono::nanoseconds{nanoseconds})};
@@ -99,20 +99,19 @@ auto build_state_load(const std::filesystem::path &path, BuildState &entries)
   return true;
 }
 
-auto build_state_save(const std::filesystem::path &path,
-                      const BuildState &entries) -> void {
+auto BuildState::save(const std::filesystem::path &path) const -> void {
   std::string buffer;
   buffer.resize(12);
   std::memcpy(buffer.data(), &STATE_MAGIC, sizeof(STATE_MAGIC));
   std::memcpy(buffer.data() + 4, &STATE_VERSION, sizeof(STATE_VERSION));
 
   std::uint32_t count{0};
-  for (const auto &entry : entries) {
+  for (const auto &[entry_path, entry] : *this) {
     count += 1;
 
-    append_string(buffer, entry.first);
+    append_string(buffer, entry_path);
 
-    const bool has_dependencies{!entry.second.dependencies.empty()};
+    const bool has_dependencies{!entry.dependencies.empty()};
     std::uint8_t flags{0};
     if (has_dependencies) {
       flags |= STATE_FLAG_HAS_DEPENDENCIES;
@@ -121,15 +120,15 @@ auto build_state_save(const std::filesystem::path &path,
     buffer.push_back(static_cast<char>(flags));
 
     if (has_dependencies) {
-      append_uint32(
-          buffer, static_cast<std::uint32_t>(entry.second.dependencies.size()));
-      for (const auto &dependency : entry.second.dependencies) {
+      append_uint32(buffer,
+                    static_cast<std::uint32_t>(entry.dependencies.size()));
+      for (const auto &dependency : entry.dependencies) {
         append_string(buffer, dependency.native());
       }
     }
 
     const auto nanoseconds{std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               entry.second.file_mark.time_since_epoch())
+                               entry.file_mark.time_since_epoch())
                                .count()};
     append_int64(buffer, static_cast<std::int64_t>(nanoseconds));
   }
