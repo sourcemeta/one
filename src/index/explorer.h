@@ -302,13 +302,13 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       current = current.parent_path();
     }
 
-    for (const auto &dep : action.dependencies) {
-      const auto filename{dep.filename().string()};
+    for (const auto &dependency : action.dependencies) {
+      const auto filename{dependency.filename().string()};
       const auto child_name{
-          dep.parent_path().parent_path().filename().string()};
+          dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        auto directory_json{sourcemeta::one::read_json(dep)};
+        auto directory_json{sourcemeta::one::read_json(dependency)};
         assert(directory_json.is_object());
         assert(directory_json.defines("health"));
         assert(directory_json.at("health").is_integer());
@@ -339,7 +339,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
         entries.push_back(std::move(entry_json));
       } else if (filename == "schema.metapack") {
-        auto nav{sourcemeta::one::read_json(dep)};
+        auto nav{sourcemeta::one::read_json(dependency)};
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.merge(nav.as_object());
