@@ -20,9 +20,7 @@ namespace sourcemeta::one {
 
 struct BuildEntry {
   std::filesystem::file_time_type file_mark;
-  // TODO: Do we still need this distinction now?
-  std::vector<std::filesystem::path> static_dependencies;
-  std::vector<std::filesystem::path> dynamic_dependencies;
+  std::vector<std::filesystem::path> dependencies;
 };
 
 enum class BuildType : std::uint8_t { Headless, Full };

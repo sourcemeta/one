@@ -12,7 +12,7 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{2};
+constexpr std::uint32_t STATE_VERSION{3};
 constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
 
 auto read_uint32(const std::uint8_t *data, std::size_t &offset)
@@ -79,24 +79,14 @@ auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
     auto &map_entry{entries[std::move(entry_path)]};
 
     if ((flags & STATE_FLAG_HAS_DEPENDENCIES) != 0) {
-      const auto static_count{read_uint32(data, offset)};
-      map_entry.static_dependencies.reserve(static_count);
-      for (std::uint32_t static_index = 0; static_index < static_count;
-           ++static_index) {
-        const auto dep_length{read_uint32(data, offset)};
-        map_entry.static_dependencies.emplace_back(std::string{
-            reinterpret_cast<const char *>(data + offset), dep_length});
-        offset += dep_length;
-      }
-
-      const auto dynamic_count{read_uint32(data, offset)};
-      map_entry.dynamic_dependencies.reserve(dynamic_count);
-      for (std::uint32_t dynamic_index = 0; dynamic_index < dynamic_count;
-           ++dynamic_index) {
-        const auto dep_length{read_uint32(data, offset)};
-        map_entry.dynamic_dependencies.emplace_back(std::string{
-            reinterpret_cast<const char *>(data + offset), dep_length});
-        offset += dep_length;
+      const auto dependency_count{read_uint32(data, offset)};
+      map_entry.dependencies.reserve(dependency_count);
+      for (std::uint32_t dependency_index = 0;
+           dependency_index < dependency_count; ++dependency_index) {
+        const auto dependency_length{read_uint32(data, offset)};
+        map_entry.dependencies.emplace_back(std::string{
+            reinterpret_cast<const char *>(data + offset), dependency_length});
+        offset += dependency_length;
       }
     }
 
@@ -122,8 +112,7 @@ auto build_state_save(const std::filesystem::path &path,
 
     append_string(buffer, entry.first);
 
-    const bool has_dependencies{!entry.second.static_dependencies.empty() ||
-                                !entry.second.dynamic_dependencies.empty()};
+    const bool has_dependencies{!entry.second.dependencies.empty()};
     std::uint8_t flags{0};
     if (has_dependencies) {
       flags |= STATE_FLAG_HAS_DEPENDENCIES;
@@ -132,15 +121,9 @@ auto build_state_save(const std::filesystem::path &path,
     buffer.push_back(static_cast<char>(flags));
 
     if (has_dependencies) {
-      append_uint32(buffer, static_cast<std::uint32_t>(
-                                entry.second.static_dependencies.size()));
-      for (const auto &dependency : entry.second.static_dependencies) {
-        append_string(buffer, dependency.native());
-      }
-
-      append_uint32(buffer, static_cast<std::uint32_t>(
-                                entry.second.dynamic_dependencies.size()));
-      for (const auto &dependency : entry.second.dynamic_dependencies) {
+      append_uint32(
+          buffer, static_cast<std::uint32_t>(entry.second.dependencies.size()));
+      for (const auto &dependency : entry.second.dependencies) {
         append_string(buffer, dependency.native());
       }
     }

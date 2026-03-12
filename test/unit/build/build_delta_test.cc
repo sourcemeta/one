@@ -713,9 +713,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "schemas" / "ghost" / "%",
-            {.file_mark = MTIME(100),
-             .static_dependencies = {},
-             .dynamic_dependencies = {}});
+            {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -2486,12 +2484,10 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "b" / "%" / "dependencies.metapack",
-            {.file_mark = MTIME(100),
-             .static_dependencies = {output / "schemas" / "a" / "%" /
-                                     "schema.metapack"},
-             .dynamic_dependencies = {}});
+  ADD_ENTRY(
+      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+      {.file_mark = MTIME(100),
+       .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
   ADD_ENTRY(entries, output,
             output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output,
@@ -2691,18 +2687,14 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildEntries entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "b" / "%" / "dependencies.metapack",
-            {.file_mark = MTIME(100),
-             .static_dependencies = {output / "schemas" / "a" / "%" /
-                                     "schema.metapack"},
-             .dynamic_dependencies = {}});
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "c" / "%" / "dependencies.metapack",
-            {.file_mark = MTIME(100),
-             .static_dependencies = {output / "schemas" / "b" / "%" /
-                                     "schema.metapack"},
-             .dynamic_dependencies = {}});
+  ADD_ENTRY(
+      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+      {.file_mark = MTIME(100),
+       .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
+  ADD_ENTRY(
+      entries, output, output / "schemas" / "c" / "%" / "dependencies.metapack",
+      {.file_mark = MTIME(100),
+       .dependencies = {output / "schemas" / "b" / "%" / "schema.metapack"}});
   ADD_ENTRY(entries, output,
             output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output,
@@ -2984,12 +2976,10 @@ TEST(Build_delta, mtime_reverse_dep) {
             MTIME(10));
   ADD_ENTRY(entries, output, output / "schemas" / "b" / "%" / "schema.metapack",
             MTIME(50));
-  ADD_ENTRY(entries, output,
-            output / "schemas" / "b" / "%" / "dependencies.metapack",
-            {.file_mark = MTIME(100),
-             .static_dependencies = {output / "schemas" / "a" / "%" /
-                                     "schema.metapack"},
-             .dynamic_dependencies = {}});
+  ADD_ENTRY(
+      entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
+      {.file_mark = MTIME(100),
+       .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
   ADD_ENTRY(entries, output,
             output / "explorer" / "a" / "%" / "schema.metapack", MTIME(100));
   ADD_ENTRY(entries, output,

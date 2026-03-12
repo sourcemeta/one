@@ -349,13 +349,12 @@ static auto index_main(const std::string_view &program,
             return;
           }
 
-          std::vector<std::filesystem::path> dynamic_dependencies;
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
           handler(
               action,
-              [&dynamic_dependencies](const auto &path) {
-                dynamic_dependencies.emplace_back(path);
+              [&action](const auto &path) {
+                action.dependencies.emplace_back(path);
               },
               resolver, configuration, raw_configuration);
 
@@ -364,8 +363,7 @@ static auto index_main(const std::string_view &program,
             std::lock_guard<std::mutex> lock{entries_mutex};
             auto &entry{entries[action.destination.native()]};
             entry.file_mark = now;
-            entry.static_dependencies = std::move(action.dependencies);
-            entry.dynamic_dependencies = std::move(dynamic_dependencies);
+            entry.dependencies = std::move(action.dependencies);
           }
         },
         concurrency, THREAD_STACK_SIZE);

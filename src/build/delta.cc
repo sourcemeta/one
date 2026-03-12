@@ -127,14 +127,7 @@ static auto is_dirty(const std::string &target_path, const TargetMap &targets,
   }
 
   const auto &entry{entry_match->second};
-  for (const auto &dependency : entry.static_dependencies) {
-    if (is_dirty(dependency.string(), targets, entries, force_dirty, cache)) {
-      cache[target_path] = DirtyState::Dirty;
-      return true;
-    }
-  }
-
-  for (const auto &dependency : entry.dynamic_dependencies) {
+  for (const auto &dependency : entry.dependencies) {
     if (is_dirty(dependency.string(), targets, entries, force_dirty, cache)) {
       cache[target_path] = DirtyState::Dirty;
       return true;
