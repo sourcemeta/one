@@ -515,12 +515,44 @@ struct GENERATE_STATS {
 };
 
 struct GENERATE_URITEMPLATE_ROUTES {
-  using Context = sourcemeta::core::URITemplateRouter;
+  using Context = sourcemeta::one::BuildType;
   static auto handler(const std::filesystem::path &destination,
                       const sourcemeta::one::BuildDependencies &,
                       const sourcemeta::one::BuildDynamicCallback &,
-                      const sourcemeta::one::Resolver &, const Context &router)
-      -> void {
+                      const sourcemeta::one::Resolver &,
+                      const Context &build_type) -> void {
+    sourcemeta::core::URITemplateRouter router;
+    router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
+    router.add("/self/v1/api/list/{+path}",
+               sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
+    router.add("/self/v1/api/schemas/dependencies/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
+    router.add("/self/v1/api/schemas/dependents/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS);
+    router.add("/self/v1/api/schemas/health/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
+    router.add("/self/v1/api/schemas/locations/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
+    router.add("/self/v1/api/schemas/positions/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
+    router.add("/self/v1/api/schemas/stats/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
+    router.add("/self/v1/api/schemas/metadata/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
+    router.add("/self/v1/api/schemas/evaluate/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
+    router.add("/self/v1/api/schemas/trace/{+schema}",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
+    router.add("/self/v1/api/schemas/search",
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
+    router.add("/self/v1/health", sourcemeta::one::HANDLER_SELF_V1_HEALTH);
+    router.add("/self/v1/api/{+any}",
+               sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
+
+    if (build_type == sourcemeta::one::BuildType::Full) {
+      router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC);
+    }
+
     std::filesystem::create_directories(destination.parent_path());
     sourcemeta::core::URITemplateRouterView::save(router, destination);
   }
