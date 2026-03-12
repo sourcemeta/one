@@ -14,10 +14,10 @@ TEST(Build_state, round_trip_empty) {
   const auto path{state_path("empty")};
   std::filesystem::create_directories(path.parent_path());
 
-  const sourcemeta::one::BuildEntries original_entries;
+  const sourcemeta::one::BuildState original_entries;
   sourcemeta::one::build_state_save(path, original_entries);
 
-  sourcemeta::one::BuildEntries loaded_entries;
+  sourcemeta::one::BuildState loaded_entries;
   EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_TRUE(loaded_entries.empty());
 }
@@ -27,7 +27,7 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
   std::filesystem::create_directories(path.parent_path());
 
   const auto now{std::filesystem::file_time_type::clock::now()};
-  sourcemeta::one::BuildEntries original_entries;
+  sourcemeta::one::BuildState original_entries;
   original_entries["/output/schemas/foo/%/schema.metapack"] = {
       .file_mark = now,
       .dependencies = {},
@@ -35,7 +35,7 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
 
   sourcemeta::one::build_state_save(path, original_entries);
 
-  sourcemeta::one::BuildEntries loaded_entries;
+  sourcemeta::one::BuildState loaded_entries;
   EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
@@ -49,7 +49,7 @@ TEST(Build_state, round_trip_with_file_mark) {
   std::filesystem::create_directories(path.parent_path());
 
   const auto now{std::filesystem::file_time_type::clock::now()};
-  sourcemeta::one::BuildEntries original_entries;
+  sourcemeta::one::BuildState original_entries;
   original_entries["/output/schemas/foo/%/schema.metapack"] = {
       .file_mark = now,
       .dependencies = {},
@@ -57,7 +57,7 @@ TEST(Build_state, round_trip_with_file_mark) {
 
   sourcemeta::one::build_state_save(path, original_entries);
 
-  sourcemeta::one::BuildEntries loaded_entries;
+  sourcemeta::one::BuildState loaded_entries;
   EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
 
@@ -77,7 +77,7 @@ TEST(Build_state, round_trip_with_dependencies) {
   std::filesystem::create_directories(path.parent_path());
 
   const auto now{std::filesystem::file_time_type::clock::now()};
-  sourcemeta::one::BuildEntries original_entries;
+  sourcemeta::one::BuildState original_entries;
   original_entries["/output/schemas/foo/%/dependencies.metapack"] = {
       .file_mark = now,
       .dependencies = {"/output/schemas/bar/%/schema.metapack",
@@ -87,7 +87,7 @@ TEST(Build_state, round_trip_with_dependencies) {
 
   sourcemeta::one::build_state_save(path, original_entries);
 
-  sourcemeta::one::BuildEntries loaded_entries;
+  sourcemeta::one::BuildState loaded_entries;
   EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 1);
 
@@ -104,7 +104,7 @@ TEST(Build_state, round_trip_multiple_entries) {
   std::filesystem::create_directories(path.parent_path());
 
   const auto now{std::filesystem::file_time_type::clock::now()};
-  sourcemeta::one::BuildEntries original_entries;
+  sourcemeta::one::BuildState original_entries;
   original_entries["/output/schemas/foo/%/schema.metapack"] = {
       .file_mark = now,
       .dependencies = {},
@@ -120,7 +120,7 @@ TEST(Build_state, round_trip_multiple_entries) {
 
   sourcemeta::one::build_state_save(path, original_entries);
 
-  sourcemeta::one::BuildEntries loaded_entries;
+  sourcemeta::one::BuildState loaded_entries;
   EXPECT_TRUE(sourcemeta::one::build_state_load(path, loaded_entries));
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));

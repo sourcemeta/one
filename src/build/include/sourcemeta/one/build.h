@@ -71,10 +71,10 @@ using BuildDependencies = std::vector<std::filesystem::path>;
 using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 
 // TODO: Maybe this should be its own class?
-using BuildEntries = std::unordered_map<std::string, BuildEntry>;
+using BuildState = std::unordered_map<std::string, BuildEntry>;
 
 SOURCEMETA_ONE_BUILD_EXPORT
-auto delta(const BuildType build_type, const BuildEntries &entries,
+auto delta(const BuildType build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,
            const std::string_view version,
            const std::string_view current_version,
@@ -85,12 +85,12 @@ auto delta(const BuildType build_type, const BuildEntries &entries,
            const std::vector<std::filesystem::path> &removed) -> BuildPlan;
 
 SOURCEMETA_ONE_BUILD_EXPORT
-auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
+auto build_state_load(const std::filesystem::path &path, BuildState &entries)
     -> bool;
 
 SOURCEMETA_ONE_BUILD_EXPORT
 auto build_state_save(const std::filesystem::path &path,
-                      const BuildEntries &entries) -> void;
+                      const BuildState &entries) -> void;
 
 } // namespace sourcemeta::one
 

@@ -106,7 +106,7 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
 
 static auto
 __check_dependencies_resolvable(const sourcemeta::one::BuildPlan &plan,
-                                const sourcemeta::one::BuildEntries &entries,
+                                const sourcemeta::one::BuildState &entries,
                                 const std::filesystem::path &output) -> void {
   const auto &output_prefix{output.native()};
   for (std::size_t wave_index{0}; wave_index < plan.waves.size();
@@ -150,14 +150,14 @@ __check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
   }
 }
 
-static auto __ADD_ENTRY_IMPL(sourcemeta::one::BuildEntries &entries,
+static auto __ADD_ENTRY_IMPL(sourcemeta::one::BuildState &entries,
                              const std::filesystem::path &,
                              const std::filesystem::path &path,
                              sourcemeta::one::BuildEntry entry) -> void {
   entries[path.string()] = std::move(entry);
 }
 
-static auto ADD_ENTRY(sourcemeta::one::BuildEntries &entries,
+static auto ADD_ENTRY(sourcemeta::one::BuildState &entries,
                       const std::filesystem::path &output,
                       const std::filesystem::path &path,
                       const std::filesystem::file_time_type mark) -> void {
@@ -166,14 +166,14 @@ static auto ADD_ENTRY(sourcemeta::one::BuildEntries &entries,
   __ADD_ENTRY_IMPL(entries, output, path, std::move(entry));
 }
 
-static auto ADD_ENTRY(sourcemeta::one::BuildEntries &entries,
+static auto ADD_ENTRY(sourcemeta::one::BuildState &entries,
                       const std::filesystem::path &output,
                       const std::filesystem::path &path,
                       sourcemeta::one::BuildEntry entry) -> void {
   __ADD_ENTRY_IMPL(entries, output, path, std::move(entry));
 }
 
-static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildEntries &entries,
+static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
                                const std::filesystem::path &output,
                                const std::filesystem::path &relative_output,
                                const bool evaluate, const bool web,

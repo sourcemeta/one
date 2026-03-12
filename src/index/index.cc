@@ -186,7 +186,7 @@ static auto index_main(const std::string_view &program,
   std::filesystem::create_directories(output_path);
   const auto canonical_output{std::filesystem::canonical(output_path)};
 
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
   if (std::filesystem::exists(state_path)) {
     try {

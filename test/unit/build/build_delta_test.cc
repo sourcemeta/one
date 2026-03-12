@@ -12,7 +12,7 @@
 
 TEST(Build_delta, full_empty_registry) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -56,7 +56,7 @@ TEST(Build_delta, full_empty_registry) {
 
 TEST(Build_delta, full_single_schema) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -179,7 +179,7 @@ TEST(Build_delta, full_single_schema) {
 
 TEST(Build_delta, incremental_changed_same_mtime) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
@@ -234,7 +234,7 @@ TEST(Build_delta, incremental_changed_same_mtime) {
 
 TEST(Build_delta, incremental_missing_schema_metapack) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output,
             output / "schemas" / "bar" / "%" / "dependencies.metapack",
@@ -358,7 +358,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
 
 TEST(Build_delta, incremental_one_schema_changed) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output,
@@ -541,7 +541,7 @@ TEST(Build_delta, incremental_one_schema_changed) {
 
 TEST(Build_delta, incremental_removed_schema) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -584,7 +584,7 @@ TEST(Build_delta, incremental_removed_schema) {
 
 TEST(Build_delta, full_stale_file_in_entries) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output,
             output / "schemas" / "ghost" / "%" / "schema.metapack", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -711,7 +711,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
 
 TEST(Build_delta, full_stale_directory_in_entries) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "schemas" / "ghost" / "%",
             {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
@@ -838,7 +838,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
 
 TEST(Build_delta, full_with_comment) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -883,7 +883,7 @@ TEST(Build_delta, full_with_comment) {
 
 TEST(Build_delta, full_without_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
@@ -930,7 +930,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 
 TEST(Build_delta, incremental_with_comment) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -1051,7 +1051,7 @@ TEST(Build_delta, incremental_with_comment) {
 
 TEST(Build_delta, incremental_empty_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
@@ -1172,7 +1172,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
 
 TEST(Build_delta, incremental_no_changes_adds_comment) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
@@ -1208,7 +1208,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
 
 TEST(Build_delta, incremental_no_changes_removes_comment) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "comment.json", MTIME(100));
@@ -1245,7 +1245,7 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
 
 TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
@@ -1283,7 +1283,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 
 TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
@@ -1321,7 +1321,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 
 TEST(Build_delta, full_config_change_to_empty_schemas) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "routes.bin", MTIME(100));
@@ -1380,7 +1380,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
 
 TEST(Build_delta, full_single_schema_evaluate_false) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
@@ -1493,7 +1493,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
 
 TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output,
             output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
             MTIME(100));
@@ -1618,7 +1618,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
 
 TEST(Build_delta, incremental_evaluate_false) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -1726,7 +1726,7 @@ TEST(Build_delta, incremental_evaluate_false) {
 
 TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
@@ -1799,7 +1799,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
 
 TEST(Build_delta, incremental_missing_bundle) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
@@ -1885,7 +1885,7 @@ TEST(Build_delta, incremental_missing_bundle) {
 
 TEST(Build_delta, incremental_missing_web_schema) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
@@ -1961,7 +1961,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
 
 TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, false, MTIME(100));
@@ -2007,7 +2007,7 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
 
 TEST(Build_delta, mtime_nothing_changed) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(50));
@@ -2061,7 +2061,7 @@ TEST(Build_delta, mtime_nothing_changed) {
 
 TEST(Build_delta, mtime_source_newer) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(10));
@@ -2207,7 +2207,7 @@ TEST(Build_delta, mtime_source_newer) {
 
 TEST(Build_delta, mtime_no_entry) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
@@ -2352,7 +2352,7 @@ TEST(Build_delta, mtime_no_entry) {
 TEST(Build_delta, mtime_no_file_mark) {
   const std::filesystem::path output{"/output"};
 
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
@@ -2482,7 +2482,7 @@ TEST(Build_delta, mtime_no_file_mark) {
 
 TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(
       entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
@@ -2685,7 +2685,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
 
 TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(
       entries, output, output / "schemas" / "b" / "%" / "dependencies.metapack",
@@ -2970,7 +2970,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
 
 TEST(Build_delta, mtime_reverse_dep) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "schemas" / "a" / "%" / "schema.metapack",
             MTIME(10));
@@ -3171,7 +3171,7 @@ TEST(Build_delta, mtime_reverse_dep) {
 
 TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output,
             output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
@@ -3291,7 +3291,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
 
 TEST(Build_delta, headless_full_empty_registry) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -3325,7 +3325,7 @@ TEST(Build_delta, headless_full_empty_registry) {
 
 TEST(Build_delta, headless_full_single_schema) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -3431,7 +3431,7 @@ TEST(Build_delta, headless_full_single_schema) {
 
 TEST(Build_delta, headless_incremental) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -3532,7 +3532,7 @@ TEST(Build_delta, headless_incremental) {
 
 TEST(Build_delta, full_to_headless_removes_web) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output,
             output / "schemas" / "foo" / "%" / "schema.metapack", MTIME(100));
@@ -3659,7 +3659,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
 
 TEST(Build_delta, headless_to_full_incremental) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   const sourcemeta::one::Resolver::Views schemas{
@@ -3777,7 +3777,7 @@ TEST(Build_delta, headless_to_full_incremental) {
 
 TEST(Build_delta, headless_to_full_full_rebuild) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output,
@@ -3935,7 +3935,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
 
 TEST(Build_delta, full_to_headless_full_rebuild) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));
   ADD_ENTRY(entries, output,
@@ -4057,7 +4057,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
 
 TEST(Build_delta, full_single_schema_nested_path_headless) {
   const std::filesystem::path output{"/output"};
-  const sourcemeta::one::BuildEntries entries;
+  const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/test",
        {"/src/test.json", "example/test", MTIME(100)}}};
@@ -4185,7 +4185,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
 
 TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildEntries entries;
+  sourcemeta::one::BuildState entries;
 
   ADD_ENTRY(entries, output, output / "version.json", MTIME(100));
   ADD_ENTRY(entries, output, output / "configuration.json", MTIME(100));

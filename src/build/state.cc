@@ -12,7 +12,7 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{3};
+constexpr std::uint32_t STATE_VERSION{1};
 constexpr std::uint8_t STATE_FLAG_HAS_DEPENDENCIES{0x01};
 
 auto read_uint32(const std::uint8_t *data, std::size_t &offset)
@@ -49,7 +49,7 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
+auto build_state_load(const std::filesystem::path &path, BuildState &entries)
     -> bool {
   const sourcemeta::core::FileView view{path};
   const auto *data{view.as<std::uint8_t>()};
@@ -100,7 +100,7 @@ auto build_state_load(const std::filesystem::path &path, BuildEntries &entries)
 }
 
 auto build_state_save(const std::filesystem::path &path,
-                      const BuildEntries &entries) -> void {
+                      const BuildState &entries) -> void {
   std::string buffer;
   buffer.resize(12);
   std::memcpy(buffer.data(), &STATE_MAGIC, sizeof(STATE_MAGIC));

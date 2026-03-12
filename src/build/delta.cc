@@ -92,7 +92,7 @@ declare_schema_targets(TargetMap &targets, const std::filesystem::path &output,
 enum class DirtyState : std::uint8_t { Unknown, Clean, Dirty };
 
 static auto is_dirty(const std::string &target_path, const TargetMap &targets,
-                     const BuildEntries &entries,
+                     const BuildState &entries,
                      const std::unordered_set<std::string> &force_dirty,
                      std::unordered_map<std::string, DirtyState> &cache)
     -> bool {
@@ -203,7 +203,7 @@ static auto collect_affected_directories(
   return result;
 }
 
-auto delta(const BuildType build_type, const BuildEntries &entries,
+auto delta(const BuildType build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,
            const std::string_view version,
            const std::string_view current_version,
