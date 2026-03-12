@@ -29,7 +29,7 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
-                           {.file_mark = now});
+                           {.file_mark = now, .dependencies = {}});
 
   original_entries.save(path);
 
@@ -51,7 +51,7 @@ TEST(Build_state, round_trip_with_file_mark) {
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
-                           {.file_mark = now});
+                           {.file_mark = now, .dependencies = {}});
 
   original_entries.save(path);
 
@@ -107,12 +107,13 @@ TEST(Build_state, round_trip_multiple_entries) {
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState original_entries;
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
-                           {.file_mark = now});
+                           {.file_mark = now, .dependencies = {}});
   original_entries.emplace(
       "/output/schemas/foo/%/dependencies.metapack",
       {.file_mark = now,
        .dependencies = {"/output/schemas/bar/%/schema.metapack"}});
-  original_entries.emplace("/output/configuration.json", {.file_mark = now});
+  original_entries.emplace("/output/configuration.json",
+                           {.file_mark = now, .dependencies = {}});
 
   original_entries.save(path);
 

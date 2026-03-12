@@ -180,22 +180,25 @@ TEST(Build_delta, full_single_schema) {
 TEST(Build_delta, incremental_changed_same_mtime) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -235,12 +238,14 @@ TEST(Build_delta, incremental_changed_same_mtime) {
 TEST(Build_delta, incremental_missing_schema_metapack) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "dependencies.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -358,50 +363,53 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
 TEST(Build_delta, incremental_one_schema_changed) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "dependencies.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "locations.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "positions.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "stats.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "bundle.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "health.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" /
                       "blaze-exhaustive.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "blaze-fast.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "editor.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "bar" / "%" / "dependents.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "schema-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
@@ -534,8 +542,10 @@ TEST(Build_delta, incremental_one_schema_changed) {
 TEST(Build_delta, incremental_removed_schema) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -578,7 +588,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   entries.emplace(output / "schemas" / "ghost" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -876,7 +886,8 @@ TEST(Build_delta, full_with_comment) {
 TEST(Build_delta, full_without_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "comment.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "comment.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -923,8 +934,10 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 TEST(Build_delta, incremental_with_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1044,9 +1057,12 @@ TEST(Build_delta, incremental_with_comment) {
 TEST(Build_delta, incremental_empty_comment_removes_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "comment.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "comment.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1165,19 +1181,22 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
 TEST(Build_delta, incremental_no_changes_adds_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1202,20 +1221,24 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
 TEST(Build_delta, incremental_no_changes_removes_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "comment.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "comment.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
@@ -1240,19 +1263,22 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
 TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
@@ -1279,19 +1305,22 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
@@ -1318,19 +1347,22 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 TEST(Build_delta, full_config_change_to_empty_schemas) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
@@ -1493,9 +1525,9 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
   sourcemeta::one::BuildState entries;
   entries.emplace(output / "schemas" / "foo" / "%" /
                       "blaze-exhaustive.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
@@ -1615,8 +1647,10 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
 TEST(Build_delta, incremental_evaluate_false) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -1723,25 +1757,28 @@ TEST(Build_delta, incremental_evaluate_false) {
 TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.forget(
       (output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack")
           .string());
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -1797,24 +1834,27 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
 TEST(Build_delta, incremental_missing_bundle) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.forget(
       (output / "schemas" / "foo" / "%" / "bundle.metapack").string());
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -1883,24 +1923,27 @@ TEST(Build_delta, incremental_missing_bundle) {
 TEST(Build_delta, incremental_missing_web_schema) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.forget(
       (output / "explorer" / "foo" / "%" / "schema-html.metapack").string());
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -1959,18 +2002,21 @@ TEST(Build_delta, incremental_missing_web_schema) {
 TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, false, MTIME(100));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -2005,22 +2051,25 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
 TEST(Build_delta, mtime_nothing_changed) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(50));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(50)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(50), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
@@ -2059,21 +2108,24 @@ TEST(Build_delta, mtime_nothing_changed) {
 TEST(Build_delta, mtime_source_newer) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(10));
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(50)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(50), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(50)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
@@ -2206,20 +2258,23 @@ TEST(Build_delta, mtime_source_newer) {
 TEST(Build_delta, mtime_no_entry) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(50)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(50), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
@@ -2352,20 +2407,23 @@ TEST(Build_delta, mtime_no_file_mark) {
   const std::filesystem::path output{"/output"};
 
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.forget(
       (output / "schemas" / "foo" / "%" / "schema.metapack").string());
   const sourcemeta::one::Resolver::Views schemas{
@@ -2483,16 +2541,18 @@ TEST(Build_delta, mtime_no_file_mark) {
 TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(
       output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
   entries.emplace(output / "explorer" / "a" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "b" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}}};
@@ -2686,7 +2746,8 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
 TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(
       output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
@@ -2696,12 +2757,13 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "b" / "%" / "schema.metapack"}});
   entries.emplace(output / "explorer" / "a" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "b" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "c" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
@@ -2971,20 +3033,22 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
 TEST(Build_delta, mtime_reverse_dep) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "a" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(10)});
+                  {.file_mark = MTIME(10), .dependencies = {}});
   entries.emplace(output / "schemas" / "b" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(50)});
+                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(
       output / "schemas" / "b" / "%" / "dependencies.metapack",
       {.file_mark = MTIME(100),
        .dependencies = {output / "schemas" / "a" / "%" / "schema.metapack"}});
   entries.emplace(output / "explorer" / "a" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "b" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(30)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(30)}}};
@@ -3172,13 +3236,15 @@ TEST(Build_delta, mtime_reverse_dep) {
 TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" /
                       "blaze-exhaustive.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3431,8 +3497,10 @@ TEST(Build_delta, headless_full_single_schema) {
 TEST(Build_delta, headless_incremental) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3532,19 +3600,22 @@ TEST(Build_delta, headless_incremental) {
 TEST(Build_delta, full_to_headless_removes_web) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "schema-html.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3657,8 +3728,10 @@ TEST(Build_delta, full_to_headless_removes_web) {
 TEST(Build_delta, headless_to_full_incremental) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
@@ -3775,42 +3848,45 @@ TEST(Build_delta, headless_to_full_incremental) {
 TEST(Build_delta, headless_to_full_full_rebuild) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "locations.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "positions.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "stats.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "bundle.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "health.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "editor.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" /
                       "blaze-exhaustive.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "schema.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "dependents.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed;
@@ -3928,14 +4004,16 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
 TEST(Build_delta, full_to_headless_full_rebuild) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "schema-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
@@ -4178,30 +4256,33 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
 
-  entries.emplace(output / "version.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "configuration.json", {.file_mark = MTIME(100)});
-  entries.emplace(output / "routes.bin", {.file_mark = MTIME(100)});
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "404.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "example" / "%" / "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "example" / "%" /
                       "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "example" / "schemas" / "%" /
                       "directory.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "example" / "schemas" / "%" /
                       "directory-html.metapack",
-                  {.file_mark = MTIME(100)});
+                  {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "example/schemas/a", true, true,
                      MTIME(100));
   ADD_SCHEMA_ENTRIES(entries, output, "example/schemas/b", true, true,
