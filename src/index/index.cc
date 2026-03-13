@@ -21,6 +21,7 @@
 #include <atomic>      // std::atomic
 #include <cassert>     // assert
 #include <chrono>      // std::chrono
+#include <cstdint>     // std::uint8_t
 #include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
