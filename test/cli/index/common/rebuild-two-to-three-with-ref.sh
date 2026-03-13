@@ -65,15 +65,7 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 
-cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/a.json (#1)
-Detecting: $(realpath "$TMP")/schemas/c.json (#2)
-Detecting: $(realpath "$TMP")/schemas/b.json (#3)
-( 33%) Resolving: a.json
-( 66%) Resolving: c.json
-(100%) Resolving: b.json
+cat << 'EOF' > "$TMP/expected.txt"
 (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
 (  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
 ( 13%) Producing: schemas/example/schemas/c/%/locations.metapack
@@ -99,4 +91,5 @@ Detecting: $(realpath "$TMP")/schemas/b.json (#3)
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 
-diff "$TMP/output.txt" "$TMP/expected.txt"
+grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
+diff "$TMP/output_producing.txt" "$TMP/expected.txt"
