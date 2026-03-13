@@ -1305,10 +1305,21 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 2);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 6);
 
-  EXPECT_ACTION(plan, 0, 0, 2, Remove, output / "explorer" / "foo", "");
-  EXPECT_ACTION(plan, 0, 1, 2, Remove, output / "schemas", "");
+  EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
+                output / "dependency-tree.metapack", "");
+  EXPECT_ACTION(plan, 0, 1, 3, DirectoryList,
+                output / "explorer" / "%" / "directory.metapack", "");
+  EXPECT_ACTION(plan, 0, 2, 3, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "");
+
+  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
+  EXPECT_ACTION(plan, 2, 1, 2, Remove, output / "schemas", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
@@ -1347,10 +1358,21 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 2);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 6);
 
-  EXPECT_ACTION(plan, 0, 0, 2, Remove, output / "explorer" / "foo", "");
-  EXPECT_ACTION(plan, 0, 1, 2, Remove, output / "schemas", "");
+  EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
+                output / "dependency-tree.metapack", "");
+  EXPECT_ACTION(plan, 0, 1, 3, DirectoryList,
+                output / "explorer" / "%" / "directory.metapack", "");
+  EXPECT_ACTION(plan, 0, 2, 3, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "");
+
+  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
+  EXPECT_ACTION(plan, 2, 1, 2, Remove, output / "schemas", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",

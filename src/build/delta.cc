@@ -462,7 +462,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   }
 
   const auto has_schema_work{is_full || !dirty_set.empty() ||
-                             !removed_uris.empty() || has_missing_web};
+                             !removed_uris.empty() || has_missing_web ||
+                             has_potential_stale};
 
   std::vector<std::filesystem::path> affected_relative_paths;
   if (has_schema_work) {
