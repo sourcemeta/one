@@ -108,31 +108,29 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  using Context = std::tuple<
-      std::reference_wrapper<const sourcemeta::one::Resolver>,
-      std::reference_wrapper<const sourcemeta::one::Configuration::Collection>,
-      std::filesystem::path>;
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::Build::Dependencies &dependencies,
-                      const sourcemeta::one::Build::DynamicCallback &callback,
-                      const Context &context) -> void {
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
+    const auto &resolver_entry{resolver.entry(action.data)};
     const auto schema{
-        sourcemeta::one::read_json_with_metadata(dependencies.front().get())};
+        sourcemeta::one::read_json_with_metadata(action.dependencies.front())};
     const auto id{sourcemeta::core::identify(
-        schema.data, [&callback, &context](const auto identifier) {
-          return std::get<0>(context).get()(identifier, callback);
+        schema.data, [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
         })};
     assert(!id.empty());
     auto result{sourcemeta::core::JSON::make_object()};
 
     result.assign("bytes", sourcemeta::core::JSON{schema.bytes});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
-    result.assign("path",
-                  sourcemeta::core::JSON{"/" + std::get<2>(context).string()});
+    result.assign("path", sourcemeta::core::JSON{
+                              "/" + resolver_entry.relative_path.string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
-        schema.data, [&callback, &context](const auto identifier) {
-          return std::get<0>(context).get()(identifier, callback);
+        schema.data, [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
         })};
     assert(base_dialect.has_value());
     result.assign("baseDialect",
@@ -157,8 +155,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       const auto *examples{schema.data.try_at("examples")};
       if (examples && examples->is_array() && !examples->empty()) {
         const auto vocabularies{sourcemeta::core::vocabularies(
-            [&callback, &context](const auto identifier) {
-              return std::get<0>(context).get()(identifier, callback);
+            [&callback, &resolver](const auto identifier) {
+              return resolver(identifier, callback);
             },
             base_dialect.value(), dialect)};
         const auto &walker_result{
@@ -179,15 +177,15 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{sourcemeta::one::read_json(dependencies.at(1).get())};
+    const auto health{sourcemeta::one::read_json(action.dependencies.at(1))};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::one::read_json(dependencies.at(2).get())};
+        sourcemeta::one::read_json(action.dependencies.at(2))};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
-    const auto &collection{std::get<1>(context).get()};
+    const auto &collection{*resolver_entry.collection};
 
     if (collection.extra.defines("x-sourcemeta-one:alert")) {
       assert(collection.extra.at("x-sourcemeta-one:alert").is_string());
@@ -204,13 +202,14 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("provenance", sourcemeta::core::JSON{nullptr});
     }
 
-    result.assign("breadcrumb", make_breadcrumb(std::get<2>(context), false));
+    result.assign("breadcrumb",
+                  make_breadcrumb(resolver_entry.relative_path, false));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_pretty_json(
-        destination, result, "application/json",
+        action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -218,17 +217,17 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 };
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
-  using Context = std::nullptr_t;
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::Build::Dependencies &dependencies,
-                      const sourcemeta::one::Build::DynamicCallback &,
-                      const Context &) -> void {
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
-    result.reserve(dependencies.size());
+    result.reserve(action.dependencies.size());
 
-    for (const auto &dependency : dependencies) {
-      auto metadata_json{sourcemeta::one::read_json(dependency.get())};
+    for (const auto &dependency : action.dependencies) {
+      auto metadata_json{sourcemeta::one::read_json(dependency)};
       if (!sourcemeta::core::is_schema(metadata_json)) {
         continue;
       }
@@ -270,9 +269,9 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_jsonl(
-        destination, result, "application/jsonl",
+        action.destination, result, "application/jsonl",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
         sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
@@ -282,92 +281,81 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  struct Context {
-    const std::filesystem::path &directory;
-    const sourcemeta::one::Configuration &configuration;
-    const sourcemeta::one::Build &output;
-    const std::filesystem::path &explorer_path;
-    const std::filesystem::path &schemas_path;
-  };
-
-  static auto handler(const std::filesystem::path &destination,
-                      const sourcemeta::one::Build::Dependencies &,
-                      const sourcemeta::one::Build::DynamicCallback &callback,
-                      const Context &context) -> void {
+  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    assert(
-        context.directory.string().starts_with(context.schemas_path.string()));
     auto entries{sourcemeta::core::JSON::make_array()};
-
     std::vector<sourcemeta::core::JSON::Integer> scores;
 
-    if (std::filesystem::exists(context.directory)) {
-      for (const auto &entry :
-           std::filesystem::directory_iterator{context.directory}) {
-        const auto entry_relative_path{entry.path().string().substr(
-            context.schemas_path.string().size() + 1)};
-        assert(!entry_relative_path.starts_with('/'));
+    const auto directory_path{action.destination.parent_path().parent_path()};
+    std::filesystem::path relative_path;
+    auto current{directory_path};
+    while (current.has_filename()) {
+      if (current.filename() == "explorer") {
+        relative_path = std::filesystem::relative(directory_path, current);
+        break;
+      }
 
-        const auto directory_metapack_path{context.explorer_path /
-                                           entry_relative_path / "%" /
-                                           "directory.metapack"};
+      current = current.parent_path();
+    }
 
-        if (entry.is_directory() && entry.path().filename() != "%" &&
-            std::filesystem::exists(directory_metapack_path) &&
-            !context.output.is_untracked_file(entry.path())) {
-          auto entry_json{sourcemeta::core::JSON::make_object()};
-          callback(directory_metapack_path);
-          auto directory_json{
-              sourcemeta::one::read_json(directory_metapack_path)};
-          assert(directory_json.is_object());
-          assert(directory_json.defines("health"));
-          assert(directory_json.at("health").is_integer());
-          scores.emplace_back(directory_json.at("health").to_integer());
-          entry_json.assign("health", directory_json.at("health"));
+    for (const auto &dependency : action.dependencies) {
+      const auto filename{dependency.filename().string()};
+      const auto child_name{
+          dependency.parent_path().parent_path().filename().string()};
 
-          entry_json.assign("name",
-                            sourcemeta::core::JSON{entry.path().filename()});
-          inflate_metadata(context.configuration, entry_relative_path,
-                           entry_json);
+      if (filename == "directory.metapack") {
+        auto directory_json{sourcemeta::one::read_json(dependency)};
+        assert(directory_json.is_object());
+        assert(directory_json.defines("health"));
+        assert(directory_json.at("health").is_integer());
+        scores.emplace_back(directory_json.at("health").to_integer());
 
-          entry_json.assign("type", sourcemeta::core::JSON{"directory"});
-          entry_json.assign(
-              "path", sourcemeta::core::JSON{
-                          entry.path().string().substr(
-                              context.schemas_path.string().size()) +
-                          // This is to distinguish links to a directory or to a
-                          // schema, in case both entries have the same name
-                          "/"});
-          entries.push_back(std::move(entry_json));
+        auto entry_json{sourcemeta::core::JSON::make_object()};
+        entry_json.assign("health", directory_json.at("health"));
+        entry_json.assign("name", sourcemeta::core::JSON{child_name});
+        entry_json.assign("type", sourcemeta::core::JSON{"directory"});
+        assert(directory_json.defines("path"));
+        entry_json.assign("path",
+                          sourcemeta::core::JSON{
+                              directory_json.at("path").to_string() + "/"});
+        if (directory_json.defines("title")) {
+          entry_json.assign("title", directory_json.at("title"));
         }
-
-        if (entry.is_directory() &&
-            std::filesystem::exists(entry.path() / "%" / "schema.metapack")) {
-          auto entry_json{sourcemeta::core::JSON::make_object()};
-          auto name{entry.path().filename()};
-          entry_json.assign("name", sourcemeta::core::JSON{std::move(name)});
-          auto schema_nav_path{context.explorer_path / entry_relative_path};
-          schema_nav_path /= "%";
-          schema_nav_path /= "schema.metapack";
-
-          auto nav{sourcemeta::one::read_json(schema_nav_path)};
-
-          entry_json.merge(nav.as_object());
-          assert(!entry_json.defines("entries"));
-          // No need to show these on children
-          entry_json.erase("breadcrumb");
-          entry_json.erase("examples");
-          entry_json.assign("type", sourcemeta::core::JSON{"schema"});
-
-          assert(entry_json.defines("path"));
-          std::filesystem::path url{entry_json.at("path").to_string()};
-          entry_json.at("path").into(sourcemeta::core::JSON{url});
-
-          assert(entry_json.defines("health"));
-          assert(entry_json.at("health").is_integer());
-          scores.emplace_back(entry_json.at("health").to_integer());
-          entries.push_back(std::move(entry_json));
+        if (directory_json.defines("description")) {
+          entry_json.assign("description", directory_json.at("description"));
         }
+        if (directory_json.defines("email")) {
+          entry_json.assign("email", directory_json.at("email"));
+        }
+        if (directory_json.defines("github")) {
+          entry_json.assign("github", directory_json.at("github"));
+        }
+        if (directory_json.defines("website")) {
+          entry_json.assign("website", directory_json.at("website"));
+        }
+        entries.push_back(std::move(entry_json));
+      } else if (filename == "schema.metapack") {
+        auto nav{sourcemeta::one::read_json(dependency)};
+        auto entry_json{sourcemeta::core::JSON::make_object()};
+        entry_json.assign("name", sourcemeta::core::JSON{child_name});
+        entry_json.merge(nav.as_object());
+        assert(!entry_json.defines("entries"));
+        entry_json.erase("breadcrumb");
+        entry_json.erase("examples");
+        entry_json.assign("type", sourcemeta::core::JSON{"schema"});
+
+        assert(entry_json.defines("path"));
+        std::filesystem::path url{entry_json.at("path").to_string()};
+        entry_json.at("path").into(sourcemeta::core::JSON{url});
+
+        assert(entry_json.defines("health"));
+        assert(entry_json.at("health").is_integer());
+        scores.emplace_back(entry_json.at("health").to_integer());
+        entries.push_back(std::move(entry_json));
       }
     }
 
@@ -385,7 +373,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       sort_keys.push_back({type, try_parse_version(name), name});
     }
 
-    // Sort indices so we can reorder the JSON array accordingly
     std::vector<std::size_t> indices(entries.size());
     for (std::size_t index = 0; index < indices.size(); index++) {
       indices[index] = index;
@@ -416,39 +403,37 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
     auto meta{sourcemeta::core::JSON::make_object()};
 
-    const auto page_key{
-        std::filesystem::relative(context.directory, context.schemas_path)};
-    inflate_metadata(context.configuration, page_key, meta);
+    inflate_metadata(configuration, relative_path, meta);
 
-    const auto accumulated_health =
-        static_cast<int>(std::lround(static_cast<double>(std::accumulate(
-                                         scores.cbegin(), scores.cend(), 0LL)) /
-                                     static_cast<double>(scores.size())));
-
-    meta.assign("health", sourcemeta::core::JSON{accumulated_health});
+    if (!scores.empty()) {
+      const auto accumulated_health = static_cast<int>(
+          std::lround(static_cast<double>(std::accumulate(scores.cbegin(),
+                                                          scores.cend(), 0LL)) /
+                      static_cast<double>(scores.size())));
+      meta.assign("health", sourcemeta::core::JSON{accumulated_health});
+    } else {
+      meta.assign("health", sourcemeta::core::JSON{0});
+    }
 
     meta.assign("entries", std::move(entries));
 
-    const std::filesystem::path relative_path{context.directory.string().substr(
-        std::min(context.schemas_path.string().size() + 1,
-                 context.directory.string().size()))};
-    meta.assign("path", sourcemeta::core::JSON{std::string{"/"} +
-                                               relative_path.string()});
-
-    if (relative_path.string().empty()) {
-      meta.assign("url", sourcemeta::core::JSON{context.configuration.url});
+    if (relative_path == ".") {
+      meta.assign("path", sourcemeta::core::JSON{"/"});
+      meta.assign("url", sourcemeta::core::JSON{configuration.url});
+      meta.assign("breadcrumb", make_breadcrumb(std::filesystem::path{}, true));
     } else {
-      meta.assign("url", sourcemeta::core::JSON{context.configuration.url +
-                                                "/" + relative_path.string()});
+      meta.assign("path", sourcemeta::core::JSON{std::string{"/"} +
+                                                 relative_path.string()});
+      meta.assign("url", sourcemeta::core::JSON{configuration.url + "/" +
+                                                relative_path.string()});
+      meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
     }
 
-    meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
     const auto timestamp_end{std::chrono::steady_clock::now()};
-
-    std::filesystem::create_directories(destination.parent_path());
+    std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::write_pretty_json(
-        destination, meta, "application/json", sourcemeta::one::Encoding::GZIP,
-        sourcemeta::core::JSON{nullptr},
+        action.destination, meta, "application/json",
+        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }

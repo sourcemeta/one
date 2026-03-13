@@ -9,6 +9,7 @@ target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::html)
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::configuration)
+target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::shared)
 
 sourcemeta_esbuild_bundle(

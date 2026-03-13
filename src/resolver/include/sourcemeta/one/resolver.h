@@ -7,9 +7,9 @@
 
 #include <sourcemeta/one/resolver_error.h>
 
-#include <filesystem>    // std::filesystem
-#include <functional>    // std::reference_wrapper
-#include <optional>      // std::optional
+#include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
+#include <functional> // std::function, std::reference_wrapper
+#include <optional>   // std::optional
 #include <shared_mutex>  // std::shared_mutex
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
@@ -41,25 +41,32 @@ public:
           std::reference_wrapper<const sourcemeta::core::JSON::String>,
           std::reference_wrapper<const sourcemeta::core::JSON::String>>;
 
-  auto cache_path(const sourcemeta::core::JSON::String &uri,
-                  const std::filesystem::path &path) -> void;
+  auto cache_path(std::string_view uri, const std::filesystem::path &path)
+      -> void;
+
+  struct Entry {
+    std::filesystem::path path;
+    // This is the collection name plus the final schema path component
+    std::filesystem::path relative_path;
+    std::filesystem::file_time_type mtime;
+    bool evaluate{true};
+    std::optional<std::filesystem::path> cache_path{};
+    sourcemeta::core::JSON::String dialect{};
+    sourcemeta::core::JSON::String original_identifier{};
+    const Configuration::Collection *collection{nullptr};
+  };
+
+  using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
 
   [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
   [[nodiscard]] auto end() const -> auto { return this->views.end(); }
   [[nodiscard]] auto size() const -> auto { return this->views.size(); }
+  [[nodiscard]] auto data() const -> const Views & { return this->views; }
 
-  struct Entry {
-    std::optional<std::filesystem::path> cache_path;
-    std::filesystem::path path;
-    sourcemeta::core::JSON::String dialect;
-    // This is the collection name plus the final schema path component
-    std::filesystem::path relative_path;
-    sourcemeta::core::JSON::String original_identifier;
-    std::reference_wrapper<const Configuration::Collection> collection;
-  };
+  [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
 private:
-  std::unordered_map<sourcemeta::core::JSON::String, Entry> views;
+  Views views;
   std::shared_mutex mutex;
 };
 

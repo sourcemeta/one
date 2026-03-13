@@ -29,13 +29,13 @@ auto make_hero(const sourcemeta::one::Configuration &configuration)
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_INDEX::handler(
-    const std::filesystem::path &destination,
-    const sourcemeta::one::Build::Dependencies &dependencies,
-    const sourcemeta::one::Build::DynamicCallback &,
-    const Context &configuration) -> void {
+    const sourcemeta::one::BuildPlan::Action &action,
+    const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
+    const sourcemeta::one::Configuration &configuration,
+    const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory{read_json(dependencies.front().get())};
+  const auto directory{read_json(action.dependencies.front())};
   const auto &canonical{directory.at("url").to_string()};
   const auto title{configuration.html->name + " Schemas"};
   const auto &description{configuration.html->description};
@@ -46,9 +46,9 @@ auto GENERATE_WEB_INDEX::handler(
                                   html::make_file_manager(directory));
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
-  std::filesystem::create_directories(destination.parent_path());
-  write_text(destination, html_content.str(), "text/html", Encoding::GZIP,
-             sourcemeta::core::JSON{nullptr},
+  std::filesystem::create_directories(action.destination.parent_path());
+  write_text(action.destination, html_content.str(), "text/html",
+             Encoding::GZIP, sourcemeta::core::JSON{nullptr},
              std::chrono::duration_cast<std::chrono::milliseconds>(
                  timestamp_end - timestamp_start));
 }

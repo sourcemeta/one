@@ -49,19 +49,30 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 https://example.com/foo => https://sourcemeta.com/example/schemas/foo
-(100%) Ingesting: https://sourcemeta.com/example/schemas/foo
-(100%) Analysing: https://sourcemeta.com/example/schemas/foo
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/example/schemas/foo
-(  0%) Producing: explorer
-( 33%) Producing: example/schemas
-( 66%) Producing: example
-(100%) Producing: .
-( 25%) Rendering: example/schemas
-( 50%) Rendering: example
-( 75%) Rendering: .
-(100%) Rendering: example/schemas/foo
+(  4%) Producing: configuration.json
+(  8%) Producing: version.json
+( 12%) Producing: explorer/%/404.metapack
+( 16%) Producing: schemas/example/schemas/foo/%/schema.metapack
+( 20%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
+( 24%) Producing: schemas/example/schemas/foo/%/locations.metapack
+( 28%) Producing: schemas/example/schemas/foo/%/positions.metapack
+( 32%) Producing: schemas/example/schemas/foo/%/stats.metapack
+( 36%) Producing: dependency-tree.metapack
+( 40%) Producing: schemas/example/schemas/foo/%/bundle.metapack
+( 44%) Producing: schemas/example/schemas/foo/%/health.metapack
+( 48%) Producing: explorer/example/schemas/foo/%/schema.metapack
+( 52%) Producing: schemas/example/schemas/foo/%/blaze-exhaustive.metapack
+( 56%) Producing: schemas/example/schemas/foo/%/blaze-fast.metapack
+( 60%) Producing: schemas/example/schemas/foo/%/dependents.metapack
+( 64%) Producing: schemas/example/schemas/foo/%/editor.metapack
+( 68%) Producing: explorer/%/search.metapack
+( 72%) Producing: explorer/example/schemas/%/directory.metapack
+( 76%) Producing: explorer/example/schemas/foo/%/schema-html.metapack
+( 80%) Producing: explorer/example/%/directory.metapack
+( 84%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 88%) Producing: explorer/%/directory.metapack
+( 92%) Producing: explorer/example/%/directory-html.metapack
+( 96%) Producing: explorer/%/directory-html.metapack
+(100%) Producing: routes.bin
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

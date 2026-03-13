@@ -46,18 +46,29 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-(100%) Ingesting: https://sourcemeta.com/schemas/test
-(100%) Analysing: https://sourcemeta.com/schemas/test
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/schemas/test
-(  0%) Producing: explorer
-( 50%) Producing: schemas
-(100%) Producing: .
-( 33%) Rendering: schemas
-( 66%) Rendering: .
-(100%) Rendering: schemas/test
+(  4%) Producing: configuration.json
+(  8%) Producing: version.json
+( 13%) Producing: explorer/%/404.metapack
+( 17%) Producing: schemas/schemas/test/%/schema.metapack
+( 21%) Producing: schemas/schemas/test/%/dependencies.metapack
+( 26%) Producing: schemas/schemas/test/%/locations.metapack
+( 30%) Producing: schemas/schemas/test/%/positions.metapack
+( 34%) Producing: schemas/schemas/test/%/stats.metapack
+( 39%) Producing: dependency-tree.metapack
+( 43%) Producing: schemas/schemas/test/%/bundle.metapack
+( 47%) Producing: schemas/schemas/test/%/health.metapack
+( 52%) Producing: explorer/schemas/test/%/schema.metapack
+( 56%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
+( 60%) Producing: schemas/schemas/test/%/blaze-fast.metapack
+( 65%) Producing: schemas/schemas/test/%/dependents.metapack
+( 69%) Producing: schemas/schemas/test/%/editor.metapack
+( 73%) Producing: explorer/%/search.metapack
+( 78%) Producing: explorer/schemas/%/directory.metapack
+( 82%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 86%) Producing: explorer/%/directory.metapack
+( 91%) Producing: explorer/schemas/%/directory-html.metapack
+( 95%) Producing: explorer/%/directory-html.metapack
+(100%) Producing: routes.bin
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -112,14 +123,8 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(100%) Producing: .
-(100%) Rendering: .
-(skip) Rendering: . [not-found]
-(skip) Producing: routes.bin [routes]
+( 50%) Disposing: explorer/schemas
+(100%) Disposing: schemas
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

@@ -36,12 +36,14 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(100%) Producing: .
-(100%) Rendering: .
+( 12%) Producing: configuration.json
+( 25%) Producing: version.json
+( 37%) Producing: dependency-tree.metapack
+( 50%) Producing: explorer/%/404.metapack
+( 62%) Producing: explorer/%/directory.metapack
+( 75%) Producing: explorer/%/search.metapack
+( 87%) Producing: explorer/%/directory-html.metapack
+(100%) Producing: routes.bin
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -82,20 +84,25 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-(100%) Ingesting: https://sourcemeta.com/schemas/test
-(100%) Analysing: https://sourcemeta.com/schemas/test
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(100%) Reviewing: schemas
-(100%) Reworking: https://sourcemeta.com/schemas/test
-(  0%) Producing: explorer
-( 50%) Producing: schemas
-(100%) Producing: .
-( 33%) Rendering: schemas
-( 66%) Rendering: .
-(skip) Rendering: . [not-found]
-(100%) Rendering: schemas/test
-(skip) Producing: routes.bin [routes]
+(  5%) Producing: schemas/schemas/test/%/schema.metapack
+( 10%) Producing: schemas/schemas/test/%/dependencies.metapack
+( 15%) Producing: schemas/schemas/test/%/locations.metapack
+( 21%) Producing: schemas/schemas/test/%/positions.metapack
+( 26%) Producing: schemas/schemas/test/%/stats.metapack
+( 31%) Producing: dependency-tree.metapack
+( 36%) Producing: schemas/schemas/test/%/bundle.metapack
+( 42%) Producing: schemas/schemas/test/%/health.metapack
+( 47%) Producing: explorer/schemas/test/%/schema.metapack
+( 52%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
+( 57%) Producing: schemas/schemas/test/%/blaze-fast.metapack
+( 63%) Producing: schemas/schemas/test/%/dependents.metapack
+( 68%) Producing: schemas/schemas/test/%/editor.metapack
+( 73%) Producing: explorer/%/search.metapack
+( 78%) Producing: explorer/schemas/%/directory.metapack
+( 84%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 89%) Producing: explorer/%/directory.metapack
+( 94%) Producing: explorer/schemas/%/directory-html.metapack
+(100%) Producing: explorer/%/directory-html.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

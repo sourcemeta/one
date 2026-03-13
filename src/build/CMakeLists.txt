@@ -1,5 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME build
-  SOURCES build.cc build_state.h)
+  PRIVATE_HEADERS state.h
+  SOURCES delta.cc state.cc)
 target_link_libraries(sourcemeta_one_build
-  PUBLIC sourcemeta::core::json
-  PRIVATE sourcemeta::core::jsonschema sourcemeta::core::io)
+  PUBLIC sourcemeta::core::json sourcemeta::one::resolver
+  PRIVATE sourcemeta::core::io)

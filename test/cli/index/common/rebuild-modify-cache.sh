@@ -63,41 +63,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 (100%) Resolving: a.json
-(100%) Ingesting: https://sourcemeta.com/example/schemas/a
-(skip) Ingesting: https://sourcemeta.com/example/schemas/a [materialise]
-(100%) Analysing: https://sourcemeta.com/example/schemas/a
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [positions]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [locations]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [dependencies]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [stats]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [health]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [bundle]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [editor]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-exhaustive]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [blaze-fast]
-(skip) Analysing: https://sourcemeta.com/example/schemas/a [metadata]
-( 33%) Reviewing: schemas
-( 66%) Reviewing: schemas
-(skip) Reviewing: schemas [dependencies]
-(100%) Reviewing: schemas
-(  0%) Producing: explorer
-(skip) Producing: explorer [search]
-( 33%) Producing: example/schemas
-(skip) Producing: example/schemas [directory]
-( 66%) Producing: example
-(skip) Producing: example [directory]
-(100%) Producing: .
-(skip) Producing: . [directory]
-( 25%) Rendering: example/schemas
-(skip) Rendering: example/schemas [directory]
-( 50%) Rendering: example
-(skip) Rendering: example [directory]
-( 75%) Rendering: .
-(skip) Rendering: . [index]
-(skip) Rendering: . [not-found]
-(100%) Rendering: example/schemas/a
-(skip) Rendering: example/schemas/a [schema]
-(skip) Producing: routes.bin [routes]
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
