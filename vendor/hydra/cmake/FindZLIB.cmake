@@ -64,6 +64,12 @@ if(NOT ZLIB_FOUND)
         -fno-math-errno
         -fwrapv)
     endif()
+
+    # Disable LTO for zlib to work around GCC LTO linker plugin not
+    # properly rescanning this archive for transitive dependencies
+    if(HYDRA_COMPILER_GCC)
+      target_compile_options(zlib PRIVATE -fno-lto)
+    endif()
   endif()
 
   target_include_directories(zlib PUBLIC
