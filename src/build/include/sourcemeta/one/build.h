@@ -10,7 +10,7 @@
 
 #include <sourcemeta/one/build_state.h>
 
-#include <cstdint>     // std::uint8_t
+#include <cstdint>     // std::uint8_t, std::size_t
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::function
 #include <string_view> // std::string_view
