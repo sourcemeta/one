@@ -1,6 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME yaml
   PRIVATE_HEADERS error.h
-  SOURCES yaml.cc lexer.h parser.h)
+  SOURCES yaml.cc lexer.h parser.h stringify.h)
 
 if(SOURCEMETA_CORE_INSTALL)
   sourcemeta_library_install(NAMESPACE sourcemeta PROJECT core NAME yaml)

@@ -13,6 +13,7 @@
 
 #include <filesystem> // std::filesystem
 #include <istream>    // std::basic_istream
+#include <ostream>    // std::basic_ostream
 
 /// @defgroup yaml YAML
 /// @brief A YAML parser that converts YAML to JSON.
@@ -108,6 +109,25 @@ auto read_yaml(const std::filesystem::path &path,
 SOURCEMETA_CORE_YAML_EXPORT
 auto read_yaml_or_json(const std::filesystem::path &path,
                        const JSON::ParseCallback &callback = nullptr) -> JSON;
+
+/// @ingroup yaml
+///
+/// Stringify a JSON document as YAML. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/json.h>
+/// #include <sourcemeta/core/yaml.h>
+///
+/// #include <iostream>
+///
+/// const sourcemeta::core::JSON document =
+///   sourcemeta::core::parse_json(R"JSON({ "foo": "bar" })JSON");
+/// sourcemeta::core::stringify_yaml(document, std::cout);
+/// ```
+SOURCEMETA_CORE_YAML_EXPORT
+auto stringify_yaml(const JSON &document,
+                    std::basic_ostream<JSON::Char, JSON::CharTraits> &stream)
+    -> void;
 
 } // namespace sourcemeta::core
 

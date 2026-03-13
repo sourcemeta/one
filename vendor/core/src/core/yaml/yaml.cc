@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "parser.h"
+#include "stringify.h"
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json_error.h>
@@ -68,6 +69,12 @@ auto read_yaml_or_json(const std::filesystem::path &path,
   } catch (const JSONParseError &) {
     return read_yaml(path, callback);
   }
+}
+
+auto stringify_yaml(const JSON &document,
+                    std::basic_ostream<JSON::Char, JSON::CharTraits> &stream)
+    -> void {
+  yaml::stringify_yaml<JSON::Allocator>(document, stream);
 }
 
 } // namespace sourcemeta::core
