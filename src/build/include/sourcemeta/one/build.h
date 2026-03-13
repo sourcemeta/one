@@ -65,6 +65,35 @@ struct BuildPlan {
 
 using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 
+// Per-schema targets
+//
+// - Materialise: S/schema <- source, configuration.json
+// - Positions: S/positions <- S/schema
+// - Locations: S/locations <- S/schema
+// - Dependencies: S/dependencies <- S/schema
+// - Stats: S/stats <- S/schema
+// - Health: S/health <- S/schema, S/dependencies
+// - Bundle: S/bundle <- S/schema, S/dependencies
+// - Editor: S/editor <- S/bundle
+// - BlazeExhaustive: S/blaze-exhaustive <- S/bundle
+// - BlazeFast: S/blaze-fast <- S/bundle
+// - SchemaMetadata: E/schema <- S/schema,
+//                               S/health,
+//                               S/dependencies
+// - Dependents: S/dependents <- dependency-tree
+// - WebSchema: E/schema-html <- E/schema,
+//                               S/dependencies,
+//                               S/health,
+//                               S/dependents
+// - DirectoryList: E/directory <- its schema and directory entries
+// - WebDirectory: E/directory-html <- E/directory
+// - WebNotFound: E/404 <- configuration.json
+// - Routes: <- configuration.json
+//
+// Aggregates:
+//
+// - DependencyTree: dependency-tree <- ALL S/dependencies
+// - SearchIndex: explorer/%/search <- ALL E/schema
 SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildPlan::Type build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,

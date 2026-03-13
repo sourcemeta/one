@@ -123,7 +123,11 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 50%) Disposing: explorer/schemas
+( 16%) Producing: dependency-tree.metapack
+( 33%) Producing: explorer/%/directory.metapack
+( 50%) Producing: explorer/%/search.metapack
+( 66%) Producing: explorer/%/directory-html.metapack
+( 83%) Disposing: explorer/schemas
 (100%) Disposing: schemas
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
