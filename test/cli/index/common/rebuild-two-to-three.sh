@@ -63,27 +63,34 @@ EOF
 remove_threads_information "$TMP/output.txt"
 grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
+# TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
+# WebSchema to rebuild because dependency-tree.metapack is a global
+# aggregate bottleneck. Ideally only the affected schemas would rebuild.
 cat << 'EOF' > "$TMP/expected.txt"
 (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
-(  9%) Producing: schemas/example/schemas/c/%/dependencies.metapack
-( 14%) Producing: schemas/example/schemas/c/%/locations.metapack
-( 19%) Producing: schemas/example/schemas/c/%/positions.metapack
-( 23%) Producing: schemas/example/schemas/c/%/stats.metapack
-( 28%) Producing: dependency-tree.metapack
-( 33%) Producing: schemas/example/schemas/c/%/bundle.metapack
-( 38%) Producing: schemas/example/schemas/c/%/health.metapack
-( 42%) Producing: explorer/example/schemas/c/%/schema.metapack
-( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+(  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+( 12%) Producing: schemas/example/schemas/c/%/locations.metapack
+( 16%) Producing: schemas/example/schemas/c/%/positions.metapack
+( 20%) Producing: schemas/example/schemas/c/%/stats.metapack
+( 24%) Producing: dependency-tree.metapack
+( 28%) Producing: schemas/example/schemas/c/%/bundle.metapack
+( 32%) Producing: schemas/example/schemas/c/%/health.metapack
+( 36%) Producing: explorer/example/schemas/c/%/schema.metapack
+( 40%) Producing: schemas/example/schemas/a/%/dependents.metapack
+( 44%) Producing: schemas/example/schemas/b/%/dependents.metapack
+( 48%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
 ( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-( 57%) Producing: schemas/example/schemas/c/%/dependents.metapack
-( 61%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 66%) Producing: explorer/%/search.metapack
-( 71%) Producing: explorer/example/schemas/%/directory.metapack
-( 76%) Producing: explorer/example/schemas/c/%/schema-html.metapack
-( 80%) Producing: explorer/example/%/directory.metapack
-( 85%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 90%) Producing: explorer/%/directory.metapack
-( 95%) Producing: explorer/example/%/directory-html.metapack
+( 56%) Producing: schemas/example/schemas/c/%/dependents.metapack
+( 60%) Producing: schemas/example/schemas/c/%/editor.metapack
+( 64%) Producing: explorer/%/search.metapack
+( 68%) Producing: explorer/example/schemas/%/directory.metapack
+( 72%) Producing: explorer/example/schemas/a/%/schema-html.metapack
+( 76%) Producing: explorer/example/schemas/b/%/schema-html.metapack
+( 80%) Producing: explorer/example/schemas/c/%/schema-html.metapack
+( 84%) Producing: explorer/example/%/directory.metapack
+( 88%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 92%) Producing: explorer/%/directory.metapack
+( 96%) Producing: explorer/example/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 

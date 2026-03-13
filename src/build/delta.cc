@@ -508,43 +508,20 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       dirty_set.insert(destination.string());
     }
 
-    std::unordered_set<std::string> graph_affected_schemas;
-
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
-      if (!entries.contains((schema_base_path(output, info.relative_path) /
-                             ROOT_RULE.filename)
-                                .native())) {
-        graph_affected_schemas.insert(
-            schema_base_path(output, info.relative_path).string());
-        for (const auto &ref_uri : info.references) {
-          const auto ref_match{schemas.find(ref_uri)};
-          if (ref_match != schemas.end() && !removed_uris.contains(ref_uri)) {
-            graph_affected_schemas.insert(
-                schema_base_path(output, ref_match->second.relative_path)
-                    .string());
-          }
-        }
-      }
-    }
-
-    for (const auto &uri : removed_uris) {
-      const auto match{schemas.find(uri)};
-      if (match == schemas.end()) {
-        continue;
-      }
-
-      graph_affected_schemas.insert(
-          schema_base_path(output, match->second.relative_path).string());
-      for (const auto &ref_uri : match->second.references) {
-        const auto ref_match{schemas.find(ref_uri)};
-        if (ref_match != schemas.end() && !removed_uris.contains(ref_uri)) {
-          graph_affected_schemas.insert(
-              schema_base_path(output, ref_match->second.relative_path)
-                  .string());
+    // TODO: This is a coarse boolean that forces ALL dependents and
+    // WebSchema to rebuild whenever any schema is added or removed.
+    // Ideally we would narrow this to only the affected schemas, but
+    // dependency-tree.metapack is a global aggregate, so any change
+    // fans out to every dependent. Fixing this requires content-based
+    // dirty checking or breaking the global bottleneck.
+    auto has_graph_change{!removed_uris.empty()};
+    if (!has_graph_change) {
+      for (const auto &[uri, info] : schemas) {
+        if (!entries.contains((schema_base_path(output, info.relative_path) /
+                               ROOT_RULE.filename)
+                                  .native())) {
+          has_graph_change = true;
+          break;
         }
       }
     }
@@ -576,10 +553,9 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         auto should_force{is_full || schema_is_dirty ||
                           !entries.contains(target_path_string)};
 
-        if (!should_force &&
+        if (!should_force && has_graph_change &&
             (rule.dirty == DirtyOverride::ForceOnGraphChange ||
-             rule.dirty == DirtyOverride::ForceIfAffected) &&
-            graph_affected_schemas.contains(schema_base.string())) {
+             rule.dirty == DirtyOverride::ForceIfAffected)) {
           should_force = true;
         }
 
