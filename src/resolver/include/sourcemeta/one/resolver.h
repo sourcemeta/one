@@ -14,7 +14,6 @@
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::pair
-#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -55,7 +54,6 @@ public:
     sourcemeta::core::JSON::String dialect{};
     sourcemeta::core::JSON::String original_identifier{};
     const Configuration::Collection *collection{nullptr};
-    std::vector<sourcemeta::core::JSON::String> references{};
   };
 
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
