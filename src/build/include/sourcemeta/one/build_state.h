@@ -53,7 +53,7 @@ public:
     result.dependencies = std::move(dependencies);
   }
 
-  auto forget(const Container::key_type &key) -> void { this->data.erase(key); }
+  auto forget(const Container::key_type &key) -> void;
 
   [[nodiscard]] auto begin() const -> Container::const_iterator {
     return this->data.begin();

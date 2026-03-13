@@ -107,25 +107,29 @@ Detecting: $(realpath "$TMP")/schemas-right-a/s3.json (#5)
 ( 80%) Resolving: s4.json
 (100%) Resolving: s3.json
 (  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
-(  9%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
-( 14%) Producing: schemas/left/left-a/s5/%/locations.metapack
-( 19%) Producing: schemas/left/left-a/s5/%/positions.metapack
-( 23%) Producing: schemas/left/left-a/s5/%/stats.metapack
-( 28%) Producing: dependency-tree.metapack
-( 33%) Producing: schemas/left/left-a/s5/%/bundle.metapack
-( 38%) Producing: schemas/left/left-a/s5/%/health.metapack
-( 42%) Producing: explorer/left/left-a/s5/%/schema.metapack
-( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
-( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
-( 57%) Producing: schemas/left/left-a/s5/%/dependents.metapack
-( 61%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 66%) Producing: explorer/%/search.metapack
-( 71%) Producing: explorer/left/left-a/%/directory.metapack
-( 76%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 80%) Producing: explorer/left/%/directory.metapack
-( 85%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 90%) Producing: explorer/%/directory.metapack
-( 95%) Producing: explorer/left/%/directory-html.metapack
+(  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+( 12%) Producing: schemas/left/left-a/s5/%/locations.metapack
+( 16%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 20%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 24%) Producing: dependency-tree.metapack
+( 28%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 32%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 36%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 40%) Producing: schemas/left/left-a/s1/%/dependents.metapack
+( 44%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 48%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 52%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+( 56%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 60%) Producing: schemas/left/left-b/s2/%/dependents.metapack
+( 64%) Producing: schemas/right/right-a/s3/%/dependents.metapack
+( 68%) Producing: schemas/right/right-b/s4/%/dependents.metapack
+( 72%) Producing: explorer/%/search.metapack
+( 76%) Producing: explorer/left/left-a/%/directory.metapack
+( 80%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 84%) Producing: explorer/left/%/directory.metapack
+( 88%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 92%) Producing: explorer/%/directory.metapack
+( 96%) Producing: explorer/left/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 
@@ -143,25 +147,29 @@ Detecting: $(realpath "$TMP")/schemas-left-a/s5.json (#5)
 ( 80%) Resolving: s1.json
 (100%) Resolving: s5.json
 (  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
-(  9%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
-( 14%) Producing: schemas/left/left-a/s5/%/locations.metapack
-( 19%) Producing: schemas/left/left-a/s5/%/positions.metapack
-( 23%) Producing: schemas/left/left-a/s5/%/stats.metapack
-( 28%) Producing: dependency-tree.metapack
-( 33%) Producing: schemas/left/left-a/s5/%/bundle.metapack
-( 38%) Producing: schemas/left/left-a/s5/%/health.metapack
-( 42%) Producing: explorer/left/left-a/s5/%/schema.metapack
-( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
-( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
-( 57%) Producing: schemas/left/left-a/s5/%/dependents.metapack
-( 61%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 66%) Producing: explorer/%/search.metapack
-( 71%) Producing: explorer/left/left-a/%/directory.metapack
-( 76%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 80%) Producing: explorer/left/%/directory.metapack
-( 85%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 90%) Producing: explorer/%/directory.metapack
-( 95%) Producing: explorer/left/%/directory-html.metapack
+(  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+( 12%) Producing: schemas/left/left-a/s5/%/locations.metapack
+( 16%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 20%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 24%) Producing: dependency-tree.metapack
+( 28%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 32%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 36%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 40%) Producing: schemas/left/left-a/s1/%/dependents.metapack
+( 44%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 48%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 52%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+( 56%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 60%) Producing: schemas/left/left-b/s2/%/dependents.metapack
+( 64%) Producing: schemas/right/right-a/s3/%/dependents.metapack
+( 68%) Producing: schemas/right/right-b/s4/%/dependents.metapack
+( 72%) Producing: explorer/%/search.metapack
+( 76%) Producing: explorer/left/left-a/%/directory.metapack
+( 80%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 84%) Producing: explorer/left/%/directory.metapack
+( 88%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 92%) Producing: explorer/%/directory.metapack
+( 96%) Producing: explorer/left/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 

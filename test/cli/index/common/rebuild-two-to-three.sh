@@ -72,24 +72,26 @@ Detecting: $(realpath "$TMP")/schemas/b.json (#3)
 ( 66%) Resolving: c.json
 (100%) Resolving: b.json
 (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
-(  9%) Producing: schemas/example/schemas/c/%/dependencies.metapack
-( 14%) Producing: schemas/example/schemas/c/%/locations.metapack
-( 19%) Producing: schemas/example/schemas/c/%/positions.metapack
-( 23%) Producing: schemas/example/schemas/c/%/stats.metapack
-( 28%) Producing: dependency-tree.metapack
-( 33%) Producing: schemas/example/schemas/c/%/bundle.metapack
-( 38%) Producing: schemas/example/schemas/c/%/health.metapack
-( 42%) Producing: explorer/example/schemas/c/%/schema.metapack
-( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
-( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-( 57%) Producing: schemas/example/schemas/c/%/dependents.metapack
-( 61%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 66%) Producing: explorer/%/search.metapack
-( 71%) Producing: explorer/example/schemas/%/directory.metapack
-( 76%) Producing: explorer/example/schemas/c/%/schema-html.metapack
-( 80%) Producing: explorer/example/%/directory.metapack
-( 85%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 90%) Producing: explorer/%/directory.metapack
+(  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+( 13%) Producing: schemas/example/schemas/c/%/locations.metapack
+( 17%) Producing: schemas/example/schemas/c/%/positions.metapack
+( 21%) Producing: schemas/example/schemas/c/%/stats.metapack
+( 26%) Producing: dependency-tree.metapack
+( 30%) Producing: schemas/example/schemas/c/%/bundle.metapack
+( 34%) Producing: schemas/example/schemas/c/%/health.metapack
+( 39%) Producing: explorer/example/schemas/c/%/schema.metapack
+( 43%) Producing: schemas/example/schemas/a/%/dependents.metapack
+( 47%) Producing: schemas/example/schemas/b/%/dependents.metapack
+( 52%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+( 56%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+( 60%) Producing: schemas/example/schemas/c/%/dependents.metapack
+( 65%) Producing: schemas/example/schemas/c/%/editor.metapack
+( 69%) Producing: explorer/%/search.metapack
+( 73%) Producing: explorer/example/schemas/%/directory.metapack
+( 78%) Producing: explorer/example/schemas/c/%/schema-html.metapack
+( 82%) Producing: explorer/example/%/directory.metapack
+( 86%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 91%) Producing: explorer/%/directory.metapack
 ( 95%) Producing: explorer/example/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
 EOF

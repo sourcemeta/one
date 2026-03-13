@@ -106,6 +106,17 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
   }
 }
 
+auto BuildState::forget(const Container::key_type &key) -> void {
+  const auto child_prefix{key + "/"};
+  for (auto iterator = this->data.begin(); iterator != this->data.end();) {
+    if (iterator->first == key || iterator->first.starts_with(child_prefix)) {
+      iterator = this->data.erase(iterator);
+    } else {
+      ++iterator;
+    }
+  }
+}
+
 auto BuildState::save(const std::filesystem::path &path) const -> void {
   std::string buffer;
   buffer.resize(12);

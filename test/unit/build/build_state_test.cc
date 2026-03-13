@@ -130,3 +130,28 @@ TEST(Build_state, round_trip_multiple_entries) {
   EXPECT_NE(dependencies_entry, nullptr);
   EXPECT_EQ(dependencies_entry->dependencies.size(), 1);
 }
+
+TEST(Build_state, forget_removes_children) {
+  const auto now{std::filesystem::file_time_type::clock::now()};
+  sourcemeta::one::BuildState entries;
+  entries.emplace("/output/schemas/foo/%/schema.metapack",
+                  {.file_mark = now, .dependencies = {}});
+  entries.emplace("/output/schemas/foo/%/dependencies.metapack",
+                  {.file_mark = now, .dependencies = {}});
+  entries.emplace("/output/schemas/foo/%/locations.metapack",
+                  {.file_mark = now, .dependencies = {}});
+  entries.emplace("/output/schemas/bar/%/schema.metapack",
+                  {.file_mark = now, .dependencies = {}});
+  entries.emplace("/output/configuration.json",
+                  {.file_mark = now, .dependencies = {}});
+  EXPECT_EQ(entries.size(), 5);
+
+  entries.forget("/output/schemas/foo/%");
+
+  EXPECT_EQ(entries.size(), 2);
+  EXPECT_FALSE(entries.contains("/output/schemas/foo/%/schema.metapack"));
+  EXPECT_FALSE(entries.contains("/output/schemas/foo/%/dependencies.metapack"));
+  EXPECT_FALSE(entries.contains("/output/schemas/foo/%/locations.metapack"));
+  EXPECT_TRUE(entries.contains("/output/schemas/bar/%/schema.metapack"));
+  EXPECT_TRUE(entries.contains("/output/configuration.json"));
+}
