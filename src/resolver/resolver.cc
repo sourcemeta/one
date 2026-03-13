@@ -5,11 +5,13 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm> // std::transform
-#include <cassert>   // assert
-#include <cctype>    // std::tolower
-#include <mutex>     // std::mutex, std::lock_guard
-#include <string>    // std::string
+#include <algorithm>  // std::transform
+#include <cassert>    // assert
+#include <cctype>     // std::tolower
+#include <functional> // std::function
+#include <mutex>      // std::mutex, std::lock_guard
+#include <string>     // std::string
+#include <vector>     // std::vector
 
 static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::JSON::String &uri,
@@ -92,6 +94,55 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   }
 
   schema.assign(keyword, sourcemeta::core::JSON{value.recompose()});
+}
+
+static auto
+collect_references(const sourcemeta::core::JSON &schema,
+                   const sourcemeta::core::JSON::String &identifier,
+                   const sourcemeta::one::Configuration::Collection &collection,
+                   const sourcemeta::core::JSON::String &server_url,
+                   const std::filesystem::path &collection_relative_path)
+    -> std::vector<sourcemeta::core::JSON::String> {
+  std::vector<sourcemeta::core::JSON::String> result;
+  if (!schema.is_object()) {
+    return result;
+  }
+
+  std::function<void(const sourcemeta::core::JSON &)> walk;
+  walk = [&](const sourcemeta::core::JSON &value) {
+    if (value.is_object()) {
+      for (const auto &property : value.as_object()) {
+        if (property.second.is_string() &&
+            (property.first == "$ref" || property.first == "$dynamicRef" ||
+             property.first == "$recursiveRef")) {
+          const auto &ref_string{property.second.to_string()};
+          if (!ref_string.starts_with('#')) {
+            sourcemeta::core::URI ref_uri{ref_string};
+            if (ref_uri.is_relative()) {
+              ref_uri.resolve_from(sourcemeta::core::URI{identifier});
+            }
+            ref_uri.canonicalize();
+            auto resolved{ref_uri.recompose()};
+            const auto hash_pos{resolved.find('#')};
+            if (hash_pos != std::string::npos) {
+              resolved.resize(hash_pos);
+            }
+            auto normalized{normalise_identifier(resolved)};
+            result.emplace_back(rebase(collection, normalized, server_url,
+                                       collection_relative_path));
+          }
+        }
+
+        walk(property.second);
+      }
+    } else if (value.is_array()) {
+      for (const auto &element : value.as_array()) {
+        walk(element);
+      }
+    }
+  };
+  walk(schema);
+  return result;
 }
 
 namespace sourcemeta::one {
@@ -316,6 +367,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
       !collection.extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
       collection.extra.at("x-sourcemeta-one:evaluate").to_boolean()};
 
+  auto schema_references{collect_references(
+      schema, identifier, collection, server_url, collection_relative_path)};
+
   std::unique_lock lock{this->mutex};
   auto result{this->views.emplace(
       new_identifier,
@@ -328,7 +382,8 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
             .cache_path = std::nullopt,
             .dialect = std::move(current_dialect),
             .original_identifier = identifier,
-            .collection = &collection})};
+            .collection = &collection,
+            .references = std::move(schema_references)})};
   lock.unlock();
   if (!result.second && result.first->second.path != path) {
     throw sourcemeta::core::SchemaFrameError(

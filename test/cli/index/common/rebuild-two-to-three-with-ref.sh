@@ -64,6 +64,7 @@ cat << 'EOF' > "$TMP/schemas/c.json"
 EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
+grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 cat << 'EOF' > "$TMP/expected.txt"
 (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
@@ -76,13 +77,13 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 34%) Producing: schemas/example/schemas/c/%/health.metapack
 ( 39%) Producing: explorer/example/schemas/c/%/schema.metapack
 ( 43%) Producing: schemas/example/schemas/a/%/dependents.metapack
-( 47%) Producing: schemas/example/schemas/b/%/dependents.metapack
-( 52%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
-( 56%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-( 60%) Producing: schemas/example/schemas/c/%/dependents.metapack
-( 65%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 69%) Producing: explorer/%/search.metapack
-( 73%) Producing: explorer/example/schemas/%/directory.metapack
+( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+( 56%) Producing: schemas/example/schemas/c/%/dependents.metapack
+( 60%) Producing: schemas/example/schemas/c/%/editor.metapack
+( 65%) Producing: explorer/%/search.metapack
+( 69%) Producing: explorer/example/schemas/%/directory.metapack
+( 73%) Producing: explorer/example/schemas/a/%/schema-html.metapack
 ( 78%) Producing: explorer/example/schemas/c/%/schema-html.metapack
 ( 82%) Producing: explorer/example/%/directory.metapack
 ( 86%) Producing: explorer/example/schemas/%/directory-html.metapack
@@ -91,5 +92,4 @@ cat << 'EOF' > "$TMP/expected.txt"
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 
-grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"
