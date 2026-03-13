@@ -421,7 +421,10 @@ TEST(Build_delta, incremental_one_schema_added) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
+  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
+  // WebSchema to rebuild because dependency-tree.metapack is a global
+  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -467,6 +470,7 @@ TEST(Build_delta, incremental_one_schema_added) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  // TODO(over-rebuild): bar's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 6, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
                 "https://example.com/bar", output / "dependency-tree.metapack");
@@ -486,16 +490,24 @@ TEST(Build_delta, incremental_one_schema_added) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
   EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      plan, 4, 1, 4, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  // TODO(over-rebuild): bar's WebSchema rebuilds unnecessarily
+  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
+                output / "explorer" / "bar" / "%" / "schema-html.metapack",
+                "https://example.com/bar",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "schemas" / "bar" / "%" / "dependencies.metapack",
+                output / "schemas" / "bar" / "%" / "health.metapack",
+                output / "schemas" / "bar" / "%" / "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -2296,7 +2308,10 @@ TEST(Build_delta, mtime_no_entry) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
+  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
+  // WebSchema to rebuild because dependency-tree.metapack is a global
+  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2342,6 +2357,7 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  // TODO(over-rebuild): bar's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 6, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
                 "https://example.com/bar", output / "dependency-tree.metapack");
@@ -2361,16 +2377,24 @@ TEST(Build_delta, mtime_no_entry) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
   EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      plan, 4, 1, 4, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  // TODO(over-rebuild): bar's WebSchema rebuilds unnecessarily
+  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
+                output / "explorer" / "bar" / "%" / "schema-html.metapack",
+                "https://example.com/bar",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "schemas" / "bar" / "%" / "dependencies.metapack",
+                output / "schemas" / "bar" / "%" / "health.metapack",
+                output / "schemas" / "bar" / "%" / "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -3741,6 +3765,72 @@ TEST(Build_delta, full_to_headless_removes_web) {
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
+TEST(Build_delta, full_to_headless_no_change_removes_web) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "dependency-tree.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
+  entries.emplace(output / "explorer" / "%" / "directory.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "search.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "404.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/foo",
+       {.path = "/src/foo.json", .relative_path = "foo", .mtime = MTIME(100)}}};
+  const std::vector<std::filesystem::path> changed;
+  const std::vector<std::filesystem::path> removed;
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::core::JSON::make_object(), changed, removed)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 2, 5);
+
+  EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Headless",
+                output / "configuration.json");
+
+  EXPECT_ACTION_UNORDERED(plan, 1, 0, 4, Remove,
+                          output / "explorer" / "%" / "404.metapack", "");
+  EXPECT_ACTION_UNORDERED(plan, 1, 1, 4, Remove,
+                          output / "explorer" / "%" / "directory-html.metapack",
+                          "");
+  EXPECT_ACTION_UNORDERED(
+      plan, 1, 2, 4, Remove,
+      output / "explorer" / "foo" / "%" / "directory-html.metapack", "");
+  EXPECT_ACTION_UNORDERED(
+      plan, 1, 3, 4, Remove,
+      output / "explorer" / "foo" / "%" / "schema-html.metapack", "");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "version.json", output / "configuration.json",
+      output / "dependency-tree.metapack",
+      output / "schemas" / "foo" / "%" / "schema.metapack",
+      output / "schemas" / "foo" / "%" / "dependencies.metapack",
+      output / "schemas" / "foo" / "%" / "locations.metapack",
+      output / "schemas" / "foo" / "%" / "positions.metapack",
+      output / "schemas" / "foo" / "%" / "stats.metapack",
+      output / "schemas" / "foo" / "%" / "bundle.metapack",
+      output / "schemas" / "foo" / "%" / "health.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+      output / "schemas" / "foo" / "%" / "editor.metapack",
+      output / "schemas" / "foo" / "%" / "dependents.metapack",
+      output / "explorer" / "foo" / "%" / "schema.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
+}
+
 TEST(Build_delta, headless_to_full_incremental) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
@@ -4318,7 +4408,10 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 23);
+  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
+  // WebSchema to rebuild because dependency-tree.metapack is a global
+  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 25);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
@@ -4387,6 +4480,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "health.metapack",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependencies.metapack");
+  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 7, Dependents,
                 output / "schemas" / "example" / "schemas" / "a" / "%" /
                     "dependents.metapack",
@@ -4418,7 +4512,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, SearchIndex,
+  EXPECT_ACTION(plan, 4, 0, 5, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
@@ -4426,7 +4520,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "schema.metapack",
                 output / "explorer" / "example" / "schemas" / "a" / "%" /
                     "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 5, DirectoryList,
                           output / "explorer" / "example" / "schemas" / "%" /
                               "directory.metapack",
                           "",
@@ -4436,7 +4530,32 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                               "%" / "schema.metapack",
                           output / "explorer" / "example" / "schemas" / "c" /
                               "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  // TODO(over-rebuild): a's and b's WebSchema rebuild unnecessarily
+  EXPECT_ACTION(plan, 4, 2, 5, WebSchema,
+                output / "explorer" / "example" / "schemas" / "a" / "%" /
+                    "schema-html.metapack",
+                "https://example.com/a",
+                output / "explorer" / "example" / "schemas" / "a" / "%" /
+                    "schema.metapack",
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "dependencies.metapack",
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "health.metapack",
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
+                output / "explorer" / "example" / "schemas" / "b" / "%" /
+                    "schema-html.metapack",
+                "https://example.com/b",
+                output / "explorer" / "example" / "schemas" / "b" / "%" /
+                    "schema.metapack",
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "dependencies.metapack",
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "health.metapack",
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema-html.metapack",
                 "https://example.com/c",
@@ -4753,9 +4872,10 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  // When schema C is added, the dependency tree changes, so ALL schemas
-  // dependents must be rebuilt
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
+  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
+  // WebSchema to rebuild because dependency-tree.metapack is a global
+  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 21);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "c" / "%" / "schema.metapack",
@@ -4802,6 +4922,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "health.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
+  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 7, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
                 "https://example.com/a", output / "dependency-tree.metapack");
@@ -4824,17 +4945,32 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 5, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 5, SearchIndex,
                           output / "explorer" / "%" / "search.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  // TODO(over-rebuild): a's and b's WebSchema rebuild unnecessarily
+  EXPECT_ACTION(plan, 4, 2, 5, WebSchema,
+                output / "explorer" / "a" / "%" / "schema-html.metapack",
+                "https://example.com/a",
+                output / "explorer" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "a" / "%" / "dependencies.metapack",
+                output / "schemas" / "a" / "%" / "health.metapack",
+                output / "schemas" / "a" / "%" / "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
+                output / "explorer" / "b" / "%" / "schema-html.metapack",
+                "https://example.com/b",
+                output / "explorer" / "b" / "%" / "schema.metapack",
+                output / "schemas" / "b" / "%" / "dependencies.metapack",
+                output / "schemas" / "b" / "%" / "health.metapack",
+                output / "schemas" / "b" / "%" / "dependents.metapack");
+  EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
                 output / "explorer" / "c" / "%" / "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "c" / "%" / "schema.metapack",
