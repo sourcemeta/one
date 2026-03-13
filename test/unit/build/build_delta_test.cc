@@ -360,7 +360,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
       output / "routes.bin");
 }
 
-TEST(Build_delta, incremental_one_schema_changed) {
+TEST(Build_delta, incremental_one_schema_added) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   entries.emplace(output / "version.json",
@@ -421,7 +421,7 @@ TEST(Build_delta, incremental_one_schema_changed) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -461,31 +461,36 @@ TEST(Build_delta, incremental_one_schema_changed) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 6, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 6, Dependents,
+                output / "schemas" / "bar" / "%" / "dependents.metapack",
+                "https://example.com/bar", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 2, 6, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 3, 6, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 4, 6, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
                 "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+  EXPECT_ACTION(plan, 3, 5, 6, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "foo" / "%" / "schema.metapack",
+                          output / "explorer" / "bar" / "%" /
+                              "schema.metapack");
   EXPECT_ACTION_UNORDERED(
       plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -1794,7 +1799,8 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
                 output / "dependency-tree.metapack", "",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "");
+                output / "explorer" / "%" / "directory.metapack", "",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
   EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
@@ -1870,7 +1876,8 @@ TEST(Build_delta, incremental_missing_bundle) {
                 output / "dependency-tree.metapack", "",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "");
+                output / "explorer" / "%" / "directory.metapack", "",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
   EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
@@ -1959,7 +1966,8 @@ TEST(Build_delta, incremental_missing_web_schema) {
                 output / "dependency-tree.metapack", "",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "");
+                output / "explorer" / "%" / "directory.metapack", "",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
   EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
@@ -2199,9 +2207,11 @@ TEST(Build_delta, mtime_source_newer) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "foo" / "%" / "schema.metapack",
+                          output / "explorer" / "bar" / "%" /
+                              "schema.metapack");
   EXPECT_ACTION_UNORDERED(
       plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -2286,7 +2296,7 @@ TEST(Build_delta, mtime_no_entry) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2326,31 +2336,36 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 6, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 6, Dependents,
+                output / "schemas" / "bar" / "%" / "dependents.metapack",
+                "https://example.com/bar", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 2, 6, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 3, 6, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 4, 6, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
                 "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+  EXPECT_ACTION(plan, 3, 5, 6, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "foo" / "%" / "schema.metapack",
+                          output / "explorer" / "bar" / "%" /
+                              "schema.metapack");
   EXPECT_ACTION_UNORDERED(
       plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -3169,9 +3184,10 @@ TEST(Build_delta, mtime_reverse_dep) {
                 output / "schemas" / "b" / "%" / "dependents.metapack",
                 "https://example.com/b", output / "dependency-tree.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 4, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "",
-                output / "explorer" / "a" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "a" / "%" / "schema.metapack",
+                          output / "explorer" / "b" / "%" / "schema.metapack");
   EXPECT_ACTION_UNORDERED(plan, 4, 1, 4, SearchIndex,
                           output / "explorer" / "%" / "search.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
@@ -4302,7 +4318,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 23);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
@@ -4361,7 +4377,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
                 "https://example.com/c",
@@ -4371,23 +4387,31 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "health.metapack",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 7, Dependents,
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "dependents.metapack",
+                "https://example.com/a", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 2, 7, Dependents,
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "dependents.metapack",
+                "https://example.com/b", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 3, 7, BlazeExhaustive,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "blaze-exhaustive.metapack",
                 "https://example.com/c",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 4, 7, BlazeFast,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "blaze-fast.metapack",
                 "https://example.com/c",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 5, 7, Dependents,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependents.metapack",
                 "https://example.com/c", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+  EXPECT_ACTION(plan, 3, 6, 7, Editor,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "editor.metapack",
                 "https://example.com/c",
@@ -4402,12 +4426,16 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "schema.metapack",
                 output / "explorer" / "example" / "schemas" / "a" / "%" /
                     "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, DirectoryList,
-                output / "explorer" / "example" / "schemas" / "%" /
-                    "directory.metapack",
-                "",
-                output / "explorer" / "example" / "schemas" / "c" / "%" /
-                    "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, DirectoryList,
+                          output / "explorer" / "example" / "schemas" / "%" /
+                              "directory.metapack",
+                          "",
+                          output / "explorer" / "example" / "schemas" / "a" /
+                              "%" / "schema.metapack",
+                          output / "explorer" / "example" / "schemas" / "b" /
+                              "%" / "schema.metapack",
+                          output / "explorer" / "example" / "schemas" / "c" /
+                              "%" / "schema.metapack");
   EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema-html.metapack",
@@ -4535,4 +4563,335 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
           "blaze-fast.metapack",
       output / "explorer" / "example" / "schemas" / "c" / "%" /
           "schema-html.metapack");
+}
+
+TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "dependency-tree.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "search.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "directory.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "404.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
+  ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(100));
+
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
+      {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
+  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
+  const std::vector<std::filesystem::path> removed;
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::core::JSON::make_object(), changed, removed)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+
+  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 4, Dependencies,
+                output / "schemas" / "foo" / "%" / "dependencies.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 1, 4, Locations,
+                output / "schemas" / "foo" / "%" / "locations.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 2, 4, Positions,
+                output / "schemas" / "foo" / "%" / "positions.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 3, 4, Stats,
+                output / "schemas" / "foo" / "%" / "stats.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
+      output / "schemas" / "foo" / "%" / "dependencies.metapack",
+      output / "schemas" / "bar" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+                output / "schemas" / "foo" / "%" / "bundle.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 2, 3, Health,
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+
+  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+                output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+                output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+                output / "schemas" / "foo" / "%" / "dependents.metapack",
+                "https://example.com/foo", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                output / "schemas" / "foo" / "%" / "editor.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+
+  // The directory list must depend on BOTH foo AND bar
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "foo" / "%" / "schema.metapack",
+                          output / "explorer" / "bar" / "%" /
+                              "schema.metapack");
+  EXPECT_ACTION_UNORDERED(
+      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      "", output / "explorer" / "foo" / "%" / "schema.metapack",
+      output / "explorer" / "bar" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+                output / "explorer" / "foo" / "%" / "schema-html.metapack",
+                "https://example.com/foo",
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                output / "schemas" / "foo" / "%" / "dependents.metapack");
+
+  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "version.json", output / "configuration.json",
+      output / "routes.bin", output / "dependency-tree.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "404.metapack",
+      output / "schemas" / "foo" / "%" / "schema.metapack",
+      output / "schemas" / "foo" / "%" / "dependencies.metapack",
+      output / "schemas" / "foo" / "%" / "locations.metapack",
+      output / "schemas" / "foo" / "%" / "positions.metapack",
+      output / "schemas" / "foo" / "%" / "stats.metapack",
+      output / "schemas" / "foo" / "%" / "bundle.metapack",
+      output / "schemas" / "foo" / "%" / "health.metapack",
+      output / "schemas" / "foo" / "%" / "editor.metapack",
+      output / "schemas" / "foo" / "%" / "dependents.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+      output / "explorer" / "foo" / "%" / "schema.metapack",
+      output / "explorer" / "foo" / "%" / "schema-html.metapack",
+      output / "schemas" / "bar" / "%" / "schema.metapack",
+      output / "schemas" / "bar" / "%" / "dependencies.metapack",
+      output / "schemas" / "bar" / "%" / "locations.metapack",
+      output / "schemas" / "bar" / "%" / "positions.metapack",
+      output / "schemas" / "bar" / "%" / "stats.metapack",
+      output / "schemas" / "bar" / "%" / "bundle.metapack",
+      output / "schemas" / "bar" / "%" / "health.metapack",
+      output / "schemas" / "bar" / "%" / "editor.metapack",
+      output / "schemas" / "bar" / "%" / "dependents.metapack",
+      output / "schemas" / "bar" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "bar" / "%" / "blaze-fast.metapack",
+      output / "explorer" / "bar" / "%" / "schema.metapack",
+      output / "explorer" / "bar" / "%" / "schema-html.metapack",
+      output / "explorer" / "foo" / "%" / "directory-html.metapack",
+      output / "explorer" / "bar" / "%" / "directory-html.metapack");
+}
+
+TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+
+  entries.emplace(output / "version.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "dependency-tree.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "search.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "directory.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  entries.emplace(output / "explorer" / "%" / "404.metapack",
+                  {.file_mark = MTIME(100), .dependencies = {}});
+  ADD_SCHEMA_ENTRIES(entries, output, "a", true, true, MTIME(100));
+  ADD_SCHEMA_ENTRIES(entries, output, "b", true, true, MTIME(100));
+
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
+      {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
+      {"https://example.com/c", {"/src/c.json", "c", MTIME(200)}}};
+  const std::vector<std::filesystem::path> changed{"/src/c.json"};
+  const std::vector<std::filesystem::path> removed;
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
+      "1.0.0", "", sourcemeta::core::JSON::make_object(),
+      sourcemeta::core::JSON::make_object(), changed, removed)};
+
+  // When schema C is added, the dependency tree changes, so ALL schemas
+  // dependents must be rebuilt
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
+
+  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+                output / "schemas" / "c" / "%" / "schema.metapack",
+                "https://example.com/c",
+                std::filesystem::path{"/"} / "src" / "c.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 4, Dependencies,
+                output / "schemas" / "c" / "%" / "dependencies.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 1, 4, Locations,
+                output / "schemas" / "c" / "%" / "locations.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 2, 4, Positions,
+                output / "schemas" / "c" / "%" / "positions.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 1, 3, 4, Stats,
+                output / "schemas" / "c" / "%" / "stats.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
+      output / "schemas" / "a" / "%" / "dependencies.metapack",
+      output / "schemas" / "b" / "%" / "dependencies.metapack",
+      output / "schemas" / "c" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+                output / "schemas" / "c" / "%" / "bundle.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 2, 3, Health,
+                output / "schemas" / "c" / "%" / "health.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
+
+  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
+                output / "explorer" / "c" / "%" / "schema.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "schema.metapack",
+                output / "schemas" / "c" / "%" / "health.metapack",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 7, Dependents,
+                output / "schemas" / "a" / "%" / "dependents.metapack",
+                "https://example.com/a", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 2, 7, Dependents,
+                output / "schemas" / "b" / "%" / "dependents.metapack",
+                "https://example.com/b", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 3, 7, BlazeExhaustive,
+                output / "schemas" / "c" / "%" / "blaze-exhaustive.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 4, 7, BlazeFast,
+                output / "schemas" / "c" / "%" / "blaze-fast.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 5, 7, Dependents,
+                output / "schemas" / "c" / "%" / "dependents.metapack",
+                "https://example.com/c", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 6, 7, Editor,
+                output / "schemas" / "c" / "%" / "editor.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "bundle.metapack");
+
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "a" / "%" / "schema.metapack",
+                          output / "explorer" / "b" / "%" / "schema.metapack",
+                          output / "explorer" / "c" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
+                          output / "explorer" / "%" / "search.metapack", "",
+                          output / "explorer" / "a" / "%" / "schema.metapack",
+                          output / "explorer" / "b" / "%" / "schema.metapack",
+                          output / "explorer" / "c" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+                output / "explorer" / "c" / "%" / "schema-html.metapack",
+                "https://example.com/c",
+                output / "explorer" / "c" / "%" / "schema.metapack",
+                output / "schemas" / "c" / "%" / "dependencies.metapack",
+                output / "schemas" / "c" / "%" / "health.metapack",
+                output / "schemas" / "c" / "%" / "dependents.metapack");
+
+  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "version.json", output / "configuration.json",
+      output / "routes.bin", output / "dependency-tree.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "404.metapack",
+      output / "schemas" / "a" / "%" / "schema.metapack",
+      output / "schemas" / "a" / "%" / "dependencies.metapack",
+      output / "schemas" / "a" / "%" / "locations.metapack",
+      output / "schemas" / "a" / "%" / "positions.metapack",
+      output / "schemas" / "a" / "%" / "stats.metapack",
+      output / "schemas" / "a" / "%" / "bundle.metapack",
+      output / "schemas" / "a" / "%" / "health.metapack",
+      output / "schemas" / "a" / "%" / "editor.metapack",
+      output / "schemas" / "a" / "%" / "dependents.metapack",
+      output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "a" / "%" / "blaze-fast.metapack",
+      output / "explorer" / "a" / "%" / "schema.metapack",
+      output / "explorer" / "a" / "%" / "schema-html.metapack",
+      output / "explorer" / "a" / "%" / "directory-html.metapack",
+      output / "schemas" / "b" / "%" / "schema.metapack",
+      output / "schemas" / "b" / "%" / "dependencies.metapack",
+      output / "schemas" / "b" / "%" / "locations.metapack",
+      output / "schemas" / "b" / "%" / "positions.metapack",
+      output / "schemas" / "b" / "%" / "stats.metapack",
+      output / "schemas" / "b" / "%" / "bundle.metapack",
+      output / "schemas" / "b" / "%" / "health.metapack",
+      output / "schemas" / "b" / "%" / "editor.metapack",
+      output / "schemas" / "b" / "%" / "dependents.metapack",
+      output / "schemas" / "b" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "b" / "%" / "blaze-fast.metapack",
+      output / "explorer" / "b" / "%" / "schema.metapack",
+      output / "explorer" / "b" / "%" / "schema-html.metapack",
+      output / "explorer" / "b" / "%" / "directory-html.metapack",
+      output / "schemas" / "c" / "%" / "schema.metapack",
+      output / "schemas" / "c" / "%" / "dependencies.metapack",
+      output / "schemas" / "c" / "%" / "locations.metapack",
+      output / "schemas" / "c" / "%" / "positions.metapack",
+      output / "schemas" / "c" / "%" / "stats.metapack",
+      output / "schemas" / "c" / "%" / "bundle.metapack",
+      output / "schemas" / "c" / "%" / "health.metapack",
+      output / "schemas" / "c" / "%" / "editor.metapack",
+      output / "schemas" / "c" / "%" / "dependents.metapack",
+      output / "schemas" / "c" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "c" / "%" / "blaze-fast.metapack",
+      output / "explorer" / "c" / "%" / "schema.metapack",
+      output / "explorer" / "c" / "%" / "schema-html.metapack");
 }

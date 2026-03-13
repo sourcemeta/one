@@ -438,6 +438,18 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
                    dependency_tree_path, all_dependencies);
     dirty_set.insert(dependency_tree_path.string());
 
+    auto has_graph_change{!removed_uris.empty()};
+    if (!has_graph_change) {
+      for (const auto &[uri, info] : schemas) {
+        if (!entries.contains((schema_base_path(output, info.relative_path) /
+                               "schema.metapack")
+                                  .native())) {
+          has_graph_change = true;
+          break;
+        }
+      }
+    }
+
     for (const auto &[uri, info] : schemas) {
       if (removed_uris.contains(uri)) {
         continue;
@@ -449,7 +461,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
                      dependents_path, {dependency_tree_path}, uri);
 
       const auto base{schema_base_path(output, info.relative_path)};
-      if (is_full || dirty_set.contains((base / "schema.metapack").string()) ||
+      if (is_full || has_graph_change ||
+          dirty_set.contains((base / "schema.metapack").string()) ||
           !entries.contains(dependents_path.native())) {
         dirty_set.insert(dependents_path.string());
       }
@@ -481,7 +494,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
       std::vector<std::filesystem::path> directory_dependencies;
 
-      for (const auto &schema_relative : affected_relative_paths) {
+      for (const auto &schema_relative : all_relative_paths) {
         if (schema_relative.parent_path() == relative ||
             (relative == "." && !schema_relative.has_parent_path())) {
           directory_dependencies.emplace_back(
@@ -489,16 +502,21 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         }
       }
 
-      for (const auto &child_directory : affected_dirs) {
-        if (child_directory == directory) {
+      for (const auto &other_directory : affected_dirs) {
+        auto other_relative{
+            std::filesystem::relative(other_directory, schemas_path)};
+        if (other_relative == relative) {
           continue;
         }
 
-        if (child_directory.parent_path() == directory) {
-          const auto child_relative{
-              std::filesystem::relative(child_directory, schemas_path)};
+        auto other_parent{other_relative.parent_path()};
+        if (other_parent.empty()) {
+          other_parent = ".";
+        }
+
+        if (other_parent == relative) {
           directory_dependencies.emplace_back(
-              (explorer_path / child_relative / SENTINEL / "directory.metapack")
+              (explorer_path / other_relative / SENTINEL / "directory.metapack")
                   .lexically_normal());
         }
       }
