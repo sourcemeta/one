@@ -41,7 +41,6 @@ static auto append_filename(const std::string &base, const char *filename)
 
 struct Target {
   BuildPlan::Action::Type action;
-  std::string destination;
   std::vector<std::string> dependencies;
   std::string_view data;
 };
@@ -52,11 +51,9 @@ static auto declare_target(TargetMap &targets, BuildPlan::Action::Type action,
                            std::string destination,
                            std::vector<std::string> dependencies,
                            const std::string_view data = {}) -> void {
-  auto iterator{targets.try_emplace(destination).first};
-  iterator->second = Target{.action = action,
-                            .destination = std::move(destination),
-                            .dependencies = std::move(dependencies),
-                            .data = data};
+  auto iterator{targets.try_emplace(std::move(destination)).first};
+  iterator->second = Target{
+      .action = action, .dependencies = std::move(dependencies), .data = data};
 }
 
 static auto declare_schema_targets(
@@ -113,16 +110,18 @@ static auto declare_schema_targets(
   }
 }
 
-static auto compute_wave(const std::string &path, const TargetMap &targets,
-                         const std::unordered_set<std::string> &dirty_set,
-                         std::unordered_map<std::string, std::size_t> &cache)
+static auto
+compute_wave(const std::string &path, const TargetMap &targets,
+             const std::unordered_set<std::string> &dirty_set,
+             std::unordered_map<std::string_view, std::size_t> &cache)
     -> std::size_t {
-  const auto cached{cache.find(path)};
+  const std::string_view path_view{path};
+  const auto cached{cache.find(path_view)};
   if (cached != cache.end()) {
     return cached->second;
   }
 
-  cache[path] = 0;
+  cache[path_view] = 0;
 
   const auto target_match{targets.find(path)};
   if (target_match == targets.end()) {
@@ -140,7 +139,7 @@ static auto compute_wave(const std::string &path, const TargetMap &targets,
     }
   }
 
-  cache[path] = max_dependency_wave;
+  cache[path_view] = max_dependency_wave;
   return max_dependency_wave;
 }
 
@@ -235,29 +234,30 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     const auto &output_string{output.native()};
     bool fast_path_dirty{false};
 
-    // Check if any schema has a stale root or any missing target
+    // Reusable buffers to avoid per-rule string allocation
+    std::string schema_buffer;
+    std::string explorer_buffer;
+    schema_buffer.reserve(output_string.size() + 64);
+    explorer_buffer.reserve(output_string.size() + 64);
+    std::unordered_set<std::string> current_schema_bases;
+    current_schema_bases.reserve(schemas.size());
+
     for (const auto &[uri, info] : schemas) {
       const auto &relative_string{info.relative_path.native()};
 
-      std::string schema_base;
-      schema_base.reserve(output_string.size() + relative_string.size() + 12);
-      schema_base += output_string;
-      schema_base += '/';
-      schema_base += SCHEMAS_DIRECTORY;
-      schema_base += '/';
-      schema_base += relative_string;
-      schema_base += '/';
-      schema_base += SENTINEL;
+      schema_buffer.clear();
+      schema_buffer += output_string;
+      schema_buffer += '/';
+      schema_buffer += SCHEMAS_DIRECTORY;
+      schema_buffer += '/';
+      schema_buffer += relative_string;
+      schema_buffer += '/';
+      schema_buffer += SENTINEL;
+      const auto schema_base_end{schema_buffer.size()};
+      current_schema_bases.insert(schema_buffer);
 
-      std::string explorer_base;
-      explorer_base.reserve(output_string.size() + relative_string.size() + 14);
-      explorer_base += output_string;
-      explorer_base += '/';
-      explorer_base += EXPLORER_DIRECTORY;
-      explorer_base += '/';
-      explorer_base += relative_string;
-      explorer_base += '/';
-      explorer_base += SENTINEL;
+      bool explorer_built{false};
+      std::size_t explorer_base_end{0};
 
       for (const auto &rule : PER_SCHEMA_RULES) {
         if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
@@ -269,16 +269,34 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
           continue;
         }
 
-        const auto &base{rule.base == TargetBase::Schema ? schema_base
-                                                         : explorer_base};
-        const auto key{base + '/' + rule.filename};
+        if (rule.base == TargetBase::Explorer && !explorer_built) {
+          explorer_buffer.clear();
+          explorer_buffer += output_string;
+          explorer_buffer += '/';
+          explorer_buffer += EXPLORER_DIRECTORY;
+          explorer_buffer += '/';
+          explorer_buffer += relative_string;
+          explorer_buffer += '/';
+          explorer_buffer += SENTINEL;
+          explorer_base_end = explorer_buffer.size();
+          explorer_built = true;
+        }
+
+        auto &buffer{rule.base == TargetBase::Schema ? schema_buffer
+                                                     : explorer_buffer};
+        const auto base_end{rule.base == TargetBase::Schema
+                                ? schema_base_end
+                                : explorer_base_end};
+        buffer.resize(base_end);
+        buffer += '/';
+        buffer += rule.filename;
 
         if (rule.is_root) {
-          if (entries.is_stale(key, info.mtime)) {
+          if (entries.is_stale(buffer, info.mtime)) {
             fast_path_dirty = true;
             break;
           }
-        } else if (!entries.contains(key)) {
+        } else if (!entries.contains(buffer)) {
           fast_path_dirty = true;
           break;
         }
@@ -290,23 +308,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
 
     // Check has_potential_stale: entries for schemas that no longer exist
+    // (current_schema_bases was already populated during the per-schema loop)
     if (!fast_path_dirty) {
-      std::unordered_set<std::string> current_schema_bases;
-      current_schema_bases.reserve(schemas.size());
-      for (const auto &[uri, info] : schemas) {
-        const auto &relative_string{info.relative_path.native()};
-        std::string base;
-        base.reserve(output_string.size() + relative_string.size() + 12);
-        base += output_string;
-        base += '/';
-        base += SCHEMAS_DIRECTORY;
-        base += '/';
-        base += relative_string;
-        base += '/';
-        base += SENTINEL;
-        current_schema_bases.insert(std::move(base));
-      }
-
       const auto schemas_prefix_string{output_string + '/' + SCHEMAS_DIRECTORY +
                                        '/'};
       for (const auto &[entry_path, entry_value] : entries) {
@@ -439,6 +442,16 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   const auto configuration_string{configuration_path.string()};
   const auto explorer_string{explorer_path.string()};
 
+  struct ActiveSchema {
+    std::string_view uri;
+    const Resolver::Entry *info;
+    std::string schema_base;
+    std::string explorer_base;
+    std::string root_path;
+  };
+
+  std::vector<ActiveSchema> active_schemas;
+  active_schemas.reserve(schemas.size());
   std::vector<std::filesystem::path> all_relative_paths;
   all_relative_paths.reserve(schemas.size());
 
@@ -448,28 +461,24 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
 
     const auto &relative_string{info.relative_path.native()};
-    const auto schema_base{
+    auto schema_base{
         make_base_string(output_string, SCHEMAS_DIRECTORY, relative_string)};
-    const auto explorer_base{
+    auto explorer_base{
         make_base_string(output_string, EXPLORER_DIRECTORY, relative_string)};
     declare_schema_targets(targets, schema_base, explorer_base, output_string,
                            info.path.native(), info.evaluate, build_type,
                            configuration_string, uri);
     all_relative_paths.emplace_back(info.relative_path);
+    auto root_path{append_filename(schema_base, ROOT_RULE.filename)};
+    active_schemas.push_back({uri, &info, std::move(schema_base),
+                              std::move(explorer_base), std::move(root_path)});
   }
 
   std::unordered_set<std::string> force_dirty;
 
   if (is_full) {
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
-      force_dirty.insert(
-          append_filename(make_base_string(output_string, SCHEMAS_DIRECTORY,
-                                           info.relative_path.native()),
-                          ROOT_RULE.filename));
+    for (const auto &schema : active_schemas) {
+      force_dirty.insert(schema.root_path);
     }
   } else if (!changed.empty()) {
     std::unordered_set<std::string> changed_set;
@@ -478,63 +487,46 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       changed_set.insert(path.native());
     }
 
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
+    for (const auto &schema : active_schemas) {
+      if (!changed_set.contains(schema.info->path.native())) {
         continue;
       }
 
-      if (!changed_set.contains(info.path.native())) {
-        continue;
-      }
-
-      auto metapack_path{
-          append_filename(make_base_string(output_string, SCHEMAS_DIRECTORY,
-                                           info.relative_path.native()),
-                          ROOT_RULE.filename)};
-      if (entries.is_stale(metapack_path, info.mtime)) {
-        force_dirty.insert(std::move(metapack_path));
+      if (entries.is_stale(schema.root_path, schema.info->mtime)) {
+        force_dirty.insert(schema.root_path);
       }
     }
   } else if (!is_full) {
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
-      auto metapack_path{
-          append_filename(make_base_string(output_string, SCHEMAS_DIRECTORY,
-                                           info.relative_path.native()),
-                          ROOT_RULE.filename)};
-      if (entries.is_stale(metapack_path, info.mtime)) {
-        force_dirty.insert(std::move(metapack_path));
+    for (const auto &schema : active_schemas) {
+      if (entries.is_stale(schema.root_path, schema.info->mtime)) {
+        force_dirty.insert(schema.root_path);
       }
     }
   }
 
   std::unordered_set<std::string> dirty_set;
   {
-    // Bottom-up dirty propagation: build reverse dependency map,
-    // seed with force_dirty + missing entries, then BFS
-    std::unordered_map<std::string, std::vector<std::string>> reverse_deps;
+    // Bottom-up dirty propagation using string_view to avoid copying
+    // target path strings into the reverse dependency map
+    std::unordered_map<std::string_view, std::vector<std::string_view>>
+        reverse_deps;
     reverse_deps.reserve(targets.size());
+    std::vector<std::string> worklist;
+    worklist.reserve(targets.size());
     for (const auto &[target_path, target] : targets) {
+      const std::string_view target_view{target_path};
       for (const auto &dep : target.dependencies) {
-        reverse_deps[dep].push_back(target_path);
+        reverse_deps[std::string_view{dep}].push_back(target_view);
       }
 
       const auto *state_entry{entries.entry(target_path)};
       if (state_entry != nullptr) {
         for (const auto &dep : state_entry->dependencies) {
-          reverse_deps[dep.native()].push_back(target_path);
+          reverse_deps[std::string_view{dep.native()}].push_back(target_view);
         }
       }
-    }
 
-    // Seed worklist with dirty roots
-    std::vector<std::string> worklist;
-    for (const auto &[target_path, target] : targets) {
-      if (force_dirty.contains(target_path) ||
-          entries.entry(target_path) == nullptr) {
+      if (force_dirty.contains(target_path) || state_entry == nullptr) {
         dirty_set.insert(target_path);
         worklist.push_back(target_path);
       }
@@ -543,12 +535,12 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     // BFS: propagate dirtiness through reverse edges
     for (std::size_t worklist_index{0}; worklist_index < worklist.size();
          worklist_index++) {
-      const auto current{worklist[worklist_index]};
-      const auto reverse_it{reverse_deps.find(current)};
+      const auto &current{worklist[worklist_index]};
+      const auto reverse_it{reverse_deps.find(std::string_view{current})};
       if (reverse_it != reverse_deps.end()) {
         for (const auto &dependent : reverse_it->second) {
-          if (dirty_set.insert(dependent).second) {
-            worklist.push_back(dependent);
+          if (dirty_set.emplace(dependent).second) {
+            worklist.emplace_back(dependent);
           }
         }
       }
@@ -557,22 +549,16 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   bool has_missing_web{false};
   if (build_type == BuildPlan::Type::Full && dirty_set.empty() && !is_full) {
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
-      const auto &relative_string{info.relative_path.native()};
+    for (const auto &schema : active_schemas) {
       for (const auto &rule : PER_SCHEMA_RULES) {
         if (rule.gate != TargetGate::FullOnly) {
           continue;
         }
 
-        const auto dir{rule.base == TargetBase::Schema ? SCHEMAS_DIRECTORY
-                                                       : EXPLORER_DIRECTORY};
-        if (!entries.contains(append_filename(
-                make_base_string(output_string, dir, relative_string),
-                rule.filename))) {
+        const auto &base{rule.base == TargetBase::Schema
+                             ? schema.schema_base
+                             : schema.explorer_base};
+        if (!entries.contains(append_filename(base, rule.filename))) {
           has_missing_web = true;
           break;
         }
@@ -626,9 +612,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   {
     std::unordered_set<std::string> current_schema_bases;
     current_schema_bases.reserve(schemas.size());
-    for (const auto &[uri, info] : schemas) {
-      current_schema_bases.insert(make_base_string(
-          output_string, SCHEMAS_DIRECTORY, info.relative_path.native()));
+    for (const auto &schema : active_schemas) {
+      current_schema_bases.insert(schema.schema_base);
     }
 
     const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
@@ -685,21 +670,14 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   std::vector<std::filesystem::path> affected_relative_paths;
   if (has_schema_work) {
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
+    for (const auto &schema : active_schemas) {
       if (is_full) {
-        affected_relative_paths.emplace_back(info.relative_path);
+        affected_relative_paths.emplace_back(schema.info->relative_path);
         continue;
       }
 
-      if (dirty_set.contains(
-              append_filename(make_base_string(output_string, SCHEMAS_DIRECTORY,
-                                               info.relative_path.native()),
-                              ROOT_RULE.filename))) {
-        affected_relative_paths.emplace_back(info.relative_path);
+      if (dirty_set.contains(schema.root_path)) {
+        affected_relative_paths.emplace_back(schema.info->relative_path);
       }
     }
 
@@ -707,18 +685,12 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       const auto &rule{AGGREGATE_RULES[index]};
 
       std::vector<std::string> all_collected;
-      all_collected.reserve(schemas.size());
-      for (const auto &[uri, info] : schemas) {
-        if (removed_uris.contains(uri)) {
-          continue;
-        }
-
-        const auto dir{rule.collector_base == TargetBase::Schema
-                           ? SCHEMAS_DIRECTORY
-                           : EXPLORER_DIRECTORY};
-        all_collected.push_back(append_filename(
-            make_base_string(output_string, dir, info.relative_path.native()),
-            rule.collector_filename));
+      all_collected.reserve(active_schemas.size());
+      for (const auto &schema : active_schemas) {
+        const auto &base{rule.collector_base == TargetBase::Schema
+                             ? schema.schema_base
+                             : schema.explorer_base};
+        all_collected.push_back(append_filename(base, rule.collector_filename));
       }
 
       std::string destination;
@@ -753,29 +725,16 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     // dirty checking or breaking the global bottleneck.
     auto has_graph_change{!removed_uris.empty()};
     if (!has_graph_change) {
-      for (const auto &[uri, info] : schemas) {
-        if (!entries.contains(append_filename(
-                make_base_string(output_string, SCHEMAS_DIRECTORY,
-                                 info.relative_path.native()),
-                ROOT_RULE.filename))) {
+      for (const auto &schema : active_schemas) {
+        if (!entries.contains(schema.root_path)) {
           has_graph_change = true;
           break;
         }
       }
     }
 
-    for (const auto &[uri, info] : schemas) {
-      if (removed_uris.contains(uri)) {
-        continue;
-      }
-
-      const auto &relative_string{info.relative_path.native()};
-      const auto schema_base{
-          make_base_string(output_string, SCHEMAS_DIRECTORY, relative_string)};
-      const auto explorer_base{
-          make_base_string(output_string, EXPLORER_DIRECTORY, relative_string)};
-      const auto schema_is_dirty{
-          dirty_set.contains(append_filename(schema_base, ROOT_RULE.filename))};
+    for (const auto &schema : active_schemas) {
+      const auto schema_is_dirty{dirty_set.contains(schema.root_path)};
 
       for (std::size_t index{0}; index < PER_SCHEMA_RULES.size(); index++) {
         const auto &rule{PER_SCHEMA_RULES[index]};
@@ -788,8 +747,9 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
           continue;
         }
 
-        const auto &base{rule.base == TargetBase::Schema ? schema_base
-                                                         : explorer_base};
+        const auto &base{rule.base == TargetBase::Schema
+                             ? schema.schema_base
+                             : schema.explorer_base};
         auto target_path_string{append_filename(base, rule.filename)};
         auto should_force{is_full || schema_is_dirty ||
                           !entries.contains(target_path_string)};
@@ -893,11 +853,11 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
   } // has_schema_work
 
-  std::unordered_map<std::string, std::size_t> wave_cache;
+  std::unordered_map<std::string_view, std::size_t> wave_cache;
   std::size_t max_wave{0};
 
   for (const auto &target_path : dirty_set) {
-    if (!targets.contains(target_path)) {
+    if (targets.find(target_path) == targets.end()) {
       continue;
     }
 
@@ -911,11 +871,12 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   if (!dirty_set.empty()) {
     dag_waves.resize(max_wave + 1);
     for (const auto &target_path : dirty_set) {
-      if (!targets.contains(target_path)) {
+      const auto target_it{targets.find(target_path)};
+      if (target_it == targets.end()) {
         continue;
       }
 
-      const auto &target{targets.at(target_path)};
+      const auto &target{target_it->second};
       const auto wave_it{wave_cache.find(target_path)};
       const auto wave{wave_it != wave_cache.end() ? wave_it->second
                                                   : std::size_t{0}};
@@ -926,7 +887,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       }
 
       dag_waves[wave].push_back({target.action,
-                                 std::filesystem::path{target.destination},
+                                 std::filesystem::path{target_path},
                                  std::move(action_deps), target.data});
     }
   }
@@ -954,26 +915,21 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
          {}});
   }
 
-  for (const auto &[uri, info] : schemas) {
-    if (removed_uris.contains(uri) || info.evaluate) {
+  for (const auto &schema : active_schemas) {
+    if (schema.info->evaluate) {
       continue;
     }
 
-    const auto &relative_string{info.relative_path.native()};
-    const auto schema_base{
-        make_base_string(output_string, SCHEMAS_DIRECTORY, relative_string)};
-    const auto schema_dirty{
-        dirty_set.contains(append_filename(schema_base, ROOT_RULE.filename))};
+    const auto schema_dirty{dirty_set.contains(schema.root_path)};
     if (schema_dirty || is_full) {
-      const auto explorer_base{
-          make_base_string(output_string, EXPLORER_DIRECTORY, relative_string)};
       for (const auto &rule : PER_SCHEMA_RULES) {
         if (rule.gate != TargetGate::IfEvaluate) {
           continue;
         }
 
-        const auto &target_base{
-            rule.base == TargetBase::Schema ? schema_base : explorer_base};
+        const auto &target_base{rule.base == TargetBase::Schema
+                                    ? schema.schema_base
+                                    : schema.explorer_base};
         auto target_path{append_filename(target_base, rule.filename)};
         if (entries.contains(target_path)) {
           remove_wave.push_back({BuildPlan::Action::Type::Remove,
@@ -986,14 +942,11 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   }
 
   std::unordered_set<std::string> known_bases;
-  known_bases.reserve(schemas.size() * 2 + 1);
-  for (const auto &[uri, info] : schemas) {
-    const auto &relative_string{info.relative_path.native()};
-    known_bases.insert(
-        make_base_string(output_string, SCHEMAS_DIRECTORY, relative_string));
-    known_bases.insert(
-        make_base_string(output_string, EXPLORER_DIRECTORY, relative_string));
-    auto current{info.relative_path};
+  known_bases.reserve(active_schemas.size() * 2 + 1);
+  for (const auto &schema : active_schemas) {
+    known_bases.insert(schema.schema_base);
+    known_bases.insert(schema.explorer_base);
+    auto current{schema.info->relative_path};
     while (current.has_parent_path() && current.parent_path() != current) {
       current = current.parent_path();
       known_bases.insert(explorer_string + '/' + current.string() + '/' +
