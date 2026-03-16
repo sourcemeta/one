@@ -17,9 +17,11 @@ sourcemeta_esbuild_bundle(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/main.min.js"
   DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/main.js"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/copy.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/search.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tabs.js"
-    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/editor.js")
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/editor.js"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/dependencies.js")
 
 # Generate CSS
 include(BootstrapFiles)
