@@ -277,36 +277,24 @@ static auto index_main(const std::string_view &program,
   sourcemeta::one::Resolver resolver;
   resolver.reserve(detected_schemas.size());
 
-  // Pre-compute evaluate per collection (avoids repeated JSON lookups)
-  std::unordered_map<const sourcemeta::one::Configuration::Collection *, bool>
-      evaluate_cache;
-  for (const auto &pair : configuration.entries) {
-    const auto *collection{
-        std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
-    if (collection != nullptr) {
-      evaluate_cache[collection] =
-          !collection->extra.defines("x-sourcemeta-one:evaluate") ||
-          !collection->extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
-          collection->extra.at("x-sourcemeta-one:evaluate").to_boolean();
-    }
-  }
-
   // Phase 1: populate resolver from cache for unchanged source files
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
     const auto *cached{entries.resolve(detected.path.native(), detected.mtime)};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
-      resolver.emplace(cached->new_identifier,
-                       sourcemeta::one::Resolver::Entry{
-                           .path = detected.path,
-                           .relative_path = cached->relative_path,
-                           .mtime = detected.mtime,
-                           .evaluate = evaluate_cache[&collection],
-                           .cache_path = std::nullopt,
-                           .dialect = cached->dialect,
-                           .original_identifier = cached->original_identifier,
-                           .collection = &collection});
+      resolver.emplace(
+          cached->new_identifier,
+          sourcemeta::one::Resolver::Entry{
+              .path = detected.path,
+              .relative_path = cached->relative_path,
+              .mtime = detected.mtime,
+              .evaluate =
+                  sourcemeta::one::Configuration::should_evaluate(collection),
+              .cache_path = std::nullopt,
+              .dialect = cached->dialect,
+              .original_identifier = cached->original_identifier,
+              .collection = &collection});
     } else {
       uncached_schemas.emplace_back(detected);
     }

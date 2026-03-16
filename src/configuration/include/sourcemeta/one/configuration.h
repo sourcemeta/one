@@ -54,6 +54,13 @@ struct Configuration {
   [[nodiscard]] auto resolve_schema(const sourcemeta::core::URI &input) const
       -> std::optional<std::filesystem::path>;
 
+  [[nodiscard]] static auto should_evaluate(const Collection &collection)
+      -> bool {
+    return !collection.extra.defines("x-sourcemeta-one:evaluate") ||
+           !collection.extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
+           collection.extra.at("x-sourcemeta-one:evaluate").to_boolean();
+  }
+
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;
 };

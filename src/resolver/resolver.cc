@@ -308,12 +308,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // (5) Safely one the schema entry in the resolver
   /////////////////////////////////////////////////////////////////////////////
 
-  // TODO: Computing this for every schema seems like a waste.
-  // Can we compute it properly at the collection level once?
-  const auto evaluate{
-      !collection.extra.defines("x-sourcemeta-one:evaluate") ||
-      !collection.extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
-      collection.extra.at("x-sourcemeta-one:evaluate").to_boolean()};
+  const auto evaluate{Configuration::should_evaluate(collection)};
 
   std::unique_lock lock{this->mutex};
   auto result{this->views.emplace(
