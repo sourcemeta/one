@@ -277,10 +277,19 @@ static auto index_main(const std::string_view &program,
   sourcemeta::one::Resolver resolver;
   resolver.reserve(detected_schemas.size());
 
-  // Phase 1: populate resolver from cache for unchanged source files
+  // Phase 1: populate resolver from cache for unchanged source files.
+
+  // Skip the cache entirely if the configuration changed, as cached
+  // identifiers and paths may no longer be valid
+  const auto resolver_cache_valid{raw_configuration == current_configuration &&
+                                  current_version ==
+                                      sourcemeta::one::version()};
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
-    const auto *cached{entries.resolve(detected.path.native(), detected.mtime)};
+    const auto *cached{
+        resolver_cache_valid
+            ? entries.resolve(detected.path.native(), detected.mtime)
+            : nullptr};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
       resolver.emplace(
