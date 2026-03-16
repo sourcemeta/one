@@ -331,6 +331,7 @@ static auto index_main(const std::string_view &program,
   // (7) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
+  // TODO: Make use of these for real
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   auto plan{sourcemeta::one::delta(build_type, entries, canonical_output,
@@ -352,8 +353,6 @@ static auto index_main(const std::string_view &program,
   std::mutex entries_mutex;
 
   for (auto &wave : plan.waves) {
-    // TODO: Maybe we can optimise this for waves of a single action
-    // by avoiding the creation of a whole thread plus the locks?
     sourcemeta::core::parallel_for_each(
         wave.begin(), wave.end(),
         [&](auto &action, const auto threads, const auto) {
