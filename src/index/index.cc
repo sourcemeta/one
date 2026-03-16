@@ -326,23 +326,22 @@ static auto index_main(const std::string_view &program,
             detected.collection.get(), detected.path, detected.mtime)};
 
         {
-          const auto &resolved{result.entry.get()};
+          const auto &resolved{result.second.get()};
           std::lock_guard<std::mutex> lock{mutex};
-          entries.commit(
-              detected.path.native(),
-              sourcemeta::one::BuildState::ResolverEntry{
-                  .file_mark = detected.mtime,
-                  .new_identifier = std::string{result.new_identifier.get()},
-                  .original_identifier =
-                      std::string{result.original_identifier.get()},
-                  .dialect = std::string{resolved.dialect},
-                  .relative_path = resolved.relative_path.string()});
+          entries.commit(detected.path.native(),
+                         sourcemeta::one::BuildState::ResolverEntry{
+                             .file_mark = detected.mtime,
+                             .new_identifier = std::string{result.first.get()},
+                             .original_identifier =
+                                 std::string{resolved.original_identifier},
+                             .dialect = std::string{resolved.dialect},
+                             .relative_path = resolved.relative_path.string()});
         }
 
         if (app.contains("verbose")) {
           std::lock_guard<std::mutex> lock{mutex};
-          std::cerr << result.original_identifier.get() << " => "
-                    << result.new_identifier.get() << "\n";
+          std::cerr << result.second.get().original_identifier << " => "
+                    << result.first.get() << "\n";
         }
       },
       concurrency);

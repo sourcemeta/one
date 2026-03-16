@@ -46,18 +46,15 @@ public:
     const Configuration::Collection *collection{nullptr};
   };
 
-  struct AddResult {
-    std::reference_wrapper<const sourcemeta::core::JSON::String>
-        original_identifier;
-    std::reference_wrapper<const sourcemeta::core::JSON::String> new_identifier;
-    std::reference_wrapper<const Entry> entry;
-  };
+  using Result =
+      std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
+                std::reference_wrapper<const Entry>>;
 
   auto add(const sourcemeta::core::JSON::String &server_url,
            const std::filesystem::path &collection_relative_path,
            const Configuration::Collection &collection,
            const std::filesystem::path &path,
-           std::filesystem::file_time_type mtime) -> AddResult;
+           const std::filesystem::file_time_type mtime) -> Result;
 
   auto emplace(std::string new_identifier, Entry entry) -> void;
 

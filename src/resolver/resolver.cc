@@ -227,7 +227,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
                    const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
-                   const std::filesystem::file_time_type mtime) -> AddResult {
+                   const std::filesystem::file_time_type mtime) -> Result {
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
@@ -333,9 +333,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     throw sourcemeta::core::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
-  return {.original_identifier = result.first->second.original_identifier,
-          .new_identifier = result.first->first,
-          .entry = result.first->second};
+  return {result.first->first, result.first->second};
 }
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
