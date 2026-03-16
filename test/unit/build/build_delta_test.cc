@@ -144,9 +144,7 @@ TEST(Build_delta, full_single_schema) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -327,9 +325,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 output / "explorer" / "bar" / "%" / "schema-html.metapack",
                 "https://example.com/bar",
                 output / "explorer" / "bar" / "%" / "schema.metapack",
-                output / "schemas" / "bar" / "%" / "dependencies.metapack",
-                output / "schemas" / "bar" / "%" / "health.metapack",
-                output / "schemas" / "bar" / "%" / "dependents.metapack");
+                output / "schemas" / "bar" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -421,10 +417,7 @@ TEST(Build_delta, incremental_one_schema_added) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
-  // WebSchema to rebuild because dependency-tree.metapack is a global
-  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -470,7 +463,6 @@ TEST(Build_delta, incremental_one_schema_added) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  // TODO(over-rebuild): bar's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 6, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
                 "https://example.com/bar", output / "dependency-tree.metapack");
@@ -490,30 +482,20 @@ TEST(Build_delta, incremental_one_schema_added) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
   EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 4, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema.metapack");
-  // TODO(over-rebuild): bar's WebSchema rebuilds unnecessarily
-  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
-                output / "explorer" / "bar" / "%" / "schema-html.metapack",
-                "https://example.com/bar",
-                output / "explorer" / "bar" / "%" / "schema.metapack",
-                output / "schemas" / "bar" / "%" / "dependencies.metapack",
-                output / "schemas" / "bar" / "%" / "health.metapack",
-                output / "schemas" / "bar" / "%" / "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -693,9 +675,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -820,9 +800,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -1037,9 +1015,7 @@ TEST(Build_delta, incremental_with_comment) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -1160,9 +1136,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -1528,9 +1502,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -1646,9 +1618,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -1762,9 +1732,7 @@ TEST(Build_delta, incremental_evaluate_false) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -2009,9 +1977,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -2254,9 +2220,7 @@ TEST(Build_delta, mtime_source_newer) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -2330,10 +2294,7 @@ TEST(Build_delta, mtime_no_entry) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
-  // WebSchema to rebuild because dependency-tree.metapack is a global
-  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2379,7 +2340,6 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  // TODO(over-rebuild): bar's dependents rebuild unnecessarily
   EXPECT_ACTION(plan, 3, 1, 6, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
                 "https://example.com/bar", output / "dependency-tree.metapack");
@@ -2399,30 +2359,20 @@ TEST(Build_delta, mtime_no_entry) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
   EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 4, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
       "", output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema.metapack");
-  // TODO(over-rebuild): bar's WebSchema rebuilds unnecessarily
-  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
-                output / "explorer" / "bar" / "%" / "schema-html.metapack",
-                "https://example.com/bar",
-                output / "explorer" / "bar" / "%" / "schema.metapack",
-                output / "schemas" / "bar" / "%" / "dependencies.metapack",
-                output / "schemas" / "bar" / "%" / "health.metapack",
-                output / "schemas" / "bar" / "%" / "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -2568,9 +2518,7 @@ TEST(Build_delta, mtime_no_file_mark) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -2751,16 +2699,12 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                 output / "explorer" / "a" / "%" / "schema-html.metapack",
                 "https://example.com/a",
                 output / "explorer" / "a" / "%" / "schema.metapack",
-                output / "schemas" / "a" / "%" / "dependencies.metapack",
-                output / "schemas" / "a" / "%" / "health.metapack",
-                output / "schemas" / "a" / "%" / "dependents.metapack");
+                output / "schemas" / "a" / "%" / "health.metapack");
   EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
-                output / "schemas" / "b" / "%" / "dependencies.metapack",
-                output / "schemas" / "b" / "%" / "health.metapack",
-                output / "schemas" / "b" / "%" / "dependents.metapack");
+                output / "schemas" / "b" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -3018,23 +2962,17 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                 output / "explorer" / "a" / "%" / "schema-html.metapack",
                 "https://example.com/a",
                 output / "explorer" / "a" / "%" / "schema.metapack",
-                output / "schemas" / "a" / "%" / "dependencies.metapack",
-                output / "schemas" / "a" / "%" / "health.metapack",
-                output / "schemas" / "a" / "%" / "dependents.metapack");
+                output / "schemas" / "a" / "%" / "health.metapack");
   EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
-                output / "schemas" / "b" / "%" / "dependencies.metapack",
-                output / "schemas" / "b" / "%" / "health.metapack",
-                output / "schemas" / "b" / "%" / "dependents.metapack");
+                output / "schemas" / "b" / "%" / "health.metapack");
   EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
                 output / "explorer" / "c" / "%" / "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "c" / "%" / "schema.metapack",
-                output / "schemas" / "c" / "%" / "dependencies.metapack",
-                output / "schemas" / "c" / "%" / "health.metapack",
-                output / "schemas" / "c" / "%" / "dependents.metapack");
+                output / "schemas" / "c" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -3205,53 +3143,49 @@ TEST(Build_delta, mtime_reverse_dep) {
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 6, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 6, BlazeExhaustive,
-                output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
-                "https://example.com/a",
-                output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 6, BlazeFast,
-                output / "schemas" / "a" / "%" / "blaze-fast.metapack",
-                "https://example.com/a",
-                output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 6, Dependents,
-                output / "schemas" / "a" / "%" / "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 6, Editor,
-                output / "schemas" / "a" / "%" / "editor.metapack",
-                "https://example.com/a",
-                output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 5, 6, Dependents,
-                output / "schemas" / "b" / "%" / "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
-
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
-                          output / "explorer" / "%" / "directory.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 4, SearchIndex,
-                          output / "explorer" / "%" / "search.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
-                output / "explorer" / "a" / "%" / "schema-html.metapack",
-                "https://example.com/a",
-                output / "explorer" / "a" / "%" / "schema.metapack",
-                output / "schemas" / "a" / "%" / "dependencies.metapack",
-                output / "schemas" / "a" / "%" / "health.metapack",
-                output / "schemas" / "a" / "%" / "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
+  EXPECT_ACTION(plan, 3, 1, 7, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
-                output / "schemas" / "b" / "%" / "dependencies.metapack",
-                output / "schemas" / "b" / "%" / "health.metapack",
-                output / "schemas" / "b" / "%" / "dependents.metapack");
+                output / "schemas" / "b" / "%" / "health.metapack");
+  EXPECT_ACTION(plan, 3, 2, 7, BlazeExhaustive,
+                output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 3, 7, BlazeFast,
+                output / "schemas" / "a" / "%" / "blaze-fast.metapack",
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 4, 7, Dependents,
+                output / "schemas" / "a" / "%" / "dependents.metapack",
+                "https://example.com/a", output / "dependency-tree.metapack");
+  EXPECT_ACTION(plan, 3, 5, 7, Editor,
+                output / "schemas" / "a" / "%" / "editor.metapack",
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 3, 6, 7, Dependents,
+                output / "schemas" / "b" / "%" / "dependents.metapack",
+                "https://example.com/b", output / "dependency-tree.metapack");
+
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "a" / "%" / "schema.metapack",
+                          output / "explorer" / "b" / "%" / "schema.metapack");
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
+                          output / "explorer" / "%" / "search.metapack", "",
+                          output / "explorer" / "a" / "%" / "schema.metapack",
+                          output / "explorer" / "b" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+                output / "explorer" / "a" / "%" / "schema-html.metapack",
+                "https://example.com/a",
+                output / "explorer" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "a" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -3379,9 +3313,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -3940,9 +3872,7 @@ TEST(Build_delta, headless_to_full_incremental) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -4095,9 +4025,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -4430,10 +4358,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
-  // WebSchema to rebuild because dependency-tree.metapack is a global
-  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 25);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 23);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
@@ -4534,7 +4459,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SearchIndex,
+  EXPECT_ACTION(plan, 4, 0, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
@@ -4542,7 +4467,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "schema.metapack",
                 output / "explorer" / "example" / "schemas" / "a" / "%" /
                     "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 5, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, DirectoryList,
                           output / "explorer" / "example" / "schemas" / "%" /
                               "directory.metapack",
                           "",
@@ -4552,43 +4477,14 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                               "%" / "schema.metapack",
                           output / "explorer" / "example" / "schemas" / "c" /
                               "%" / "schema.metapack");
-  // TODO(over-rebuild): a's and b's WebSchema rebuild unnecessarily
-  EXPECT_ACTION(plan, 4, 2, 5, WebSchema,
-                output / "explorer" / "example" / "schemas" / "a" / "%" /
-                    "schema-html.metapack",
-                "https://example.com/a",
-                output / "explorer" / "example" / "schemas" / "a" / "%" /
-                    "schema.metapack",
-                output / "schemas" / "example" / "schemas" / "a" / "%" /
-                    "dependencies.metapack",
-                output / "schemas" / "example" / "schemas" / "a" / "%" /
-                    "health.metapack",
-                output / "schemas" / "example" / "schemas" / "a" / "%" /
-                    "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
-                output / "explorer" / "example" / "schemas" / "b" / "%" /
-                    "schema-html.metapack",
-                "https://example.com/b",
-                output / "explorer" / "example" / "schemas" / "b" / "%" /
-                    "schema.metapack",
-                output / "schemas" / "example" / "schemas" / "b" / "%" /
-                    "dependencies.metapack",
-                output / "schemas" / "example" / "schemas" / "b" / "%" /
-                    "health.metapack",
-                output / "schemas" / "example" / "schemas" / "b" / "%" /
-                    "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
-                    "dependencies.metapack",
-                output / "schemas" / "example" / "schemas" / "c" / "%" /
-                    "health.metapack",
-                output / "schemas" / "example" / "schemas" / "c" / "%" /
-                    "dependents.metapack");
+                    "health.metapack");
 
   EXPECT_ACTION(
       plan, 5, 0, 2, DirectoryList,
@@ -4815,9 +4711,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack",
-                output / "schemas" / "foo" / "%" / "health.metapack",
-                output / "schemas" / "foo" / "%" / "dependents.metapack");
+                output / "schemas" / "foo" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
@@ -4894,10 +4788,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
       "1.0.0", "", sourcemeta::core::JSON::make_object(),
       sourcemeta::core::JSON::make_object(), changed, removed)};
 
-  // TODO(over-rebuild): Adding a schema forces ALL dependents and ALL
-  // WebSchema to rebuild because dependency-tree.metapack is a global
-  // aggregate bottleneck. Ideally only the affected schemas would rebuild.
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "c" / "%" / "schema.metapack",
@@ -4967,38 +4858,21 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 5, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 5, SearchIndex,
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
                           output / "explorer" / "%" / "search.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  // TODO(over-rebuild): a's and b's WebSchema rebuild unnecessarily
-  EXPECT_ACTION(plan, 4, 2, 5, WebSchema,
-                output / "explorer" / "a" / "%" / "schema-html.metapack",
-                "https://example.com/a",
-                output / "explorer" / "a" / "%" / "schema.metapack",
-                output / "schemas" / "a" / "%" / "dependencies.metapack",
-                output / "schemas" / "a" / "%" / "health.metapack",
-                output / "schemas" / "a" / "%" / "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
-                output / "explorer" / "b" / "%" / "schema-html.metapack",
-                "https://example.com/b",
-                output / "explorer" / "b" / "%" / "schema.metapack",
-                output / "schemas" / "b" / "%" / "dependencies.metapack",
-                output / "schemas" / "b" / "%" / "health.metapack",
-                output / "schemas" / "b" / "%" / "dependents.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "c" / "%" / "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "c" / "%" / "schema.metapack",
-                output / "schemas" / "c" / "%" / "dependencies.metapack",
-                output / "schemas" / "c" / "%" / "health.metapack",
-                output / "schemas" / "c" / "%" / "dependents.metapack");
+                output / "schemas" / "c" / "%" / "health.metapack");
 
   EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",

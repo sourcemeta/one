@@ -1,6 +1,7 @@
 import "./tabs.js";
 import "./copy.js";
 import "./search.js";
+import "./dependencies.js";
 
 import { Editor } from "./editor.js";
 
@@ -23,26 +24,29 @@ function toArray(input) {
   return Array.isArray(input) ? input : [ input ];
 }
 
-document.querySelectorAll('[data-sourcemeta-ui-editor-highlight]').forEach((element) => {
-  element.addEventListener("click", async (event) => {
-    event.preventDefault();
-    const url = element.getAttribute('data-sourcemeta-ui-editor-highlight');
-    const pointers = JSON.parse(element.getAttribute('data-sourcemeta-ui-editor-highlight-pointers'));
-    if (EDITORS[url]) {
-      const positions = await window.fetch(`/self/v1/api/schemas/positions${url.replace(/\.json$/i, "")}`);
-      if (!positions.ok) {
-        throw new Error(positions.statusText);
-      }
+document.addEventListener("click", async (event) => {
+  const element = event.target.closest('[data-sourcemeta-ui-editor-highlight]');
+  if (!element) {
+    return;
+  }
 
-      const positions_json = await positions.json();
-      EDITORS[url].unhighlight();
-      for (const [index, pointer] of toArray(pointers).entries()) {
-        const range = positions_json[pointer];
-        EDITORS[url].highlight(range, "#fb9c9c");
-        if (index === 0) {
-          EDITORS[url].scroll(range[0]);
-        }
+  event.preventDefault();
+  const url = element.getAttribute('data-sourcemeta-ui-editor-highlight');
+  const pointers = JSON.parse(element.getAttribute('data-sourcemeta-ui-editor-highlight-pointers'));
+  if (EDITORS[url]) {
+    const positions = await window.fetch(`/self/v1/api/schemas/positions${url.replace(/\.json$/i, "")}`);
+    if (!positions.ok) {
+      throw new Error(positions.statusText);
+    }
+
+    const positions_json = await positions.json();
+    EDITORS[url].unhighlight();
+    for (const [index, pointer] of toArray(pointers).entries()) {
+      const range = positions_json[pointer];
+      EDITORS[url].highlight(range, "#fb9c9c");
+      if (index === 0) {
+        EDITORS[url].scroll(range[0]);
       }
     }
-  });
+  }
 });

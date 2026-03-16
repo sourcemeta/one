@@ -181,17 +181,13 @@ static constexpr std::array<PerSchemaRule, 13> PER_SCHEMA_RULES{{
      .base = TargetBase::Explorer,
      .filename = "schema-html.metapack",
      .gate = TargetGate::FullOnly,
-     .dirty = DirtyOverride::ForceIfAffected,
+     .dirty = DirtyOverride::Normal,
      .is_root = false,
      .dependencies = {{{.source = DependencySource::ExplorerBase,
                         .filename = "schema.metapack"},
                        {.source = DependencySource::SchemaBase,
-                        .filename = "dependencies.metapack"},
-                       {.source = DependencySource::SchemaBase,
-                        .filename = "health.metapack"},
-                       {.source = DependencySource::SchemaBase,
-                        .filename = "dependents.metapack"}}},
-     .dependency_count = 4},
+                        .filename = "health.metapack"}}},
+     .dependency_count = 2},
 }};
 
 enum class AggregateOutputBase : std::uint8_t { Output, Explorer };
