@@ -94,6 +94,10 @@ EOF
 remove_threads_information "$TMP/output.txt"
 grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
+# TODO(over-rebuild): Adding s5 causes dependents.metapack to rebuild for
+# s1, s2, s3, and s4 even though none of these schemas reference each other.
+# The dependency-tree.metapack global aggregate triggers ForceOnGraphChange
+# for all dependents, not just the ones whose graph actually changed.
 cat << 'EOF' > "$TMP/expected.txt"
 (  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
 (  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
