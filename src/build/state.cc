@@ -75,20 +75,29 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
   }
 
   try {
+    this->loaded_path = path;
     this->view = std::make_unique<sourcemeta::core::FileView>(path);
     this->view_data = this->view->as<std::uint8_t>();
     const auto file_size{this->view->size()};
 
     if (file_size < HEADER_SIZE) {
+      this->table_capacity = 0;
+      this->table_slots = nullptr;
+      this->string_pool = nullptr;
       this->view.reset();
       this->view_data = nullptr;
+      this->entry_count = 0;
       return;
     }
 
     if (read_field<std::uint32_t>(this->view_data, 0) != STATE_MAGIC ||
         read_field<std::uint32_t>(this->view_data, 4) != STATE_VERSION) {
+      this->table_capacity = 0;
+      this->table_slots = nullptr;
+      this->string_pool = nullptr;
       this->view.reset();
       this->view_data = nullptr;
+      this->entry_count = 0;
       return;
     }
 
@@ -118,7 +127,7 @@ auto BuildState::probe_slot(std::string_view key) const
   const auto hash{fnv1a(key.data(), key.size())};
   auto index{static_cast<std::uint32_t>(hash & (this->table_capacity - 1))};
 
-  while (true) {
+  for (std::uint32_t probe = 0; probe < this->table_capacity; ++probe) {
     const auto *slot{this->table_slots + index * SLOT_SIZE};
     if (slot[SLOT_OCCUPIED] == 0) {
       return nullptr;
@@ -137,6 +146,8 @@ auto BuildState::probe_slot(std::string_view key) const
 
     index = (index + 1) & (this->table_capacity - 1);
   }
+
+  return nullptr;
 }
 
 auto BuildState::parse_slot_entry(const std::uint8_t *slot) const
@@ -336,7 +347,7 @@ auto BuildState::keys() const -> const std::vector<std::string_view> & {
 }
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {
-  if (!this->dirty && this->view) {
+  if (!this->dirty && this->view && path == this->loaded_path) {
     return;
   }
 
@@ -421,6 +432,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             .count())};
 
     const auto deps_offset{static_cast<std::uint32_t>(pool.size())};
+    assert(entry.dependencies.size() <= UINT16_MAX);
     const auto deps_count{
         static_cast<std::uint16_t>(entry.dependencies.size())};
     for (const auto &dependency : entry.dependencies) {
