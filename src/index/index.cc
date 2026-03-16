@@ -350,7 +350,6 @@ static auto index_main(const std::string_view &program,
   constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
 
   std::atomic<std::size_t> progress_counter{0};
-  std::mutex entries_mutex;
 
   for (auto &wave : plan.waves) {
     sourcemeta::core::parallel_for_each(
@@ -366,7 +365,7 @@ static auto index_main(const std::string_view &program,
             print_progress(mutex, threads, "Disposing", relative_path, current,
                            plan.size);
             std::filesystem::remove_all(action.destination);
-            std::lock_guard<std::mutex> lock{entries_mutex};
+            const auto lock{entries.take_lock()};
             entries.forget(action.destination.native());
             return;
           }
@@ -383,7 +382,7 @@ static auto index_main(const std::string_view &program,
               resolver, configuration, raw_configuration)};
 
           if (wrote) {
-            std::lock_guard<std::mutex> lock{entries_mutex};
+            const auto lock{entries.take_lock()};
             entries.commit(action.destination, std::move(action.dependencies));
           } else {
             print_progress(mutex, threads, "Bypassing", relative_path, current,
