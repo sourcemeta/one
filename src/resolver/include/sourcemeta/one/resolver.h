@@ -13,6 +13,7 @@
 #include <shared_mutex>  // std::shared_mutex
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <utility>       // std::pair
 
 namespace sourcemeta::one {
 
