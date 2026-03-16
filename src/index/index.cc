@@ -297,17 +297,16 @@ static auto index_main(const std::string_view &program,
     const auto *cached{entries.resolve(detected.path.native(), detected.mtime)};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
-      resolver.emplace_unlocked(
-          cached->new_identifier,
-          sourcemeta::one::Resolver::Entry{
-              .path = detected.path,
-              .relative_path = cached->relative_path,
-              .mtime = detected.mtime,
-              .evaluate = evaluate_cache[&collection],
-              .cache_path = std::nullopt,
-              .dialect = cached->dialect,
-              .original_identifier = cached->original_identifier,
-              .collection = &collection});
+      resolver.emplace(cached->new_identifier,
+                       sourcemeta::one::Resolver::Entry{
+                           .path = detected.path,
+                           .relative_path = cached->relative_path,
+                           .mtime = detected.mtime,
+                           .evaluate = evaluate_cache[&collection],
+                           .cache_path = std::nullopt,
+                           .dialect = cached->dialect,
+                           .original_identifier = cached->original_identifier,
+                           .collection = &collection});
     } else {
       uncached_schemas.emplace_back(detected);
     }

@@ -339,12 +339,6 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
 }
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
-  std::unique_lock lock{this->mutex};
-  this->views.emplace(std::move(new_identifier), std::move(entry));
-}
-
-auto Resolver::emplace_unlocked(std::string new_identifier, Entry entry)
-    -> void {
   this->views.emplace(std::move(new_identifier), std::move(entry));
 }
 

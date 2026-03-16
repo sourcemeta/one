@@ -60,7 +60,6 @@ public:
            std::filesystem::file_time_type mtime) -> AddResult;
 
   auto emplace(std::string new_identifier, Entry entry) -> void;
-  auto emplace_unlocked(std::string new_identifier, Entry entry) -> void;
 
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
 
