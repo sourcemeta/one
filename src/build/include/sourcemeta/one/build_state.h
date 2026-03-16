@@ -86,6 +86,7 @@ private:
                              TransparentEqual>
       lazy_cache;
 
+  std::filesystem::path loaded_path;
   std::size_t entry_count{0};
   bool dirty{false};
   mutable bool keys_stale{true};
