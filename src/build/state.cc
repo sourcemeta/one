@@ -73,6 +73,7 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
     }
 
     const auto entry_count{read_uint32(file_data, offset)};
+    this->data.reserve(entry_count);
     for (std::uint32_t index = 0; index < entry_count; ++index) {
       const auto path_length{read_uint32(file_data, offset)};
       std::string entry_path{reinterpret_cast<const char *>(file_data + offset),
