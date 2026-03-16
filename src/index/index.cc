@@ -144,25 +144,7 @@ static auto index_main(const std::string_view &program,
       raw_configuration, configuration_path.parent_path())};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (3) Support overriding the target URL from the CLI
-  /////////////////////////////////////////////////////////////////////////////
-
-  if (app.contains("url")) {
-    std::cerr << "Overriding the URL in the configuration file with: "
-              << app.at("url").at(0) << "\n";
-    sourcemeta::core::URI url{std::string{app.at("url").at(0)}};
-    if (url.is_absolute() && url.scheme().has_value() &&
-        (url.scheme().value() == "https" || url.scheme().value() == "http")) {
-      configuration.url =
-          sourcemeta::core::URI::canonicalize(std::string{app.at("url").at(0)});
-    } else {
-      std::cerr << "error: The URL option must be an absolute HTTP(s) URL\n";
-      return EXIT_FAILURE;
-    }
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (4) Resolve a URI to a schema filesystem path
+  // (3) Resolve a URI to a schema filesystem path
   /////////////////////////////////////////////////////////////////////////////
 
   if (app.contains("resolve-schema")) {
@@ -179,7 +161,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Prepare the output directory and load previous state
+  // (4) Prepare the output directory and load previous state
   /////////////////////////////////////////////////////////////////////////////
 
   std::filesystem::create_directories(output_path);
@@ -226,7 +208,7 @@ static auto index_main(const std::string_view &program,
                              : std::thread::hardware_concurrency()};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (6) First pass to locate all of the schemas we will be indexing
+  // (5) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +254,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Detect");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (7) Resolve all detected schemas in parallel
+  // (6) Resolve all detected schemas in parallel
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver;
@@ -346,7 +328,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Resolve");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) Build schema info map and compute the delta plan
+  // (7) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
   const std::vector<std::filesystem::path> changed;
@@ -359,7 +341,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Delta");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Execute the plan wave by wave
+  // (8) Execute the plan wave by wave
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -413,7 +395,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Build");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Save state
+  // (9) Save state and profile
   /////////////////////////////////////////////////////////////////////////////
 
   entries.save(state_path);
@@ -421,7 +403,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Cleanup");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Compute metrics
+  // (10) Output metrics
   /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Add a test for this
@@ -476,7 +458,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   try {
     sourcemeta::core::Options app;
     // TODO: Support a --help flag
-    app.option("url", {"u"});
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});

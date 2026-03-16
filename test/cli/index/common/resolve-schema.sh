@@ -17,21 +17,9 @@ resolve_schema_match_short() {
   test "$RESULT" = "$4"
 }
 
-resolve_schema_match_with_url() {
-  RESULT="$("$1" "$2" "$TMP/output" \
-    --url "$3" --resolve-schema "$4" 2>/dev/null)"
-  test "$RESULT" = "$5"
-}
-
 resolve_schema_no_match() {
   "$1" "$2" "$TMP/output" \
     --resolve-schema "$3" && CODE="$?" || CODE="$?"
-  test "$CODE" = "1"
-}
-
-resolve_schema_no_match_with_url() {
-  "$1" "$2" "$TMP/output" \
-    --url "$3" --resolve-schema "$4" && CODE="$?" || CODE="$?"
   test "$CODE" = "1"
 }
 
@@ -97,15 +85,6 @@ resolve_schema_no_match "$1" "$TMP/one.json" "/unknown/foo"
 # Wrong origin
 resolve_schema_no_match "$1" "$TMP/one.json" \
   "https://other.com/schemas/foo.json"
-
-# --url override changes which URIs match
-resolve_schema_match_with_url "$1" "$TMP/one.json" \
-  "https://other.com/" "https://other.com/schemas/foo.json" \
-  "$(realpath "$TMP")/schemas/foo.json"
-
-# --url override makes original URL stop matching
-resolve_schema_no_match_with_url "$1" "$TMP/one.json" \
-  "https://other.com/" "https://sourcemeta.com/schemas/foo.json"
 
 # A full run to assert on standard error output
 "$1" "$TMP/one.json" "$TMP/output" \
