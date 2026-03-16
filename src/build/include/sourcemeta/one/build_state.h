@@ -5,6 +5,8 @@
 #include <sourcemeta/one/build_export.h>
 #endif
 
+#include <sourcemeta/core/io.h>
+
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint32_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
@@ -15,10 +17,6 @@
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
-namespace sourcemeta::core {
-class FileView;
-}
-
 namespace sourcemeta::one {
 
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {
@@ -28,10 +26,10 @@ public:
     std::vector<std::filesystem::path> dependencies;
   };
 
-  BuildState();
-  ~BuildState();
-  BuildState(BuildState &&) noexcept;
-  auto operator=(BuildState &&) noexcept -> BuildState &;
+  BuildState() = default;
+  ~BuildState() = default;
+  BuildState(BuildState &&) noexcept = default;
+  auto operator=(BuildState &&) noexcept -> BuildState & = default;
   BuildState(const BuildState &) = delete;
   auto operator=(const BuildState &) -> BuildState & = delete;
 

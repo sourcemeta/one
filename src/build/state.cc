@@ -69,11 +69,6 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-BuildState::BuildState() = default;
-BuildState::~BuildState() = default;
-BuildState::BuildState(BuildState &&) noexcept = default;
-auto BuildState::operator=(BuildState &&) noexcept -> BuildState & = default;
-
 auto BuildState::load(const std::filesystem::path &path) -> void {
   if (!std::filesystem::exists(path)) {
     return;
