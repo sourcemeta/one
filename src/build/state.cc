@@ -88,6 +88,10 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
+auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
+  return std::unique_lock<std::mutex>{this->mutex_};
+}
+
 auto BuildState::load(const std::filesystem::path &path) -> void {
   if (!std::filesystem::exists(path)) {
     return;

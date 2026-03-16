@@ -12,10 +12,11 @@
 namespace sourcemeta::one {
 
 auto GENERATE_WEB_DIRECTORY::handler(
+    const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
-    const sourcemeta::core::JSON &) -> void {
+    const sourcemeta::core::JSON &) -> bool {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   const auto directory{read_json(action.dependencies.front())};
@@ -41,6 +42,7 @@ auto GENERATE_WEB_DIRECTORY::handler(
              Encoding::GZIP, sourcemeta::core::JSON{nullptr},
              std::chrono::duration_cast<std::chrono::milliseconds>(
                  timestamp_end - timestamp_start));
+  return true;
 }
 
 } // namespace sourcemeta::one

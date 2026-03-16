@@ -11,6 +11,7 @@
 #include <cstdint>     // std::uint8_t, std::uint32_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
 #include <memory>      // std::unique_ptr
+#include <mutex>       // std::mutex, std::unique_lock
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <unordered_map> // std::unordered_map
@@ -36,10 +37,12 @@ public:
 
   BuildState() = default;
   ~BuildState() = default;
-  BuildState(BuildState &&) noexcept = default;
-  auto operator=(BuildState &&) noexcept -> BuildState & = default;
+  BuildState(BuildState &&) = delete;
+  auto operator=(BuildState &&) -> BuildState & = delete;
   BuildState(const BuildState &) = delete;
   auto operator=(const BuildState &) -> BuildState & = delete;
+
+  [[nodiscard]] auto take_lock() const -> std::unique_lock<std::mutex>;
 
   auto load(const std::filesystem::path &path) -> void;
   auto save(const std::filesystem::path &path) const -> void;
@@ -106,6 +109,7 @@ private:
                              TransparentEqual>
       resolver_lazy_cache;
 
+  mutable std::mutex mutex_;
   std::filesystem::path loaded_path;
   std::size_t entry_count{0};
   std::size_t resolver_entry_count{0};

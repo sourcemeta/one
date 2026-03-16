@@ -38,52 +38,59 @@
 namespace sourcemeta::one {
 
 struct GENERATE_VERSION {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(
         sourcemeta::core::JSON{std::string{action.data}}, stream);
+    return true;
   }
 };
 
 struct GENERATE_COMMENT {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(
         sourcemeta::core::JSON{std::string{action.data}}, stream);
+    return true;
   }
 };
 
 struct GENERATE_CONFIGURATION {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &raw_configuration) -> void {
+                      const sourcemeta::core::JSON &raw_configuration) -> bool {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(raw_configuration, stream);
+    return true;
   }
 };
 
 struct GENERATE_MATERIALISED_SCHEMA {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{resolver(action.data)};
     assert(schema.has_value());
@@ -119,6 +126,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     resolver.cache_path(action.data, action.destination);
+    return true;
   }
 
 private:
@@ -145,11 +153,12 @@ private:
 };
 
 struct GENERATE_POINTER_POSITIONS {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
     sourcemeta::one::read_json(action.dependencies.front(), std::ref(tracker));
@@ -161,15 +170,17 @@ struct GENERATE_POINTER_POSITIONS {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_FRAME_LOCATIONS {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     sourcemeta::core::PointerPositionTracker tracker;
     const auto contents{sourcemeta::one::read_json(action.dependencies.front(),
@@ -188,15 +199,17 @@ struct GENERATE_FRAME_LOCATIONS {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_DEPENDENCIES {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(action.dependencies.front())};
@@ -224,6 +237,7 @@ struct GENERATE_DEPENDENCIES {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 
 private:
@@ -238,11 +252,12 @@ private:
 };
 
 struct GENERATE_DEPENDENCY_TREE {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
     // Direct dependencies
@@ -297,15 +312,17 @@ struct GENERATE_DEPENDENCY_TREE {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_DEPENDENTS {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(action.dependencies.front())};
@@ -330,15 +347,17 @@ struct GENERATE_DEPENDENTS {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_HEALTH {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents{
         sourcemeta::one::read_json(action.dependencies.front())};
@@ -386,6 +405,7 @@ struct GENERATE_HEALTH {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 
 private:
@@ -431,11 +451,12 @@ private:
 };
 
 struct GENERATE_BUNDLE {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(action.dependencies.front())};
     sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
@@ -459,15 +480,17 @@ struct GENERATE_BUNDLE {
         sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_EDITOR {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{sourcemeta::one::read_json(action.dependencies.front())};
     sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
@@ -491,6 +514,7 @@ struct GENERATE_EDITOR {
         sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
@@ -519,33 +543,38 @@ static auto generate_blaze_template(
 }
 
 struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     generate_blaze_template(action.destination, action.dependencies,
                             sourcemeta::blaze::Mode::Exhaustive);
+    return true;
   }
 };
 
 struct GENERATE_BLAZE_TEMPLATE_FAST {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     generate_blaze_template(action.destination, action.dependencies,
                             sourcemeta::blaze::Mode::FastValidation);
+    return true;
   }
 };
 
 struct GENERATE_STATS {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema{sourcemeta::one::read_json(action.dependencies.front())};
     std::map<sourcemeta::core::JSON::String,
@@ -580,15 +609,17 @@ struct GENERATE_STATS {
         sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_URITEMPLATE_ROUTES {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     sourcemeta::core::URITemplateRouter router;
     router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
     router.add("/self/v1/api/list/{+path}",
@@ -623,6 +654,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
     std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::core::URITemplateRouterView::save(router, action.destination);
+    return true;
   }
 };
 
