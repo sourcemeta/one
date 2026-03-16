@@ -250,8 +250,9 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
 #define EXPECT_TOTAL_FILES(plan, entries, ...)                                 \
   do {                                                                         \
     std::set<std::filesystem::path> total_files_result;                        \
-    for (const auto &[total_files_path, total_files_entry] : (entries)) {      \
-      total_files_result.insert(total_files_path);                             \
+    for (const auto total_files_key : (entries).keys()) {                      \
+      total_files_result.insert(                                               \
+          std::filesystem::path{std::string{total_files_key}});                \
     }                                                                          \
     for (const auto &total_files_wave : (plan).waves) {                        \
       for (const auto &total_files_action : total_files_wave) {                \

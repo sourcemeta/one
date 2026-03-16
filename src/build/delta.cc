@@ -328,18 +328,17 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       }
 
       const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
-      for (const auto &[entry_path, entry_value] : entries) {
+      for (const auto entry_path : entries.keys()) {
         if (!entry_path.starts_with(schemas_prefix)) {
           continue;
         }
 
         const auto sentinel_pos{entry_path.find("/%/")};
-        if (sentinel_pos == std::string::npos) {
+        if (sentinel_pos == std::string_view::npos) {
           continue;
         }
 
-        if (!base_set.contains(
-                std::string_view{entry_path.data(), sentinel_pos + 2})) {
+        if (!base_set.contains(entry_path.substr(0, sentinel_pos + 2))) {
           fast_path_dirty = true;
           break;
         }
@@ -534,13 +533,13 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   if (build_type == BuildPlan::Type::Headless && dirty_set.empty() &&
       !is_full) {
     const auto explorer_prefix{explorer_path.string() + "/"};
-    for (const auto &[entry_path, entry] : entries) {
+    for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(explorer_prefix)) {
         continue;
       }
 
       const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string::npos) {
+      if (last_slash == std::string_view::npos) {
         continue;
       }
 
@@ -577,18 +576,18 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
 
     const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
-    for (const auto &[entry_path, entry] : entries) {
+    for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(schemas_prefix)) {
         continue;
       }
 
       const auto sentinel_pos{entry_path.find("/%/")};
-      if (sentinel_pos == std::string::npos) {
+      if (sentinel_pos == std::string_view::npos) {
         continue;
       }
 
       if (!current_schema_bases.contains(
-              std::string_view{entry_path.data(), sentinel_pos + 2})) {
+              entry_path.substr(0, sentinel_pos + 2))) {
         has_potential_stale = true;
         break;
       }
@@ -945,7 +944,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
 
     std::unordered_set<std::string> stale_roots;
-    for (const auto &[entry_path, entry] : entries) {
+    for (const auto entry_key : entries.keys()) {
+      const std::string entry_path{entry_key};
       if (!entry_path.starts_with(output_prefix)) {
         continue;
       }
@@ -1008,13 +1008,13 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   bool web_removed{false};
   if (build_type == BuildPlan::Type::Headless) {
     const auto explorer_prefix{explorer_path.string() + "/"};
-    for (const auto &[entry_path, entry] : entries) {
+    for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(explorer_prefix)) {
         continue;
       }
 
       const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string::npos) {
+      if (last_slash == std::string_view::npos) {
         continue;
       }
 
@@ -1034,12 +1034,12 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   if (build_type == BuildPlan::Type::Full && !is_full) {
     const auto explorer_prefix{explorer_path.string() + "/"};
     bool had_web_entries{false};
-    for (const auto &[entry_path, entry] : entries) {
+    for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(explorer_prefix)) {
         continue;
       }
       const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string::npos) {
+      if (last_slash == std::string_view::npos) {
         continue;
       }
       const std::string_view filename{entry_path.data() + last_slash + 1,

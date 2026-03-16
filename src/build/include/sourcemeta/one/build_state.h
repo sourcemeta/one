@@ -5,9 +5,16 @@
 #include <sourcemeta/one/build_export.h>
 #endif
 
-#include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
-#include <string>     // std::string
+#include <sourcemeta/core/io.h>
+
+#include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint32_t
+#include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
+#include <memory>      // std::unique_ptr
+#include <string>      // std::string
+#include <string_view> // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
 namespace sourcemeta::one {
@@ -19,56 +26,70 @@ public:
     std::vector<std::filesystem::path> dependencies;
   };
 
-  using Container = std::unordered_map<std::string, Entry>;
-
   BuildState() = default;
+  ~BuildState() = default;
+  BuildState(BuildState &&) noexcept = default;
+  auto operator=(BuildState &&) noexcept -> BuildState & = default;
+  BuildState(const BuildState &) = delete;
+  auto operator=(const BuildState &) -> BuildState & = delete;
 
   auto load(const std::filesystem::path &path) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
-  [[nodiscard]] auto empty() const -> bool { return this->data.empty(); }
-  [[nodiscard]] auto size() const -> std::size_t { return this->data.size(); }
+  [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
+  [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
 
-  [[nodiscard]] auto contains(const Container::key_type &key) const -> bool {
-    return this->data.contains(key);
-  }
-
-  [[nodiscard]] auto entry(const Container::key_type &key) const
-      -> const Entry * {
-    const auto match{this->data.find(key)};
-    return match == this->data.end() ? nullptr : &match->second;
-  }
-
+  [[nodiscard]] auto contains(const std::string &key) const -> bool;
+  [[nodiscard]] auto entry(const std::string &key) const -> const Entry *;
   [[nodiscard]] auto
-  is_stale(const Container::key_type &key,
-           const std::filesystem::file_time_type source_mtime) const -> bool {
-    const auto *result{this->entry(key)};
-    return result == nullptr || source_mtime > result->file_mark;
-  }
+  is_stale(const std::string &key,
+           std::filesystem::file_time_type source_mtime) const -> bool;
 
   auto commit(const std::filesystem::path &path,
-              std::vector<std::filesystem::path> dependencies) -> void {
-    auto &result{this->data[path.native()]};
-    result.file_mark = std::filesystem::file_time_type::clock::now();
-    result.dependencies = std::move(dependencies);
-  }
+              std::vector<std::filesystem::path> dependencies) -> void;
+  auto forget(const std::string &key) -> void;
+  auto emplace(const std::filesystem::path &path, Entry entry) -> void;
 
-  auto forget(const Container::key_type &key) -> void;
-
-  [[nodiscard]] auto begin() const -> Container::const_iterator {
-    return this->data.begin();
-  }
-
-  [[nodiscard]] auto end() const -> Container::const_iterator {
-    return this->data.end();
-  }
-
-  auto emplace(const std::filesystem::path &path, Entry entry) -> void {
-    this->data[path.native()] = std::move(entry);
-  }
+  [[nodiscard]] auto keys() const -> const std::vector<std::string_view> &;
 
 private:
-  Container data;
+  struct TransparentHash {
+    using is_transparent = void;
+    auto operator()(std::string_view value) const noexcept -> std::size_t {
+      return std::hash<std::string_view>{}(value);
+    }
+  };
+
+  struct TransparentEqual {
+    using is_transparent = void;
+    auto operator()(std::string_view left,
+                    std::string_view right) const noexcept -> bool {
+      return left == right;
+    }
+  };
+
+  auto probe_slot(std::string_view key) const -> const std::uint8_t *;
+  auto parse_slot_entry(const std::uint8_t *slot) const -> const Entry &;
+
+  std::unique_ptr<sourcemeta::core::FileView> view;
+  const std::uint8_t *view_data{nullptr};
+
+  std::uint32_t table_capacity{0};
+  const std::uint8_t *table_slots{nullptr};
+  const std::uint8_t *string_pool{nullptr};
+
+  std::unordered_map<std::string, Entry, TransparentHash, TransparentEqual>
+      overlay;
+  std::unordered_set<std::string, TransparentHash, TransparentEqual> deleted;
+
+  mutable std::unordered_map<std::string, Entry, TransparentHash,
+                             TransparentEqual>
+      lazy_cache;
+
+  std::size_t entry_count{0};
+  bool dirty{false};
+  mutable bool keys_stale{true};
+  mutable std::vector<std::string_view> cached_keys;
 };
 
 } // namespace sourcemeta::one
