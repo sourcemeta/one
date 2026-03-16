@@ -300,7 +300,7 @@ static auto index_main(const std::string_view &program,
     }
   }
 
-  // Phase 2: resolve uncached schemas and commit to cache (parallel)
+  // Phase 2: resolve uncached schemas and commit to cache
   sourcemeta::core::parallel_for_each(
       uncached_schemas.begin(), uncached_schemas.end(),
       [&configuration, &resolver, &mutex, &entries, &uncached_schemas,
