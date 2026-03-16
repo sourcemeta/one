@@ -270,13 +270,15 @@ auto GENERATE_WEB_SCHEMA::handler(
       div({{"data-sourcemeta-ui-tab-id", "examples"}, {"class", "d-none"}},
           examples_content));
 
-  details_children.emplace_back(div(
-      {{"data-sourcemeta-ui-tab-id", "dependencies"}, {"class", "d-none"}},
-      div({{"data-sourcemeta-ui-dependencies", meta.at("path").to_string()}},
-          "Loading...")));
+  details_children.emplace_back(
+      div({{"data-sourcemeta-ui-tab-id", "dependencies"}, {"class", "d-none"}},
+          div({{"data-sourcemeta-ui-dependencies", meta.at("path").to_string()},
+               {"data-sourcemeta-ui-identifier", canonical}},
+              "Loading...")));
   details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "dependents"}, {"class", "d-none"}},
-          div({{"data-sourcemeta-ui-dependents", meta.at("path").to_string()}},
+          div({{"data-sourcemeta-ui-dependents", meta.at("path").to_string()},
+               {"data-sourcemeta-ui-identifier", canonical}},
               "Loading...")));
 
   // Health tab

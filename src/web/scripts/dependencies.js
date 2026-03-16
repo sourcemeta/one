@@ -25,7 +25,7 @@ function schemaLink(url, origin) {
 document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (element) => {
   const path = element.getAttribute("data-sourcemeta-ui-dependencies");
   const origin = window.location.origin;
-  const identifier = origin + path;
+  const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
   const response = await window.fetch(`/self/v1/api/schemas/dependencies${path}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependencies.";
@@ -103,7 +103,7 @@ document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (el
 document.querySelectorAll("[data-sourcemeta-ui-dependents]").forEach(async (element) => {
   const path = element.getAttribute("data-sourcemeta-ui-dependents");
   const origin = window.location.origin;
-  const identifier = origin + path;
+  const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
   const response = await window.fetch(`/self/v1/api/schemas/dependents${path}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependents.";
