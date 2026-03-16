@@ -56,6 +56,17 @@ static auto declare_target(TargetMap &targets, BuildPlan::Action::Type action,
       .action = action, .dependencies = std::move(dependencies), .data = data};
 }
 
+static auto
+declare_target_direct(TargetMap &targets, BuildPlan::Action::Type action,
+                      std::string destination, const std::string_view data = {})
+    -> Target & {
+  auto iterator{targets.try_emplace(std::move(destination)).first};
+  iterator->second.action = action;
+  iterator->second.dependencies.clear();
+  iterator->second.data = data;
+  return iterator->second;
+}
+
 static auto declare_schema_targets(
     TargetMap &targets, const std::string &schema_base,
     const std::string &explorer_base, const std::string &output_string,
@@ -76,37 +87,33 @@ static auto declare_schema_targets(
 
     const auto &base{rule.base == TargetBase::Schema ? schema_base
                                                      : explorer_base};
-    auto destination{append_filename(base, rule.filename)};
-
-    std::vector<std::string> dependencies;
-    dependencies.reserve(rule.dependency_count);
+    auto &target{declare_target_direct(
+        targets, rule.action, append_filename(base, rule.filename), uri)};
+    target.dependencies.reserve(rule.dependency_count);
     for (std::uint8_t dependency_index{0};
          dependency_index < rule.dependency_count; dependency_index++) {
       const auto &dependency{rule.dependencies[dependency_index]};
       switch (dependency.source) {
         case DependencySource::SchemaBase:
-          dependencies.push_back(
+          target.dependencies.push_back(
               append_filename(schema_base, dependency.filename));
           break;
         case DependencySource::ExplorerBase:
-          dependencies.push_back(
+          target.dependencies.push_back(
               append_filename(explorer_base, dependency.filename));
           break;
         case DependencySource::GlobalOutput:
-          dependencies.push_back(
+          target.dependencies.push_back(
               append_filename(output_string, dependency.filename));
           break;
         case DependencySource::ExternalSource:
-          dependencies.push_back(source_string);
+          target.dependencies.push_back(source_string);
           break;
         case DependencySource::ExternalConfig:
-          dependencies.push_back(configuration_string);
+          target.dependencies.push_back(configuration_string);
           break;
       }
     }
-
-    declare_target(targets, rule.action, std::move(destination),
-                   std::move(dependencies), uri);
   }
 }
 
@@ -229,91 +236,108 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   }
 
   // Fast path: detect "nothing changed" using string-only operations,
-  // avoiding all filesystem::path construction and target declaration
+  // avoiding all filesystem::path construction and target declaration.
+  // Since changed.empty(), no source files changed, so root staleness
+  // checks use contains() instead of is_stale(). Web transition uses
+  // O(1) routes.bin check instead of iterating all entries.
   if (!is_full && changed.empty() && removed.empty()) {
     const auto &output_string{output.native()};
     bool fast_path_dirty{false};
 
-    // Reusable buffers to avoid per-rule string allocation
+    // O(1) web transition: routes.bin exists only after Full builds
+    const auto routes_string{(output / "routes.bin").string()};
+    const auto had_web{entries.contains(routes_string)};
+    const auto needs_web{build_type == BuildPlan::Type::Full};
+    if (had_web != needs_web) {
+      fast_path_dirty = true;
+    }
+
+    // Check per-schema targets using buffer reuse
     std::string schema_buffer;
     std::string explorer_buffer;
     schema_buffer.reserve(output_string.size() + 64);
     explorer_buffer.reserve(output_string.size() + 64);
-    std::unordered_set<std::string> current_schema_bases;
-    current_schema_bases.reserve(schemas.size());
+    std::vector<std::string> current_bases;
+    current_bases.reserve(schemas.size());
 
-    for (const auto &[uri, info] : schemas) {
-      const auto &relative_string{info.relative_path.native()};
+    if (!fast_path_dirty) {
+      for (const auto &[uri, info] : schemas) {
+        const auto &relative_string{info.relative_path.native()};
 
-      schema_buffer.clear();
-      schema_buffer += output_string;
-      schema_buffer += '/';
-      schema_buffer += SCHEMAS_DIRECTORY;
-      schema_buffer += '/';
-      schema_buffer += relative_string;
-      schema_buffer += '/';
-      schema_buffer += SENTINEL;
-      const auto schema_base_end{schema_buffer.size()};
-      current_schema_bases.insert(schema_buffer);
+        schema_buffer.clear();
+        schema_buffer += output_string;
+        schema_buffer += '/';
+        schema_buffer += SCHEMAS_DIRECTORY;
+        schema_buffer += '/';
+        schema_buffer += relative_string;
+        schema_buffer += '/';
+        schema_buffer += SENTINEL;
+        const auto schema_base_end{schema_buffer.size()};
+        current_bases.push_back(schema_buffer);
 
-      bool explorer_built{false};
-      std::size_t explorer_base_end{0};
+        bool explorer_built{false};
+        std::size_t explorer_base_end{0};
 
-      for (const auto &rule : PER_SCHEMA_RULES) {
-        if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
-          continue;
-        }
+        for (const auto &rule : PER_SCHEMA_RULES) {
+          if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
+            continue;
+          }
 
-        if (rule.gate == TargetGate::FullOnly &&
-            build_type != BuildPlan::Type::Full) {
-          continue;
-        }
+          if (rule.gate == TargetGate::FullOnly &&
+              build_type != BuildPlan::Type::Full) {
+            continue;
+          }
 
-        if (rule.base == TargetBase::Explorer && !explorer_built) {
-          explorer_buffer.clear();
-          explorer_buffer += output_string;
-          explorer_buffer += '/';
-          explorer_buffer += EXPLORER_DIRECTORY;
-          explorer_buffer += '/';
-          explorer_buffer += relative_string;
-          explorer_buffer += '/';
-          explorer_buffer += SENTINEL;
-          explorer_base_end = explorer_buffer.size();
-          explorer_built = true;
-        }
+          if (rule.base == TargetBase::Explorer && !explorer_built) {
+            explorer_buffer.clear();
+            explorer_buffer += output_string;
+            explorer_buffer += '/';
+            explorer_buffer += EXPLORER_DIRECTORY;
+            explorer_buffer += '/';
+            explorer_buffer += relative_string;
+            explorer_buffer += '/';
+            explorer_buffer += SENTINEL;
+            explorer_base_end = explorer_buffer.size();
+            explorer_built = true;
+          }
 
-        auto &buffer{rule.base == TargetBase::Schema ? schema_buffer
-                                                     : explorer_buffer};
-        const auto base_end{rule.base == TargetBase::Schema
-                                ? schema_base_end
-                                : explorer_base_end};
-        buffer.resize(base_end);
-        buffer += '/';
-        buffer += rule.filename;
+          auto &buffer{rule.base == TargetBase::Schema ? schema_buffer
+                                                       : explorer_buffer};
+          const auto base_end{rule.base == TargetBase::Schema
+                                  ? schema_base_end
+                                  : explorer_base_end};
+          buffer.resize(base_end);
+          buffer += '/';
+          buffer += rule.filename;
 
-        if (rule.is_root) {
-          if (entries.is_stale(buffer, info.mtime)) {
+          if (rule.is_root) {
+            if (entries.is_stale(buffer, info.mtime)) {
+              fast_path_dirty = true;
+              break;
+            }
+          } else if (!entries.contains(buffer)) {
             fast_path_dirty = true;
             break;
           }
-        } else if (!entries.contains(buffer)) {
-          fast_path_dirty = true;
+        }
+
+        if (fast_path_dirty) {
           break;
         }
       }
-
-      if (fast_path_dirty) {
-        break;
-      }
     }
 
-    // Check has_potential_stale: entries for schemas that no longer exist
-    // (current_schema_bases was already populated during the per-schema loop)
+    // Check has_potential_stale using string_view set
     if (!fast_path_dirty) {
-      const auto schemas_prefix_string{output_string + '/' + SCHEMAS_DIRECTORY +
-                                       '/'};
+      std::unordered_set<std::string_view> base_set;
+      base_set.reserve(current_bases.size());
+      for (const auto &base : current_bases) {
+        base_set.insert(base);
+      }
+
+      const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
       for (const auto &[entry_path, entry_value] : entries) {
-        if (!entry_path.starts_with(schemas_prefix_string)) {
+        if (!entry_path.starts_with(schemas_prefix)) {
           continue;
         }
 
@@ -322,86 +346,10 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
           continue;
         }
 
-        if (!current_schema_bases.contains(
-                entry_path.substr(0, sentinel_pos + 2))) {
+        if (!base_set.contains(
+                std::string_view{entry_path.data(), sentinel_pos + 2})) {
           fast_path_dirty = true;
           break;
-        }
-      }
-    }
-
-    // Check has_missing_web (Full) or has_stale_web (Headless)
-    if (!fast_path_dirty) {
-      if (build_type == BuildPlan::Type::Full) {
-        for (const auto &[uri, info] : schemas) {
-          const auto &relative_string{info.relative_path.native()};
-
-          for (const auto &rule : PER_SCHEMA_RULES) {
-            if (rule.gate != TargetGate::FullOnly) {
-              continue;
-            }
-
-            const auto &dir{rule.base == TargetBase::Schema
-                                ? SCHEMAS_DIRECTORY
-                                : EXPLORER_DIRECTORY};
-            std::string key;
-            key.reserve(output_string.size() + relative_string.size() + 32);
-            key += output_string;
-            key += '/';
-            key += dir;
-            key += '/';
-            key += relative_string;
-            key += '/';
-            key += SENTINEL;
-            key += '/';
-            key += rule.filename;
-
-            if (!entries.contains(key)) {
-              fast_path_dirty = true;
-              break;
-            }
-          }
-
-          if (fast_path_dirty) {
-            break;
-          }
-        }
-      } else {
-        const auto explorer_prefix_string{output_string + '/' +
-                                          EXPLORER_DIRECTORY + '/'};
-        for (const auto &[entry_path, entry_value] : entries) {
-          if (!entry_path.starts_with(explorer_prefix_string)) {
-            continue;
-          }
-
-          const auto last_slash{entry_path.rfind('/')};
-          if (last_slash == std::string::npos) {
-            continue;
-          }
-
-          const std::string_view filename{entry_path.data() + last_slash + 1,
-                                          entry_path.size() - last_slash - 1};
-          for (const auto &rule : PER_SCHEMA_RULES) {
-            if (rule.gate == TargetGate::FullOnly &&
-                filename == rule.filename) {
-              fast_path_dirty = true;
-              break;
-            }
-          }
-
-          if (!fast_path_dirty) {
-            for (const auto &rule : DIRECTORY_RULES) {
-              if (rule.gate == TargetGate::FullOnly &&
-                  filename == rule.filename) {
-                fast_path_dirty = true;
-                break;
-              }
-            }
-          }
-
-          if (fast_path_dirty) {
-            break;
-          }
         }
       }
     }
@@ -474,7 +422,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
                               std::move(explorer_base), std::move(root_path)});
   }
 
-  std::unordered_set<std::string> force_dirty;
+  std::unordered_set<std::string_view> force_dirty;
 
   if (is_full) {
     for (const auto &schema : active_schemas) {
@@ -506,43 +454,69 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   std::unordered_set<std::string> dirty_set;
   {
-    // Bottom-up dirty propagation using string_view to avoid copying
-    // target path strings into the reverse dependency map
-    std::unordered_map<std::string_view, std::vector<std::string_view>>
-        reverse_deps;
-    reverse_deps.reserve(targets.size());
-    std::vector<std::string> worklist;
-    worklist.reserve(targets.size());
-    for (const auto &[target_path, target] : targets) {
-      const std::string_view target_view{target_path};
-      for (const auto &dep : target.dependencies) {
-        reverse_deps[std::string_view{dep}].push_back(target_view);
+    // Direct marking: if a schema's root is force_dirty, all its
+    // intra-schema targets are dirty (they all transitively depend on
+    // the root). This avoids building a reverse dependency map.
+    for (const auto &schema : active_schemas) {
+      if (!force_dirty.contains(schema.root_path)) {
+        continue;
       }
 
-      const auto *state_entry{entries.entry(target_path)};
-      if (state_entry != nullptr) {
-        for (const auto &dep : state_entry->dependencies) {
-          reverse_deps[std::string_view{dep.native()}].push_back(target_view);
+      for (std::size_t index{0}; index < PER_SCHEMA_RULES.size(); index++) {
+        const auto &rule{PER_SCHEMA_RULES[index]};
+        if (rule.gate == TargetGate::IfEvaluate && !schema.info->evaluate) {
+          continue;
         }
-      }
 
-      if (force_dirty.contains(target_path) || state_entry == nullptr) {
-        dirty_set.insert(target_path);
-        worklist.push_back(target_path);
+        if (rule.gate == TargetGate::FullOnly &&
+            build_type != BuildPlan::Type::Full) {
+          continue;
+        }
+
+        const auto &base{rule.base == TargetBase::Schema
+                             ? schema.schema_base
+                             : schema.explorer_base};
+        dirty_set.insert(append_filename(base, rule.filename));
       }
     }
 
-    // BFS: propagate dirtiness through reverse edges
-    for (std::size_t worklist_index{0}; worklist_index < worklist.size();
-         worklist_index++) {
-      const auto &current{worklist[worklist_index]};
-      const auto reverse_it{reverse_deps.find(std::string_view{current})};
-      if (reverse_it != reverse_deps.end()) {
-        for (const auto &dependent : reverse_it->second) {
-          if (dirty_set.emplace(dependent).second) {
-            worklist.emplace_back(dependent);
+    // Detect missing-entry targets and propagate dirtiness
+    // through both declared and state_entry dependencies
+    bool propagation_changed{true};
+    while (propagation_changed) {
+      propagation_changed = false;
+      for (const auto &[target_path, target] : targets) {
+        if (dirty_set.contains(target_path)) {
+          continue;
+        }
+
+        // Check declared dependencies first (cheaper, no entry lookup)
+        for (const auto &dep : target.dependencies) {
+          if (dirty_set.contains(dep)) {
+            dirty_set.insert(target_path);
+            propagation_changed = true;
+            goto next_target;
           }
         }
+
+        {
+          const auto *state_entry{entries.entry(target_path)};
+          if (state_entry == nullptr) {
+            dirty_set.insert(target_path);
+            propagation_changed = true;
+            continue;
+          }
+
+          for (const auto &dep : state_entry->dependencies) {
+            if (dirty_set.contains(dep.native())) {
+              dirty_set.insert(target_path);
+              propagation_changed = true;
+              break;
+            }
+          }
+        }
+
+      next_target:;
       }
     }
   }
@@ -610,7 +584,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   bool has_potential_stale{false};
   {
-    std::unordered_set<std::string> current_schema_bases;
+    std::unordered_set<std::string_view> current_schema_bases;
     current_schema_bases.reserve(schemas.size());
     for (const auto &schema : active_schemas) {
       current_schema_bases.insert(schema.schema_base);
@@ -627,8 +601,8 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         continue;
       }
 
-      const auto base{entry_path.substr(0, sentinel_pos + 2)};
-      if (!current_schema_bases.contains(base)) {
+      if (!current_schema_bases.contains(
+              std::string_view{entry_path.data(), sentinel_pos + 2})) {
         has_potential_stale = true;
         break;
       }
@@ -871,19 +845,19 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
   if (!dirty_set.empty()) {
     dag_waves.resize(max_wave + 1);
     for (const auto &target_path : dirty_set) {
-      const auto target_it{targets.find(target_path)};
+      auto target_it{targets.find(target_path)};
       if (target_it == targets.end()) {
         continue;
       }
 
-      const auto &target{target_it->second};
+      auto &target{target_it->second};
       const auto wave_it{wave_cache.find(target_path)};
       const auto wave{wave_it != wave_cache.end() ? wave_it->second
                                                   : std::size_t{0}};
       BuildPlan::Action::Dependencies action_deps;
       action_deps.reserve(target.dependencies.size());
-      for (const auto &dep : target.dependencies) {
-        action_deps.emplace_back(dep);
+      for (auto &dep : target.dependencies) {
+        action_deps.emplace_back(std::move(dep));
       }
 
       dag_waves[wave].push_back({target.action,
@@ -941,91 +915,99 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
   }
 
-  std::unordered_set<std::string> known_bases;
-  known_bases.reserve(active_schemas.size() * 2 + 1);
-  for (const auto &schema : active_schemas) {
-    known_bases.insert(schema.schema_base);
-    known_bases.insert(schema.explorer_base);
-    auto current{schema.info->relative_path};
-    while (current.has_parent_path() && current.parent_path() != current) {
-      current = current.parent_path();
-      known_bases.insert(explorer_string + '/' + current.string() + '/' +
-                         SENTINEL);
-    }
-  }
-  known_bases.insert(explorer_string + '/' + SENTINEL);
-
-  std::unordered_set<std::string> known_ancestors;
-  known_ancestors.reserve(known_bases.size() * 3);
-  for (const auto &base : known_bases) {
-    auto slash_pos{base.rfind('/')};
-    while (slash_pos != std::string::npos && slash_pos > 0) {
-      const auto ancestor{base.substr(0, slash_pos)};
-      if (!known_ancestors.insert(ancestor).second) {
-        break;
+  // Skip stale entry detection when no schemas were removed and no
+  // stale schema entries were detected. This avoids iterating all entries
+  // and building the known_bases/known_ancestors sets.
+  if (has_potential_stale || !removed_uris.empty() || is_full) {
+    std::unordered_set<std::string> known_bases;
+    known_bases.reserve(active_schemas.size() * 2 + 1);
+    for (const auto &schema : active_schemas) {
+      known_bases.insert(schema.schema_base);
+      known_bases.insert(schema.explorer_base);
+      auto current{schema.info->relative_path};
+      while (current.has_parent_path() && current.parent_path() != current) {
+        current = current.parent_path();
+        known_bases.insert(explorer_string + '/' + current.string() + '/' +
+                           SENTINEL);
       }
-      slash_pos = ancestor.rfind('/');
     }
-  }
+    known_bases.insert(explorer_string + '/' + SENTINEL);
 
-  const auto output_prefix{output_string + "/"};
-
-  std::unordered_set<std::string> global_skip_paths;
-  for (const auto &rule : AGGREGATE_RULES) {
-    if (rule.output_base == AggregateOutputBase::Explorer) {
-      global_skip_paths.insert(explorer_string + '/' + SENTINEL + '/' +
-                               rule.output_filename);
-    } else {
-      global_skip_paths.insert(output_string + '/' + rule.output_filename);
-    }
-  }
-  for (const auto &rule : GLOBAL_RULES) {
-    global_skip_paths.insert(output_string + '/' + rule.filename);
-  }
-
-  std::unordered_set<std::string> stale_roots;
-  for (const auto &[entry_path, entry] : entries) {
-    if (!entry_path.starts_with(output_prefix)) {
-      continue;
-    }
-
-    if (global_skip_paths.contains(entry_path)) {
-      continue;
-    }
-
-    bool is_known{false};
-    const auto sentinel_pos{entry_path.find("/%/")};
-    if (sentinel_pos != std::string::npos) {
-      is_known = known_bases.contains(entry_path.substr(0, sentinel_pos + 2));
-    }
-
-    if (!is_known) {
-      is_known = known_bases.contains(entry_path) ||
-                 known_ancestors.contains(entry_path);
-    }
-
-    if (!is_known) {
-      auto stale_end{entry_path.size()};
-      while (true) {
-        const auto slash_pos{entry_path.rfind('/', stale_end - 1)};
-        if (slash_pos == std::string::npos ||
-            slash_pos < output_prefix.size()) {
+    std::unordered_set<std::string> known_ancestors;
+    known_ancestors.reserve(known_bases.size() * 3);
+    for (const auto &base : known_bases) {
+      auto slash_pos{base.rfind('/')};
+      while (slash_pos != std::string::npos && slash_pos > 0) {
+        const auto ancestor{base.substr(0, slash_pos)};
+        if (!known_ancestors.insert(ancestor).second) {
           break;
         }
-        const auto parent{entry_path.substr(0, slash_pos)};
-        if (known_bases.contains(parent) || known_ancestors.contains(parent)) {
-          break;
-        }
-        stale_end = slash_pos;
+        slash_pos = ancestor.rfind('/');
+      }
+    }
+
+    const auto output_prefix{output_string + "/"};
+
+    std::unordered_set<std::string> global_skip_paths;
+    for (const auto &rule : AGGREGATE_RULES) {
+      if (rule.output_base == AggregateOutputBase::Explorer) {
+        global_skip_paths.insert(explorer_string + '/' + SENTINEL + '/' +
+                                 rule.output_filename);
+      } else {
+        global_skip_paths.insert(output_string + '/' + rule.output_filename);
+      }
+    }
+    for (const auto &rule : GLOBAL_RULES) {
+      global_skip_paths.insert(output_string + '/' + rule.filename);
+    }
+
+    std::unordered_set<std::string> stale_roots;
+    for (const auto &[entry_path, entry] : entries) {
+      if (!entry_path.starts_with(output_prefix)) {
+        continue;
       }
 
-      stale_roots.insert(entry_path.substr(0, stale_end));
-    }
-  }
+      if (global_skip_paths.contains(entry_path)) {
+        continue;
+      }
 
-  for (auto &root : stale_roots) {
-    remove_wave.push_back(
-        {BuildPlan::Action::Type::Remove, std::filesystem::path{root}, {}, {}});
+      bool is_known{false};
+      const auto sentinel_pos{entry_path.find("/%/")};
+      if (sentinel_pos != std::string::npos) {
+        is_known = known_bases.contains(entry_path.substr(0, sentinel_pos + 2));
+      }
+
+      if (!is_known) {
+        is_known = known_bases.contains(entry_path) ||
+                   known_ancestors.contains(entry_path);
+      }
+
+      if (!is_known) {
+        auto stale_end{entry_path.size()};
+        while (true) {
+          const auto slash_pos{entry_path.rfind('/', stale_end - 1)};
+          if (slash_pos == std::string::npos ||
+              slash_pos < output_prefix.size()) {
+            break;
+          }
+          const auto parent{entry_path.substr(0, slash_pos)};
+          if (known_bases.contains(parent) ||
+              known_ancestors.contains(parent)) {
+            break;
+          }
+          stale_end = slash_pos;
+        }
+
+        stale_roots.insert(entry_path.substr(0, stale_end));
+      }
+    }
+
+    for (auto &root : stale_roots) {
+      remove_wave.push_back({BuildPlan::Action::Type::Remove,
+                             std::filesystem::path{root},
+                             {},
+                             {}});
+    }
   }
 
   std::unordered_set<std::string_view> web_only_filenames;
