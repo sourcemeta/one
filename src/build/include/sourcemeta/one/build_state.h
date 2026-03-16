@@ -26,6 +26,14 @@ public:
     std::vector<std::filesystem::path> dependencies;
   };
 
+  struct ResolverEntry {
+    std::filesystem::file_time_type file_mark;
+    std::string new_identifier;
+    std::string original_identifier;
+    std::string dialect;
+    std::string relative_path;
+  };
+
   BuildState() = default;
   ~BuildState() = default;
   BuildState(BuildState &&) noexcept = default;
@@ -44,13 +52,16 @@ public:
   [[nodiscard]] auto
   is_stale(const std::string &key,
            std::filesystem::file_time_type source_mtime) const -> bool;
-
   auto commit(const std::filesystem::path &path,
               std::vector<std::filesystem::path> dependencies) -> void;
+  auto commit(const std::string &source_path, ResolverEntry entry) -> void;
   auto forget(const std::string &key) -> void;
   auto emplace(const std::filesystem::path &path, Entry entry) -> void;
-
   [[nodiscard]] auto keys() const -> const std::vector<std::string_view> &;
+
+  [[nodiscard]] auto resolve(const std::string &source_path,
+                             std::filesystem::file_time_type mtime) const
+      -> const ResolverEntry *;
 
 private:
   struct TransparentHash {
@@ -68,8 +79,11 @@ private:
     }
   };
 
-  auto probe_slot(std::string_view key) const -> const std::uint8_t *;
+  auto probe_slot(std::string_view key, std::uint8_t kind) const
+      -> const std::uint8_t *;
   auto parse_slot_entry(const std::uint8_t *slot) const -> const Entry &;
+  auto parse_slot_resolver_entry(const std::uint8_t *slot) const
+      -> const ResolverEntry &;
 
   std::unique_ptr<sourcemeta::core::FileView> view;
   const std::uint8_t *view_data{nullptr};
@@ -81,13 +95,20 @@ private:
   std::unordered_map<std::string, Entry, TransparentHash, TransparentEqual>
       overlay;
   std::unordered_set<std::string, TransparentHash, TransparentEqual> deleted;
-
   mutable std::unordered_map<std::string, Entry, TransparentHash,
                              TransparentEqual>
       lazy_cache;
 
+  std::unordered_map<std::string, ResolverEntry, TransparentHash,
+                     TransparentEqual>
+      resolver_overlay;
+  mutable std::unordered_map<std::string, ResolverEntry, TransparentHash,
+                             TransparentEqual>
+      resolver_lazy_cache;
+
   std::filesystem::path loaded_path;
   std::size_t entry_count{0};
+  std::size_t resolver_entry_count{0};
   bool dirty{false};
   mutable bool keys_stale{true};
   mutable std::vector<std::string_view> cached_keys;

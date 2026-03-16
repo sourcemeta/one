@@ -144,25 +144,7 @@ static auto index_main(const std::string_view &program,
       raw_configuration, configuration_path.parent_path())};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (3) Support overriding the target URL from the CLI
-  /////////////////////////////////////////////////////////////////////////////
-
-  if (app.contains("url")) {
-    std::cerr << "Overriding the URL in the configuration file with: "
-              << app.at("url").at(0) << "\n";
-    sourcemeta::core::URI url{std::string{app.at("url").at(0)}};
-    if (url.is_absolute() && url.scheme().has_value() &&
-        (url.scheme().value() == "https" || url.scheme().value() == "http")) {
-      configuration.url =
-          sourcemeta::core::URI::canonicalize(std::string{app.at("url").at(0)});
-    } else {
-      std::cerr << "error: The URL option must be an absolute HTTP(s) URL\n";
-      return EXIT_FAILURE;
-    }
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (4) Resolve a URI to a schema filesystem path
+  // (3) Resolve a URI to a schema filesystem path
   /////////////////////////////////////////////////////////////////////////////
 
   if (app.contains("resolve-schema")) {
@@ -179,7 +161,7 @@ static auto index_main(const std::string_view &program,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (5) Prepare the output directory and load previous state
+  // (4) Prepare the output directory and load previous state
   /////////////////////////////////////////////////////////////////////////////
 
   std::filesystem::create_directories(output_path);
@@ -193,6 +175,7 @@ static auto index_main(const std::string_view &program,
   // otherwise the entries map and the on-disk artefacts are out of sync
 
   std::string current_version;
+  const auto this_version{sourcemeta::one::version()};
   const auto version_path{canonical_output / "version.json"};
   if (!entries.empty() && std::filesystem::exists(version_path)) {
     const auto version_json{sourcemeta::core::read_json(version_path)};
@@ -225,7 +208,7 @@ static auto index_main(const std::string_view &program,
                              : std::thread::hardware_concurrency()};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (6) First pass to locate all of the schemas we will be indexing
+  // (5) First pass to locate all of the schemas we will be indexing
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
@@ -271,24 +254,73 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Detect");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (7) Resolve all detected schemas in parallel
+  // (6) Resolve all detected schemas in parallel
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver;
+  resolver.reserve(detected_schemas.size());
+
+  // Phase 1: populate resolver from cache for unchanged source files.
+
+  // Skip the cache entirely if the configuration changed, as cached
+  // identifiers and paths may no longer be valid
+  const auto resolver_cache_valid{raw_configuration == current_configuration &&
+                                  current_version == this_version};
+  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  for (const auto &detected : detected_schemas) {
+    const auto *cached{
+        resolver_cache_valid
+            ? entries.resolve(detected.path.native(), detected.mtime)
+            : nullptr};
+    if (cached != nullptr) {
+      const auto &collection{detected.collection.get()};
+      resolver.emplace(
+          cached->new_identifier,
+          sourcemeta::one::Resolver::Entry{
+              .path = detected.path,
+              .relative_path = cached->relative_path,
+              .mtime = detected.mtime,
+              .evaluate =
+                  sourcemeta::one::Configuration::should_evaluate(collection),
+              .cache_path = std::nullopt,
+              .dialect = cached->dialect,
+              .original_identifier = cached->original_identifier,
+              .collection = &collection});
+    } else {
+      uncached_schemas.emplace_back(detected);
+    }
+  }
+
+  // Phase 2: resolve uncached schemas and commit to cache
   sourcemeta::core::parallel_for_each(
-      detected_schemas.begin(), detected_schemas.end(),
-      [&configuration, &resolver, &mutex, &detected_schemas,
-       &app](const auto &detected, const auto threads, const auto cursor) {
+      uncached_schemas.begin(), uncached_schemas.end(),
+      [&configuration, &resolver, &mutex, &entries, &uncached_schemas,
+       &app](const auto &detected_ref, const auto threads, const auto cursor) {
+        const auto &detected{detected_ref.get()};
         print_progress(mutex, threads, "Resolving",
                        detected.path.filename().string(), cursor,
-                       detected_schemas.size());
-        const auto mapping{resolver.add(
+                       uncached_schemas.size());
+        const auto result{resolver.add(
             configuration.url, detected.collection_relative_path,
             detected.collection.get(), detected.path, detected.mtime)};
+
+        {
+          const auto &resolved{result.second.get()};
+          std::lock_guard<std::mutex> lock{mutex};
+          entries.commit(detected.path.native(),
+                         sourcemeta::one::BuildState::ResolverEntry{
+                             .file_mark = detected.mtime,
+                             .new_identifier = std::string{result.first.get()},
+                             .original_identifier =
+                                 std::string{resolved.original_identifier},
+                             .dialect = std::string{resolved.dialect},
+                             .relative_path = resolved.relative_path.string()});
+        }
+
         if (app.contains("verbose")) {
           std::lock_guard<std::mutex> lock{mutex};
-          std::cerr << mapping.first.get() << " => " << mapping.second.get()
-                    << "\n";
+          std::cerr << result.second.get().original_identifier << " => "
+                    << result.first.get() << "\n";
         }
       },
       concurrency);
@@ -296,20 +328,20 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Resolve");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) Build schema info map and compute the delta plan
+  // (7) Build schema info map and compute the delta plan
   /////////////////////////////////////////////////////////////////////////////
 
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   auto plan{sourcemeta::one::delta(build_type, entries, canonical_output,
-                                   resolver.data(), sourcemeta::one::version(),
+                                   resolver.data(), this_version,
                                    current_version, comment, raw_configuration,
                                    current_configuration, changed, removed)};
 
   PROFILE_END(profiling, "Delta");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Execute the plan wave by wave
+  // (8) Execute the plan wave by wave
   /////////////////////////////////////////////////////////////////////////////
 
   // Give it a generous thread stack size, otherwise we might overflow
@@ -363,7 +395,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Build");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (9) Save state
+  // (9) Save state and profile
   /////////////////////////////////////////////////////////////////////////////
 
   entries.save(state_path);
@@ -371,7 +403,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Cleanup");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Compute metrics
+  // (10) Output metrics
   /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Add a test for this
@@ -426,7 +458,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   try {
     sourcemeta::core::Options app;
     // TODO: Support a --help flag
-    app.option("url", {"u"});
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});

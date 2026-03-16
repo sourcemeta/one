@@ -227,9 +227,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
                    const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
-                   const std::filesystem::file_time_type mtime)
-    -> std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
-                 std::reference_wrapper<const sourcemeta::core::JSON::String>> {
+                   const std::filesystem::file_time_type mtime) -> Result {
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
@@ -310,12 +308,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // (5) Safely one the schema entry in the resolver
   /////////////////////////////////////////////////////////////////////////////
 
-  // TODO: Computing this for every schema seems like a waste.
-  // Can we compute it properly at the collection level once?
-  const auto evaluate{
-      !collection.extra.defines("x-sourcemeta-one:evaluate") ||
-      !collection.extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
-      collection.extra.at("x-sourcemeta-one:evaluate").to_boolean()};
+  const auto evaluate{Configuration::should_evaluate(collection)};
 
   std::unique_lock lock{this->mutex};
   auto result{this->views.emplace(
@@ -335,7 +328,16 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     throw sourcemeta::core::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
-  return {result.first->second.original_identifier, result.first->first};
+  return {result.first->first, result.first->second};
+}
+
+auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
+  const auto path{entry.path};
+  auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
+  if (!result.second && result.first->second.path != path) {
+    throw sourcemeta::core::SchemaFrameError(
+        result.first->first, "Cannot register the same identifier twice");
+  }
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
