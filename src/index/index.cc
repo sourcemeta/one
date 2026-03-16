@@ -49,10 +49,12 @@
                    std::chrono::steady_clock::now() - (state).second));        \
   (state).second = std::chrono::steady_clock::now()
 
-using BuildHandlerFunction = void (*)(
+using BuildHandlerFunction = auto (*)(
+    const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
-    const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &);
+    const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
+    -> bool;
 
 static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
@@ -357,33 +359,35 @@ static auto index_main(const std::string_view &program,
           const auto current{
               progress_counter.fetch_add(1, std::memory_order_relaxed) + 1};
           const std::string_view destination_view{action.destination.native()};
-          print_progress(
-              mutex, threads,
-              action.type == sourcemeta::one::BuildPlan::Action::Type::Remove
-                  ? "Disposing"
-                  : "Producing",
-              destination_view.substr(canonical_output.native().size() + 1),
-              current, plan.size);
+          const auto relative_path{
+              destination_view.substr(canonical_output.native().size() + 1)};
 
           if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
+            print_progress(mutex, threads, "Disposing", relative_path, current,
+                           plan.size);
             std::filesystem::remove_all(action.destination);
             std::lock_guard<std::mutex> lock{entries_mutex};
             entries.forget(action.destination.native());
             return;
           }
 
+          print_progress(mutex, threads, "Producing", relative_path, current,
+                         plan.size);
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
-          handler(
-              action,
+          const auto wrote{handler(
+              entries, action,
               [&action](const auto &path) {
                 action.dependencies.emplace_back(path);
               },
-              resolver, configuration, raw_configuration);
+              resolver, configuration, raw_configuration)};
 
-          {
+          if (wrote) {
             std::lock_guard<std::mutex> lock{entries_mutex};
             entries.commit(action.destination, std::move(action.dependencies));
+          } else {
+            print_progress(mutex, threads, "Bypassing", relative_path, current,
+                           plan.size);
           }
         },
         concurrency, THREAD_STACK_SIZE);

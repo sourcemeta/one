@@ -108,11 +108,12 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
     const auto schema{
@@ -213,15 +214,17 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_EXPLORER_SEARCH_INDEX {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
     result.reserve(action.dependencies.size());
@@ -277,15 +280,17 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
         sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  static auto handler(const sourcemeta::one::BuildPlan::Action &action,
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> void {
+                      const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
@@ -436,6 +441,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
+    return true;
   }
 };
 
