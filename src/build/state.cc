@@ -205,7 +205,7 @@ auto BuildState::parse_slot_entry(const std::uint8_t *slot) const
 }
 
 auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
-    -> const ResolverCacheEntry & {
+    -> const ResolverEntry & {
   const auto key{slot_key(slot, this->string_pool)};
 
   const auto cache_match{this->resolver_lazy_cache.find(key)};
@@ -228,8 +228,6 @@ auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
 
   return cached;
 }
-
-// ---- Output entry methods (kind=0) ----
 
 auto BuildState::contains(const std::string &key) const -> bool {
   if (this->overlay.contains(key)) {
@@ -393,12 +391,9 @@ auto BuildState::keys() const -> const std::vector<std::string_view> & {
   return this->cached_keys;
 }
 
-// ---- Resolver cache methods (kind=1) ----
-
-auto BuildState::resolver_cache_lookup(
-    const std::string &source_path,
-    const std::filesystem::file_time_type mtime) const
-    -> const ResolverCacheEntry * {
+auto BuildState::resolve(const std::string &source_path,
+                         const std::filesystem::file_time_type mtime) const
+    -> const ResolverEntry * {
   const auto overlay_match{this->resolver_overlay.find(source_path)};
   if (overlay_match != this->resolver_overlay.end()) {
     if (mtime <= overlay_match->second.file_mark) {
@@ -424,19 +419,12 @@ auto BuildState::resolver_cache_lookup(
   return &this->parse_slot_resolver_entry(slot);
 }
 
-auto BuildState::resolver_cache_commit(
-    const std::string &source_path, const std::filesystem::file_time_type mtime,
-    std::string new_identifier, std::string original_identifier,
-    std::string dialect, std::string relative_path) -> void {
+auto BuildState::commit(const std::string &source_path, ResolverEntry entry)
+    -> void {
   const auto was_live{this->resolver_overlay.contains(source_path) ||
                       this->probe_slot(source_path, KIND_RESOLVER) != nullptr};
 
-  this->resolver_overlay[source_path] =
-      ResolverCacheEntry{.file_mark = mtime,
-                         .new_identifier = std::move(new_identifier),
-                         .original_identifier = std::move(original_identifier),
-                         .dialect = std::move(dialect),
-                         .relative_path = std::move(relative_path)};
+  this->resolver_overlay[source_path] = std::move(entry);
 
   if (!was_live) {
     this->resolver_entry_count++;
@@ -444,8 +432,6 @@ auto BuildState::resolver_cache_commit(
 
   this->dirty = true;
 }
-
-// ---- Save ----
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {
   if (!this->dirty && this->view && path == this->loaded_path) {

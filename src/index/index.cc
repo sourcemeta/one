@@ -294,8 +294,7 @@ static auto index_main(const std::string_view &program,
   // Phase 1: populate resolver from cache for unchanged source files
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
-    const auto *cached{
-        entries.resolver_cache_lookup(detected.path.native(), detected.mtime)};
+    const auto *cached{entries.resolve(detected.path.native(), detected.mtime)};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
       resolver.emplace_unlocked(
@@ -330,11 +329,15 @@ static auto index_main(const std::string_view &program,
         {
           const auto &resolved{result.entry.get()};
           std::lock_guard<std::mutex> lock{mutex};
-          entries.resolver_cache_commit(
-              detected.path.native(), detected.mtime,
-              std::string{result.new_identifier.get()},
-              std::string{result.original_identifier.get()},
-              std::string{resolved.dialect}, resolved.relative_path.string());
+          entries.commit(
+              detected.path.native(),
+              sourcemeta::one::BuildState::ResolverEntry{
+                  .file_mark = detected.mtime,
+                  .new_identifier = std::string{result.new_identifier.get()},
+                  .original_identifier =
+                      std::string{result.original_identifier.get()},
+                  .dialect = std::string{resolved.dialect},
+                  .relative_path = resolved.relative_path.string()});
         }
 
         if (app.contains("verbose")) {
