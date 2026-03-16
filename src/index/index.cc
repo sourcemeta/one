@@ -275,20 +275,72 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver;
+  resolver.reserve(detected_schemas.size());
+
+  // Pre-compute evaluate per collection (avoids repeated JSON lookups)
+  std::unordered_map<const sourcemeta::one::Configuration::Collection *, bool>
+      evaluate_cache;
+  for (const auto &pair : configuration.entries) {
+    const auto *collection{
+        std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
+    if (collection != nullptr) {
+      evaluate_cache[collection] =
+          !collection->extra.defines("x-sourcemeta-one:evaluate") ||
+          !collection->extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
+          collection->extra.at("x-sourcemeta-one:evaluate").to_boolean();
+    }
+  }
+
+  // Phase 1: populate resolver from cache for unchanged source files
+  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  for (const auto &detected : detected_schemas) {
+    const auto *cached{
+        entries.resolver_cache_lookup(detected.path.native(), detected.mtime)};
+    if (cached != nullptr) {
+      const auto &collection{detected.collection.get()};
+      resolver.emplace_unlocked(
+          cached->new_identifier,
+          sourcemeta::one::Resolver::Entry{
+              .path = detected.path,
+              .relative_path = cached->relative_path,
+              .mtime = detected.mtime,
+              .evaluate = evaluate_cache[&collection],
+              .cache_path = std::nullopt,
+              .dialect = cached->dialect,
+              .original_identifier = cached->original_identifier,
+              .collection = &collection});
+    } else {
+      uncached_schemas.emplace_back(detected);
+    }
+  }
+
+  // Phase 2: resolve uncached schemas and commit to cache (parallel)
   sourcemeta::core::parallel_for_each(
-      detected_schemas.begin(), detected_schemas.end(),
-      [&configuration, &resolver, &mutex, &detected_schemas,
-       &app](const auto &detected, const auto threads, const auto cursor) {
+      uncached_schemas.begin(), uncached_schemas.end(),
+      [&configuration, &resolver, &mutex, &entries, &uncached_schemas,
+       &app](const auto &detected_ref, const auto threads, const auto cursor) {
+        const auto &detected{detected_ref.get()};
         print_progress(mutex, threads, "Resolving",
                        detected.path.filename().string(), cursor,
-                       detected_schemas.size());
-        const auto mapping{resolver.add(
+                       uncached_schemas.size());
+        const auto result{resolver.add(
             configuration.url, detected.collection_relative_path,
             detected.collection.get(), detected.path, detected.mtime)};
+
+        {
+          const auto &resolved{result.entry.get()};
+          std::lock_guard<std::mutex> lock{mutex};
+          entries.resolver_cache_commit(
+              detected.path.native(), detected.mtime,
+              std::string{result.new_identifier.get()},
+              std::string{result.original_identifier.get()},
+              std::string{resolved.dialect}, resolved.relative_path.string());
+        }
+
         if (app.contains("verbose")) {
           std::lock_guard<std::mutex> lock{mutex};
-          std::cerr << mapping.first.get() << " => " << mapping.second.get()
-                    << "\n";
+          std::cerr << result.original_identifier.get() << " => "
+                    << result.new_identifier.get() << "\n";
         }
       },
       concurrency);

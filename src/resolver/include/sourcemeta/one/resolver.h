@@ -13,7 +13,6 @@
 #include <shared_mutex>  // std::shared_mutex
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
-#include <utility>       // std::pair
 
 namespace sourcemeta::one {
 
@@ -32,16 +31,6 @@ public:
                   const Callback &callback = nullptr) const
       -> std::optional<sourcemeta::core::JSON>;
 
-  // Returns the original identifier and the new identifier
-  auto add(const sourcemeta::core::JSON::String &server_url,
-           const std::filesystem::path &collection_relative_path,
-           const Configuration::Collection &collection,
-           const std::filesystem::path &path,
-           const std::filesystem::file_time_type mtime)
-      -> std::pair<
-          std::reference_wrapper<const sourcemeta::core::JSON::String>,
-          std::reference_wrapper<const sourcemeta::core::JSON::String>>;
-
   auto cache_path(std::string_view uri, const std::filesystem::path &path)
       -> void;
 
@@ -57,7 +46,25 @@ public:
     const Configuration::Collection *collection{nullptr};
   };
 
+  struct AddResult {
+    std::reference_wrapper<const sourcemeta::core::JSON::String>
+        original_identifier;
+    std::reference_wrapper<const sourcemeta::core::JSON::String> new_identifier;
+    std::reference_wrapper<const Entry> entry;
+  };
+
+  auto add(const sourcemeta::core::JSON::String &server_url,
+           const std::filesystem::path &collection_relative_path,
+           const Configuration::Collection &collection,
+           const std::filesystem::path &path,
+           std::filesystem::file_time_type mtime) -> AddResult;
+
+  auto emplace(std::string new_identifier, Entry entry) -> void;
+  auto emplace_unlocked(std::string new_identifier, Entry entry) -> void;
+
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
+
+  auto reserve(std::size_t count) -> void { this->views.reserve(count); }
 
   [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
   [[nodiscard]] auto end() const -> auto { return this->views.end(); }

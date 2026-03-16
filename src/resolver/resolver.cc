@@ -227,9 +227,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
                    const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
-                   const std::filesystem::file_time_type mtime)
-    -> std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
-                 std::reference_wrapper<const sourcemeta::core::JSON::String>> {
+                   const std::filesystem::file_time_type mtime) -> AddResult {
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
@@ -335,7 +333,19 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     throw sourcemeta::core::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
-  return {result.first->second.original_identifier, result.first->first};
+  return {.original_identifier = result.first->second.original_identifier,
+          .new_identifier = result.first->first,
+          .entry = result.first->second};
+}
+
+auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
+  std::unique_lock lock{this->mutex};
+  this->views.emplace(std::move(new_identifier), std::move(entry));
+}
+
+auto Resolver::emplace_unlocked(std::string new_identifier, Entry entry)
+    -> void {
+  this->views.emplace(std::move(new_identifier), std::move(entry));
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
