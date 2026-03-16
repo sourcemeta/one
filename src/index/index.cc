@@ -264,14 +264,13 @@ static auto index_main(const std::string_view &program,
 
   // Skip the cache entirely if the configuration changed, as cached
   // identifiers and paths may no longer be valid
-  const auto resolver_cache_valid{raw_configuration == current_configuration &&
-                                  current_version == this_version};
+  const auto incremental{raw_configuration == current_configuration &&
+                         current_version == this_version};
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
     const auto *cached{
-        resolver_cache_valid
-            ? entries.resolve(detected.path.native(), detected.mtime)
-            : nullptr};
+        incremental ? entries.resolve(detected.path.native(), detected.mtime)
+                    : nullptr};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
       resolver.emplace(
@@ -335,9 +334,8 @@ static auto index_main(const std::string_view &program,
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   auto plan{sourcemeta::one::delta(build_type, entries, canonical_output,
-                                   resolver.data(), this_version,
-                                   current_version, comment, raw_configuration,
-                                   current_configuration, changed, removed)};
+                                   resolver.data(), this_version, incremental,
+                                   comment, changed, removed)};
 
   PROFILE_END(profiling, "Delta");
 
