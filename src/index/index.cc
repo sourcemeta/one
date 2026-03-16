@@ -234,6 +234,7 @@ static auto index_main(const std::string_view &program,
     std::reference_wrapper<const sourcemeta::one::Configuration::Collection>
         collection;
     std::filesystem::path path;
+    std::filesystem::file_time_type mtime;
   };
 
   std::vector<DetectedSchema> detected_schemas;
@@ -262,8 +263,8 @@ static auto index_main(const std::string_view &program,
 
       std::cerr << "Detecting: " << entry.path().string() << " (#"
                 << detected_schemas.size() + 1 << ")\n";
-      detected_schemas.push_back(
-          {pair.first, std::cref(*collection), entry.path()});
+      detected_schemas.push_back({pair.first, std::cref(*collection),
+                                  entry.path(), entry.last_write_time()});
     }
   };
 
@@ -281,9 +282,9 @@ static auto index_main(const std::string_view &program,
         print_progress(mutex, threads, "Resolving",
                        detected.path.filename().string(), cursor,
                        detected_schemas.size());
-        const auto mapping{
-            resolver.add(configuration.url, detected.collection_relative_path,
-                         detected.collection.get(), detected.path)};
+        const auto mapping{resolver.add(
+            configuration.url, detected.collection_relative_path,
+            detected.collection.get(), detected.path, detected.mtime)};
         if (app.contains("verbose")) {
           std::lock_guard<std::mutex> lock{mutex};
           std::cerr << mapping.first.get() << " => " << mapping.second.get()

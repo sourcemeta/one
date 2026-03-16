@@ -41,7 +41,9 @@ std::unique_ptr<sourcemeta::one::Configuration>
       ResolverTest::shared_configuration->url, collection_name,                \
       std::get<sourcemeta::one::Configuration::Collection>(                    \
           ResolverTest::shared_configuration->entries.at(collection_name)),    \
-      std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path))
+      std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path), \
+      std::filesystem::last_write_time(std::filesystem::path{SCHEMAS_PATH} /   \
+                                       collection_name / (relative_path)))
 
 #define RESOLVER_ADD(resolver, collection_name, relative_path,                 \
                      expected_current_uri, expected_final_uri,                 \

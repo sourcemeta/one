@@ -36,7 +36,8 @@ public:
   auto add(const sourcemeta::core::JSON::String &server_url,
            const std::filesystem::path &collection_relative_path,
            const Configuration::Collection &collection,
-           const std::filesystem::path &path)
+           const std::filesystem::path &path,
+           const std::filesystem::file_time_type mtime)
       -> std::pair<
           std::reference_wrapper<const sourcemeta::core::JSON::String>,
           std::reference_wrapper<const sourcemeta::core::JSON::String>>;
