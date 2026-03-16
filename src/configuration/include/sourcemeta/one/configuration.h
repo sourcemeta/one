@@ -56,9 +56,8 @@ struct Configuration {
 
   [[nodiscard]] static auto should_evaluate(const Collection &collection)
       -> bool {
-    return !collection.extra.defines("x-sourcemeta-one:evaluate") ||
-           !collection.extra.at("x-sourcemeta-one:evaluate").is_boolean() ||
-           collection.extra.at("x-sourcemeta-one:evaluate").to_boolean();
+    const auto *value{collection.extra.try_at("x-sourcemeta-one:evaluate")};
+    return value == nullptr || !value->is_boolean() || value->to_boolean();
   }
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
