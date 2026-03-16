@@ -235,16 +235,10 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
   }
 
-  // Fast path: detect "nothing changed" using string-only operations,
-  // avoiding all filesystem::path construction and target declaration.
-  // Since changed.empty(), no source files changed, so root staleness
-  // checks use contains() instead of is_stale(). Web transition uses
-  // O(1) routes.bin check instead of iterating all entries.
   if (!is_full && changed.empty() && removed.empty()) {
     const auto &output_string{output.native()};
     bool fast_path_dirty{false};
 
-    // O(1) web transition: routes.bin exists only after Full builds
     const auto routes_string{(output / "routes.bin").string()};
     const auto had_web{entries.contains(routes_string)};
     const auto needs_web{build_type == BuildPlan::Type::Full};
@@ -252,7 +246,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       fast_path_dirty = true;
     }
 
-    // Check per-schema targets using buffer reuse
     std::string schema_buffer;
     std::string explorer_buffer;
     schema_buffer.reserve(output_string.size() + 64);
@@ -327,7 +320,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       }
     }
 
-    // Check has_potential_stale using string_view set
     if (!fast_path_dirty) {
       std::unordered_set<std::string_view> base_set;
       base_set.reserve(current_bases.size());
@@ -454,9 +446,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   std::unordered_set<std::string> dirty_set;
   {
-    // Direct marking: if a schema's root is force_dirty, all its
-    // intra-schema targets are dirty (they all transitively depend on
-    // the root). This avoids building a reverse dependency map.
     for (const auto &schema : active_schemas) {
       if (!force_dirty.contains(schema.root_path)) {
         continue;
@@ -480,8 +469,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       }
     }
 
-    // Detect missing-entry targets and propagate dirtiness
-    // through both declared and state_entry dependencies
     bool propagation_changed{true};
     while (propagation_changed) {
       propagation_changed = false;
@@ -490,7 +477,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
           continue;
         }
 
-        // Check declared dependencies first (cheaper, no entry lookup)
         for (const auto &dep : target.dependencies) {
           if (dirty_set.contains(dep)) {
             dirty_set.insert(target_path);
@@ -825,7 +811,7 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         dirty_set.insert(std::move(destination));
       }
     }
-  } // has_schema_work
+  }
 
   std::unordered_map<std::string_view, std::size_t> wave_cache;
   std::size_t max_wave{0};
@@ -915,9 +901,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     }
   }
 
-  // Skip stale entry detection when no schemas were removed and no
-  // stale schema entries were detected. This avoids iterating all entries
-  // and building the known_bases/known_ancestors sets.
   if (has_potential_stale || !removed_uris.empty() || is_full) {
     std::unordered_set<std::string> known_bases;
     known_bases.reserve(active_schemas.size() * 2 + 1);
