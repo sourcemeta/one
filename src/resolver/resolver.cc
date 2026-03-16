@@ -332,7 +332,12 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
 }
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
-  this->views.emplace(std::move(new_identifier), std::move(entry));
+  const auto path{entry.path};
+  auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
+  if (!result.second && result.first->second.path != path) {
+    throw sourcemeta::core::SchemaFrameError(
+        result.first->first, "Cannot register the same identifier twice");
+  }
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
