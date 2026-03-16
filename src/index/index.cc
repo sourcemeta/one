@@ -193,6 +193,7 @@ static auto index_main(const std::string_view &program,
   // otherwise the entries map and the on-disk artefacts are out of sync
 
   std::string current_version;
+  const auto this_version{sourcemeta::one::version()};
   const auto version_path{canonical_output / "version.json"};
   if (!entries.empty() && std::filesystem::exists(version_path)) {
     const auto version_json{sourcemeta::core::read_json(version_path)};
@@ -282,8 +283,7 @@ static auto index_main(const std::string_view &program,
   // Skip the cache entirely if the configuration changed, as cached
   // identifiers and paths may no longer be valid
   const auto resolver_cache_valid{raw_configuration == current_configuration &&
-                                  current_version ==
-                                      sourcemeta::one::version()};
+                                  current_version == this_version};
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
     const auto *cached{
@@ -352,7 +352,7 @@ static auto index_main(const std::string_view &program,
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   auto plan{sourcemeta::one::delta(build_type, entries, canonical_output,
-                                   resolver.data(), sourcemeta::one::version(),
+                                   resolver.data(), this_version,
                                    current_version, comment, raw_configuration,
                                    current_configuration, changed, removed)};
 
