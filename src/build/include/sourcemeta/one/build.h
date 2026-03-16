@@ -97,11 +97,8 @@ using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildPlan::Type build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,
-           const std::string_view version,
-           const std::string_view current_version,
+           const std::string_view version, bool incremental,
            const std::string_view comment,
-           const sourcemeta::core::JSON &configuration,
-           const sourcemeta::core::JSON &current_configuration,
            const std::vector<std::filesystem::path> &changed,
            const std::vector<std::filesystem::path> &removed) -> BuildPlan;
 

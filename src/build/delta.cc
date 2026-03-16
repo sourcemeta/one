@@ -187,11 +187,8 @@ static auto collect_affected_directories(
 
 auto delta(const BuildPlan::Type build_type, const BuildState &entries,
            const std::filesystem::path &output, const Resolver::Views &schemas,
-           const std::string_view version,
-           const std::string_view current_version,
+           const std::string_view version, const bool incremental,
            const std::string_view comment,
-           const sourcemeta::core::JSON &configuration,
-           const sourcemeta::core::JSON &current_configuration,
            const std::vector<std::filesystem::path> &changed,
            const std::vector<std::filesystem::path> &removed) -> BuildPlan {
   assert(output.is_absolute());
@@ -205,17 +202,10 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       removed, [](const auto &path) { return path.is_absolute(); }));
 
   assert(!version.empty());
-  assert(!configuration.is_null());
   const auto version_path{output / VERSION_RULE.filename};
   const auto configuration_path{output / CONFIGURATION_RULE.filename};
   const auto comment_path{output / COMMENT_RULE.filename};
-  assert(current_version.empty() == !entries.contains(version_path.native()));
-  assert(current_configuration.is_null() ==
-         !entries.contains(configuration_path.native()));
-  const auto version_changed{current_version != version};
-  const auto configuration_changed{current_configuration.is_null() ||
-                                   configuration != current_configuration};
-  const auto is_full{version_changed || configuration_changed};
+  const auto is_full{!incremental};
   const auto schemas_path{output / SCHEMAS_DIRECTORY};
   const auto explorer_path{output / EXPLORER_DIRECTORY};
   const auto comment_string{comment_path.string()};
