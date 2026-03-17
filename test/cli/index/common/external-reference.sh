@@ -49,11 +49,12 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
+Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
-( 12%) Producing: explorer/%/404.metapack
-( 16%) Producing: schemas/example/schemas/test/%/schema.metapack
-( 20%) Producing: schemas/example/schemas/test/%/dependencies.metapack
+( 13%) Producing: explorer/%/404.metapack
+( 17%) Producing: schemas/example/schemas/test/%/schema.metapack
+( 21%) Producing: schemas/example/schemas/test/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
   https://sourcemeta.com/external
 

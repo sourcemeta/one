@@ -86,12 +86,11 @@ grep -q "schemas/example/schemas/a/%/dependents.metapack" \
 grep -q "schemas/example/schemas/d/%/dependents.metapack" \
     "$TMP/output_producing.txt"
 
-# TODO(over-rebuild): B and C's dependents rebuild unnecessarily
-# as B and C are completely unrelated to D.
-grep -q "schemas/example/schemas/b/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
-grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
+# B and C's dependents must NOT rebuild (unrelated to D)
+if grep -q "schemas/example/schemas/b/%/dependents.metapack" \
+    "$TMP/output_producing.txt"; then exit 1; fi
+if grep -q "schemas/example/schemas/c/%/dependents.metapack" \
+    "$TMP/output_producing.txt"; then exit 1; fi
 
 # Verify no files were deleted
 cd "$TMP/output"

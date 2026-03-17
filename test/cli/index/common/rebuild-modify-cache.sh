@@ -62,6 +62,8 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
+Building...
+Resolving dependents...
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

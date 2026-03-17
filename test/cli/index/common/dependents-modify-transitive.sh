@@ -95,26 +95,9 @@ EOF
 remove_threads_information "$TMP/output.txt"
 grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
-# A's dependents must rebuild (C is a transitive dependent of A via B)
-grep -q "schemas/example/schemas/a/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
-
-# TODO(over-rebuild): B's dependents rebuilds because C's
-# dependencies.metapack is dirty and registered as a dynamic dep of B's
-# dependents. But C still references B the same way, so B's dependents
-# content is unchanged
-grep -q "schemas/example/schemas/b/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
-
-# TODO(over-rebuild): C's dependents rebuilds because C's own
-# dependencies.metapack is a static rule dep. But nobody references C,
-# so C's dependents content is unchanged
-grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
-
-# D's dependents must NOT rebuild (D is unrelated)
-grep -q "schemas/example/schemas/d/%/dependents.metapack" \
-    "$TMP/output_producing.txt" && exit 1
+# No dependents should rebuild: C's references did not change
+# (it still references B the same way), so no schema's dependents are affected
+if grep -q "dependents.metapack" "$TMP/output_producing.txt"; then exit 1; fi
 
 # Verify no files were deleted
 cd "$TMP/output"

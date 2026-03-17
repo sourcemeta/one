@@ -437,6 +437,23 @@ auto BuildState::commit(const std::string &source_path, ResolverEntry entry)
   this->dirty = true;
 }
 
+auto BuildState::in_overlay(const std::string &key) const -> bool {
+  return this->overlay.contains(key);
+}
+
+auto BuildState::disk_entry(const std::string &key) const -> const Entry * {
+  if (this->deleted.contains(key)) {
+    return nullptr;
+  }
+
+  const auto *slot{this->probe_slot(key, KIND_OUTPUT)};
+  if (slot == nullptr) {
+    return nullptr;
+  }
+
+  return &this->parse_slot_entry(slot);
+}
+
 auto BuildState::save(const std::filesystem::path &path) const -> void {
   if (!this->dirty && this->view && path == this->loaded_path) {
     return;

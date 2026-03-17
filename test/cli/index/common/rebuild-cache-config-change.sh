@@ -51,6 +51,8 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
+Building...
+Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -79,29 +81,30 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
+Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
-( 12%) Producing: explorer/%/404.metapack
-( 16%) Producing: schemas/example/schemas/foo/%/schema.metapack
-( 20%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
-( 25%) Producing: schemas/example/schemas/foo/%/locations.metapack
-( 29%) Producing: schemas/example/schemas/foo/%/positions.metapack
-( 33%) Producing: schemas/example/schemas/foo/%/stats.metapack
-( 37%) Producing: schemas/example/schemas/foo/%/bundle.metapack
-( 41%) Producing: schemas/example/schemas/foo/%/dependents.metapack
-( 45%) Producing: schemas/example/schemas/foo/%/health.metapack
-( 50%) Producing: explorer/example/schemas/foo/%/schema.metapack
-( 54%) Producing: schemas/example/schemas/foo/%/blaze-exhaustive.metapack
-( 58%) Producing: schemas/example/schemas/foo/%/blaze-fast.metapack
-( 62%) Producing: schemas/example/schemas/foo/%/editor.metapack
-( 66%) Producing: explorer/%/search.metapack
-( 70%) Producing: explorer/example/schemas/%/directory.metapack
-( 75%) Producing: explorer/example/schemas/foo/%/schema-html.metapack
-( 79%) Producing: explorer/example/%/directory.metapack
-( 83%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 87%) Producing: explorer/%/directory.metapack
+( 13%) Producing: explorer/%/404.metapack
+( 17%) Producing: schemas/example/schemas/foo/%/schema.metapack
+( 21%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
+( 26%) Producing: schemas/example/schemas/foo/%/locations.metapack
+( 30%) Producing: schemas/example/schemas/foo/%/positions.metapack
+( 34%) Producing: schemas/example/schemas/foo/%/stats.metapack
+( 39%) Producing: schemas/example/schemas/foo/%/bundle.metapack
+( 43%) Producing: schemas/example/schemas/foo/%/health.metapack
+( 47%) Producing: explorer/example/schemas/foo/%/schema.metapack
+( 52%) Producing: schemas/example/schemas/foo/%/blaze-exhaustive.metapack
+( 56%) Producing: schemas/example/schemas/foo/%/blaze-fast.metapack
+( 60%) Producing: schemas/example/schemas/foo/%/editor.metapack
+( 65%) Producing: explorer/%/search.metapack
+( 69%) Producing: explorer/example/schemas/%/directory.metapack
+( 73%) Producing: explorer/example/schemas/foo/%/schema-html.metapack
+( 78%) Producing: explorer/example/%/directory.metapack
+( 82%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 86%) Producing: explorer/%/directory.metapack
 ( 91%) Producing: explorer/example/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
+Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

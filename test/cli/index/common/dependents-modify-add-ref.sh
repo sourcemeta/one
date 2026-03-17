@@ -1,14 +1,8 @@
 #!/bin/sh
 
 # When modifying a schema to add a NEW $ref to another schema that it
-# did not previously reference, both the modified schema's dependents and
-# the newly referenced schema's dependents should rebuild.
-#
-# TODO(over-rebuild): A's dependents does NOT rebuild even though B now
-# references A. This is because A's dependents state.bin deps do not yet
-# include B's dependencies.metapack (B was not a dependent of A before
-# this modification). The stale data self-corrects on the next full
-# rebuild or the next schema addition/removal.
+# did not previously reference, the newly referenced schema's dependents
+# should rebuild. Unrelated schemas' dependents must not be scheduled.
 
 set -o errexit
 set -o nounset
@@ -85,19 +79,17 @@ EOF
 remove_threads_information "$TMP/output.txt"
 grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
-# B's dependents must rebuild (B changed)
-grep -q "schemas/example/schemas/b/%/dependents.metapack" \
+# A's dependents must rebuild (B now references A)
+grep -q "schemas/example/schemas/a/%/dependents.metapack" \
     "$TMP/output_producing.txt"
 
-# TODO(over-rebuild): A's dependents SHOULD rebuild because B now
-# references A, but currently it does NOT because state.bin deps for
-# A's dependents do not include B's dependencies.metapack yet
-grep -q "schemas/example/schemas/a/%/dependents.metapack" \
-    "$TMP/output_producing.txt" && exit 1
+# B's dependents must NOT rebuild (nobody references B)
+if grep -q "schemas/example/schemas/b/%/dependents.metapack" \
+    "$TMP/output_producing.txt"; then exit 1; fi
 
 # C's dependents must NOT rebuild (C is unrelated)
-grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt" && exit 1
+if grep -q "schemas/example/schemas/c/%/dependents.metapack" \
+    "$TMP/output_producing.txt"; then exit 1; fi
 
 # Verify no files were deleted
 cd "$TMP/output"

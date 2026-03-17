@@ -30,6 +30,7 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
+Building...
 ( 12%) Producing: comment.json
 ( 25%) Producing: configuration.json
 ( 37%) Producing: version.json
@@ -38,6 +39,7 @@ Using configuration: $(realpath "$TMP")/one.json
 ( 75%) Producing: explorer/%/search.metapack
 ( 87%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
+Resolving dependents...
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
@@ -53,7 +55,9 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
+Building...
 (100%) Producing: comment.json
+Resolving dependents...
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

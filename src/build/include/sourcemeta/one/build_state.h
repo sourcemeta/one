@@ -66,6 +66,9 @@ public:
                              std::filesystem::file_time_type mtime) const
       -> const ResolverEntry *;
 
+  [[nodiscard]] auto in_overlay(const std::string &key) const -> bool;
+  [[nodiscard]] auto disk_entry(const std::string &key) const -> const Entry *;
+
 private:
   struct TransparentHash {
     using is_transparent = void;

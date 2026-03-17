@@ -45,17 +45,17 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
+Building...
 (  4%) Producing: configuration.json
 (  9%) Producing: version.json
-( 13%) Producing: explorer/%/404.metapack
-( 18%) Producing: schemas/test/test/%/schema.metapack
-( 22%) Producing: schemas/test/test/%/dependencies.metapack
-( 27%) Producing: schemas/test/test/%/locations.metapack
-( 31%) Producing: schemas/test/test/%/positions.metapack
-( 36%) Producing: schemas/test/test/%/stats.metapack
-( 40%) Producing: schemas/test/test/%/bundle.metapack
-( 45%) Producing: schemas/test/test/%/dependents.metapack
-( 50%) Producing: schemas/test/test/%/health.metapack
+( 14%) Producing: explorer/%/404.metapack
+( 19%) Producing: schemas/test/test/%/schema.metapack
+( 23%) Producing: schemas/test/test/%/dependencies.metapack
+( 28%) Producing: schemas/test/test/%/locations.metapack
+( 33%) Producing: schemas/test/test/%/positions.metapack
+( 38%) Producing: schemas/test/test/%/stats.metapack
+( 42%) Producing: schemas/test/test/%/bundle.metapack
+( 47%) Producing: schemas/test/test/%/health.metapack
 error: Could not determine the base dialect of the schema
 EOF
 
