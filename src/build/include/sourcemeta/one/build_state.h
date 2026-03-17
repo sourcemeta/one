@@ -13,7 +13,6 @@
 #include <functional>  // std::function
 #include <memory>      // std::unique_ptr
 #include <mutex>       // std::recursive_mutex, std::unique_lock
-#include <set>         // std::set
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <unordered_map> // std::unordered_map
@@ -69,12 +68,13 @@ public:
                              std::filesystem::file_time_type mtime) const
       -> const ResolverEntry *;
 
-  using DependentCallback =
-      std::function<void(const std::string &from, const std::string &to,
-                         const std::filesystem::path &source)>;
+  using ReferencingCallback =
+      std::function<void(const std::filesystem::path &)>;
 
-  auto dependents_of(std::string_view uri, const std::string &server_url,
-                     const DependentCallback &callback) const -> void;
+  auto dependencies_referencing(const std::filesystem::path &output,
+                                std::string_view schema_base,
+                                const ReferencingCallback &callback) const
+      -> void;
 
 private:
   struct TransparentHash {
@@ -119,23 +119,7 @@ private:
                              TransparentEqual>
       resolver_lazy_cache;
 
-  struct DependentEntry {
-    std::string from;
-    std::string to;
-    std::filesystem::path source;
-    auto operator<(const DependentEntry &other) const -> bool {
-      if (this->from != other.from) {
-        return this->from < other.from;
-      }
-
-      return this->to < other.to;
-    }
-  };
-
   mutable std::recursive_mutex mutex_;
-  mutable bool dependents_computed_{false};
-  mutable std::unordered_map<std::string, std::set<DependentEntry>>
-      dependents_cache_;
   std::filesystem::path loaded_path;
   std::size_t entry_count{0};
   std::size_t resolver_entry_count{0};

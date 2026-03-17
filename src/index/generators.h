@@ -28,6 +28,8 @@
 #include <fstream>       // std::ofstream
 #include <memory>        // std::unique_ptr
 #include <mutex>         // std::mutex, std::lock_guard
+#include <queue>         // std::queue
+#include <set>           // std::set
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <utility>       // std::move, std::pair
@@ -248,25 +250,84 @@ private:
   }
 };
 
+// The handler uses BuildState to find which dependencies.metapack files
+// reference the current schema, then reads only those files to compute
+// the reverse dependency graph. This is safe because the forward
+// dependencies are produced in a previous wave, and the execution loop
+// completes an entire wave before starting the next one.
 struct GENERATE_DEPENDENTS {
   static auto handler(const sourcemeta::one::BuildState &state,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
+    const auto &destination_string{action.destination.native()};
+    const auto schemas_position{destination_string.find("/schemas/")};
+    assert(schemas_position != std::string::npos);
+    const std::filesystem::path output_directory{
+        destination_string.substr(0, schemas_position)};
+    const auto sentinel_position{destination_string.find("/%/")};
+    assert(sentinel_position != std::string::npos);
+    const auto schema_base{destination_string.substr(
+        schemas_position + 9, sentinel_position - schemas_position - 9)};
+
+    using DirectMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::unordered_set<sourcemeta::core::JSON::String>>;
+    DirectMap direct;
+
+    state.dependencies_referencing(
+        output_directory, schema_base, [&](const auto &dependencies_path) {
+          const auto contents{sourcemeta::one::read_json(dependencies_path)};
+          assert(contents.is_array());
+          for (const auto &entry : contents.as_array()) {
+            direct[entry.at("to").to_string()].emplace(
+                entry.at("from").to_string());
+          }
+
+          callback(dependencies_path);
+        });
+
+    using TransitiveMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
+    TransitiveMap transitive;
+    for (const auto &[target, _] : direct) {
+      auto &edges{transitive[target]};
+      std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+      visited.emplace(target);
+      std::queue<sourcemeta::core::JSON::String> queue;
+      queue.emplace(target);
+      while (!queue.empty()) {
+        const auto current{std::move(queue.front())};
+        queue.pop();
+        const auto match{direct.find(current)};
+        if (match == direct.cend()) {
+          continue;
+        }
+
+        for (const auto &dependent : match->second) {
+          edges.emplace(dependent, current);
+          if (visited.emplace(dependent).second) {
+            queue.emplace(dependent);
+          }
+        }
+      }
+    }
 
     auto result{sourcemeta::core::JSON::make_array()};
-    state.dependents_of(
-        action.data, configuration.url,
-        [&](const auto &from, const auto &to, const auto &source) {
-          auto object{sourcemeta::core::JSON::make_object()};
-          object.assign("from", sourcemeta::core::JSON{from});
-          object.assign("to", sourcemeta::core::JSON{to});
-          result.push_back(std::move(object));
-          callback(source);
-        });
+    const auto match{transitive.find(std::string{action.data})};
+    if (match != transitive.cend()) {
+      for (const auto &[from, to] : match->second) {
+        auto object{sourcemeta::core::JSON::make_object()};
+        object.assign("from", sourcemeta::core::JSON{from});
+        object.assign("to", sourcemeta::core::JSON{to});
+        result.push_back(std::move(object));
+      }
+    }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 

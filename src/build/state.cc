@@ -7,11 +7,8 @@
 #include <cstdint> // std::int64_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <cstring> // std::memcpy, std::memcmp
 #include <fstream> // std::ofstream
-#include <queue>   // std::queue
 #include <string>  // std::string
-#include <unordered_map> // std::unordered_map
-#include <unordered_set> // std::unordered_set
-#include <vector>        // std::vector
+#include <vector>  // std::vector
 
 namespace {
 
@@ -440,101 +437,29 @@ auto BuildState::commit(const std::string &source_path, ResolverEntry entry)
   this->dirty = true;
 }
 
-auto BuildState::dependents_of(const std::string_view uri,
-                               const std::string &server_url,
-                               const DependentCallback &callback) const
-    -> void {
+auto BuildState::dependencies_referencing(
+    const std::filesystem::path &output, const std::string_view schema_base,
+    const ReferencingCallback &callback) const -> void {
   const auto lock{this->take_lock()};
-  if (!this->dependents_computed_) {
-    const auto output_directory{this->loaded_path.parent_path().string()};
-    const auto schemas_prefix{output_directory + "/schemas/"};
-    static constexpr std::string_view SENTINEL{"/%/"};
+  const auto schemas_prefix{output.string() + "/schemas/"};
+  const auto target_prefix{schemas_prefix + std::string{schema_base} + "/%/"};
 
-    using DirectMap =
-        std::unordered_map<std::string, std::unordered_set<std::string>>;
-    DirectMap direct;
-    std::unordered_map<std::string, std::filesystem::path> uri_to_source;
-
-    for (const auto key : this->keys()) {
-      if (!key.ends_with("/%/dependencies.metapack")) {
-        continue;
-      }
-
-      const auto *state_entry{this->entry(std::string{key})};
-      if (state_entry == nullptr) {
-        continue;
-      }
-
-      const auto relative_start{schemas_prefix.size()};
-      const auto sentinel_position{key.find(SENTINEL, relative_start)};
-      if (sentinel_position == std::string_view::npos) {
-        continue;
-      }
-
-      const auto owner_relative{
-          key.substr(relative_start, sentinel_position - relative_start)};
-      const auto owner_uri{server_url + std::string{owner_relative}};
-      uri_to_source.try_emplace(owner_uri,
-                                std::filesystem::path{std::string{key}});
-
-      for (const auto &dependency : state_entry->dependencies) {
-        const auto &dependency_path{dependency.native()};
-        if (!dependency_path.starts_with(schemas_prefix)) {
-          continue;
-        }
-
-        const auto dependency_sentinel{
-            dependency_path.find(SENTINEL, relative_start)};
-        if (dependency_sentinel == std::string::npos) {
-          continue;
-        }
-
-        const auto dependency_relative{dependency_path.substr(
-            relative_start, dependency_sentinel - relative_start)};
-        if (dependency_relative == owner_relative) {
-          continue;
-        }
-
-        const auto dependency_uri{server_url + dependency_relative};
-        direct[dependency_uri].emplace(owner_uri);
-      }
+  for (const auto key : this->keys()) {
+    if (!key.ends_with("/%/dependencies.metapack")) {
+      continue;
     }
 
-    for (const auto &[target, _] : direct) {
-      auto &dependents{this->dependents_cache_[target]};
-      std::unordered_set<std::string_view> visited;
-      visited.emplace(target);
-      std::queue<std::string> queue;
-      queue.emplace(target);
-      while (!queue.empty()) {
-        const auto current{std::move(queue.front())};
-        queue.pop();
-        const auto match{direct.find(current)};
-        if (match == direct.cend()) {
-          continue;
-        }
-
-        for (const auto &dependent : match->second) {
-          const auto source_match{uri_to_source.find(dependent)};
-          assert(source_match != uri_to_source.cend());
-          dependents.insert({dependent, current, source_match->second});
-          if (visited.emplace(dependent).second) {
-            queue.emplace(dependent);
-          }
-        }
-      }
+    const auto *state_entry{this->entry(std::string{key})};
+    if (state_entry == nullptr) {
+      continue;
     }
 
-    this->dependents_computed_ = true;
-  }
-
-  const auto match{this->dependents_cache_.find(std::string{uri})};
-  if (match == this->dependents_cache_.cend()) {
-    return;
-  }
-
-  for (const auto &dependent : match->second) {
-    callback(dependent.from, dependent.to, dependent.source);
+    for (const auto &dependency : state_entry->dependencies) {
+      if (dependency.native().starts_with(target_prefix)) {
+        callback(std::filesystem::path{std::string{key}});
+        break;
+      }
+    }
   }
 }
 
