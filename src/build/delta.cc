@@ -397,10 +397,52 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
     declare_schema_targets(targets, schema_base, explorer_base, output_string,
                            info.path.native(), info.evaluate, build_type,
                            configuration_string, uri);
+
     all_relative_paths.emplace_back(info.relative_path);
     auto root_path{append_filename(schema_base, ROOT_RULE.filename)};
     active_schemas.push_back({uri, &info, std::move(schema_base),
                               std::move(explorer_base), std::move(root_path)});
+  }
+
+  // Add dynamic dependencies for each Dependents target. On a full rebuild,
+  // state.bin may be empty so we add ALL dependencies.metapack files as deps.
+  // On incremental builds, we use dependencies_referencing() to add only the
+  // dependencies.metapack files that reference each schema.
+  {
+    std::vector<std::string> all_dependencies_paths;
+    if (is_full) {
+      all_dependencies_paths.reserve(active_schemas.size());
+      for (const auto &schema : active_schemas) {
+        all_dependencies_paths.push_back(
+            append_filename(schema.schema_base, "dependencies.metapack"));
+      }
+    }
+
+    for (const auto &schema : active_schemas) {
+      const auto dependents_path{
+          append_filename(schema.schema_base, "dependents.metapack")};
+      auto dependents_target{targets.find(dependents_path)};
+      if (dependents_target == targets.end()) {
+        continue;
+      }
+
+      if (is_full) {
+        const auto own_dependencies{
+            append_filename(schema.schema_base, "dependencies.metapack")};
+        for (const auto &dependencies_path : all_dependencies_paths) {
+          if (dependencies_path != own_dependencies) {
+            dependents_target->second.dependencies.push_back(dependencies_path);
+          }
+        }
+      } else {
+        entries.dependencies_referencing(
+            output, schema.info->relative_path.native(),
+            [&dependents_target](const auto &referencing_path) {
+              dependents_target->second.dependencies.push_back(
+                  referencing_path.string());
+            });
+      }
+    }
   }
 
   std::unordered_set<std::string_view> force_dirty;

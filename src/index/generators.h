@@ -250,45 +250,31 @@ private:
   }
 };
 
-// The handler uses BuildState to find which dependencies.metapack files
-// reference the current schema, then reads only those files to compute
-// the reverse dependency graph. This is safe because the forward
-// dependencies are produced in a previous wave, and the execution loop
-// completes an entire wave before starting the next one.
+// The relevant dependencies.metapack files are determined by delta()
+// using BuildState::dependencies_referencing and passed as
+// action.dependencies. The handler reads only those few files to build
+// the reverse dependency graph
 struct GENERATE_DEPENDENTS {
-  static auto handler(const sourcemeta::one::BuildState &state,
+  static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto &destination_string{action.destination.native()};
-    const auto schemas_position{destination_string.find("/schemas/")};
-    assert(schemas_position != std::string::npos);
-    const std::filesystem::path output_directory{
-        destination_string.substr(0, schemas_position)};
-    const auto sentinel_position{destination_string.find("/%/")};
-    assert(sentinel_position != std::string::npos);
-    const auto schema_base{destination_string.substr(
-        schemas_position + 9, sentinel_position - schemas_position - 9)};
 
     using DirectMap =
         std::unordered_map<sourcemeta::core::JSON::String,
                            std::unordered_set<sourcemeta::core::JSON::String>>;
     DirectMap direct;
-
-    state.dependencies_referencing(
-        output_directory, schema_base, [&](const auto &dependencies_path) {
-          const auto contents{sourcemeta::one::read_json(dependencies_path)};
-          assert(contents.is_array());
-          for (const auto &entry : contents.as_array()) {
-            direct[entry.at("to").to_string()].emplace(
-                entry.at("from").to_string());
-          }
-
-          callback(dependencies_path);
-        });
+    for (const auto &dependency : action.dependencies) {
+      const auto contents{sourcemeta::one::read_json(dependency)};
+      assert(contents.is_array());
+      for (const auto &entry : contents.as_array()) {
+        direct[entry.at("to").to_string()].emplace(
+            entry.at("from").to_string());
+      }
+    }
 
     using TransitiveMap =
         std::unordered_map<sourcemeta::core::JSON::String,

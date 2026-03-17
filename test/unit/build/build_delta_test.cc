@@ -2527,7 +2527,8 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   EXPECT_ACTION(plan, 2, 1, 6, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
                 "https://example.com/a",
-                output / "schemas" / "a" / "%" / "dependencies.metapack");
+                output / "schemas" / "a" / "%" / "dependencies.metapack",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 3, 4, 8, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
@@ -2768,7 +2769,8 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   EXPECT_ACTION(plan, 2, 1, 9, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
                 "https://example.com/a",
-                output / "schemas" / "a" / "%" / "dependencies.metapack");
+                output / "schemas" / "a" / "%" / "dependencies.metapack",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 3, 5, 12, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
@@ -2784,7 +2786,8 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   EXPECT_ACTION(plan, 2, 4, 9, Dependents,
                 output / "schemas" / "b" / "%" / "dependents.metapack",
                 "https://example.com/b",
-                output / "schemas" / "b" / "%" / "dependencies.metapack");
+                output / "schemas" / "b" / "%" / "dependencies.metapack",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 3, 8, 12, Editor,
                 output / "schemas" / "b" / "%" / "editor.metapack",
                 "https://example.com/b",
@@ -3017,7 +3020,8 @@ TEST(Build_delta, mtime_reverse_dep) {
   EXPECT_ACTION(plan, 2, 2, 7, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
                 "https://example.com/a",
-                output / "schemas" / "a" / "%" / "dependencies.metapack");
+                output / "schemas" / "a" / "%" / "dependencies.metapack",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 3, 4, 5, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
