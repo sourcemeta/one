@@ -60,25 +60,24 @@ Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 ( 12%) Producing: explorer/%/404.metapack
 ( 16%) Producing: schemas/example/schemas/a/%/schema.metapack
 ( 20%) Producing: schemas/example/schemas/a/%/dependencies.metapack
-( 24%) Producing: schemas/example/schemas/a/%/locations.metapack
-( 28%) Producing: schemas/example/schemas/a/%/positions.metapack
-( 32%) Producing: schemas/example/schemas/a/%/stats.metapack
-( 36%) Producing: dependency-tree.metapack
-( 40%) Producing: schemas/example/schemas/a/%/bundle.metapack
-( 44%) Producing: schemas/example/schemas/a/%/health.metapack
-( 48%) Producing: explorer/example/schemas/a/%/schema.metapack
-( 52%) Producing: schemas/example/schemas/a/%/blaze-exhaustive.metapack
-( 56%) Producing: schemas/example/schemas/a/%/blaze-fast.metapack
-( 60%) Producing: schemas/example/schemas/a/%/dependents.metapack
-( 64%) Producing: schemas/example/schemas/a/%/editor.metapack
-( 68%) Producing: explorer/%/search.metapack
-( 72%) Producing: explorer/example/schemas/%/directory.metapack
-( 76%) Producing: explorer/example/schemas/a/%/schema-html.metapack
-( 80%) Producing: explorer/example/%/directory.metapack
-( 84%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 88%) Producing: explorer/%/directory.metapack
-( 92%) Producing: explorer/example/%/directory-html.metapack
-( 96%) Producing: explorer/%/directory-html.metapack
+( 25%) Producing: schemas/example/schemas/a/%/locations.metapack
+( 29%) Producing: schemas/example/schemas/a/%/positions.metapack
+( 33%) Producing: schemas/example/schemas/a/%/stats.metapack
+( 37%) Producing: schemas/example/schemas/a/%/bundle.metapack
+( 41%) Producing: schemas/example/schemas/a/%/dependents.metapack
+( 45%) Producing: schemas/example/schemas/a/%/health.metapack
+( 50%) Producing: explorer/example/schemas/a/%/schema.metapack
+( 54%) Producing: schemas/example/schemas/a/%/blaze-exhaustive.metapack
+( 58%) Producing: schemas/example/schemas/a/%/blaze-fast.metapack
+( 62%) Producing: schemas/example/schemas/a/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 70%) Producing: explorer/example/schemas/%/directory.metapack
+( 75%) Producing: explorer/example/schemas/a/%/schema-html.metapack
+( 79%) Producing: explorer/example/%/directory.metapack
+( 83%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 87%) Producing: explorer/%/directory.metapack
+( 91%) Producing: explorer/example/%/directory-html.metapack
+( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
 EOF
 

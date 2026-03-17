@@ -30,14 +30,13 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 11%) Producing: comment.json
-( 22%) Producing: configuration.json
-( 33%) Producing: version.json
-( 44%) Producing: dependency-tree.metapack
-( 55%) Producing: explorer/%/404.metapack
-( 66%) Producing: explorer/%/directory.metapack
-( 77%) Producing: explorer/%/search.metapack
-( 88%) Producing: explorer/%/directory-html.metapack
+( 12%) Producing: comment.json
+( 25%) Producing: configuration.json
+( 37%) Producing: version.json
+( 50%) Producing: explorer/%/404.metapack
+( 62%) Producing: explorer/%/directory.metapack
+( 75%) Producing: explorer/%/search.metapack
+( 87%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
 EOF
 

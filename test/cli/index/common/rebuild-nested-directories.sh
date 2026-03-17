@@ -99,30 +99,29 @@ grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
 # The dependency-tree.metapack global aggregate triggers ForceOnGraphChange
 # for all dependents, not just the ones whose graph actually changed.
 cat << 'EOF' > "$TMP/expected.txt"
-(  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
-(  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
-( 12%) Producing: schemas/left/left-a/s5/%/locations.metapack
-( 16%) Producing: schemas/left/left-a/s5/%/positions.metapack
-( 20%) Producing: schemas/left/left-a/s5/%/stats.metapack
-( 24%) Producing: dependency-tree.metapack
-( 28%) Producing: schemas/left/left-a/s5/%/bundle.metapack
-( 32%) Producing: schemas/left/left-a/s5/%/health.metapack
-( 36%) Producing: explorer/left/left-a/s5/%/schema.metapack
-( 40%) Producing: schemas/left/left-a/s1/%/dependents.metapack
-( 44%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
-( 48%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
-( 52%) Producing: schemas/left/left-a/s5/%/dependents.metapack
-( 56%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 60%) Producing: schemas/left/left-b/s2/%/dependents.metapack
-( 64%) Producing: schemas/right/right-a/s3/%/dependents.metapack
-( 68%) Producing: schemas/right/right-b/s4/%/dependents.metapack
-( 72%) Producing: explorer/%/search.metapack
-( 76%) Producing: explorer/left/left-a/%/directory.metapack
-( 80%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 84%) Producing: explorer/left/%/directory.metapack
-( 88%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 92%) Producing: explorer/%/directory.metapack
-( 96%) Producing: explorer/left/%/directory-html.metapack
+(  4%) Producing: schemas/left/left-a/s1/%/dependents.metapack
+(  8%) Producing: schemas/left/left-a/s5/%/schema.metapack
+( 12%) Producing: schemas/left/left-b/s2/%/dependents.metapack
+( 16%) Producing: schemas/right/right-a/s3/%/dependents.metapack
+( 20%) Producing: schemas/right/right-b/s4/%/dependents.metapack
+( 25%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+( 29%) Producing: schemas/left/left-a/s5/%/locations.metapack
+( 33%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 37%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 41%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 45%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+( 50%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 54%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 58%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 62%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 66%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 70%) Producing: explorer/%/search.metapack
+( 75%) Producing: explorer/left/left-a/%/directory.metapack
+( 79%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 83%) Producing: explorer/left/%/directory.metapack
+( 87%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 91%) Producing: explorer/%/directory.metapack
+( 95%) Producing: explorer/left/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
 EOF
 

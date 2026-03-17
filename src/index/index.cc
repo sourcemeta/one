@@ -56,7 +56,7 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
     -> bool;
 
-static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
+static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
     &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
     &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
     &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
@@ -68,7 +68,6 @@ static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
     &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
     &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
-    &sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler,
     &sourcemeta::one::GENERATE_DEPENDENTS::handler,
     &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
     &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,

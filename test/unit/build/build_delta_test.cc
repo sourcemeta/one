@@ -20,20 +20,18 @@ TEST(Build_delta, full_empty_registry) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 7);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 4, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 2, 4, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 3, 4, SearchIndex,
+  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
@@ -45,7 +43,6 @@ TEST(Build_delta, full_empty_registry) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
                      output / "version.json",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -64,7 +61,7 @@ TEST(Build_delta, full_single_schema) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 20);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -96,13 +93,14 @@ TEST(Build_delta, full_single_schema) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
+                output / "schemas" / "foo" / "%" / "dependents.metapack",
+                "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
   EXPECT_ACTION(plan, 3, 2, 3, Health,
                 output / "schemas" / "foo" / "%" / "health.metapack",
@@ -110,24 +108,21 @@ TEST(Build_delta, full_single_schema) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
-                output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -166,7 +161,6 @@ TEST(Build_delta, full_single_schema) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -181,8 +175,6 @@ TEST(Build_delta, incremental_changed_same_mtime) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -223,7 +215,6 @@ TEST(Build_delta, incremental_changed_same_mtime) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -250,7 +241,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "bar" / "%" / "schema.metapack",
@@ -275,10 +266,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "bar" / "%" / "bundle.metapack",
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "schema.metapack",
@@ -289,24 +277,25 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 output / "schemas" / "bar" / "%" / "schema.metapack",
                 output / "schemas" / "bar" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "bar" / "%" / "schema.metapack",
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "schema.metapack",
                 output / "schemas" / "bar" / "%" / "health.metapack",
                 output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "bar" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "bar" / "%" / "blaze-fast.metapack",
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
-                "https://example.com/bar", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/bar",
+                output / "schemas" / "bar" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "bar" / "%" / "editor.metapack",
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "bundle.metapack");
@@ -345,7 +334,6 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
       output / "schemas" / "bar" / "%" / "dependents.metapack",
       output / "explorer" / "bar" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -390,8 +378,6 @@ TEST(Build_delta, incremental_one_schema_added) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "bar" / "%" / "schema-html.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -412,9 +398,9 @@ TEST(Build_delta, incremental_one_schema_added) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+  EXPECT_ACTION(plan, 0, 1, 2, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 std::filesystem::path{"/"} / "src" / "foo.json",
@@ -437,11 +423,7 @@ TEST(Build_delta, incremental_one_schema_added) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "foo" / "%" / "dependencies.metapack",
-      output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -452,27 +434,29 @@ TEST(Build_delta, incremental_one_schema_added) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 6, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 6, Dependents,
+  EXPECT_ACTION(plan, 0, 0, 2, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
-                "https://example.com/bar", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 6, BlazeExhaustive,
+                "https://example.com/bar",
+                output / "schemas" / "bar" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 6, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 6, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 5, 6, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -526,7 +510,6 @@ TEST(Build_delta, incremental_one_schema_added) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -549,13 +532,11 @@ TEST(Build_delta, incremental_removed_schema) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 7);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 6);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 2, 3, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
@@ -570,7 +551,6 @@ TEST(Build_delta, incremental_removed_schema) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -590,7 +570,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -622,10 +602,11 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
+                output / "schemas" / "foo" / "%" / "dependents.metapack",
+                "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -636,24 +617,21 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
-                output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -694,7 +672,6 @@ TEST(Build_delta, full_stale_file_in_entries) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -714,7 +691,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 22);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -746,10 +723,11 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
+                output / "schemas" / "foo" / "%" / "dependents.metapack",
+                "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -760,24 +738,21 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
-                output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -818,7 +793,6 @@ TEST(Build_delta, full_stale_directory_in_entries) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -835,21 +809,19 @@ TEST(Build_delta, full_with_comment) {
       sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       false, "Hello world", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
 
   EXPECT_ACTION(plan, 0, 0, 3, Comment, output / "comment.json", "Hello world");
   EXPECT_ACTION(plan, 0, 1, 3, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 2, 3, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 4, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 2, 4, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 3, 4, SearchIndex,
+  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
@@ -861,7 +833,6 @@ TEST(Build_delta, full_with_comment) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "comment.json",
                      output / "configuration.json", output / "version.json",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -881,20 +852,18 @@ TEST(Build_delta, full_without_comment_removes_existing) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 8);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 4, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 2, 4, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 3, 4, SearchIndex,
+  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
@@ -908,7 +877,6 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
                      output / "version.json",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -931,7 +899,7 @@ TEST(Build_delta, incremental_with_comment) {
       sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       true, "Hello world", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "Hello world");
 
@@ -958,10 +926,7 @@ TEST(Build_delta, incremental_with_comment) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -972,24 +937,25 @@ TEST(Build_delta, incremental_with_comment) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1029,7 +995,6 @@ TEST(Build_delta, incremental_with_comment) {
                      output / "schemas" / "foo" / "%" / "dependents.metapack",
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -1053,7 +1018,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1078,10 +1043,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1092,24 +1054,25 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1150,7 +1113,6 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1165,8 +1127,6 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
@@ -1189,7 +1149,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "comment.json",
-                     output / "routes.bin", output / "dependency-tree.metapack",
+                     output / "routes.bin",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1206,8 +1166,6 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
   entries.emplace(output / "comment.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
@@ -1230,7 +1188,6 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1246,8 +1203,6 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -1264,13 +1219,11 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 6);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 2, 3, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
@@ -1282,7 +1235,6 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1298,8 +1250,6 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -1316,13 +1266,11 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 6);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 2, 3, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
@@ -1334,7 +1282,6 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1349,8 +1296,6 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
@@ -1368,20 +1313,18 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 10);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 4, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 2, 4, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 3, 4, SearchIndex,
+  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
@@ -1396,7 +1339,6 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1414,7 +1356,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -1446,10 +1388,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1460,16 +1399,17 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 2, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, Dependents,
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 1, 2, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1506,7 +1446,6 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1529,7 +1468,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -1561,10 +1500,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1575,16 +1511,17 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 2, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, Dependents,
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 1, 2, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1627,7 +1564,6 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1649,7 +1585,7 @@ TEST(Build_delta, incremental_evaluate_false) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 15);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1674,10 +1610,7 @@ TEST(Build_delta, incremental_evaluate_false) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1688,16 +1621,17 @@ TEST(Build_delta, incremental_evaluate_false) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 2, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 3, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 2, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1734,7 +1668,6 @@ TEST(Build_delta, incremental_evaluate_false) {
                      output / "schemas" / "foo" / "%" / "dependents.metapack",
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -1752,8 +1685,6 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   entries.forget(
       (output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack")
           .string());
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -1774,18 +1705,15 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
-  EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 3, 4, BlazeExhaustive,
+  EXPECT_ACTION(plan, 0, 2, 3, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1811,7 +1739,6 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1828,8 +1755,6 @@ TEST(Build_delta, incremental_missing_bundle) {
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.forget(
       (output / "schemas" / "foo" / "%" / "bundle.metapack").string());
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -1850,18 +1775,15 @@ TEST(Build_delta, incremental_missing_bundle) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 8);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 7);
 
-  EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 3, 4, Bundle,
+  EXPECT_ACTION(plan, 0, 2, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1900,7 +1822,6 @@ TEST(Build_delta, incremental_missing_bundle) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1917,8 +1838,6 @@ TEST(Build_delta, incremental_missing_web_schema) {
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   entries.forget(
       (output / "explorer" / "foo" / "%" / "schema-html.metapack").string());
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -1939,18 +1858,15 @@ TEST(Build_delta, incremental_missing_web_schema) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
-  EXPECT_ACTION(plan, 0, 0, 4, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 0, 1, 4, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 4, SearchIndex,
+  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 3, 4, WebSchema,
+  EXPECT_ACTION(plan, 0, 2, 3, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
@@ -1977,7 +1893,6 @@ TEST(Build_delta, incremental_missing_web_schema) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -1992,8 +1907,6 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, false, MTIME(100));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -2027,7 +1940,6 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
@@ -2040,8 +1952,6 @@ TEST(Build_delta, mtime_nothing_changed) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(50));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "directory.metapack",
@@ -2081,7 +1991,6 @@ TEST(Build_delta, mtime_nothing_changed) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -2097,8 +2006,6 @@ TEST(Build_delta, mtime_source_newer) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(10));
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -2119,7 +2026,7 @@ TEST(Build_delta, mtime_source_newer) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2144,11 +2051,7 @@ TEST(Build_delta, mtime_source_newer) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "foo" / "%" / "dependencies.metapack",
-      output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2159,24 +2062,25 @@ TEST(Build_delta, mtime_source_newer) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -2230,7 +2134,6 @@ TEST(Build_delta, mtime_source_newer) {
       output / "explorer" / "bar" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
       output / "explorer" / "bar" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -2245,8 +2148,6 @@ TEST(Build_delta, mtime_no_entry) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "bar", true, true, MTIME(50));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(50), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -2267,9 +2168,9 @@ TEST(Build_delta, mtime_no_entry) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+  EXPECT_ACTION(plan, 0, 1, 2, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 std::filesystem::path{"/"} / "src" / "foo.json",
@@ -2292,11 +2193,7 @@ TEST(Build_delta, mtime_no_entry) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "foo" / "%" / "dependencies.metapack",
-      output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2307,27 +2204,29 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 6, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 6, Dependents,
+  EXPECT_ACTION(plan, 0, 0, 2, Dependents,
                 output / "schemas" / "bar" / "%" / "dependents.metapack",
-                "https://example.com/bar", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 6, BlazeExhaustive,
+                "https://example.com/bar",
+                output / "schemas" / "bar" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 6, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 6, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 5, 6, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -2380,7 +2279,6 @@ TEST(Build_delta, mtime_no_entry) {
       output / "explorer" / "bar" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
       output / "explorer" / "bar" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -2396,8 +2294,6 @@ TEST(Build_delta, mtime_no_file_mark) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -2419,7 +2315,7 @@ TEST(Build_delta, mtime_no_file_mark) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2444,10 +2340,7 @@ TEST(Build_delta, mtime_no_file_mark) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2458,24 +2351,25 @@ TEST(Build_delta, mtime_no_file_mark) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -2512,7 +2406,6 @@ TEST(Build_delta, mtime_no_file_mark) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -2544,7 +2437,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 31);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 30);
 
   EXPECT_ACTION(plan, 0, 0, 2, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2590,70 +2483,68 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 5, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "a" / "%" / "dependencies.metapack",
-      output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 5, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 6, Bundle,
                 output / "schemas" / "a" / "%" / "bundle.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 2, 5, Health,
+  EXPECT_ACTION(plan, 2, 2, 6, Health,
                 output / "schemas" / "a" / "%" / "health.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 3, 5, Bundle,
+  EXPECT_ACTION(plan, 2, 3, 6, Bundle,
                 output / "schemas" / "b" / "%" / "bundle.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 4, 5, Health,
+  EXPECT_ACTION(plan, 2, 5, 6, Health,
                 output / "schemas" / "b" / "%" / "health.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 10, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 8, SchemaMetadata,
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 10, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 1, 8, SchemaMetadata,
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 2, 10, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 2, 8, BlazeExhaustive,
                 output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 10, BlazeFast,
+  EXPECT_ACTION(plan, 3, 3, 8, BlazeFast,
                 output / "schemas" / "a" / "%" / "blaze-fast.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 10, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 6, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 5, 10, Editor,
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 4, 8, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 6, 10, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 5, 8, BlazeExhaustive,
                 output / "schemas" / "b" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 7, 10, BlazeFast,
+  EXPECT_ACTION(plan, 3, 6, 8, BlazeFast,
                 output / "schemas" / "b" / "%" / "blaze-fast.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 8, 10, Dependents,
+  EXPECT_ACTION(plan, 2, 4, 6, Dependents,
                 output / "schemas" / "b" / "%" / "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 9, 10, Editor,
+                "https://example.com/b",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 7, 8, Editor,
                 output / "schemas" / "b" / "%" / "editor.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
@@ -2712,7 +2603,6 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
       output / "schemas" / "b" / "%" / "dependents.metapack",
       output / "explorer" / "b" / "%" / "schema.metapack",
       output / "explorer" / "b" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -2751,7 +2641,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 44);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 43);
 
   EXPECT_ACTION(plan, 0, 0, 3, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2818,102 +2708,100 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 7, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "a" / "%" / "dependencies.metapack",
-      output / "schemas" / "b" / "%" / "dependencies.metapack",
-      output / "schemas" / "c" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 7, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 9, Bundle,
                 output / "schemas" / "a" / "%" / "bundle.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 2, 7, Health,
+  EXPECT_ACTION(plan, 2, 2, 9, Health,
                 output / "schemas" / "a" / "%" / "health.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 3, 7, Bundle,
+  EXPECT_ACTION(plan, 2, 3, 9, Bundle,
                 output / "schemas" / "b" / "%" / "bundle.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 4, 7, Health,
+  EXPECT_ACTION(plan, 2, 5, 9, Health,
                 output / "schemas" / "b" / "%" / "health.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 5, 7, Bundle,
+  EXPECT_ACTION(plan, 2, 6, 9, Bundle,
                 output / "schemas" / "c" / "%" / "bundle.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 6, 7, Health,
+  EXPECT_ACTION(plan, 2, 8, 9, Health,
                 output / "schemas" / "c" / "%" / "health.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 15, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 12, SchemaMetadata,
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 15, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 1, 12, SchemaMetadata,
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 2, 15, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 2, 12, SchemaMetadata,
                 output / "explorer" / "c" / "%" / "schema.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "health.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 3, 15, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 3, 12, BlazeExhaustive,
                 output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 15, BlazeFast,
+  EXPECT_ACTION(plan, 3, 4, 12, BlazeFast,
                 output / "schemas" / "a" / "%" / "blaze-fast.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 5, 15, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 9, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 6, 15, Editor,
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 5, 12, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 7, 15, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 6, 12, BlazeExhaustive,
                 output / "schemas" / "b" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 8, 15, BlazeFast,
+  EXPECT_ACTION(plan, 3, 7, 12, BlazeFast,
                 output / "schemas" / "b" / "%" / "blaze-fast.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 9, 15, Dependents,
+  EXPECT_ACTION(plan, 2, 4, 9, Dependents,
                 output / "schemas" / "b" / "%" / "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 10, 15, Editor,
+                "https://example.com/b",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 8, 12, Editor,
                 output / "schemas" / "b" / "%" / "editor.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 11, 15, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 9, 12, BlazeExhaustive,
                 output / "schemas" / "c" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 12, 15, BlazeFast,
+  EXPECT_ACTION(plan, 3, 10, 12, BlazeFast,
                 output / "schemas" / "c" / "%" / "blaze-fast.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 13, 15, Dependents,
+  EXPECT_ACTION(plan, 2, 7, 9, Dependents,
                 output / "schemas" / "c" / "%" / "dependents.metapack",
-                "https://example.com/c", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 14, 15, Editor,
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 11, 12, Editor,
                 output / "schemas" / "c" / "%" / "editor.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
@@ -2992,7 +2880,6 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
       output / "schemas" / "c" / "%" / "dependents.metapack",
       output / "explorer" / "c" / "%" / "schema.metapack",
       output / "explorer" / "c" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -3028,7 +2915,7 @@ TEST(Build_delta, mtime_reverse_dep) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 30);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 29);
 
   EXPECT_ACTION(plan, 0, 0, 5, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -3052,44 +2939,40 @@ TEST(Build_delta, mtime_reverse_dep) {
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 1, 0, 6, Dependencies,
+  EXPECT_ACTION(plan, 1, 0, 7, Dependencies,
                 output / "schemas" / "a" / "%" / "dependencies.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 1, 1, 6, Locations,
+  EXPECT_ACTION(plan, 1, 1, 7, Locations,
                 output / "schemas" / "a" / "%" / "locations.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 1, 2, 6, Positions,
+  EXPECT_ACTION(plan, 1, 2, 7, Positions,
                 output / "schemas" / "a" / "%" / "positions.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 1, 3, 6, Stats,
+  EXPECT_ACTION(plan, 1, 3, 7, Stats,
                 output / "schemas" / "a" / "%" / "stats.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 1, 4, 6, Bundle,
+  EXPECT_ACTION(plan, 1, 4, 7, Bundle,
                 output / "schemas" / "b" / "%" / "bundle.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 1, 5, 6, Health,
+  EXPECT_ACTION(plan, 1, 6, 7, Health,
                 output / "schemas" / "b" / "%" / "health.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 7, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "a" / "%" / "dependencies.metapack",
-      output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 7, SchemaMetadata,
+  EXPECT_ACTION(plan, 2, 0, 7, SchemaMetadata,
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack",
                 output / "schemas" / "b" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 2, 7, Bundle,
+  EXPECT_ACTION(plan, 2, 1, 7, Bundle,
                 output / "schemas" / "a" / "%" / "bundle.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -3112,35 +2995,37 @@ TEST(Build_delta, mtime_reverse_dep) {
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack",
                 output / "schemas" / "a" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 7, WebSchema,
+  EXPECT_ACTION(plan, 3, 1, 5, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack");
-  EXPECT_ACTION(plan, 3, 2, 7, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 2, 5, BlazeExhaustive,
                 output / "schemas" / "a" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 7, BlazeFast,
+  EXPECT_ACTION(plan, 3, 3, 5, BlazeFast,
                 output / "schemas" / "a" / "%" / "blaze-fast.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 7, Dependents,
+  EXPECT_ACTION(plan, 2, 2, 7, Dependents,
                 output / "schemas" / "a" / "%" / "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 5, 7, Editor,
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 4, 5, Editor,
                 output / "schemas" / "a" / "%" / "editor.metapack",
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 6, 7, Dependents,
+  EXPECT_ACTION(plan, 1, 5, 7, Dependents,
                 output / "schemas" / "b" / "%" / "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
+                "https://example.com/b",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
 
   EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
@@ -3191,7 +3076,6 @@ TEST(Build_delta, mtime_reverse_dep) {
       output / "schemas" / "b" / "%" / "dependents.metapack",
       output / "explorer" / "b" / "%" / "schema.metapack",
       output / "explorer" / "b" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -3218,7 +3102,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3243,10 +3127,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3257,16 +3138,17 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 2, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 3, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 2, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -3309,7 +3191,6 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                      output / "schemas" / "foo" / "%" / "dependents.metapack",
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
-                     output / "dependency-tree.metapack",
                      output / "explorer" / "%" / "search.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -3326,17 +3207,15 @@ TEST(Build_delta, headless_full_empty_registry) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 3, 6);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 3, 5);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 1, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "");
 
   EXPECT_ACTION(plan, 2, 0, 1, Routes, output / "routes.bin", "Headless",
@@ -3344,7 +3223,6 @@ TEST(Build_delta, headless_full_empty_registry) {
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "configuration.json", output / "version.json",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
@@ -3360,7 +3238,7 @@ TEST(Build_delta, headless_full_single_schema) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 17);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -3389,10 +3267,7 @@ TEST(Build_delta, headless_full_single_schema) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3403,24 +3278,25 @@ TEST(Build_delta, headless_full_single_schema) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -3449,7 +3325,6 @@ TEST(Build_delta, headless_full_single_schema) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
@@ -3469,7 +3344,7 @@ TEST(Build_delta, headless_incremental) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 14);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3494,10 +3369,7 @@ TEST(Build_delta, headless_incremental) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3508,24 +3380,25 @@ TEST(Build_delta, headless_incremental) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -3551,7 +3424,6 @@ TEST(Build_delta, headless_incremental) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack");
 }
@@ -3583,7 +3455,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 20);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3608,10 +3480,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3622,24 +3491,25 @@ TEST(Build_delta, full_to_headless_removes_web) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -3678,7 +3548,6 @@ TEST(Build_delta, full_to_headless_removes_web) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
@@ -3689,8 +3558,6 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
   entries.emplace(output / "version.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "configuration.json",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
                   {.file_mark = MTIME(100), .dependencies = {}});
@@ -3731,7 +3598,6 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
-      output / "dependency-tree.metapack",
       output / "schemas" / "foo" / "%" / "schema.metapack",
       output / "schemas" / "foo" / "%" / "dependencies.metapack",
       output / "schemas" / "foo" / "%" / "locations.metapack",
@@ -3763,7 +3629,7 @@ TEST(Build_delta, headless_to_full_incremental) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3788,10 +3654,7 @@ TEST(Build_delta, headless_to_full_incremental) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3802,24 +3665,25 @@ TEST(Build_delta, headless_to_full_incremental) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -3858,7 +3722,6 @@ TEST(Build_delta, headless_to_full_incremental) {
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -3895,8 +3758,6 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "foo" / "%" / "schema.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "schemas" / "foo" / "%" / "dependents.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
@@ -3915,7 +3776,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3940,10 +3801,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3954,24 +3812,25 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -4011,7 +3870,6 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -4039,7 +3897,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "2.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 20);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -4068,10 +3926,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 3, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -4082,24 +3937,25 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 3, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -4135,7 +3991,6 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "schemas" / "foo" / "%" / "dependents.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
@@ -4152,7 +4007,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -4187,13 +4042,15 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       output / "schemas" / "example" / "test" / "%" / "schema.metapack");
 
   EXPECT_ACTION(
-      plan, 3, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(
-      plan, 3, 1, 3, Bundle,
+      plan, 3, 0, 3, Bundle,
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack",
+      output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(
+      plan, 3, 1, 3, Dependents,
+      output / "schemas" / "example" / "test" / "%" / "dependents.metapack",
+      "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
   EXPECT_ACTION(
       plan, 3, 2, 3, Health,
@@ -4203,29 +4060,25 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
 
   EXPECT_ACTION(
-      plan, 4, 0, 5, SchemaMetadata,
+      plan, 4, 0, 4, SchemaMetadata,
       output / "explorer" / "example" / "test" / "%" / "schema.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack",
       output / "schemas" / "example" / "test" / "%" / "health.metapack",
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
                 output / "schemas" / "example" / "test" / "%" /
                     "blaze-exhaustive.metapack",
                 "https://example.com/test",
                 output / "schemas" / "example" / "test" / "%" /
                     "bundle.metapack");
   EXPECT_ACTION(
-      plan, 4, 2, 5, BlazeFast,
+      plan, 4, 2, 4, BlazeFast,
       output / "schemas" / "example" / "test" / "%" / "blaze-fast.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack");
   EXPECT_ACTION(
-      plan, 4, 3, 5, Dependents,
-      output / "schemas" / "example" / "test" / "%" / "dependents.metapack",
-      "https://example.com/test", output / "dependency-tree.metapack");
-  EXPECT_ACTION(
-      plan, 4, 4, 5, Editor,
+      plan, 4, 3, 4, Editor,
       output / "schemas" / "example" / "test" / "%" / "editor.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack");
@@ -4260,7 +4113,6 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       output / "schemas" / "example" / "test" / "%" / "editor.metapack",
       output / "schemas" / "example" / "test" / "%" / "dependents.metapack",
       output / "explorer" / "example" / "test" / "%" / "schema.metapack",
-      output / "dependency-tree.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "example" / "%" / "directory.metapack",
@@ -4276,8 +4128,6 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
@@ -4316,9 +4166,9 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 23);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 22);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+  EXPECT_ACTION(plan, 0, 2, 3, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
                 "https://example.com/c",
@@ -4350,15 +4200,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 3, DependencyTree,
-                output / "dependency-tree.metapack", "",
-                output / "schemas" / "example" / "schemas" / "c" / "%" /
-                    "dependencies.metapack",
-                output / "schemas" / "example" / "schemas" / "b" / "%" /
-                    "dependencies.metapack",
-                output / "schemas" / "example" / "schemas" / "a" / "%" /
-                    "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack",
                 "https://example.com/c",
@@ -4374,8 +4216,27 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "schema.metapack",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependencies.metapack");
+  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
+  EXPECT_ACTION(plan, 0, 0, 3, Dependents,
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "dependents.metapack",
+                "https://example.com/a",
+                output / "schemas" / "example" / "schemas" / "a" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 0, 1, 3, Dependents,
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "dependents.metapack",
+                "https://example.com/b",
+                output / "schemas" / "example" / "schemas" / "b" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
+                output / "schemas" / "example" / "schemas" / "c" / "%" /
+                    "dependents.metapack",
+                "https://example.com/c",
+                output / "schemas" / "example" / "schemas" / "c" / "%" /
+                    "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema.metapack",
                 "https://example.com/c",
@@ -4385,32 +4246,19 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                     "health.metapack",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "dependencies.metapack");
-  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
-  EXPECT_ACTION(plan, 3, 1, 7, Dependents,
-                output / "schemas" / "example" / "schemas" / "a" / "%" /
-                    "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 7, Dependents,
-                output / "schemas" / "example" / "schemas" / "b" / "%" /
-                    "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 3, 7, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "blaze-exhaustive.metapack",
                 "https://example.com/c",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 7, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "blaze-fast.metapack",
                 "https://example.com/c",
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 5, 7, Dependents,
-                output / "schemas" / "example" / "schemas" / "c" / "%" /
-                    "dependents.metapack",
-                "https://example.com/c", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 6, 7, Editor,
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "editor.metapack",
                 "https://example.com/c",
@@ -4469,8 +4317,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
-      output / "routes.bin", output / "dependency-tree.metapack",
-      output / "explorer" / "%" / "search.metapack",
+      output / "routes.bin", output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "404.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -4570,8 +4417,6 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -4592,7 +4437,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -4617,11 +4462,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "foo" / "%" / "dependencies.metapack",
-      output / "schemas" / "bar" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -4632,24 +4473,25 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 5, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 3, 1, 5, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 2, 5, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 3, 5, Dependents,
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
                 output / "schemas" / "foo" / "%" / "dependents.metapack",
-                "https://example.com/foo", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 4, 5, Editor,
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -4676,8 +4518,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
-      output / "routes.bin", output / "dependency-tree.metapack",
-      output / "explorer" / "%" / "search.metapack",
+      output / "routes.bin", output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack",
@@ -4721,8 +4562,6 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "routes.bin",
                   {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "dependency-tree.metapack",
-                  {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "search.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   entries.emplace(output / "explorer" / "%" / "directory.metapack",
@@ -4744,9 +4583,9 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 18);
 
-  EXPECT_ACTION(plan, 0, 0, 1, Materialise,
+  EXPECT_ACTION(plan, 0, 2, 3, Materialise,
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 "https://example.com/c",
                 std::filesystem::path{"/"} / "src" / "c.json",
@@ -4769,12 +4608,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack");
 
-  EXPECT_ACTION_UNORDERED(
-      plan, 2, 0, 3, DependencyTree, output / "dependency-tree.metapack", "",
-      output / "schemas" / "a" / "%" / "dependencies.metapack",
-      output / "schemas" / "b" / "%" / "dependencies.metapack",
-      output / "schemas" / "c" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 2, 1, 3, Bundle,
+  EXPECT_ACTION(plan, 2, 0, 3, Bundle,
                 output / "schemas" / "c" / "%" / "bundle.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
@@ -4784,32 +4618,35 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
+  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
+  EXPECT_ACTION(plan, 0, 0, 3, Dependents,
+                output / "schemas" / "a" / "%" / "dependents.metapack",
+                "https://example.com/a",
+                output / "schemas" / "a" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 0, 1, 3, Dependents,
+                output / "schemas" / "b" / "%" / "dependents.metapack",
+                "https://example.com/b",
+                output / "schemas" / "b" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 2, 1, 3, Dependents,
+                output / "schemas" / "c" / "%" / "dependents.metapack",
+                "https://example.com/c",
+                output / "schemas" / "c" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 7, SchemaMetadata,
+  EXPECT_ACTION(plan, 3, 0, 4, SchemaMetadata,
                 output / "explorer" / "c" / "%" / "schema.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "health.metapack",
                 output / "schemas" / "c" / "%" / "dependencies.metapack");
-  // TODO(over-rebuild): a's and b's dependents rebuild unnecessarily
-  EXPECT_ACTION(plan, 3, 1, 7, Dependents,
-                output / "schemas" / "a" / "%" / "dependents.metapack",
-                "https://example.com/a", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 2, 7, Dependents,
-                output / "schemas" / "b" / "%" / "dependents.metapack",
-                "https://example.com/b", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 3, 7, BlazeExhaustive,
+  EXPECT_ACTION(plan, 3, 1, 4, BlazeExhaustive,
                 output / "schemas" / "c" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 4, 7, BlazeFast,
+  EXPECT_ACTION(plan, 3, 2, 4, BlazeFast,
                 output / "schemas" / "c" / "%" / "blaze-fast.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 3, 5, 7, Dependents,
-                output / "schemas" / "c" / "%" / "dependents.metapack",
-                "https://example.com/c", output / "dependency-tree.metapack");
-  EXPECT_ACTION(plan, 3, 6, 7, Editor,
+  EXPECT_ACTION(plan, 3, 3, 4, Editor,
                 output / "schemas" / "c" / "%" / "editor.metapack",
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
@@ -4836,8 +4673,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
-      output / "routes.bin", output / "dependency-tree.metapack",
-      output / "explorer" / "%" / "search.metapack",
+      output / "routes.bin", output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack",
