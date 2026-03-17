@@ -45,16 +45,17 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-( 10%) Producing: configuration.json
-( 20%) Producing: version.json
-( 30%) Producing: explorer/%/404.metapack
-( 40%) Producing: schemas/test/test/%/schema.metapack
-( 50%) Producing: schemas/test/test/%/dependencies.metapack
-( 60%) Producing: schemas/test/test/%/locations.metapack
-( 70%) Producing: schemas/test/test/%/positions.metapack
-( 80%) Producing: schemas/test/test/%/stats.metapack
-( 90%) Producing: schemas/test/test/%/bundle.metapack
-(100%) Producing: schemas/test/test/%/health.metapack
+(  4%) Producing: configuration.json
+(  9%) Producing: version.json
+( 13%) Producing: explorer/%/404.metapack
+( 18%) Producing: schemas/test/test/%/schema.metapack
+( 22%) Producing: schemas/test/test/%/dependencies.metapack
+( 27%) Producing: schemas/test/test/%/locations.metapack
+( 31%) Producing: schemas/test/test/%/positions.metapack
+( 36%) Producing: schemas/test/test/%/stats.metapack
+( 40%) Producing: schemas/test/test/%/bundle.metapack
+( 45%) Producing: schemas/test/test/%/dependents.metapack
+( 50%) Producing: schemas/test/test/%/health.metapack
 error: Custom linter rules are only available on the enterprise edition
 EOF
 
