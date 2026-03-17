@@ -5,6 +5,12 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/time.h>
 
+// TODO: Add this macro to all other file types too
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define ASSERT_NOT_REDUNDANT_WRITE(destination, document)                      \
+  assert(!std::filesystem::exists(destination) ||                              \
+         read_json(destination) != (document))
+
 #include <cassert>    // assert
 #include <chrono>     // std::chrono::system_clock::time_point
 #include <functional> // std::functional
@@ -163,6 +169,7 @@ auto write_json(const std::filesystem::path &destination,
                 const Encoding encoding,
                 const sourcemeta::core::JSON &extension,
                 const std::chrono::milliseconds duration) -> void {
+  ASSERT_NOT_REDUNDANT_WRITE(destination, document);
   write_stream(destination, mime, encoding, extension, duration,
                [&document](auto &stream) {
                  sourcemeta::core::stringify(document, stream);
@@ -175,6 +182,7 @@ auto write_pretty_json(const std::filesystem::path &destination,
                        const Encoding encoding,
                        const sourcemeta::core::JSON &extension,
                        const std::chrono::milliseconds duration) -> void {
+  ASSERT_NOT_REDUNDANT_WRITE(destination, document);
   write_stream(destination, mime, encoding, extension, duration,
                [&document](auto &stream) {
                  sourcemeta::core::prettify(document, stream);
