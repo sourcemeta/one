@@ -288,7 +288,6 @@ struct GENERATE_DEPENDENTS {
         }
       }
 
-      // Read JSON files and build direct dependency map
       DirectMap direct;
       for (const auto &dep_file : deps_files) {
         const auto contents{sourcemeta::one::read_json(dep_file)};
@@ -326,7 +325,6 @@ struct GENERATE_DEPENDENTS {
       }
     });
 
-    // Extract this schema's portion
     auto result{sourcemeta::core::JSON::make_array()};
     const auto match{shared_.transitive.find(std::string{action.data})};
     if (match != shared_.transitive.cend()) {
@@ -338,8 +336,6 @@ struct GENERATE_DEPENDENTS {
       }
     }
 
-    // Register contributing dependencies.metapack paths as dynamic deps
-    // for precise dirty tracking on future rebuilds
     if (match != shared_.transitive.cend()) {
       std::unordered_set<std::string_view> registered;
       for (const auto &[from_uri, _] : match->second) {
