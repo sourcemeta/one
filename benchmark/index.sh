@@ -33,7 +33,7 @@ generate_typed_schema() {
 {
   "\$schema": "http://json-schema.org/draft-07/schema#",
   "\$id": "https://example.com/$1",
-  "type": "string"
+  "type": "$2"
 }
 EOF
 }
@@ -91,7 +91,7 @@ echo "  Result: ${RESULT_CACHED_1}ms" >&2
 
 # Measure updating a schema
 echo "Measuring: update one schema (1 existing)..." >&2
-generate_typed_schema "schema-0"
+generate_typed_schema "schema-0" string
 RESULT_MODIFIED_1="$(measure)"
 echo "  Result: ${RESULT_MODIFIED_1}ms" >&2
 
@@ -119,7 +119,7 @@ echo "  Result: ${RESULT_CACHED_101}ms" >&2
 
 # Measure updating a schema
 echo "Measuring: update one schema (101 existing)..." >&2
-generate_typed_schema "schema-0"
+generate_typed_schema "schema-0" integer
 RESULT_MODIFIED_101="$(measure)"
 echo "  Result: ${RESULT_MODIFIED_101}ms" >&2
 
@@ -147,7 +147,7 @@ echo "  Result: ${RESULT_CACHED_1001}ms" >&2
 
 # Measure updating a schema
 echo "Measuring: update one schema (1001 existing)..." >&2
-generate_typed_schema "schema-0"
+generate_typed_schema "schema-0" boolean
 RESULT_MODIFIED_1001="$(measure)"
 echo "  Result: ${RESULT_MODIFIED_1001}ms" >&2
 
@@ -175,7 +175,7 @@ echo "  Result: ${RESULT_CACHED_10001}ms" >&2
 
 # Measure updating a schema
 echo "Measuring: update one schema (10001 existing)..." >&2
-generate_typed_schema "schema-0"
+generate_typed_schema "schema-0" object
 RESULT_MODIFIED_10001="$(measure)"
 echo "  Result: ${RESULT_MODIFIED_10001}ms" >&2
 
