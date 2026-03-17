@@ -92,12 +92,12 @@ grep -q "schemas/example/schemas/b/%/dependents.metapack" \
 # TODO(over-rebuild): A's dependents SHOULD rebuild because B now
 # references A, but currently it does NOT because state.bin deps for
 # A's dependents do not include B's dependencies.metapack yet
-! grep -q "schemas/example/schemas/a/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
+grep -q "schemas/example/schemas/a/%/dependents.metapack" \
+    "$TMP/output_producing.txt" && exit 1 || true
 
 # C's dependents must NOT rebuild (C is unrelated)
-! grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
+grep -q "schemas/example/schemas/c/%/dependents.metapack" \
+    "$TMP/output_producing.txt" && exit 1 || true
 
 # Verify no files were deleted
 cd "$TMP/output"

@@ -95,8 +95,8 @@ grep -q "schemas/example/schemas/b/%/dependents.metapack" \
     "$TMP/output_producing.txt"
 
 # C's dependents must NOT rebuild (C is unrelated to B)
-! grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt"
+grep -q "schemas/example/schemas/c/%/dependents.metapack" \
+    "$TMP/output_producing.txt" && exit 1 || true
 
 # Verify no files were deleted
 cd "$TMP/output"
