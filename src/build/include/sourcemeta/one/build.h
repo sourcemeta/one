@@ -80,7 +80,7 @@ using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 // - SchemaMetadata: E/schema <- S/schema,
 //                               S/health,
 //                               S/dependencies
-// - Dependents: S/dependents <- dependency-tree
+// - Dependents: S/dependents <- S/dependencies
 // - WebSchema: E/schema-html <- E/schema,
 //                               S/dependencies,
 //                               S/health,
@@ -92,7 +92,6 @@ using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 //
 // Aggregates:
 //
-// - DependencyTree: dependency-tree <- ALL S/dependencies
 // - SearchIndex: explorer/%/search <- ALL E/schema
 SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildPlan::Type build_type, const BuildState &entries,

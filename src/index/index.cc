@@ -68,7 +68,7 @@ static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
     &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
     &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
-    &sourcemeta::one::GENERATE_DEPENDENCY_TREE::handler,
+    nullptr,
     &sourcemeta::one::GENERATE_DEPENDENTS::handler,
     &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
     &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,

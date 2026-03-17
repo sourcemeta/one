@@ -666,12 +666,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       dirty_set.insert(std::move(destination));
     }
 
-    // TODO: This is a coarse boolean that forces ALL dependents and
-    // WebSchema to rebuild whenever any schema is added or removed.
-    // Ideally we would narrow this to only the affected schemas, but
-    // dependency-tree.metapack is a global aggregate, so any change
-    // fans out to every dependent. Fixing this requires content-based
-    // dirty checking or breaking the global bottleneck.
     auto has_graph_change{!removed_uris.empty()};
     if (!has_graph_change) {
       for (const auto &schema : active_schemas) {

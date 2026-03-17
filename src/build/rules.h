@@ -173,8 +173,8 @@ static constexpr std::array<PerSchemaRule, 13> PER_SCHEMA_RULES{{
      .gate = TargetGate::Always,
      .dirty = DirtyOverride::ForceOnGraphChange,
      .is_root = false,
-     .dependencies = {{{.source = DependencySource::GlobalOutput,
-                        .filename = "dependency-tree.metapack"}}},
+     .dependencies = {{{.source = DependencySource::SchemaBase,
+                        .filename = "dependencies.metapack"}}},
      .dependency_count = 1},
 
     {.action = BuildPlan::Action::Type::WebSchema,
@@ -200,13 +200,7 @@ struct AggregateRule {
   const char *collector_filename;
 };
 
-static constexpr std::array<AggregateRule, 2> AGGREGATE_RULES{{
-    {.action = BuildPlan::Action::Type::DependencyTree,
-     .output_filename = "dependency-tree.metapack",
-     .output_base = AggregateOutputBase::Output,
-     .collector_base = TargetBase::Schema,
-     .collector_filename = "dependencies.metapack"},
-
+static constexpr std::array<AggregateRule, 1> AGGREGATE_RULES{{
     {.action = BuildPlan::Action::Type::SearchIndex,
      .output_filename = "search.metapack",
      .output_base = AggregateOutputBase::Explorer,

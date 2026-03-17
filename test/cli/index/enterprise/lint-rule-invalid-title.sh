@@ -46,16 +46,16 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (  4%) Producing: configuration.json
-(  8%) Producing: version.json
+(  9%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
-( 17%) Producing: schemas/test/test/%/schema.metapack
-( 21%) Producing: schemas/test/test/%/dependencies.metapack
-( 26%) Producing: schemas/test/test/%/locations.metapack
-( 30%) Producing: schemas/test/test/%/positions.metapack
-( 34%) Producing: schemas/test/test/%/stats.metapack
-( 39%) Producing: dependency-tree.metapack
-( 43%) Producing: schemas/test/test/%/bundle.metapack
-( 47%) Producing: schemas/test/test/%/health.metapack
+( 18%) Producing: schemas/test/test/%/schema.metapack
+( 22%) Producing: schemas/test/test/%/dependencies.metapack
+( 27%) Producing: schemas/test/test/%/locations.metapack
+( 31%) Producing: schemas/test/test/%/positions.metapack
+( 36%) Producing: schemas/test/test/%/stats.metapack
+( 40%) Producing: schemas/test/test/%/bundle.metapack
+( 45%) Producing: schemas/test/test/%/dependents.metapack
+( 50%) Producing: schemas/test/test/%/health.metapack
 error: The schema rule name must match ^[a-z0-9_/]+\$
   at name My Invalid Rule!
 EOF

@@ -54,25 +54,24 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 12%) Producing: explorer/%/404.metapack
 ( 16%) Producing: schemas/example/schemas/old/%/schema.metapack
 ( 20%) Producing: schemas/example/schemas/old/%/dependencies.metapack
-( 24%) Producing: schemas/example/schemas/old/%/locations.metapack
-( 28%) Producing: schemas/example/schemas/old/%/positions.metapack
-( 32%) Producing: schemas/example/schemas/old/%/stats.metapack
-( 36%) Producing: dependency-tree.metapack
-( 40%) Producing: schemas/example/schemas/old/%/bundle.metapack
-( 44%) Producing: schemas/example/schemas/old/%/health.metapack
-( 48%) Producing: explorer/example/schemas/old/%/schema.metapack
-( 52%) Producing: schemas/example/schemas/old/%/blaze-exhaustive.metapack
-( 56%) Producing: schemas/example/schemas/old/%/blaze-fast.metapack
-( 60%) Producing: schemas/example/schemas/old/%/dependents.metapack
-( 64%) Producing: schemas/example/schemas/old/%/editor.metapack
-( 68%) Producing: explorer/%/search.metapack
-( 72%) Producing: explorer/example/schemas/%/directory.metapack
-( 76%) Producing: explorer/example/schemas/old/%/schema-html.metapack
-( 80%) Producing: explorer/example/%/directory.metapack
-( 84%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 88%) Producing: explorer/%/directory.metapack
-( 92%) Producing: explorer/example/%/directory-html.metapack
-( 96%) Producing: explorer/%/directory-html.metapack
+( 25%) Producing: schemas/example/schemas/old/%/locations.metapack
+( 29%) Producing: schemas/example/schemas/old/%/positions.metapack
+( 33%) Producing: schemas/example/schemas/old/%/stats.metapack
+( 37%) Producing: schemas/example/schemas/old/%/bundle.metapack
+( 41%) Producing: schemas/example/schemas/old/%/dependents.metapack
+( 45%) Producing: schemas/example/schemas/old/%/health.metapack
+( 50%) Producing: explorer/example/schemas/old/%/schema.metapack
+( 54%) Producing: schemas/example/schemas/old/%/blaze-exhaustive.metapack
+( 58%) Producing: schemas/example/schemas/old/%/blaze-fast.metapack
+( 62%) Producing: schemas/example/schemas/old/%/editor.metapack
+( 66%) Producing: explorer/%/search.metapack
+( 70%) Producing: explorer/example/schemas/%/directory.metapack
+( 75%) Producing: explorer/example/schemas/old/%/schema-html.metapack
+( 79%) Producing: explorer/example/%/directory.metapack
+( 83%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 87%) Producing: explorer/%/directory.metapack
+( 91%) Producing: explorer/example/%/directory-html.metapack
+( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
@@ -107,26 +106,25 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (  4%) Producing: schemas/example/schemas/new/%/schema.metapack
-(  8%) Producing: schemas/example/schemas/new/%/dependencies.metapack
+(  9%) Producing: schemas/example/schemas/new/%/dependencies.metapack
 ( 13%) Producing: schemas/example/schemas/new/%/locations.metapack
-( 17%) Producing: schemas/example/schemas/new/%/positions.metapack
-( 21%) Producing: schemas/example/schemas/new/%/stats.metapack
-( 26%) Producing: dependency-tree.metapack
-( 30%) Producing: schemas/example/schemas/new/%/bundle.metapack
-( 34%) Producing: schemas/example/schemas/new/%/health.metapack
-( 39%) Producing: explorer/example/schemas/new/%/schema.metapack
-( 43%) Producing: schemas/example/schemas/new/%/blaze-exhaustive.metapack
-( 47%) Producing: schemas/example/schemas/new/%/blaze-fast.metapack
-( 52%) Producing: schemas/example/schemas/new/%/dependents.metapack
-( 56%) Producing: schemas/example/schemas/new/%/editor.metapack
-( 60%) Producing: explorer/%/search.metapack
-( 65%) Producing: explorer/example/schemas/%/directory.metapack
-( 69%) Producing: explorer/example/schemas/new/%/schema-html.metapack
-( 73%) Producing: explorer/example/%/directory.metapack
-( 78%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 82%) Producing: explorer/%/directory.metapack
+( 18%) Producing: schemas/example/schemas/new/%/positions.metapack
+( 22%) Producing: schemas/example/schemas/new/%/stats.metapack
+( 27%) Producing: schemas/example/schemas/new/%/bundle.metapack
+( 31%) Producing: schemas/example/schemas/new/%/dependents.metapack
+( 36%) Producing: schemas/example/schemas/new/%/health.metapack
+( 40%) Producing: explorer/example/schemas/new/%/schema.metapack
+( 45%) Producing: schemas/example/schemas/new/%/blaze-exhaustive.metapack
+( 50%) Producing: schemas/example/schemas/new/%/blaze-fast.metapack
+( 54%) Producing: schemas/example/schemas/new/%/editor.metapack
+( 59%) Producing: explorer/%/search.metapack
+( 63%) Producing: explorer/example/schemas/%/directory.metapack
+( 68%) Producing: explorer/example/schemas/new/%/schema-html.metapack
+( 72%) Producing: explorer/example/%/directory.metapack
+( 77%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 81%) Producing: explorer/%/directory.metapack
 ( 86%) Producing: explorer/example/%/directory-html.metapack
-( 91%) Producing: explorer/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory-html.metapack
 ( 95%) Disposing: explorer/example/schemas/old
 (100%) Disposing: schemas/example/schemas/old
 EOF

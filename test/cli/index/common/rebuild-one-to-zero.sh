@@ -47,26 +47,25 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (  4%) Producing: configuration.json
-(  8%) Producing: version.json
+(  9%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
-( 17%) Producing: schemas/schemas/test/%/schema.metapack
-( 21%) Producing: schemas/schemas/test/%/dependencies.metapack
-( 26%) Producing: schemas/schemas/test/%/locations.metapack
-( 30%) Producing: schemas/schemas/test/%/positions.metapack
-( 34%) Producing: schemas/schemas/test/%/stats.metapack
-( 39%) Producing: dependency-tree.metapack
-( 43%) Producing: schemas/schemas/test/%/bundle.metapack
-( 47%) Producing: schemas/schemas/test/%/health.metapack
-( 52%) Producing: explorer/schemas/test/%/schema.metapack
-( 56%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
-( 60%) Producing: schemas/schemas/test/%/blaze-fast.metapack
-( 65%) Producing: schemas/schemas/test/%/dependents.metapack
-( 69%) Producing: schemas/schemas/test/%/editor.metapack
-( 73%) Producing: explorer/%/search.metapack
-( 78%) Producing: explorer/schemas/%/directory.metapack
-( 82%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 18%) Producing: schemas/schemas/test/%/schema.metapack
+( 22%) Producing: schemas/schemas/test/%/dependencies.metapack
+( 27%) Producing: schemas/schemas/test/%/locations.metapack
+( 31%) Producing: schemas/schemas/test/%/positions.metapack
+( 36%) Producing: schemas/schemas/test/%/stats.metapack
+( 40%) Producing: schemas/schemas/test/%/bundle.metapack
+( 45%) Producing: schemas/schemas/test/%/dependents.metapack
+( 50%) Producing: schemas/schemas/test/%/health.metapack
+( 54%) Producing: explorer/schemas/test/%/schema.metapack
+( 59%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
+( 63%) Producing: schemas/schemas/test/%/blaze-fast.metapack
+( 68%) Producing: schemas/schemas/test/%/editor.metapack
+( 72%) Producing: explorer/%/search.metapack
+( 77%) Producing: explorer/schemas/%/directory.metapack
+( 81%) Producing: explorer/schemas/test/%/schema-html.metapack
 ( 86%) Producing: explorer/%/directory.metapack
-( 91%) Producing: explorer/schemas/%/directory-html.metapack
+( 90%) Producing: explorer/schemas/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
 EOF
@@ -78,7 +77,6 @@ cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./configuration.json
-./dependency-tree.metapack
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
@@ -123,11 +121,10 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-( 16%) Producing: dependency-tree.metapack
-( 33%) Producing: explorer/%/directory.metapack
-( 50%) Producing: explorer/%/search.metapack
-( 66%) Producing: explorer/%/directory-html.metapack
-( 83%) Disposing: explorer/schemas
+( 20%) Producing: explorer/%/directory.metapack
+( 40%) Producing: explorer/%/search.metapack
+( 60%) Producing: explorer/%/directory-html.metapack
+( 80%) Disposing: explorer/schemas
 (100%) Disposing: schemas
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
@@ -138,7 +135,6 @@ cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./configuration.json
-./dependency-tree.metapack
 ./explorer
 ./explorer/%
 ./explorer/%/404.metapack
