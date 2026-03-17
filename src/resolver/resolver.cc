@@ -332,6 +332,12 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
 }
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
+  assert(std::filesystem::exists(entry.path));
+  // As the materialised path must exist if we are emplacing
+  // given a cache hit
+  assert(entry.cache_path.has_value());
+  assert(std::filesystem::exists(entry.cache_path.value()));
+  assert(entry.collection);
   const auto path{entry.path};
   auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
   if (!result.second && result.first->second.path != path) {

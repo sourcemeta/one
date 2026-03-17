@@ -282,7 +282,8 @@ static auto index_main(const std::string_view &program,
               .mtime = detected.mtime,
               .evaluate =
                   sourcemeta::one::Configuration::should_evaluate(collection),
-              .cache_path = std::nullopt,
+              .cache_path = canonical_output / "schemas" /
+                            cached->relative_path / "%" / "schema.metapack",
               .dialect = cached->dialect,
               .original_identifier = cached->original_identifier,
               .collection = &collection});
