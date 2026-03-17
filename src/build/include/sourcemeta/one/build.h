@@ -34,7 +34,6 @@ struct BuildPlan {
       BlazeExhaustive,
       BlazeFast,
       SchemaMetadata,
-      DependencyTree,
       Dependents,
       SearchIndex,
       DirectoryList,

@@ -251,6 +251,10 @@ private:
   }
 };
 
+// The reverse dependency graph is computed once and shared across all parallel
+// handler invocations in the wave. This is safe because the forward
+// dependencies are produced in a previous wave, and the execution loop
+// completes an entire wave before starting the next one
 struct GENERATE_DEPENDENTS {
   using DirectMap =
       std::unordered_map<sourcemeta::core::JSON::String,
@@ -277,30 +281,28 @@ struct GENERATE_DEPENDENTS {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
     std::call_once(compute_flag_, [&entries]() {
-      // Collect dependencies.metapack file paths from BuildState
-      std::vector<std::filesystem::path> deps_files;
+      std::vector<std::filesystem::path> dependencies_files;
       {
         const auto lock{entries.take_lock()};
         for (const auto key : entries.keys()) {
           if (key.ends_with("/%/dependencies.metapack")) {
-            deps_files.emplace_back(std::string{key});
+            dependencies_files.emplace_back(std::string{key});
           }
         }
       }
 
       DirectMap direct;
-      for (const auto &dep_file : deps_files) {
-        const auto contents{sourcemeta::one::read_json(dep_file)};
+      for (const auto &dependencies_file : dependencies_files) {
+        const auto contents{sourcemeta::one::read_json(dependencies_file)};
         assert(contents.is_array());
-        const auto &dep_file_string{dep_file.native()};
+        const auto &dependencies_path{dependencies_file.native()};
         for (const auto &entry : contents.as_array()) {
           const auto &from_uri{entry.at("from").to_string()};
-          shared_.uri_to_deps_path.try_emplace(from_uri, dep_file_string);
+          shared_.uri_to_deps_path.try_emplace(from_uri, dependencies_path);
           direct[entry.at("to").to_string()].emplace(from_uri);
         }
       }
 
-      // BFS for transitive closure
       for (const auto &[target, _] : direct) {
         auto &edges{shared_.transitive[target]};
         std::unordered_set<sourcemeta::core::JSON::StringView> visited;
