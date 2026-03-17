@@ -91,8 +91,8 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
-auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
-  return std::unique_lock<std::mutex>{this->mutex_};
+auto BuildState::take_lock() const -> std::unique_lock<std::recursive_mutex> {
+  return std::unique_lock<std::recursive_mutex>{this->mutex_};
 }
 
 auto BuildState::load(const std::filesystem::path &path) -> void {
@@ -444,6 +444,7 @@ auto BuildState::dependents_of(const std::string_view uri,
                                const std::string &server_url,
                                const DependentCallback &callback) const
     -> void {
+  const auto lock{this->take_lock()};
   if (!this->dependents_computed_) {
     const auto output_directory{this->loaded_path.parent_path().string()};
     const auto schemas_prefix{output_directory + "/schemas/"};

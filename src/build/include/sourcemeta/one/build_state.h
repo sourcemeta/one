@@ -12,7 +12,7 @@
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
 #include <functional>  // std::function
 #include <memory>      // std::unique_ptr
-#include <mutex>       // std::mutex, std::unique_lock
+#include <mutex>       // std::recursive_mutex, std::unique_lock
 #include <set>         // std::set
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -44,7 +44,8 @@ public:
   BuildState(const BuildState &) = delete;
   auto operator=(const BuildState &) -> BuildState & = delete;
 
-  [[nodiscard]] auto take_lock() const -> std::unique_lock<std::mutex>;
+  [[nodiscard]] auto take_lock() const
+      -> std::unique_lock<std::recursive_mutex>;
 
   auto load(const std::filesystem::path &path) -> void;
   auto save(const std::filesystem::path &path) const -> void;
@@ -131,7 +132,7 @@ private:
     }
   };
 
-  mutable std::mutex mutex_;
+  mutable std::recursive_mutex mutex_;
   mutable bool dependents_computed_{false};
   mutable std::unordered_map<std::string, std::set<DependentEntry>>
       dependents_cache_;
