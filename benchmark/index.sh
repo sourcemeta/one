@@ -28,6 +28,16 @@ generate_schema() {
 EOF
 }
 
+generate_typed_schema() {
+  cat << EOF > "$TMP/schemas/$1.json"
+{
+  "\$schema": "http://json-schema.org/draft-07/schema#",
+  "\$id": "https://example.com/$1",
+  "type": "string"
+}
+EOF
+}
+
 generate_schema_with_ref() {
   cat << EOF > "$TMP/schemas/$1.json"
 {
@@ -79,6 +89,12 @@ echo "Measuring: cached rebuild (1 existing)..." >&2
 RESULT_CACHED_1="$(measure)"
 echo "  Result: ${RESULT_CACHED_1}ms" >&2
 
+# Measure updating a schema
+echo "Measuring: update one schema (1 existing)..." >&2
+generate_typed_schema "schema-0"
+RESULT_MODIFIED_1="$(measure)"
+echo "  Result: ${RESULT_MODIFIED_1}ms" >&2
+
 # Fill up to 100 schemas
 echo "Filling registry to 100 schemas..." >&2
 index=1
@@ -100,6 +116,12 @@ echo "  Result: ${RESULT_100_TO_101}ms" >&2
 echo "Measuring: cached rebuild (101 existing)..." >&2
 RESULT_CACHED_101="$(measure)"
 echo "  Result: ${RESULT_CACHED_101}ms" >&2
+
+# Measure updating a schema
+echo "Measuring: update one schema (101 existing)..." >&2
+generate_typed_schema "schema-0"
+RESULT_MODIFIED_101="$(measure)"
+echo "  Result: ${RESULT_MODIFIED_101}ms" >&2
 
 # Fill up to 1000 schemas
 echo "Filling registry to 1000 schemas..." >&2
@@ -123,6 +145,12 @@ echo "Measuring: cached rebuild (1001 existing)..." >&2
 RESULT_CACHED_1001="$(measure)"
 echo "  Result: ${RESULT_CACHED_1001}ms" >&2
 
+# Measure updating a schema
+echo "Measuring: update one schema (1001 existing)..." >&2
+generate_typed_schema "schema-0"
+RESULT_MODIFIED_1001="$(measure)"
+echo "  Result: ${RESULT_MODIFIED_1001}ms" >&2
+
 # Fill up to 10000 schemas
 echo "Filling registry to 10000 schemas..." >&2
 index=1001
@@ -145,6 +173,12 @@ echo "Measuring: cached rebuild (10001 existing)..." >&2
 RESULT_CACHED_10001="$(measure)"
 echo "  Result: ${RESULT_CACHED_10001}ms" >&2
 
+# Measure updating a schema
+echo "Measuring: update one schema (10001 existing)..." >&2
+generate_typed_schema "schema-0"
+RESULT_MODIFIED_10001="$(measure)"
+echo "  Result: ${RESULT_MODIFIED_10001}ms" >&2
+
 cat << EOF
 [
   {
@@ -166,6 +200,26 @@ cat << EOF
     "name": "Add one schema (10000 existing)",
     "unit": "ms",
     "value": $RESULT_10000_TO_10001
+  },
+  {
+    "name": "Update one schema (1 existing)",
+    "unit": "ms",
+    "value": $RESULT_MODIFIED_1
+  },
+  {
+    "name": "Update one schema (101 existing)",
+    "unit": "ms",
+    "value": $RESULT_MODIFIED_101
+  },
+  {
+    "name": "Update one schema (1001 existing)",
+    "unit": "ms",
+    "value": $RESULT_MODIFIED_1001
+  },
+  {
+    "name": "Update one schema (10001 existing)",
+    "unit": "ms",
+    "value": $RESULT_MODIFIED_10001
   },
   {
     "name": "Cached rebuild (1 existing)",
