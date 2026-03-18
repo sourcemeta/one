@@ -284,10 +284,13 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto &resolver_entry{resolver.entry(action.data)};
     // Read the schema to get data and bytes
     sourcemeta::core::FileView schema_view{action.dependencies.front()};
-    const auto schema_info{sourcemeta::one::metapack_info(schema_view).value()};
-    const auto schema_data{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())
-            .value()};
+    const auto schema_info_option{sourcemeta::one::metapack_info(schema_view)};
+    assert(schema_info_option.has_value());
+    const auto &schema_info{schema_info_option.value()};
+    const auto schema_data_option{
+        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_data_option.has_value());
+    const auto &schema_data{schema_data_option.value()};
     const auto id{sourcemeta::core::identify(
         schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
@@ -349,12 +352,16 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(1)).value()};
+    const auto health_option{
+        sourcemeta::one::metapack_read_json(action.dependencies.at(1))};
+    assert(health_option.has_value());
+    const auto &health{health_option.value()};
     result.assign("health", health.at("score"));
 
-    const auto schema_dependencies{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(2)).value()};
+    const auto schema_dependencies_option{
+        sourcemeta::one::metapack_read_json(action.dependencies.at(2))};
+    assert(schema_dependencies_option.has_value());
+    const auto &schema_dependencies{schema_dependencies_option.value()};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
@@ -511,8 +518,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        auto directory_json{
-            sourcemeta::one::metapack_read_json(dependency).value()};
+        auto directory_json_option{
+            sourcemeta::one::metapack_read_json(dependency)};
+        assert(directory_json_option.has_value());
+        auto directory_json{std::move(directory_json_option.value())};
         assert(directory_json.is_object());
         assert(directory_json.defines("health"));
         assert(directory_json.at("health").is_integer());
