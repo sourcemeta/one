@@ -115,7 +115,6 @@ static auto action_serve_metapack_file(
     }
   }
 
-  // Read the raw payload data from the mmap'd view
   const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
   const auto payload_size{view.size() - payload_start};
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
