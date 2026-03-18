@@ -25,6 +25,7 @@
 #endif
 
 #include <cassert>       // assert
+#include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
 #include <fstream>       // std::ofstream
 #include <memory>        // std::unique_ptr
@@ -37,6 +38,23 @@
 #include <variant>       // std::visit
 
 namespace sourcemeta::one {
+
+#pragma pack(push, 1)
+struct MetapackDialectExtension {
+  std::uint16_t dialect_length;
+};
+#pragma pack(pop)
+
+static auto make_dialect_extension(const std::string_view dialect)
+    -> std::vector<std::uint8_t> {
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackDialectExtension) + dialect.size());
+  MetapackDialectExtension header{};
+  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
+  std::memcpy(result.data(), &header, sizeof(header));
+  std::memcpy(result.data() + sizeof(header), dialect.data(), dialect.size());
+  return result;
+}
 
 struct GENERATE_VERSION {
   static auto handler(const sourcemeta::one::BuildState &,
@@ -119,8 +137,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
         dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    const auto extension_bytes{
-        sourcemeta::one::metapack_make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema.value(), "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
@@ -453,8 +470,7 @@ struct GENERATE_BUNDLE {
         dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    const auto extension_bytes{
-        sourcemeta::one::metapack_make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema, "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
@@ -489,8 +505,7 @@ struct GENERATE_EDITOR {
         dialect_identifier);
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    const auto extension_bytes{
-        sourcemeta::one::metapack_make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema, "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,

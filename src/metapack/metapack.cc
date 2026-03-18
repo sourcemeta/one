@@ -3,7 +3,6 @@
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/io.h>
 
-// TODO: Remove this dependency once we handle gzip internally
 #include <sourcemeta/one/gzip.h>
 
 #include <cassert>     // assert
@@ -36,11 +35,9 @@ static auto write_binary_header(std::ostream &output,
   header.content_bytes = uncompressed_size;
   header.duration = duration.count();
 
-  // Compute SHA-256 checksum of the uncompressed payload
   std::ostringstream checksum_hex;
   sourcemeta::core::sha256(payload, checksum_hex);
   const auto hex_string{checksum_hex.str()};
-  // Convert hex string to raw bytes
   for (std::size_t index{0}; index < 32 && index * 2 + 1 < hex_string.size();
        index++) {
     const auto byte_string{hex_string.substr(index * 2, 2)};
@@ -51,14 +48,10 @@ static auto write_binary_header(std::ostream &output,
   assert(mime.size() <= UINT16_MAX);
   header.mime_length = static_cast<std::uint16_t>(mime.size());
 
-  // Write the fixed header
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   output.write(reinterpret_cast<const char *>(&header), sizeof(MetapackHeader));
-
-  // Write mime string
   output.write(mime.data(), static_cast<std::streamsize>(mime.size()));
 
-  // Write extension size and data
   const auto extension_size{static_cast<std::uint32_t>(extension.size())};
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   output.write(reinterpret_cast<const char *>(&extension_size),
@@ -221,7 +214,6 @@ auto metapack_read_json(const std::filesystem::path &path)
     throw std::runtime_error("Unsupported metapack version");
   }
 
-  // Skip past: fixed header + mime + extension_size + extension
   auto payload_offset{sizeof(MetapackHeader) + header->mime_length};
   const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
   payload_offset += sizeof(std::uint32_t) + *extension_size;
@@ -247,73 +239,12 @@ auto metapack_read_json(const std::filesystem::path &path)
   return sourcemeta::core::parse_json(payload_string);
 }
 
-auto metapack_make_dialect_extension(const std::string_view dialect)
-    -> std::vector<std::uint8_t> {
-  std::vector<std::uint8_t> result;
-  result.resize(sizeof(MetapackDialectExtension) + dialect.size());
-
-  MetapackDialectExtension header{};
-  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
-  std::memcpy(result.data(), &header, sizeof(header));
-  std::memcpy(result.data() + sizeof(header), dialect.data(), dialect.size());
-
-  return result;
-}
-
-auto metapack_make_explorer_schema_extension(
-    const std::int64_t health, const std::int64_t bytes,
-    const std::int64_t dependencies, const std::string_view path,
-    const std::string_view identifier, const std::string_view base_dialect,
-    const std::string_view dialect, const std::string_view title,
-    const std::string_view description, const std::string_view alert,
-    const std::string_view provenance) -> std::vector<std::uint8_t> {
-  const auto strings_size{
-      path.size() + identifier.size() + base_dialect.size() + dialect.size() +
-      title.size() + description.size() + alert.size() + provenance.size()};
-  std::vector<std::uint8_t> result;
-  result.resize(sizeof(MetapackExplorerSchemaExtension) + strings_size);
-
-  MetapackExplorerSchemaExtension header{};
-  header.health = health;
-  header.bytes = bytes;
-  header.dependencies = dependencies;
-  header.path_length = static_cast<std::uint16_t>(path.size());
-  header.identifier_length = static_cast<std::uint16_t>(identifier.size());
-  header.base_dialect_length = static_cast<std::uint16_t>(base_dialect.size());
-  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
-  header.title_length = static_cast<std::uint16_t>(title.size());
-  header.description_length = static_cast<std::uint16_t>(description.size());
-  header.alert_length = static_cast<std::uint16_t>(alert.size());
-  header.provenance_length = static_cast<std::uint16_t>(provenance.size());
-
-  auto *cursor{result.data()};
-  std::memcpy(cursor, &header, sizeof(header));
-  cursor += sizeof(header);
-
-  const auto append = [&cursor](const std::string_view string) {
-    std::memcpy(cursor, string.data(), string.size());
-    cursor += string.size();
-  };
-
-  append(path);
-  append(identifier);
-  append(base_dialect);
-  append(dialect);
-  append(title);
-  append(description);
-  append(alert);
-  append(provenance);
-
-  return result;
-}
-
 auto metapack_info(const sourcemeta::core::FileView &view) -> MetapackInfo {
   assert(view.size() >= sizeof(MetapackHeader) + sizeof(std::uint32_t));
   const auto *header{view.as<MetapackHeader>()};
   assert(header->magic == METAPACK_MAGIC);
   assert(header->format_version == METAPACK_VERSION);
 
-  // Convert raw checksum bytes to hex string
   std::string checksum_hex;
   checksum_hex.reserve(64);
   static constexpr const char *hex_chars = "0123456789abcdef";
@@ -322,12 +253,10 @@ auto metapack_info(const sourcemeta::core::FileView &view) -> MetapackInfo {
     checksum_hex += hex_chars[byte & 0x0F];
   }
 
-  // Convert nanoseconds since epoch to time_point
   const auto nanos{std::chrono::nanoseconds{header->last_modified}};
   const auto time_point{std::chrono::system_clock::time_point{
       std::chrono::duration_cast<std::chrono::system_clock::duration>(nanos)}};
 
-  // Read mime string
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *mime_data{reinterpret_cast<const char *>(
       view.as<std::uint8_t>(sizeof(MetapackHeader)))};

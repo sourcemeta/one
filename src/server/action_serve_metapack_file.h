@@ -17,6 +17,12 @@
 #include <sstream>    // std::ostringstream
 #include <string>     // std::string
 
+#pragma pack(push, 1)
+struct MetapackDialectExtension {
+  std::uint16_t dialect_length;
+};
+#pragma pack(pop)
+
 static auto action_serve_metapack_file(
     const sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response,
@@ -109,7 +115,17 @@ static auto action_serve_metapack_file(
   if (link.has_value()) {
     write_link_header(response, link.value());
   } else {
-    const auto dialect{sourcemeta::one::metapack_dialect_string(view)};
+    const auto *dialect_ext{
+        sourcemeta::one::metapack_extension<MetapackDialectExtension>(view)};
+    const std::string_view dialect =
+        (dialect_ext != nullptr && dialect_ext->dialect_length > 0)
+            ? std::string_view{reinterpret_cast<
+                                   const char *>(view.as<std::uint8_t>(
+                                   sourcemeta::one::metapack_extension_offset(
+                                       view) +
+                                   sizeof(MetapackDialectExtension))),
+                               dialect_ext->dialect_length}
+            : std::string_view{};
     if (!dialect.empty()) {
       write_link_header(response, std::string{dialect});
     }
