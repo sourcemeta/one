@@ -51,8 +51,6 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
-Building...
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -81,7 +79,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
@@ -105,6 +102,5 @@ Building...
 ( 91%) Producing: explorer/example/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

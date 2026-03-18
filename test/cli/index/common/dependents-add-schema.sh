@@ -76,7 +76,7 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 \
     2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
+grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 # A's dependents must rebuild (D now references A)
 grep -q "schemas/example/schemas/a/%/dependents.metapack" \
@@ -87,10 +87,10 @@ grep -q "schemas/example/schemas/d/%/dependents.metapack" \
     "$TMP/output_producing.txt"
 
 # B and C's dependents must NOT rebuild (unrelated to D)
-if grep -q "schemas/example/schemas/b/%/dependents.metapack" \
-    "$TMP/output_producing.txt"; then exit 1; fi
-if grep -q "schemas/example/schemas/c/%/dependents.metapack" \
-    "$TMP/output_producing.txt"; then exit 1; fi
+grep -q "schemas/example/schemas/b/%/dependents.metapack" \
+    "$TMP/output_producing.txt" && exit 1
+grep -q "schemas/example/schemas/c/%/dependents.metapack" \
+    "$TMP/output_producing.txt" && exit 1
 
 # Verify no files were deleted
 cd "$TMP/output"

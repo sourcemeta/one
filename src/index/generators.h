@@ -251,9 +251,8 @@ private:
   }
 };
 
-// The relevant dependencies.metapack files are determined by delta()
-// using overlay comparison and passed as action.dependencies. The handler
-// reads only those few files to build the reverse dependency graph.
+// The relevant input dependencies files are determined by delta. The handler
+// reads only those few files to build the reverse dependency graph
 struct GENERATE_DEPENDENTS {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,

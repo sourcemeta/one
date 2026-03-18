@@ -46,7 +46,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-Building...
 (  4%) Producing: configuration.json
 (  9%) Producing: version.json
 ( 14%) Producing: explorer/%/404.metapack
@@ -68,8 +67,7 @@ Building...
 ( 90%) Producing: explorer/schemas/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
-Resolving dependents...
-(100%) Producing: schemas/schemas/test/%/dependents.metapack
+(100%) Combining: schemas/schemas/test/%/dependents.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -123,13 +121,11 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Building...
 ( 20%) Producing: explorer/%/directory.metapack
 ( 40%) Producing: explorer/%/search.metapack
 ( 60%) Producing: explorer/%/directory-html.metapack
 ( 80%) Disposing: explorer/schemas
 (100%) Disposing: schemas
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

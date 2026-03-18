@@ -86,7 +86,7 @@ static auto declare_schema_targets(
     }
 
     if (rule.action == BuildPlan::Action::Type::Dependents &&
-        phase == BuildPhase::Core) {
+        phase == BuildPhase::Produce) {
       continue;
     }
 
@@ -190,13 +190,12 @@ static auto collect_affected_directories(
   return result;
 }
 
-auto delta(const BuildPlan::Type build_type, const BuildState &entries,
-           const std::filesystem::path &output, const Resolver::Views &schemas,
-           const std::string_view version, const bool incremental,
-           const std::string_view comment,
+auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
+           const BuildState &entries, const std::filesystem::path &output,
+           const Resolver::Views &schemas, const std::string_view version,
+           const bool incremental, const std::string_view comment,
            const std::vector<std::filesystem::path> &changed,
-           const std::vector<std::filesystem::path> &removed,
-           const BuildPhase phase) -> BuildPlan {
+           const std::vector<std::filesystem::path> &removed) -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
     return entry.second.path.is_absolute() &&
@@ -209,12 +208,10 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
 
   assert(!version.empty());
 
-  if (phase == BuildPhase::Dependents) {
+  if (phase == BuildPhase::Combine) {
     const auto &output_string{output.native()};
     const auto schemas_prefix{output_string + "/" + SCHEMAS_DIRECTORY + "/"};
 
-    // Find which schemas' cross-schema references changed by comparing
-    // overlay entries (rebuilt in phase 1) to on-disk entries (previous build)
     std::unordered_set<std::string> affected_schemas;
     for (const auto key : entries.keys()) {
       if (!key.ends_with("/%/dependencies.metapack")) {
@@ -228,7 +225,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       const auto *new_entry{entries.entry(std::string{key})};
       const auto *old_entry{entries.disk_entry(std::string{key})};
 
-      // Collect cross-schema references from old and new deps
       auto extract_cross_schema_refs{
           [&schemas_prefix](
               const BuildState::Entry *state_entry,
@@ -260,7 +256,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
             return result;
           }};
 
-      // Extract the owner schema's relative path from the key
       const auto owner_start{schemas_prefix.size()};
       const auto owner_sentinel{key.find("/%/", owner_start)};
       if (owner_sentinel == std::string_view::npos) {
@@ -272,7 +267,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
       const auto old_refs{extract_cross_schema_refs(old_entry, owner_base)};
       const auto new_refs{extract_cross_schema_refs(new_entry, owner_base)};
 
-      // Symmetric difference: schemas added or removed as references
       for (const auto &reference : new_refs) {
         if (!old_refs.contains(reference)) {
           affected_schemas.insert(reference);
@@ -285,14 +279,11 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         }
       }
 
-      // If the entry is new (no old version), the schema itself needs
-      // its own dependents built
       if (old_entry == nullptr) {
         affected_schemas.insert(std::string{owner_base});
       }
     }
 
-    // Build Dependents actions for affected schemas only
     BuildPlan plan;
     plan.output = output;
     plan.type = build_type;
@@ -310,7 +301,6 @@ auto delta(const BuildPlan::Type build_type, const BuildState &entries,
         auto destination{std::filesystem::path{
             append_filename(schema_base, "dependents.metapack")}};
 
-        // Find which dependencies.metapack files reference this schema
         BuildPlan::Action::Dependencies action_dependencies;
         for (const auto dep_key : entries.keys()) {
           if (!dep_key.ends_with("/%/dependencies.metapack")) {

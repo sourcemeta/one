@@ -48,7 +48,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
@@ -72,8 +71,7 @@ Building...
 ( 91%) Producing: explorer/example/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
-Resolving dependents...
-(100%) Producing: schemas/example/schemas/foo/%/dependents.metapack
+(100%) Combining: schemas/example/schemas/foo/%/dependents.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -85,8 +83,6 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
-Building...
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -105,7 +101,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-Building...
 (  5%) Producing: schemas/example/schemas/foo/%/schema.metapack
 ( 10%) Producing: schemas/example/schemas/foo/%/dependencies.metapack
 ( 15%) Producing: schemas/example/schemas/foo/%/locations.metapack
@@ -125,7 +120,6 @@ Building...
 ( 89%) Producing: explorer/%/directory.metapack
 ( 94%) Producing: explorer/example/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -137,7 +131,5 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
-Building...
-Resolving dependents...
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

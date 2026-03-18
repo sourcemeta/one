@@ -64,7 +64,7 @@ cat << 'EOF' > "$TMP/schemas/c.json"
 EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
+grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 cat << 'EOF' > "$TMP/expected.txt"
 (  5%) Producing: schemas/example/schemas/c/%/schema.metapack
@@ -86,8 +86,8 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 89%) Producing: explorer/%/directory.metapack
 ( 94%) Producing: explorer/example/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
-( 50%) Producing: schemas/example/schemas/a/%/dependents.metapack
-(100%) Producing: schemas/example/schemas/c/%/dependents.metapack
+( 50%) Combining: schemas/example/schemas/a/%/dependents.metapack
+(100%) Combining: schemas/example/schemas/c/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

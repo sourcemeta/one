@@ -92,7 +92,7 @@ cat << 'EOF' > "$TMP/schemas-left-a/s5.json"
 EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
+grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 # TODO(over-rebuild): Adding s5 causes dependents.metapack to rebuild for
 # s1, s2, s3, and s4 even though none of these schemas reference each other.
@@ -118,7 +118,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 89%) Producing: explorer/%/directory.metapack
 ( 94%) Producing: explorer/left/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
-(100%) Producing: schemas/left/left-a/s5/%/dependents.metapack
+(100%) Combining: schemas/left/left-a/s5/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

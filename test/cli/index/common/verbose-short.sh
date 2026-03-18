@@ -49,7 +49,6 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
 https://example.com/foo => https://sourcemeta.com/example/schemas/foo
-Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
@@ -73,7 +72,6 @@ Building...
 ( 91%) Producing: explorer/example/%/directory-html.metapack
 ( 95%) Producing: explorer/%/directory-html.metapack
 (100%) Producing: routes.bin
-Resolving dependents...
-(100%) Producing: schemas/example/schemas/foo/%/dependents.metapack
+(100%) Combining: schemas/example/schemas/foo/%/dependents.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -94,6 +94,61 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
             << " [" << std::this_thread::get_id() << "/" << threads << "]\n";
 }
 
+static auto execute_plan(std::mutex &mutex,
+                         sourcemeta::one::BuildState &entries,
+                         const std::filesystem::path &canonical_output,
+                         sourcemeta::one::Resolver &resolver,
+                         const sourcemeta::one::Configuration &configuration,
+                         const sourcemeta::core::JSON &raw_configuration,
+                         const std::size_t concurrency,
+                         sourcemeta::one::BuildPlan &plan,
+                         const std::string_view label) -> void {
+  // Give it a generous thread stack size, otherwise we might overflow
+  // the small-by-default thread stack with Blaze
+  constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
+  std::atomic<std::size_t> progress_counter{0};
+  for (auto &wave : plan.waves) {
+    sourcemeta::core::parallel_for_each(
+        wave.begin(), wave.end(),
+        [&](auto &action, const auto threads, const auto) {
+          const auto current{
+              progress_counter.fetch_add(1, std::memory_order_relaxed) + 1};
+          const std::string_view destination_view{action.destination.native()};
+          const auto relative_path{
+              destination_view.substr(canonical_output.native().size() + 1)};
+
+          if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
+            print_progress(mutex, threads, "Disposing", relative_path, current,
+                           plan.size);
+            std::filesystem::remove_all(action.destination);
+            const auto lock{entries.take_lock()};
+            entries.forget(action.destination.native());
+            return;
+          }
+
+          print_progress(mutex, threads, label, relative_path, current,
+                         plan.size);
+          const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
+          assert(handler);
+          const auto wrote{handler(
+              entries, action,
+              [&action](const auto &path) {
+                action.dependencies.emplace_back(path);
+              },
+              resolver, configuration, raw_configuration)};
+
+          if (wrote) {
+            const auto lock{entries.take_lock()};
+            entries.commit(action.destination, std::move(action.dependencies));
+          } else {
+            print_progress(mutex, threads, "Bypassing", relative_path, current,
+                           plan.size);
+          }
+        },
+        concurrency, THREAD_STACK_SIZE);
+  }
+}
+
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
   if (!app.contains("skip-banner")) {
@@ -190,23 +245,20 @@ static auto index_main(const std::string_view &program,
         sourcemeta::core::read_json(configuration_json_path);
   }
 
-  // Determine comment
   const std::string comment{app.contains("comment")
                                 ? std::string{app.at("comment").at(0)}
                                 : std::string{}};
-
-  // Determine build type
   const auto build_type{configuration.html.has_value()
                             ? sourcemeta::one::BuildPlan::Type::Full
                             : sourcemeta::one::BuildPlan::Type::Headless};
-
-  PROFILE_END(profiling, "Startup");
 
   // Mainly to not screw up the logs
   std::mutex mutex;
   const auto concurrency{app.contains("concurrency")
                              ? std::stoull(app.at("concurrency").front().data())
                              : std::thread::hardware_concurrency()};
+
+  PROFILE_END(profiling, "Startup");
 
   /////////////////////////////////////////////////////////////////////////////
   // (5) First pass to locate all of the schemas we will be indexing
@@ -329,91 +381,31 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Resolve");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (7) Build schema info map and compute the delta plan
+  // (7) Run the delta plans
   /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Make use of these for real
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  PROFILE_END(profiling, "Delta");
+  auto produce_plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce, build_type, entries,
+      canonical_output, resolver.data(), this_version, incremental, comment,
+      changed, removed)};
+  execute_plan(mutex, entries, canonical_output, resolver, configuration,
+               raw_configuration, concurrency, produce_plan, "Producing");
+  PROFILE_END(profiling, "Producing");
+
+  auto combine_plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Combine, build_type, entries,
+      canonical_output, resolver.data(), this_version, incremental, comment,
+      changed, removed)};
+  execute_plan(mutex, entries, canonical_output, resolver, configuration,
+               raw_configuration, concurrency, combine_plan, "Combining");
+  PROFILE_END(profiling, "Combining");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (8) Execute the build in two phases
-  /////////////////////////////////////////////////////////////////////////////
-
-  // Give it a generous thread stack size, otherwise we might overflow
-  // the small-by-default thread stack with Blaze
-  constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
-
-  auto execute_plan{[&](auto &plan) {
-    std::atomic<std::size_t> progress_counter{0};
-    for (auto &wave : plan.waves) {
-      sourcemeta::core::parallel_for_each(
-          wave.begin(), wave.end(),
-          [&](auto &action, const auto threads, const auto) {
-            const auto current{
-                progress_counter.fetch_add(1, std::memory_order_relaxed) + 1};
-            const std::string_view destination_view{
-                action.destination.native()};
-            const auto relative_path{
-                destination_view.substr(canonical_output.native().size() + 1)};
-
-            if (action.type ==
-                sourcemeta::one::BuildPlan::Action::Type::Remove) {
-              print_progress(mutex, threads, "Disposing", relative_path,
-                             current, plan.size);
-              std::filesystem::remove_all(action.destination);
-              const auto lock{entries.take_lock()};
-              entries.forget(action.destination.native());
-              return;
-            }
-
-            print_progress(mutex, threads, "Producing", relative_path, current,
-                           plan.size);
-            const auto handler{
-                HANDLERS[static_cast<std::uint8_t>(action.type)]};
-            assert(handler);
-            const auto wrote{handler(
-                entries, action,
-                [&action](const auto &path) {
-                  action.dependencies.emplace_back(path);
-                },
-                resolver, configuration, raw_configuration)};
-
-            if (wrote) {
-              const auto lock{entries.take_lock()};
-              entries.commit(action.destination,
-                             std::move(action.dependencies));
-            } else {
-              print_progress(mutex, threads, "Bypassing", relative_path,
-                             current, plan.size);
-            }
-          },
-          concurrency, THREAD_STACK_SIZE);
-    }
-  }};
-
-  // Phase 1: everything except dependents
-  std::cerr << "Building...\n";
-  auto core_plan{sourcemeta::one::delta(build_type, entries, canonical_output,
-                                        resolver.data(), this_version,
-                                        incremental, comment, changed, removed,
-                                        sourcemeta::one::BuildPhase::Core)};
-  execute_plan(core_plan);
-
-  // Phase 2: dependents only, using state.bin overlay from phase 1
-  std::cerr << "Resolving dependents...\n";
-  auto dependents_plan{sourcemeta::one::delta(
-      build_type, entries, canonical_output, resolver.data(), this_version,
-      incremental, comment, changed, removed,
-      sourcemeta::one::BuildPhase::Dependents)};
-  execute_plan(dependents_plan);
-
-  PROFILE_END(profiling, "Build");
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (9) Save state and profile
+  // (8) Save state and profile
   /////////////////////////////////////////////////////////////////////////////
 
   entries.save(state_path);
@@ -421,7 +413,7 @@ static auto index_main(const std::string_view &program,
   PROFILE_END(profiling, "Cleanup");
 
   /////////////////////////////////////////////////////////////////////////////
-  // (10) Output metrics
+  // (9) Output metrics
   /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Add a test for this

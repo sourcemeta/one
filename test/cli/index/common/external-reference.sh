@@ -49,7 +49,6 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-Building...
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack

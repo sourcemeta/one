@@ -93,11 +93,11 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 \
     2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-grep "Producing" "$TMP/output.txt" > "$TMP/output_producing.txt"
+grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 # No dependents should rebuild: C's references did not change
 # (it still references B the same way), so no schema's dependents are affected
-if grep -q "dependents.metapack" "$TMP/output_producing.txt"; then exit 1; fi
+grep -q "dependents.metapack" "$TMP/output_producing.txt" && exit 1
 
 # Verify no files were deleted
 cd "$TMP/output"

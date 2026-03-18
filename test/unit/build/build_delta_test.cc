@@ -16,7 +16,8 @@ TEST(Build_delta, full_empty_registry) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -57,7 +58,8 @@ TEST(Build_delta, full_single_schema) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -187,7 +189,8 @@ TEST(Build_delta, incremental_changed_same_mtime) {
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -231,7 +234,8 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -381,7 +385,8 @@ TEST(Build_delta, incremental_one_schema_added) {
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -505,7 +510,8 @@ TEST(Build_delta, incremental_removed_schema) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed{"/src/foo.json"};
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -543,7 +549,8 @@ TEST(Build_delta, full_stale_file_in_entries) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -659,7 +666,8 @@ TEST(Build_delta, full_stale_directory_in_entries) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -773,6 +781,7 @@ TEST(Build_delta, full_with_comment) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       false, "Hello world", changed, removed)};
 
@@ -815,7 +824,8 @@ TEST(Build_delta, full_without_comment_removes_existing) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -863,6 +873,7 @@ TEST(Build_delta, incremental_with_comment) {
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
       true, "Hello world", changed, removed)};
 
@@ -976,7 +987,8 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1096,7 +1108,8 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "hello", changed, removed)};
 
@@ -1135,7 +1148,8 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1172,7 +1186,8 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1219,7 +1234,8 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1266,7 +1282,8 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
   const sourcemeta::one::Resolver::Views schemas;
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -1309,7 +1326,8 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -1416,7 +1434,8 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          false, "", changed, removed)};
 
@@ -1528,7 +1547,8 @@ TEST(Build_delta, incremental_evaluate_false) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1643,7 +1663,8 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1712,7 +1733,8 @@ TEST(Build_delta, incremental_missing_bundle) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1794,7 +1816,8 @@ TEST(Build_delta, incremental_missing_web_schema) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1859,6 +1882,7 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
@@ -1906,7 +1930,8 @@ TEST(Build_delta, mtime_nothing_changed) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -1959,7 +1984,8 @@ TEST(Build_delta, mtime_source_newer) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2095,7 +2121,8 @@ TEST(Build_delta, mtime_no_entry) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2232,7 +2259,8 @@ TEST(Build_delta, mtime_no_file_mark) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2349,7 +2377,8 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   const std::vector<std::filesystem::path> changed{"/src/a.json"};
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2543,7 +2572,8 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   const std::vector<std::filesystem::path> changed{"/src/a.json"};
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2802,7 +2832,8 @@ TEST(Build_delta, mtime_reverse_dep) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
 
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -2979,7 +3010,8 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -3080,6 +3112,7 @@ TEST(Build_delta, headless_full_empty_registry) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
@@ -3111,6 +3144,7 @@ TEST(Build_delta, headless_full_single_schema) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
@@ -3212,6 +3246,7 @@ TEST(Build_delta, headless_incremental) {
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
@@ -3318,6 +3353,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
@@ -3437,6 +3473,7 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
@@ -3485,7 +3522,8 @@ TEST(Build_delta, headless_to_full_incremental) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -3625,7 +3663,8 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -3742,6 +3781,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "2.0.0", false, "", changed, removed)};
 
@@ -3847,6 +3887,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
   const std::vector<std::filesystem::path> changed;
   const std::vector<std::filesystem::path> removed;
   const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
@@ -3999,7 +4040,8 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
        {"/src/c.json", "example/schemas/c", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed{"/src/c.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -4246,7 +4288,8 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const std::vector<std::filesystem::path> changed{"/src/foo.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
@@ -4386,7 +4429,8 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
       {"https://example.com/c", {"/src/c.json", "c", MTIME(200)}}};
   const std::vector<std::filesystem::path> changed{"/src/c.json"};
   const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPlan::Type::Full,
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
                                          true, "", changed, removed)};
 
