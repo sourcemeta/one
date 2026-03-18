@@ -679,41 +679,51 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    bool propagation_changed{true};
-    while (propagation_changed) {
-      propagation_changed = false;
-      for (const auto &[target_path, target] : targets) {
-        if (dirty_set.contains(target_path)) {
-          continue;
+    // Phase 1: Single pass over all targets to find state-based dirtiness
+    // and build a reverse adjacency from declared dependencies.
+    std::unordered_map<std::string_view, std::vector<std::string_view>>
+        reverse_dag;
+    for (const auto &[target_path, target] : targets) {
+      for (const auto &dep : target.dependencies) {
+        reverse_dag[dep].push_back(target_path);
+      }
+
+      if (dirty_set.contains(target_path)) {
+        continue;
+      }
+
+      const auto *state_entry{entries.entry(target_path)};
+      if (state_entry == nullptr) {
+        dirty_set.insert(target_path);
+        continue;
+      }
+
+      for (const auto &dep : state_entry->dependencies) {
+        if (dirty_set.contains(dep.native()) ||
+            removed_entries.contains(dep.native())) {
+          dirty_set.insert(target_path);
+          break;
         }
+      }
+    }
 
-        for (const auto &dep : target.dependencies) {
-          if (dirty_set.contains(dep)) {
-            dirty_set.insert(target_path);
-            propagation_changed = true;
-            goto next_target;
-          }
+    // Phase 2: BFS from dirty targets through the declared DAG.
+    std::vector<std::string_view> worklist;
+    worklist.reserve(dirty_set.size());
+    for (const auto &dirty_path : dirty_set) {
+      worklist.push_back(dirty_path);
+    }
+
+    for (std::size_t i{0}; i < worklist.size(); i++) {
+      const auto reverse_it{reverse_dag.find(worklist[i])};
+      if (reverse_it == reverse_dag.end()) {
+        continue;
+      }
+
+      for (const auto &dependent : reverse_it->second) {
+        if (dirty_set.insert(std::string{dependent}).second) {
+          worklist.push_back(dependent);
         }
-
-        {
-          const auto *state_entry{entries.entry(target_path)};
-          if (state_entry == nullptr) {
-            dirty_set.insert(target_path);
-            propagation_changed = true;
-            continue;
-          }
-
-          for (const auto &dep : state_entry->dependencies) {
-            if (dirty_set.contains(dep.native()) ||
-                removed_entries.contains(dep.native())) {
-              dirty_set.insert(target_path);
-              propagation_changed = true;
-              break;
-            }
-          }
-        }
-
-      next_target:;
       }
     }
   }
