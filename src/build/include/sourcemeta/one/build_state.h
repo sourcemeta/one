@@ -68,8 +68,9 @@ public:
 
   [[nodiscard]] auto in_overlay(const std::string &key) const -> bool;
   [[nodiscard]] auto disk_entry(const std::string &key) const -> const Entry *;
+  [[nodiscard]] auto raw_disk_entry(const std::string &key) const
+      -> const Entry *;
 
-private:
   struct TransparentHash {
     using is_transparent = void;
     auto operator()(std::string_view value) const noexcept -> std::size_t {
@@ -85,6 +86,10 @@ private:
     }
   };
 
+  [[nodiscard]] auto deleted_keys() const -> const
+      std::unordered_set<std::string, TransparentHash, TransparentEqual> &;
+
+private:
   auto probe_slot(std::string_view key, std::uint8_t kind) const
       -> const std::uint8_t *;
   auto parse_slot_entry(const std::uint8_t *slot) const -> const Entry &;
