@@ -103,8 +103,9 @@ do
   generate_schema "schema-$index"
   index=$((index + 1))
 done
-echo "Reindexing outside measurements..." >&2
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
+echo "Measuring: index 100 schemas..." >&2
+RESULT_INDEX_100="$(measure)"
+echo "  Result: ${RESULT_INDEX_100}ms" >&2
 
 # Measure adding one schema (with a $ref) to a 100-schema registry
 echo "Measuring: add one schema (100 existing)..." >&2
@@ -131,8 +132,9 @@ do
   generate_schema "schema-$index"
   index=$((index + 1))
 done
-echo "Reindexing outside measurements..." >&2
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
+echo "Measuring: index 1000 schemas..." >&2
+RESULT_INDEX_1000="$(measure)"
+echo "  Result: ${RESULT_INDEX_1000}ms" >&2
 
 # Measure adding one schema (with a $ref) to a 1000-schema registry
 echo "Measuring: add one schema (1000 existing)..." >&2
@@ -159,8 +161,9 @@ do
   generate_schema "schema-$index"
   index=$((index + 1))
 done
-echo "Reindexing outside measurements..." >&2
-"$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
+echo "Measuring: index 10000 schemas..." >&2
+RESULT_INDEX_10000="$(measure)"
+echo "  Result: ${RESULT_INDEX_10000}ms" >&2
 
 # Measure adding one schema (with a $ref) to a 10000-schema registry
 echo "Measuring: add one schema (10000 existing)..." >&2
@@ -240,6 +243,21 @@ cat << EOF
     "name": "Cached rebuild (10001 existing)",
     "unit": "ms",
     "value": $RESULT_CACHED_10001
+  },
+  {
+    "name": "Index 100 schemas",
+    "unit": "ms",
+    "value": $RESULT_INDEX_100
+  },
+  {
+    "name": "Index 1000 schemas",
+    "unit": "ms",
+    "value": $RESULT_INDEX_1000
+  },
+  {
+    "name": "Index 10000 schemas",
+    "unit": "ms",
+    "value": $RESULT_INDEX_10000
   }
 ]
 EOF
