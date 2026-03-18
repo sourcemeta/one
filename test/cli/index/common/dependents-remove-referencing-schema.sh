@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # When removing a schema that references another schema, the referenced
-# schema's dependents.metapack must be rebuilt in the Combine phase to
-# reflect that the removed schema is no longer a dependent.
+# schema's dependents must be rebuilt in phase to reflect that the removed
+# schema is no longer a dependent.
 
 set -o errexit
 set -o nounset
