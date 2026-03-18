@@ -317,6 +317,49 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     plan.type = build_type;
 
     if (!affected_schemas.empty()) {
+      // Build a reverse index: for each schema relative path, collect
+      // the dependencies.metapack keys that reference it. This is a
+      // single O(keys) pass instead of O(affected × keys).
+      std::unordered_map<std::string, std::vector<std::string>>
+          reverse_dep_index;
+      for (const auto dep_key : entries.keys()) {
+        if (!dep_key.ends_with("/%/dependencies.metapack")) {
+          continue;
+        }
+
+        const auto *dep_entry{entries.entry(std::string{dep_key})};
+        if (dep_entry == nullptr) {
+          continue;
+        }
+
+        for (const auto &dependency : dep_entry->dependencies) {
+          const auto &dep_path{dependency.native()};
+          if (!dep_path.starts_with(schemas_prefix)) {
+            continue;
+          }
+
+          const auto sentinel_pos{dep_path.find("/%/", owner_start)};
+          if (sentinel_pos == std::string::npos) {
+            continue;
+          }
+
+          auto referenced_schema{
+              dep_path.substr(owner_start, sentinel_pos - owner_start)};
+          if (affected_schemas.contains(referenced_schema)) {
+            reverse_dep_index[std::move(referenced_schema)].emplace_back(
+                dep_key);
+          }
+        }
+      }
+
+      // Deduplicate: a single dep_key may reference the same schema
+      // through multiple dependency paths
+      for (auto &[schema, dep_keys] : reverse_dep_index) {
+        std::ranges::sort(dep_keys);
+        const auto [first, last] = std::ranges::unique(dep_keys);
+        dep_keys.erase(first, last);
+      }
+
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : schemas) {
         const auto &relative_string{info.relative_path.native()};
@@ -330,22 +373,11 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             append_filename(schema_base, "dependents.metapack")}};
 
         BuildPlan::Action::Dependencies action_dependencies;
-        for (const auto dep_key : entries.keys()) {
-          if (!dep_key.ends_with("/%/dependencies.metapack")) {
-            continue;
-          }
-
-          const auto *dep_entry{entries.entry(std::string{dep_key})};
-          if (dep_entry == nullptr) {
-            continue;
-          }
-
-          const auto target_prefix{schemas_prefix + relative_string + "/%/"};
-          for (const auto &dependency : dep_entry->dependencies) {
-            if (dependency.native().starts_with(target_prefix)) {
-              action_dependencies.emplace_back(std::string{dep_key});
-              break;
-            }
+        const auto reverse_iterator{reverse_dep_index.find(relative_string)};
+        if (reverse_iterator != reverse_dep_index.end()) {
+          action_dependencies.reserve(reverse_iterator->second.size());
+          for (const auto &dep_key : reverse_iterator->second) {
+            action_dependencies.emplace_back(dep_key);
           }
         }
 
@@ -647,41 +679,51 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    bool propagation_changed{true};
-    while (propagation_changed) {
-      propagation_changed = false;
-      for (const auto &[target_path, target] : targets) {
-        if (dirty_set.contains(target_path)) {
-          continue;
+    // Phase 1: Single pass over all targets to find state-based dirtiness
+    // and build a reverse adjacency from declared dependencies.
+    std::unordered_map<std::string_view, std::vector<std::string_view>>
+        reverse_adjacency;
+    for (const auto &[target_path, target] : targets) {
+      for (const auto &dependency : target.dependencies) {
+        reverse_adjacency[dependency].push_back(target_path);
+      }
+
+      if (dirty_set.contains(target_path)) {
+        continue;
+      }
+
+      const auto *state_entry{entries.entry(target_path)};
+      if (state_entry == nullptr) {
+        dirty_set.insert(target_path);
+        continue;
+      }
+
+      for (const auto &dependency : state_entry->dependencies) {
+        if (dirty_set.contains(dependency.native()) ||
+            removed_entries.contains(dependency.native())) {
+          dirty_set.insert(target_path);
+          break;
         }
+      }
+    }
 
-        for (const auto &dep : target.dependencies) {
-          if (dirty_set.contains(dep)) {
-            dirty_set.insert(target_path);
-            propagation_changed = true;
-            goto next_target;
-          }
+    // Phase 2: BFS from dirty targets through the declared DAG.
+    std::vector<std::string_view> worklist;
+    worklist.reserve(dirty_set.size());
+    for (const auto &dirty_path : dirty_set) {
+      worklist.push_back(dirty_path);
+    }
+
+    for (std::size_t index{0}; index < worklist.size(); index++) {
+      const auto match{reverse_adjacency.find(worklist[index])};
+      if (match == reverse_adjacency.end()) {
+        continue;
+      }
+
+      for (const auto &dependent : match->second) {
+        if (dirty_set.insert(std::string{dependent}).second) {
+          worklist.push_back(dependent);
         }
-
-        {
-          const auto *state_entry{entries.entry(target_path)};
-          if (state_entry == nullptr) {
-            dirty_set.insert(target_path);
-            propagation_changed = true;
-            continue;
-          }
-
-          for (const auto &dep : state_entry->dependencies) {
-            if (dirty_set.contains(dep.native()) ||
-                removed_entries.contains(dep.native())) {
-              dirty_set.insert(target_path);
-              propagation_changed = true;
-              break;
-            }
-          }
-        }
-
-      next_target:;
       }
     }
   }
