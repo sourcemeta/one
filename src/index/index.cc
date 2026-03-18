@@ -392,17 +392,19 @@ static auto index_main(const std::string_view &program,
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
       canonical_output, resolver.data(), this_version, incremental, comment,
       changed, removed)};
+  PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
-  PROFILE_END(profiling, "Producing");
+  PROFILE_END(profiling, "Producing (Build)");
 
   auto combine_plan{sourcemeta::one::delta(
       sourcemeta::one::BuildPhase::Combine, build_type, entries,
       canonical_output, resolver.data(), this_version, incremental, comment,
       changed, removed)};
+  PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");
-  PROFILE_END(profiling, "Combining");
+  PROFILE_END(profiling, "Combining (Build)");
 
   /////////////////////////////////////////////////////////////////////////////
   // (8) Save state and profile
