@@ -317,6 +317,49 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     plan.type = build_type;
 
     if (!affected_schemas.empty()) {
+      // Build a reverse index: for each schema relative path, collect
+      // the dependencies.metapack keys that reference it. This is a
+      // single O(keys) pass instead of O(affected × keys).
+      std::unordered_map<std::string, std::vector<std::string>>
+          reverse_dep_index;
+      for (const auto dep_key : entries.keys()) {
+        if (!dep_key.ends_with("/%/dependencies.metapack")) {
+          continue;
+        }
+
+        const auto *dep_entry{entries.entry(std::string{dep_key})};
+        if (dep_entry == nullptr) {
+          continue;
+        }
+
+        for (const auto &dependency : dep_entry->dependencies) {
+          const auto &dep_path{dependency.native()};
+          if (!dep_path.starts_with(schemas_prefix)) {
+            continue;
+          }
+
+          const auto sentinel_pos{dep_path.find("/%/", owner_start)};
+          if (sentinel_pos == std::string::npos) {
+            continue;
+          }
+
+          auto referenced_schema{
+              dep_path.substr(owner_start, sentinel_pos - owner_start)};
+          if (affected_schemas.contains(referenced_schema)) {
+            reverse_dep_index[std::move(referenced_schema)].emplace_back(
+                dep_key);
+          }
+        }
+      }
+
+      // Deduplicate: a single dep_key may reference the same schema
+      // through multiple dependency paths
+      for (auto &[schema, dep_keys] : reverse_dep_index) {
+        std::ranges::sort(dep_keys);
+        const auto [first, last] = std::ranges::unique(dep_keys);
+        dep_keys.erase(first, last);
+      }
+
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : schemas) {
         const auto &relative_string{info.relative_path.native()};
@@ -330,22 +373,11 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             append_filename(schema_base, "dependents.metapack")}};
 
         BuildPlan::Action::Dependencies action_dependencies;
-        for (const auto dep_key : entries.keys()) {
-          if (!dep_key.ends_with("/%/dependencies.metapack")) {
-            continue;
-          }
-
-          const auto *dep_entry{entries.entry(std::string{dep_key})};
-          if (dep_entry == nullptr) {
-            continue;
-          }
-
-          const auto target_prefix{schemas_prefix + relative_string + "/%/"};
-          for (const auto &dependency : dep_entry->dependencies) {
-            if (dependency.native().starts_with(target_prefix)) {
-              action_dependencies.emplace_back(std::string{dep_key});
-              break;
-            }
+        const auto reverse_it{reverse_dep_index.find(relative_string)};
+        if (reverse_it != reverse_dep_index.end()) {
+          action_dependencies.reserve(reverse_it->second.size());
+          for (const auto &dep_key : reverse_it->second) {
+            action_dependencies.emplace_back(dep_key);
           }
         }
 
