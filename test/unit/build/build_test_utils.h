@@ -174,8 +174,6 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
                   {.file_mark = mark, .dependencies = {}});
   entries.emplace(base / "editor.metapack",
                   {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "dependents.metapack",
-                  {.file_mark = mark, .dependencies = {}});
   entries.emplace(explorer_base / "schema.metapack",
                   {.file_mark = mark, .dependencies = {}});
   if (evaluate) {

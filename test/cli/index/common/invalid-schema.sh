@@ -51,8 +51,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (  4%) Producing: configuration.json
 (  8%) Producing: version.json
-( 12%) Producing: explorer/%/404.metapack
-( 16%) Producing: schemas/example/schemas/test/%/schema.metapack
+( 13%) Producing: explorer/%/404.metapack
+( 17%) Producing: schemas/example/schemas/test/%/schema.metapack
 error: The schema does not adhere to its metaschema
 The integer value 1 was expected to equal one of the following values: "array", "boolean", "integer", "null", "number", "object", and "string"
   at instance location "/type"

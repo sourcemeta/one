@@ -251,101 +251,66 @@ private:
   }
 };
 
-// The reverse dependency graph is computed once and shared across all parallel
-// handler invocations in the wave. This is safe because the forward
-// dependencies are produced in a previous wave, and the execution loop
-// completes an entire wave before starting the next one
+// The relevant input dependencies files are determined by delta. The handler
+// reads only those few files to build the reverse dependency graph
 struct GENERATE_DEPENDENTS {
-  using DirectMap =
-      std::unordered_map<sourcemeta::core::JSON::String,
-                         std::unordered_set<sourcemeta::core::JSON::String>>;
-  using TransitiveMap =
-      std::unordered_map<sourcemeta::core::JSON::String,
-                         std::set<std::pair<sourcemeta::core::JSON::String,
-                                            sourcemeta::core::JSON::String>>>;
-
-  struct SharedComputation {
-    TransitiveMap transitive;
-    std::unordered_map<std::string, std::string> uri_to_deps_path;
-  };
-
-  static inline std::once_flag compute_flag_;
-  static inline SharedComputation shared_;
-
-  static auto handler(const sourcemeta::one::BuildState &entries,
+  static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
-    std::call_once(compute_flag_, [&entries]() {
-      std::vector<std::filesystem::path> dependencies_files;
-      {
-        const auto lock{entries.take_lock()};
-        for (const auto key : entries.keys()) {
-          if (key.ends_with("/%/dependencies.metapack")) {
-            dependencies_files.emplace_back(std::string{key});
+    using DirectMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::unordered_set<sourcemeta::core::JSON::String>>;
+    DirectMap direct;
+    for (const auto &dependency : action.dependencies) {
+      const auto contents{sourcemeta::one::read_json(dependency)};
+      assert(contents.is_array());
+      for (const auto &entry : contents.as_array()) {
+        direct[entry.at("to").to_string()].emplace(
+            entry.at("from").to_string());
+      }
+    }
+
+    using TransitiveMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
+    TransitiveMap transitive;
+    for (const auto &[target, _] : direct) {
+      auto &edges{transitive[target]};
+      std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+      visited.emplace(target);
+      std::queue<sourcemeta::core::JSON::String> queue;
+      queue.emplace(target);
+      while (!queue.empty()) {
+        const auto current{std::move(queue.front())};
+        queue.pop();
+        const auto match{direct.find(current)};
+        if (match == direct.cend()) {
+          continue;
+        }
+
+        for (const auto &dependent : match->second) {
+          edges.emplace(dependent, current);
+          if (visited.emplace(dependent).second) {
+            queue.emplace(dependent);
           }
         }
       }
-
-      DirectMap direct;
-      for (const auto &dependencies_file : dependencies_files) {
-        const auto contents{sourcemeta::one::read_json(dependencies_file)};
-        assert(contents.is_array());
-        const auto &dependencies_path{dependencies_file.native()};
-        for (const auto &entry : contents.as_array()) {
-          const auto &from_uri{entry.at("from").to_string()};
-          shared_.uri_to_deps_path.try_emplace(from_uri, dependencies_path);
-          direct[entry.at("to").to_string()].emplace(from_uri);
-        }
-      }
-
-      for (const auto &[target, _] : direct) {
-        auto &edges{shared_.transitive[target]};
-        std::unordered_set<sourcemeta::core::JSON::StringView> visited;
-        visited.emplace(target);
-        std::queue<sourcemeta::core::JSON::String> queue;
-        queue.emplace(target);
-        while (!queue.empty()) {
-          const auto current{std::move(queue.front())};
-          queue.pop();
-          const auto match{direct.find(current)};
-          if (match == direct.cend()) {
-            continue;
-          }
-
-          for (const auto &dependent : match->second) {
-            edges.emplace(dependent, current);
-            if (visited.emplace(dependent).second) {
-              queue.emplace(dependent);
-            }
-          }
-        }
-      }
-    });
+    }
 
     auto result{sourcemeta::core::JSON::make_array()};
-    const auto match{shared_.transitive.find(std::string{action.data})};
-    if (match != shared_.transitive.cend()) {
+    const auto match{transitive.find(std::string{action.data})};
+    if (match != transitive.cend()) {
       for (const auto &[from, to] : match->second) {
         auto object{sourcemeta::core::JSON::make_object()};
         object.assign("from", sourcemeta::core::JSON{from});
         object.assign("to", sourcemeta::core::JSON{to});
         result.push_back(std::move(object));
-      }
-    }
-
-    if (match != shared_.transitive.cend()) {
-      std::unordered_set<std::string_view> registered;
-      for (const auto &[from_uri, _] : match->second) {
-        const auto path_match{shared_.uri_to_deps_path.find(from_uri)};
-        if (path_match != shared_.uri_to_deps_path.cend() &&
-            registered.insert(path_match->second).second) {
-          callback(std::filesystem::path{path_match->second});
-        }
       }
     }
 

@@ -84,22 +84,22 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 (  5%) Producing: schemas/schemas/test/%/schema.metapack
 ( 11%) Producing: schemas/schemas/test/%/dependencies.metapack
-( 16%) Producing: schemas/schemas/test/%/locations.metapack
-( 22%) Producing: schemas/schemas/test/%/positions.metapack
-( 27%) Producing: schemas/schemas/test/%/stats.metapack
-( 33%) Producing: schemas/schemas/test/%/bundle.metapack
-( 38%) Producing: schemas/schemas/test/%/dependents.metapack
-( 44%) Producing: schemas/schemas/test/%/health.metapack
-( 50%) Producing: explorer/schemas/test/%/schema.metapack
-( 55%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
-( 61%) Producing: schemas/schemas/test/%/blaze-fast.metapack
-( 66%) Producing: schemas/schemas/test/%/editor.metapack
-( 72%) Producing: explorer/%/search.metapack
-( 77%) Producing: explorer/schemas/%/directory.metapack
-( 83%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 17%) Producing: schemas/schemas/test/%/locations.metapack
+( 23%) Producing: schemas/schemas/test/%/positions.metapack
+( 29%) Producing: schemas/schemas/test/%/stats.metapack
+( 35%) Producing: schemas/schemas/test/%/bundle.metapack
+( 41%) Producing: schemas/schemas/test/%/health.metapack
+( 47%) Producing: explorer/schemas/test/%/schema.metapack
+( 52%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
+( 58%) Producing: schemas/schemas/test/%/blaze-fast.metapack
+( 64%) Producing: schemas/schemas/test/%/editor.metapack
+( 70%) Producing: explorer/%/search.metapack
+( 76%) Producing: explorer/schemas/%/directory.metapack
+( 82%) Producing: explorer/schemas/test/%/schema-html.metapack
 ( 88%) Producing: explorer/%/directory.metapack
 ( 94%) Producing: explorer/schemas/%/directory-html.metapack
 (100%) Producing: explorer/%/directory-html.metapack
+(100%) Combining: schemas/schemas/test/%/dependents.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
