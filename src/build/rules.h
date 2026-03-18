@@ -190,18 +190,6 @@ static constexpr std::array<PerSchemaRule, 13> PER_SCHEMA_RULES{{
      .dependency_count = 2},
 }};
 
-enum class AggregateOutputBase : std::uint8_t { Output, Explorer };
-
-struct AggregateRule {
-  BuildPlan::Action::Type action;
-  const char *output_filename;
-  AggregateOutputBase output_base;
-  TargetBase collector_base;
-  const char *collector_filename;
-};
-
-static constexpr std::array<AggregateRule, 0> AGGREGATE_RULES{{}};
-
 enum class DirectoryScope : std::uint8_t { AllDirectories, NonRoot, RootOnly };
 
 enum class DirectoryDependencyKind : std::uint8_t {
