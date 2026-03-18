@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
@@ -14,6 +15,7 @@
 #include <cassert>     // assert
 #include <chrono>      // std::chrono
 #include <cmath>       // std::lround
+#include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
@@ -107,6 +109,159 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 
 namespace sourcemeta::one {
 
+#pragma pack(push, 1)
+struct MetapackExplorerSchemaExtension {
+  std::int64_t health;
+  std::int64_t bytes;
+  std::int64_t dependencies;
+  std::uint16_t path_length;
+  std::uint16_t identifier_length;
+  std::uint16_t base_dialect_length;
+  std::uint16_t dialect_length;
+  std::uint16_t title_length;
+  std::uint16_t description_length;
+  std::uint16_t alert_length;
+  std::uint16_t provenance_length;
+};
+#pragma pack(pop)
+
+inline auto explorer_extension_string(const MetapackExplorerSchemaExtension *,
+                                      const std::uint8_t *base,
+                                      const std::size_t field_offset,
+                                      const std::size_t field_length)
+    -> std::string_view {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  return {reinterpret_cast<const char *>(
+              base + sizeof(MetapackExplorerSchemaExtension) + field_offset),
+          field_length};
+}
+
+inline auto
+explorer_extension_path(const MetapackExplorerSchemaExtension *extension,
+                        const std::uint8_t *base) -> std::string_view {
+  return explorer_extension_string(extension, base, 0, extension->path_length);
+}
+
+inline auto
+explorer_extension_identifier(const MetapackExplorerSchemaExtension *extension,
+                              const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{extension->path_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->identifier_length);
+}
+
+inline auto explorer_extension_base_dialect(
+    const MetapackExplorerSchemaExtension *extension, const std::uint8_t *base)
+    -> std::string_view {
+  const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
+                           extension->identifier_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->base_dialect_length);
+}
+
+inline auto
+explorer_extension_dialect(const MetapackExplorerSchemaExtension *extension,
+                           const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
+                           extension->identifier_length +
+                           extension->base_dialect_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->dialect_length);
+}
+
+inline auto
+explorer_extension_title(const MetapackExplorerSchemaExtension *extension,
+                         const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
+                           extension->identifier_length +
+                           extension->base_dialect_length +
+                           extension->dialect_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->title_length);
+}
+
+inline auto
+explorer_extension_description(const MetapackExplorerSchemaExtension *extension,
+                               const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
+                           extension->identifier_length +
+                           extension->base_dialect_length +
+                           extension->dialect_length + extension->title_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->description_length);
+}
+
+inline auto
+explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
+                         const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
+                           extension->identifier_length +
+                           extension->base_dialect_length +
+                           extension->dialect_length + extension->title_length +
+                           extension->description_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->alert_length);
+}
+
+inline auto
+explorer_extension_provenance(const MetapackExplorerSchemaExtension *extension,
+                              const std::uint8_t *base) -> std::string_view {
+  const std::size_t offset{
+      static_cast<std::size_t>(extension->path_length) +
+      extension->identifier_length + extension->base_dialect_length +
+      extension->dialect_length + extension->title_length +
+      extension->description_length + extension->alert_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->provenance_length);
+}
+
+static auto make_explorer_schema_extension(
+    const std::int64_t health, const std::int64_t bytes,
+    const std::int64_t dependencies, const std::string_view path,
+    const std::string_view identifier, const std::string_view base_dialect,
+    const std::string_view dialect, const std::string_view title,
+    const std::string_view description, const std::string_view alert,
+    const std::string_view provenance) -> std::vector<std::uint8_t> {
+  const auto strings_size{
+      path.size() + identifier.size() + base_dialect.size() + dialect.size() +
+      title.size() + description.size() + alert.size() + provenance.size()};
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackExplorerSchemaExtension) + strings_size);
+
+  MetapackExplorerSchemaExtension header{};
+  header.health = health;
+  header.bytes = bytes;
+  header.dependencies = dependencies;
+  header.path_length = static_cast<std::uint16_t>(path.size());
+  header.identifier_length = static_cast<std::uint16_t>(identifier.size());
+  header.base_dialect_length = static_cast<std::uint16_t>(base_dialect.size());
+  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
+  header.title_length = static_cast<std::uint16_t>(title.size());
+  header.description_length = static_cast<std::uint16_t>(description.size());
+  header.alert_length = static_cast<std::uint16_t>(alert.size());
+  header.provenance_length = static_cast<std::uint16_t>(provenance.size());
+
+  auto *cursor{result.data()};
+  std::memcpy(cursor, &header, sizeof(header));
+  cursor += sizeof(header);
+
+  const auto append = [&cursor](const std::string_view string) {
+    std::memcpy(cursor, string.data(), string.size());
+    cursor += string.size();
+  };
+
+  append(path);
+  append(identifier);
+  append(base_dialect);
+  append(dialect);
+  append(title);
+  append(description);
+  append(alert);
+  append(provenance);
+
+  return result;
+}
+
 struct GENERATE_EXPLORER_SCHEMA_METADATA {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -116,44 +271,48 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
-    const auto schema{
-        sourcemeta::one::read_json_with_metadata(action.dependencies.front())};
+    // Read the schema to get data and bytes
+    sourcemeta::core::FileView schema_view{action.dependencies.front()};
+    const auto schema_info{sourcemeta::one::metapack_info(schema_view)};
+    const auto schema_data{
+        sourcemeta::one::metapack_read_json(action.dependencies.front())};
     const auto id{sourcemeta::core::identify(
-        schema.data, [&callback, &resolver](const auto identifier) {
+        schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         })};
     assert(!id.empty());
     auto result{sourcemeta::core::JSON::make_object()};
 
-    result.assign("bytes", sourcemeta::core::JSON{schema.bytes});
+    result.assign("bytes", sourcemeta::core::JSON{static_cast<std::size_t>(
+                               schema_info.content_bytes)});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
-        schema.data, [&callback, &resolver](const auto identifier) {
+        schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         })};
     assert(base_dialect.has_value());
     result.assign("baseDialect",
                   sourcemeta::core::JSON{std::string{
                       sourcemeta::core::to_string(base_dialect.value())}});
-    const auto dialect{sourcemeta::core::dialect(schema.data)};
+    const auto dialect{sourcemeta::core::dialect(schema_data)};
     assert(!dialect.empty());
     result.assign("dialect", sourcemeta::core::JSON{std::string{dialect}});
 
-    if (schema.data.is_object()) {
-      const auto title{schema.data.try_at("title")};
+    if (schema_data.is_object()) {
+      const auto title{schema_data.try_at("title")};
       if (title && title->is_string()) {
         result.assign("title", sourcemeta::core::JSON{title->trim()});
       }
-      const auto description{schema.data.try_at("description")};
+      const auto description{schema_data.try_at("description")};
       if (description && description->is_string()) {
         result.assign("description",
                       sourcemeta::core::JSON{description->trim()});
       }
 
       auto examples_array{sourcemeta::core::JSON::make_array()};
-      const auto *examples{schema.data.try_at("examples")};
+      const auto *examples{schema_data.try_at("examples")};
       if (examples && examples->is_array() && !examples->empty()) {
         const auto vocabularies{sourcemeta::core::vocabularies(
             [&callback, &resolver](const auto identifier) {
@@ -178,11 +337,12 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("examples", std::move(examples_array));
     }
 
-    const auto health{sourcemeta::one::read_json(action.dependencies.at(1))};
+    const auto health{
+        sourcemeta::one::metapack_read_json(action.dependencies.at(1))};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::one::read_json(action.dependencies.at(2))};
+        sourcemeta::one::metapack_read_json(action.dependencies.at(2))};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
@@ -208,10 +368,24 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(action.destination.parent_path());
-    sourcemeta::one::write_pretty_json(
+    const auto extension_bytes{make_explorer_schema_extension(
+        result.at("health").to_integer(),
+        static_cast<std::int64_t>(schema_info.content_bytes),
+        result.at("dependencies").to_integer(), result.at("path").to_string(),
+        result.at("identifier").to_string(),
+        result.at("baseDialect").to_string(), result.at("dialect").to_string(),
+        result.defines("title") ? result.at("title").to_string() : "",
+        result.defines("description") ? result.at("description").to_string()
+                                      : "",
+        result.at("alert").is_string() ? result.at("alert").to_string() : "",
+        result.at("provenance").is_string()
+            ? result.at("provenance").to_string()
+            : "")};
+
+    sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
-        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     return true;
@@ -230,18 +404,31 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
     result.reserve(action.dependencies.size());
 
     for (const auto &dependency : action.dependencies) {
-      auto metadata_json{sourcemeta::one::read_json(dependency)};
-      if (!sourcemeta::core::is_schema(metadata_json)) {
+      sourcemeta::core::FileView dependency_view{dependency};
+      const auto extension_offset{
+          sourcemeta::one::metapack_extension_offset(dependency_view)};
+      if (extension_offset == 0) {
         continue;
       }
 
+      const auto *extension{
+          sourcemeta::one::metapack_extension<MetapackExplorerSchemaExtension>(
+              dependency_view)};
+      if (extension == nullptr) {
+        continue;
+      }
+
+      const auto *extension_base{
+          dependency_view.as<std::uint8_t>(extension_offset)};
+      const auto path{explorer_extension_path(extension, extension_base)};
+      const auto title{explorer_extension_title(extension, extension_base)};
+      const auto description{
+          explorer_extension_description(extension, extension_base)};
+
       auto entry{sourcemeta::core::JSON::make_array()};
-      entry.push_back(
-          sourcemeta::core::JSON{metadata_json.at("path").to_string()});
-      // TODO: Can we move these?
-      entry.push_back(metadata_json.at_or("title", sourcemeta::core::JSON{""}));
-      entry.push_back(
-          metadata_json.at_or("description", sourcemeta::core::JSON{""}));
+      entry.push_back(sourcemeta::core::JSON{std::string{path}});
+      entry.push_back(sourcemeta::core::JSON{std::string{title}});
+      entry.push_back(sourcemeta::core::JSON{std::string{description}});
       result.push_back(std::move(entry));
     }
 
@@ -272,12 +459,11 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    std::filesystem::create_directories(action.destination.parent_path());
-    sourcemeta::one::write_jsonl(
+    sourcemeta::one::metapack_write_jsonl(
         action.destination, result, "application/jsonl",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
-        sourcemeta::one::Encoding::Identity, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::MetapackEncoding::Identity, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     return true;
@@ -313,7 +499,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        auto directory_json{sourcemeta::one::read_json(dependency)};
+        auto directory_json{sourcemeta::one::metapack_read_json(dependency)};
         assert(directory_json.is_object());
         assert(directory_json.defines("health"));
         assert(directory_json.at("health").is_integer());
@@ -344,22 +530,73 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
         entries.push_back(std::move(entry_json));
       } else if (filename == "schema.metapack") {
-        auto nav{sourcemeta::one::read_json(dependency)};
+        sourcemeta::core::FileView dependency_view{dependency};
+        const auto extension_offset{
+            sourcemeta::one::metapack_extension_offset(dependency_view)};
+        const auto *extension{sourcemeta::one::metapack_extension<
+            MetapackExplorerSchemaExtension>(dependency_view)};
+
+        if (extension == nullptr || extension_offset == 0) {
+          continue;
+        }
+
+        const auto *extension_base{
+            dependency_view.as<std::uint8_t>(extension_offset)};
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
-        entry_json.merge(nav.as_object());
-        assert(!entry_json.defines("entries"));
-        entry_json.erase("breadcrumb");
-        entry_json.erase("examples");
         entry_json.assign("type", sourcemeta::core::JSON{"schema"});
 
-        assert(entry_json.defines("path"));
-        std::filesystem::path url{entry_json.at("path").to_string()};
-        entry_json.at("path").into(sourcemeta::core::JSON{url});
+        const auto schema_path{
+            explorer_extension_path(extension, extension_base)};
+        entry_json.assign("path", sourcemeta::core::JSON{std::filesystem::path{
+                                      std::string{schema_path}}});
+        entry_json.assign(
+            "identifier",
+            sourcemeta::core::JSON{std::string{
+                explorer_extension_identifier(extension, extension_base)}});
+        entry_json.assign("bytes", sourcemeta::core::JSON{extension->bytes});
+        entry_json.assign(
+            "baseDialect",
+            sourcemeta::core::JSON{std::string{
+                explorer_extension_base_dialect(extension, extension_base)}});
+        entry_json.assign("dialect", sourcemeta::core::JSON{
+                                         std::string{explorer_extension_dialect(
+                                             extension, extension_base)}});
+        entry_json.assign("health", sourcemeta::core::JSON{extension->health});
+        entry_json.assign("dependencies",
+                          sourcemeta::core::JSON{extension->dependencies});
 
-        assert(entry_json.defines("health"));
-        assert(entry_json.at("health").is_integer());
-        scores.emplace_back(entry_json.at("health").to_integer());
+        const auto title{explorer_extension_title(extension, extension_base)};
+        if (!title.empty()) {
+          entry_json.assign("title",
+                            sourcemeta::core::JSON{std::string{title}});
+        }
+
+        const auto description{
+            explorer_extension_description(extension, extension_base)};
+        if (!description.empty()) {
+          entry_json.assign("description",
+                            sourcemeta::core::JSON{std::string{description}});
+        }
+
+        const auto alert{explorer_extension_alert(extension, extension_base)};
+        if (!alert.empty()) {
+          entry_json.assign("alert",
+                            sourcemeta::core::JSON{std::string{alert}});
+        } else {
+          entry_json.assign("alert", sourcemeta::core::JSON{nullptr});
+        }
+
+        const auto provenance{
+            explorer_extension_provenance(extension, extension_base)};
+        if (!provenance.empty()) {
+          entry_json.assign("provenance",
+                            sourcemeta::core::JSON{std::string{provenance}});
+        } else {
+          entry_json.assign("provenance", sourcemeta::core::JSON{nullptr});
+        }
+
+        scores.emplace_back(extension->health);
         entries.push_back(std::move(entry_json));
       }
     }
@@ -435,10 +672,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
-    std::filesystem::create_directories(action.destination.parent_path());
-    sourcemeta::one::write_pretty_json(
+    sourcemeta::one::metapack_write_pretty_json(
         action.destination, meta, "application/json",
-        sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
+        sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     return true;

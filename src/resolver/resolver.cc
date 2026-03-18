@@ -1,3 +1,4 @@
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
@@ -120,7 +121,8 @@ auto Resolver::operator()(
   if (result->second.cache_path.has_value()) {
     // We can guarantee the cached outcome is JSON, so we don't need to try
     // reading as YAML
-    auto schema{sourcemeta::one::read_json(result->second.cache_path.value())};
+    auto schema{
+        sourcemeta::one::metapack_read_json(result->second.cache_path.value())};
     assert(sourcemeta::core::is_schema(schema));
     if (callback) {
       callback(result->second.cache_path.value());

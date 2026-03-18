@@ -4,6 +4,7 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
@@ -36,11 +37,10 @@ auto GENERATE_WEB_NOT_FOUND::handler(
                        html::a({{"href", "/"}}, "Get back to the home page")));
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
-  std::filesystem::create_directories(action.destination.parent_path());
-  write_text(action.destination, html_content.str(), "text/html",
-             Encoding::GZIP, sourcemeta::core::JSON{nullptr},
-             std::chrono::duration_cast<std::chrono::milliseconds>(
-                 timestamp_end - timestamp_start));
+  metapack_write_text(action.destination, html_content.str(), "text/html",
+                      MetapackEncoding::GZIP, {},
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          timestamp_end - timestamp_start));
   return true;
 }
 

@@ -7,6 +7,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include "helpers.h"
@@ -32,7 +33,7 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
 
   auto locations_path{template_path.parent_path() / "locations.metapack"};
   // TODO: Cache this across runs?
-  const auto locations{sourcemeta::one::read_json(locations_path)};
+  const auto locations{sourcemeta::one::metapack_read_json(locations_path)};
   if (!locations.is_object() || !locations.defines("static")) {
     throw std::runtime_error("Failed to read schema locations metadata");
   }
@@ -143,7 +144,7 @@ auto evaluate(const std::filesystem::path &template_path,
   // TODO: Cache this conversion across runs, potentially using the schema file
   // "checksum" as the cache key. This is important as the template might be
   // compressed
-  const auto template_json{read_json(template_path)};
+  const auto template_json{metapack_read_json(template_path)};
   const auto schema_template{sourcemeta::blaze::from_json(template_json)};
   if (!schema_template.has_value()) {
     throw std::runtime_error("Failed to parse schema template");
