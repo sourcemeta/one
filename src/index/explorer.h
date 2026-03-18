@@ -223,15 +223,14 @@ static auto make_explorer_schema_extension(
     const std::string_view dialect, const std::string_view title,
     const std::string_view description, const std::string_view alert,
     const std::string_view provenance) -> std::vector<std::uint8_t> {
-  constexpr auto max_length{std::numeric_limits<std::uint16_t>::max()};
-  assert(path.size() <= max_length);
-  assert(identifier.size() <= max_length);
-  assert(base_dialect.size() <= max_length);
-  assert(dialect.size() <= max_length);
-  assert(title.size() <= max_length);
-  assert(description.size() <= max_length);
-  assert(alert.size() <= max_length);
-  assert(provenance.size() <= max_length);
+  assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(dialect.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(alert.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(provenance.size() <= std::numeric_limits<std::uint16_t>::max());
 
   const auto strings_size{
       path.size() + identifier.size() + base_dialect.size() + dialect.size() +
