@@ -5,7 +5,6 @@
 // between the indexer and the server
 
 #include <sourcemeta/one/shared_encoding.h>
-#include <sourcemeta/one/shared_metapack.h>
 #include <sourcemeta/one/shared_version.h>
 
 namespace sourcemeta::one {

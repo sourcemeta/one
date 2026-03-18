@@ -59,6 +59,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/VERSION" "${ONE_VERSION}")
 if(ONE_INDEX OR ONE_SERVER)
   add_subdirectory(src/shared)
   add_subdirectory(src/gzip)
+  add_subdirectory(src/metapack)
 endif()
 
 if(ONE_INDEX)
@@ -121,6 +122,7 @@ if(ONE_TESTS)
 
   if(ONE_INDEX OR ONE_SERVER)
     add_subdirectory(test/unit/gzip)
+    add_subdirectory(test/unit/metapack)
   endif()
 
   if(ONE_INDEX)

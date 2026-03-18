@@ -427,9 +427,9 @@ static auto index_main(const std::string_view &program,
          std::filesystem::recursive_directory_iterator{canonical_output}) {
       if (entry.is_regular_file() && entry.path().extension() == ".metapack") {
         try {
-          const auto file{sourcemeta::one::read_stream_raw(entry.path())};
-          assert(file.has_value());
-          durations.emplace_back(entry.path(), file.value().duration);
+          sourcemeta::core::FileView file_view{entry.path()};
+          const auto file_info{sourcemeta::one::metapack_info(file_view)};
+          durations.emplace_back(entry.path(), file_info.duration);
         } catch (...) {
           std::cerr << "Could not profile file: " << entry.path() << "\n";
           throw;

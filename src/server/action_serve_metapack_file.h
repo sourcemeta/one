@@ -1,8 +1,10 @@
 #ifndef SOURCEMETA_ONE_SERVER_ACTION_SERVE_METAPACK_FILE_H
 #define SOURCEMETA_ONE_SERVER_ACTION_SERVE_METAPACK_FILE_H
 
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/time.h>
 
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include "helpers.h"
@@ -29,12 +31,21 @@ static auto action_serve_metapack_file(
     return;
   }
 
-  auto file{sourcemeta::one::read_stream_raw(absolute_path)};
-  if (!file.has_value()) {
+  if (!std::filesystem::exists(absolute_path)) {
     json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
                "not-found", "There is nothing at this URL");
     return;
   }
+
+  sourcemeta::core::FileView view{absolute_path};
+  if (view.size() <
+      sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
+    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
+               "not-found", "There is nothing at this URL");
+    return;
+  }
+
+  const auto info{sourcemeta::one::metapack_info(view)};
 
   // Note that `If-Modified-Since` can only be used with a `GET` or `HEAD`.
   // See
@@ -44,7 +55,7 @@ static auto action_serve_metapack_file(
   // to more consistent behavior.
   if (if_modified_since.has_value() &&
       (if_modified_since.value() + std::chrono::seconds(1)) >=
-          file.value().last_modified) {
+          info.last_modified) {
     response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
     if (enable_cors) {
       response.write_header("Access-Control-Allow-Origin", "*");
@@ -54,7 +65,7 @@ static auto action_serve_metapack_file(
     return;
   }
 
-  const auto &checksum{file.value().checksum};
+  const auto &checksum{info.checksum_hex};
   std::ostringstream etag_value_strong;
   std::ostringstream etag_value_weak;
   etag_value_strong << '"' << checksum << '"';
@@ -83,11 +94,11 @@ static auto action_serve_metapack_file(
   if (mime.has_value()) {
     response.write_header("Content-Type", mime.value());
   } else {
-    response.write_header("Content-Type", file.value().mime);
+    response.write_header("Content-Type", info.mime);
   }
 
   response.write_header("Last-Modified",
-                        sourcemeta::core::to_gmt(file.value().last_modified));
+                        sourcemeta::core::to_gmt(info.last_modified));
 
   std::ostringstream etag;
   etag << '"' << checksum << '"';
@@ -98,20 +109,25 @@ static auto action_serve_metapack_file(
   if (link.has_value()) {
     write_link_header(response, link.value());
   } else {
-    const auto &dialect{file.value().extension};
-    if (dialect.is_string()) {
-      write_link_header(response, dialect.to_string());
+    const auto dialect{sourcemeta::one::metapack_dialect_string(view)};
+    if (!dialect.empty()) {
+      write_link_header(response, std::string{dialect});
     }
   }
 
-  std::ostringstream contents;
-  contents << file.value().data.rdbuf();
+  // Read the raw payload data from the mmap'd view
+  const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
+  const auto payload_size{view.size() - payload_start};
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string contents{
+      reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_start)),
+      payload_size};
 
-  if (file.value().encoding == sourcemeta::one::Encoding::GZIP) {
-    send_response(code, request, response, contents.str(),
+  if (info.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
+    send_response(code, request, response, contents,
                   sourcemeta::one::Encoding::GZIP);
   } else {
-    send_response(code, request, response, contents.str(),
+    send_response(code, request, response, contents,
                   sourcemeta::one::Encoding::Identity);
   }
 }

@@ -1,12 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME shared
-  PRIVATE_HEADERS metapack.h encoding.h version.h
-  SOURCES metapack.cc version.cc configure.h.in)
-
-target_link_libraries(sourcemeta_one_shared PUBLIC sourcemeta::core::json)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::io)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::crypto)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::core::time)
-target_link_libraries(sourcemeta_one_shared PRIVATE sourcemeta::one::gzip)
+  PRIVATE_HEADERS encoding.h version.h
+  SOURCES version.cc configure.h.in)
 
 if(ONE_ENTERPRISE)
   target_compile_definitions(sourcemeta_one_shared

@@ -4,6 +4,7 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <chrono>     // std::chrono
@@ -19,7 +20,7 @@ auto GENERATE_WEB_DIRECTORY::handler(
     const sourcemeta::core::JSON &) -> bool {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory{read_json(action.dependencies.front())};
+  const auto directory{metapack_read_json(action.dependencies.front())};
   const auto &canonical{directory.at("url").to_string()};
   const auto &title{directory.defines("title")
                         ? directory.at("title").to_string()
@@ -37,11 +38,10 @@ auto GENERATE_WEB_DIRECTORY::handler(
                       html::make_file_manager(directory));
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
-  std::filesystem::create_directories(action.destination.parent_path());
-  write_text(action.destination, html_content.str(), "text/html",
-             Encoding::GZIP, sourcemeta::core::JSON{nullptr},
-             std::chrono::duration_cast<std::chrono::milliseconds>(
-                 timestamp_end - timestamp_start));
+  metapack_write_text(action.destination, html_content.str(), "text/html",
+                      MetapackEncoding::GZIP, {},
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                          timestamp_end - timestamp_start));
   return true;
 }
 
