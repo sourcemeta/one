@@ -373,10 +373,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             append_filename(schema_base, "dependents.metapack")}};
 
         BuildPlan::Action::Dependencies action_dependencies;
-        const auto reverse_it{reverse_dep_index.find(relative_string)};
-        if (reverse_it != reverse_dep_index.end()) {
-          action_dependencies.reserve(reverse_it->second.size());
-          for (const auto &dep_key : reverse_it->second) {
+        const auto reverse_iterator{reverse_dep_index.find(relative_string)};
+        if (reverse_iterator != reverse_dep_index.end()) {
+          action_dependencies.reserve(reverse_iterator->second.size());
+          for (const auto &dep_key : reverse_iterator->second) {
             action_dependencies.emplace_back(dep_key);
           }
         }
@@ -682,10 +682,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     // Phase 1: Single pass over all targets to find state-based dirtiness
     // and build a reverse adjacency from declared dependencies.
     std::unordered_map<std::string_view, std::vector<std::string_view>>
-        reverse_dag;
+        reverse_adjacency;
     for (const auto &[target_path, target] : targets) {
-      for (const auto &dep : target.dependencies) {
-        reverse_dag[dep].push_back(target_path);
+      for (const auto &dependency : target.dependencies) {
+        reverse_adjacency[dependency].push_back(target_path);
       }
 
       if (dirty_set.contains(target_path)) {
@@ -698,9 +698,9 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         continue;
       }
 
-      for (const auto &dep : state_entry->dependencies) {
-        if (dirty_set.contains(dep.native()) ||
-            removed_entries.contains(dep.native())) {
+      for (const auto &dependency : state_entry->dependencies) {
+        if (dirty_set.contains(dependency.native()) ||
+            removed_entries.contains(dependency.native())) {
           dirty_set.insert(target_path);
           break;
         }
@@ -714,13 +714,13 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       worklist.push_back(dirty_path);
     }
 
-    for (std::size_t i{0}; i < worklist.size(); i++) {
-      const auto reverse_it{reverse_dag.find(worklist[i])};
-      if (reverse_it == reverse_dag.end()) {
+    for (std::size_t index{0}; index < worklist.size(); index++) {
+      const auto match{reverse_adjacency.find(worklist[index])};
+      if (match == reverse_adjacency.end()) {
         continue;
       }
 
-      for (const auto &dependent : reverse_it->second) {
+      for (const auto &dependent : match->second) {
         if (dirty_set.insert(std::string{dependent}).second) {
           worklist.push_back(dependent);
         }
