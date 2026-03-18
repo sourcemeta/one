@@ -71,8 +71,8 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 ( 20%) Producing: explorer/%/directory.metapack
-( 40%) Producing: explorer/%/search.metapack
-( 60%) Producing: explorer/%/directory-html.metapack
+( 40%) Producing: explorer/%/directory-html.metapack
+( 60%) Producing: explorer/%/search.metapack
 ( 80%) Disposing: explorer/example/schemas/b
 (100%) Disposing: schemas/example/schemas/b
 (100%) Combining: schemas/example/schemas/a/%/dependents.metapack

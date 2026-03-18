@@ -35,8 +35,8 @@ Using configuration: $(realpath "$TMP")/one.json
 ( 37%) Producing: version.json
 ( 50%) Producing: explorer/%/404.metapack
 ( 62%) Producing: explorer/%/directory.metapack
-( 75%) Producing: explorer/%/search.metapack
-( 87%) Producing: explorer/%/directory-html.metapack
+( 75%) Producing: explorer/%/directory-html.metapack
+( 87%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
 EOF
 

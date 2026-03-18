@@ -984,6 +984,21 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
                 }
               }
               break;
+            case DirectoryDependencyKind::AllDirectoryListings:
+              for (const auto &any_directory : affected_dirs) {
+                rule_dependencies.push_back(
+                    (std::filesystem::relative(any_directory, schemas_path) ==
+                             "."
+                         ? explorer_path / SENTINEL /
+                               DIRECTORY_RULES[0].filename
+                         : explorer_path /
+                               std::filesystem::relative(any_directory,
+                                                         schemas_path) /
+                               SENTINEL / DIRECTORY_RULES[0].filename)
+                        .lexically_normal()
+                        .string());
+              }
+              break;
             case DirectoryDependencyKind::SameDirectoryTarget:
               rule_dependencies.push_back(
                   (explorer_path / relative / SENTINEL / dependency.filename)

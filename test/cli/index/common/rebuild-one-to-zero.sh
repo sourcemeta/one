@@ -60,12 +60,12 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 57%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
 ( 61%) Producing: schemas/schemas/test/%/blaze-fast.metapack
 ( 66%) Producing: schemas/schemas/test/%/editor.metapack
-( 71%) Producing: explorer/%/search.metapack
-( 76%) Producing: explorer/schemas/%/directory.metapack
-( 80%) Producing: explorer/schemas/test/%/schema-html.metapack
-( 85%) Producing: explorer/%/directory.metapack
-( 90%) Producing: explorer/schemas/%/directory-html.metapack
-( 95%) Producing: explorer/%/directory-html.metapack
+( 71%) Producing: explorer/schemas/%/directory.metapack
+( 76%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 80%) Producing: explorer/%/directory.metapack
+( 85%) Producing: explorer/schemas/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory-html.metapack
+( 95%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
 (100%) Combining: schemas/schemas/test/%/dependents.metapack
 EOF
@@ -122,8 +122,8 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 ( 20%) Producing: explorer/%/directory.metapack
-( 40%) Producing: explorer/%/search.metapack
-( 60%) Producing: explorer/%/directory-html.metapack
+( 40%) Producing: explorer/%/directory-html.metapack
+( 60%) Producing: explorer/%/search.metapack
 ( 80%) Disposing: explorer/schemas
 (100%) Disposing: schemas
 EOF

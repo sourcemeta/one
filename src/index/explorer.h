@@ -419,35 +419,32 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
-    result.reserve(action.dependencies.size());
 
     for (const auto &dependency : action.dependencies) {
-      sourcemeta::core::FileView dependency_view{dependency};
-      const auto extension_offset{
-          sourcemeta::one::metapack_extension_offset(dependency_view)};
-      if (extension_offset == 0) {
-        continue;
+      const auto directory_option{
+          sourcemeta::one::metapack_read_json(dependency)};
+      assert(directory_option.has_value());
+      const auto &directory{directory_option.value()};
+      assert(directory.is_object());
+      assert(directory.defines("entries"));
+
+      for (const auto &directory_entry : directory.at("entries").as_array()) {
+        if (!directory_entry.defines("type") ||
+            directory_entry.at("type").to_string() != "schema") {
+          continue;
+        }
+
+        auto entry{sourcemeta::core::JSON::make_array()};
+        entry.push_back(
+            sourcemeta::core::JSON{directory_entry.at("path").to_string()});
+        entry.push_back(directory_entry.defines("title")
+                            ? directory_entry.at("title")
+                            : sourcemeta::core::JSON{""});
+        entry.push_back(directory_entry.defines("description")
+                            ? directory_entry.at("description")
+                            : sourcemeta::core::JSON{""});
+        result.push_back(std::move(entry));
       }
-
-      const auto *extension{
-          sourcemeta::one::metapack_extension<MetapackExplorerSchemaExtension>(
-              dependency_view)};
-      if (extension == nullptr) {
-        continue;
-      }
-
-      const auto *extension_base{
-          dependency_view.as<std::uint8_t>(extension_offset)};
-      const auto path{explorer_extension_path(extension, extension_base)};
-      const auto title{explorer_extension_title(extension, extension_base)};
-      const auto description{
-          explorer_extension_description(extension, extension_base)};
-
-      auto entry{sourcemeta::core::JSON::make_array()};
-      entry.push_back(sourcemeta::core::JSON{std::string{path}});
-      entry.push_back(sourcemeta::core::JSON{std::string{title}});
-      entry.push_back(sourcemeta::core::JSON{std::string{description}});
-      result.push_back(std::move(entry));
     }
 
     std::sort(result.begin(), result.end(),

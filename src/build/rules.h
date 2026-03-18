@@ -200,19 +200,14 @@ struct AggregateRule {
   const char *collector_filename;
 };
 
-static constexpr std::array<AggregateRule, 1> AGGREGATE_RULES{{
-    {.action = BuildPlan::Action::Type::SearchIndex,
-     .output_filename = "search.metapack",
-     .output_base = AggregateOutputBase::Explorer,
-     .collector_base = TargetBase::Explorer,
-     .collector_filename = "schema.metapack"},
-}};
+static constexpr std::array<AggregateRule, 0> AGGREGATE_RULES{{}};
 
 enum class DirectoryScope : std::uint8_t { AllDirectories, NonRoot, RootOnly };
 
 enum class DirectoryDependencyKind : std::uint8_t {
   SchemaMetadata,
   ChildDirectories,
+  AllDirectoryListings,
   SameDirectoryTarget,
   ExternalConfig
 };
@@ -234,7 +229,7 @@ struct DirectoryRule {
   std::uint8_t dependency_count;
 };
 
-static constexpr std::array<DirectoryRule, 4> DIRECTORY_RULES{{
+static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
     {.action = BuildPlan::Action::Type::DirectoryList,
      .filename = "directory.metapack",
      .gate = TargetGate::Always,
@@ -245,6 +240,15 @@ static constexpr std::array<DirectoryRule, 4> DIRECTORY_RULES{{
                        {.kind = DirectoryDependencyKind::ChildDirectories,
                         .filename = nullptr}}},
      .dependency_count = 2},
+
+    {.action = BuildPlan::Action::Type::SearchIndex,
+     .filename = "search.metapack",
+     .gate = TargetGate::Always,
+     .scope = DirectoryScope::RootOnly,
+     .only_full_rebuild = false,
+     .dependencies = {{{.kind = DirectoryDependencyKind::AllDirectoryListings,
+                        .filename = nullptr}}},
+     .dependency_count = 1},
 
     {.action = BuildPlan::Action::Type::WebIndex,
      .filename = "directory-html.metapack",

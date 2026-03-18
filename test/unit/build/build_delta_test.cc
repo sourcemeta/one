@@ -27,16 +27,17 @@ TEST(Build_delta, full_empty_registry) {
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 2, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 2, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
@@ -125,20 +126,20 @@ TEST(Build_delta, full_single_schema) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -294,20 +295,20 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 "https://example.com/bar",
                 output / "schemas" / "bar" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "bar" / "%" / "schema-html.metapack",
                 "https://example.com/bar",
                 output / "explorer" / "bar" / "%" / "schema.metapack",
                 output / "schemas" / "bar" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -445,23 +446,22 @@ TEST(Build_delta, incremental_one_schema_added) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
-  EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
-      "", output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -517,13 +517,14 @@ TEST(Build_delta, incremental_removed_schema) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 6);
 
-  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 2, 0, 1, Routes, output / "routes.bin", "Full",
@@ -616,20 +617,20 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -733,20 +734,20 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -792,16 +793,17 @@ TEST(Build_delta, full_with_comment) {
                 "");
   EXPECT_ACTION(plan, 0, 2, 3, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 2, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 2, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
@@ -835,16 +837,17 @@ TEST(Build_delta, full_without_comment_removes_existing) {
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 2, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 2, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
@@ -934,20 +937,20 @@ TEST(Build_delta, incremental_with_comment) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1047,20 +1050,20 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1193,13 +1196,14 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
-  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
@@ -1241,13 +1245,14 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
-  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 0, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
@@ -1293,16 +1298,17 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
+  EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
                 output / "explorer" / "%" / "404.metapack", "",
                 output / "configuration.json");
-  EXPECT_ACTION(plan, 1, 1, 3, DirectoryList,
+  EXPECT_ACTION(plan, 1, 1, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 2, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 2, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 2, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 2, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1385,20 +1391,20 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1493,20 +1499,20 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1599,20 +1605,20 @@ TEST(Build_delta, incremental_evaluate_false) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -1670,19 +1676,19 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 3, BlazeExhaustive,
+  EXPECT_ACTION(plan, 0, 1, 2, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -1740,30 +1746,30 @@ TEST(Build_delta, incremental_missing_bundle) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 7);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 3, Bundle,
+  EXPECT_ACTION(plan, 0, 1, 2, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 1, 0, 4, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 5, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
-  EXPECT_ACTION(plan, 1, 1, 4, BlazeExhaustive,
+  EXPECT_ACTION(plan, 1, 1, 5, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 2, 5, BlazeExhaustive,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 1, 2, 4, BlazeFast,
+  EXPECT_ACTION(plan, 1, 3, 5, BlazeFast,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 1, 3, 4, Editor,
+  EXPECT_ACTION(plan, 1, 4, 5, Editor,
                 output / "schemas" / "foo" / "%" / "editor.metapack",
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
@@ -1823,20 +1829,20 @@ TEST(Build_delta, incremental_missing_web_schema) {
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
-  EXPECT_ACTION(plan, 0, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 0, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 0, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 1, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -2044,23 +2050,22 @@ TEST(Build_delta, mtime_source_newer) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
-  EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
-      "", output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -2181,23 +2186,22 @@ TEST(Build_delta, mtime_no_entry) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
-  EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
-      "", output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -2319,20 +2323,20 @@ TEST(Build_delta, mtime_no_file_mark) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -2486,27 +2490,26 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                 "https://example.com/b",
                 output / "schemas" / "b" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 4, SearchIndex,
-                          output / "explorer" / "%" / "search.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 3, WebSchema,
                 output / "explorer" / "a" / "%" / "schema-html.metapack",
                 "https://example.com/a",
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack");
-  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -2730,34 +2733,32 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 5, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 4, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 5, SearchIndex,
-                          output / "explorer" / "%" / "search.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack",
-                          output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 5, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 4, WebSchema,
                 output / "explorer" / "a" / "%" / "schema-html.metapack",
                 "https://example.com/a",
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack");
-  EXPECT_ACTION(plan, 4, 3, 5, WebSchema,
+  EXPECT_ACTION(plan, 4, 2, 4, WebSchema,
                 output / "explorer" / "b" / "%" / "schema-html.metapack",
                 "https://example.com/b",
                 output / "explorer" / "b" / "%" / "schema.metapack",
                 output / "schemas" / "b" / "%" / "health.metapack");
-  EXPECT_ACTION(plan, 4, 4, 5, WebSchema,
+  EXPECT_ACTION(plan, 4, 3, 4, WebSchema,
                 output / "explorer" / "c" / "%" / "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -2941,22 +2942,21 @@ TEST(Build_delta, mtime_reverse_dep) {
                 "https://example.com/a",
                 output / "schemas" / "a" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
-                          output / "explorer" / "%" / "search.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "a" / "%" / "schema-html.metapack",
                 "https://example.com/a",
                 output / "explorer" / "a" / "%" / "schema.metapack",
                 output / "schemas" / "a" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -3062,20 +3062,20 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -3116,18 +3116,20 @@ TEST(Build_delta, headless_full_empty_registry) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 3, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 4, 5);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
   EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
 
-  EXPECT_ACTION(plan, 1, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 1, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
-  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "");
 
-  EXPECT_ACTION(plan, 2, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 2, 0, 1, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3148,7 +3150,7 @@ TEST(Build_delta, headless_full_single_schema) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 16);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -3207,14 +3209,15 @@ TEST(Build_delta, headless_full_single_schema) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 6, 0, 1, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3250,7 +3253,7 @@ TEST(Build_delta, headless_incremental) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 13);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 6, 13);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3305,12 +3308,13 @@ TEST(Build_delta, headless_incremental) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 2, SearchIndex,
+
+  EXPECT_ACTION(plan, 5, 0, 1, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
+                output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -3357,7 +3361,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", true, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3412,24 +3416,25 @@ TEST(Build_delta, full_to_headless_removes_web) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 5, 0, 1, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 6, 0, 4, Remove,
+  EXPECT_ACTION(plan, 7, 0, 4, Remove,
                 output / "explorer" / "%" / "404.metapack", "");
-  EXPECT_ACTION(plan, 6, 1, 4, Remove,
+  EXPECT_ACTION(plan, 7, 1, 4, Remove,
                 output / "explorer" / "%" / "directory-html.metapack", "");
-  EXPECT_ACTION(plan, 6, 2, 4, Remove,
+  EXPECT_ACTION(plan, 7, 2, 4, Remove,
                 output / "explorer" / "foo" / "%" / "directory-html.metapack",
                 "");
-  EXPECT_ACTION(plan, 6, 3, 4, Remove,
+  EXPECT_ACTION(plan, 7, 3, 4, Remove,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack", "");
 
   EXPECT_TOTAL_FILES(
@@ -3582,20 +3587,20 @@ TEST(Build_delta, headless_to_full_incremental) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -3723,20 +3728,20 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION(plan, 4, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 1, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
@@ -3785,7 +3790,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "2.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 19);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -3844,21 +3849,22 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                 "https://example.com/foo",
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
+  EXPECT_ACTION(plan, 5, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "foo" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "foo" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 6, 0, 1, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 7, 0, 3, Remove,
+  EXPECT_ACTION(plan, 8, 0, 3, Remove,
                 output / "explorer" / "%" / "404.metapack", "");
-  EXPECT_ACTION(plan, 7, 1, 3, Remove,
+  EXPECT_ACTION(plan, 8, 1, 3, Remove,
                 output / "explorer" / "%" / "directory-html.metapack", "");
-  EXPECT_ACTION(plan, 7, 2, 3, Remove,
+  EXPECT_ACTION(plan, 8, 2, 3, Remove,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack", "");
 
   EXPECT_TOTAL_FILES(
@@ -3891,7 +3897,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
       "1.0.0", false, "", changed, removed)};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 17);
 
   EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
                 "");
@@ -3963,10 +3969,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack");
 
   EXPECT_ACTION(
-      plan, 5, 0, 2, SearchIndex, output / "explorer" / "%" / "search.metapack",
-      "", output / "explorer" / "example" / "test" / "%" / "schema.metapack");
-  EXPECT_ACTION(
-      plan, 5, 1, 2, DirectoryList,
+      plan, 5, 0, 1, DirectoryList,
       output / "explorer" / "example" / "%" / "directory.metapack", "",
       output / "explorer" / "example" / "test" / "%" / "schema.metapack");
 
@@ -3974,7 +3977,12 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "example" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 7, 0, 1, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "example" / "%" / "directory.metapack",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -4126,15 +4134,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
                     "bundle.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 3, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "example" / "schemas" / "c" / "%" /
-                    "schema.metapack",
-                output / "explorer" / "example" / "schemas" / "b" / "%" /
-                    "schema.metapack",
-                output / "explorer" / "example" / "schemas" / "a" / "%" /
-                    "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "example" / "schemas" / "%" /
                               "directory.metapack",
                           "",
@@ -4144,7 +4144,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                               "%" / "schema.metapack",
                           output / "explorer" / "example" / "schemas" / "c" /
                               "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "example" / "schemas" / "c" / "%" /
                     "schema-html.metapack",
                 "https://example.com/c",
@@ -4172,8 +4172,14 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
       output / "explorer" / "example" / "%" / "directory-html.metapack", "",
       output / "explorer" / "example" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 7, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "example" / "schemas" / "%" /
+                    "directory.metapack",
+                output / "explorer" / "example" / "%" / "directory.metapack",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -4349,23 +4355,22 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 output / "schemas" / "foo" / "%" / "bundle.metapack");
 
   // The directory list must depend on BOTH foo AND bar
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "foo" / "%" / "schema.metapack",
                           output / "explorer" / "bar" / "%" /
                               "schema.metapack");
-  EXPECT_ACTION_UNORDERED(
-      plan, 4, 1, 3, SearchIndex, output / "explorer" / "%" / "search.metapack",
-      "", output / "explorer" / "foo" / "%" / "schema.metapack",
-      output / "explorer" / "bar" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack",
                 "https://example.com/foo",
                 output / "explorer" / "foo" / "%" / "schema.metapack",
                 output / "schemas" / "foo" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(
@@ -4490,24 +4495,22 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 "https://example.com/c",
                 output / "schemas" / "c" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION_UNORDERED(plan, 4, 0, 3, DirectoryList,
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, DirectoryList,
                           output / "explorer" / "%" / "directory.metapack", "",
                           output / "explorer" / "a" / "%" / "schema.metapack",
                           output / "explorer" / "b" / "%" / "schema.metapack",
                           output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION_UNORDERED(plan, 4, 1, 3, SearchIndex,
-                          output / "explorer" / "%" / "search.metapack", "",
-                          output / "explorer" / "a" / "%" / "schema.metapack",
-                          output / "explorer" / "b" / "%" / "schema.metapack",
-                          output / "explorer" / "c" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 4, 2, 3, WebSchema,
+  EXPECT_ACTION(plan, 4, 1, 2, WebSchema,
                 output / "explorer" / "c" / "%" / "schema-html.metapack",
                 "https://example.com/c",
                 output / "explorer" / "c" / "%" / "schema.metapack",
                 output / "schemas" / "c" / "%" / "health.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 1, WebIndex,
+  EXPECT_ACTION(plan, 5, 0, 2, WebIndex,
                 output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
   EXPECT_TOTAL_FILES(

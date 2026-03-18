@@ -69,14 +69,14 @@ Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 ( 52%) Producing: schemas/example/schemas/a/%/blaze-exhaustive.metapack
 ( 56%) Producing: schemas/example/schemas/a/%/blaze-fast.metapack
 ( 60%) Producing: schemas/example/schemas/a/%/editor.metapack
-( 65%) Producing: explorer/%/search.metapack
-( 69%) Producing: explorer/example/schemas/%/directory.metapack
-( 73%) Producing: explorer/example/schemas/a/%/schema-html.metapack
-( 78%) Producing: explorer/example/%/directory.metapack
-( 82%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 86%) Producing: explorer/%/directory.metapack
-( 91%) Producing: explorer/example/%/directory-html.metapack
-( 95%) Producing: explorer/%/directory-html.metapack
+( 65%) Producing: explorer/example/schemas/%/directory.metapack
+( 69%) Producing: explorer/example/schemas/a/%/schema-html.metapack
+( 73%) Producing: explorer/example/%/directory.metapack
+( 78%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 82%) Producing: explorer/%/directory.metapack
+( 86%) Producing: explorer/example/%/directory-html.metapack
+( 91%) Producing: explorer/%/directory-html.metapack
+( 95%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
 (100%) Combining: schemas/example/schemas/a/%/dependents.metapack
 EOF
