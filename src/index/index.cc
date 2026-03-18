@@ -428,7 +428,8 @@ static auto index_main(const std::string_view &program,
       if (entry.is_regular_file() && entry.path().extension() == ".metapack") {
         try {
           sourcemeta::core::FileView file_view{entry.path()};
-          const auto file_info{sourcemeta::one::metapack_info(file_view)};
+          const auto file_info{
+              sourcemeta::one::metapack_info(file_view).value()};
           durations.emplace_back(entry.path(), file_info.duration);
         } catch (...) {
           std::cerr << "Could not profile file: " << entry.path() << "\n";

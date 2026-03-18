@@ -30,7 +30,7 @@ static auto search(const std::filesystem::path &search_index,
   assert(search_index.is_absolute());
 
   sourcemeta::core::FileView view{search_index};
-  const auto payload_start{metapack_payload_offset(view)};
+  const auto payload_start{metapack_payload_offset(view).value()};
   const auto payload_size{view.size() - payload_start};
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view payload{

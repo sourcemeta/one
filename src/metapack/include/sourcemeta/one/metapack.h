@@ -12,6 +12,7 @@
 #include <chrono>      // std::chrono
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t, etc.
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
@@ -88,14 +89,15 @@ auto metapack_write_file(const std::filesystem::path &destination,
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_read_json(const std::filesystem::path &path)
-    -> sourcemeta::core::JSON;
+    -> std::optional<sourcemeta::core::JSON>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_info(const sourcemeta::core::FileView &view) -> MetapackInfo;
+auto metapack_info(const sourcemeta::core::FileView &view)
+    -> std::optional<MetapackInfo>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_payload_offset(const sourcemeta::core::FileView &view)
-    -> std::size_t;
+    -> std::optional<std::size_t>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_extension_offset(const sourcemeta::core::FileView &view)

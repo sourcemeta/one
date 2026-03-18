@@ -122,7 +122,8 @@ auto Resolver::operator()(
     // We can guarantee the cached outcome is JSON, so we don't need to try
     // reading as YAML
     auto schema{
-        sourcemeta::one::metapack_read_json(result->second.cache_path.value())};
+        sourcemeta::one::metapack_read_json(result->second.cache_path.value())
+            .value()};
     assert(sourcemeta::core::is_schema(schema));
     if (callback) {
       callback(result->second.cache_path.value());

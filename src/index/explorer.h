@@ -17,6 +17,7 @@
 #include <cmath>       // std::lround
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
+#include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
 #include <regex>       // std::regex, std::regex_search, std::smatch
@@ -222,6 +223,16 @@ static auto make_explorer_schema_extension(
     const std::string_view dialect, const std::string_view title,
     const std::string_view description, const std::string_view alert,
     const std::string_view provenance) -> std::vector<std::uint8_t> {
+  constexpr auto max_length{std::numeric_limits<std::uint16_t>::max()};
+  assert(path.size() <= max_length);
+  assert(identifier.size() <= max_length);
+  assert(base_dialect.size() <= max_length);
+  assert(dialect.size() <= max_length);
+  assert(title.size() <= max_length);
+  assert(description.size() <= max_length);
+  assert(alert.size() <= max_length);
+  assert(provenance.size() <= max_length);
+
   const auto strings_size{
       path.size() + identifier.size() + base_dialect.size() + dialect.size() +
       title.size() + description.size() + alert.size() + provenance.size()};
@@ -273,9 +284,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto &resolver_entry{resolver.entry(action.data)};
     // Read the schema to get data and bytes
     sourcemeta::core::FileView schema_view{action.dependencies.front()};
-    const auto schema_info{sourcemeta::one::metapack_info(schema_view)};
+    const auto schema_info{sourcemeta::one::metapack_info(schema_view).value()};
     const auto schema_data{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::one::metapack_read_json(action.dependencies.front())
+            .value()};
     const auto id{sourcemeta::core::identify(
         schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
@@ -338,11 +350,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     }
 
     const auto health{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(1))};
+        sourcemeta::one::metapack_read_json(action.dependencies.at(1)).value()};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(2))};
+        sourcemeta::one::metapack_read_json(action.dependencies.at(2)).value()};
     result.assign("dependencies",
                   sourcemeta::core::to_json(schema_dependencies.size()));
 
@@ -499,7 +511,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        auto directory_json{sourcemeta::one::metapack_read_json(dependency)};
+        auto directory_json{
+            sourcemeta::one::metapack_read_json(dependency).value()};
         assert(directory_json.is_object());
         assert(directory_json.defines("health"));
         assert(directory_json.at("health").is_integer());

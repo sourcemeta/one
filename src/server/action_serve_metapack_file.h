@@ -52,6 +52,11 @@ static auto action_serve_metapack_file(
   }
 
   const auto info{sourcemeta::one::metapack_info(view)};
+  if (!info.has_value()) {
+    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
+               "not-found", "There is nothing at this URL");
+    return;
+  }
 
   // Note that `If-Modified-Since` can only be used with a `GET` or `HEAD`.
   // See
@@ -61,7 +66,7 @@ static auto action_serve_metapack_file(
   // to more consistent behavior.
   if (if_modified_since.has_value() &&
       (if_modified_since.value() + std::chrono::seconds(1)) >=
-          info.last_modified) {
+          info->last_modified) {
     response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
     if (enable_cors) {
       response.write_header("Access-Control-Allow-Origin", "*");
@@ -71,7 +76,7 @@ static auto action_serve_metapack_file(
     return;
   }
 
-  const auto &checksum{info.checksum_hex};
+  const auto &checksum{info->checksum_hex};
   std::ostringstream etag_value_strong;
   std::ostringstream etag_value_weak;
   etag_value_strong << '"' << checksum << '"';
@@ -100,11 +105,11 @@ static auto action_serve_metapack_file(
   if (mime.has_value()) {
     response.write_header("Content-Type", mime.value());
   } else {
-    response.write_header("Content-Type", info.mime);
+    response.write_header("Content-Type", info->mime);
   }
 
   response.write_header("Last-Modified",
-                        sourcemeta::core::to_gmt(info.last_modified));
+                        sourcemeta::core::to_gmt(info->last_modified));
 
   std::ostringstream etag;
   etag << '"' << checksum << '"';
@@ -117,8 +122,11 @@ static auto action_serve_metapack_file(
   } else {
     const auto *dialect_ext{
         sourcemeta::one::metapack_extension<MetapackDialectExtension>(view)};
+    const auto extension_total{sourcemeta::one::metapack_extension_size(view)};
     const std::string_view dialect =
-        (dialect_ext != nullptr && dialect_ext->dialect_length > 0)
+        (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
+         sizeof(MetapackDialectExtension) + dialect_ext->dialect_length <=
+             extension_total)
             ? std::string_view{reinterpret_cast<
                                    const char *>(view.as<std::uint8_t>(
                                    sourcemeta::one::metapack_extension_offset(
@@ -132,13 +140,19 @@ static auto action_serve_metapack_file(
   }
 
   const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
-  const auto payload_size{view.size() - payload_start};
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const std::string contents{
-      reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_start)),
-      payload_size};
+  if (!payload_start.has_value()) {
+    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
+               "not-found", "There is nothing at this URL");
+    return;
+  }
 
-  if (info.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
+  const auto payload_size{view.size() - payload_start.value()};
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string contents{reinterpret_cast<const char *>(
+                                 view.as<std::uint8_t>(payload_start.value())),
+                             payload_size};
+
+  if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
     send_response(code, request, response, contents,
                   sourcemeta::one::Encoding::GZIP);
   } else {

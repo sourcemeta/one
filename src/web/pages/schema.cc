@@ -23,7 +23,7 @@ auto GENERATE_WEB_SCHEMA::handler(
     const sourcemeta::core::JSON &) -> bool {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto meta{metapack_read_json(action.dependencies.front())};
+  const auto meta{metapack_read_json(action.dependencies.front()).value()};
   const auto &canonical{meta.at("identifier").to_string()};
   const auto &title{meta.defines("title") ? meta.at("title").to_string()
                                           : meta.at("path").to_string()};
@@ -196,7 +196,7 @@ auto GENERATE_WEB_SCHEMA::handler(
            {"data-sourcemeta-ui-editor-language", "json"}},
           "Loading schema..."));
 
-  const auto health{metapack_read_json(action.dependencies.at(1))};
+  const auto health{metapack_read_json(action.dependencies.at(1)).value()};
   assert(health.is_object());
   assert(health.defines("errors"));
 
