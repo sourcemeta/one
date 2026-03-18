@@ -67,6 +67,8 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index dependents-modify-transitive)
   sourcemeta_one_test_cli(common index dependents-add-schema)
   sourcemeta_one_test_cli(common index dependents-modify-add-ref)
+  sourcemeta_one_test_cli(common index dependents-remove-referenced-schema)
+  sourcemeta_one_test_cli(common index dependents-remove-referencing-schema)
 
   if(ONE_ENTERPRISE)
     sourcemeta_one_test_cli(enterprise index no-options)

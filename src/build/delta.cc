@@ -212,6 +212,39 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     const auto &output_string{output.native()};
     const auto schemas_prefix{output_string + "/" + SCHEMAS_DIRECTORY + "/"};
 
+    auto extract_cross_schema_refs{
+        [&schemas_prefix](
+            const BuildState::Entry *state_entry,
+            std::string_view owner_base) -> std::unordered_set<std::string> {
+          std::unordered_set<std::string> result;
+          if (state_entry == nullptr) {
+            return result;
+          }
+
+          for (const auto &dependency : state_entry->dependencies) {
+            const auto &dependency_path{dependency.native()};
+            if (!dependency_path.starts_with(schemas_prefix)) {
+              continue;
+            }
+
+            const auto sentinel_position{dependency_path.find("/%/")};
+            if (sentinel_position == std::string::npos) {
+              continue;
+            }
+
+            const auto relative{dependency_path.substr(
+                schemas_prefix.size(),
+                sentinel_position - schemas_prefix.size())};
+            if (relative != owner_base) {
+              result.insert(std::string{relative});
+            }
+          }
+
+          return result;
+        }};
+
+    const auto owner_start{schemas_prefix.size()};
+
     std::unordered_set<std::string> affected_schemas;
     for (const auto key : entries.keys()) {
       if (!key.ends_with("/%/dependencies.metapack")) {
@@ -225,38 +258,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       const auto *new_entry{entries.entry(std::string{key})};
       const auto *old_entry{entries.disk_entry(std::string{key})};
 
-      auto extract_cross_schema_refs{
-          [&schemas_prefix](
-              const BuildState::Entry *state_entry,
-              std::string_view owner_base) -> std::unordered_set<std::string> {
-            std::unordered_set<std::string> result;
-            if (state_entry == nullptr) {
-              return result;
-            }
-
-            for (const auto &dependency : state_entry->dependencies) {
-              const auto &dependency_path{dependency.native()};
-              if (!dependency_path.starts_with(schemas_prefix)) {
-                continue;
-              }
-
-              const auto sentinel_position{dependency_path.find("/%/")};
-              if (sentinel_position == std::string::npos) {
-                continue;
-              }
-
-              const auto relative{dependency_path.substr(
-                  schemas_prefix.size(),
-                  sentinel_position - schemas_prefix.size())};
-              if (relative != owner_base) {
-                result.insert(std::string{relative});
-              }
-            }
-
-            return result;
-          }};
-
-      const auto owner_start{schemas_prefix.size()};
       const auto owner_sentinel{key.find("/%/", owner_start)};
       if (owner_sentinel == std::string_view::npos) {
         continue;
@@ -281,6 +282,33 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
       if (old_entry == nullptr) {
         affected_schemas.insert(std::string{owner_base});
+      }
+    }
+
+    for (const auto &deleted_key : entries.deleted_keys()) {
+      if (!deleted_key.ends_with("/%/dependencies.metapack")) {
+        continue;
+      }
+
+      if (!deleted_key.starts_with(schemas_prefix)) {
+        continue;
+      }
+
+      const auto *old_entry{entries.raw_disk_entry(deleted_key)};
+      if (old_entry == nullptr) {
+        continue;
+      }
+
+      const auto owner_sentinel{deleted_key.find("/%/", owner_start)};
+      if (owner_sentinel == std::string::npos) {
+        continue;
+      }
+
+      const auto owner_base{
+          deleted_key.substr(owner_start, owner_sentinel - owner_start)};
+      for (const auto &reference :
+           extract_cross_schema_refs(old_entry, owner_base)) {
+        affected_schemas.insert(reference);
       }
     }
 
@@ -568,6 +596,32 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     }
   }
 
+  std::unordered_set<std::string_view> current_schema_bases;
+  current_schema_bases.reserve(active_schemas.size());
+  for (const auto &schema : active_schemas) {
+    current_schema_bases.insert(schema.schema_base);
+  }
+
+  std::unordered_set<std::string> removed_entries;
+  {
+    const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
+    for (const auto entry_path : entries.keys()) {
+      if (!entry_path.starts_with(schemas_prefix)) {
+        continue;
+      }
+
+      const auto sentinel_pos{entry_path.find("/%/")};
+      if (sentinel_pos == std::string_view::npos) {
+        continue;
+      }
+
+      if (!current_schema_bases.contains(
+              entry_path.substr(0, sentinel_pos + 2))) {
+        removed_entries.emplace(entry_path);
+      }
+    }
+  }
+
   std::unordered_set<std::string> dirty_set;
   {
     for (const auto &schema : active_schemas) {
@@ -618,7 +672,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
           }
 
           for (const auto &dep : state_entry->dependencies) {
-            if (dirty_set.contains(dep.native())) {
+            if (dirty_set.contains(dep.native()) ||
+                removed_entries.contains(dep.native())) {
               dirty_set.insert(target_path);
               propagation_changed = true;
               break;
@@ -692,32 +747,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     }
   }
 
-  bool has_potential_stale{false};
-  {
-    std::unordered_set<std::string_view> current_schema_bases;
-    current_schema_bases.reserve(schemas.size());
-    for (const auto &schema : active_schemas) {
-      current_schema_bases.insert(schema.schema_base);
-    }
-
-    const auto schemas_prefix{output_string + '/' + SCHEMAS_DIRECTORY + '/'};
-    for (const auto entry_path : entries.keys()) {
-      if (!entry_path.starts_with(schemas_prefix)) {
-        continue;
-      }
-
-      const auto sentinel_pos{entry_path.find("/%/")};
-      if (sentinel_pos == std::string_view::npos) {
-        continue;
-      }
-
-      if (!current_schema_bases.contains(
-              entry_path.substr(0, sentinel_pos + 2))) {
-        has_potential_stale = true;
-        break;
-      }
-    }
-  }
+  const auto has_potential_stale{!removed_entries.empty()};
 
   if (!is_full && dirty_set.empty() && removed_uris.empty() &&
       !has_missing_web && !has_stale_web && !has_potential_stale) {

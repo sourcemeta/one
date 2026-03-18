@@ -454,6 +454,20 @@ auto BuildState::disk_entry(const std::string &key) const -> const Entry * {
   return &this->parse_slot_entry(slot);
 }
 
+auto BuildState::raw_disk_entry(const std::string &key) const -> const Entry * {
+  const auto *slot{this->probe_slot(key, KIND_OUTPUT)};
+  if (slot == nullptr) {
+    return nullptr;
+  }
+
+  return &this->parse_slot_entry(slot);
+}
+
+auto BuildState::deleted_keys() const -> const
+    std::unordered_set<std::string, TransparentHash, TransparentEqual> & {
+  return this->deleted;
+}
+
 auto BuildState::save(const std::filesystem::path &path) const -> void {
   if (!this->dirty && this->view && path == this->loaded_path) {
     return;
