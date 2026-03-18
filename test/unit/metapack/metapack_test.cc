@@ -26,7 +26,7 @@ TEST(Metapack, write_and_read_json_identity) {
       sourcemeta::one::MetapackEncoding::Identity, {},
       std::chrono::milliseconds{5});
 
-  const auto result{sourcemeta::one::metapack_read_json(path)};
+  const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_TRUE(result.is_object());
   EXPECT_EQ(result.at("hello").to_string(), "world");
 }
@@ -40,7 +40,7 @@ TEST(Metapack, write_and_read_json_gzip) {
                                        sourcemeta::one::MetapackEncoding::GZIP,
                                        {}, std::chrono::milliseconds{10});
 
-  const auto result{sourcemeta::one::metapack_read_json(path)};
+  const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_TRUE(result.is_object());
   EXPECT_TRUE(result.at("foo").is_integer());
   EXPECT_EQ(result.at("foo").to_integer(), 42);
@@ -56,7 +56,7 @@ TEST(Metapack, write_and_read_pretty_json) {
       sourcemeta::one::MetapackEncoding::GZIP, {},
       std::chrono::milliseconds{3});
 
-  const auto result{sourcemeta::one::metapack_read_json(path)};
+  const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_EQ(result.at("key").to_string(), "value");
 }
 
@@ -137,7 +137,7 @@ TEST(Metapack, write_and_read_extension) {
       view.as<std::uint8_t>(extension_start + sizeof(TestExtension)))};
   EXPECT_EQ(std::string_view(name_data, read_extension->name_length), "hello");
 
-  const auto result{sourcemeta::one::metapack_read_json(path)};
+  const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_TRUE(result.is_object());
 }
 

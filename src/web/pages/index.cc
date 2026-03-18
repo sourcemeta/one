@@ -7,6 +7,7 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
+#include <cassert>    // assert
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
 #include <sstream>    // std::ostringstream
@@ -37,7 +38,9 @@ auto GENERATE_WEB_INDEX::handler(
     const sourcemeta::core::JSON &) -> bool {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory{metapack_read_json(action.dependencies.front())};
+  const auto directory_option{metapack_read_json(action.dependencies.front())};
+  assert(directory_option.has_value());
+  const auto &directory{directory_option.value()};
   const auto &canonical{directory.at("url").to_string()};
   const auto title{configuration.html->name + " Schemas"};
   const auto &description{configuration.html->description};

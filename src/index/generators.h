@@ -28,6 +28,7 @@
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
 #include <fstream>       // std::ofstream
+#include <limits>        // std::numeric_limits
 #include <memory>        // std::unique_ptr
 #include <mutex>         // std::mutex, std::lock_guard
 #include <queue>         // std::queue
@@ -47,6 +48,7 @@ struct MetapackDialectExtension {
 
 static auto make_dialect_extension(const std::string_view dialect)
     -> std::vector<std::uint8_t> {
+  assert(dialect.size() <= std::numeric_limits<std::uint16_t>::max());
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackDialectExtension) + dialect.size());
   MetapackDialectExtension header{};
@@ -179,8 +181,10 @@ struct GENERATE_POINTER_POSITIONS {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto schema{
+    const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_option.has_value());
+    const auto &schema{schema_option.value()};
     std::ostringstream schema_stream;
     sourcemeta::core::prettify(schema, schema_stream);
     sourcemeta::core::PointerPositionTracker tracker;
@@ -204,8 +208,10 @@ struct GENERATE_FRAME_LOCATIONS {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{
+    const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(contents_option.has_value());
+    const auto &contents{contents_option.value()};
     std::ostringstream contents_stream;
     sourcemeta::core::prettify(contents, contents_stream);
     sourcemeta::core::PointerPositionTracker tracker;
@@ -235,8 +241,10 @@ struct GENERATE_DEPENDENCIES {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{
+    const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(contents_option.has_value());
+    const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
     sourcemeta::core::dependencies(
         contents, sourcemeta::core::schema_walker,
@@ -290,7 +298,10 @@ struct GENERATE_DEPENDENTS {
                            std::unordered_set<sourcemeta::core::JSON::String>>;
     DirectMap direct;
     for (const auto &dependency : action.dependencies) {
-      const auto contents{sourcemeta::one::metapack_read_json(dependency)};
+      const auto contents_option{
+          sourcemeta::one::metapack_read_json(dependency)};
+      assert(contents_option.has_value());
+      const auto &contents{contents_option.value()};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
         direct[entry.at("to").to_string()].emplace(
@@ -356,8 +367,10 @@ struct GENERATE_HEALTH {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto contents{
+    const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(contents_option.has_value());
+    const auto &contents{contents_option.value()};
     const auto &collection{*resolver.entry(action.data).collection};
     auto &cache_entry{bundle_for(collection, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
@@ -454,8 +467,10 @@ struct GENERATE_BUNDLE {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{
+    auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_option.has_value());
+    auto schema{std::move(schema_option.value())};
     sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
                              [&callback, &resolver](const auto identifier) {
                                return resolver(identifier, callback);
@@ -489,8 +504,10 @@ struct GENERATE_EDITOR {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    auto schema{
+    auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_option.has_value());
+    auto schema{std::move(schema_option.value())};
     sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
                                  [&callback, &resolver](const auto identifier) {
                                    return resolver(identifier, callback);
@@ -521,8 +538,10 @@ static auto generate_blaze_template(
     const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
     const sourcemeta::blaze::Mode mode) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
-  const auto contents{
+  const auto contents_option{
       sourcemeta::one::metapack_read_json(dependencies.front())};
+  assert(contents_option.has_value());
+  const auto &contents{contents_option.value()};
   sourcemeta::core::SchemaFrame frame{
       sourcemeta::core::SchemaFrame::Mode::References};
   frame.analyse(contents, sourcemeta::core::schema_walker,
@@ -574,8 +593,10 @@ struct GENERATE_STATS {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    const auto schema{
+    const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_option.has_value());
+    const auto &schema{schema_option.value()};
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;

@@ -33,7 +33,10 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
 
   auto locations_path{template_path.parent_path() / "locations.metapack"};
   // TODO: Cache this across runs?
-  const auto locations{sourcemeta::one::metapack_read_json(locations_path)};
+  const auto locations_option{
+      sourcemeta::one::metapack_read_json(locations_path)};
+  assert(locations_option.has_value());
+  const auto &locations{locations_option.value()};
   if (!locations.is_object() || !locations.defines("static")) {
     throw std::runtime_error("Failed to read schema locations metadata");
   }
@@ -144,7 +147,9 @@ auto evaluate(const std::filesystem::path &template_path,
   // TODO: Cache this conversion across runs, potentially using the schema file
   // "checksum" as the cache key. This is important as the template might be
   // compressed
-  const auto template_json{metapack_read_json(template_path)};
+  const auto template_json_option{metapack_read_json(template_path)};
+  assert(template_json_option.has_value());
+  const auto &template_json{template_json_option.value()};
   const auto schema_template{sourcemeta::blaze::from_json(template_json)};
   if (!schema_template.has_value()) {
     throw std::runtime_error("Failed to parse schema template");
