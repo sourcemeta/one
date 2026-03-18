@@ -194,7 +194,8 @@ auto metapack_extension_size(const sourcemeta::core::FileView &view)
   }
 
   const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC) {
+  if (header->magic != METAPACK_MAGIC ||
+      header->format_version != METAPACK_VERSION) {
     return 0;
   }
 
@@ -295,7 +296,8 @@ auto metapack_payload_offset(const sourcemeta::core::FileView &view)
   }
 
   const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC) {
+  if (header->magic != METAPACK_MAGIC ||
+      header->format_version != METAPACK_VERSION) {
     return std::nullopt;
   }
 
