@@ -124,7 +124,8 @@ struct GENERATE_MATERIALISED_SCHEMA {
         sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     resolver.cache_path(action.data, action.destination);
     return true;
   }
@@ -169,7 +170,8 @@ struct GENERATE_POINTER_POSITIONS {
         action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -198,7 +200,8 @@ struct GENERATE_FRAME_LOCATIONS {
         action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -236,7 +239,8 @@ struct GENERATE_DEPENDENCIES {
         action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 
@@ -321,7 +325,8 @@ struct GENERATE_DEPENDENTS {
         action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -379,7 +384,8 @@ struct GENERATE_HEALTH {
         action.destination, report, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 
@@ -454,7 +460,8 @@ struct GENERATE_BUNDLE {
         sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -488,7 +495,8 @@ struct GENERATE_EDITOR {
         sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{std::string{dialect_identifier}},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -496,7 +504,8 @@ struct GENERATE_EDITOR {
 static auto generate_blaze_template(
     const std::filesystem::path &destination,
     const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
-    const sourcemeta::blaze::Mode mode) -> void {
+    const sourcemeta::blaze::Mode mode, const bool enable_debug_checks)
+    -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   const auto contents{sourcemeta::one::read_json(dependencies.front())};
   sourcemeta::core::SchemaFrame frame{
@@ -514,7 +523,8 @@ static auto generate_blaze_template(
       destination, result, "application/json", sourcemeta::one::Encoding::GZIP,
       sourcemeta::core::JSON{nullptr},
       std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                            timestamp_start));
+                                                            timestamp_start),
+      enable_debug_checks);
 }
 
 struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
@@ -525,7 +535,8 @@ struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     generate_blaze_template(action.destination, action.dependencies,
-                            sourcemeta::blaze::Mode::Exhaustive);
+                            sourcemeta::blaze::Mode::Exhaustive,
+                            action.incremental);
     return true;
   }
 };
@@ -538,7 +549,8 @@ struct GENERATE_BLAZE_TEMPLATE_FAST {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> bool {
     generate_blaze_template(action.destination, action.dependencies,
-                            sourcemeta::blaze::Mode::FastValidation);
+                            sourcemeta::blaze::Mode::FastValidation,
+                            action.incremental);
     return true;
   }
 };
@@ -583,7 +595,8 @@ struct GENERATE_STATS {
         "application/json", sourcemeta::one::Encoding::GZIP,
         sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };

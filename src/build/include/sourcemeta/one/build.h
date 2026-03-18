@@ -54,6 +54,7 @@ struct BuildPlan {
     std::filesystem::path destination;
     Dependencies dependencies;
     std::string_view data;
+    bool incremental;
   };
 
   std::filesystem::path output;

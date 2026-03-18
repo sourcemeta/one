@@ -213,7 +213,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         action.destination, result, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };
@@ -440,7 +441,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         action.destination, meta, "application/json",
         sourcemeta::one::Encoding::GZIP, sourcemeta::core::JSON{nullptr},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+                                                              timestamp_start),
+        action.incremental);
     return true;
   }
 };

@@ -349,9 +349,9 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
           }
         }
 
-        dependents_wave.push_back({BuildPlan::Action::Type::Dependents,
-                                   std::move(destination),
-                                   std::move(action_dependencies), uri});
+        dependents_wave.push_back(
+            {BuildPlan::Action::Type::Dependents, std::move(destination),
+             std::move(action_dependencies), uri, incremental});
       }
 
       std::ranges::sort(dependents_wave, [](const BuildPlan::Action &left,
@@ -506,7 +506,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         plan.waves.push_back({{.type = BuildPlan::Action::Type::Comment,
                                .destination = comment_path,
                                .dependencies = {},
-                               .data = comment}});
+                               .data = comment,
+                               .incremental = incremental}});
         plan.size = 1;
         return plan;
       }
@@ -518,7 +519,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         plan.waves.push_back({{.type = BuildPlan::Action::Type::Remove,
                                .destination = comment_path,
                                .dependencies = {},
-                               .data = {}}});
+                               .data = {},
+                               .incremental = incremental}});
         plan.size = 1;
         return plan;
       }
@@ -758,7 +760,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       plan.waves.push_back({{.type = BuildPlan::Action::Type::Comment,
                              .destination = comment_path,
                              .dependencies = {},
-                             .data = comment}});
+                             .data = comment,
+                             .incremental = incremental}});
       plan.size = 1;
       return plan;
     }
@@ -770,7 +773,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       plan.waves.push_back({{.type = BuildPlan::Action::Type::Remove,
                              .destination = comment_path,
                              .dependencies = {},
-                             .data = {}}});
+                             .data = {},
+                             .incremental = incremental}});
       plan.size = 1;
       return plan;
     }
@@ -994,9 +998,9 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         action_deps.emplace_back(std::move(dep));
       }
 
-      dag_waves[wave].push_back({target.action,
-                                 std::filesystem::path{target_path},
-                                 std::move(action_deps), target.data});
+      dag_waves[wave].push_back(
+          {target.action, std::filesystem::path{target_path},
+           std::move(action_deps), target.data, incremental});
     }
   }
 
@@ -1014,13 +1018,15 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
          std::filesystem::path{make_base_string(
              output_string, SCHEMAS_DIRECTORY, relative_string)},
          {},
-         {}});
+         {},
+         incremental});
     remove_wave.push_back(
         {BuildPlan::Action::Type::Remove,
          std::filesystem::path{make_base_string(
              output_string, EXPLORER_DIRECTORY, relative_string)},
          {},
-         {}});
+         {},
+         incremental});
   }
 
   for (const auto &schema : active_schemas) {
@@ -1043,7 +1049,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
           remove_wave.push_back({BuildPlan::Action::Type::Remove,
                                  std::filesystem::path{std::move(target_path)},
                                  {},
-                                 {}});
+                                 {},
+                                 incremental});
         }
       }
     }
@@ -1138,7 +1145,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       remove_wave.push_back({BuildPlan::Action::Type::Remove,
                              std::filesystem::path{root},
                              {},
-                             {}});
+                             {},
+                             incremental});
     }
   }
 
@@ -1173,7 +1181,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         remove_wave.push_back({BuildPlan::Action::Type::Remove,
                                std::filesystem::path{entry_path},
                                {},
-                               {}});
+                               {},
+                               incremental});
         web_removed = true;
       }
     }
@@ -1210,29 +1219,33 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     init_wave.push_back({.type = BuildPlan::Action::Type::Version,
                          .destination = version_path,
                          .dependencies = {},
-                         .data = version});
+                         .data = version,
+                         .incremental = incremental});
     init_wave.push_back({.type = BuildPlan::Action::Type::Configuration,
                          .destination = configuration_path,
                          .dependencies = {},
-                         .data = {}});
+                         .data = {},
+                         .incremental = incremental});
     if (!comment.empty()) {
       init_wave.push_back({.type = BuildPlan::Action::Type::Comment,
                            .destination = comment_path,
                            .dependencies = {},
-                           .data = comment});
+                           .data = comment,
+                           .incremental = incremental});
     } else if (entries.contains(comment_string)) {
       remove_wave.push_back(
-          {BuildPlan::Action::Type::Remove, comment_path, {}, {}});
+          {BuildPlan::Action::Type::Remove, comment_path, {}, {}, incremental});
     }
     plan.waves.push_back(std::move(init_wave));
   } else if (!comment.empty()) {
     plan.waves.push_back({{.type = BuildPlan::Action::Type::Comment,
                            .destination = comment_path,
                            .dependencies = {},
-                           .data = comment}});
+                           .data = comment,
+                           .incremental = incremental}});
   } else if (entries.contains(comment_string)) {
     remove_wave.push_back(
-        {BuildPlan::Action::Type::Remove, comment_path, {}, {}});
+        {BuildPlan::Action::Type::Remove, comment_path, {}, {}, incremental});
   }
 
   for (auto &wave : dag_waves) {
@@ -1252,7 +1265,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
           {rule.action,
            output / rule.filename,
            {configuration_path},
-           build_type == BuildPlan::Type::Full ? "Full" : "Headless"});
+           build_type == BuildPlan::Type::Full ? "Full" : "Headless",
+           incremental});
     }
 
     if (!global_wave.empty()) {
