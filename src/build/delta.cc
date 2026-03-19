@@ -881,6 +881,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
     const auto affected_dirs{
         collect_affected_directories(schemas_path, affected_relative_paths)};
+    const auto all_dirs{
+        collect_affected_directories(schemas_path, all_relative_paths)};
 
     for (const auto &rule : DIRECTORY_RULES) {
       if (rule.gate == TargetGate::FullOnly &&
@@ -941,23 +943,22 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
                 if (other_parent == relative) {
                   rule_dependencies.push_back(
                       (explorer_path / other_relative / SENTINEL /
-                       DIRECTORY_RULES[0].filename)
+                       DIRECTORY_LIST_RULE.filename)
                           .lexically_normal()
                           .string());
                 }
               }
               break;
             case DirectoryDependencyKind::AllDirectoryListings:
-              for (const auto &any_directory : affected_dirs) {
+              for (const auto &any_directory : all_dirs) {
+                const auto dir_relative{
+                    std::filesystem::relative(any_directory, schemas_path)};
                 rule_dependencies.push_back(
-                    (std::filesystem::relative(any_directory, schemas_path) ==
-                             "."
+                    (dir_relative == "."
                          ? explorer_path / SENTINEL /
-                               DIRECTORY_RULES[0].filename
-                         : explorer_path /
-                               std::filesystem::relative(any_directory,
-                                                         schemas_path) /
-                               SENTINEL / DIRECTORY_RULES[0].filename)
+                               DIRECTORY_LIST_RULE.filename
+                         : explorer_path / dir_relative / SENTINEL /
+                               DIRECTORY_LIST_RULE.filename)
                         .lexically_normal()
                         .string());
               }

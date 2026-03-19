@@ -337,6 +337,21 @@ static constexpr auto find_rule_by_action(BuildPlan::Action::Type action)
 static constexpr const auto &SCHEMA_METADATA_RULE =
     find_rule_by_action(BuildPlan::Action::Type::SchemaMetadata);
 
+static constexpr auto
+find_directory_rule_by_action(BuildPlan::Action::Type action)
+    -> const DirectoryRule & {
+  for (const auto &rule : DIRECTORY_RULES) {
+    if (rule.action == action) {
+      return rule;
+    }
+  }
+
+  return DIRECTORY_RULES[0];
+}
+
+static constexpr const auto &DIRECTORY_LIST_RULE =
+    find_directory_rule_by_action(BuildPlan::Action::Type::DirectoryList);
+
 } // namespace sourcemeta::one
 
 #endif
