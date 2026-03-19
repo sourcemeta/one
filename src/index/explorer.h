@@ -137,11 +137,16 @@ static auto parse_version_info(const std::string_view name)
   std::string name_string{name};
   std::smatch match;
   if (std::regex_match(name_string, match, version_regex)) {
-    return {1, static_cast<std::uint32_t>(std::stoul(match[1])),
-            match[2].matched ? static_cast<std::uint32_t>(std::stoul(match[2]))
-                             : 0,
-            match[3].matched ? static_cast<std::uint32_t>(std::stoul(match[3]))
-                             : 0};
+    try {
+      return {
+          1, static_cast<std::uint32_t>(std::stoul(match[1])),
+          match[2].matched ? static_cast<std::uint32_t>(std::stoul(match[2]))
+                           : 0,
+          match[3].matched ? static_cast<std::uint32_t>(std::stoul(match[3]))
+                           : 0};
+    } catch (...) {
+      return {0, 0, 0, 0};
+    }
   }
 
   return {0, 0, 0, 0};
@@ -164,6 +169,13 @@ static auto make_directory_extension(
     const std::string_view description, const std::string_view email,
     const std::string_view github, const std::string_view website)
     -> std::vector<std::uint8_t> {
+  assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(email.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(github.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(website.size() <= std::numeric_limits<std::uint16_t>::max());
+
   const auto strings_size{path.size() + title.size() + description.size() +
                           email.size() + github.size() + website.size()};
   std::vector<std::uint8_t> result;
@@ -587,7 +599,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     struct SortableEntry {
       sourcemeta::core::JSON json;
       MetapackVersionInfo version;
-      std::string_view name;
+      std::string name;
     };
 
     std::vector<SortableEntry> directory_entries;
