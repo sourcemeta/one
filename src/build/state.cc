@@ -1,5 +1,7 @@
 #include <sourcemeta/one/build_state.h>
 
+#include "rules.h"
+
 #include <sourcemeta/core/io.h>
 
 #include <cassert> // assert
@@ -14,12 +16,20 @@ namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
 constexpr std::uint32_t STATE_VERSION{2};
-
-// File layout:
-//   [Header: 24 bytes]
-//   [Hash table: capacity * 32-byte slots]
-//   [String pool: variable]
+constexpr std::uint32_t SCHEMA_INDEX_MAGIC{0x58444953};
 constexpr std::size_t HEADER_SIZE{24};
+
+#pragma pack(push, 1)
+struct SchemaIndexRecord {
+  std::uint32_t relative_path_offset;
+  std::uint16_t relative_path_length;
+  std::int64_t root_mtime;
+  std::uint16_t target_bitmap;
+  std::uint8_t has_cross_schema_deps;
+  std::uint8_t padding;
+};
+#pragma pack(pop)
+static_assert(sizeof(SchemaIndexRecord) == 18);
 
 // Slot layout (32 bytes, open-addressing with linear probing):
 //   0:  hash         u64
@@ -128,12 +138,25 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
 
     this->table_capacity = read_field<std::uint32_t>(this->view_data, 8);
     this->entry_count = read_field<std::uint32_t>(this->view_data, 12);
-    // Offset 20 was padding in original v2, now stores resolver count
     this->resolver_entry_count = read_field<std::uint32_t>(this->view_data, 20);
     this->table_slots = this->view_data + HEADER_SIZE;
+    const auto pool_size_value{read_field<std::uint32_t>(this->view_data, 16)};
     this->string_pool =
         this->table_slots +
         static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE;
+
+    const auto schema_table_start{
+        HEADER_SIZE +
+        static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE +
+        pool_size_value};
+    if (schema_table_start + sizeof(std::uint32_t) * 2 <= file_size &&
+        read_field<std::uint32_t>(this->view_data, schema_table_start) ==
+            SCHEMA_INDEX_MAGIC) {
+      this->persisted_schema_count = read_field<std::uint32_t>(
+          this->view_data, schema_table_start + sizeof(std::uint32_t));
+      this->persisted_schema_table =
+          this->view_data + schema_table_start + sizeof(std::uint32_t) * 2;
+    }
   } catch (...) {
     this->table_capacity = 0;
     this->table_slots = nullptr;
@@ -306,6 +329,7 @@ auto BuildState::commit(const std::filesystem::path &path,
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::forget(const std::string &key) -> void {
@@ -346,6 +370,7 @@ auto BuildState::forget(const std::string &key) -> void {
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
@@ -364,6 +389,7 @@ auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::keys() const -> const std::vector<std::string_view> & {
@@ -466,6 +492,186 @@ auto BuildState::raw_disk_entry(const std::string &key) const -> const Entry * {
 auto BuildState::deleted_keys() const -> const
     std::unordered_set<std::string, TransparentHash, TransparentEqual> & {
   return this->deleted;
+}
+
+auto BuildState::build_schema_index(const std::string &output) const -> void {
+  this->schema_index_cache.clear();
+  this->schema_index_output = output;
+
+  if (this->persisted_schema_table != nullptr &&
+      this->persisted_schema_count > 0 && this->overlay.empty() &&
+      this->deleted.empty()) {
+    const auto *cursor{this->persisted_schema_table};
+    for (std::uint32_t index{0}; index < this->persisted_schema_count;
+         index++) {
+      const auto *record{reinterpret_cast<const SchemaIndexRecord *>(cursor)};
+      cursor += sizeof(SchemaIndexRecord);
+      const std::string relative_path{reinterpret_cast<const char *>(cursor),
+                                      record->relative_path_length};
+      cursor += record->relative_path_length;
+
+      using file_time = std::filesystem::file_time_type;
+      auto &entry{this->schema_index_cache[relative_path]};
+      entry.root_mtime =
+          file_time{std::chrono::duration_cast<file_time::duration>(
+              std::chrono::nanoseconds{record->root_mtime})};
+      entry.target_bitmap = record->target_bitmap;
+      entry.has_cross_schema_deps = record->has_cross_schema_deps != 0;
+    }
+
+    this->schema_index_stale = false;
+    return;
+  }
+
+  const auto schemas_prefix{output + "/schemas/"};
+  const auto explorer_prefix{output + "/explorer/"};
+  static constexpr std::string_view sentinel{"/%/"};
+
+  auto extract_schema_base = [&](std::string_view key)
+      -> std::pair<std::string_view, std::string_view> {
+    std::string_view prefix;
+    if (key.starts_with(schemas_prefix)) {
+      prefix = schemas_prefix;
+    } else if (key.starts_with(explorer_prefix)) {
+      prefix = explorer_prefix;
+    } else {
+      return {{}, {}};
+    }
+
+    const auto after_prefix{key.substr(prefix.size())};
+    const auto sentinel_pos{after_prefix.find(sentinel)};
+    if (sentinel_pos == std::string_view::npos) {
+      return {{}, {}};
+    }
+
+    return {after_prefix.substr(0, sentinel_pos),
+            after_prefix.substr(sentinel_pos + sentinel.size())};
+  };
+
+  auto process_key = [&](std::filesystem::file_time_type mtime,
+                         bool is_explorer, std::string_view relative_path,
+                         std::string_view filename) {
+    auto &schema_entry{this->schema_index_cache[std::string{relative_path}]};
+
+    for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+         rule_index++) {
+      const auto &rule{PER_SCHEMA_RULES[rule_index]};
+      if (filename == rule.filename &&
+          ((rule.base == TargetBase::Explorer) == is_explorer)) {
+        schema_entry.target_bitmap |=
+            static_cast<std::uint16_t>(1 << rule_index);
+        if (rule.is_root) {
+          schema_entry.root_mtime = mtime;
+        }
+        break;
+      }
+    }
+  };
+
+  auto check_cross_schema_deps =
+      [&](std::string_view owner_relative,
+          const std::vector<std::filesystem::path> &dependencies) {
+        for (const auto &dependency : dependencies) {
+          const auto [dep_relative, dep_filename] =
+              extract_schema_base(dependency.native());
+          if (!dep_relative.empty() && dep_relative != owner_relative) {
+            auto &schema_entry{
+                this->schema_index_cache[std::string{owner_relative}]};
+            schema_entry.has_cross_schema_deps = true;
+            return;
+          }
+        }
+      };
+
+  // Scan disk entries sequentially
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+       ++slot_index) {
+    const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
+    if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+      continue;
+    }
+
+    const auto key{slot_key(slot, this->string_pool)};
+    if (this->deleted.contains(key) || this->overlay.contains(key)) {
+      continue;
+    }
+
+    const auto [relative_path, filename] = extract_schema_base(key);
+    if (relative_path.empty()) {
+      continue;
+    }
+
+    const bool is_explorer{key.starts_with(explorer_prefix)};
+    const auto nanoseconds{read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+    using file_time = std::filesystem::file_time_type;
+    const auto mtime{file_time{std::chrono::duration_cast<file_time::duration>(
+        std::chrono::nanoseconds{nanoseconds})}};
+
+    process_key(mtime, is_explorer, relative_path, filename);
+
+    // Check deps for cross-schema references
+    const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+    if (data_count > 0) {
+      auto offset{static_cast<std::size_t>(
+          read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+      for (std::uint16_t dependency_index = 0; dependency_index < data_count;
+           ++dependency_index) {
+        const auto dependency_path{read_pool_string(this->string_pool, offset)};
+        const auto [dep_relative, dep_filename] =
+            extract_schema_base(dependency_path);
+        if (!dep_relative.empty() && dep_relative != relative_path) {
+          this->schema_index_cache[std::string{relative_path}]
+              .has_cross_schema_deps = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // Scan overlay entries
+  for (const auto &[entry_path, entry_value] : this->overlay) {
+    const auto [relative_path, filename] = extract_schema_base(entry_path);
+    if (relative_path.empty()) {
+      continue;
+    }
+
+    const bool is_explorer{
+        std::string_view{entry_path}.starts_with(explorer_prefix)};
+    process_key(entry_value.file_mark, is_explorer, relative_path, filename);
+    check_cross_schema_deps(relative_path, entry_value.dependencies);
+  }
+
+  this->schema_index_stale = false;
+}
+
+auto BuildState::schema_state(const std::string &output,
+                              const std::string &relative_path, const bool,
+                              const bool) const -> const SchemaStateEntry * {
+  if (this->schema_index_stale || this->schema_index_output != output) {
+    this->build_schema_index(output);
+  }
+
+  const auto match{this->schema_index_cache.find(relative_path)};
+  if (match == this->schema_index_cache.end()) {
+    return nullptr;
+  }
+
+  return &match->second;
+}
+
+auto BuildState::schema_relative_paths(const std::string &output) const
+    -> std::vector<std::string> {
+  if (this->schema_index_stale || this->schema_index_output != output) {
+    this->build_schema_index(output);
+  }
+
+  std::vector<std::string> result;
+  result.reserve(this->schema_index_cache.size());
+  for (const auto &[relative_path, entry] : this->schema_index_cache) {
+    result.push_back(relative_path);
+  }
+
+  return result;
 }
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {
@@ -613,6 +819,122 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
   buffer.append(reinterpret_cast<const char *>(slots.data()), slots.size());
   buffer.append(pool);
+
+  {
+    const auto output_dir{path.parent_path().string()};
+    const auto schemas_prefix{output_dir + "/schemas/"};
+    const auto explorer_prefix{output_dir + "/explorer/"};
+    static constexpr std::string_view sentinel_marker{"/%/"};
+
+    std::unordered_map<std::string, SchemaStateEntry, TransparentHash,
+                       TransparentEqual>
+        save_schema_index;
+
+    const auto *new_pool{reinterpret_cast<const std::uint8_t *>(pool.data())};
+    for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
+      const auto *slot{slots.data() + slot_index * SLOT_SIZE};
+      if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+        continue;
+      }
+
+      const auto key{slot_key(slot, new_pool)};
+
+      std::string_view key_prefix;
+      bool is_explorer{false};
+      if (key.starts_with(schemas_prefix)) {
+        key_prefix = schemas_prefix;
+      } else if (key.starts_with(explorer_prefix)) {
+        key_prefix = explorer_prefix;
+        is_explorer = true;
+      } else {
+        continue;
+      }
+
+      const auto after{key.substr(key_prefix.size())};
+      const auto sentinel_position{after.find(sentinel_marker)};
+      if (sentinel_position == std::string_view::npos) {
+        continue;
+      }
+
+      const auto relative_path{after.substr(0, sentinel_position)};
+      const auto filename{after.substr(sentinel_position + 3)};
+      auto &schema_entry{save_schema_index[std::string{relative_path}]};
+
+      for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+           rule_index++) {
+        const auto &rule{PER_SCHEMA_RULES[rule_index]};
+        if (filename == rule.filename &&
+            ((rule.base == TargetBase::Explorer) == is_explorer)) {
+          schema_entry.target_bitmap |=
+              static_cast<std::uint16_t>(1 << rule_index);
+          if (rule.is_root) {
+            const auto nanoseconds{
+                read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+            using file_time = std::filesystem::file_time_type;
+            schema_entry.root_mtime =
+                file_time{std::chrono::duration_cast<file_time::duration>(
+                    std::chrono::nanoseconds{nanoseconds})};
+          }
+          break;
+        }
+      }
+
+      const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+      if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
+        auto offset{static_cast<std::size_t>(
+            read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+        for (std::uint16_t dep_index = 0; dep_index < data_count; ++dep_index) {
+          const auto dependency_path{read_pool_string(new_pool, offset)};
+          std::string_view dep_prefix;
+          if (dependency_path.starts_with(schemas_prefix)) {
+            dep_prefix = schemas_prefix;
+          } else if (dependency_path.starts_with(explorer_prefix)) {
+            dep_prefix = explorer_prefix;
+          } else {
+            continue;
+          }
+
+          const auto dep_after{dependency_path.substr(dep_prefix.size())};
+          const auto dep_sentinel{dep_after.find(sentinel_marker)};
+          if (dep_sentinel != std::string_view::npos &&
+              dep_after.substr(0, dep_sentinel) != relative_path) {
+            schema_entry.has_cross_schema_deps = true;
+            break;
+          }
+        }
+      }
+    }
+
+    std::string schema_index_buffer;
+    const auto schema_count{
+        static_cast<std::uint32_t>(save_schema_index.size())};
+    schema_index_buffer.reserve(
+        sizeof(SCHEMA_INDEX_MAGIC) + sizeof(schema_count) +
+        schema_count * (sizeof(SchemaIndexRecord) + 64));
+    schema_index_buffer.append(
+        reinterpret_cast<const char *>(&SCHEMA_INDEX_MAGIC),
+        sizeof(SCHEMA_INDEX_MAGIC));
+    schema_index_buffer.append(reinterpret_cast<const char *>(&schema_count),
+                               sizeof(schema_count));
+
+    for (const auto &[relative_path, schema_entry] : save_schema_index) {
+      SchemaIndexRecord record{};
+      record.relative_path_offset = 0;
+      record.relative_path_length =
+          static_cast<std::uint16_t>(relative_path.size());
+      record.root_mtime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                              schema_entry.root_mtime.time_since_epoch())
+                              .count();
+      record.target_bitmap = schema_entry.target_bitmap;
+      record.has_cross_schema_deps = schema_entry.has_cross_schema_deps ? 1 : 0;
+      record.padding = 0;
+      schema_index_buffer.append(reinterpret_cast<const char *>(&record),
+                                 sizeof(record));
+      schema_index_buffer.append(relative_path);
+    }
+
+    buffer.append(schema_index_buffer);
+  }
 
   std::ofstream stream{path, std::ios::binary};
   assert(!stream.fail());

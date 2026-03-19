@@ -89,7 +89,26 @@ public:
   [[nodiscard]] auto deleted_keys() const -> const
       std::unordered_set<std::string, TransparentHash, TransparentEqual> &;
 
+  struct SchemaStateEntry {
+    std::filesystem::file_time_type root_mtime;
+    std::uint16_t target_bitmap;
+    bool has_cross_schema_deps;
+  };
+
+  // Fast schema-level query: returns null if schema not in state.
+  // The output parameter is the output directory path string.
+  // The relative_path is the schema's relative path (e.g. "foo").
+  // The bitmap has one bit per PER_SCHEMA_RULES entry.
+  [[nodiscard]] auto schema_state(const std::string &output,
+                                  const std::string &relative_path,
+                                  bool evaluate, bool web) const
+      -> const SchemaStateEntry *;
+
+  [[nodiscard]] auto schema_relative_paths(const std::string &output) const
+      -> std::vector<std::string>;
+
 private:
+  auto build_schema_index(const std::string &output) const -> void;
   auto probe_slot(std::string_view key, std::uint8_t kind) const
       -> const std::uint8_t *;
   auto parse_slot_entry(const std::uint8_t *slot) const -> const Entry &;
@@ -124,6 +143,13 @@ private:
   bool dirty{false};
   mutable bool keys_stale{true};
   mutable std::vector<std::string_view> cached_keys;
+  mutable bool schema_index_stale{true};
+  mutable std::string schema_index_output;
+  mutable std::unordered_map<std::string, SchemaStateEntry, TransparentHash,
+                             TransparentEqual>
+      schema_index_cache;
+  const std::uint8_t *persisted_schema_table{nullptr};
+  std::uint32_t persisted_schema_count{0};
 };
 
 } // namespace sourcemeta::one
