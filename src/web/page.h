@@ -28,19 +28,19 @@ inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
       .attribute("href", configuration.url);
   writer.span().attribute("class", "fw-bold me-1");
   writer.text(configuration.html->name);
-  writer.close(); // </span>
+  writer.close();
   writer.span().attribute("class", "fw-lighter");
   writer.text(" Schemas");
-  writer.close(); // </span>
-  writer.close(); // </a>
+  writer.close();
+  writer.close();
 
   // Search section
   writer.div().attribute(
       "class", "mt-2 mt-md-0 flex-grow-1 position-relative w-100 w-md-auto");
   writer.div().attribute("class", "input-group");
   writer.span().attribute("class", "input-group-text");
-  writer.i().attribute("class", "bi bi-search").close(); // </i>
-  writer.close();                                        // </span>
+  writer.i().attribute("class", "bi bi-search").close();
+  writer.close();
   writer.input()
       .attribute("class", "form-control")
       .attribute("type", "search")
@@ -48,13 +48,13 @@ inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
       .attribute("placeholder", "Search")
       .attribute("aria-label", "Search")
       .attribute("autocomplete", "off");
-  writer.close(); // </div> input-group
+  writer.close();
   writer.ul()
       .attribute("class",
                  "d-none list-group position-absolute w-100 mt-2 shadow-sm")
       .attribute("id", "search-result");
-  writer.close(); // </ul>
-  writer.close(); // </div> search section
+  writer.close();
+  writer.close();
 
   // Action button
   if (configuration.html->action.has_value()) {
@@ -65,13 +65,13 @@ inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
     writer.i()
         .attribute("class",
                    "me-2 bi bi-" + configuration.html->action.value().icon)
-        .close(); // </i>
+        .close();
     writer.text(configuration.html->action.value().title);
-    writer.close(); // </a>
+    writer.close();
   }
 
-  writer.close(); // </div> container
-  writer.close(); // </nav>
+  writer.close();
+  writer.close();
 }
 
 inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
@@ -99,15 +99,15 @@ inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
       .attribute("class", "text-secondary")
       .attribute("target", "_blank");
   writer.text("One");
-  writer.close(); // </a>
+  writer.close();
   writer.text(information);
   writer.a()
       .attribute("href", "https://www.sourcemeta.com")
       .attribute("class", "text-secondary")
       .attribute("target", "_blank");
   writer.text("Sourcemeta");
-  writer.close(); // </a>
-  writer.close(); // </small>
+  writer.close();
+  writer.close();
 
   // Right section
   writer.small();
@@ -115,13 +115,13 @@ inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
       .attribute("href", "https://github.com/sourcemeta/one/discussions")
       .attribute("class", "text-secondary")
       .attribute("target", "_blank");
-  writer.i().attribute("class", "bi bi-question-square me-2").close(); // </i>
+  writer.i().attribute("class", "bi bi-question-square me-2").close();
   writer.text("Need Help?");
-  writer.close(); // </a>
-  writer.close(); // </small>
+  writer.close();
+  writer.close();
 
-  writer.close(); // </footer>
-  writer.close(); // </div>
+  writer.close();
+  writer.close();
 }
 
 inline auto make_head(sourcemeta::core::HTMLWriter &writer,
@@ -172,7 +172,7 @@ inline auto make_head(sourcemeta::core::HTMLWriter &writer,
       .attribute("rel", "manifest")
       .attribute("href", "/self/static/manifest.webmanifest");
   writer.raw(configuration.html->head.value_or(""));
-  writer.close(); // </head>
+  writer.close();
 }
 
 template <typename BodyWriter>
@@ -196,9 +196,9 @@ inline auto make_page(sourcemeta::core::HTMLWriter &writer,
                  // on any update
                  std::string{"/self/static/main.min.js?v="} +
                      std::string{SOURCEMETA_ONE_JS_CHECKSUM});
-  writer.close(); // </script>
-  writer.close(); // </body>
-  writer.close(); // </html>
+  writer.close();
+  writer.close();
+  writer.close();
 }
 
 } // namespace sourcemeta::one::html

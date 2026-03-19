@@ -20,8 +20,8 @@ void make_hero(sourcemeta::core::HTMLWriter &writer,
     writer.div().attribute("class", "bg-light border border-light-subtle mt-4 "
                                     "px-3 py-3");
     writer.raw(configuration.html->hero.value());
-    writer.close(); // </div> inner
-    writer.close(); // </div> outer
+    writer.close();
+    writer.close();
   } else {
     writer.div().close();
   }

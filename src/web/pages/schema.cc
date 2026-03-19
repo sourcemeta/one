@@ -55,26 +55,26 @@ auto GENERATE_WEB_SCHEMA::handler(
         if (meta.defines("title")) {
           w.h2().attribute("class", "fw-bold h4");
           w.text(title);
-          w.close(); // </h2>
+          w.close();
         }
         if (meta.defines("description")) {
           w.p().attribute("class", "text-secondary");
           w.text(meta.at("description").to_string());
-          w.close(); // </p>
+          w.close();
         }
         w.a()
             .attribute("href", meta.at("path").to_string() + ".json")
             .attribute("class", "btn btn-primary me-2")
             .attribute("role", "button");
         w.text("Get JSON Schema");
-        w.close(); // </a>
+        w.close();
         w.a()
             .attribute("href", meta.at("path").to_string() + ".json?bundle=1")
             .attribute("class", "btn btn-secondary")
             .attribute("role", "button");
         w.text("Bundle");
-        w.close(); // </a>
-        w.close(); // </div> header
+        w.close();
+        w.close();
 
         // Integration snippets
         const auto schema_name{
@@ -97,7 +97,7 @@ auto GENERATE_WEB_SCHEMA::handler(
 
         w.span().attribute("class", "text-secondary fw-light text-nowrap");
         w.text("Use with");
-        w.close(); // </span>
+        w.close();
 
         // Button group
         w.div()
@@ -108,20 +108,20 @@ auto GENERATE_WEB_SCHEMA::handler(
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-tab-target", "usage-cli");
         w.text("CLI");
-        w.close(); // </button>
+        w.close();
         w.button()
             .attribute("class", "btn btn-sm btn-outline-secondary")
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-tab-target", "usage-openapi");
         w.text("OpenAPI");
-        w.close(); // </button>
+        w.close();
         w.button()
             .attribute("class", "btn btn-sm btn-outline-secondary")
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-tab-target", "usage-deno");
         w.text("Deno");
-        w.close(); // </button>
-        w.close(); // </div> btn-group
+        w.close();
+        w.close();
 
         // CLI tab
         w.div()
@@ -137,16 +137,16 @@ auto GENERATE_WEB_SCHEMA::handler(
             .attribute("target", "_blank")
             .attribute("class", "text-dark");
         w.text("jsonschema install");
-        w.close(); // </a>
+        w.close();
         w.span(" " + canonical + " schemas/" + schema_name + ".json");
-        w.close(); // </code>
+        w.close();
         w.button()
             .attribute("class", "btn btn-sm btn-outline-secondary")
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-copy", cli_snippet);
-        w.i().attribute("class", "bi bi-clipboard").close(); // </i>
-        w.close();                                           // </button>
-        w.close();                                           // </div> usage-cli
+        w.i().attribute("class", "bi bi-clipboard").close();
+        w.close();
+        w.close();
 
         // OpenAPI tab
         w.div()
@@ -157,14 +157,14 @@ auto GENERATE_WEB_SCHEMA::handler(
         w.code().attribute("class", "bg-white border p-2 font-monospace "
                                     "flex-grow-1 text-dark text-break");
         w.text(openapi_snippet);
-        w.close(); // </code>
+        w.close();
         w.button()
             .attribute("class", "btn btn-sm btn-outline-secondary")
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-copy", openapi_snippet);
-        w.i().attribute("class", "bi bi-clipboard").close(); // </i>
-        w.close();                                           // </button>
-        w.close(); // </div> usage-openapi
+        w.i().attribute("class", "bi bi-clipboard").close();
+        w.close();
+        w.close();
 
         // Deno tab
         w.div()
@@ -175,16 +175,16 @@ auto GENERATE_WEB_SCHEMA::handler(
         w.code().attribute("class", "bg-white border p-2 font-monospace "
                                     "flex-grow-1 text-dark text-break");
         w.text(deno_snippet);
-        w.close(); // </code>
+        w.close();
         w.button()
             .attribute("class", "btn btn-sm btn-outline-secondary")
             .attribute("type", "button")
             .attribute("data-sourcemeta-ui-copy", deno_snippet);
-        w.i().attribute("class", "bi bi-clipboard").close(); // </i>
-        w.close();                                           // </button>
-        w.close(); // </div> usage-deno
+        w.i().attribute("class", "bi bi-clipboard").close();
+        w.close();
+        w.close();
 
-        w.close(); // </div> usage tab group
+        w.close();
 
         // Information table
         w.table().attribute("class", "table table-bordered my-4");
@@ -193,64 +193,64 @@ auto GENERATE_WEB_SCHEMA::handler(
         w.tr();
         w.th().attribute("scope", "row").attribute("class", "text-nowrap");
         w.text("Identifier");
-        w.close(); // </th>
+        w.close();
         w.td();
         w.code();
         w.a().attribute("href", meta.at("identifier").to_string());
         w.text(meta.at("identifier").to_string());
-        w.close(); // </a>
-        w.close(); // </code>
-        w.close(); // </td>
-        w.close(); // </tr>
+        w.close();
+        w.close();
+        w.close();
+        w.close();
 
         // Base Dialect row
         w.tr();
         w.th().attribute("scope", "row").attribute("class", "text-nowrap");
         w.text("Base Dialect");
-        w.close(); // </th>
+        w.close();
         w.td();
         html::make_dialect_badge(w, meta.at("baseDialect").to_string());
-        w.close(); // </td>
-        w.close(); // </tr>
+        w.close();
+        w.close();
 
         // Dialect row
         w.tr();
         w.th().attribute("scope", "row").attribute("class", "text-nowrap");
         w.text("Dialect");
-        w.close(); // </th>
+        w.close();
         w.td();
         w.code(meta.at("dialect").to_string());
-        w.close(); // </td>
-        w.close(); // </tr>
+        w.close();
+        w.close();
 
         // Health row
         w.tr();
         w.th().attribute("scope", "row").attribute("class", "text-nowrap");
         w.text("Health");
-        w.close(); // </th>
+        w.close();
         w.td().attribute("class", "align-middle");
         w.div().attribute("style", "max-width: 300px");
         html::make_schema_health_progress_bar(w,
                                               meta.at("health").to_integer());
-        w.close(); // </div>
-        w.close(); // </td>
-        w.close(); // </tr>
+        w.close();
+        w.close();
+        w.close();
 
         // Size row
         w.tr();
         w.th().attribute("scope", "row").attribute("class", "text-nowrap");
         w.text("Size");
-        w.close(); // </th>
+        w.close();
         w.td(std::to_string(meta.at("bytes").as_real() / (1024 * 1024)) +
              " MB");
-        w.close(); // </tr>
+        w.close();
 
-        w.close(); // </table>
+        w.close();
 
         // Empty div
         w.div().close();
 
-        w.close(); // </div> content wrapper
+        w.close();
 
         // Alert section
         if (meta.at("alert").is_string()) {
@@ -258,7 +258,7 @@ auto GENERATE_WEB_SCHEMA::handler(
               .attribute("class", "alert alert-warning mb-3")
               .attribute("role", "alert");
           w.raw(meta.at("alert").to_string());
-          w.close(); // </div>
+          w.close();
         }
 
         // Schema editor
@@ -270,7 +270,7 @@ auto GENERATE_WEB_SCHEMA::handler(
             .attribute("data-sourcemeta-ui-editor-mode", "readonly")
             .attribute("data-sourcemeta-ui-editor-language", "json");
         w.text("Loading schema...");
-        w.close(); // </div> schema
+        w.close();
 
         // Details tab group
         w.div()
@@ -292,9 +292,9 @@ auto GENERATE_WEB_SCHEMA::handler(
             "class",
             "ms-2 badge rounded-pill text-bg-secondary align-text-top");
         w.text(std::to_string(meta.at("examples").size()));
-        w.close(); // </span>
-        w.close(); // </button>
-        w.close(); // </li>
+        w.close();
+        w.close();
+        w.close();
 
         // Dependencies tab button
         w.li().attribute("class", "nav-item");
@@ -310,9 +310,9 @@ auto GENERATE_WEB_SCHEMA::handler(
                 "ms-2 badge rounded-pill text-bg-secondary align-text-top")
             .attribute("data-sourcemeta-ui-dependencies-count", "");
         w.text("...");
-        w.close(); // </span>
-        w.close(); // </button>
-        w.close(); // </li>
+        w.close();
+        w.close();
+        w.close();
 
         // Dependents tab button
         w.li().attribute("class", "nav-item");
@@ -328,9 +328,9 @@ auto GENERATE_WEB_SCHEMA::handler(
                 "ms-2 badge rounded-pill text-bg-secondary align-text-top")
             .attribute("data-sourcemeta-ui-dependents-count", "");
         w.text("...");
-        w.close(); // </span>
-        w.close(); // </button>
-        w.close(); // </li>
+        w.close();
+        w.close();
+        w.close();
 
         // Health tab button
         w.li().attribute("class", "nav-item");
@@ -344,11 +344,11 @@ auto GENERATE_WEB_SCHEMA::handler(
             "class",
             "ms-2 badge rounded-pill text-bg-secondary align-text-top");
         w.text(std::to_string(health.at("errors").size()));
-        w.close(); // </span>
-        w.close(); // </button>
-        w.close(); // </li>
+        w.close();
+        w.close();
+        w.close();
 
-        w.close(); // </ul> nav
+        w.close();
 
         // Examples tab content
         w.div()
@@ -364,12 +364,12 @@ auto GENERATE_WEB_SCHEMA::handler(
             w.pre().attribute("class", "bg-light p-2 border");
             w.code().attribute("class", "d-block text-primary");
             w.text(pretty.str());
-            w.close(); // </code>
-            w.close(); // </pre>
+            w.close();
+            w.close();
           }
-          w.close(); // </div> list-group
+          w.close();
         }
-        w.close(); // </div> examples
+        w.close();
 
         // Dependencies tab content
         w.div()
@@ -380,8 +380,8 @@ auto GENERATE_WEB_SCHEMA::handler(
                        meta.at("path").to_string())
             .attribute("data-sourcemeta-ui-identifier", canonical);
         w.text("Loading...");
-        w.close(); // </div> inner
-        w.close(); // </div> dependencies
+        w.close();
+        w.close();
 
         // Dependents tab content
         w.div()
@@ -392,8 +392,8 @@ auto GENERATE_WEB_SCHEMA::handler(
                        meta.at("path").to_string())
             .attribute("data-sourcemeta-ui-identifier", canonical);
         w.text("Loading...");
-        w.close(); // </div> inner
-        w.close(); // </div> dependents
+        w.close();
+        w.close();
 
         // Health tab content
         const auto errors_count{health.at("errors").size()};
@@ -426,40 +426,40 @@ auto GENERATE_WEB_SCHEMA::handler(
 
             w.code().attribute("class", "d-block text-primary");
             w.text(error.at("pointers").front().to_string());
-            w.close(); // </code>
+            w.close();
 
             if (error.at("custom").to_boolean()) {
               w.small().attribute("class", "d-block text-body-secondary");
               w.span().attribute("class", "badge text-bg-info me-1");
               w.text("Custom");
-              w.close(); // </span>
+              w.close();
               w.span(error.at("name").to_string());
-              w.close(); // </small>
+              w.close();
             } else {
               w.small().attribute("class", "d-block text-body-secondary");
               w.text(error.at("name").to_string());
-              w.close(); // </small>
+              w.close();
             }
 
             w.p().attribute("class", "mb-0 mt-2");
             w.text(error.at("message").to_string());
-            w.close(); // </p>
+            w.close();
 
             if (error.at("description").is_string()) {
               w.small().attribute("class", "mt-2");
               w.text(error.at("description").to_string());
-              w.close(); // </small>
+              w.close();
             }
 
-            w.close(); // </a> error item
+            w.close();
           }
-          w.close(); // </div> list-group
+          w.close();
         }
-        w.close(); // </div> health
+        w.close();
 
-        w.close(); // </div> details tab group
+        w.close();
 
-        w.close(); // </div> container-fluid
+        w.close();
       });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

@@ -29,14 +29,14 @@ auto GENERATE_WEB_NOT_FOUND::handler(
                     w.div().attribute("class", "container-fluid p-4");
                     w.h2().attribute("class", "fw-bold");
                     w.text("Oops! What you are looking for is not here");
-                    w.close(); // </h2>
+                    w.close();
                     w.p().attribute("class", "lead");
                     w.text("Are you sure the link you got is correct?");
-                    w.close(); // </p>
+                    w.close();
                     w.a().attribute("href", "/");
                     w.text("Get back to the home page");
-                    w.close(); // </a>
-                    w.close(); // </div>
+                    w.close();
+                    w.close();
                   });
   const auto timestamp_end{std::chrono::steady_clock::now()};
 

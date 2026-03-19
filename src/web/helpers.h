@@ -26,9 +26,9 @@ inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
   // First item: back arrow
   writer.li().attribute("class", "breadcrumb-item");
   writer.a().attribute("href", "/");
-  writer.i().attribute("class", "bi bi-arrow-left").close(); // </i>
-  writer.close();                                            // </a>
-  writer.close();                                            // </li>
+  writer.i().attribute("class", "bi bi-arrow-left").close();
+  writer.close();
+  writer.close();
 
   for (auto iterator = breadcrumb.as_array().cbegin();
        iterator != breadcrumb.as_array().cend(); ++iterator) {
@@ -37,18 +37,18 @@ inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
           .attribute("class", "breadcrumb-item active")
           .attribute("aria-current", "page");
       writer.text(iterator->at("name").to_string());
-      writer.close(); // </li>
+      writer.close();
     } else {
       writer.li().attribute("class", "breadcrumb-item");
       writer.a().attribute("href", iterator->at("path").to_string());
       writer.text(iterator->at("name").to_string());
-      writer.close(); // </a>
-      writer.close(); // </li>
+      writer.close();
+      writer.close();
     }
   }
 
-  writer.close(); // </ol>
-  writer.close(); // </nav>
+  writer.close();
+  writer.close();
 }
 
 inline auto
@@ -85,8 +85,8 @@ make_schema_health_progress_bar(sourcemeta::core::HTMLWriter &writer,
     writer.attribute("style", progress_style);
   }
   writer.text(std::to_string(health) + "%");
-  writer.close(); // </div> inner
-  writer.close(); // </div> progress
+  writer.close();
+  writer.close();
 }
 
 inline auto
@@ -125,8 +125,8 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
       "align-middle badge " +
           std::string(is_current ? "text-bg-primary" : "text-bg-danger"));
   writer.text(display_name);
-  writer.close(); // </span>
-  writer.close(); // </a>
+  writer.close();
+  writer.close();
 }
 
 inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
@@ -153,12 +153,12 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
   writer.div();
   writer.h2().attribute("class", "fw-bold h4");
   writer.text(directory.at("title").to_string());
-  writer.close(); // </h2>
+  writer.close();
 
   if (directory.defines("description")) {
     writer.p().attribute("class", "text-secondary");
     writer.text(directory.at("description").to_string());
-    writer.close(); // </p>
+    writer.close();
   }
 
   if (directory.defines("email") || directory.defines("github") ||
@@ -175,8 +175,8 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
           .attribute("class", "text-secondary")
           .attribute("target", "_blank");
       writer.text(directory.at("github").to_string());
-      writer.close(); // </a>
-      writer.close(); // </small>
+      writer.close();
+      writer.close();
     }
 
     if (directory.defines("website")) {
@@ -190,8 +190,8 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
           .attribute("class", "text-secondary")
           .attribute("target", "_blank");
       writer.text(directory.at("website").to_string());
-      writer.close(); // </a>
-      writer.close(); // </small>
+      writer.close();
+      writer.close();
     }
 
     if (directory.defines("email")) {
@@ -204,15 +204,15 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
           .attribute("href", "mailto:" + directory.at("email").to_string())
           .attribute("class", "text-secondary");
       writer.text(directory.at("email").to_string());
-      writer.close(); // </a>
-      writer.close(); // </small>
+      writer.close();
+      writer.close();
     }
 
-    writer.close(); // </div> contact
+    writer.close();
   }
 
-  writer.close(); // </div> title section
-  writer.close(); // </div> container
+  writer.close();
+  writer.close();
 }
 
 inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
@@ -234,39 +234,39 @@ inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
   } else {
     make_dialect_badge(writer, entry.at("baseDialect").to_string());
   }
-  writer.close(); // </td>
+  writer.close();
 
   // Name column
   writer.td().attribute("class", "font-monospace");
   writer.a().attribute("href", entry.at("path").to_string());
   writer.text(entry.at("name").to_string());
-  writer.close(); // </a>
-  writer.close(); // </td>
+  writer.close();
+  writer.close();
 
   // Title column
   writer.td();
   writer.small(entry.defines("title") ? entry.at("title").to_string() : "-");
-  writer.close(); // </td>
+  writer.close();
 
   // Description column
   writer.td();
   writer.small(
       entry.defines("description") ? entry.at("description").to_string() : "-");
-  writer.close(); // </td>
+  writer.close();
 
   // Dependencies column
   writer.td();
   writer.small(entry.defines("dependencies")
                    ? std::to_string(entry.at("dependencies").to_integer())
                    : "-");
-  writer.close(); // </td>
+  writer.close();
 
   // Health column
   writer.td().attribute("class", "align-middle");
   make_schema_health_progress_bar(writer, entry.at("health").to_integer());
-  writer.close(); // </td>
+  writer.close();
 
-  writer.close(); // </tr>
+  writer.close();
 }
 
 inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
@@ -279,21 +279,21 @@ inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
       .close();
   writer.th().attribute("scope", "col");
   writer.text("Name");
-  writer.close(); // </th>
+  writer.close();
   writer.th().attribute("scope", "col");
   writer.text("Title");
-  writer.close(); // </th>
+  writer.close();
   writer.th().attribute("scope", "col");
   writer.text("Description");
-  writer.close(); // </th>
+  writer.close();
   writer.th().attribute("scope", "col");
   writer.text("Dependencies");
-  writer.close(); // </th>
+  writer.close();
   writer.th().attribute("scope", "col").attribute("style", "width: 150px");
   writer.text("Health");
-  writer.close(); // </th>
-  writer.close(); // </tr>
-  writer.close(); // </thead>
+  writer.close();
+  writer.close();
+  writer.close();
 }
 
 inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
@@ -303,7 +303,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
     writer.p(
         "Things look a bit empty over here. Try ingesting some schemas using "
         "the configuration file!");
-    writer.close(); // </div>
+    writer.close();
     return;
   }
 
@@ -332,14 +332,14 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
         make_file_manager_row(writer, entry);
       }
     }
-    writer.close(); // </tbody>
-    writer.close(); // </table>
+    writer.close();
+    writer.close();
   }
 
   if (has_special_entries) {
     writer.h6().attribute("class", "text-secondary mt-4 mb-3");
     writer.text("Special directories");
-    writer.close(); // </h6>
+    writer.close();
     writer.table().attribute(
         "class", "table table-bordered border-light-subtle table-light");
     make_file_manager_table_header(writer);
@@ -350,11 +350,11 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
         make_file_manager_row(writer, entry);
       }
     }
-    writer.close(); // </tbody>
-    writer.close(); // </table>
+    writer.close();
+    writer.close();
   }
 
-  writer.close(); // </div>
+  writer.close();
 }
 
 } // namespace sourcemeta::one::html
