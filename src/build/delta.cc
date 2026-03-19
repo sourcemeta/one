@@ -562,52 +562,73 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
   std::vector<std::filesystem::path> all_relative_paths;
   all_relative_paths.reserve(schemas.size());
 
+  std::unordered_set<std::string> dirty_relative_paths;
   for (const auto &[uri, info] : schemas) {
     if (removed_uris.contains(uri)) {
       continue;
     }
 
     const auto &relative_string{info.relative_path.native()};
+    all_relative_paths.emplace_back(info.relative_path);
+
     auto schema_base{
         make_base_string(output_string, SCHEMAS_DIRECTORY, relative_string)};
     auto explorer_base{
         make_base_string(output_string, EXPLORER_DIRECTORY, relative_string)};
-    declare_schema_targets(targets, schema_base, explorer_base, output_string,
-                           info.path.native(), info.evaluate, build_type,
-                           configuration_string, uri, phase);
-    all_relative_paths.emplace_back(info.relative_path);
     auto root_path{append_filename(schema_base, ROOT_RULE.filename)};
+
+    const auto *cached_schema_state{
+        is_full ? nullptr
+                : entries.schema_state(output_string, relative_string,
+                                       info.evaluate,
+                                       build_type == BuildPlan::Type::Full)};
+
+    bool schema_dirty{is_full || cached_schema_state == nullptr};
+    if (!schema_dirty) {
+      schema_dirty = info.mtime > cached_schema_state->root_mtime;
+    }
+
+    bool has_missing_targets{false};
+    if (!schema_dirty && cached_schema_state != nullptr) {
+      std::uint16_t expected_bitmap{0};
+      for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+           rule_index++) {
+        const auto &rule{PER_SCHEMA_RULES[rule_index]};
+        if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
+          continue;
+        }
+        if (rule.gate == TargetGate::FullOnly &&
+            build_type != BuildPlan::Type::Full) {
+          continue;
+        }
+        expected_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
+      }
+      has_missing_targets = (cached_schema_state->target_bitmap &
+                             expected_bitmap) != expected_bitmap;
+    }
+
+    const bool needs_targets{schema_dirty || has_missing_targets ||
+                             (cached_schema_state != nullptr &&
+                              cached_schema_state->has_cross_schema_deps)};
+
+    if (schema_dirty) {
+      dirty_relative_paths.insert(relative_string);
+    }
+
+    if (needs_targets) {
+      declare_schema_targets(targets, schema_base, explorer_base, output_string,
+                             info.path.native(), info.evaluate, build_type,
+                             configuration_string, uri, phase);
+    }
+
     active_schemas.push_back({uri, &info, std::move(schema_base),
                               std::move(explorer_base), std::move(root_path)});
   }
 
   std::unordered_set<std::string_view> force_dirty;
-
-  if (is_full) {
-    for (const auto &schema : active_schemas) {
+  for (const auto &schema : active_schemas) {
+    if (dirty_relative_paths.contains(schema.info->relative_path.native())) {
       force_dirty.insert(schema.root_path);
-    }
-  } else if (!changed.empty()) {
-    std::unordered_set<std::string> changed_set;
-    changed_set.reserve(changed.size());
-    for (const auto &path : changed) {
-      changed_set.insert(path.native());
-    }
-
-    for (const auto &schema : active_schemas) {
-      if (!changed_set.contains(schema.info->path.native())) {
-        continue;
-      }
-
-      if (entries.is_stale(schema.root_path, schema.info->mtime)) {
-        force_dirty.insert(schema.root_path);
-      }
-    }
-  } else if (!is_full) {
-    for (const auto &schema : active_schemas) {
-      if (entries.is_stale(schema.root_path, schema.info->mtime)) {
-        force_dirty.insert(schema.root_path);
-      }
     }
   }
 

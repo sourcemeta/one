@@ -1,5 +1,7 @@
 #include <sourcemeta/one/build_state.h>
 
+#include "rules.h"
+
 #include <sourcemeta/core/io.h>
 
 #include <cassert> // assert
@@ -479,25 +481,6 @@ auto BuildState::build_schema_index(const std::string &output) const -> void {
   const auto explorer_prefix{output + "/explorer/"};
   static constexpr std::string_view sentinel{"/%/"};
 
-  // Map filenames to bit indices. These correspond to PER_SCHEMA_RULES order.
-  // Schema base filenames (TargetBase::Schema)
-  static const std::array<std::pair<std::string_view, std::uint8_t>, 13>
-      filename_bits{{{"schema.metapack", 0},
-                     {"positions.metapack", 1},
-                     {"locations.metapack", 2},
-                     {"dependencies.metapack", 3},
-                     {"stats.metapack", 4},
-                     {"health.metapack", 5},
-                     {"bundle.metapack", 6},
-                     {"editor.metapack", 7},
-                     {"blaze-exhaustive.metapack", 8},
-                     {"blaze-fast.metapack", 9},
-                     {"dependents.metapack", 11},
-                     // Explorer base filenames (TargetBase::Explorer)
-                     // schema.metapack under explorer → bit 10
-                     // schema-html.metapack under explorer → bit 12
-                     {"schema-html.metapack", 12}}};
-
   auto extract_schema_base = [&](std::string_view key)
       -> std::pair<std::string_view, std::string_view> {
     std::string_view prefix;
@@ -524,19 +507,17 @@ auto BuildState::build_schema_index(const std::string &output) const -> void {
                          std::string_view filename) {
     auto &schema_entry{this->schema_index_cache[std::string{relative_path}]};
 
-    if (is_explorer && filename == "schema.metapack") {
-      schema_entry.target_bitmap |= (1 << 10);
-    } else if (is_explorer && filename == "schema-html.metapack") {
-      schema_entry.target_bitmap |= (1 << 12);
-    } else {
-      for (const auto &[rule_filename, bit] : filename_bits) {
-        if (filename == rule_filename && !is_explorer) {
-          schema_entry.target_bitmap |= (1 << bit);
-          if (bit == 0) {
-            schema_entry.root_mtime = mtime;
-          }
-          break;
+    for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+         rule_index++) {
+      const auto &rule{PER_SCHEMA_RULES[rule_index]};
+      if (filename == rule.filename &&
+          ((rule.base == TargetBase::Explorer) == is_explorer)) {
+        schema_entry.target_bitmap |=
+            static_cast<std::uint16_t>(1 << rule_index);
+        if (rule.is_root) {
+          schema_entry.root_mtime = mtime;
         }
+        break;
       }
     }
   };
