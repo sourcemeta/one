@@ -10,20 +10,21 @@
 #include <cassert>    // assert
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
-#include <sstream>    // std::ostringstream
 
 namespace {
 
-auto make_hero(const sourcemeta::one::Configuration &configuration)
-    -> sourcemeta::core::HTML {
-  using namespace sourcemeta::core::html;
+void make_hero(sourcemeta::core::HTMLWriter &writer,
+               const sourcemeta::one::Configuration &configuration) {
   if (configuration.html->hero.has_value()) {
-    return div({{"class", "container-fluid px-4"}},
-               div({{"class", "bg-light border border-light-subtle mt-4 "
-                              "px-3 py-3"}},
-                   raw(configuration.html->hero.value())));
+    writer.div().attribute("class", "container-fluid px-4");
+    writer.div().attribute("class", "bg-light border border-light-subtle mt-4 "
+                                    "px-3 py-3");
+    writer.raw(configuration.html->hero.value());
+    writer.close();
+    writer.close();
+  } else {
+    writer.div().close();
   }
-  return div();
 }
 
 } // anonymous namespace
@@ -44,14 +45,15 @@ auto GENERATE_WEB_INDEX::handler(
   const auto &canonical{directory.at("url").to_string()};
   const auto title{configuration.html->name + " Schemas"};
   const auto &description{configuration.html->description};
-  std::ostringstream html_content;
-  html_content << "<!DOCTYPE html>"
-               << html::make_page(configuration, canonical, title, description,
-                                  make_hero(configuration),
-                                  html::make_file_manager(directory));
+  sourcemeta::core::HTMLWriter writer;
+  html::make_page(writer, configuration, canonical, title, description,
+                  [&](sourcemeta::core::HTMLWriter &w) {
+                    make_hero(w, configuration);
+                    html::make_file_manager(w, directory);
+                  });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
-  metapack_write_text(action.destination, html_content.str(), "text/html",
+  metapack_write_text(action.destination, writer.str(), "text/html",
                       MetapackEncoding::GZIP, {},
                       std::chrono::duration_cast<std::chrono::milliseconds>(
                           timestamp_end - timestamp_start));
