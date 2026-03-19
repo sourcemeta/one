@@ -32,16 +32,16 @@ auto GENERATE_WEB_DIRECTORY::handler(
       directory.defines("description")
           ? directory.at("description").to_string()
           : ("Schemas located at " + directory.at("path").to_string())};
-  std::ostringstream html_content;
-  html_content << "<!DOCTYPE html>"
-               << html::make_page(
-                      configuration, canonical, title, description,
-                      html::make_breadcrumb(directory.at("breadcrumb")),
-                      html::make_directory_header(directory),
-                      html::make_file_manager(directory));
+  sourcemeta::core::HTMLWriter writer;
+  html::make_page(writer, configuration, canonical, title, description,
+                  [&](sourcemeta::core::HTMLWriter &w) {
+                    html::make_breadcrumb(w, directory.at("breadcrumb"));
+                    html::make_directory_header(w, directory);
+                    html::make_file_manager(w, directory);
+                  });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
-  metapack_write_text(action.destination, html_content.str(), "text/html",
+  metapack_write_text(action.destination, writer.str(), "text/html",
                       MetapackEncoding::GZIP, {},
                       std::chrono::duration_cast<std::chrono::milliseconds>(
                           timestamp_end - timestamp_start));

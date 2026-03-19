@@ -9,7 +9,6 @@
 
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
-#include <sstream>    // std::ostringstream
 
 namespace sourcemeta::one {
 
@@ -24,20 +23,24 @@ auto GENERATE_WEB_NOT_FOUND::handler(
   const auto &canonical{configuration.url};
   const auto title{"Not Found"};
   const auto description{"What you are looking for is not here"};
-  std::ostringstream html_content;
-  html_content
-      << "<!DOCTYPE html>"
-      << html::make_page(
-             configuration, canonical, title, description,
-             html::div({{"class", "container-fluid p-4"}},
-                       html::h2({{"class", "fw-bold"}},
-                                "Oops! What you are looking for is not here"),
-                       html::p({{"class", "lead"}},
-                               "Are you sure the link you got is correct?"),
-                       html::a({{"href", "/"}}, "Get back to the home page")));
+  sourcemeta::core::HTMLWriter writer;
+  html::make_page(writer, configuration, canonical, title, description,
+                  [&](sourcemeta::core::HTMLWriter &w) {
+                    w.div().attribute("class", "container-fluid p-4");
+                    w.h2().attribute("class", "fw-bold");
+                    w.text("Oops! What you are looking for is not here");
+                    w.close(); // </h2>
+                    w.p().attribute("class", "lead");
+                    w.text("Are you sure the link you got is correct?");
+                    w.close(); // </p>
+                    w.a().attribute("href", "/");
+                    w.text("Get back to the home page");
+                    w.close(); // </a>
+                    w.close(); // </div>
+                  });
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
-  metapack_write_text(action.destination, html_content.str(), "text/html",
+  metapack_write_text(action.destination, writer.str(), "text/html",
                       MetapackEncoding::GZIP, {},
                       std::chrono::duration_cast<std::chrono::milliseconds>(
                           timestamp_end - timestamp_start));

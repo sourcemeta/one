@@ -8,139 +8,197 @@
 #include "checksum_css.h"
 #include "checksum_js.h"
 
-#include <optional> // std::optional
-#include <sstream>  // std::ostringstream
-#include <string>   // std::string
-#include <vector>   // std::vector
+#include <string>  // std::string
+#include <utility> // std::forward
 
 namespace sourcemeta::one::html {
 
-using namespace sourcemeta::core::html;
+inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
+                            const Configuration &configuration) -> void {
+  writer.nav().attribute("class", "navbar navbar-expand border-bottom bg-body");
 
-inline auto make_navigation(const Configuration &configuration)
-    -> sourcemeta::core::HTML {
-  auto container =
-      div({{"class", "container-fluid px-4 py-1 align-items-center "
-                     "flex-column flex-md-row"}},
-          a({{"class", "navbar-brand me-0 me-md-3 d-flex align-items-center "
-                       "w-100 w-md-auto"},
-             {"href", configuration.url}},
-            span({{"class", "fw-bold me-1"}}, configuration.html->name),
-            span({{"class", "fw-lighter"}}, " Schemas")),
-          div({{"class",
-                "mt-2 mt-md-0 flex-grow-1 position-relative w-100 w-md-auto"}},
-              div({{"class", "input-group"}},
-                  span({{"class", "input-group-text"}},
-                       i({{"class", "bi bi-search"}})),
-                  input({{"class", "form-control"},
-                         {"type", "search"},
-                         {"id", "search"},
-                         {"placeholder", "Search"},
-                         {"aria-label", "Search"},
-                         {"autocomplete", "off"}})),
-              ul({{"class",
-                   "d-none list-group position-absolute w-100 mt-2 shadow-sm"},
-                  {"id", "search-result"}})));
+  writer.div().attribute("class",
+                         "container-fluid px-4 py-1 align-items-center "
+                         "flex-column flex-md-row");
 
+  // Brand link
+  writer.a()
+      .attribute("class", "navbar-brand me-0 me-md-3 d-flex align-items-center "
+                          "w-100 w-md-auto")
+      .attribute("href", configuration.url);
+  writer.span().attribute("class", "fw-bold me-1");
+  writer.text(configuration.html->name);
+  writer.close(); // </span>
+  writer.span().attribute("class", "fw-lighter");
+  writer.text(" Schemas");
+  writer.close(); // </span>
+  writer.close(); // </a>
+
+  // Search section
+  writer.div().attribute(
+      "class", "mt-2 mt-md-0 flex-grow-1 position-relative w-100 w-md-auto");
+  writer.div().attribute("class", "input-group");
+  writer.span().attribute("class", "input-group-text");
+  writer.i().attribute("class", "bi bi-search").close(); // </i>
+  writer.close();                                        // </span>
+  writer.input()
+      .attribute("class", "form-control")
+      .attribute("type", "search")
+      .attribute("id", "search")
+      .attribute("placeholder", "Search")
+      .attribute("aria-label", "Search")
+      .attribute("autocomplete", "off");
+  writer.close(); // </div> input-group
+  writer.ul()
+      .attribute("class",
+                 "d-none list-group position-absolute w-100 mt-2 shadow-sm")
+      .attribute("id", "search-result");
+  writer.close(); // </ul>
+  writer.close(); // </div> search section
+
+  // Action button
   if (configuration.html->action.has_value()) {
-    container.push_back(a(
-        {{"class", "ms-md-3 btn btn-dark mt-2 mt-md-0 w-100 w-md-auto"},
-         {"role", "button"},
-         {"href", configuration.html->action.value().url}},
-        i({{"class", "me-2 bi bi-" + configuration.html->action.value().icon}}),
-        configuration.html->action.value().title));
+    writer.a()
+        .attribute("class", "ms-md-3 btn btn-dark mt-2 mt-md-0 w-100 w-md-auto")
+        .attribute("role", "button")
+        .attribute("href", configuration.html->action.value().url);
+    writer.i()
+        .attribute("class",
+                   "me-2 bi bi-" + configuration.html->action.value().icon)
+        .close(); // </i>
+    writer.text(configuration.html->action.value().title);
+    writer.close(); // </a>
   }
 
-  return nav({{"class", "navbar navbar-expand border-bottom bg-body"}},
-             std::move(container));
+  writer.close(); // </div> container
+  writer.close(); // </nav>
 }
 
-inline auto make_footer() -> sourcemeta::core::HTML {
-  std::ostringstream information;
-  information << " " << edition() << " v" << version() << " © 2026 ";
+inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
+  std::string information{" "};
+  information += edition();
+  information += " v";
+  information += version();
+  information += " \xC2\xA9 2026 ";
 
-  return div(
-      {{"class", "container-fluid px-4 mb-2"}},
-      footer(
-          {{"class", "border-top text-secondary py-3 d-flex align-items-center "
-                     "justify-content-between flex-column flex-md-row"}},
-          small({{"class", "mb-2 mb-md-0"}},
-                img({{"src", "/self/static/icon.svg"},
-                     {"alt", "Sourcemeta"},
-                     {"height", "25"},
-                     {"width", "25"},
-                     {"class", "me-2"}}),
-                a({{"href", "https://github.com/sourcemeta/one"},
-                   {"class", "text-secondary"},
-                   {"target", "_blank"}},
-                  "One"),
-                information.str(),
-                a({{"href", "https://www.sourcemeta.com"},
-                   {"class", "text-secondary"},
-                   {"target", "_blank"}},
-                  "Sourcemeta")),
-          small(a({{"href", "https://github.com/sourcemeta/one/discussions"},
-                   {"class", "text-secondary"},
-                   {"target", "_blank"}},
-                  i({{"class", "bi bi-question-square me-2"}}),
-                  "Need Help?"))));
+  writer.div().attribute("class", "container-fluid px-4 mb-2");
+  writer.footer().attribute(
+      "class", "border-top text-secondary py-3 d-flex align-items-center "
+               "justify-content-between flex-column flex-md-row");
+
+  // Left section
+  writer.small().attribute("class", "mb-2 mb-md-0");
+  writer.img()
+      .attribute("src", "/self/static/icon.svg")
+      .attribute("alt", "Sourcemeta")
+      .attribute("height", "25")
+      .attribute("width", "25")
+      .attribute("class", "me-2");
+  writer.a()
+      .attribute("href", "https://github.com/sourcemeta/one")
+      .attribute("class", "text-secondary")
+      .attribute("target", "_blank");
+  writer.text("One");
+  writer.close(); // </a>
+  writer.text(information);
+  writer.a()
+      .attribute("href", "https://www.sourcemeta.com")
+      .attribute("class", "text-secondary")
+      .attribute("target", "_blank");
+  writer.text("Sourcemeta");
+  writer.close(); // </a>
+  writer.close(); // </small>
+
+  // Right section
+  writer.small();
+  writer.a()
+      .attribute("href", "https://github.com/sourcemeta/one/discussions")
+      .attribute("class", "text-secondary")
+      .attribute("target", "_blank");
+  writer.i().attribute("class", "bi bi-question-square me-2").close(); // </i>
+  writer.text("Need Help?");
+  writer.close(); // </a>
+  writer.close(); // </small>
+
+  writer.close(); // </footer>
+  writer.close(); // </div>
 }
 
-inline auto
-make_head(const Configuration &configuration, const std::string &canonical,
-          const std::string &page_title, const std::string &description)
-    -> sourcemeta::core::HTML {
-  return head(meta({{"charset", "utf-8"}}),
-              meta({{"name", "referrer"}, {"content", "no-referrer"}}),
-              meta({{"name", "viewport"},
-                    {"content", "width=device-width, initial-scale=1.0"}}),
-              meta({{"http-equiv", "x-ua-compatible"}, {"content", "ie=edge"}}),
-              title(page_title),
-              meta({{"name", "description"}, {"content", description}}),
-              link({{"rel", "canonical"}, {"href", canonical}}),
-              link({{"rel", "stylesheet"},
-                    {"href",
-                     // For cache busting, to force browsers to refresh styles
-                     // on any update
-                     std::string{"/self/static/style.min.css?v="} +
-                         std::string{SOURCEMETA_ONE_CSS_CHECKSUM}}}),
-              link({{"rel", "icon"},
-                    {"href", "/self/static/favicon.ico"},
-                    {"sizes", "any"}}),
-              link({{"rel", "icon"},
-                    {"href", "/self/static/icon.svg"},
-                    {"type", "image/svg+xml"}}),
-              link({{"rel", "shortcut icon"},
-                    {"href", "/self/static/apple-touch-icon.png"},
-                    {"type", "image/png"}}),
-              link({{"rel", "apple-touch-icon"},
-                    {"href", "/self/static/apple-touch-icon.png"},
-                    {"sizes", "180x180"}}),
-              link({{"rel", "manifest"},
-                    {"href", "/self/static/manifest.webmanifest"}}),
-              raw(configuration.html->head.value_or("")));
+inline auto make_head(sourcemeta::core::HTMLWriter &writer,
+                      const Configuration &configuration,
+                      const std::string &canonical,
+                      const std::string &page_title,
+                      const std::string &description) -> void {
+  writer.head();
+  writer.meta().attribute("charset", "utf-8");
+  writer.meta()
+      .attribute("name", "referrer")
+      .attribute("content", "no-referrer");
+  writer.meta()
+      .attribute("name", "viewport")
+      .attribute("content", "width=device-width, initial-scale=1.0");
+  writer.meta()
+      .attribute("http-equiv", "x-ua-compatible")
+      .attribute("content", "ie=edge");
+  writer.title(page_title);
+  writer.meta()
+      .attribute("name", "description")
+      .attribute("content", description);
+  writer.link().attribute("rel", "canonical").attribute("href", canonical);
+  writer.link()
+      .attribute("rel", "stylesheet")
+      .attribute("href",
+                 // For cache busting, to force browsers to refresh styles
+                 // on any update
+                 std::string{"/self/static/style.min.css?v="} +
+                     std::string{SOURCEMETA_ONE_CSS_CHECKSUM});
+  writer.link()
+      .attribute("rel", "icon")
+      .attribute("href", "/self/static/favicon.ico")
+      .attribute("sizes", "any");
+  writer.link()
+      .attribute("rel", "icon")
+      .attribute("href", "/self/static/icon.svg")
+      .attribute("type", "image/svg+xml");
+  writer.link()
+      .attribute("rel", "shortcut icon")
+      .attribute("href", "/self/static/apple-touch-icon.png")
+      .attribute("type", "image/png");
+  writer.link()
+      .attribute("rel", "apple-touch-icon")
+      .attribute("href", "/self/static/apple-touch-icon.png")
+      .attribute("sizes", "180x180");
+  writer.link()
+      .attribute("rel", "manifest")
+      .attribute("href", "/self/static/manifest.webmanifest");
+  writer.raw(configuration.html->head.value_or(""));
+  writer.close(); // </head>
 }
 
-template <typename... Children>
-inline auto make_page(const Configuration &configuration,
+template <typename BodyWriter>
+inline auto make_page(sourcemeta::core::HTMLWriter &writer,
+                      const Configuration &configuration,
                       const std::string &canonical, const std::string &title,
-                      const std::string &description, Children &&...children)
-    -> sourcemeta::core::HTML {
-  std::vector<sourcemeta::core::HTMLNode> nodes;
-  nodes.emplace_back(make_navigation(configuration));
-  (nodes.emplace_back(std::forward<Children>(children)), ...);
-  nodes.emplace_back(make_footer());
-  nodes.emplace_back(script(
-      {{"async", ""},
-       {"defer", ""},
-       {"src",
-        // For cache busting, to force browsers to refresh styles on any update
-        std::string{"/self/static/main.min.js?v="} +
-            std::string{SOURCEMETA_ONE_JS_CHECKSUM}}}));
-  return sourcemeta::core::html::html(
-      {{"class", "h-100"}, {"lang", "en"}},
-      make_head(configuration, canonical, title, description),
-      body({{"class", "h-100 d-flex flex-column"}}, std::move(nodes)));
+                      const std::string &description, BodyWriter &&write_body)
+    -> void {
+  writer.raw("<!DOCTYPE html>");
+  writer.html().attribute("class", "h-100").attribute("lang", "en");
+  make_head(writer, configuration, canonical, title, description);
+  writer.body().attribute("class", "h-100 d-flex flex-column");
+  make_navigation(writer, configuration);
+  std::forward<BodyWriter>(write_body)(writer);
+  make_footer(writer);
+  writer.script()
+      .attribute("async", "")
+      .attribute("defer", "")
+      .attribute("src",
+                 // For cache busting, to force browsers to refresh styles
+                 // on any update
+                 std::string{"/self/static/main.min.js?v="} +
+                     std::string{SOURCEMETA_ONE_JS_CHECKSUM});
+  writer.close(); // </script>
+  writer.close(); // </body>
+  writer.close(); // </html>
 }
 
 } // namespace sourcemeta::one::html

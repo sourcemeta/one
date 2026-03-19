@@ -6,46 +6,55 @@
 #include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
-#include <optional>    // std::optional
-#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <vector>      // std::vector
 
 namespace sourcemeta::one::html {
 
-using namespace sourcemeta::core::html;
-
-inline auto make_breadcrumb(const sourcemeta::core::JSON &breadcrumb)
-    -> sourcemeta::core::HTML {
+inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
+                            const sourcemeta::core::JSON &breadcrumb) -> void {
   assert(breadcrumb.is_array());
   assert(!breadcrumb.empty());
-  auto entries = ol({{"class", "breadcrumb mb-0"}},
-                    li({{"class", "breadcrumb-item"}},
-                       a({{"href", "/"}}, i({{"class", "bi bi-arrow-left"}}))));
+
+  writer.nav()
+      .attribute("class", "container-fluid px-4 py-2 bg-light bg-gradient "
+                          "border-bottom font-monospace")
+      .attribute("aria-label", "breadcrumb");
+
+  writer.ol().attribute("class", "breadcrumb mb-0");
+
+  // First item: back arrow
+  writer.li().attribute("class", "breadcrumb-item");
+  writer.a().attribute("href", "/");
+  writer.i().attribute("class", "bi bi-arrow-left").close(); // </i>
+  writer.close();                                            // </a>
+  writer.close();                                            // </li>
 
   for (auto iterator = breadcrumb.as_array().cbegin();
        iterator != breadcrumb.as_array().cend(); ++iterator) {
     if (std::next(iterator) == breadcrumb.as_array().cend()) {
-      entries.push_back(
-          li({{"class", "breadcrumb-item active"}, {"aria-current", "page"}},
-             iterator->at("name").to_string()));
+      writer.li()
+          .attribute("class", "breadcrumb-item active")
+          .attribute("aria-current", "page");
+      writer.text(iterator->at("name").to_string());
+      writer.close(); // </li>
     } else {
-      entries.push_back(li({{"class", "breadcrumb-item"}},
-                           a({{"href", iterator->at("path").to_string()}},
-                             iterator->at("name").to_string())));
+      writer.li().attribute("class", "breadcrumb-item");
+      writer.a().attribute("href", iterator->at("path").to_string());
+      writer.text(iterator->at("name").to_string());
+      writer.close(); // </a>
+      writer.close(); // </li>
     }
   }
 
-  return nav({{"class", "container-fluid px-4 py-2 bg-light bg-gradient "
-                        "border-bottom font-monospace"},
-              {"aria-label", "breadcrumb"}},
-             std::move(entries));
+  writer.close(); // </ol>
+  writer.close(); // </nav>
 }
 
 inline auto
-make_schema_health_progress_bar(const sourcemeta::core::JSON::Integer health)
-    -> sourcemeta::core::HTML {
+make_schema_health_progress_bar(sourcemeta::core::HTMLWriter &writer,
+                                const sourcemeta::core::JSON::Integer health)
+    -> void {
   const auto [progress_class, progress_style] =
       [health]() -> std::pair<std::string, std::string> {
     if (health > 90) {
@@ -63,23 +72,27 @@ make_schema_health_progress_bar(const sourcemeta::core::JSON::Integer health)
     }
   }();
 
-  sourcemeta::core::HTMLAttributes attributes{{"class", progress_class}};
-  if (!progress_style.empty()) {
-    attributes.emplace_back("style", progress_style);
-  }
+  writer.div()
+      .attribute("class", "progress")
+      .attribute("role", "progressbar")
+      .attribute("aria-label", "Schema health score")
+      .attribute("aria-valuenow", std::to_string(health))
+      .attribute("aria-valuemin", "0")
+      .attribute("aria-valuemax", "100");
 
-  return div({{"class", "progress"},
-              {"role", "progressbar"},
-              {"aria-label", "Schema health score"},
-              {"aria-valuenow", std::to_string(health)},
-              {"aria-valuemin", "0"},
-              {"aria-valuemax", "100"}},
-             div(std::move(attributes), std::to_string(health) + "%"));
+  writer.div().attribute("class", progress_class);
+  if (!progress_style.empty()) {
+    writer.attribute("style", progress_style);
+  }
+  writer.text(std::to_string(health) + "%");
+  writer.close(); // </div> inner
+  writer.close(); // </div> progress
 }
 
 inline auto
-make_dialect_badge(const sourcemeta::core::JSON::String &base_dialect_uri)
-    -> sourcemeta::core::HTML {
+make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
+                   const sourcemeta::core::JSON::String &base_dialect_uri)
+    -> void {
   const auto [short_name, is_current] =
       [&base_dialect_uri]() -> std::pair<std::string, bool> {
     if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema") {
@@ -104,169 +117,244 @@ make_dialect_badge(const sourcemeta::core::JSON::String &base_dialect_uri)
     display_name[0] = static_cast<char>(std::toupper(display_name[0]));
   }
 
-  return a({{"href", "https://www.learnjsonschema.com/" + short_name},
-            {"target", "_blank"}},
-           span({{"class", "align-middle badge " +
-                               std::string(is_current ? "text-bg-primary"
-                                                      : "text-bg-danger")}},
-                display_name));
+  writer.a()
+      .attribute("href", "https://www.learnjsonschema.com/" + short_name)
+      .attribute("target", "_blank");
+  writer.span().attribute(
+      "class",
+      "align-middle badge " +
+          std::string(is_current ? "text-bg-primary" : "text-bg-danger"));
+  writer.text(display_name);
+  writer.close(); // </span>
+  writer.close(); // </a>
 }
 
-inline auto make_directory_header(const sourcemeta::core::JSON &directory)
-    -> sourcemeta::core::HTML {
+inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
+                                  const sourcemeta::core::JSON &directory)
+    -> void {
   if (!directory.defines("title")) {
-    return div();
+    writer.div().close();
+    return;
   }
 
-  std::vector<sourcemeta::core::HTMLNode> children;
+  writer.div().attribute("class", "container-fluid px-4 pt-4 d-flex");
 
   if (directory.defines("github") && !directory.at("github").includes('/')) {
-    children.emplace_back(
-        img({{"src", "https://github.com/" +
-                         directory.at("github").to_string() + ".png?size=200"},
-             {"width", "100"},
-             {"height", "100"},
-             {"class", "img-thumbnail me-4"}}));
+    writer.img()
+        .attribute("src", "https://github.com/" +
+                              directory.at("github").to_string() +
+                              ".png?size=200")
+        .attribute("width", "100")
+        .attribute("height", "100")
+        .attribute("class", "img-thumbnail me-4");
   }
 
-  std::vector<sourcemeta::core::HTMLNode> title_section_children;
-  title_section_children.emplace_back(
-      h2({{"class", "fw-bold h4"}}, directory.at("title").to_string()));
+  // Title section
+  writer.div();
+  writer.h2().attribute("class", "fw-bold h4");
+  writer.text(directory.at("title").to_string());
+  writer.close(); // </h2>
 
   if (directory.defines("description")) {
-    title_section_children.emplace_back(
-        p({{"class", "text-secondary"}},
-          directory.at("description").to_string()));
+    writer.p().attribute("class", "text-secondary");
+    writer.text(directory.at("description").to_string());
+    writer.close(); // </p>
   }
 
   if (directory.defines("email") || directory.defines("github") ||
       directory.defines("website")) {
-    std::vector<sourcemeta::core::HTMLNode> contact_children;
+    writer.div(); // contact div
 
     if (directory.defines("github")) {
-      contact_children.emplace_back(
-          small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
-                i({{"class", "bi bi-github text-secondary me-1"}}),
-                a({{"href",
-                    "https://github.com/" + directory.at("github").to_string()},
-                   {"class", "text-secondary"},
-                   {"target", "_blank"}},
-                  directory.at("github").to_string())));
+      writer.small().attribute("class",
+                               "me-3 d-block mb-2 mb-md-0 d-md-inline-block");
+      writer.i().attribute("class", "bi bi-github text-secondary me-1").close();
+      writer.a()
+          .attribute("href",
+                     "https://github.com/" + directory.at("github").to_string())
+          .attribute("class", "text-secondary")
+          .attribute("target", "_blank");
+      writer.text(directory.at("github").to_string());
+      writer.close(); // </a>
+      writer.close(); // </small>
     }
 
     if (directory.defines("website")) {
-      contact_children.emplace_back(
-          small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
-                i({{"class", "bi bi-link-45deg text-secondary me-1"}}),
-                a({{"href", directory.at("website").to_string()},
-                   {"class", "text-secondary"},
-                   {"target", "_blank"}},
-                  directory.at("website").to_string())));
+      writer.small().attribute("class",
+                               "me-3 d-block mb-2 mb-md-0 d-md-inline-block");
+      writer.i()
+          .attribute("class", "bi bi-link-45deg text-secondary me-1")
+          .close();
+      writer.a()
+          .attribute("href", directory.at("website").to_string())
+          .attribute("class", "text-secondary")
+          .attribute("target", "_blank");
+      writer.text(directory.at("website").to_string());
+      writer.close(); // </a>
+      writer.close(); // </small>
     }
 
     if (directory.defines("email")) {
-      contact_children.emplace_back(
-          small({{"class", "me-3 d-block mb-2 mb-md-0 d-md-inline-block"}},
-                i({{"class", "bi bi-envelope text-secondary me-1"}}),
-                a({{"href", "mailto:" + directory.at("email").to_string()},
-                   {"class", "text-secondary"}},
-                  directory.at("email").to_string())));
+      writer.small().attribute("class",
+                               "me-3 d-block mb-2 mb-md-0 d-md-inline-block");
+      writer.i()
+          .attribute("class", "bi bi-envelope text-secondary me-1")
+          .close();
+      writer.a()
+          .attribute("href", "mailto:" + directory.at("email").to_string())
+          .attribute("class", "text-secondary");
+      writer.text(directory.at("email").to_string());
+      writer.close(); // </a>
+      writer.close(); // </small>
     }
 
-    title_section_children.emplace_back(div(std::move(contact_children)));
+    writer.close(); // </div> contact
   }
 
-  children.emplace_back(div(std::move(title_section_children)));
-  return div({{"class", "container-fluid px-4 pt-4 d-flex"}},
-             std::move(children));
+  writer.close(); // </div> title section
+  writer.close(); // </div> container
 }
 
-inline auto make_file_manager_row(const sourcemeta::core::JSON &entry)
-    -> sourcemeta::core::HTML {
-  auto type_content = [&entry]() -> sourcemeta::core::HTML {
-    if (entry.at("type").to_string() == "directory") {
-      if (entry.defines("github") && !entry.at("github").includes('/')) {
-        return img(
-            {{"src", "https://github.com/" + entry.at("github").to_string() +
-                         ".png?size=80"},
-             {"width", "40"},
-             {"height", "40"}});
-      } else {
-        return i({{"class", "bi bi-folder-fill"}});
-      }
+inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
+                                  const sourcemeta::core::JSON &entry) -> void {
+  writer.tr();
+
+  // Type column
+  writer.td().attribute("class", "text-nowrap");
+  if (entry.at("type").to_string() == "directory") {
+    if (entry.defines("github") && !entry.at("github").includes('/')) {
+      writer.img()
+          .attribute("src", "https://github.com/" +
+                                entry.at("github").to_string() + ".png?size=80")
+          .attribute("width", "40")
+          .attribute("height", "40");
     } else {
-      return make_dialect_badge(entry.at("baseDialect").to_string());
+      writer.i().attribute("class", "bi bi-folder-fill").close();
     }
-  }();
+  } else {
+    make_dialect_badge(writer, entry.at("baseDialect").to_string());
+  }
+  writer.close(); // </td>
 
-  return tr(
-      td({{"class", "text-nowrap"}}, type_content),
-      td({{"class", "font-monospace"}},
-         a({{"href", entry.at("path").to_string()}},
-           entry.at("name").to_string())),
-      td(small(entry.defines("title") ? entry.at("title").to_string() : "-")),
-      td(small(entry.defines("description")
-                   ? entry.at("description").to_string()
-                   : "-")),
-      td(small(entry.defines("dependencies")
+  // Name column
+  writer.td().attribute("class", "font-monospace");
+  writer.a().attribute("href", entry.at("path").to_string());
+  writer.text(entry.at("name").to_string());
+  writer.close(); // </a>
+  writer.close(); // </td>
+
+  // Title column
+  writer.td();
+  writer.small(entry.defines("title") ? entry.at("title").to_string() : "-");
+  writer.close(); // </td>
+
+  // Description column
+  writer.td();
+  writer.small(
+      entry.defines("description") ? entry.at("description").to_string() : "-");
+  writer.close(); // </td>
+
+  // Dependencies column
+  writer.td();
+  writer.small(entry.defines("dependencies")
                    ? std::to_string(entry.at("dependencies").to_integer())
-                   : "-")),
-      td({{"class", "align-middle"}},
-         make_schema_health_progress_bar(entry.at("health").to_integer())));
+                   : "-");
+  writer.close(); // </td>
+
+  // Health column
+  writer.td().attribute("class", "align-middle");
+  make_schema_health_progress_bar(writer, entry.at("health").to_integer());
+  writer.close(); // </td>
+
+  writer.close(); // </tr>
 }
 
-inline auto make_file_manager_table_header() -> sourcemeta::core::HTML {
-  return thead(tr(th({{"scope", "col"}, {"style", "width: 50px"}}),
-                  th({{"scope", "col"}}, "Name"),
-                  th({{"scope", "col"}}, "Title"),
-                  th({{"scope", "col"}}, "Description"),
-                  th({{"scope", "col"}}, "Dependencies"),
-                  th({{"scope", "col"}, {"style", "width: 150px"}}, "Health")));
+inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
+    -> void {
+  writer.thead();
+  writer.tr();
+  writer.th()
+      .attribute("scope", "col")
+      .attribute("style", "width: 50px")
+      .close();
+  writer.th().attribute("scope", "col");
+  writer.text("Name");
+  writer.close(); // </th>
+  writer.th().attribute("scope", "col");
+  writer.text("Title");
+  writer.close(); // </th>
+  writer.th().attribute("scope", "col");
+  writer.text("Description");
+  writer.close(); // </th>
+  writer.th().attribute("scope", "col");
+  writer.text("Dependencies");
+  writer.close(); // </th>
+  writer.th().attribute("scope", "col").attribute("style", "width: 150px");
+  writer.text("Health");
+  writer.close(); // </th>
+  writer.close(); // </tr>
+  writer.close(); // </thead>
 }
 
-inline auto make_file_manager(const sourcemeta::core::JSON &directory)
-    -> sourcemeta::core::HTML {
+inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
+                              const sourcemeta::core::JSON &directory) -> void {
   if (directory.at("entries").empty()) {
-    return div(
-        {{"class", "container-fluid p-4 flex-grow-1"}},
-        p("Things look a bit empty over here. Try ingesting some schemas using "
-          "the configuration file!"));
+    writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
+    writer.p(
+        "Things look a bit empty over here. Try ingesting some schemas using "
+        "the configuration file!");
+    writer.close(); // </div>
+    return;
   }
 
-  auto tbody_content = tbody();
-  auto special_tbody_content = tbody();
+  // First pass: check what we have
   bool has_regular_entries = false;
   bool has_special_entries = false;
-
   for (const auto &entry : directory.at("entries").as_array()) {
     const auto path = entry.at("path").to_string();
     if (path == "/self" || path == "/self/") {
-      special_tbody_content.push_back(make_file_manager_row(entry));
       has_special_entries = true;
     } else {
-      tbody_content.push_back(make_file_manager_row(entry));
       has_regular_entries = true;
     }
   }
 
-  std::vector<sourcemeta::core::HTMLNode> container_children;
+  writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
   if (has_regular_entries) {
-    container_children.emplace_back(table(
-        {{"class", "table table-bordered border-light-subtle table-light"}},
-        make_file_manager_table_header(), std::move(tbody_content)));
+    writer.table().attribute(
+        "class", "table table-bordered border-light-subtle table-light");
+    make_file_manager_table_header(writer);
+    writer.tbody();
+    for (const auto &entry : directory.at("entries").as_array()) {
+      const auto path = entry.at("path").to_string();
+      if (path != "/self" && path != "/self/") {
+        make_file_manager_row(writer, entry);
+      }
+    }
+    writer.close(); // </tbody>
+    writer.close(); // </table>
   }
 
   if (has_special_entries) {
-    container_children.emplace_back(
-        h6({{"class", "text-secondary mt-4 mb-3"}}, "Special directories"));
-    container_children.emplace_back(table(
-        {{"class", "table table-bordered border-light-subtle table-light"}},
-        make_file_manager_table_header(), std::move(special_tbody_content)));
+    writer.h6().attribute("class", "text-secondary mt-4 mb-3");
+    writer.text("Special directories");
+    writer.close(); // </h6>
+    writer.table().attribute(
+        "class", "table table-bordered border-light-subtle table-light");
+    make_file_manager_table_header(writer);
+    writer.tbody();
+    for (const auto &entry : directory.at("entries").as_array()) {
+      const auto path = entry.at("path").to_string();
+      if (path == "/self" || path == "/self/") {
+        make_file_manager_row(writer, entry);
+      }
+    }
+    writer.close(); // </tbody>
+    writer.close(); // </table>
   }
 
-  return div({{"class", "container-fluid p-4 flex-grow-1"}},
-             std::move(container_children));
+  writer.close(); // </div>
 }
 
 } // namespace sourcemeta::one::html
