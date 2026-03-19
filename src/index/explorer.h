@@ -17,7 +17,6 @@
 #include <cmath>       // std::lround
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
-#include <iostream>    // std::cerr
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
@@ -594,7 +593,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     std::vector<SortableEntry> directory_entries;
     std::vector<SortableEntry> schema_entries;
 
-    const auto loop_start{std::chrono::steady_clock::now()};
     for (const auto &dependency : action.dependencies) {
       const auto filename{dependency.filename().string()};
       const auto child_name{
@@ -602,81 +600,83 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
       if (filename == "directory.metapack") {
         sourcemeta::core::FileView directory_view{dependency};
-        const auto dir_extension_offset{
+        const auto directory_extension_offset{
             sourcemeta::one::metapack_extension_offset(directory_view)};
-        const auto *dir_extension{
+        const auto *directory_extension{
             sourcemeta::one::metapack_extension<MetapackDirectoryExtension>(
                 directory_view)};
 
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
-        MetapackVersionInfo dir_version{};
+        MetapackVersionInfo directory_version{};
 
-        if (dir_extension != nullptr && dir_extension_offset != 0) {
-          const auto *dir_base{
-              directory_view.as<std::uint8_t>(dir_extension_offset)};
-          dir_version = dir_extension->version;
+        if (directory_extension != nullptr && directory_extension_offset != 0) {
+          const auto *directory_base{
+              directory_view.as<std::uint8_t>(directory_extension_offset)};
+          directory_version = directory_extension->version;
 
-          entry_json.assign("health",
-                            sourcemeta::core::JSON{dir_extension->health});
-          scores.emplace_back(dir_extension->health);
-
-          const auto dir_path{directory_extension_string(
-              dir_extension, dir_base, 0, dir_extension->path_length)};
           entry_json.assign(
-              "path", sourcemeta::core::JSON{std::string{dir_path} + "/"});
+              "health", sourcemeta::core::JSON{directory_extension->health});
+          scores.emplace_back(directory_extension->health);
 
-          const std::size_t title_offset{dir_extension->path_length};
-          const auto dir_title{
-              directory_extension_string(dir_extension, dir_base, title_offset,
-                                         dir_extension->title_length)};
-          if (!dir_title.empty()) {
-            entry_json.assign("title",
-                              sourcemeta::core::JSON{std::string{dir_title}});
+          const auto directory_path_string{
+              directory_extension_string(directory_extension, directory_base, 0,
+                                         directory_extension->path_length)};
+          entry_json.assign(
+              "path",
+              sourcemeta::core::JSON{std::string{directory_path_string} + "/"});
+
+          const std::size_t title_offset{directory_extension->path_length};
+          const auto directory_title{directory_extension_string(
+              directory_extension, directory_base, title_offset,
+              directory_extension->title_length)};
+          if (!directory_title.empty()) {
+            entry_json.assign(
+                "title", sourcemeta::core::JSON{std::string{directory_title}});
           }
 
-          const std::size_t desc_offset{title_offset +
-                                        dir_extension->title_length};
-          const auto dir_description{
-              directory_extension_string(dir_extension, dir_base, desc_offset,
-                                         dir_extension->description_length)};
-          if (!dir_description.empty()) {
-            entry_json.assign("description", sourcemeta::core::JSON{
-                                                 std::string{dir_description}});
+          const std::size_t description_offset{
+              title_offset + directory_extension->title_length};
+          const auto directory_description{directory_extension_string(
+              directory_extension, directory_base, description_offset,
+              directory_extension->description_length)};
+          if (!directory_description.empty()) {
+            entry_json.assign("description", sourcemeta::core::JSON{std::string{
+                                                 directory_description}});
           }
 
-          const std::size_t email_offset{desc_offset +
-                                         dir_extension->description_length};
-          const auto dir_email{
-              directory_extension_string(dir_extension, dir_base, email_offset,
-                                         dir_extension->email_length)};
-          if (!dir_email.empty()) {
-            entry_json.assign("email",
-                              sourcemeta::core::JSON{std::string{dir_email}});
+          const std::size_t email_offset{
+              description_offset + directory_extension->description_length};
+          const auto directory_email{directory_extension_string(
+              directory_extension, directory_base, email_offset,
+              directory_extension->email_length)};
+          if (!directory_email.empty()) {
+            entry_json.assign(
+                "email", sourcemeta::core::JSON{std::string{directory_email}});
           }
 
           const std::size_t github_offset{email_offset +
-                                          dir_extension->email_length};
-          const auto dir_github{
-              directory_extension_string(dir_extension, dir_base, github_offset,
-                                         dir_extension->github_length)};
-          if (!dir_github.empty()) {
-            entry_json.assign("github",
-                              sourcemeta::core::JSON{std::string{dir_github}});
+                                          directory_extension->email_length};
+          const auto directory_github{directory_extension_string(
+              directory_extension, directory_base, github_offset,
+              directory_extension->github_length)};
+          if (!directory_github.empty()) {
+            entry_json.assign("github", sourcemeta::core::JSON{
+                                            std::string{directory_github}});
           }
 
           const std::size_t website_offset{github_offset +
-                                           dir_extension->github_length};
-          const auto dir_website{directory_extension_string(
-              dir_extension, dir_base, website_offset,
-              dir_extension->website_length)};
-          if (!dir_website.empty()) {
-            entry_json.assign("website",
-                              sourcemeta::core::JSON{std::string{dir_website}});
+                                           directory_extension->github_length};
+          const auto directory_website{directory_extension_string(
+              directory_extension, directory_base, website_offset,
+              directory_extension->website_length)};
+          if (!directory_website.empty()) {
+            entry_json.assign("website", sourcemeta::core::JSON{
+                                             std::string{directory_website}});
           }
         } else {
-          dir_version = parse_version_info(child_name);
+          directory_version = parse_version_info(child_name);
 
           auto directory_json_option{
               sourcemeta::one::metapack_read_json(dependency)};
@@ -709,7 +709,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           }
         }
 
-        directory_entries.push_back({std::move(entry_json), dir_version, {}});
+        directory_entries.push_back(
+            {std::move(entry_json), directory_version, {}});
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
@@ -787,7 +788,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       }
     }
 
-    const auto loop_end{std::chrono::steady_clock::now()};
     const auto version_comparator = [](const SortableEntry &left,
                                        const SortableEntry &right) -> bool {
       if (left.version.is_version != right.version.is_version) {
@@ -809,30 +809,11 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               version_comparator);
     std::sort(schema_entries.begin(), schema_entries.end(), version_comparator);
 
-    const auto sort_end{std::chrono::steady_clock::now()};
     for (auto &entry : directory_entries) {
       entries.push_back(std::move(entry.json));
     }
     for (auto &entry : schema_entries) {
       entries.push_back(std::move(entry.json));
-    }
-    const auto merge_end{std::chrono::steady_clock::now()};
-
-    if (directory_entries.size() + schema_entries.size() > 100) {
-      std::cerr << "[dir-list] dirs=" << directory_entries.size()
-                << " schemas=" << schema_entries.size() << " loop="
-                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                       loop_end - loop_start)
-                       .count()
-                << "ms sort="
-                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                       sort_end - loop_end)
-                       .count()
-                << "ms merge="
-                << std::chrono::duration_cast<std::chrono::milliseconds>(
-                       merge_end - sort_end)
-                       .count()
-                << "ms\n";
     }
 
     auto meta{sourcemeta::core::JSON::make_object()};
