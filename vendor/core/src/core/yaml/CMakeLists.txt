@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME yaml
-  PRIVATE_HEADERS error.h
+  PRIVATE_HEADERS error.h roundtrip.h
   SOURCES yaml.cc lexer.h parser.h stringify.h)
 
 if(SOURCEMETA_CORE_INSTALL)
@@ -7,5 +7,6 @@ if(SOURCEMETA_CORE_INSTALL)
 endif()
 
 target_link_libraries(sourcemeta_core_yaml PUBLIC sourcemeta::core::json)
+target_link_libraries(sourcemeta_core_yaml PUBLIC sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_core_yaml PRIVATE sourcemeta::core::io)
 target_link_libraries(sourcemeta_core_yaml PRIVATE sourcemeta::core::unicode)
