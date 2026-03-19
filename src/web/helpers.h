@@ -173,10 +173,10 @@ inline auto make_directory_header(const sourcemeta::core::JSON &directory)
                   directory.at("email").to_string())));
     }
 
-    title_section_children.emplace_back(div(contact_children));
+    title_section_children.emplace_back(div(std::move(contact_children)));
   }
 
-  children.emplace_back(div(title_section_children));
+  children.emplace_back(div(std::move(title_section_children)));
   return div({{"class", "container-fluid px-4 pt-4 d-flex"}},
              std::move(children));
 }

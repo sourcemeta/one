@@ -140,7 +140,7 @@ inline auto make_page(const Configuration &configuration,
   return sourcemeta::core::html::html(
       {{"class", "h-100"}, {"lang", "en"}},
       make_head(configuration, canonical, title, description),
-      body({{"class", "h-100 d-flex flex-column"}}, nodes));
+      body({{"class", "h-100 d-flex flex-column"}}, std::move(nodes)));
 }
 
 } // namespace sourcemeta::one::html

@@ -62,7 +62,7 @@ auto GENERATE_WEB_SCHEMA::handler(
          {"role", "button"}},
         "Bundle"));
 
-  content_children.emplace_back(div(header_children));
+  content_children.emplace_back(div(std::move(header_children)));
 
   // Integration snippets
   const auto schema_name{
@@ -95,7 +95,7 @@ auto GENERATE_WEB_SCHEMA::handler(
       span({{"class", "text-secondary fw-light text-nowrap"}}, "Use with"));
   usage_row.emplace_back(
       div({{"class", "btn-group flex-shrink-0 me-2"}, {"role", "group"}},
-          usage_buttons));
+          std::move(usage_buttons)));
   usage_row.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "usage-cli"},
            {"class", "d-none d-flex align-items-center flex-grow-1 gap-2"},
@@ -140,7 +140,7 @@ auto GENERATE_WEB_SCHEMA::handler(
            {"class", "bg-light border rounded px-3 py-2 mt-4 d-flex "
                      "flex-wrap flex-md-nowrap align-items-center small "
                      "gap-2"}},
-          usage_row));
+          std::move(usage_row)));
 
   // Information table
   std::vector<sourcemeta::core::HTMLNode> table_rows;
@@ -177,10 +177,10 @@ auto GENERATE_WEB_SCHEMA::handler(
       td(std::to_string(meta.at("bytes").as_real() / (1024 * 1024)) + " MB")));
 
   content_children.emplace_back(
-      table({{"class", "table table-bordered my-4"}}, table_rows));
+      table({{"class", "table table-bordered my-4"}}, std::move(table_rows)));
   content_children.emplace_back(div({})); // Close div for content
 
-  container_children.emplace_back(div(content_children));
+  container_children.emplace_back(div(std::move(content_children)));
 
   // Alert section
   if (meta.at("alert").is_string()) {
@@ -254,7 +254,7 @@ auto GENERATE_WEB_SCHEMA::handler(
                std::to_string(health.at("errors").size())))));
 
   details_children.emplace_back(
-      ul({{"class", "nav nav-tabs mt-4 mb-3"}}, nav_items));
+      ul({{"class", "nav nav-tabs mt-4 mb-3"}}, std::move(nav_items)));
 
   // Examples tab
   std::vector<sourcemeta::core::HTMLNode> examples_content;
@@ -270,11 +270,11 @@ auto GENERATE_WEB_SCHEMA::handler(
               code({{"class", "d-block text-primary"}}, pretty.str())));
     }
     examples_content.emplace_back(
-        div({{"class", "list-group"}}, example_items));
+        div({{"class", "list-group"}}, std::move(example_items)));
   }
   details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "examples"}, {"class", "d-none"}},
-          examples_content));
+          std::move(examples_content)));
 
   details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "dependencies"}, {"class", "d-none"}},
@@ -332,25 +332,26 @@ auto GENERATE_WEB_SCHEMA::handler(
            {"data-sourcemeta-ui-editor-highlight", meta.at("path").to_string()},
            {"data-sourcemeta-ui-editor-highlight-pointers", pointers.str()},
            {"class", "list-group-item list-group-item-action py-3"}},
-          error_children));
+          std::move(error_children)));
     }
-    health_content.emplace_back(div({{"class", "list-group"}}, error_items));
+    health_content.emplace_back(
+        div({{"class", "list-group"}}, std::move(error_items)));
   }
   details_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-id", "health"}, {"class", "d-none"}},
-          health_content));
+          std::move(health_content)));
 
   container_children.emplace_back(
       div({{"data-sourcemeta-ui-tab-group", "details"},
            {"data-sourcemeta-ui-tab-url-param", "tab"}},
-          details_children));
+          std::move(details_children)));
 
   std::ostringstream html_content;
   html_content << "<!DOCTYPE html>"
                << html::make_page(configuration, canonical, title, description,
                                   html::make_breadcrumb(meta.at("breadcrumb")),
                                   html::div({{"class", "container-fluid p-4"}},
-                                            container_children));
+                                            std::move(container_children)));
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
   metapack_write_text(action.destination, html_content.str(), "text/html",
