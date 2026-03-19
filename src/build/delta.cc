@@ -560,8 +560,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
   }
 
   TargetMap targets;
-  targets.reserve(schemas.size() * PER_SCHEMA_RULES.size() +
-                  AGGREGATE_RULES.size());
+  targets.reserve(schemas.size() * PER_SCHEMA_RULES.size());
   const auto &output_string{output.native()};
   const auto configuration_string{configuration_path.string()};
   const auto explorer_string{explorer_path.string()};
@@ -837,42 +836,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    for (std::size_t index{0}; index < AGGREGATE_RULES.size(); index++) {
-      const auto &rule{AGGREGATE_RULES[index]};
-
-      std::vector<std::string> all_collected;
-      all_collected.reserve(active_schemas.size());
-      for (const auto &schema : active_schemas) {
-        const auto &base{rule.collector_base == TargetBase::Schema
-                             ? schema.schema_base
-                             : schema.explorer_base};
-        all_collected.push_back(append_filename(base, rule.collector_filename));
-      }
-
-      std::string destination;
-      if (rule.output_base == AggregateOutputBase::Explorer) {
-        destination.reserve(
-            explorer_string.size() + 4 +
-            std::char_traits<char>::length(rule.output_filename));
-        destination += explorer_string;
-        destination += '/';
-        destination += SENTINEL;
-        destination += '/';
-        destination += rule.output_filename;
-      } else {
-        destination.reserve(
-            output_string.size() + 1 +
-            std::char_traits<char>::length(rule.output_filename));
-        destination += output_string;
-        destination += '/';
-        destination += rule.output_filename;
-      }
-
-      declare_target(targets, rule.action, destination,
-                     std::move(all_collected));
-      dirty_set.insert(std::move(destination));
-    }
-
     auto has_graph_change{!removed_uris.empty()};
     if (!has_graph_change) {
       for (const auto &schema : active_schemas) {
@@ -918,6 +881,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
     const auto affected_dirs{
         collect_affected_directories(schemas_path, affected_relative_paths)};
+    const auto all_dirs{
+        collect_affected_directories(schemas_path, all_relative_paths)};
 
     for (const auto &rule : DIRECTORY_RULES) {
       if (rule.gate == TargetGate::FullOnly &&
@@ -978,10 +943,24 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
                 if (other_parent == relative) {
                   rule_dependencies.push_back(
                       (explorer_path / other_relative / SENTINEL /
-                       DIRECTORY_RULES[0].filename)
+                       DIRECTORY_LIST_RULE.filename)
                           .lexically_normal()
                           .string());
                 }
+              }
+              break;
+            case DirectoryDependencyKind::AllDirectoryListings:
+              for (const auto &any_directory : all_dirs) {
+                const auto dir_relative{
+                    std::filesystem::relative(any_directory, schemas_path)};
+                rule_dependencies.push_back(
+                    (dir_relative == "."
+                         ? explorer_path / SENTINEL /
+                               DIRECTORY_LIST_RULE.filename
+                         : explorer_path / dir_relative / SENTINEL /
+                               DIRECTORY_LIST_RULE.filename)
+                        .lexically_normal()
+                        .string());
               }
               break;
             case DirectoryDependencyKind::SameDirectoryTarget:
@@ -1122,14 +1101,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     const auto output_prefix{output_string + "/"};
 
     std::unordered_set<std::string> global_skip_paths;
-    for (const auto &rule : AGGREGATE_RULES) {
-      if (rule.output_base == AggregateOutputBase::Explorer) {
-        global_skip_paths.insert(explorer_string + '/' + SENTINEL + '/' +
-                                 rule.output_filename);
-      } else {
-        global_skip_paths.insert(output_string + '/' + rule.output_filename);
-      }
-    }
     for (const auto &rule : GLOBAL_RULES) {
       global_skip_paths.insert(output_string + '/' + rule.filename);
     }

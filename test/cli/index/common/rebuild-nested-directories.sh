@@ -110,14 +110,14 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
 ( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
 ( 57%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 63%) Producing: explorer/%/search.metapack
-( 68%) Producing: explorer/left/left-a/%/directory.metapack
-( 73%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 78%) Producing: explorer/left/%/directory.metapack
-( 84%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 89%) Producing: explorer/%/directory.metapack
-( 94%) Producing: explorer/left/%/directory-html.metapack
-(100%) Producing: explorer/%/directory-html.metapack
+( 63%) Producing: explorer/left/left-a/%/directory.metapack
+( 68%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 73%) Producing: explorer/left/%/directory.metapack
+( 78%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 84%) Producing: explorer/%/directory.metapack
+( 89%) Producing: explorer/left/%/directory-html.metapack
+( 94%) Producing: explorer/%/directory-html.metapack
+(100%) Producing: explorer/%/search.metapack
 (100%) Combining: schemas/left/left-a/s5/%/dependents.metapack
 EOF
 

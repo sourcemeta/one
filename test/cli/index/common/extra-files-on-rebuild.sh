@@ -63,14 +63,14 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 52%) Producing: schemas/example/schemas/old/%/blaze-exhaustive.metapack
 ( 56%) Producing: schemas/example/schemas/old/%/blaze-fast.metapack
 ( 60%) Producing: schemas/example/schemas/old/%/editor.metapack
-( 65%) Producing: explorer/%/search.metapack
-( 69%) Producing: explorer/example/schemas/%/directory.metapack
-( 73%) Producing: explorer/example/schemas/old/%/schema-html.metapack
-( 78%) Producing: explorer/example/%/directory.metapack
-( 82%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 86%) Producing: explorer/%/directory.metapack
-( 91%) Producing: explorer/example/%/directory-html.metapack
-( 95%) Producing: explorer/%/directory-html.metapack
+( 65%) Producing: explorer/example/schemas/%/directory.metapack
+( 69%) Producing: explorer/example/schemas/old/%/schema-html.metapack
+( 73%) Producing: explorer/example/%/directory.metapack
+( 78%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 82%) Producing: explorer/%/directory.metapack
+( 86%) Producing: explorer/example/%/directory-html.metapack
+( 91%) Producing: explorer/%/directory-html.metapack
+( 95%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
 (100%) Combining: schemas/example/schemas/old/%/dependents.metapack
 EOF
@@ -116,14 +116,14 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 42%) Producing: schemas/example/schemas/new/%/blaze-exhaustive.metapack
 ( 47%) Producing: schemas/example/schemas/new/%/blaze-fast.metapack
 ( 52%) Producing: schemas/example/schemas/new/%/editor.metapack
-( 57%) Producing: explorer/%/search.metapack
-( 61%) Producing: explorer/example/schemas/%/directory.metapack
-( 66%) Producing: explorer/example/schemas/new/%/schema-html.metapack
-( 71%) Producing: explorer/example/%/directory.metapack
-( 76%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 80%) Producing: explorer/%/directory.metapack
-( 85%) Producing: explorer/example/%/directory-html.metapack
-( 90%) Producing: explorer/%/directory-html.metapack
+( 57%) Producing: explorer/example/schemas/%/directory.metapack
+( 61%) Producing: explorer/example/schemas/new/%/schema-html.metapack
+( 66%) Producing: explorer/example/%/directory.metapack
+( 71%) Producing: explorer/example/schemas/%/directory-html.metapack
+( 76%) Producing: explorer/%/directory.metapack
+( 80%) Producing: explorer/example/%/directory-html.metapack
+( 85%) Producing: explorer/%/directory-html.metapack
+( 90%) Producing: explorer/%/search.metapack
 ( 95%) Disposing: explorer/example/schemas/old
 (100%) Disposing: schemas/example/schemas/old
 (100%) Combining: schemas/example/schemas/new/%/dependents.metapack
