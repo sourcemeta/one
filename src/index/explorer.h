@@ -23,23 +23,9 @@
 #include <regex>       // std::regex, std::regex_search, std::smatch
 #include <string>      // std::string, std::stoul
 #include <string_view> // std::string_view
-#include <tuple>       // std::tuple, std::make_tuple
+#include <tuple>       // std::tuple
 #include <utility>     // std::move
 #include <vector>      // std::vector
-
-// TODO: We need a SemVer module in Core
-
-static auto try_parse_version(const sourcemeta::core::JSON::String &name)
-    -> std::optional<std::tuple<unsigned, unsigned, unsigned>> {
-  static const std::regex version_regex(R"(v?(\d+)\.(\d+)\.(\d+))");
-  std::smatch match;
-  if (std::regex_search(name, match, version_regex)) {
-    return std::make_tuple(std::stoul(match[1]), std::stoul(match[2]),
-                           std::stoul(match[3]));
-  } else {
-    return std::nullopt;
-  }
-}
 
 static auto make_breadcrumb(const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
@@ -111,10 +97,18 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
 namespace sourcemeta::one {
 
 #pragma pack(push, 1)
+struct MetapackVersionInfo {
+  std::uint8_t is_version;
+  std::uint32_t major;
+  std::uint32_t minor;
+  std::uint32_t patch;
+};
+
 struct MetapackExplorerSchemaExtension {
   std::int64_t health;
   std::int64_t bytes;
   std::int64_t dependencies;
+  MetapackVersionInfo version;
   std::uint16_t path_length;
   std::uint16_t identifier_length;
   std::uint16_t base_dialect_length;
@@ -124,7 +118,97 @@ struct MetapackExplorerSchemaExtension {
   std::uint16_t alert_length;
   std::uint16_t provenance_length;
 };
+
+struct MetapackDirectoryExtension {
+  MetapackVersionInfo version;
+  std::int64_t health;
+  std::uint16_t path_length;
+  std::uint16_t title_length;
+  std::uint16_t description_length;
+  std::uint16_t email_length;
+  std::uint16_t github_length;
+  std::uint16_t website_length;
+};
 #pragma pack(pop)
+
+static auto parse_version_info(const std::string_view name)
+    -> MetapackVersionInfo {
+  static const std::regex version_regex(R"(^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$)");
+  std::string name_string{name};
+  std::smatch match;
+  if (std::regex_match(name_string, match, version_regex)) {
+    try {
+      return {
+          1, static_cast<std::uint32_t>(std::stoul(match[1])),
+          match[2].matched ? static_cast<std::uint32_t>(std::stoul(match[2]))
+                           : 0,
+          match[3].matched ? static_cast<std::uint32_t>(std::stoul(match[3]))
+                           : 0};
+    } catch (...) {
+      return {0, 0, 0, 0};
+    }
+  }
+
+  return {0, 0, 0, 0};
+}
+
+inline auto directory_extension_string(const MetapackDirectoryExtension *,
+                                       const std::uint8_t *base,
+                                       const std::size_t field_offset,
+                                       const std::size_t field_length)
+    -> std::string_view {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  return {reinterpret_cast<const char *>(
+              base + sizeof(MetapackDirectoryExtension) + field_offset),
+          field_length};
+}
+
+static auto make_directory_extension(
+    const MetapackVersionInfo &version, const std::int64_t health,
+    const std::string_view path, const std::string_view title,
+    const std::string_view description, const std::string_view email,
+    const std::string_view github, const std::string_view website)
+    -> std::vector<std::uint8_t> {
+  assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(email.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(github.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(website.size() <= std::numeric_limits<std::uint16_t>::max());
+
+  const auto strings_size{path.size() + title.size() + description.size() +
+                          email.size() + github.size() + website.size()};
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackDirectoryExtension) + strings_size);
+
+  MetapackDirectoryExtension header{};
+  header.version = version;
+  header.health = health;
+  header.path_length = static_cast<std::uint16_t>(path.size());
+  header.title_length = static_cast<std::uint16_t>(title.size());
+  header.description_length = static_cast<std::uint16_t>(description.size());
+  header.email_length = static_cast<std::uint16_t>(email.size());
+  header.github_length = static_cast<std::uint16_t>(github.size());
+  header.website_length = static_cast<std::uint16_t>(website.size());
+
+  auto *cursor{result.data()};
+  std::memcpy(cursor, &header, sizeof(header));
+  cursor += sizeof(header);
+
+  const auto append = [&cursor](const std::string_view string) {
+    std::memcpy(cursor, string.data(), string.size());
+    cursor += string.size();
+  };
+
+  append(path);
+  append(title);
+  append(description);
+  append(email);
+  append(github);
+  append(website);
+
+  return result;
+}
 
 inline auto explorer_extension_string(const MetapackExplorerSchemaExtension *,
                                       const std::uint8_t *base,
@@ -218,11 +302,12 @@ explorer_extension_provenance(const MetapackExplorerSchemaExtension *extension,
 
 static auto make_explorer_schema_extension(
     const std::int64_t health, const std::int64_t bytes,
-    const std::int64_t dependencies, const std::string_view path,
-    const std::string_view identifier, const std::string_view base_dialect,
-    const std::string_view dialect, const std::string_view title,
-    const std::string_view description, const std::string_view alert,
-    const std::string_view provenance) -> std::vector<std::uint8_t> {
+    const std::int64_t dependencies, const MetapackVersionInfo &version,
+    const std::string_view path, const std::string_view identifier,
+    const std::string_view base_dialect, const std::string_view dialect,
+    const std::string_view title, const std::string_view description,
+    const std::string_view alert, const std::string_view provenance)
+    -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -242,6 +327,7 @@ static auto make_explorer_schema_extension(
   header.health = health;
   header.bytes = bytes;
   header.dependencies = dependencies;
+  header.version = version;
   header.path_length = static_cast<std::uint16_t>(path.size());
   header.identifier_length = static_cast<std::uint16_t>(identifier.size());
   header.base_dialect_length = static_cast<std::uint16_t>(base_dialect.size());
@@ -386,11 +472,13 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
+    const auto schema_name{
+        action.destination.parent_path().parent_path().filename().string()};
     const auto extension_bytes{make_explorer_schema_extension(
         result.at("health").to_integer(),
         static_cast<std::int64_t>(schema_info.content_bytes),
-        result.at("dependencies").to_integer(), result.at("path").to_string(),
-        result.at("identifier").to_string(),
+        result.at("dependencies").to_integer(), parse_version_info(schema_name),
+        result.at("path").to_string(), result.at("identifier").to_string(),
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
         result.defines("title") ? result.at("title").to_string() : "",
         result.defines("description") ? result.at("description").to_string()
@@ -508,45 +596,135 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       current = current.parent_path();
     }
 
+    struct SortableEntry {
+      sourcemeta::core::JSON json;
+      MetapackVersionInfo version;
+      std::string name;
+    };
+
+    std::vector<SortableEntry> directory_entries;
+    std::vector<SortableEntry> schema_entries;
+
     for (const auto &dependency : action.dependencies) {
       const auto filename{dependency.filename().string()};
       const auto child_name{
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        auto directory_json_option{
-            sourcemeta::one::metapack_read_json(dependency)};
-        assert(directory_json_option.has_value());
-        auto directory_json{std::move(directory_json_option.value())};
-        assert(directory_json.is_object());
-        assert(directory_json.defines("health"));
-        assert(directory_json.at("health").is_integer());
-        scores.emplace_back(directory_json.at("health").to_integer());
+        sourcemeta::core::FileView directory_view{dependency};
+        const auto directory_extension_offset{
+            sourcemeta::one::metapack_extension_offset(directory_view)};
+        const auto *directory_extension{
+            sourcemeta::one::metapack_extension<MetapackDirectoryExtension>(
+                directory_view)};
 
         auto entry_json{sourcemeta::core::JSON::make_object()};
-        entry_json.assign("health", directory_json.at("health"));
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
-        assert(directory_json.defines("path"));
-        entry_json.assign("path",
-                          sourcemeta::core::JSON{
-                              directory_json.at("path").to_string() + "/"});
-        if (directory_json.defines("title")) {
-          entry_json.assign("title", directory_json.at("title"));
+        MetapackVersionInfo directory_version{};
+
+        if (directory_extension != nullptr && directory_extension_offset != 0) {
+          const auto *directory_base{
+              directory_view.as<std::uint8_t>(directory_extension_offset)};
+          directory_version = directory_extension->version;
+
+          entry_json.assign(
+              "health", sourcemeta::core::JSON{directory_extension->health});
+          scores.emplace_back(directory_extension->health);
+
+          const auto directory_path_string{
+              directory_extension_string(directory_extension, directory_base, 0,
+                                         directory_extension->path_length)};
+          entry_json.assign(
+              "path",
+              sourcemeta::core::JSON{std::string{directory_path_string} + "/"});
+
+          const std::size_t title_offset{directory_extension->path_length};
+          const auto directory_title{directory_extension_string(
+              directory_extension, directory_base, title_offset,
+              directory_extension->title_length)};
+          if (!directory_title.empty()) {
+            entry_json.assign(
+                "title", sourcemeta::core::JSON{std::string{directory_title}});
+          }
+
+          const std::size_t description_offset{
+              title_offset + directory_extension->title_length};
+          const auto directory_description{directory_extension_string(
+              directory_extension, directory_base, description_offset,
+              directory_extension->description_length)};
+          if (!directory_description.empty()) {
+            entry_json.assign("description", sourcemeta::core::JSON{std::string{
+                                                 directory_description}});
+          }
+
+          const std::size_t email_offset{
+              description_offset + directory_extension->description_length};
+          const auto directory_email{directory_extension_string(
+              directory_extension, directory_base, email_offset,
+              directory_extension->email_length)};
+          if (!directory_email.empty()) {
+            entry_json.assign(
+                "email", sourcemeta::core::JSON{std::string{directory_email}});
+          }
+
+          const std::size_t github_offset{email_offset +
+                                          directory_extension->email_length};
+          const auto directory_github{directory_extension_string(
+              directory_extension, directory_base, github_offset,
+              directory_extension->github_length)};
+          if (!directory_github.empty()) {
+            entry_json.assign("github", sourcemeta::core::JSON{
+                                            std::string{directory_github}});
+          }
+
+          const std::size_t website_offset{github_offset +
+                                           directory_extension->github_length};
+          const auto directory_website{directory_extension_string(
+              directory_extension, directory_base, website_offset,
+              directory_extension->website_length)};
+          if (!directory_website.empty()) {
+            entry_json.assign("website", sourcemeta::core::JSON{
+                                             std::string{directory_website}});
+          }
+        } else {
+          directory_version = parse_version_info(child_name);
+
+          auto directory_json_option{
+              sourcemeta::one::metapack_read_json(dependency)};
+          assert(directory_json_option.has_value());
+          auto directory_json{std::move(directory_json_option.value())};
+          assert(directory_json.is_object());
+          assert(directory_json.defines("health"));
+          assert(directory_json.at("health").is_integer());
+          scores.emplace_back(directory_json.at("health").to_integer());
+
+          entry_json.assign("health", directory_json.at("health"));
+          assert(directory_json.defines("path"));
+          entry_json.assign("path",
+                            sourcemeta::core::JSON{
+                                directory_json.at("path").to_string() + "/"});
+          if (directory_json.defines("title")) {
+            entry_json.assign("title", directory_json.at("title"));
+          }
+          if (directory_json.defines("description")) {
+            entry_json.assign("description", directory_json.at("description"));
+          }
+          if (directory_json.defines("email")) {
+            entry_json.assign("email", directory_json.at("email"));
+          }
+          if (directory_json.defines("github")) {
+            entry_json.assign("github", directory_json.at("github"));
+          }
+          if (directory_json.defines("website")) {
+            entry_json.assign("website", directory_json.at("website"));
+          }
         }
-        if (directory_json.defines("description")) {
-          entry_json.assign("description", directory_json.at("description"));
-        }
-        if (directory_json.defines("email")) {
-          entry_json.assign("email", directory_json.at("email"));
-        }
-        if (directory_json.defines("github")) {
-          entry_json.assign("github", directory_json.at("github"));
-        }
-        if (directory_json.defines("website")) {
-          entry_json.assign("website", directory_json.at("website"));
-        }
-        entries.push_back(std::move(entry_json));
+
+        directory_entries.push_back(
+            {std::move(entry_json), directory_version, {}});
+        directory_entries.back().name =
+            directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
         sourcemeta::core::FileView dependency_view{dependency};
         const auto extension_offset{
@@ -615,51 +793,40 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
 
         scores.emplace_back(extension->health);
-        entries.push_back(std::move(entry_json));
+        schema_entries.push_back(
+            {std::move(entry_json), extension->version, {}});
+        schema_entries.back().name =
+            schema_entries.back().json.at("name").to_string();
       }
     }
 
-    struct SortKey {
-      std::string_view type;
-      std::optional<std::tuple<unsigned, unsigned, unsigned>> version;
-      std::string_view name;
+    const auto version_comparator = [](const SortableEntry &left,
+                                       const SortableEntry &right) -> bool {
+      if (left.version.is_version != right.version.is_version) {
+        return left.version.is_version > right.version.is_version;
+      }
+
+      if (left.version.is_version && right.version.is_version) {
+        if (left.version.major != right.version.major)
+          return left.version.major > right.version.major;
+        if (left.version.minor != right.version.minor)
+          return left.version.minor > right.version.minor;
+        return left.version.patch > right.version.patch;
+      }
+
+      return left.name < right.name;
     };
 
-    std::vector<SortKey> sort_keys;
-    sort_keys.reserve(entries.size());
-    for (const auto &entry : entries.as_array()) {
-      const auto &type{entry.at("type").to_string()};
-      const auto &name{entry.at("name").to_string()};
-      sort_keys.push_back({type, try_parse_version(name), name});
+    std::sort(directory_entries.begin(), directory_entries.end(),
+              version_comparator);
+    std::sort(schema_entries.begin(), schema_entries.end(), version_comparator);
+
+    for (auto &entry : directory_entries) {
+      entries.push_back(std::move(entry.json));
     }
-
-    std::vector<std::size_t> indices(entries.size());
-    for (std::size_t index = 0; index < indices.size(); index++) {
-      indices[index] = index;
+    for (auto &entry : schema_entries) {
+      entries.push_back(std::move(entry.json));
     }
-
-    std::sort(indices.begin(), indices.end(),
-              [&sort_keys](const auto left, const auto right) {
-                const auto &left_key{sort_keys[left]};
-                const auto &right_key{sort_keys[right]};
-                if (left_key.type == right_key.type) {
-                  if (left_key.version.has_value() &&
-                      right_key.version.has_value()) {
-                    return left_key.version.value() > right_key.version.value();
-                  }
-
-                  return left_key.name > right_key.name;
-                }
-
-                return left_key.type < right_key.type;
-              });
-
-    auto sorted_entries{sourcemeta::core::JSON::make_array()};
-    for (const auto index : indices) {
-      sorted_entries.push_back(entries.at(index));
-    }
-
-    entries = std::move(sorted_entries);
 
     auto meta{sourcemeta::core::JSON::make_object()};
 
@@ -689,10 +856,22 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
     }
 
+    const auto directory_name{
+        action.destination.parent_path().parent_path().filename().string()};
+    const auto directory_extension_bytes{make_directory_extension(
+        parse_version_info(directory_name), meta.at("health").to_integer(),
+        meta.at("path").to_string(),
+        meta.defines("title") ? meta.at("title").to_string() : "",
+        meta.defines("description") ? meta.at("description").to_string() : "",
+        meta.defines("email") ? meta.at("email").to_string() : "",
+        meta.defines("github") ? meta.at("github").to_string() : "",
+        meta.defines("website") ? meta.at("website").to_string() : "")};
+
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, meta, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
+        sourcemeta::one::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{directory_extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     return true;
