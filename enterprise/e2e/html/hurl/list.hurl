@@ -13,10 +13,14 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.entries" count == 2
-jsonpath "$.entries[0].name" == "test"
+jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 67
-jsonpath "$.entries[0].path" == "/test/"
+jsonpath "$.entries[0].health" == 100
+jsonpath "$.entries[0].path" == "/self/"
+jsonpath "$.entries[1].name" == "test"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].health" == 67
+jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
