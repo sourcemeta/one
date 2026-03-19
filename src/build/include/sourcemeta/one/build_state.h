@@ -148,6 +148,8 @@ private:
   mutable std::unordered_map<std::string, SchemaStateEntry, TransparentHash,
                              TransparentEqual>
       schema_index_cache;
+  const std::uint8_t *persisted_schema_table{nullptr};
+  std::uint32_t persisted_schema_count{0};
 };
 
 } // namespace sourcemeta::one
