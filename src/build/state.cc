@@ -306,6 +306,7 @@ auto BuildState::commit(const std::filesystem::path &path,
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::forget(const std::string &key) -> void {
@@ -346,6 +347,7 @@ auto BuildState::forget(const std::string &key) -> void {
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
@@ -364,6 +366,7 @@ auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
 
   this->dirty = true;
   this->keys_stale = true;
+  this->schema_index_stale = true;
 }
 
 auto BuildState::keys() const -> const std::vector<std::string_view> & {
@@ -466,6 +469,182 @@ auto BuildState::raw_disk_entry(const std::string &key) const -> const Entry * {
 auto BuildState::deleted_keys() const -> const
     std::unordered_set<std::string, TransparentHash, TransparentEqual> & {
   return this->deleted;
+}
+
+auto BuildState::build_schema_index(const std::string &output) const -> void {
+  this->schema_index_cache.clear();
+  this->schema_index_output = output;
+
+  const auto schemas_prefix{output + "/schemas/"};
+  const auto explorer_prefix{output + "/explorer/"};
+  static constexpr std::string_view sentinel{"/%/"};
+
+  // Map filenames to bit indices. These correspond to PER_SCHEMA_RULES order.
+  // Schema base filenames (TargetBase::Schema)
+  static const std::array<std::pair<std::string_view, std::uint8_t>, 13>
+      filename_bits{{{"schema.metapack", 0},
+                     {"positions.metapack", 1},
+                     {"locations.metapack", 2},
+                     {"dependencies.metapack", 3},
+                     {"stats.metapack", 4},
+                     {"health.metapack", 5},
+                     {"bundle.metapack", 6},
+                     {"editor.metapack", 7},
+                     {"blaze-exhaustive.metapack", 8},
+                     {"blaze-fast.metapack", 9},
+                     {"dependents.metapack", 11},
+                     // Explorer base filenames (TargetBase::Explorer)
+                     // schema.metapack under explorer → bit 10
+                     // schema-html.metapack under explorer → bit 12
+                     {"schema-html.metapack", 12}}};
+
+  auto extract_schema_base = [&](std::string_view key)
+      -> std::pair<std::string_view, std::string_view> {
+    std::string_view prefix;
+    if (key.starts_with(schemas_prefix)) {
+      prefix = schemas_prefix;
+    } else if (key.starts_with(explorer_prefix)) {
+      prefix = explorer_prefix;
+    } else {
+      return {{}, {}};
+    }
+
+    const auto after_prefix{key.substr(prefix.size())};
+    const auto sentinel_pos{after_prefix.find(sentinel)};
+    if (sentinel_pos == std::string_view::npos) {
+      return {{}, {}};
+    }
+
+    return {after_prefix.substr(0, sentinel_pos),
+            after_prefix.substr(sentinel_pos + sentinel.size())};
+  };
+
+  auto process_key = [&](std::filesystem::file_time_type mtime,
+                         bool is_explorer, std::string_view relative_path,
+                         std::string_view filename) {
+    auto &schema_entry{this->schema_index_cache[std::string{relative_path}]};
+
+    if (is_explorer && filename == "schema.metapack") {
+      schema_entry.target_bitmap |= (1 << 10);
+    } else if (is_explorer && filename == "schema-html.metapack") {
+      schema_entry.target_bitmap |= (1 << 12);
+    } else {
+      for (const auto &[rule_filename, bit] : filename_bits) {
+        if (filename == rule_filename && !is_explorer) {
+          schema_entry.target_bitmap |= (1 << bit);
+          if (bit == 0) {
+            schema_entry.root_mtime = mtime;
+          }
+          break;
+        }
+      }
+    }
+  };
+
+  auto check_cross_schema_deps =
+      [&](std::string_view owner_relative,
+          const std::vector<std::filesystem::path> &dependencies) {
+        for (const auto &dependency : dependencies) {
+          const auto [dep_relative, dep_filename] =
+              extract_schema_base(dependency.native());
+          if (!dep_relative.empty() && dep_relative != owner_relative) {
+            auto &schema_entry{
+                this->schema_index_cache[std::string{owner_relative}]};
+            schema_entry.has_cross_schema_deps = true;
+            return;
+          }
+        }
+      };
+
+  // Scan disk entries sequentially
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+       ++slot_index) {
+    const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
+    if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+      continue;
+    }
+
+    const auto key{slot_key(slot, this->string_pool)};
+    if (this->deleted.contains(key) || this->overlay.contains(key)) {
+      continue;
+    }
+
+    const auto [relative_path, filename] = extract_schema_base(key);
+    if (relative_path.empty()) {
+      continue;
+    }
+
+    const bool is_explorer{key.starts_with(explorer_prefix)};
+    const auto nanoseconds{read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+    using file_time = std::filesystem::file_time_type;
+    const auto mtime{file_time{std::chrono::duration_cast<file_time::duration>(
+        std::chrono::nanoseconds{nanoseconds})}};
+
+    process_key(mtime, is_explorer, relative_path, filename);
+
+    // Check deps for cross-schema references
+    const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+    if (data_count > 0) {
+      auto offset{static_cast<std::size_t>(
+          read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+      for (std::uint16_t dependency_index = 0; dependency_index < data_count;
+           ++dependency_index) {
+        const auto dependency_path{read_pool_string(this->string_pool, offset)};
+        const auto [dep_relative, dep_filename] =
+            extract_schema_base(dependency_path);
+        if (!dep_relative.empty() && dep_relative != relative_path) {
+          this->schema_index_cache[std::string{relative_path}]
+              .has_cross_schema_deps = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // Scan overlay entries
+  for (const auto &[entry_path, entry_value] : this->overlay) {
+    const auto [relative_path, filename] = extract_schema_base(entry_path);
+    if (relative_path.empty()) {
+      continue;
+    }
+
+    const bool is_explorer{
+        std::string_view{entry_path}.starts_with(explorer_prefix)};
+    process_key(entry_value.file_mark, is_explorer, relative_path, filename);
+    check_cross_schema_deps(relative_path, entry_value.dependencies);
+  }
+
+  this->schema_index_stale = false;
+}
+
+auto BuildState::schema_state(const std::string &output,
+                              const std::string &relative_path, const bool,
+                              const bool) const -> const SchemaStateEntry * {
+  if (this->schema_index_stale || this->schema_index_output != output) {
+    this->build_schema_index(output);
+  }
+
+  const auto match{this->schema_index_cache.find(relative_path)};
+  if (match == this->schema_index_cache.end()) {
+    return nullptr;
+  }
+
+  return &match->second;
+}
+
+auto BuildState::schema_relative_paths(const std::string &output) const
+    -> std::vector<std::string> {
+  if (this->schema_index_stale || this->schema_index_output != output) {
+    this->build_schema_index(output);
+  }
+
+  std::vector<std::string> result;
+  result.reserve(this->schema_index_cache.size());
+  for (const auto &[relative_path, entry] : this->schema_index_cache) {
+    result.push_back(relative_path);
+  }
+
+  return result;
 }
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {
