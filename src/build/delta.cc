@@ -678,10 +678,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    // Phase 1: Single pass over all targets to find state-based dirtiness
-    // and build a reverse adjacency from declared dependencies.
     std::unordered_map<std::string_view, std::vector<std::string_view>>
         reverse_adjacency;
+    std::unordered_map<std::string, std::vector<std::string>>
+        reverse_state_deps;
     for (const auto &[target_path, target] : targets) {
       for (const auto &dependency : target.dependencies) {
         reverse_adjacency[dependency].push_back(target_path);
@@ -698,15 +698,29 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
 
       for (const auto &dependency : state_entry->dependencies) {
-        if (dirty_set.contains(dependency.native()) ||
-            removed_entries.contains(dependency.native())) {
-          dirty_set.insert(target_path);
-          break;
+        reverse_state_deps[dependency.native()].push_back(target_path);
+      }
+    }
+
+    for (const auto &dirty_path : dirty_set) {
+      const auto match{reverse_state_deps.find(dirty_path)};
+      if (match != reverse_state_deps.end()) {
+        for (const auto &dependent : match->second) {
+          dirty_set.insert(dependent);
         }
       }
     }
 
-    // Phase 2: BFS from dirty targets through the declared DAG.
+    for (const auto &removed_path : removed_entries) {
+      const auto match{reverse_state_deps.find(removed_path)};
+      if (match != reverse_state_deps.end()) {
+        for (const auto &dependent : match->second) {
+          dirty_set.insert(dependent);
+        }
+      }
+    }
+
+    // BFS from dirty targets through the declared DAG.
     std::vector<std::string_view> worklist;
     worklist.reserve(dirty_set.size());
     for (const auto &dirty_path : dirty_set) {
