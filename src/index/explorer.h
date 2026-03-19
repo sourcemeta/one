@@ -8,6 +8,7 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/semver.h>
 
 #include <sourcemeta/one/build.h>
 
@@ -20,8 +21,7 @@
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
-#include <regex>       // std::regex, std::regex_search, std::smatch
-#include <string>      // std::string, std::stoul
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <tuple>       // std::tuple
 #include <utility>     // std::move
@@ -133,20 +133,12 @@ struct MetapackDirectoryExtension {
 
 static auto parse_version_info(const std::string_view name)
     -> MetapackVersionInfo {
-  static const std::regex version_regex(R"(^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?$)");
-  std::string name_string{name};
-  std::smatch match;
-  if (std::regex_match(name_string, match, version_regex)) {
-    try {
-      return {
-          1, static_cast<std::uint32_t>(std::stoul(match[1])),
-          match[2].matched ? static_cast<std::uint32_t>(std::stoul(match[2]))
-                           : 0,
-          match[3].matched ? static_cast<std::uint32_t>(std::stoul(match[3]))
-                           : 0};
-    } catch (...) {
-      return {0, 0, 0, 0};
-    }
+  const auto version{sourcemeta::core::SemVer::from(
+      name, sourcemeta::core::SemVer::Mode::Loose)};
+  if (version.has_value()) {
+    return {1, static_cast<std::uint32_t>(version->major()),
+            static_cast<std::uint32_t>(version->minor()),
+            static_cast<std::uint32_t>(version->patch())};
   }
 
   return {0, 0, 0, 0};
