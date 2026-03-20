@@ -17,7 +17,7 @@ auto GENERATE_WEB_NOT_FOUND::handler(
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
-    const sourcemeta::core::JSON &) -> bool {
+    const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   const auto &canonical{configuration.url};
@@ -44,7 +44,6 @@ auto GENERATE_WEB_NOT_FOUND::handler(
                       MetapackEncoding::GZIP, {},
                       std::chrono::duration_cast<std::chrono::milliseconds>(
                           timestamp_end - timestamp_start));
-  return true;
 }
 
 } // namespace sourcemeta::one

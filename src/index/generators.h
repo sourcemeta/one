@@ -64,13 +64,12 @@ struct GENERATE_VERSION {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(
         sourcemeta::core::JSON{std::string{action.data}}, stream);
-    return true;
   }
 };
 
@@ -80,13 +79,12 @@ struct GENERATE_COMMENT {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(
         sourcemeta::core::JSON{std::string{action.data}}, stream);
-    return true;
   }
 };
 
@@ -96,12 +94,11 @@ struct GENERATE_CONFIGURATION {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &raw_configuration) -> bool {
+                      const sourcemeta::core::JSON &raw_configuration) -> void {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
     sourcemeta::core::stringify(raw_configuration, stream);
-    return true;
   }
 };
 
@@ -111,7 +108,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{resolver(action.data)};
     assert(schema.has_value());
@@ -147,7 +144,6 @@ struct GENERATE_MATERIALISED_SCHEMA {
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
     resolver.cache_path(action.data, action.destination);
-    return true;
   }
 
 private:
@@ -179,7 +175,7 @@ struct GENERATE_POINTER_POSITIONS {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -196,7 +192,6 @@ struct GENERATE_POINTER_POSITIONS {
         sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -206,7 +201,7 @@ struct GENERATE_FRAME_LOCATIONS {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -229,7 +224,6 @@ struct GENERATE_FRAME_LOCATIONS {
         sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -239,7 +233,7 @@ struct GENERATE_DEPENDENCIES {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -268,7 +262,6 @@ struct GENERATE_DEPENDENCIES {
         sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 
 private:
@@ -290,7 +283,7 @@ struct GENERATE_DEPENDENTS {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
     using DirectMap =
@@ -355,7 +348,6 @@ struct GENERATE_DEPENDENTS {
         sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -365,7 +357,7 @@ struct GENERATE_HEALTH {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -414,7 +406,6 @@ struct GENERATE_HEALTH {
         sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 
 private:
@@ -465,7 +456,7 @@ struct GENERATE_BUNDLE {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -492,7 +483,6 @@ struct GENERATE_BUNDLE {
         std::span<const std::uint8_t>{extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -502,7 +492,7 @@ struct GENERATE_EDITOR {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -529,7 +519,6 @@ struct GENERATE_EDITOR {
         std::span<const std::uint8_t>{extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -565,10 +554,9 @@ struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     generate_blaze_template(action.destination, action.dependencies,
                             sourcemeta::blaze::Mode::Exhaustive);
-    return true;
   }
 };
 
@@ -578,10 +566,9 @@ struct GENERATE_BLAZE_TEMPLATE_FAST {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     generate_blaze_template(action.destination, action.dependencies,
                             sourcemeta::blaze::Mode::FastValidation);
-    return true;
   }
 };
 
@@ -591,7 +578,7 @@ struct GENERATE_STATS {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
@@ -627,7 +614,6 @@ struct GENERATE_STATS {
         "application/json", sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -637,7 +623,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     sourcemeta::core::URITemplateRouter router;
     router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
     router.add("/self/v1/api/list/{+path}",
@@ -672,7 +658,6 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
     std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::core::URITemplateRouterView::save(router, action.destination);
-    return true;
   }
 };
 
