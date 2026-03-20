@@ -1013,8 +1013,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             limits.maximum_direct_directory_entries > 0 &&
             rule_dependencies.size() >
                 limits.maximum_direct_directory_entries) {
-          throw BuildTooManyDirectoryEntriesError(
-              directory, rule_dependencies.size());
+          throw BuildTooManyDirectoryEntriesError(directory,
+                                                  rule_dependencies.size());
         }
 
         declare_target(targets, rule.action, destination,

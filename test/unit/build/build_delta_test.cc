@@ -726,10 +726,10 @@ TEST(Build_delta, full_with_comment) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      false, "Hello world", {})};
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "Hello world", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
 
@@ -817,10 +817,10 @@ TEST(Build_delta, incremental_with_comment) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      true, "Hello world", {})};
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         true, "Hello world", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -1815,10 +1815,10 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 0, 0);
 
@@ -3023,10 +3023,10 @@ TEST(Build_delta, headless_full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 4, 5);
 
@@ -3055,10 +3055,10 @@ TEST(Build_delta, headless_full_single_schema) {
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 16);
 
@@ -3156,10 +3156,10 @@ TEST(Build_delta, headless_incremental) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 6, 13);
 
@@ -3262,10 +3262,10 @@ TEST(Build_delta, full_to_headless_removes_web) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
 
@@ -3381,10 +3381,10 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo",
        {.path = "/src/foo.json", .relative_path = "foo", .mtime = MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 2, 5);
 
@@ -3685,10 +3685,10 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "2.0.0", false, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "2.0.0", false, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 19);
 
@@ -3790,10 +3790,10 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/test",
        {"/src/test.json", "example/test", MTIME(100)}}};
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", {})};
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "", {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 17);
 
@@ -4462,10 +4462,10 @@ TEST(Build_delta, limits_zero_does_not_enforce) {
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const sourcemeta::one::BuildLimits limits{.maximum_direct_directory_entries =
                                                 0};
-  EXPECT_NO_THROW(sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      false, "", limits));
+  EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", limits));
 }
 
 TEST(Build_delta, limits_directory_entries_within_limit) {
@@ -4476,10 +4476,10 @@ TEST(Build_delta, limits_directory_entries_within_limit) {
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
   const sourcemeta::one::BuildLimits limits{.maximum_direct_directory_entries =
                                                 10};
-  EXPECT_NO_THROW(sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      false, "", limits));
+  EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", limits));
 }
 
 TEST(Build_delta, limits_directory_entries_exceeded_flat) {
@@ -4494,8 +4494,7 @@ TEST(Build_delta, limits_directory_entries_exceeded_flat) {
   try {
     sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                            sourcemeta::one::BuildPlan::Type::Full, entries,
-                           output, schemas, "1.0.0", false, "",
-                           limits);
+                           output, schemas, "1.0.0", false, "", limits);
     FAIL();
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     EXPECT_EQ(error.path(), output / "schemas");
@@ -4513,10 +4512,10 @@ TEST(Build_delta, limits_directory_entries_nested_ok) {
       {"https://example.com/g/b", {"/src/g/b.json", "g/b", MTIME(100)}}};
   const sourcemeta::one::BuildLimits limits{.maximum_direct_directory_entries =
                                                 2};
-  EXPECT_NO_THROW(sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      false, "", limits));
+  EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", limits));
 }
 
 TEST(Build_delta, limits_directory_entries_subdirectories_count) {
@@ -4531,8 +4530,7 @@ TEST(Build_delta, limits_directory_entries_subdirectories_count) {
   try {
     sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                            sourcemeta::one::BuildPlan::Type::Full, entries,
-                           output, schemas, "1.0.0", false, "",
-                           limits);
+                           output, schemas, "1.0.0", false, "", limits);
     FAIL();
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     EXPECT_EQ(error.path(), output / "schemas");
