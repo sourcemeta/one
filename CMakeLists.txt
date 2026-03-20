@@ -57,6 +57,7 @@ message(STATUS "One version: ${ONE_VERSION}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/VERSION" "${ONE_VERSION}")
 
 if(ONE_INDEX OR ONE_SERVER)
+  find_package(LibDeflate REQUIRED)
   add_subdirectory(src/shared)
   add_subdirectory(src/gzip)
   add_subdirectory(src/metapack)

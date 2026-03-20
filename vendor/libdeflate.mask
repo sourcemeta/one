@@ -1,0 +1,8 @@
+programs/
+scripts/
+.cirrus.yml
+CMakeLists.txt
+libdeflate-config.cmake.in
+libdeflate.pc.in
+NEWS.md
+README.md

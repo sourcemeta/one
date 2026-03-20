@@ -3,7 +3,6 @@
 #include <sourcemeta/one/gzip.h>
 
 #include <cstdint>
-#include <cstring>
 #include <string>
 
 TEST(GZIP, compress_bytes_1) {
