@@ -27,9 +27,7 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
-#include <cerrno>   // errno, EINTR
-#include <fcntl.h>  // open, O_RDONLY, O_NOATIME
-#include <unistd.h> // pread, close
+#include "async.h"
 
 static auto make_breadcrumb(const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
@@ -601,6 +599,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     std::vector<SortableEntry> directory_entries;
     std::vector<SortableEntry> schema_entries;
 
+    std::vector<std::filesystem::path> schema_paths;
+    std::vector<std::string> schema_names;
+
     for (const auto &dependency : action.dependencies) {
       const auto filename{dependency.filename().string()};
       const auto child_name{
@@ -722,138 +723,123 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
-        // Use pread instead of mmap (FileView) to avoid the ~19µs
-        // per-file mmap/munmap syscall overhead. We read the metapack
-        // header first (to learn the extension offset/size), then
-        // read the extension data in a second pread.
-        constexpr std::size_t HEADER_READ_SIZE{128};
-#ifdef __linux__
-        const int fd{open(dependency.c_str(), O_RDONLY | O_NOATIME)};
-#else
-        const int fd{open(dependency.c_str(), O_RDONLY)};
-#endif
-        if (fd < 0) {
-          continue;
-        }
+        schema_paths.push_back(dependency);
+        schema_names.push_back(child_name);
+      }
+    }
 
-        // Read header + mime + ext_size in one pread
-        std::uint8_t header_buf[HEADER_READ_SIZE];
-        ssize_t header_bytes;
-        do {
-          header_bytes = pread(fd, header_buf, HEADER_READ_SIZE, 0);
-        } while (header_bytes == -1 && errno == EINTR);
+    std::vector<std::optional<SortableEntry>> schema_results(
+        schema_paths.size());
 
-        if (header_bytes <
-            static_cast<ssize_t>(sizeof(sourcemeta::one::MetapackHeader))) {
-          close(fd);
-          continue;
-        }
+    parallel_read(
+        schema_paths, 128,
+        [&](const std::size_t schema_index, const std::uint8_t *data,
+            const std::size_t length) -> std::size_t {
+          if (data == nullptr) {
+            return 0;
+          }
 
-        const auto *header{
-            reinterpret_cast<const sourcemeta::one::MetapackHeader *>(
-                header_buf)};
-        if (header->magic != sourcemeta::one::METAPACK_MAGIC ||
-            header->format_version != sourcemeta::one::METAPACK_VERSION) {
-          close(fd);
-          continue;
-        }
+          const auto *header{
+              reinterpret_cast<const sourcemeta::one::MetapackHeader *>(data)};
+          if (length < sizeof(sourcemeta::one::MetapackHeader) ||
+              header->magic != sourcemeta::one::METAPACK_MAGIC ||
+              header->format_version != sourcemeta::one::METAPACK_VERSION) {
+            return 0;
+          }
 
-        const auto ext_size_offset{sizeof(sourcemeta::one::MetapackHeader) +
-                                   header->mime_length};
-        if (ext_size_offset + sizeof(std::uint32_t) >
-            static_cast<std::size_t>(header_bytes)) {
-          close(fd);
-          continue;
-        }
+          const auto extension_size_offset{
+              sizeof(sourcemeta::one::MetapackHeader) + header->mime_length};
+          if (extension_size_offset + sizeof(std::uint32_t) > length) {
+            return 0;
+          }
 
-        const auto extension_size{*reinterpret_cast<const std::uint32_t *>(
-            header_buf + ext_size_offset)};
-        if (extension_size == 0 ||
-            extension_size < sizeof(MetapackExplorerSchemaExtension)) {
-          close(fd);
-          continue;
-        }
+          const auto extension_size{*reinterpret_cast<const std::uint32_t *>(
+              data + extension_size_offset)};
+          const auto extension_data_offset{extension_size_offset +
+                                           sizeof(std::uint32_t)};
 
-        const auto ext_data_offset{ext_size_offset + sizeof(std::uint32_t)};
+          if (extension_size < sizeof(MetapackExplorerSchemaExtension)) {
+            return 0;
+          }
 
-        // Read the extension data
-        std::vector<std::uint8_t> ext_buf(extension_size);
-        ssize_t ext_bytes;
-        do {
-          ext_bytes = pread(fd, ext_buf.data(), extension_size,
-                            static_cast<off_t>(ext_data_offset));
-        } while (ext_bytes == -1 && errno == EINTR);
-        close(fd);
+          if (length < extension_data_offset + extension_size) {
+            return (extension_data_offset + extension_size) - length;
+          }
 
-        if (ext_bytes <
-            static_cast<ssize_t>(sizeof(MetapackExplorerSchemaExtension))) {
-          continue;
-        }
+          const auto *extension{
+              reinterpret_cast<const MetapackExplorerSchemaExtension *>(
+                  data + extension_data_offset)};
+          const auto *extension_base{data + extension_data_offset};
 
-        const auto *extension{
-            reinterpret_cast<const MetapackExplorerSchemaExtension *>(
-                ext_buf.data())};
-        const auto *extension_base{ext_buf.data()};
+          auto entry_json{sourcemeta::core::JSON::make_object()};
+          entry_json.assign("name",
+                            sourcemeta::core::JSON{schema_names[schema_index]});
+          entry_json.assign("type", sourcemeta::core::JSON{"schema"});
 
-        auto entry_json{sourcemeta::core::JSON::make_object()};
-        entry_json.assign("name", sourcemeta::core::JSON{child_name});
-        entry_json.assign("type", sourcemeta::core::JSON{"schema"});
+          const auto schema_path{
+              explorer_extension_path(extension, extension_base)};
+          entry_json.assign(
+              "path", sourcemeta::core::JSON{
+                          std::filesystem::path{std::string{schema_path}}});
+          entry_json.assign(
+              "identifier",
+              sourcemeta::core::JSON{std::string{
+                  explorer_extension_identifier(extension, extension_base)}});
+          entry_json.assign("bytes", sourcemeta::core::JSON{extension->bytes});
+          entry_json.assign(
+              "baseDialect",
+              sourcemeta::core::JSON{std::string{
+                  explorer_extension_base_dialect(extension, extension_base)}});
+          entry_json.assign(
+              "dialect",
+              sourcemeta::core::JSON{std::string{
+                  explorer_extension_dialect(extension, extension_base)}});
+          entry_json.assign("health",
+                            sourcemeta::core::JSON{extension->health});
+          entry_json.assign("dependencies",
+                            sourcemeta::core::JSON{extension->dependencies});
 
-        const auto schema_path{
-            explorer_extension_path(extension, extension_base)};
-        entry_json.assign("path", sourcemeta::core::JSON{std::filesystem::path{
-                                      std::string{schema_path}}});
-        entry_json.assign(
-            "identifier",
-            sourcemeta::core::JSON{std::string{
-                explorer_extension_identifier(extension, extension_base)}});
-        entry_json.assign("bytes", sourcemeta::core::JSON{extension->bytes});
-        entry_json.assign(
-            "baseDialect",
-            sourcemeta::core::JSON{std::string{
-                explorer_extension_base_dialect(extension, extension_base)}});
-        entry_json.assign("dialect", sourcemeta::core::JSON{
-                                         std::string{explorer_extension_dialect(
-                                             extension, extension_base)}});
-        entry_json.assign("health", sourcemeta::core::JSON{extension->health});
-        entry_json.assign("dependencies",
-                          sourcemeta::core::JSON{extension->dependencies});
+          const auto title{explorer_extension_title(extension, extension_base)};
+          if (!title.empty()) {
+            entry_json.assign("title",
+                              sourcemeta::core::JSON{std::string{title}});
+          }
 
-        const auto title{explorer_extension_title(extension, extension_base)};
-        if (!title.empty()) {
-          entry_json.assign("title",
-                            sourcemeta::core::JSON{std::string{title}});
-        }
+          const auto description{
+              explorer_extension_description(extension, extension_base)};
+          if (!description.empty()) {
+            entry_json.assign("description",
+                              sourcemeta::core::JSON{std::string{description}});
+          }
 
-        const auto description{
-            explorer_extension_description(extension, extension_base)};
-        if (!description.empty()) {
-          entry_json.assign("description",
-                            sourcemeta::core::JSON{std::string{description}});
-        }
+          const auto alert{explorer_extension_alert(extension, extension_base)};
+          if (!alert.empty()) {
+            entry_json.assign("alert",
+                              sourcemeta::core::JSON{std::string{alert}});
+          } else {
+            entry_json.assign("alert", sourcemeta::core::JSON{nullptr});
+          }
 
-        const auto alert{explorer_extension_alert(extension, extension_base)};
-        if (!alert.empty()) {
-          entry_json.assign("alert",
-                            sourcemeta::core::JSON{std::string{alert}});
-        } else {
-          entry_json.assign("alert", sourcemeta::core::JSON{nullptr});
-        }
+          const auto provenance{
+              explorer_extension_provenance(extension, extension_base)};
+          if (!provenance.empty()) {
+            entry_json.assign("provenance",
+                              sourcemeta::core::JSON{std::string{provenance}});
+          } else {
+            entry_json.assign("provenance", sourcemeta::core::JSON{nullptr});
+          }
 
-        const auto provenance{
-            explorer_extension_provenance(extension, extension_base)};
-        if (!provenance.empty()) {
-          entry_json.assign("provenance",
-                            sourcemeta::core::JSON{std::string{provenance}});
-        } else {
-          entry_json.assign("provenance", sourcemeta::core::JSON{nullptr});
-        }
+          schema_results[schema_index] =
+              SortableEntry{std::move(entry_json), extension->version,
+                            schema_names[schema_index]};
+          return 0;
+        });
 
-        scores.emplace_back(extension->health);
-        schema_entries.push_back(
-            {std::move(entry_json), extension->version, {}});
-        schema_entries.back().name =
-            schema_entries.back().json.at("name").to_string();
+    for (auto &schema_result : schema_results) {
+      if (schema_result.has_value()) {
+        scores.emplace_back(
+            schema_result.value().json.at("health").to_integer());
+        schema_entries.push_back(std::move(schema_result.value()));
       }
     }
 
