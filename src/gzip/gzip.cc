@@ -42,8 +42,7 @@ auto gunzip(const std::uint8_t *input, const std::size_t size,
     output.resize(capacity);
     std::size_t actual_size{0};
     const auto result{libdeflate_gzip_decompress(
-        decompressor, input, size, output.data(), output.size(),
-        &actual_size)};
+        decompressor, input, size, output.data(), output.size(), &actual_size)};
 
     if (result == LIBDEFLATE_SUCCESS) {
       output.resize(actual_size);
