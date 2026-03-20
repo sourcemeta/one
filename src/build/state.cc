@@ -845,9 +845,25 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       index = static_cast<std::uint32_t>(hash & (capacity - 1));
       while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
         const auto *slot{slots.data() + index * SLOT_SIZE};
-        if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
-            slot_key(slot, this->string_pool) == entry_key) {
-          break;
+        if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash) {
+          const auto probe_key_offset{
+              read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
+          const auto probe_key_length{
+              read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
+          std::string_view probe_key;
+          if (can_patch && probe_key_offset < old_pool_size) {
+            probe_key = {reinterpret_cast<const char *>(this->string_pool +
+                                                        probe_key_offset),
+                         probe_key_length};
+          } else {
+            const auto offset_in_pool{can_patch
+                                          ? probe_key_offset - old_pool_size
+                                          : probe_key_offset};
+            probe_key = {pool.data() + offset_in_pool, probe_key_length};
+          }
+          if (probe_key == entry_key) {
+            break;
+          }
         }
         index = (index + 1) & (capacity - 1);
       }
@@ -918,28 +934,25 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     auto read_slot_key{[&](const std::uint8_t *slot) -> std::string_view {
       const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
       const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
-      if (can_patch && key_offset >= old_pool_size) {
-        const auto new_offset{key_offset - old_pool_size};
-        return {pool.data() + new_offset, key_length};
-      }
-      if (this->string_pool != nullptr) {
+      if (can_patch && key_offset < old_pool_size) {
         return {reinterpret_cast<const char *>(this->string_pool + key_offset),
                 key_length};
       }
-      return {pool.data() + key_offset, key_length};
+      const auto offset_in_pool{can_patch ? key_offset - old_pool_size
+                                          : key_offset};
+      return {pool.data() + offset_in_pool, key_length};
     }};
 
     auto read_slot_pool_string{[&](std::size_t &offset) -> std::string {
-      const std::uint8_t *base;
-      if (can_patch && offset >= old_pool_size) {
-        base =
-            reinterpret_cast<const std::uint8_t *>(pool.data()) - old_pool_size;
-      } else if (this->string_pool != nullptr && can_patch) {
-        base = this->string_pool;
-      } else {
-        base = reinterpret_cast<const std::uint8_t *>(pool.data());
+      if (can_patch && offset < old_pool_size) {
+        return read_pool_string(this->string_pool, offset);
       }
-      return read_pool_string(base, offset);
+      auto adjusted_offset{can_patch ? offset - old_pool_size : offset};
+      auto result{
+          read_pool_string(reinterpret_cast<const std::uint8_t *>(pool.data()),
+                           adjusted_offset)};
+      offset = (can_patch ? old_pool_size : 0) + adjusted_offset;
+      return result;
     }};
 
     const auto output_dir{path.parent_path().string()};
