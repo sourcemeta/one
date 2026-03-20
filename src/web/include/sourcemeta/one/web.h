@@ -13,7 +13,7 @@ struct GENERATE_WEB_DIRECTORY {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> bool;
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_NOT_FOUND {
@@ -22,7 +22,7 @@ struct GENERATE_WEB_NOT_FOUND {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> bool;
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_INDEX {
@@ -31,7 +31,7 @@ struct GENERATE_WEB_INDEX {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> bool;
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 struct GENERATE_WEB_SCHEMA {
@@ -40,7 +40,7 @@ struct GENERATE_WEB_SCHEMA {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> bool;
+                      const sourcemeta::core::JSON &) -> void;
 };
 
 } // namespace sourcemeta::one

@@ -54,7 +54,7 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::BuildPlan::Action &,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
-    -> bool;
+    -> void;
 
 static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
     &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
@@ -130,20 +130,15 @@ static auto execute_plan(std::mutex &mutex,
                          plan.size);
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
-          const auto wrote{handler(
+          handler(
               entries, action,
               [&action](const auto &path) {
                 action.dependencies.emplace_back(path);
               },
-              resolver, configuration, raw_configuration)};
+              resolver, configuration, raw_configuration);
 
-          if (wrote) {
-            const auto lock{entries.take_lock()};
-            entries.commit(action.destination, std::move(action.dependencies));
-          } else {
-            print_progress(mutex, threads, "Bypassing", relative_path, current,
-                           plan.size);
-          }
+          const auto lock{entries.take_lock()};
+          entries.commit(action.destination, std::move(action.dependencies));
         },
         concurrency, THREAD_STACK_SIZE);
   }

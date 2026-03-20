@@ -356,7 +356,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
     // Read the schema to get data and bytes
@@ -486,7 +486,6 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         std::span<const std::uint8_t>{extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -496,7 +495,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::core::JSON> result;
 
@@ -561,7 +560,6 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
         sourcemeta::one::MetapackEncoding::Identity, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
@@ -571,7 +569,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> bool {
+                      const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
@@ -914,7 +912,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         std::span<const std::uint8_t>{directory_extension_bytes},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
-    return true;
   }
 };
 
