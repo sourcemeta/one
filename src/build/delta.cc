@@ -193,19 +193,13 @@ static auto collect_affected_directories(
 auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
-           const bool incremental, const std::string_view comment,
-           const std::vector<std::filesystem::path> &changed,
-           const std::vector<std::filesystem::path> &removed) -> BuildPlan {
+           const bool incremental, const std::string_view comment)
+    -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
     return entry.second.path.is_absolute() &&
            !entry.second.relative_path.is_absolute();
   }));
-  assert(std::ranges::all_of(
-      changed, [](const auto &path) { return path.is_absolute(); }));
-  assert(std::ranges::all_of(
-      removed, [](const auto &path) { return path.is_absolute(); }));
-
   assert(!version.empty());
 
   if (phase == BuildPhase::Combine) {
@@ -405,22 +399,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto explorer_path{output / EXPLORER_DIRECTORY};
   const auto comment_string{comment_path.string()};
 
-  std::unordered_set<std::string> removed_uris;
-  if (!changed.empty() || !removed.empty()) {
-    std::unordered_set<std::string> removed_set;
-    removed_set.reserve(removed.size());
-    for (const auto &path : removed) {
-      removed_set.insert(path.string());
-    }
-
-    for (const auto &[uri, info] : schemas) {
-      if (removed_set.contains(info.path.string())) {
-        removed_uris.insert(uri);
-      }
-    }
-  }
-
-  if (!is_full && changed.empty() && removed.empty()) {
+  if (!is_full) {
     const auto &output_string{output.native()};
     bool fast_path_dirty{false};
 
@@ -564,10 +543,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
   std::unordered_set<std::string> dirty_relative_paths;
   for (const auto &[uri, info] : schemas) {
-    if (removed_uris.contains(uri)) {
-      continue;
-    }
-
     const auto &relative_string{info.relative_path.native()};
     all_relative_paths.emplace_back(info.relative_path);
 
@@ -850,8 +825,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
   const auto has_potential_stale{!removed_entries.empty()};
 
-  if (!is_full && dirty_set.empty() && removed_uris.empty() &&
-      !has_missing_web && !has_stale_web && !has_potential_stale) {
+  if (!is_full && dirty_set.empty() && !has_missing_web && !has_stale_web &&
+      !has_potential_stale) {
     if (!comment.empty()) {
       BuildPlan plan;
       plan.output = output;
@@ -879,8 +854,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     return {.output = output, .type = build_type, .waves = {}, .size = 0};
   }
 
-  const auto has_schema_work{is_full || !dirty_set.empty() ||
-                             !removed_uris.empty() || has_missing_web ||
+  const auto has_schema_work{is_full || !dirty_set.empty() || has_missing_web ||
                              has_potential_stale};
 
   std::vector<std::filesystem::path> affected_relative_paths;
@@ -896,7 +870,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    auto has_graph_change{!removed_uris.empty()};
+    auto has_graph_change{false};
     if (!has_graph_change) {
       for (const auto &schema : active_schemas) {
         if (!entries.contains(schema.root_path)) {
@@ -1083,27 +1057,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
   std::vector<BuildPlan::Action> remove_wave;
 
-  for (const auto &uri : removed_uris) {
-    const auto match{schemas.find(uri)};
-    if (match == schemas.end()) {
-      continue;
-    }
-
-    const auto &relative_string{match->second.relative_path.native()};
-    remove_wave.push_back(
-        {BuildPlan::Action::Type::Remove,
-         std::filesystem::path{make_base_string(
-             output_string, SCHEMAS_DIRECTORY, relative_string)},
-         {},
-         {}});
-    remove_wave.push_back(
-        {BuildPlan::Action::Type::Remove,
-         std::filesystem::path{make_base_string(
-             output_string, EXPLORER_DIRECTORY, relative_string)},
-         {},
-         {}});
-  }
-
   for (const auto &schema : active_schemas) {
     if (schema.info->evaluate) {
       continue;
@@ -1130,7 +1083,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     }
   }
 
-  if (has_potential_stale || !removed_uris.empty() || is_full) {
+  if (has_potential_stale || is_full) {
     std::unordered_set<std::string> known_bases;
     known_bases.reserve(active_schemas.size() * 2 + 1);
     for (const auto &schema : active_schemas) {

@@ -384,14 +384,9 @@ static auto index_main(const std::string_view &program,
   // (7) Run the delta plans
   /////////////////////////////////////////////////////////////////////////////
 
-  // TODO: Make use of these for real
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-
   auto produce_plan{sourcemeta::one::delta(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
-      canonical_output, resolver.data(), this_version, incremental, comment,
-      changed, removed)};
+      canonical_output, resolver.data(), this_version, incremental, comment)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
@@ -399,8 +394,7 @@ static auto index_main(const std::string_view &program,
 
   auto combine_plan{sourcemeta::one::delta(
       sourcemeta::one::BuildPhase::Combine, build_type, entries,
-      canonical_output, resolver.data(), this_version, incremental, comment,
-      changed, removed)};
+      canonical_output, resolver.data(), this_version, incremental, comment)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");

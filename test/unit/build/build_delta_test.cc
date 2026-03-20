@@ -14,12 +14,11 @@ TEST(Build_delta, full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 7);
 
@@ -57,12 +56,11 @@ TEST(Build_delta, full_single_schema) {
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
@@ -187,13 +185,11 @@ TEST(Build_delta, incremental_changed_same_mtime) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
@@ -232,13 +228,11 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -383,13 +377,11 @@ TEST(Build_delta, incremental_one_schema_added) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -498,49 +490,6 @@ TEST(Build_delta, incremental_one_schema_added) {
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
 }
 
-TEST(Build_delta, incremental_removed_schema) {
-  const std::filesystem::path output{"/output"};
-  sourcemeta::one::BuildState entries;
-  entries.emplace(output / "version.json",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  entries.emplace(output / "configuration.json",
-                  {.file_mark = MTIME(100), .dependencies = {}});
-  const sourcemeta::one::Resolver::Views schemas{
-      {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed{"/src/foo.json"};
-
-  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                                         sourcemeta::one::BuildPlan::Type::Full,
-                                         entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
-
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 6);
-
-  EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
-                output / "explorer" / "%" / "directory.metapack", "");
-
-  EXPECT_ACTION(plan, 1, 0, 2, WebIndex,
-                output / "explorer" / "%" / "directory-html.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
-  EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
-
-  EXPECT_ACTION(plan, 2, 0, 1, Routes, output / "routes.bin", "Full",
-                output / "configuration.json");
-
-  EXPECT_ACTION(plan, 3, 0, 2, Remove, output / "explorer" / "foo" / "%", "");
-  EXPECT_ACTION(plan, 3, 1, 2, Remove, output / "schemas" / "foo" / "%", "");
-
-  EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
-                     output / "configuration.json",
-                     output / "explorer" / "%" / "search.metapack",
-                     output / "explorer" / "%" / "directory.metapack",
-                     output / "explorer" / "%" / "directory-html.metapack",
-                     output / "routes.bin");
-}
-
 TEST(Build_delta, full_stale_file_in_entries) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
@@ -548,12 +497,11 @@ TEST(Build_delta, full_stale_file_in_entries) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
@@ -665,12 +613,11 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
@@ -779,12 +726,11 @@ TEST(Build_delta, full_with_comment) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      false, "Hello world", changed, removed)};
+
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "Hello world")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
 
@@ -824,12 +770,11 @@ TEST(Build_delta, full_without_comment_removes_existing) {
   entries.emplace(output / "comment.json",
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 8);
 
@@ -873,12 +818,11 @@ TEST(Build_delta, incremental_with_comment) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Full, entries, output, schemas, "1.0.0",
-      true, "Hello world", changed, removed)};
+
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         true, "Hello world")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -988,12 +932,11 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -1109,12 +1052,11 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "hello", changed, removed)};
+                                         true, "hello")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
@@ -1149,12 +1091,11 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
   entries.emplace(output / "explorer" / "%" / "directory-html.metapack",
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
@@ -1187,12 +1128,11 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
@@ -1236,12 +1176,11 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
@@ -1285,12 +1224,11 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   ADD_SCHEMA_ENTRIES(entries, output, "foo", true, true, MTIME(100));
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
 
@@ -1330,12 +1268,11 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -1438,12 +1375,11 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", changed, removed)};
+                                         false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 19);
 
@@ -1551,12 +1487,11 @@ TEST(Build_delta, incremental_evaluate_false) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 14);
 
@@ -1667,12 +1602,11 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
@@ -1737,12 +1671,11 @@ TEST(Build_delta, incremental_missing_bundle) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 7);
 
@@ -1820,12 +1753,11 @@ TEST(Build_delta, incremental_missing_web_schema) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
@@ -1885,12 +1817,11 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 0, 0);
 
@@ -1934,12 +1865,11 @@ TEST(Build_delta, mtime_nothing_changed) {
                   {.file_mark = MTIME(50), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
@@ -1987,13 +1917,11 @@ TEST(Build_delta, mtime_source_newer) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(50)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2123,13 +2051,11 @@ TEST(Build_delta, mtime_no_entry) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2260,13 +2186,11 @@ TEST(Build_delta, mtime_no_file_mark) {
       (output / "schemas" / "foo" / "%" / "schema.metapack").string());
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2378,13 +2302,11 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/a.json"};
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 28);
 
@@ -2572,13 +2494,11 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
       {"https://example.com/c", {"/src/c.json", "c", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/a.json"};
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 40);
 
@@ -2830,13 +2750,11 @@ TEST(Build_delta, mtime_reverse_dep) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/a", {"/src/a.json", "a", MTIME(30)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(30)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
 
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 27);
 
@@ -3008,12 +2926,11 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100), false}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 16);
 
@@ -3109,12 +3026,11 @@ TEST(Build_delta, headless_full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 4, 5);
 
@@ -3143,12 +3059,11 @@ TEST(Build_delta, headless_full_single_schema) {
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 16);
 
@@ -3246,12 +3161,11 @@ TEST(Build_delta, headless_incremental) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 6, 13);
 
@@ -3354,12 +3268,11 @@ TEST(Build_delta, full_to_headless_removes_web) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
 
@@ -3475,12 +3388,11 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo",
        {.path = "/src/foo.json", .relative_path = "foo", .mtime = MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", true, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 2, 5);
 
@@ -3525,12 +3437,11 @@ TEST(Build_delta, headless_to_full_incremental) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -3666,12 +3577,11 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -3783,12 +3693,11 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "2.0.0", false, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "2.0.0", false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 19);
 
@@ -3890,12 +3799,11 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/test",
        {"/src/test.json", "example/test", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed;
-  const std::vector<std::filesystem::path> removed;
-  const auto plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce,
-      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
-      "1.0.0", false, "", changed, removed)};
+
+  const auto plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                             sourcemeta::one::BuildPlan::Type::Headless,
+                             entries, output, schemas, "1.0.0", false, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 17);
 
@@ -4046,12 +3954,11 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
        {"/src/b.json", "example/schemas/b", MTIME(100)}},
       {"https://example.com/c",
        {"/src/c.json", "example/schemas/c", MTIME(200)}}};
-  const std::vector<std::filesystem::path> changed{"/src/c.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
@@ -4292,12 +4199,11 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}},
       {"https://example.com/bar", {"/src/bar.json", "bar", MTIME(100)}}};
-  const std::vector<std::filesystem::path> changed{"/src/foo.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -4432,12 +4338,11 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
       {"https://example.com/a", {"/src/a.json", "a", MTIME(100)}},
       {"https://example.com/b", {"/src/b.json", "b", MTIME(100)}},
       {"https://example.com/c", {"/src/c.json", "c", MTIME(200)}}};
-  const std::vector<std::filesystem::path> changed{"/src/c.json"};
-  const std::vector<std::filesystem::path> removed;
+
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", changed, removed)};
+                                         true, "")};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 

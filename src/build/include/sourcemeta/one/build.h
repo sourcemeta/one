@@ -98,9 +98,7 @@ SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
-           bool incremental, const std::string_view comment,
-           const std::vector<std::filesystem::path> &changed,
-           const std::vector<std::filesystem::path> &removed) -> BuildPlan;
+           bool incremental, const std::string_view comment) -> BuildPlan;
 
 } // namespace sourcemeta::one
 
