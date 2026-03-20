@@ -8,9 +8,10 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/one/resolver.h>
 
+#include <sourcemeta/one/build_error.h>
 #include <sourcemeta/one/build_state.h>
 
-#include <cstdint>     // std::uint8_t, std::size_t
+#include <cstdint>     // std::uint8_t, std::uint64_t, std::size_t
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::function
 #include <string_view> // std::string_view
@@ -64,6 +65,12 @@ struct BuildPlan {
 
 using BuildDynamicCallback = std::function<void(const std::filesystem::path &)>;
 
+struct BuildLimits {
+  // The maximum number of immediate entries (schemas or subdirectories)
+  // permitted in a single registry directory. Set to 0 to disable.
+  std::uint64_t maximum_direct_directory_entries{0};
+};
+
 // Per-schema targets
 //
 // - Materialise: S/schema <- source, configuration.json
@@ -98,7 +105,8 @@ SOURCEMETA_ONE_BUILD_EXPORT
 auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
-           bool incremental, const std::string_view comment) -> BuildPlan;
+           bool incremental, const std::string_view comment,
+           const BuildLimits &limits) -> BuildPlan;
 
 } // namespace sourcemeta::one
 

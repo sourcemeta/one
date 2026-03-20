@@ -54,7 +54,7 @@ EOF
 
 measure() {
   START="$(nanoseconds)"
-  "$INDEX" --skip-banner "$TMP/one.json" "$TMP/output" --time >&2 2>/dev/null
+  "$INDEX" --skip-banner --maximum-direct-directory-entries 0 "$TMP/one.json" "$TMP/output" --time >&2 2>/dev/null
   END="$(nanoseconds)"
   echo "$(( (END - START) / 1000000 ))"
 }
