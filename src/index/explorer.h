@@ -566,7 +566,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
-  static auto handler(const sourcemeta::one::BuildState &,
+  static auto handler(const sourcemeta::one::BuildState &state,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
@@ -597,12 +597,47 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     std::vector<SortableEntry> directory_entries;
     std::vector<SortableEntry> schema_entries;
 
+    const auto old_listing{
+        std::filesystem::exists(action.destination)
+            ? sourcemeta::one::metapack_read_json(action.destination)
+            : std::nullopt};
+    std::unordered_map<std::string_view, const sourcemeta::core::JSON *>
+        old_schema_entries;
+    std::unordered_map<std::string_view, const sourcemeta::core::JSON *>
+        old_directory_entries;
+    if (old_listing.has_value()) {
+      assert(old_listing->defines("entries"));
+      for (const auto &old_entry : old_listing->at("entries").as_array()) {
+        assert(old_entry.defines("name"));
+        const auto &old_name{old_entry.at("name").to_string()};
+        if (old_entry.defines("type") &&
+            old_entry.at("type").to_string() == "directory") {
+          old_directory_entries.emplace(old_name, &old_entry);
+        } else {
+          old_schema_entries.emplace(old_name, &old_entry);
+        }
+      }
+    }
+
     for (const auto &dependency : action.dependencies) {
       const auto filename{dependency.filename().string()};
       const auto child_name{
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
+        if (old_listing.has_value() && !state.in_overlay(dependency.native())) {
+          auto it = old_directory_entries.find(child_name);
+          if (it != old_directory_entries.end()) {
+            const auto &old_entry{*it->second};
+            if (old_entry.defines("health")) {
+              scores.emplace_back(old_entry.at("health").to_integer());
+            }
+            directory_entries.push_back(
+                {old_entry, parse_version_info(child_name), child_name});
+            continue;
+          }
+        }
+
         sourcemeta::core::FileView directory_view{dependency};
         const auto directory_extension_offset{
             sourcemeta::one::metapack_extension_offset(directory_view)};
@@ -718,6 +753,19 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
+        if (old_listing.has_value() && !state.in_overlay(dependency.native())) {
+          auto it = old_schema_entries.find(child_name);
+          if (it != old_schema_entries.end()) {
+            const auto &old_entry{*it->second};
+            if (old_entry.defines("health")) {
+              scores.emplace_back(old_entry.at("health").to_integer());
+            }
+            schema_entries.push_back(
+                {old_entry, parse_version_info(child_name), child_name});
+            continue;
+          }
+        }
+
         sourcemeta::core::FileView dependency_view{dependency};
         const auto extension_offset{
             sourcemeta::one::metapack_extension_offset(dependency_view)};
