@@ -3,7 +3,7 @@ FROM debian:trixie AS builder
 # NodeSource provides npm >= 10, required for the "npm sbom" command
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake sassc esbuild shellcheck curl gnupg \
-  openssl libssl-dev openssl-provider-fips \
+  openssl libssl-dev openssl-provider-fips pkg-config liburing-dev \
   && curl --fail --silent --show-error --location \
     https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
     | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg \

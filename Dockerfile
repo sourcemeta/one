@@ -2,6 +2,7 @@ FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
+  pkg-config liburing-dev \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY package.json /source/package.json

@@ -33,6 +33,20 @@ target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::output)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::linter)
 
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+  pkg_check_modules(URING QUIET IMPORTED_TARGET liburing)
+  if(URING_FOUND)
+    message(STATUS "liburing found: ${URING_VERSION}")
+    target_link_libraries(sourcemeta_one_index PRIVATE PkgConfig::URING)
+    target_compile_definitions(sourcemeta_one_index PRIVATE SOURCEMETA_ONE_HAS_URING)
+  else()
+    message(STATUS "liburing not found, using sequential pread fallback")
+  endif()
+else()
+  message(STATUS "pkg-config not found, using sequential pread fallback")
+endif()
+
 install(TARGETS sourcemeta_one_index
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
   COMPONENT sourcemeta_one)
