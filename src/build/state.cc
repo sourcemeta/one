@@ -684,27 +684,183 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       static_cast<std::uint32_t>(this->resolver_entry_count)};
   const auto total_count{output_count + resolver_count};
 
-  std::uint32_t capacity{16};
-  while (capacity < total_count * 2) {
-    capacity <<= 1;
-  }
+  const bool can_patch{this->table_capacity > 0 &&
+                       this->string_pool != nullptr &&
+                       total_count < this->table_capacity * 3 / 4};
 
   std::string pool;
-  pool.reserve(static_cast<std::size_t>(total_count) * 100);
-  std::vector<std::uint8_t> slots(
-      static_cast<std::size_t>(capacity) * SLOT_SIZE, 0);
+  std::vector<std::uint8_t> slots;
+  std::uint32_t capacity;
 
-  auto write_slot{[&](std::string_view entry_key, std::int64_t timestamp,
-                      std::uint32_t data_pool_offset, std::uint16_t data_count,
-                      std::uint8_t kind) {
+  std::uint32_t old_pool_size{0};
+  std::unordered_set<std::string, TransparentHash, TransparentEqual>
+      overlay_updates;
+  std::unordered_set<std::string, TransparentHash, TransparentEqual>
+      resolver_updates;
+
+  if (can_patch) {
+    capacity = this->table_capacity;
+    const auto old_slots_size{static_cast<std::size_t>(capacity) * SLOT_SIZE};
+    slots.resize(old_slots_size);
+    std::memcpy(slots.data(), this->table_slots, old_slots_size);
+
+    old_pool_size = read_field<std::uint32_t>(this->view_data, 16);
+
+    auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
+      const auto hash{fnv1a(entry_key.data(), entry_key.size())};
+      auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
+      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+        const auto *slot{slots.data() + index * SLOT_SIZE};
+        if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
+            slot_key(slot, this->string_pool) == entry_key) {
+          return index;
+        }
+        index = (index + 1) & (capacity - 1);
+      }
+      return capacity;
+    }};
+
+    for (const auto &deleted_key : this->deleted) {
+      const auto slot_index{find_slot(deleted_key)};
+      if (slot_index < capacity) {
+        auto empty{slot_index};
+        for (;;) {
+          const auto next{(empty + 1) & (capacity - 1)};
+          if (slots[next * SLOT_SIZE + SLOT_OCCUPIED] == 0) {
+            break;
+          }
+
+          const auto next_hash{read_field<std::uint64_t>(
+              slots.data() + next * SLOT_SIZE, SLOT_HASH)};
+          const auto natural{
+              static_cast<std::uint32_t>(next_hash & (capacity - 1))};
+          const auto distance_current{(next - natural) & (capacity - 1)};
+          const auto distance_new{(empty - natural) & (capacity - 1)};
+          if (distance_new <= distance_current) {
+            std::memcpy(slots.data() + empty * SLOT_SIZE,
+                        slots.data() + next * SLOT_SIZE, SLOT_SIZE);
+            empty = next;
+          } else {
+            break;
+          }
+        }
+
+        slots[empty * SLOT_SIZE + SLOT_OCCUPIED] = 0;
+      }
+    }
+
+    for (const auto &[overlay_key, overlay_entry] : this->overlay) {
+      if (find_slot(overlay_key) < capacity) {
+        overlay_updates.insert(overlay_key);
+      }
+    }
+
+    for (const auto &[overlay_key, overlay_entry] : this->resolver_overlay) {
+      if (find_slot(overlay_key) < capacity) {
+        resolver_updates.insert(overlay_key);
+      }
+    }
+  } else {
+    capacity = 16;
+    while (capacity < total_count * 2) {
+      capacity <<= 1;
+    }
+
+    pool.reserve(static_cast<std::size_t>(total_count) * 100);
+    slots.resize(static_cast<std::size_t>(capacity) * SLOT_SIZE, 0);
+
+    for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+         ++slot_index) {
+      const auto *old_slot{this->table_slots + slot_index * SLOT_SIZE};
+      if (old_slot[SLOT_OCCUPIED] == 0) {
+        continue;
+      }
+
+      const auto old_kind{old_slot[SLOT_KIND]};
+      const auto key{slot_key(old_slot, this->string_pool)};
+
+      if (old_kind == KIND_OUTPUT) {
+        if (this->deleted.contains(key) || this->overlay.contains(key)) {
+          continue;
+        }
+      } else if (old_kind == KIND_RESOLVER) {
+        if (this->resolver_overlay.contains(key)) {
+          continue;
+        }
+      }
+
+      const auto timestamp{read_field<std::int64_t>(old_slot, SLOT_TIMESTAMP)};
+      const auto old_data_offset{
+          read_field<std::uint32_t>(old_slot, SLOT_DATA_OFFSET)};
+      const auto data_count{
+          read_field<std::uint16_t>(old_slot, SLOT_DATA_COUNT)};
+
+      const auto new_data_offset{static_cast<std::uint32_t>(pool.size())};
+      if (data_count > 0) {
+        auto raw_offset{static_cast<std::size_t>(old_data_offset)};
+        for (std::uint16_t item_index = 0; item_index < data_count;
+             ++item_index) {
+          const auto item_length{
+              read_field<std::uint32_t>(this->string_pool, raw_offset)};
+          raw_offset += sizeof(std::uint32_t) + item_length;
+        }
+
+        const auto raw_size{raw_offset - old_data_offset};
+        pool.append(
+            reinterpret_cast<const char *>(this->string_pool + old_data_offset),
+            raw_size);
+      }
+
+      const auto hash{fnv1a(key.data(), key.size())};
+      auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
+      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+        index = (index + 1) & (capacity - 1);
+      }
+
+      auto *slot{slots.data() + index * SLOT_SIZE};
+      const auto key_offset{static_cast<std::uint32_t>(pool.size())};
+      pool.append(key);
+      const auto key_length{static_cast<std::uint32_t>(key.size())};
+
+      std::memcpy(slot + SLOT_HASH, &hash, sizeof(hash));
+      std::memcpy(slot + SLOT_KEY_OFFSET, &key_offset, sizeof(key_offset));
+      std::memcpy(slot + SLOT_KEY_LENGTH, &key_length, sizeof(key_length));
+      std::memcpy(slot + SLOT_TIMESTAMP, &timestamp, sizeof(timestamp));
+      std::memcpy(slot + SLOT_DATA_OFFSET, &new_data_offset,
+                  sizeof(new_data_offset));
+      std::memcpy(slot + SLOT_DATA_COUNT, &data_count, sizeof(data_count));
+      slot[SLOT_OCCUPIED] = 1;
+      slot[SLOT_KIND] = old_kind;
+    }
+  }
+
+  auto write_new_slot{[&](std::string_view entry_key, std::int64_t timestamp,
+                          std::uint32_t data_pool_offset,
+                          std::uint16_t data_count, std::uint8_t kind,
+                          bool is_update) {
     const auto hash{fnv1a(entry_key.data(), entry_key.size())};
-    auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
-    while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
-      index = (index + 1) & (capacity - 1);
+    std::uint32_t index;
+
+    if (is_update) {
+      index = static_cast<std::uint32_t>(hash & (capacity - 1));
+      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+        const auto *slot{slots.data() + index * SLOT_SIZE};
+        if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
+            slot_key(slot, this->string_pool) == entry_key) {
+          break;
+        }
+        index = (index + 1) & (capacity - 1);
+      }
+    } else {
+      index = static_cast<std::uint32_t>(hash & (capacity - 1));
+      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+        index = (index + 1) & (capacity - 1);
+      }
     }
 
     auto *slot{slots.data() + index * SLOT_SIZE};
-    const auto key_offset{static_cast<std::uint32_t>(pool.size())};
+    const auto key_offset{
+        static_cast<std::uint32_t>(old_pool_size + pool.size())};
     pool.append(entry_key);
     const auto key_length{static_cast<std::uint32_t>(entry_key.size())};
 
@@ -719,60 +875,14 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     slot[SLOT_KIND] = kind;
   }};
 
-  // Write on-disk entries (both kinds, not deleted/overlayed)
-  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
-       ++slot_index) {
-    const auto *old_slot{this->table_slots + slot_index * SLOT_SIZE};
-    if (old_slot[SLOT_OCCUPIED] == 0) {
-      continue;
-    }
-
-    const auto old_kind{old_slot[SLOT_KIND]};
-    const auto key{slot_key(old_slot, this->string_pool)};
-
-    if (old_kind == KIND_OUTPUT) {
-      if (this->deleted.contains(key) || this->overlay.contains(key)) {
-        continue;
-      }
-    } else if (old_kind == KIND_RESOLVER) {
-      if (this->resolver_overlay.contains(key)) {
-        continue;
-      }
-    }
-
-    const auto timestamp{read_field<std::int64_t>(old_slot, SLOT_TIMESTAMP)};
-    const auto old_data_offset{
-        read_field<std::uint32_t>(old_slot, SLOT_DATA_OFFSET)};
-    const auto data_count{read_field<std::uint16_t>(old_slot, SLOT_DATA_COUNT)};
-
-    // Copy raw data from old string pool to new pool
-    const auto new_data_offset{static_cast<std::uint32_t>(pool.size())};
-    if (data_count > 0) {
-      auto raw_offset{static_cast<std::size_t>(old_data_offset)};
-      for (std::uint16_t item_index = 0; item_index < data_count;
-           ++item_index) {
-        const auto item_length{
-            read_field<std::uint32_t>(this->string_pool, raw_offset)};
-        raw_offset += sizeof(std::uint32_t) + item_length;
-      }
-
-      const auto raw_size{raw_offset - old_data_offset};
-      pool.append(
-          reinterpret_cast<const char *>(this->string_pool + old_data_offset),
-          raw_size);
-    }
-
-    write_slot(key, timestamp, new_data_offset, data_count, old_kind);
-  }
-
-  // Write output overlay entries (kind=0)
   for (const auto &[entry_path, entry] : this->overlay) {
     const auto timestamp{static_cast<std::int64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             entry.file_mark.time_since_epoch())
             .count())};
 
-    const auto data_offset{static_cast<std::uint32_t>(pool.size())};
+    const auto data_offset{
+        static_cast<std::uint32_t>(old_pool_size + pool.size())};
     assert(entry.dependencies.size() <= UINT16_MAX);
     const auto data_count{
         static_cast<std::uint16_t>(entry.dependencies.size())};
@@ -780,47 +890,58 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       append_pool_string(pool, dependency.native());
     }
 
-    write_slot(entry_path, timestamp, data_offset, data_count, KIND_OUTPUT);
+    write_new_slot(entry_path, timestamp, data_offset, data_count, KIND_OUTPUT,
+                   overlay_updates.contains(entry_path));
   }
 
-  // Write resolver overlay entries (kind=1)
   for (const auto &[source_path, cache_entry] : this->resolver_overlay) {
     const auto timestamp{static_cast<std::int64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             cache_entry.file_mark.time_since_epoch())
             .count())};
 
-    const auto data_offset{static_cast<std::uint32_t>(pool.size())};
+    const auto data_offset{
+        static_cast<std::uint32_t>(old_pool_size + pool.size())};
     append_pool_string(pool, cache_entry.new_identifier);
     append_pool_string(pool, cache_entry.original_identifier);
     append_pool_string(pool, cache_entry.dialect);
     append_pool_string(pool, cache_entry.relative_path);
 
-    write_slot(source_path, timestamp, data_offset, 4, KIND_RESOLVER);
+    write_new_slot(source_path, timestamp, data_offset, 4, KIND_RESOLVER,
+                   resolver_updates.contains(source_path));
   }
 
-  // Assemble the file
-  const auto pool_size{static_cast<std::uint32_t>(pool.size())};
-
-  std::string buffer;
-  buffer.reserve(HEADER_SIZE + static_cast<std::size_t>(capacity) * SLOT_SIZE +
-                 pool.size());
-
-  buffer.append(reinterpret_cast<const char *>(&STATE_MAGIC),
-                sizeof(STATE_MAGIC));
-  buffer.append(reinterpret_cast<const char *>(&STATE_VERSION),
-                sizeof(STATE_VERSION));
-  buffer.append(reinterpret_cast<const char *>(&capacity), sizeof(capacity));
-  buffer.append(reinterpret_cast<const char *>(&output_count),
-                sizeof(output_count));
-  buffer.append(reinterpret_cast<const char *>(&pool_size), sizeof(pool_size));
-  buffer.append(reinterpret_cast<const char *>(&resolver_count),
-                sizeof(resolver_count));
-
-  buffer.append(reinterpret_cast<const char *>(slots.data()), slots.size());
-  buffer.append(pool);
+  const auto total_pool_size{
+      static_cast<std::uint32_t>(old_pool_size + pool.size())};
 
   {
+    auto read_slot_key{[&](const std::uint8_t *slot) -> std::string_view {
+      const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
+      const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
+      if (can_patch && key_offset >= old_pool_size) {
+        const auto new_offset{key_offset - old_pool_size};
+        return {pool.data() + new_offset, key_length};
+      }
+      if (this->string_pool != nullptr) {
+        return {reinterpret_cast<const char *>(this->string_pool + key_offset),
+                key_length};
+      }
+      return {pool.data() + key_offset, key_length};
+    }};
+
+    auto read_slot_pool_string{[&](std::size_t &offset) -> std::string {
+      const std::uint8_t *base;
+      if (can_patch && offset >= old_pool_size) {
+        base =
+            reinterpret_cast<const std::uint8_t *>(pool.data()) - old_pool_size;
+      } else if (this->string_pool != nullptr && can_patch) {
+        base = this->string_pool;
+      } else {
+        base = reinterpret_cast<const std::uint8_t *>(pool.data());
+      }
+      return read_pool_string(base, offset);
+    }};
+
     const auto output_dir{path.parent_path().string()};
     const auto schemas_prefix{output_dir + "/schemas/"};
     const auto explorer_prefix{output_dir + "/explorer/"};
@@ -830,76 +951,222 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
                        TransparentEqual>
         save_schema_index;
 
-    const auto *new_pool{reinterpret_cast<const std::uint8_t *>(pool.data())};
-    for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
-      const auto *slot{slots.data() + slot_index * SLOT_SIZE};
-      if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
-        continue;
+    if (can_patch && this->persisted_schema_table != nullptr) {
+      const auto *record_ptr{this->persisted_schema_table};
+      for (std::uint32_t record_index = 0;
+           record_index < this->persisted_schema_count; ++record_index) {
+        const auto *record{
+            reinterpret_cast<const SchemaIndexRecord *>(record_ptr)};
+        const auto relative_path{std::string{
+            reinterpret_cast<const char *>(record_ptr + sizeof(*record)),
+            record->relative_path_length}};
+        auto &schema_entry{save_schema_index[relative_path]};
+        using file_time = std::filesystem::file_time_type;
+        schema_entry.root_mtime =
+            file_time{std::chrono::duration_cast<file_time::duration>(
+                std::chrono::nanoseconds{record->root_mtime})};
+        schema_entry.target_bitmap = record->target_bitmap;
+        schema_entry.has_cross_schema_deps = record->has_cross_schema_deps != 0;
+        record_ptr += sizeof(*record) + record->relative_path_length;
       }
 
-      const auto key{slot_key(slot, new_pool)};
-
-      std::string_view key_prefix;
-      bool is_explorer{false};
-      if (key.starts_with(schemas_prefix)) {
-        key_prefix = schemas_prefix;
-      } else if (key.starts_with(explorer_prefix)) {
-        key_prefix = explorer_prefix;
-        is_explorer = true;
-      } else {
-        continue;
-      }
-
-      const auto after{key.substr(key_prefix.size())};
-      const auto sentinel_position{after.find(sentinel_marker)};
-      if (sentinel_position == std::string_view::npos) {
-        continue;
-      }
-
-      const auto relative_path{after.substr(0, sentinel_position)};
-      const auto filename{after.substr(sentinel_position + 3)};
-      auto &schema_entry{save_schema_index[std::string{relative_path}]};
-
-      for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
-           rule_index++) {
-        const auto &rule{PER_SCHEMA_RULES[rule_index]};
-        if (filename == rule.filename &&
-            ((rule.base == TargetBase::Explorer) == is_explorer)) {
-          schema_entry.target_bitmap |=
-              static_cast<std::uint16_t>(1 << rule_index);
-          if (rule.is_root) {
-            const auto nanoseconds{
-                read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
-            using file_time = std::filesystem::file_time_type;
-            schema_entry.root_mtime =
-                file_time{std::chrono::duration_cast<file_time::duration>(
-                    std::chrono::nanoseconds{nanoseconds})};
-          }
-          break;
+      for (const auto &deleted_key : this->deleted) {
+        std::string_view key_prefix;
+        if (std::string_view{deleted_key}.starts_with(schemas_prefix)) {
+          key_prefix = schemas_prefix;
+        } else if (std::string_view{deleted_key}.starts_with(explorer_prefix)) {
+          key_prefix = explorer_prefix;
+        } else {
+          continue;
         }
+
+        const auto after{
+            std::string_view{deleted_key}.substr(key_prefix.size())};
+        const auto sentinel_position{after.find(sentinel_marker)};
+        if (sentinel_position == std::string_view::npos) {
+          continue;
+        }
+
+        save_schema_index.erase(
+            std::string{after.substr(0, sentinel_position)});
       }
 
-      const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
-      if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
-        auto offset{static_cast<std::size_t>(
-            read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
-        for (std::uint16_t dep_index = 0; dep_index < data_count; ++dep_index) {
-          const auto dependency_path{read_pool_string(new_pool, offset)};
-          std::string_view dep_prefix;
-          if (dependency_path.starts_with(schemas_prefix)) {
-            dep_prefix = schemas_prefix;
-          } else if (dependency_path.starts_with(explorer_prefix)) {
-            dep_prefix = explorer_prefix;
+      std::unordered_set<std::string, TransparentHash, TransparentEqual>
+          affected_schemas;
+      for (const auto &[overlay_key, overlay_entry] : this->overlay) {
+        std::string_view key_view{overlay_key};
+        std::string_view key_prefix;
+        if (key_view.starts_with(schemas_prefix)) {
+          key_prefix = schemas_prefix;
+        } else if (key_view.starts_with(explorer_prefix)) {
+          key_prefix = explorer_prefix;
+        } else {
+          continue;
+        }
+
+        const auto after{key_view.substr(key_prefix.size())};
+        const auto sentinel_position{after.find(sentinel_marker)};
+        if (sentinel_position == std::string_view::npos) {
+          continue;
+        }
+
+        affected_schemas.insert(
+            std::string{after.substr(0, sentinel_position)});
+      }
+
+      for (const auto &affected_relative : affected_schemas) {
+        auto &schema_entry{save_schema_index[affected_relative]};
+        schema_entry = SchemaStateEntry{};
+
+        for (std::uint32_t slot_index = 0; slot_index < capacity;
+             ++slot_index) {
+          const auto *slot{slots.data() + slot_index * SLOT_SIZE};
+          if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+            continue;
+          }
+
+          const auto key{read_slot_key(slot)};
+          std::string_view key_prefix;
+          bool is_explorer{false};
+          if (key.starts_with(schemas_prefix)) {
+            key_prefix = schemas_prefix;
+          } else if (key.starts_with(explorer_prefix)) {
+            key_prefix = explorer_prefix;
+            is_explorer = true;
           } else {
             continue;
           }
 
-          const auto dep_after{dependency_path.substr(dep_prefix.size())};
-          const auto dep_sentinel{dep_after.find(sentinel_marker)};
-          if (dep_sentinel != std::string_view::npos &&
-              dep_after.substr(0, dep_sentinel) != relative_path) {
-            schema_entry.has_cross_schema_deps = true;
+          const auto after{key.substr(key_prefix.size())};
+          const auto sentinel_position{after.find(sentinel_marker)};
+          if (sentinel_position == std::string_view::npos) {
+            continue;
+          }
+
+          if (after.substr(0, sentinel_position) != affected_relative) {
+            continue;
+          }
+
+          const auto filename{after.substr(sentinel_position + 3)};
+          for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+               rule_index++) {
+            const auto &rule{PER_SCHEMA_RULES[rule_index]};
+            if (filename == rule.filename &&
+                ((rule.base == TargetBase::Explorer) == is_explorer)) {
+              schema_entry.target_bitmap |=
+                  static_cast<std::uint16_t>(1 << rule_index);
+              if (rule.is_root) {
+                const auto nanoseconds{
+                    read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+                using file_time = std::filesystem::file_time_type;
+                schema_entry.root_mtime =
+                    file_time{std::chrono::duration_cast<file_time::duration>(
+                        std::chrono::nanoseconds{nanoseconds})};
+              }
+              break;
+            }
+          }
+
+          const auto data_count{
+              read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+          if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
+            auto offset{static_cast<std::size_t>(
+                read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+            for (std::uint16_t dep_index = 0; dep_index < data_count;
+                 ++dep_index) {
+              const auto dependency_path{read_slot_pool_string(offset)};
+              std::string_view dep_prefix;
+              if (dependency_path.starts_with(schemas_prefix)) {
+                dep_prefix = schemas_prefix;
+              } else if (dependency_path.starts_with(explorer_prefix)) {
+                dep_prefix = explorer_prefix;
+              } else {
+                continue;
+              }
+
+              const auto dep_after{dependency_path.substr(dep_prefix.size())};
+              const auto dep_sentinel{dep_after.find(sentinel_marker)};
+              if (dep_sentinel != std::string_view::npos &&
+                  dep_after.substr(0, dep_sentinel) != affected_relative) {
+                schema_entry.has_cross_schema_deps = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    } else {
+
+      for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
+        const auto *slot{slots.data() + slot_index * SLOT_SIZE};
+        if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+          continue;
+        }
+
+        const auto key{read_slot_key(slot)};
+        std::string_view key_prefix;
+        bool is_explorer{false};
+        if (key.starts_with(schemas_prefix)) {
+          key_prefix = schemas_prefix;
+        } else if (key.starts_with(explorer_prefix)) {
+          key_prefix = explorer_prefix;
+          is_explorer = true;
+        } else {
+          continue;
+        }
+
+        const auto after{key.substr(key_prefix.size())};
+        const auto sentinel_position{after.find(sentinel_marker)};
+        if (sentinel_position == std::string_view::npos) {
+          continue;
+        }
+
+        const auto relative_path{after.substr(0, sentinel_position)};
+        const auto filename{after.substr(sentinel_position + 3)};
+        auto &schema_entry{save_schema_index[std::string{relative_path}]};
+
+        for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+             rule_index++) {
+          const auto &rule{PER_SCHEMA_RULES[rule_index]};
+          if (filename == rule.filename &&
+              ((rule.base == TargetBase::Explorer) == is_explorer)) {
+            schema_entry.target_bitmap |=
+                static_cast<std::uint16_t>(1 << rule_index);
+            if (rule.is_root) {
+              const auto nanoseconds{
+                  read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+              using file_time = std::filesystem::file_time_type;
+              schema_entry.root_mtime =
+                  file_time{std::chrono::duration_cast<file_time::duration>(
+                      std::chrono::nanoseconds{nanoseconds})};
+            }
             break;
+          }
+        }
+
+        const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+        if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
+          auto offset{static_cast<std::size_t>(
+              read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+          for (std::uint16_t dep_index = 0; dep_index < data_count;
+               ++dep_index) {
+            const auto dependency_path{read_slot_pool_string(offset)};
+            std::string_view dep_prefix;
+            if (dependency_path.starts_with(schemas_prefix)) {
+              dep_prefix = schemas_prefix;
+            } else if (dependency_path.starts_with(explorer_prefix)) {
+              dep_prefix = explorer_prefix;
+            } else {
+              continue;
+            }
+
+            const auto dep_after{dependency_path.substr(dep_prefix.size())};
+            const auto dep_sentinel{dep_after.find(sentinel_marker)};
+            if (dep_sentinel != std::string_view::npos &&
+                dep_after.substr(0, dep_sentinel) != relative_path) {
+              schema_entry.has_cross_schema_deps = true;
+              break;
+            }
           }
         }
       }
@@ -933,12 +1200,38 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       schema_index_buffer.append(relative_path);
     }
 
-    buffer.append(schema_index_buffer);
-  }
+    const auto temp_path{path.native() + ".tmp"};
+    std::ofstream stream{temp_path, std::ios::binary};
+    assert(!stream.fail());
 
-  std::ofstream stream{path, std::ios::binary};
-  assert(!stream.fail());
-  stream.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    stream.write(reinterpret_cast<const char *>(&STATE_MAGIC),
+                 sizeof(STATE_MAGIC));
+    stream.write(reinterpret_cast<const char *>(&STATE_VERSION),
+                 sizeof(STATE_VERSION));
+    stream.write(reinterpret_cast<const char *>(&capacity), sizeof(capacity));
+    stream.write(reinterpret_cast<const char *>(&output_count),
+                 sizeof(output_count));
+    stream.write(reinterpret_cast<const char *>(&total_pool_size),
+                 sizeof(total_pool_size));
+    stream.write(reinterpret_cast<const char *>(&resolver_count),
+                 sizeof(resolver_count));
+
+    stream.write(reinterpret_cast<const char *>(slots.data()),
+                 static_cast<std::streamsize>(slots.size()));
+
+    if (can_patch && old_pool_size > 0) {
+      stream.write(reinterpret_cast<const char *>(this->string_pool),
+                   static_cast<std::streamsize>(old_pool_size));
+    }
+    if (!pool.empty()) {
+      stream.write(pool.data(), static_cast<std::streamsize>(pool.size()));
+    }
+
+    stream.write(schema_index_buffer.data(),
+                 static_cast<std::streamsize>(schema_index_buffer.size()));
+    stream.close();
+    std::filesystem::rename(temp_path, path);
+  }
 }
 
 } // namespace sourcemeta::one
