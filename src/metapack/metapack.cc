@@ -76,8 +76,11 @@ static auto write_metapack(const std::filesystem::path &destination,
                       content.size());
 
   if (encoding == MetapackEncoding::GZIP) {
-    std::istringstream input_stream{content};
-    sourcemeta::one::gzip(input_stream, output);
+    const auto compressed{sourcemeta::one::gzip(
+        reinterpret_cast<const std::uint8_t *>(content.data()),
+        content.size())};
+    output.write(compressed.data(),
+                 static_cast<std::streamsize>(compressed.size()));
   } else {
     output.write(content.data(), static_cast<std::streamsize>(content.size()));
   }
@@ -233,18 +236,17 @@ auto metapack_read_json(const std::filesystem::path &path)
   }
 
   const auto payload_data_size{view.size() - payload_offset};
+
+  if (header->encoding == MetapackEncoding::GZIP) {
+    const auto decompressed{
+        sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
+                                payload_data_size, header->content_bytes)};
+    return sourcemeta::core::parse_json(decompressed);
+  }
+
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *payload_data{
       reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
-
-  if (header->encoding == MetapackEncoding::GZIP) {
-    std::string compressed{payload_data, payload_data_size};
-    std::istringstream compressed_stream{compressed};
-    std::ostringstream decompressed;
-    sourcemeta::one::gunzip(compressed_stream, decompressed);
-    return sourcemeta::core::parse_json(decompressed.str());
-  }
-
   const std::string payload_string{payload_data, payload_data_size};
   return sourcemeta::core::parse_json(payload_string);
 }
