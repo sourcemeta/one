@@ -3,24 +3,16 @@
 
 #include <sourcemeta/one/gzip_error.h>
 
-#include <istream>     // std::istream
-#include <ostream>     // std::ostream
-#include <string>      // std::string
-#include <string_view> // std::string_view
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint8_t
+#include <string>  // std::string
 
 namespace sourcemeta::one {
 
-auto gzip(std::istream &input, std::ostream &output) -> void;
+auto gzip(const std::uint8_t *input, std::size_t size) -> std::string;
 
-auto gzip(std::istream &stream) -> std::string;
-
-auto gzip(const std::string &input) -> std::string;
-
-auto gunzip(std::istream &input, std::ostream &output) -> void;
-
-auto gunzip(std::istream &stream) -> std::string;
-
-auto gunzip(const std::string &input) -> std::string;
+auto gunzip(const std::uint8_t *input, std::size_t size,
+            std::size_t output_hint = 0) -> std::string;
 
 } // namespace sourcemeta::one
 

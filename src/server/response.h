@@ -6,6 +6,7 @@
 
 #include "uwebsockets.h"
 
+#include <cstdint>     // std::uint8_t
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -118,7 +119,9 @@ public:
     if (expected_encoding == Encoding::GZIP) {
       this->response_->writeHeader("Content-Encoding", "gzip");
       if (current_encoding == Encoding::Identity) {
-        auto effective_message{gzip(message)};
+        auto effective_message{
+            gzip(reinterpret_cast<const std::uint8_t *>(message.data()),
+                 message.size())};
         if (method == "head") {
           this->response_->endWithoutBody(effective_message.size());
           this->response_->end();
@@ -135,7 +138,9 @@ public:
       }
     } else if (expected_encoding == Encoding::Identity) {
       if (current_encoding == Encoding::GZIP) {
-        auto effective_message{gunzip(message)};
+        auto effective_message{
+            gunzip(reinterpret_cast<const std::uint8_t *>(message.data()),
+                   message.size())};
         if (method == "head") {
           this->response_->endWithoutBody(effective_message.size());
           this->response_->end();
