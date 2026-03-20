@@ -379,17 +379,26 @@ static auto index_main(const std::string_view &program,
   // (7) Run the delta plans
   /////////////////////////////////////////////////////////////////////////////
 
-  auto produce_plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Produce, build_type, entries,
-      canonical_output, resolver.data(), this_version, incremental, comment)};
+  const sourcemeta::one::BuildLimits limits{
+      .maximum_direct_directory_entries =
+          app.contains("maximum-direct-directory-entries")
+              ? std::stoull(
+                    app.at("maximum-direct-directory-entries").front().data())
+              : 1000};
+
+  auto produce_plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce, build_type,
+                             entries, canonical_output, resolver.data(),
+                             this_version, incremental, comment, limits)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
   PROFILE_END(profiling, "Producing (Build)");
 
-  auto combine_plan{sourcemeta::one::delta(
-      sourcemeta::one::BuildPhase::Combine, build_type, entries,
-      canonical_output, resolver.data(), this_version, incremental, comment)};
+  auto combine_plan{
+      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Combine, build_type,
+                             entries, canonical_output, resolver.data(),
+                             this_version, incremental, comment, limits)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");
@@ -470,6 +479,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});
     app.option("comment", {"m"});
+    app.option("maximum-direct-directory-entries", {});
     app.parse(argc, argv);
     const std::string_view program{argv[0]};
 
@@ -520,6 +530,11 @@ auto main(int argc, char *argv[]) noexcept -> int {
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  with count " << error.count()
+              << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::cerr << "error: " << error.what() << "\n  at " << error.uri()

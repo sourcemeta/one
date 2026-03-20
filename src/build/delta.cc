@@ -193,8 +193,8 @@ static auto collect_affected_directories(
 auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
-           const bool incremental, const std::string_view comment)
-    -> BuildPlan {
+           const bool incremental, const std::string_view comment,
+           const BuildLimits &limits) -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
     return entry.second.path.is_absolute() &&
@@ -1007,6 +1007,14 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
               rule_dependencies.push_back(configuration_string);
               break;
           }
+        }
+
+        if (rule.action == BuildPlan::Action::Type::DirectoryList &&
+            limits.maximum_direct_directory_entries > 0 &&
+            rule_dependencies.size() >
+                limits.maximum_direct_directory_entries) {
+          throw BuildTooManyDirectoryEntriesError(directory,
+                                                  rule_dependencies.size());
         }
 
         declare_target(targets, rule.action, destination,

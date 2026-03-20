@@ -150,11 +150,12 @@ contain the actual schema definitions that power your instance.
 
 !!! warning
 
-    We do not recommend having more than 10,000 entries (schemas or
-    subdirectories) within a single directory, as large flat directory listings
-    can negatively affect indexing performance. Instead, organise your schemas
-    into a tree of nested subdirectories. A large number of schemas spread
-    across multiple levels of directories scales well
+    To preserve scalability and encourage best practices in schema
+    organisation, Sourcemeta One caps the number of immediate entries (schemas
+    or subdirectories) within a single registry directory to 1,000 by default.
+    Instead of placing a large number of schemas in a single flat directory,
+    organise them into a tree of nested subdirectories. A large number of
+    schemas spread across multiple levels of directories scales well.
 
 ### Includes
 
