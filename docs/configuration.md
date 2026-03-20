@@ -148,6 +148,14 @@ contain the actual schema definitions that power your instance.
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers |
 
+!!! warning
+
+    We do not recommend having more than 10,000 entries (schemas or
+    subdirectories) within a single directory, as large flat directory listings
+    can negatively affect indexing performance. Instead, organise your schemas
+    into a tree of nested subdirectories. A large number of schemas spread
+    across multiple levels of directories scales well
+
 ### Includes
 
 The `includes` property enables modular schema collection management by
