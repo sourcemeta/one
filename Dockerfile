@@ -57,6 +57,10 @@ RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 FROM debian:trixie-slim
 
+RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
+  liburing2 \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
