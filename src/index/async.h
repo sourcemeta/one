@@ -103,16 +103,6 @@ static auto parallel_read_uring(
 
   std::vector<FileState> states(file_count);
 
-  // Helper to submit batches and reap completions
-  const auto submit_and_reap = [&ring](const std::size_t count) {
-    io_uring_submit(&ring);
-    for (std::size_t completed = 0; completed < count; ++completed) {
-      struct io_uring_cqe *cqe;
-      io_uring_wait_cqe(&ring, &cqe);
-      io_uring_cqe_seen(&ring, cqe);
-    }
-  };
-
   // Round 1: Open all files
   for (std::size_t file_index = 0; file_index < file_count; ++file_index) {
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
@@ -152,7 +142,8 @@ static auto parallel_read_uring(
     }
 
     io_uring_prep_read(sqe, states[file_index].file_descriptor,
-                       states[file_index].buffer.data(), initial_size, 0);
+                       states[file_index].buffer.data(),
+                       static_cast<unsigned>(initial_size), 0);
     io_uring_sqe_set_data64(sqe, file_index);
     ++read_count;
   }
@@ -205,7 +196,8 @@ static auto parallel_read_uring(
 
       io_uring_prep_read(sqe, state.file_descriptor,
                          state.buffer.data() + state.total_bytes_read,
-                         requested, static_cast<__u64>(state.total_bytes_read));
+                         static_cast<unsigned>(requested),
+                         static_cast<__u64>(state.total_bytes_read));
       io_uring_sqe_set_data64(sqe, file_index);
     }
 
