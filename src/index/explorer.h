@@ -27,6 +27,10 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
+#include <cerrno>   // errno, EINTR
+#include <fcntl.h>  // open, O_RDONLY, O_NOATIME
+#include <unistd.h> // pread, close
+
 static auto make_breadcrumb(const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
@@ -718,18 +722,79 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
-        sourcemeta::core::FileView dependency_view{dependency};
-        const auto extension_offset{
-            sourcemeta::one::metapack_extension_offset(dependency_view)};
-        const auto *extension{sourcemeta::one::metapack_extension<
-            MetapackExplorerSchemaExtension>(dependency_view)};
-
-        if (extension == nullptr || extension_offset == 0) {
+        // Use pread instead of mmap (FileView) to avoid the ~19µs
+        // per-file mmap/munmap syscall overhead. We read the metapack
+        // header first (to learn the extension offset/size), then
+        // read the extension data in a second pread.
+        constexpr std::size_t HEADER_READ_SIZE{128};
+#ifdef __linux__
+        const int fd{open(dependency.c_str(), O_RDONLY | O_NOATIME)};
+#else
+        const int fd{open(dependency.c_str(), O_RDONLY)};
+#endif
+        if (fd < 0) {
           continue;
         }
 
-        const auto *extension_base{
-            dependency_view.as<std::uint8_t>(extension_offset)};
+        // Read header + mime + ext_size in one pread
+        std::uint8_t header_buf[HEADER_READ_SIZE];
+        ssize_t header_bytes;
+        do {
+          header_bytes = pread(fd, header_buf, HEADER_READ_SIZE, 0);
+        } while (header_bytes == -1 && errno == EINTR);
+
+        if (header_bytes <
+            static_cast<ssize_t>(sizeof(sourcemeta::one::MetapackHeader))) {
+          close(fd);
+          continue;
+        }
+
+        const auto *header{
+            reinterpret_cast<const sourcemeta::one::MetapackHeader *>(
+                header_buf)};
+        if (header->magic != sourcemeta::one::METAPACK_MAGIC ||
+            header->format_version != sourcemeta::one::METAPACK_VERSION) {
+          close(fd);
+          continue;
+        }
+
+        const auto ext_size_offset{sizeof(sourcemeta::one::MetapackHeader) +
+                                   header->mime_length};
+        if (ext_size_offset + sizeof(std::uint32_t) >
+            static_cast<std::size_t>(header_bytes)) {
+          close(fd);
+          continue;
+        }
+
+        const auto extension_size{*reinterpret_cast<const std::uint32_t *>(
+            header_buf + ext_size_offset)};
+        if (extension_size == 0 ||
+            extension_size < sizeof(MetapackExplorerSchemaExtension)) {
+          close(fd);
+          continue;
+        }
+
+        const auto ext_data_offset{ext_size_offset + sizeof(std::uint32_t)};
+
+        // Read the extension data
+        std::vector<std::uint8_t> ext_buf(extension_size);
+        ssize_t ext_bytes;
+        do {
+          ext_bytes = pread(fd, ext_buf.data(), extension_size,
+                            static_cast<off_t>(ext_data_offset));
+        } while (ext_bytes == -1 && errno == EINTR);
+        close(fd);
+
+        if (ext_bytes <
+            static_cast<ssize_t>(sizeof(MetapackExplorerSchemaExtension))) {
+          continue;
+        }
+
+        const auto *extension{
+            reinterpret_cast<const MetapackExplorerSchemaExtension *>(
+                ext_buf.data())};
+        const auto *extension_base{ext_buf.data()};
+
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"schema"});
