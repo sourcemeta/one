@@ -634,6 +634,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               scores.emplace_back(old_entry.at("health").to_integer());
             }
             if (old_entry.defines("schemas")) {
+              assert(old_entry.at("schemas").is_positive());
               child_schemas_total += old_entry.at("schemas").to_integer();
             }
             directory_entries.push_back(
@@ -662,6 +663,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           entry_json.assign(
               "health", sourcemeta::core::JSON{directory_extension->health});
           scores.emplace_back(directory_extension->health);
+          assert(directory_extension->schemas >= 0);
           entry_json.assign(
               "schemas", sourcemeta::core::JSON{directory_extension->schemas});
           child_schemas_total += directory_extension->schemas;
@@ -736,6 +738,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           entry_json.assign("health", directory_json.at("health"));
           assert(directory_json.defines("schemas"));
           assert(directory_json.at("schemas").is_integer());
+          assert(directory_json.at("schemas").is_positive());
           entry_json.assign("schemas", directory_json.at("schemas"));
           child_schemas_total += directory_json.at("schemas").to_integer();
           assert(directory_json.defines("path"));
@@ -895,6 +898,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
     const auto total_schemas{static_cast<std::int64_t>(schema_entries.size()) +
                              child_schemas_total};
+    assert(total_schemas >= 0);
     meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
 
     meta.assign("entries", std::move(entries));
