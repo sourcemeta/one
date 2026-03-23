@@ -122,6 +122,7 @@ struct MetapackExplorerSchemaExtension {
 struct MetapackDirectoryExtension {
   MetapackVersionInfo version;
   std::int64_t health;
+  std::int64_t schemas;
   std::uint16_t path_length;
   std::uint16_t title_length;
   std::uint16_t description_length;
@@ -157,10 +158,10 @@ inline auto directory_extension_string(const MetapackDirectoryExtension *,
 
 static auto make_directory_extension(
     const MetapackVersionInfo &version, const std::int64_t health,
-    const std::string_view path, const std::string_view title,
-    const std::string_view description, const std::string_view email,
-    const std::string_view github, const std::string_view website)
-    -> std::vector<std::uint8_t> {
+    const std::int64_t schemas, const std::string_view path,
+    const std::string_view title, const std::string_view description,
+    const std::string_view email, const std::string_view github,
+    const std::string_view website) -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -176,6 +177,7 @@ static auto make_directory_extension(
   MetapackDirectoryExtension header{};
   header.version = version;
   header.health = health;
+  header.schemas = schemas;
   header.path_length = static_cast<std::uint16_t>(path.size());
   header.title_length = static_cast<std::uint16_t>(title.size());
   header.description_length = static_cast<std::uint16_t>(description.size());
@@ -573,6 +575,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
+    std::int64_t child_schemas_total{0};
 
     const auto directory_path{action.destination.parent_path().parent_path()};
     std::filesystem::path relative_path;
@@ -630,6 +633,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
             if (old_entry.defines("health")) {
               scores.emplace_back(old_entry.at("health").to_integer());
             }
+            if (old_entry.defines("schemas")) {
+              child_schemas_total += old_entry.at("schemas").to_integer();
+            }
             directory_entries.push_back(
                 {old_entry, parse_version_info(child_name), child_name});
             continue;
@@ -656,6 +662,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           entry_json.assign(
               "health", sourcemeta::core::JSON{directory_extension->health});
           scores.emplace_back(directory_extension->health);
+          entry_json.assign(
+              "schemas", sourcemeta::core::JSON{directory_extension->schemas});
+          child_schemas_total += directory_extension->schemas;
 
           const auto directory_path_string{
               directory_extension_string(directory_extension, directory_base, 0,
@@ -725,6 +734,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           scores.emplace_back(directory_json.at("health").to_integer());
 
           entry_json.assign("health", directory_json.at("health"));
+          assert(directory_json.defines("schemas"));
+          assert(directory_json.at("schemas").is_integer());
+          entry_json.assign("schemas", directory_json.at("schemas"));
+          child_schemas_total += directory_json.at("schemas").to_integer();
           assert(directory_json.defines("path"));
           entry_json.assign("path",
                             sourcemeta::core::JSON{
@@ -880,6 +893,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       meta.assign("health", sourcemeta::core::JSON{0});
     }
 
+    const auto total_schemas{static_cast<std::int64_t>(schema_entries.size()) +
+                             child_schemas_total};
+    meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
+
     meta.assign("entries", std::move(entries));
 
     if (relative_path == ".") {
@@ -898,7 +915,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         action.destination.parent_path().parent_path().filename().string()};
     const auto directory_extension_bytes{make_directory_extension(
         parse_version_info(directory_name), meta.at("health").to_integer(),
-        meta.at("path").to_string(),
+        meta.at("schemas").to_integer(), meta.at("path").to_string(),
         meta.defines("title") ? meta.at("title").to_string() : "",
         meta.defines("description") ? meta.at("description").to_string() : "",
         meta.defines("email") ? meta.at("email").to_string() : "",

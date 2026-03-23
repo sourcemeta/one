@@ -254,6 +254,13 @@ inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
       entry.defines("description") ? entry.at("description").to_string() : "-");
   writer.close();
 
+  // Schemas column
+  writer.td();
+  writer.small(entry.defines("schemas")
+                   ? std::to_string(entry.at("schemas").to_integer())
+                   : "-");
+  writer.close();
+
   // Dependencies column
   writer.td();
   writer.small(entry.defines("dependencies")
@@ -285,6 +292,9 @@ inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
   writer.close();
   writer.th().attribute("scope", "col");
   writer.text("Description");
+  writer.close();
+  writer.th().attribute("scope", "col");
+  writer.text("Schemas");
   writer.close();
   writer.th().attribute("scope", "col");
   writer.text("Dependencies");
