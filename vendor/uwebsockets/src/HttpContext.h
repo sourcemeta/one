@@ -69,12 +69,26 @@ private:
     /* Init the HttpContext by registering libusockets event handlers */
     HttpContext<SSL> *init() {
         /* Handle socket connections */
-        us_socket_context_on_open(SSL, getSocketContext(), [](us_socket_t *s, int /*is_client*/, char */*ip*/, int /*ip_length*/) {
+        us_socket_context_on_open(SSL, getSocketContext(), [](us_socket_t *s, int /*is_client*/, char *ip, int ip_length) {
             /* Any connected socket should timeout until it has a request */
             us_socket_timeout(SSL, s, HTTP_IDLE_TIMEOUT_S);
 
             /* Init socket ext */
             new (us_socket_ext(SSL, s)) HttpResponseData<SSL>;
+
+#ifdef UWS_REMOTE_ADDRESS_USERSPACE
+            /* Copy remote address into per-socket cache for later retrieval */
+            AsyncSocketData<SSL> *asyncSocketData = (AsyncSocketData<SSL> *) us_socket_ext(SSL, s);
+            if (ip_length > 0 && ip_length <= 16) {
+                memcpy(asyncSocketData->remoteAddress, ip, (size_t) ip_length);
+                asyncSocketData->remoteAddressLength = ip_length;
+            } else {
+                asyncSocketData->remoteAddressLength = 0;
+            }
+#else
+            (void) ip;
+            (void) ip_length;
+#endif
 
             /* Call filter */
             HttpContextData<SSL> *httpContextData = getSocketContextDataS(s);
@@ -216,12 +230,12 @@ private:
                 /* Continue parsing */
                 return s;
 
-            }, [httpResponseData](void *user, std::string_view data, bool fin) -> void * {
+            }, [httpResponseData](void *user, std::string_view data, uint64_t maxRemainingBodyLength) -> void * {
                 /* We always get an empty chunk even if there is no data */
                 if (httpResponseData->inStream) {
 
                     /* Todo: can this handle timeout for non-post as well? */
-                    if (fin) {
+                    if (maxRemainingBodyLength == 0) {
                         /* If we just got the last chunk (or empty chunk), disable timeout */
                         us_socket_timeout(SSL, (struct us_socket_t *) user, 0);
                     } else {
@@ -235,7 +249,7 @@ private:
                     }
 
                     /* We might respond in the handler, so do not change timeout after this */
-                    httpResponseData->inStream(data, fin);
+                    httpResponseData->inStream(data, maxRemainingBodyLength);
 
                     /* Was the socket closed? */
                     if (us_socket_is_closed(SSL, (struct us_socket_t *) user)) {
@@ -249,7 +263,7 @@ private:
 
                     /* If we were given the last data chunk, reset data handler to ensure following
                      * requests on the same socket won't trigger any previously registered behavior */
-                    if (fin) {
+                    if (maxRemainingBodyLength == 0) {
                         httpResponseData->inStream = nullptr;
                     }
                 }

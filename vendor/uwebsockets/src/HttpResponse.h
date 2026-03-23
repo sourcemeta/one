@@ -232,6 +232,10 @@ public:
     std::string_view getProxiedRemoteAddressAsText() {
         return Super::addressAsText(getProxiedRemoteAddress());
     }
+
+    unsigned int getProxiedRemotePort() {
+        return getHttpResponseData()->proxyParser.getSourcePort();
+    }
 #endif
 
     /* Manually upgrade to WebSocket. Typically called in upgrade handler. Immediately calls open handler.
@@ -358,6 +362,7 @@ public:
     /* See AsyncSocket */
     using Super::getRemoteAddress;
     using Super::getRemoteAddressAsText;
+    using Super::getRemotePort;
     using Super::getNativeHandle;
 
     /* Throttle reads and writes */
@@ -483,6 +488,13 @@ public:
         return httpResponseData->offset;
     }
 
+    /* Get the remaining body length if set via content-length, UINT64_MAX if transfer-encoding is chunked, or 0 if no body */
+    uint64_t maxRemainingBodyLength() {
+        HttpResponseData<SSL> *httpResponseData = getHttpResponseData();
+
+        return httpResponseData->maxRemainingBodyLength();
+    }
+
     /* If you are messing around with sendfile you might want to override the offset. */
     void overrideWriteOffset(uintmax_t offset) {
         HttpResponseData<SSL> *httpResponseData = getHttpResponseData();
@@ -569,6 +581,17 @@ public:
 
     /* Attach a read handler for data sent. Will be called with FIN set true if last segment. */
     void onData(MoveOnlyFunction<void(std::string_view, bool)> &&handler) {
+        if (handler) {
+            onDataV2([handler = std::move(handler)](std::string_view chunk, uint64_t maxRemainingBodyLength) mutable {
+                handler(chunk, maxRemainingBodyLength == 0);
+            });
+        } else {
+            onDataV2(nullptr);
+        }
+    }
+
+    /* Attach a read handler for data sent. Will be called with maxRemainingBodyLength. maxRemainingBodyLength == 0 is the same as isLast. */
+    void onDataV2(MoveOnlyFunction<void(std::string_view, uint64_t)> &&handler) {
         HttpResponseData<SSL> *data = getHttpResponseData();
         data->inStream = std::move(handler);
 
