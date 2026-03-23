@@ -5,6 +5,7 @@
   "examples": [
     {
       "health": 100,
+      "schemas": 42,
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
@@ -17,7 +18,7 @@
     }
   ],
   "type": "object",
-  "required": [ "health", "entries", "path", "url", "breadcrumb" ],
+  "required": [ "health", "schemas", "entries", "path", "url", "breadcrumb" ],
   "properties": {
     "title": {
       "type": "string"
@@ -50,7 +51,7 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [ "health", "name", "type", "path" ],
+            "required": [ "health", "schemas", "name", "type", "path" ],
             "properties": {
               "title": {
                 "type": "string"
@@ -70,6 +71,10 @@
               "health": {
                 "type": "integer",
                 "maximum": 100,
+                "minimum": 0
+              },
+              "schemas": {
+                "type": "integer",
                 "minimum": 0
               },
               "name": {
@@ -106,6 +111,10 @@
     "health": {
       "type": "integer",
       "maximum": 100,
+      "minimum": 0
+    },
+    "schemas": {
+      "type": "integer",
       "minimum": 0
     },
     "path": {
