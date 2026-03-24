@@ -27,9 +27,8 @@ mkdir "$TMP/schemas"
 
 cat << 'EOF' > "$TMP/schemas/test.json"
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/test.json",
-  "allOf": [ { "$ref": "#foo" } ]
+  "$schema": "https://example.com/unknown-dialect",
+  "$id": "https://example.com/test"
 }
 EOF
 
@@ -53,10 +52,10 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (  8%) Producing: version.json
 ( 13%) Producing: explorer/%/404.metapack
 ( 17%) Producing: schemas/example/schemas/test/%/schema.metapack
-( 21%) Producing: schemas/example/schemas/test/%/dependencies.metapack
-error: Could not resolve schema reference
-  https://sourcemeta.com/example/schemas/test#foo
-    at schema location "/allOf/0/\$ref"
+error: Could not resolve the metaschema of the schema
+  https://sourcemeta.com/example/schemas/unknown-dialect
+
+Did you forget to register a schema with such URI in the one?
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
