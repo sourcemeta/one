@@ -43,13 +43,14 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
   const auto &static_locations{locations.at("static")};
 
   sourcemeta::core::PointerPositionTracker tracker;
-  const auto instance_json{
-      sourcemeta::core::parse_json(instance, std::ref(tracker))};
+  sourcemeta::core::JSON instance_json{nullptr};
+  sourcemeta::core::parse_json(instance, instance_json, std::ref(tracker));
   const auto result{evaluator.validate(
       schema_template, instance_json,
       [&steps, &tracker, &static_locations, &instance_json](
           const sourcemeta::blaze::EvaluationType type, const bool valid,
           const sourcemeta::blaze::Instruction &instruction,
+          const sourcemeta::blaze::InstructionExtra &extra,
           const sourcemeta::core::WeakPointer &evaluate_path,
           const sourcemeta::core::WeakPointer &instance_location,
           const sourcemeta::core::JSON &annotation) {
@@ -82,7 +83,7 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
             "instancePositions",
             sourcemeta::core::to_json(std::move(instance_positions).value()));
         step.assign("keywordLocation",
-                    sourcemeta::core::to_json(instruction.keyword_location));
+                    sourcemeta::core::to_json(extra.keyword_location));
         step.assign("annotation", annotation);
 
         if (type == sourcemeta::blaze::EvaluationType::Pre) {
@@ -96,7 +97,7 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
 
         // Determine keyword vocabulary
         const auto &current_location{
-            static_locations.at(instruction.keyword_location)};
+            static_locations.at(extra.keyword_location)};
         if (!current_location.is_object() ||
             !current_location.defines("baseDialect") ||
             !current_location.defines("dialect")) {

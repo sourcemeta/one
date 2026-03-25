@@ -184,7 +184,9 @@ struct GENERATE_POINTER_POSITIONS {
     std::ostringstream schema_stream;
     sourcemeta::core::prettify(schema, schema_stream);
     sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::core::parse_json(schema_stream.str(), std::ref(tracker));
+    sourcemeta::core::JSON parsed{nullptr};
+    sourcemeta::core::parse_json(schema_stream.str(), parsed,
+                                 std::ref(tracker));
     const auto result{sourcemeta::core::to_json(tracker)};
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
@@ -210,7 +212,9 @@ struct GENERATE_FRAME_LOCATIONS {
     std::ostringstream contents_stream;
     sourcemeta::core::prettify(contents, contents_stream);
     sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::core::parse_json(contents_stream.str(), std::ref(tracker));
+    sourcemeta::core::JSON parsed{nullptr};
+    sourcemeta::core::parse_json(contents_stream.str(), parsed,
+                                 std::ref(tracker));
     sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::Locations};
     frame.analyse(contents, sourcemeta::core::schema_walker,
