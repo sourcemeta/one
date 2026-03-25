@@ -522,7 +522,11 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
                                : "",
                            directory_entry.defines("description")
                                ? directory_entry.at("description").to_string()
-                               : ""});
+                               : "",
+                           directory_entry.defines("health")
+                               ? static_cast<std::uint8_t>(
+                                     directory_entry.at("health").to_integer())
+                               : static_cast<std::uint8_t>(0)});
       }
     }
 
