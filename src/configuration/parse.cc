@@ -52,7 +52,6 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
                                           .to_string()}
                     .parent_path()
               : default_base_path};
-      collection_input.erase("x-sourcemeta-one:path");
       auto collection{sourcemeta::blaze::Configuration::from_json(
           collection_input, base_path)};
       // Filesystems behave differently with regards to casing. To unify

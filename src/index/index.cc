@@ -589,7 +589,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::CustomRuleError &error) {
-    std::cerr << "error: " << error.what() << "\n";
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::LinterInvalidNamePatternError> &error) {

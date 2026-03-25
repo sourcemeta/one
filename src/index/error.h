@@ -85,10 +85,19 @@ private:
 
 class CustomRuleError : public std::exception {
 public:
+  CustomRuleError(std::filesystem::path path) : path_{std::move(path)} {}
+
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "Custom linter rules are only available on the enterprise "
            "edition";
   }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
 };
 
 } // namespace sourcemeta::one

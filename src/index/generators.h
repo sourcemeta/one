@@ -445,8 +445,10 @@ private:
                                             configuration, resolver, callback);
 #else
     if (!configuration.lint.rules.empty()) {
-      // TODO: Show enough information to know where the error is coming from
-      throw CustomRuleError();
+      const auto *config_path{
+          configuration.extra.try_at("x-sourcemeta-one:path")};
+      assert(config_path);
+      throw CustomRuleError(std::filesystem::path{config_path->to_string()});
     }
 #endif
 
