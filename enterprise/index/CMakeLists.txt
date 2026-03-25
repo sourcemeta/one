@@ -5,6 +5,7 @@ target_compile_definitions(sourcemeta_one_enterprise_index PUBLIC SOURCEMETA_ONE
 
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::blaze::configuration)
+target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::error)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::compiler)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::linter)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::yaml)

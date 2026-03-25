@@ -577,16 +577,38 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::CustomRuleError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterInvalidNamePatternError> &error) {
+    std::cerr << "error: The schema rule name must match " << error.regex()
+              << "\n  at path " << error.path().string() << "\n  at name "
+              << error.identifier() << "\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
     std::cerr << "error: The schema rule name must match " << error.regex()
               << "\n  at name " << error.identifier() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterInvalidNameError> &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at name " << error.identifier()
+              << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
     std::cerr << "error: " << error.what() << "\n  at name "
               << error.identifier() << "\n";
     return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterMissingNameError> &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
     std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::cerr << "error: " << error.what() << "\n";
