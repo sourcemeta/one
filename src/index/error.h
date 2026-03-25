@@ -61,6 +61,28 @@ private:
   std::string value_;
 };
 
+class OptionInvalidURIValueError : public std::exception {
+public:
+  OptionInvalidURIValueError(std::string option, std::string value)
+      : option_{std::move(option)}, value_{std::move(value)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Expected a valid URI value for option";
+  }
+
+  [[nodiscard]] auto option() const noexcept -> const std::string & {
+    return this->option_;
+  }
+
+  [[nodiscard]] auto value() const noexcept -> const std::string & {
+    return this->value_;
+  }
+
+private:
+  std::string option_;
+  std::string value_;
+};
+
 class CustomRuleError : public std::exception {
 public:
   [[nodiscard]] auto what() const noexcept -> const char * override {

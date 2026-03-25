@@ -247,8 +247,15 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   if (app.contains("resolve-schema")) {
-    const sourcemeta::core::URI input_uri{
-        std::string{app.at("resolve-schema").front()}};
+    const auto &resolve_schema_value{app.at("resolve-schema").front()};
+    sourcemeta::core::URI input_uri{""};
+    try {
+      input_uri = sourcemeta::core::URI{std::string{resolve_schema_value}};
+    } catch (const sourcemeta::core::URIParseError &) {
+      throw sourcemeta::one::OptionInvalidURIValueError(
+          "resolve-schema", std::string{resolve_schema_value});
+    }
+
     std::cerr << "Resolving schema for URI: " << input_uri.recompose() << "\n";
     const auto result{configuration.resolve_schema(input_uri)};
     if (result.has_value()) {
@@ -554,6 +561,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::cerr << "  to identifier " << error.identifier() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
+    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
+              << "\n  with value " << error.value() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::OptionInvalidURIValueError &error) {
     std::cerr << "error: " << error.what() << "\n  at option " << error.option()
               << "\n  with value " << error.value() << "\n";
     return EXIT_FAILURE;
