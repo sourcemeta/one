@@ -7,10 +7,9 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-"$1" --skip-banner > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
-test "$CODE" = "1" || exit 1
-
 cat << EOF > "$TMP/expected.txt"
+Sourcemeta One $2 v$3
+
 Usage: $(basename "$1") <one.json> <path/to/output/directory>
 
 Global Options:
@@ -37,4 +36,12 @@ Advanced Options:
 For more documentation, visit https://one.sourcemeta.com
 EOF
 
+"$1" --help > "$TMP/output.txt" 2>/dev/null
+diff "$TMP/output.txt" "$TMP/expected.txt"
+
+"$1" -h > "$TMP/output.txt" 2>/dev/null
+diff "$TMP/output.txt" "$TMP/expected.txt"
+
+"$1" > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
+test "$CODE" = "1"
 diff "$TMP/output.txt" "$TMP/expected.txt"

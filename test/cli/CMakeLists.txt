@@ -3,6 +3,7 @@ macro(sourcemeta_one_test_cli directory program name)
     add_test(NAME one.${program}.${directory}.${name} COMMAND
       "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.sh"
       "$<TARGET_FILE:sourcemeta_one_${program}>"
+      "${ONE_EDITION}"
       "${ONE_VERSION}"
       WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     set_tests_properties(one.${program}.${directory}.${name} PROPERTIES
@@ -36,6 +37,8 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index fail-invalid-schema-uri-percentage)
   sourcemeta_one_test_cli(common index fail-invalid-schema-yaml)
   sourcemeta_one_test_cli(common index fail-maximum-entries-non-numeric-value)
+  sourcemeta_one_test_cli(common index help)
+  sourcemeta_one_test_cli(common index help-skip-banner)
   sourcemeta_one_test_cli(common index no-arguments)
   sourcemeta_one_test_cli(common index fail-non-schema-array)
   sourcemeta_one_test_cli(common index fail-non-schema-yaml-array)

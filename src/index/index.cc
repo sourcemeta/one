@@ -192,17 +192,60 @@ static auto execute_plan(std::mutex &mutex,
   }
 }
 
+constexpr std::string_view USAGE_DETAILS{R"EOF(
+Global Options:
+
+   --help, -h                     Print this help information and quit
+   --configuration, -g            Print the resolved configuration and quit
+   --resolve-schema, -r <uri>     Resolve a URI to its schema path and quit
+   --skip-banner, -s              Skip the startup banner
+
+Index Options:
+
+   --verbose, -v                  Enable verbose output
+   --concurrency, -c <number>     Set the number of concurrent threads
+   --profile, -p                  Output information about slowest steps
+   --time, -t                     Output high-level timing information
+   --comment, -m <text>           Attach a comment to the build
+
+Advanced Options:
+
+   --maximum-direct-directory-entries <number>
+
+     Set the maximum number of direct entries in a directory listing
+
+For more documentation, visit https://one.sourcemeta.com
+)EOF"};
+
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
-  if (!app.contains("skip-banner")) {
-    std::cerr << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-              << sourcemeta::one::version() << "\n";
+  if (app.contains("help")) {
+    if (!app.contains("skip-banner")) {
+      std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+                << sourcemeta::one::version() << "\n\n";
+    }
+
+    std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
+              << " <one.json> <path/to/output/directory>\n";
+    std::cout << USAGE_DETAILS;
+    return EXIT_SUCCESS;
   }
 
   if (app.positional().size() != 2) {
-    std::cerr << "Usage: " << std::filesystem::path{program}.filename().string()
+    if (!app.contains("skip-banner")) {
+      std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+                << sourcemeta::one::version() << "\n\n";
+    }
+
+    std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
               << " <one.json> <path/to/output/directory>\n";
+    std::cout << USAGE_DETAILS;
     return EXIT_FAILURE;
+  }
+
+  if (!app.contains("skip-banner")) {
+    std::cerr << "Sourcemeta One " << sourcemeta::one::edition() << " v"
+              << sourcemeta::one::version() << "\n";
   }
 
   PROFILE_INIT(profiling);
@@ -524,7 +567,7 @@ static auto index_main(const std::string_view &program,
 auto main(int argc, char *argv[]) noexcept -> int {
   try {
     sourcemeta::core::Options app;
-    // TODO: Support a --help flag
+    app.flag("help", {"h"});
     app.option("concurrency", {"c"});
     app.flag("verbose", {"v"});
     app.flag("profile", {"p"});
