@@ -9,12 +9,18 @@
 
 #include <filesystem>    // std::filesystem::path
 #include <optional>      // std::optional
+#include <string>        // std::string
 #include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <variant>       // std::variant
 
 namespace sourcemeta::one {
 
 struct Configuration {
+  static auto read(const std::filesystem::path &configuration_path,
+                   const std::filesystem::path &collections_path,
+                   std::unordered_set<std::string> &configuration_files)
+      -> sourcemeta::core::JSON;
   static auto read(const std::filesystem::path &configuration_path,
                    const std::filesystem::path &collections_path)
       -> sourcemeta::core::JSON;
