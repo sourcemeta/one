@@ -50,7 +50,7 @@ else
   sed -i 's/ \[.*\]//g' "$TMP/output.txt"
 fi
 
-cat << EOF > "$TMP/expected.txt"
+cat << EOF > "$TMP/expected1.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
@@ -67,4 +67,21 @@ error: Could not resolve the metaschema of the schema
 Did you forget to register a schema with such URI in the one?
 EOF
 
-diff "$TMP/output.txt" "$TMP/expected.txt"
+cat << EOF > "$TMP/expected2.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas/my-metaschema.json (#1)
+Detecting: $(realpath "$TMP")/schemas/test.json (#2)
+( 50%) Resolving: my-metaschema.json
+(100%) Resolving: test.json
+(  2%) Producing: configuration.json
+(  5%) Producing: version.json
+(  8%) Producing: explorer/%/404.metapack
+( 11%) Producing: schemas/example/schemas/my-metaschema/%/schema.metapack
+error: Could not resolve the metaschema of the schema
+  https://sourcemeta.com/example/schemas/my-metaschema
+
+Did you forget to register a schema with such URI in the one?
+EOF
+
+diff "$TMP/output.txt" "$TMP/expected1.txt" || diff "$TMP/output.txt" "$TMP/expected2.txt"
