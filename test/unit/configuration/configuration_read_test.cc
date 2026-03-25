@@ -2,6 +2,9 @@
 
 #include <sourcemeta/one/configuration.h>
 
+#include <string>        // std::string
+#include <unordered_set> // std::unordered_set
+
 auto replace_all(std::string &text, const std::string &from,
                  const std::string &to) -> void {
   assert(!from.empty());
@@ -559,4 +562,60 @@ TEST(Configuration_read, read_invalid_006_circular_include) {
   } catch (...) {
     FAIL();
   }
+}
+
+TEST(Configuration_read, read_configuration_files_no_extends_no_includes) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_001.json"};
+  std::unordered_set<std::string> configuration_files;
+  sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+
+  EXPECT_EQ(configuration_files.size(), 1);
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(configuration_path).native()));
+}
+
+TEST(Configuration_read, read_configuration_files_with_extends) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_016.json"};
+  std::unordered_set<std::string> configuration_files;
+  sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+
+  EXPECT_EQ(configuration_files.size(), 4);
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(configuration_path).native()));
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "read_valid_016_b.json")
+          .native()));
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "read_valid_016_c.json")
+          .native()));
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "read_valid_016_d.json")
+          .native()));
+}
+
+TEST(Configuration_read, read_configuration_files_with_include_chain) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_002.json"};
+  std::unordered_set<std::string> configuration_files;
+  sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+
+  EXPECT_EQ(configuration_files.size(), 3);
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(configuration_path).native()));
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "read_partial_001.json")
+          .native()));
+  EXPECT_TRUE(configuration_files.contains(
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "folder" / "jsonschema.json")
+          .native()));
 }

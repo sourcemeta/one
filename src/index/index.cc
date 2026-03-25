@@ -18,22 +18,23 @@
 #include "explorer.h"
 #include "generators.h"
 
-#include <algorithm>   // std::sort
-#include <array>       // std::array
-#include <atomic>      // std::atomic
-#include <cassert>     // assert
-#include <chrono>      // std::chrono
-#include <cstdint>     // std::uint8_t
-#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
-#include <exception>   // std::exception
-#include <filesystem>  // std::filesystem
-#include <functional>  // std::reference_wrapper, std::cref
-#include <iomanip>     // std::setw, std::setfill
-#include <iostream>    // std::cerr, std::cout
-#include <mutex>       // std::mutex, std::lock_guard
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <vector>      // std::vector
+#include <algorithm>     // std::sort
+#include <array>         // std::array
+#include <atomic>        // std::atomic
+#include <cassert>       // assert
+#include <chrono>        // std::chrono
+#include <cstdint>       // std::uint8_t
+#include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
+#include <exception>     // std::exception
+#include <filesystem>    // std::filesystem
+#include <functional>    // std::reference_wrapper, std::cref
+#include <iomanip>       // std::setw, std::setfill
+#include <iostream>      // std::cerr, std::cout
+#include <mutex>         // std::mutex, std::lock_guard
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_set> // std::unordered_set
+#include <vector>        // std::vector
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PROFILE_INIT(state)                                                    \
@@ -273,8 +274,9 @@ static auto index_main(const std::string_view &program,
   const auto configuration_path{
       std::filesystem::canonical(app.positional().at(0))};
   std::cerr << "Using configuration: " << configuration_path.string() << "\n";
+  std::unordered_set<std::string> configuration_files;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, SOURCEMETA_ONE_COLLECTIONS)};
+      configuration_path, SOURCEMETA_ONE_COLLECTIONS, configuration_files)};
 
   if (app.contains("configuration")) {
     sourcemeta::core::prettify(raw_configuration, std::cout);
@@ -381,6 +383,11 @@ static auto index_main(const std::string_view &program,
     for (const auto &entry : std::filesystem::recursive_directory_iterator{
              collection->absolute_path}) {
       if (!entry.is_regular_file()) {
+        continue;
+      }
+
+      if (configuration_files.contains(
+              std::filesystem::weakly_canonical(entry.path()).native())) {
         continue;
       }
 
