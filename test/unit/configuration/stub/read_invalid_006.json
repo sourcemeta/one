@@ -1,0 +1,6 @@
+{
+  "url": "https://sourcemeta.com/",
+  "contents": {
+    "x": { "include": "./read_invalid_007.json" }
+  }
+}

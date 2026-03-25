@@ -484,6 +484,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const std::string_view program{argv[0]};
 
     return index_main(program, app);
+  } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
+    std::cerr << "error: " << error.what() << "\n";
+    std::cerr << "  from " << error.from().string() << "\n";
+    std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
+              << "\"\n";
+    std::cerr << "  to " << error.target().string() << "\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     std::cerr << "error: " << error.what() << "\n";
     std::cerr << "  from " << error.from().string() << "\n";
