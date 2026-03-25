@@ -4,6 +4,7 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
+#include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/json.h>
@@ -499,7 +500,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    std::vector<sourcemeta::core::JSON> result;
+    std::vector<sourcemeta::one::SearchEntry> entries;
 
     for (const auto &dependency : action.dependencies) {
       const auto directory_option{
@@ -515,48 +516,25 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
           continue;
         }
 
-        auto entry{sourcemeta::core::JSON::make_array()};
-        entry.push_back(
-            sourcemeta::core::JSON{directory_entry.at("path").to_string()});
-        entry.push_back(directory_entry.defines("title")
-                            ? directory_entry.at("title")
-                            : sourcemeta::core::JSON{""});
-        entry.push_back(directory_entry.defines("description")
-                            ? directory_entry.at("description")
-                            : sourcemeta::core::JSON{""});
-        result.push_back(std::move(entry));
+        entries.push_back(
+            {directory_entry.at("path").to_string(),
+             directory_entry.defines("title")
+                 ? directory_entry.at("title").to_string()
+                 : "",
+             directory_entry.defines("description")
+                 ? directory_entry.at("description").to_string()
+                 : ""});
       }
     }
 
-    std::sort(result.begin(), result.end(),
-              [](const sourcemeta::core::JSON &left,
-                 const sourcemeta::core::JSON &right) {
-                assert(left.is_array() && left.size() == 3);
-                assert(right.is_array() && right.size() == 3);
-
-                // Prioritise entries that have more meta-data filled in
-                const auto left_score = (!left.at(1).empty() ? 1 : 0) +
-                                        (!left.at(2).empty() ? 1 : 0);
-                const auto right_score = (!right.at(1).empty() ? 1 : 0) +
-                                         (!right.at(2).empty() ? 1 : 0);
-                if (left_score != right_score) {
-                  return left_score > right_score;
-                }
-
-                // Otherwise revert to lexicographic comparisons
-                // TODO: Ideally we sort based on schema health too, given
-                // lint results
-                if (left_score > 0) {
-                  return left.at(0).to_string() < right.at(0).to_string();
-                }
-
-                return false;
-              });
-
+    const auto payload{sourcemeta::one::make_search(std::move(entries))};
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    sourcemeta::one::metapack_write_jsonl(
-        action.destination, result, "application/jsonl",
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view payload_view{
+        reinterpret_cast<const char *>(payload.data()), payload.size()};
+    sourcemeta::one::metapack_write_text(
+        action.destination, payload_view, "application/jsonl",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
         sourcemeta::one::MetapackEncoding::Identity, {},

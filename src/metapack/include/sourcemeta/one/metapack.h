@@ -15,7 +15,6 @@
 #include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
-#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
@@ -70,13 +69,6 @@ auto metapack_write_text(const std::filesystem::path &destination,
                          MetapackEncoding encoding,
                          std::span<const std::uint8_t> extension,
                          std::chrono::milliseconds duration) -> void;
-
-SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_write_jsonl(const std::filesystem::path &destination,
-                          const std::vector<sourcemeta::core::JSON> &entries,
-                          std::string_view mime, MetapackEncoding encoding,
-                          std::span<const std::uint8_t> extension,
-                          std::chrono::milliseconds duration) -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_file(const std::filesystem::path &destination,
