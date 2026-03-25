@@ -5,9 +5,11 @@
 
 #include <sourcemeta/core/jsonpointer.h>
 
-#include <exception> // std::exception
-#include <sstream>   // std::ostringstream
-#include <string>    // std::string
+#include <exception>  // std::exception
+#include <filesystem> // std::filesystem::path
+#include <sstream>    // std::ostringstream
+#include <string>     // std::string
+#include <utility>    // std::move
 
 namespace sourcemeta::one {
 
@@ -97,6 +99,37 @@ private:
   std::filesystem::path from_;
   sourcemeta::core::Pointer location_;
   std::string identifier_;
+};
+
+class ConfigurationCyclicReferenceError : public std::exception {
+public:
+  ConfigurationCyclicReferenceError(std::filesystem::path from,
+                                    sourcemeta::core::Pointer location,
+                                    std::filesystem::path target)
+      : from_{std::move(from)}, location_{std::move(location)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Circular reference detected in configuration";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path from_;
+  sourcemeta::core::Pointer location_;
+  std::filesystem::path target_;
 };
 
 } // namespace sourcemeta::one

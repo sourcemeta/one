@@ -512,3 +512,39 @@ TEST(Configuration_read, read_invalid_003) {
     FAIL();
   }
 }
+
+TEST(Configuration_read, read_invalid_004_circular_extends) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_invalid_004.json"};
+
+  try {
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
+    EXPECT_EQ(error.target(), std::filesystem::weakly_canonical(
+                                  std::filesystem::path{STUB_DIRECTORY} /
+                                  "read_invalid_004.json"));
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
+              "/extends/extends");
+  } catch (...) {
+    FAIL();
+  }
+}
+
+TEST(Configuration_read, read_invalid_006_circular_include) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_invalid_006.json"};
+
+  try {
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
+    EXPECT_EQ(error.target(), std::filesystem::weakly_canonical(
+                                  std::filesystem::path{STUB_DIRECTORY} /
+                                  "read_invalid_006.json"));
+  } catch (...) {
+    FAIL();
+  }
+}

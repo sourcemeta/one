@@ -1,10 +1,12 @@
 #include <sourcemeta/one/configuration.h>
 
-#include <algorithm> // std::ranges
-#include <cassert>   // assert
-#include <iterator>  // std::back_inserter
-#include <utility>   // std::move
-#include <vector>    // std::vector
+#include <algorithm>     // std::ranges
+#include <cassert>       // assert
+#include <iterator>      // std::back_inserter
+#include <string>        // std::string
+#include <unordered_set> // std::unordered_set
+#include <utility>       // std::move
+#include <vector>        // std::vector
 
 namespace {
 
@@ -49,7 +51,8 @@ auto maybe_suffix(const std::filesystem::path &path,
 auto dereference(const std::filesystem::path &collections_path,
                  const std::filesystem::path &base,
                  sourcemeta::core::JSON &input,
-                 const sourcemeta::core::Pointer &location) -> void {
+                 const sourcemeta::core::Pointer &location,
+                 std::unordered_set<std::string> &visited) -> void {
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
@@ -64,10 +67,15 @@ auto dereference(const std::filesystem::path &collections_path,
                                       entry.to_string()),
                          "one.json")};
         const auto new_location{location.concat({"extends"})};
+        if (!visited.emplace(target_path.native()).second) {
+          throw sourcemeta::one::ConfigurationCyclicReferenceError(
+              base, new_location, target_path);
+        }
         auto extension{
             read_file(base, new_location, target_path, entry.to_string())};
         if (extension.is_object()) {
-          dereference(collections_path, target_path, extension, new_location);
+          dereference(collections_path, target_path, extension, new_location,
+                      visited);
           accumulator.merge(std::move(extension).as_object());
         }
       }
@@ -77,7 +85,7 @@ auto dereference(const std::filesystem::path &collections_path,
     accumulator.merge(input.as_object());
     input = std::move(accumulator);
     assert(!input.defines("extends"));
-    dereference(collections_path, base, input, location);
+    dereference(collections_path, base, input, location, visited);
 
     // Read included files
   } else if (!location.empty() && input.defines("include") &&
@@ -89,10 +97,13 @@ auto dereference(const std::filesystem::path &collections_path,
                                   input.at("include").to_string()),
                      "jsonschema.json")};
     const auto new_location{location.concat({"include"})};
+    if (!visited.emplace(target_path.native()).second) {
+      throw sourcemeta::one::ConfigurationCyclicReferenceError(
+          base, new_location, target_path);
+    }
     input.into(read_file(base, new_location, target_path,
                          input.at("include").to_string()));
-    assert(!input.defines("include"));
-    dereference(collections_path, target_path, input, new_location);
+    dereference(collections_path, target_path, input, new_location, visited);
 
     // Revisit and relativize paths
   } else if (input.defines("path") && input.at("path").is_string()) {
@@ -116,7 +127,7 @@ auto dereference(const std::filesystem::path &collections_path,
                            [](const auto &entry) { return entry.first; });
     for (const auto &key : keys) {
       dereference(collections_path, base, input.at("contents").at(key),
-                  location.concat({"contents", key}));
+                  location.concat({"contents", key}), visited);
     }
   }
 }
@@ -168,7 +179,9 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
-  dereference(collections_path, configuration_path, data, {});
+  std::unordered_set<std::string> visited;
+  visited.emplace(configuration_path.native());
+  dereference(collections_path, configuration_path, data, {}, visited);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
