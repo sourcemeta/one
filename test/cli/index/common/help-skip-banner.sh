@@ -7,9 +7,6 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
-"$1" --skip-banner > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
-test "$CODE" = "1" || exit 1
-
 cat << EOF > "$TMP/expected.txt"
 Usage: $(basename "$1") <one.json> <path/to/output/directory>
 
@@ -37,4 +34,12 @@ Advanced Options:
 For more documentation, visit https://one.sourcemeta.com
 EOF
 
+"$1" --help --skip-banner > "$TMP/output.txt" 2>/dev/null
+diff "$TMP/output.txt" "$TMP/expected.txt"
+
+"$1" -h -s > "$TMP/output.txt" 2>/dev/null
+diff "$TMP/output.txt" "$TMP/expected.txt"
+
+"$1" --skip-banner > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
+test "$CODE" = "1"
 diff "$TMP/output.txt" "$TMP/expected.txt"

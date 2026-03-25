@@ -17,10 +17,11 @@ endif()
 # See https://one.sourcemeta.com/commercial/
 option(ONE_ENTERPRISE "Build the One Enterprise edition (commercial)" OFF)
 if(ONE_ENTERPRISE)
-  message(STATUS "Sourcemeta One edition: Enterprise")
+  set(ONE_EDITION "Enterprise")
 else()
-  message(STATUS "Sourcemeta One edition: Community")
+  set(ONE_EDITION "Community")
 endif()
+message(STATUS "Sourcemeta One edition: ${ONE_EDITION}")
 
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
