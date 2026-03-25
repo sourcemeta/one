@@ -48,5 +48,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 21%) Producing: schemas/example/schemas/test/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
   at identifier https://sourcemeta.com/external
+  at path $(realpath "$TMP")/schemas/test.json
+
+Did you forget to register a schema with such URI?
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

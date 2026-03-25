@@ -144,12 +144,43 @@ static auto execute_plan(std::mutex &mutex,
                          plan.size);
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
-          handler(
-              entries, action,
-              [&action](const auto &path) {
-                action.dependencies.emplace_back(path);
-              },
-              resolver, configuration, raw_configuration);
+          try {
+            handler(
+                entries, action,
+                [&action](const auto &path) {
+                  action.dependencies.emplace_back(path);
+                },
+                resolver, configuration, raw_configuration);
+          } catch (const sourcemeta::core::SchemaResolutionError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaResolutionError>(
+                  entry->path, error.identifier(), error.what());
+            }
+            throw;
+          } catch (const sourcemeta::core::SchemaReferenceError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaReferenceError>(
+                  entry->path, error.identifier(), error.location(),
+                  error.what());
+            }
+            throw;
+          } catch (const sourcemeta::core::SchemaReferenceObjectResourceError
+                       &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaReferenceObjectResourceError>(
+                  entry->path, error.identifier());
+            }
+            throw;
+          }
 
           const auto lock{entries.take_lock()};
           entries.commit(action.destination, std::move(action.dependencies));
@@ -584,17 +615,40 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::cerr << "error: " << error.what() << "\n  at identifier "
               << error.uri() << "\n  with base " << error.base() << "\n";
     return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaReferenceObjectResourceError> &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at identifier "
+              << error.identifier() << "\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
     std::cerr << "error: " << error.what() << "\n  at identifier "
               << error.identifier() << "\n";
     return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
+          &error) {
+    std::cerr << "error: " << error.what() << "\n  at identifier "
+              << error.identifier() << "\n  at path " << error.path().string()
+              << "\n\nDid you forget to register a schema with such URI?\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
     std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.identifier() << "\n";
+              << error.identifier()
+              << "\n\nDid you forget to register a schema with such URI?\n";
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
+          &error) {
+    std::cerr << "error: " << error.what() << "\n  to identifier "
+              << error.identifier() << "\n  at path " << error.path().string()
+              << "\n  at location \"";
+    sourcemeta::core::stringify(error.location(), std::cerr);
+    std::cerr << "\"\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.identifier() << "\n  at schema location \"";
+    std::cerr << "error: " << error.what() << "\n  to identifier "
+              << error.identifier() << "\n  at location \"";
     sourcemeta::core::stringify(error.location(), std::cerr);
     std::cerr << "\"\n";
     return EXIT_FAILURE;
@@ -625,8 +679,9 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const std::filesystem::filesystem_error &error) {
     if (error.code() == std::make_error_condition(std::errc::file_exists) ||
         error.code() == std::make_error_condition(std::errc::not_a_directory)) {
-      std::cerr << "error: File already exists\n  at path "
-                << error.path1().string() << "\n";
+      std::cerr
+          << "error: File already exists and is not a directory\n  at path "
+          << error.path1().string() << "\n";
     } else if (error.code() == std::errc::no_such_file_or_directory) {
       std::cerr << "error: Could not locate the requested file\n  at path "
                 << error.path1().string() << "\n";

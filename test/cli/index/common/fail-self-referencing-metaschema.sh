@@ -54,5 +54,8 @@ Detecting: $(realpath "$TMP")/schemas/my-metaschema.json (#2)
 ( 11%) Producing: schemas/example/schemas/my-metaschema/%/schema.metapack
 error: Could not resolve the metaschema of the schema
   at identifier https://sourcemeta.com/example/schemas/my-metaschema
+  at path $(realpath "$TMP")/schemas/my-metaschema.json
+
+Did you forget to register a schema with such URI?
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
