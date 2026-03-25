@@ -6,6 +6,7 @@
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
 #include <cstring>   // std::memcpy
+#include <limits>    // std::numeric_limits
 #include <utility>   // std::move
 
 namespace sourcemeta::one {
@@ -27,6 +28,14 @@ auto make_search(std::vector<SearchEntry> &&entries)
     }
 
     return left.path < right.path;
+  });
+
+  constexpr auto MAX_FIELD_LENGTH{
+      static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+  std::erase_if(entries, [](const SearchEntry &entry) {
+    return entry.path.size() > MAX_FIELD_LENGTH ||
+           entry.title.size() > MAX_FIELD_LENGTH ||
+           entry.description.size() > MAX_FIELD_LENGTH;
   });
 
   if (entries.empty()) {

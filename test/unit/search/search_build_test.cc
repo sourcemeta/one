@@ -119,3 +119,68 @@ TEST(Search_build, total_size) {
       sizeof(sourcemeta::one::SearchRecordHeader) + 3 + 2 + 2};
   EXPECT_EQ(payload.size(), expected_size);
 }
+
+TEST(Search_build, skips_entry_with_oversized_path) {
+  const std::string oversized_path(70000, 'x');
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {oversized_path, "Title", "Desc", 80}, {"/normal", "Normal", "Desc", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+
+  sourcemeta::one::SearchIndexHeader header{};
+  std::memcpy(&header, payload.data(),
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  EXPECT_EQ(header.entry_count, 1);
+}
+
+TEST(Search_build, skips_entry_with_oversized_title) {
+  const std::string oversized_title(70000, 'x');
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/foo", oversized_title, "Desc", 80}, {"/normal", "Normal", "Desc", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+
+  sourcemeta::one::SearchIndexHeader header{};
+  std::memcpy(&header, payload.data(),
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  EXPECT_EQ(header.entry_count, 1);
+}
+
+TEST(Search_build, skips_entry_with_oversized_description) {
+  const std::string oversized_description(70000, 'x');
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/foo", "Title", oversized_description, 80},
+      {"/normal", "Normal", "Desc", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+
+  sourcemeta::one::SearchIndexHeader header{};
+  std::memcpy(&header, payload.data(),
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  EXPECT_EQ(header.entry_count, 1);
+}
+
+TEST(Search_build, all_entries_oversized_returns_empty) {
+  const std::string oversized(70000, 'x');
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {oversized, "Title", "Desc", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  EXPECT_TRUE(payload.empty());
+}
+
+TEST(Search_build, entry_at_exact_uint16_max_is_kept) {
+  const std::string max_path(65535, 'a');
+  std::vector<sourcemeta::one::SearchEntry> entries{{max_path, "", "", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  EXPECT_FALSE(payload.empty());
+
+  sourcemeta::one::SearchIndexHeader header{};
+  std::memcpy(&header, payload.data(),
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  EXPECT_EQ(header.entry_count, 1);
+}
+
+TEST(Search_build, entry_at_uint16_max_plus_one_is_skipped) {
+  const std::string too_long_path(65536, 'a');
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {too_long_path, "", "", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  EXPECT_TRUE(payload.empty());
+}
