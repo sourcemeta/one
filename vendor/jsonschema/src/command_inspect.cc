@@ -9,6 +9,7 @@
 #include "command.h"
 #include "configuration.h"
 #include "error.h"
+#include "input.h"
 #include "resolver.h"
 #include "utils.h"
 
@@ -156,13 +157,42 @@ auto sourcemeta::jsonschema::inspect(const sourcemeta::core::Options &options)
   }
 
   const std::filesystem::path schema_path{options.positional().front()};
-  sourcemeta::core::PointerPositionTracker positions;
-  const sourcemeta::core::JSON schema{
-      sourcemeta::core::read_yaml_or_json(schema_path, std::ref(positions))};
+  const bool schema_from_stdin = (schema_path == "-");
 
-  const auto configuration_path{find_configuration(schema_path)};
+  if (!schema_from_stdin && std::filesystem::is_directory(schema_path)) {
+    throw std::filesystem::filesystem_error{
+        "The input was supposed to be a file but it is a directory",
+        schema_path, std::make_error_code(std::errc::is_a_directory)};
+  }
+
+  const auto schema_config_base{
+      schema_from_stdin ? std::filesystem::current_path() : schema_path};
+  const auto schema_resolution_base{schema_from_stdin ? stdin_path()
+                                                      : schema_path};
+
+  sourcemeta::core::PointerPositionTracker positions;
+  auto property_storage = std::make_shared<std::deque<std::string>>();
+  const sourcemeta::core::JSON schema{[&]() {
+    if (schema_from_stdin) {
+      auto parsed{read_from_stdin()};
+      positions = std::move(parsed.positions);
+      property_storage = std::move(parsed.property_storage);
+      return std::move(parsed.document);
+    }
+    sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+    auto callback = make_position_callback(positions, property_storage);
+    sourcemeta::core::read_yaml_or_json(schema_path, document, callback);
+    return document;
+  }()};
+
+  if (!sourcemeta::core::is_schema(schema)) {
+    throw NotSchemaError{schema_from_stdin ? stdin_path()
+                                           : schema_resolution_base};
+  }
+
+  const auto configuration_path{find_configuration(schema_config_base)};
   const auto &configuration{
-      read_configuration(options, configuration_path, schema_path)};
+      read_configuration(options, configuration_path, schema_config_base)};
   const auto dialect{default_dialect(options, configuration)};
 
   sourcemeta::core::SchemaFrame frame{
@@ -180,24 +210,33 @@ auto sourcemeta::jsonschema::inspect(const sourcemeta::core::Options &options)
         // Only use the file-based URI if the schema has no
         // identifier, as otherwise we make the output unnecessarily
         // hard when it comes to debugging schemas
-        !identifier.empty() ? ""
-                            : sourcemeta::jsonschema::default_id(schema_path));
+        !identifier.empty()
+            ? ""
+            : sourcemeta::jsonschema::default_id(schema_resolution_base));
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
-    throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaFrameError &error) {
-    throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        schema_resolution_base, error);
   } catch (
       const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
-    throw FileError<sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
-        schema_path, error);
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    throw FileError<sourcemeta::core::SchemaResolutionError>(schema_path,
-                                                             error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-    throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
-        schema_path);
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(
+        schema_resolution_base);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(schema_resolution_base);
   } catch (const sourcemeta::core::SchemaError &error) {
-    throw FileError<sourcemeta::core::SchemaError>(schema_path, error.what());
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        schema_resolution_base, error.what());
   }
 
   if (options.contains("json")) {

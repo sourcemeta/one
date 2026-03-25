@@ -6,7 +6,7 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/linter.h>
 
-#include <cstdlib>    // EXIT_FAILURE
+#include <cstdlib>    // EXIT_SUCCESS
 #include <filesystem> // std::filesystem::current_path
 #include <fstream>    // std::ofstream, std::ifstream
 #include <iostream>   // std::cerr, std::cout
@@ -107,7 +107,12 @@ static auto get_lint_callback(sourcemeta::core::JSON &errors_array,
 
         errors_array.push_back(error_obj);
       } else {
-        std::cout << std::filesystem::relative(entry.resolution_base).string();
+        if (entry.from_stdin) {
+          std::cout << "/dev/stdin";
+        } else {
+          std::cout
+              << std::filesystem::relative(entry.resolution_base).string();
+        }
         if (position.has_value()) {
           std::cout << ":";
           std::cout << std::get<0>(position.value());
@@ -149,7 +154,7 @@ static auto load_rule(sourcemeta::core::SchemaTransformer &bundle,
   if (rule_schema.defines("title") && rule_schema.at("title").is_string()) {
     const auto rule_name{rule_schema.at("title").to_string()};
     if (rule_names.contains(rule_name)) {
-      throw sourcemeta::jsonschema::FileError<
+      throw sourcemeta::core::FileError<
           sourcemeta::jsonschema::DuplicateLintRuleError>(rule_path, rule_name);
     }
 
@@ -161,22 +166,31 @@ static auto load_rule(sourcemeta::core::SchemaTransformer &bundle,
         rule_schema, sourcemeta::core::schema_walker, custom_resolver,
         sourcemeta::blaze::default_schema_compiler, dialect);
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
-    throw sourcemeta::jsonschema::FileError<
+    throw sourcemeta::core::FileError<
         sourcemeta::blaze::LinterMissingNameError>(rule_path, error);
   } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
-    throw sourcemeta::jsonschema::FileError<
+    throw sourcemeta::core::FileError<
         sourcemeta::blaze::LinterInvalidNameError>(rule_path, error);
+  } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::LinterInvalidNamePatternError>(rule_path, error);
   } catch (
       const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
-    throw sourcemeta::jsonschema::FileError<
+    throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(rule_path,
                                                                   error);
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-    throw sourcemeta::jsonschema::FileError<
+    throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(rule_path);
+  } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>(
+        rule_path, std::string{error.uri()}, error.what());
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    throw sourcemeta::jsonschema::FileError<
-        sourcemeta::core::SchemaResolutionError>(rule_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        rule_path, error);
   }
 }
 
@@ -203,7 +217,11 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
     input_paths.emplace_back(std::filesystem::current_path());
   } else {
     for (const auto &argument : options.positional()) {
-      input_paths.emplace_back(std::filesystem::weakly_canonical(argument));
+      if (argument == "-") {
+        input_paths.emplace_back(std::filesystem::current_path());
+      } else {
+        input_paths.emplace_back(std::filesystem::weakly_canonical(argument));
+      }
     }
   }
 
@@ -321,7 +339,9 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   const auto indentation{parse_indentation(options)};
 
   if (options.contains("fix")) {
-    for (const auto &entry : for_each_json(options)) {
+    const auto entries = for_each_json(options);
+
+    for (const auto &entry : entries) {
       const auto configuration_path{find_configuration(entry.resolution_base)};
       const auto &configuration{read_configuration(options, configuration_path,
                                                    entry.resolution_base)};
@@ -353,7 +373,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               }
               scores.emplace_back(apply_result.second);
               if (!apply_result.first) {
-                return 2;
+                return EXIT_EXPECTED_FAILURE;
               }
 
               return EXIT_SUCCESS;
@@ -377,13 +397,22 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   "references",
                   entry.resolution_base, error.location()};
             } catch (
+                const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::blaze::CompilerInvalidRegexError>(
+                  entry.resolution_base, error);
+            } catch (
                 const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
                     &error) {
               if (printed_progress) {
                 std::cerr << "\n";
               }
 
-              throw FileError<
+              throw sourcemeta::core::FileError<
                   sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
                   entry.resolution_base, error);
             } catch (const sourcemeta::core::SchemaKeywordError &error) {
@@ -391,28 +420,49 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                 std::cerr << "\n";
               }
 
-              throw FileError<sourcemeta::core::SchemaKeywordError>(
-                  entry.resolution_base, error);
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaKeywordError>(entry.resolution_base,
+                                                        error);
             } catch (const sourcemeta::core::SchemaFrameError &error) {
               if (printed_progress) {
                 std::cerr << "\n";
               }
 
-              throw FileError<sourcemeta::core::SchemaFrameError>(
-                  entry.resolution_base, error);
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaFrameError>(entry.resolution_base,
+                                                      error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               if (printed_progress) {
                 std::cerr << "\n";
               }
 
-              throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaUnknownBaseDialectError>(
                   entry.resolution_base);
+            } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaUnknownDialectError>(
+                  entry.resolution_base);
+            } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaVocabularyError>(
+                  entry.resolution_base, std::string{error.uri()},
+                  error.what());
             } catch (const sourcemeta::core::SchemaResolutionError &error) {
               if (printed_progress) {
                 std::cerr << "\n";
               }
 
-              throw FileError<sourcemeta::core::SchemaResolutionError>(
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaResolutionError>(
                   entry.resolution_base, error);
             } catch (...) {
               if (printed_progress) {
@@ -423,12 +473,23 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
             }
           });
 
-      if (wrapper_result == EXIT_SUCCESS || wrapper_result == 2) {
+      if (wrapper_result == EXIT_SUCCESS ||
+          wrapper_result == EXIT_EXPECTED_FAILURE) {
         if (wrapper_result != EXIT_SUCCESS) {
           result = false;
         }
 
-        if (format_output) {
+        if (entry.from_stdin) {
+          if (format_output) {
+            if (!keep_ordering) {
+              sourcemeta::core::format(copy, sourcemeta::core::schema_walker,
+                                       custom_resolver, dialect);
+            }
+          }
+
+          sourcemeta::core::prettify(copy, std::cout, indentation);
+          std::cout << "\n";
+        } else if (format_output) {
           if (!keep_ordering) {
             sourcemeta::core::format(copy, sourcemeta::core::schema_walker,
                                      custom_resolver, dialect);
@@ -452,8 +513,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
           output << "\n";
         }
       } else {
-        // Exception was caught - exit immediately with error code 1
-        throw Fail{EXIT_FAILURE};
+        throw Fail{wrapper_result};
       }
     }
   } else {
@@ -482,35 +542,51 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                 return EXIT_SUCCESS;
               } else {
                 // Return 2 for logical lint failures
-                return 2;
+                return EXIT_EXPECTED_FAILURE;
               }
+            } catch (
+                const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::blaze::CompilerInvalidRegexError>(
+                  entry.resolution_base, error);
             } catch (
                 const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
                     &error) {
-              throw FileError<
+              throw sourcemeta::core::FileError<
                   sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
                   entry.resolution_base, error);
             } catch (const sourcemeta::core::SchemaKeywordError &error) {
-              throw FileError<sourcemeta::core::SchemaKeywordError>(
-                  entry.resolution_base, error);
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaKeywordError>(entry.resolution_base,
+                                                        error);
             } catch (const sourcemeta::core::SchemaFrameError &error) {
-              throw FileError<sourcemeta::core::SchemaFrameError>(
-                  entry.resolution_base, error);
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaFrameError>(entry.resolution_base,
+                                                      error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-              throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaUnknownBaseDialectError>(
                   entry.resolution_base);
+            } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaUnknownDialectError>(
+                  entry.resolution_base);
+            } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaVocabularyError>(
+                  entry.resolution_base, std::string{error.uri()},
+                  error.what());
             } catch (const sourcemeta::core::SchemaResolutionError &error) {
-              throw FileError<sourcemeta::core::SchemaResolutionError>(
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaResolutionError>(
                   entry.resolution_base, error);
             }
           });
 
-      if (wrapper_result == 2) {
-        // Logical lint failure
+      if (wrapper_result == EXIT_EXPECTED_FAILURE) {
         result = false;
       } else if (wrapper_result != EXIT_SUCCESS) {
-        // Exception was caught - exit immediately with error code 1
-        throw Fail{EXIT_FAILURE};
+        throw Fail{wrapper_result};
       }
     }
   }
@@ -541,8 +617,6 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   }
 
   if (!result) {
-    // Report a different exit code for linting failures, to
-    // distinguish them from other errors
-    throw Fail{2};
+    throw Fail{EXIT_EXPECTED_FAILURE};
   }
 }

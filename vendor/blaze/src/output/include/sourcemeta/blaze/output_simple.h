@@ -14,7 +14,6 @@
 #include <functional> // std::reference_wrapper
 #include <map>        // std::map
 #include <ostream>    // std::ostream
-#include <set>        // std::set
 #include <string>     // std::string
 #include <tuple>      // std::tie
 #include <utility>    // std::pair
@@ -85,6 +84,7 @@ public:
 
   auto operator()(const EvaluationType type, const bool result,
                   const Instruction &step,
+                  const InstructionExtra &step_metadata,
                   const sourcemeta::core::WeakPointer &evaluate_path,
                   const sourcemeta::core::WeakPointer &instance_location,
                   const sourcemeta::core::JSON &annotation) -> void;
@@ -129,7 +129,7 @@ private:
   const sourcemeta::core::JSON &instance_;
   const sourcemeta::core::WeakPointer base_;
   container_type output;
-  std::set<
+  std::vector<
       std::pair<sourcemeta::core::WeakPointer, sourcemeta::core::WeakPointer>>
       mask;
   std::map<

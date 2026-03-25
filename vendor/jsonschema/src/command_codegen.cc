@@ -26,7 +26,7 @@ auto sourcemeta::jsonschema::codegen(const sourcemeta::core::Options &options)
   }
 
   if (!options.contains("target")) {
-    throw std::runtime_error{
+    throw OptionConflictError{
         "You must pass a target using the `--target/-t` option"};
   }
 
@@ -54,28 +54,40 @@ auto sourcemeta::jsonschema::codegen(const sourcemeta::core::Options &options)
         sourcemeta::codegen::default_compiler, dialect,
         sourcemeta::jsonschema::default_id(schema_path));
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
-    throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        schema_path, error);
   } catch (const sourcemeta::core::SchemaFrameError &error) {
-    throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        schema_path, error);
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    throw FileError<sourcemeta::core::SchemaResolutionError>(schema_path,
-                                                             error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        schema_path, error);
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-    throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
-        schema_path);
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(schema_path);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(schema_path);
   } catch (const sourcemeta::core::SchemaError &error) {
-    throw FileError<sourcemeta::core::SchemaError>(schema_path, error.what());
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        schema_path, error.what());
   } catch (const sourcemeta::core::SchemaVocabularyError &error) {
-    throw FileError<sourcemeta::core::SchemaVocabularyError>(
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>(
         schema_path, std::string{error.uri()}, error.what());
   } catch (const sourcemeta::codegen::UnsupportedKeywordError &error) {
-    throw FileError<sourcemeta::codegen::UnsupportedKeywordError>(
+    throw sourcemeta::core::FileError<
+        sourcemeta::codegen::UnsupportedKeywordError>(
         schema_path, error.json(), error.pointer(),
         std::string{error.keyword()}, error.what());
   } catch (const sourcemeta::codegen::UnsupportedKeywordValueError &error) {
-    throw FileError<sourcemeta::codegen::UnsupportedKeywordValueError>(
+    throw sourcemeta::core::FileError<
+        sourcemeta::codegen::UnsupportedKeywordValueError>(
         schema_path, error.json(), error.pointer(),
         std::string{error.keyword()}, error.what());
+  } catch (const sourcemeta::codegen::UnexpectedSchemaError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::codegen::UnexpectedSchemaError>(
+        schema_path, error.json(), error.pointer(), error.what());
   }
 
   std::ostringstream output;
