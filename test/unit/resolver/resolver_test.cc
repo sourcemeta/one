@@ -553,6 +553,30 @@ TEST_F(ResolverTest, entry_lookup) {
             "https://example.com/schemas/2020-12-with-id");
 }
 
+TEST_F(ResolverTest, non_schema_file) {
+  RESOLVER_INIT(resolver);
+  try {
+    RESOLVER_IMPORT(resolver, "example", "non-schema-array.json");
+    FAIL();
+  } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
+    EXPECT_EQ(error.path().filename(), "non-schema-array.json");
+  }
+}
+
+TEST_F(ResolverTest, no_dialect) {
+  RESOLVER_INIT(resolver);
+  EXPECT_THROW(RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json"),
+               sourcemeta::core::SchemaUnknownDialectError);
+}
+
+TEST_F(ResolverTest, non_string_ref_no_crash) {
+  RESOLVER_INIT(resolver);
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "non-string-ref.json")};
+  EXPECT_THROW(resolver(result.first.get()),
+               sourcemeta::core::SchemaReferenceObjectResourceError);
+}
+
 TEST_F(ResolverTest, no_base_anonymous) {
   RESOLVER_INIT(resolver);
   RESOLVER_ADD(resolver, "no-base", "anonymous.json",

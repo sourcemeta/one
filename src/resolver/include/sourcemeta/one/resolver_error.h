@@ -3,10 +3,28 @@
 
 #include <sourcemeta/core/json.h>
 
-#include <exception> // std::exception
-#include <utility>   // std::move
+#include <exception>  // std::exception
+#include <filesystem> // std::filesystem::path
+#include <utility>    // std::move
 
 namespace sourcemeta::one {
+
+class ResolverNotASchemaError : public std::exception {
+public:
+  ResolverNotASchemaError(std::filesystem::path path)
+      : path_{std::move(path)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The file does not contain a valid JSON Schema";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
 
 class ResolverOutsideBaseError : public std::exception {
 public:

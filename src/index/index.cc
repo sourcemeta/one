@@ -531,9 +531,16 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &error) {
+    std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     std::cerr << "error: " << error.what() << "\n  at path "
               << error.path().string() << "\n  with count " << error.count()
+              << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
+    std::cerr << "error: " << error.what() << "\n  at " << error.path().string()
               << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
