@@ -22,6 +22,7 @@ struct SearchEntry {
   std::string path;
   std::string title;
   std::string description;
+  std::uint8_t health;
 };
 
 SOURCEMETA_ONE_SEARCH_EXPORT

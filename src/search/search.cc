@@ -12,20 +12,20 @@ namespace sourcemeta::one {
 
 auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
-  // Prioritise entries that have more metadata filled in,
-  // then sort lexicographically by path
   std::ranges::sort(entries, [](const SearchEntry &left,
                                 const SearchEntry &right) {
-    const auto left_score =
+    const auto left_metadata =
         (!left.title.empty() ? 1 : 0) + (!left.description.empty() ? 1 : 0);
-    const auto right_score =
+    const auto right_metadata =
         (!right.title.empty() ? 1 : 0) + (!right.description.empty() ? 1 : 0);
-    if (left_score != right_score) {
-      return left_score > right_score;
+    if (left_metadata != right_metadata) {
+      return left_metadata > right_metadata;
     }
 
-    // TODO: Ideally we sort based on schema health too, given
-    // lint results
+    if (left.health != right.health) {
+      return left.health > right.health;
+    }
+
     return left.path < right.path;
   });
 
