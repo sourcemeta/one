@@ -188,10 +188,7 @@ auto Resolver::operator()(
       auto &subschema{sourcemeta::core::get(schema, entry.second.pointer)};
       if (subschema.is_object()) {
         const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
-        if (maybe_ref) {
-          // This is safe, as at this point we have validated all schemas
-          // against their meta-schemas
-          assert(maybe_ref->is_string());
+        if (maybe_ref && maybe_ref->is_string()) {
           normalise_ref(*result->second.collection, entry.second.base,
                         subschema, "$ref", maybe_ref->to_string());
         }
@@ -200,10 +197,7 @@ auto Resolver::operator()(
             sourcemeta::core::SchemaBaseDialect::JSON_Schema_2020_12) {
           const auto maybe_dynamic_ref{
               subschema.try_at("$dynamicRef", dynamic_ref_hash)};
-          if (maybe_dynamic_ref) {
-            // This is safe, as at this point we have validated all schemas
-            // against their meta-schemas
-            assert(maybe_dynamic_ref->is_string());
+          if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
             normalise_ref(*result->second.collection, entry.second.base,
                           subschema, "$dynamicRef",
                           maybe_dynamic_ref->to_string());
@@ -237,7 +231,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   /////////////////////////////////////////////////////////////////////////////
   assert(path.is_absolute());
   const auto schema{sourcemeta::core::read_yaml_or_json(path)};
-  assert(sourcemeta::core::is_schema(schema));
+  if (!sourcemeta::core::is_schema(schema)) {
+    throw ResolverNotASchemaError(path);
+  }
 
   const std::string default_dialect_str{
       collection.default_dialect.value_or("")};
@@ -296,8 +292,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   /////////////////////////////////////////////////////////////////////////////
   const auto raw_dialect{
       sourcemeta::core::dialect(schema, default_dialect_str)};
-  // If we couldn't determine the dialect, we would be in trouble!
-  assert(!raw_dialect.empty());
+  if (raw_dialect.empty()) {
+    throw sourcemeta::core::SchemaUnknownDialectError();
+  }
   const auto is_official_dialect{
       sourcemeta::core::is_known_schema(raw_dialect)};
   auto current_dialect{is_official_dialect
