@@ -8,6 +8,13 @@
 #include <utility> // std::move
 #include <vector>  // std::vector
 
+#define EXPECT_SEARCH_RESULT(result, index, expected_path, expected_title,     \
+                             expected_description)                             \
+  EXPECT_EQ((result).at(index).at("path").to_string(), (expected_path));       \
+  EXPECT_EQ((result).at(index).at("title").to_string(), (expected_title));     \
+  EXPECT_EQ((result).at(index).at("description").to_string(),                  \
+            (expected_description));
+
 TEST(Search, make_search_empty) {
   std::vector<sourcemeta::one::SearchEntry> entries;
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -49,9 +56,7 @@ TEST(Search, search_match_in_path) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "foo")};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("path").to_string(), "/foo/bar");
-  EXPECT_EQ(result.at(0).at("title").to_string(), "Title");
-  EXPECT_EQ(result.at(0).at("description").to_string(), "Desc");
+  EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "Title", "Desc");
 }
 
 TEST(Search, search_match_in_title) {
@@ -61,7 +66,7 @@ TEST(Search, search_match_in_title) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Special")};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("title").to_string(), "Special Title");
+  EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "Special Title", "Desc");
 }
 
 TEST(Search, search_match_in_description) {
@@ -71,26 +76,37 @@ TEST(Search, search_match_in_description) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Unique")};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("description").to_string(),
-            "Unique description here");
+  EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "Title",
+                       "Unique description here");
 }
 
 TEST(Search, search_case_insensitive) {
-  std::vector<sourcemeta::one::SearchEntry> entries{
+  std::vector<sourcemeta::one::SearchEntry> entries_lower{
       {"/foo/bar", "Hello World", "desc"}};
-  const auto payload{sourcemeta::one::make_search(std::move(entries))};
-
-  const auto result_lower{
-      sourcemeta::one::search(payload.data(), payload.size(), "hello")};
+  const auto payload_lower{
+      sourcemeta::one::make_search(std::move(entries_lower))};
+  const auto result_lower{sourcemeta::one::search(
+      payload_lower.data(), payload_lower.size(), "hello")};
   EXPECT_EQ(result_lower.size(), 1);
+  EXPECT_SEARCH_RESULT(result_lower, 0, "/foo/bar", "Hello World", "desc");
 
-  const auto result_upper{
-      sourcemeta::one::search(payload.data(), payload.size(), "HELLO")};
+  std::vector<sourcemeta::one::SearchEntry> entries_upper{
+      {"/foo/bar", "Hello World", "desc"}};
+  const auto payload_upper{
+      sourcemeta::one::make_search(std::move(entries_upper))};
+  const auto result_upper{sourcemeta::one::search(
+      payload_upper.data(), payload_upper.size(), "HELLO")};
   EXPECT_EQ(result_upper.size(), 1);
+  EXPECT_SEARCH_RESULT(result_upper, 0, "/foo/bar", "Hello World", "desc");
 
-  const auto result_mixed{
-      sourcemeta::one::search(payload.data(), payload.size(), "hElLo")};
+  std::vector<sourcemeta::one::SearchEntry> entries_mixed{
+      {"/foo/bar", "Hello World", "desc"}};
+  const auto payload_mixed{
+      sourcemeta::one::make_search(std::move(entries_mixed))};
+  const auto result_mixed{sourcemeta::one::search(
+      payload_mixed.data(), payload_mixed.size(), "hElLo")};
   EXPECT_EQ(result_mixed.size(), 1);
+  EXPECT_SEARCH_RESULT(result_mixed, 0, "/foo/bar", "Hello World", "desc");
 }
 
 TEST(Search, search_multiple_matches) {
@@ -99,10 +115,15 @@ TEST(Search, search_multiple_matches) {
       {"/schemas/person", "Person Schema", "For people"},
       {"/schemas/email", "Email Schema", "For emails"}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "schema")};
   EXPECT_EQ(result.size(), 3);
+  EXPECT_SEARCH_RESULT(result, 0, "/schemas/address", "Address Schema",
+                       "For addresses");
+  EXPECT_SEARCH_RESULT(result, 1, "/schemas/email", "Email Schema",
+                       "For emails");
+  EXPECT_SEARCH_RESULT(result, 2, "/schemas/person", "Person Schema",
+                       "For people");
 }
 
 TEST(Search, search_limit_10) {
@@ -120,6 +141,16 @@ TEST(Search, search_limit_10) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "test")};
   EXPECT_EQ(result.size(), 10);
+  EXPECT_SEARCH_RESULT(result, 0, "/schemas/test0", "Test 0", "");
+  EXPECT_SEARCH_RESULT(result, 1, "/schemas/test1", "Test 1", "");
+  EXPECT_SEARCH_RESULT(result, 2, "/schemas/test10", "Test 10", "");
+  EXPECT_SEARCH_RESULT(result, 3, "/schemas/test11", "Test 11", "");
+  EXPECT_SEARCH_RESULT(result, 4, "/schemas/test12", "Test 12", "");
+  EXPECT_SEARCH_RESULT(result, 5, "/schemas/test13", "Test 13", "");
+  EXPECT_SEARCH_RESULT(result, 6, "/schemas/test14", "Test 14", "");
+  EXPECT_SEARCH_RESULT(result, 7, "/schemas/test2", "Test 2", "");
+  EXPECT_SEARCH_RESULT(result, 8, "/schemas/test3", "Test 3", "");
+  EXPECT_SEARCH_RESULT(result, 9, "/schemas/test4", "Test 4", "");
 }
 
 TEST(Search, search_round_trip_data_fidelity) {
@@ -128,37 +159,25 @@ TEST(Search, search_round_trip_data_fidelity) {
       {"/x/y/z", "", "Only description"},
       {"/p/q", "Only title", ""}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "/")};
   EXPECT_EQ(result.size(), 3);
-
-  EXPECT_EQ(result.at(0).at("path").to_string(), "/a/b/c");
-  EXPECT_EQ(result.at(0).at("title").to_string(), "My Title");
-  EXPECT_EQ(result.at(0).at("description").to_string(), "My Description");
-
-  EXPECT_EQ(result.at(1).at("path").to_string(), "/p/q");
-  EXPECT_EQ(result.at(1).at("title").to_string(), "Only title");
-  EXPECT_EQ(result.at(1).at("description").to_string(), "");
-
-  EXPECT_EQ(result.at(2).at("path").to_string(), "/x/y/z");
-  EXPECT_EQ(result.at(2).at("title").to_string(), "");
-  EXPECT_EQ(result.at(2).at("description").to_string(), "Only description");
+  EXPECT_SEARCH_RESULT(result, 0, "/a/b/c", "My Title", "My Description");
+  EXPECT_SEARCH_RESULT(result, 1, "/p/q", "Only title", "");
+  EXPECT_SEARCH_RESULT(result, 2, "/x/y/z", "", "Only description");
 }
 
 TEST(Search, search_single_entry_match) {
-  std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/only", "One", "Entry"}};
+  std::vector<sourcemeta::one::SearchEntry> entries{{"/only", "One", "Entry"}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "One")};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("path").to_string(), "/only");
+  EXPECT_SEARCH_RESULT(result, 0, "/only", "One", "Entry");
 }
 
 TEST(Search, search_single_entry_no_match) {
-  std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/only", "One", "Entry"}};
+  std::vector<sourcemeta::one::SearchEntry> entries{{"/only", "One", "Entry"}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "nope")};
@@ -166,12 +185,10 @@ TEST(Search, search_single_entry_no_match) {
 }
 
 TEST(Search, search_empty_title_and_description) {
-  std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/path/only", "", ""}};
+  std::vector<sourcemeta::one::SearchEntry> entries{{"/path/only", "", ""}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "path")};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("title").to_string(), "");
-  EXPECT_EQ(result.at(0).at("description").to_string(), "");
+  EXPECT_SEARCH_RESULT(result, 0, "/path/only", "", "");
 }

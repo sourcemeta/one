@@ -516,14 +516,13 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
           continue;
         }
 
-        entries.push_back(
-            {directory_entry.at("path").to_string(),
-             directory_entry.defines("title")
-                 ? directory_entry.at("title").to_string()
-                 : "",
-             directory_entry.defines("description")
-                 ? directory_entry.at("description").to_string()
-                 : ""});
+        entries.push_back({directory_entry.at("path").to_string(),
+                           directory_entry.defines("title")
+                               ? directory_entry.at("title").to_string()
+                               : "",
+                           directory_entry.defines("description")
+                               ? directory_entry.at("description").to_string()
+                               : ""});
       }
     }
 

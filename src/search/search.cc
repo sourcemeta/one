@@ -14,26 +14,24 @@ auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
   // Prioritise entries that have more metadata filled in,
   // then sort lexicographically by path
-  std::ranges::sort(entries,
-                    [](const SearchEntry &left, const SearchEntry &right) {
-              const auto left_score =
-                  (!left.title.empty() ? 1 : 0) +
-                  (!left.description.empty() ? 1 : 0);
-              const auto right_score =
-                  (!right.title.empty() ? 1 : 0) +
-                  (!right.description.empty() ? 1 : 0);
-              if (left_score != right_score) {
-                return left_score > right_score;
-              }
+  std::ranges::sort(entries, [](const SearchEntry &left,
+                                const SearchEntry &right) {
+    const auto left_score =
+        (!left.title.empty() ? 1 : 0) + (!left.description.empty() ? 1 : 0);
+    const auto right_score =
+        (!right.title.empty() ? 1 : 0) + (!right.description.empty() ? 1 : 0);
+    if (left_score != right_score) {
+      return left_score > right_score;
+    }
 
-              // TODO: Ideally we sort based on schema health too, given
-              // lint results
-              if (left_score > 0) {
-                return left.path < right.path;
-              }
+    // TODO: Ideally we sort based on schema health too, given
+    // lint results
+    if (left_score > 0) {
+      return left.path < right.path;
+    }
 
-              return false;
-            });
+    return false;
+  });
 
   std::ostringstream buffer;
   for (const auto &entry : entries) {
