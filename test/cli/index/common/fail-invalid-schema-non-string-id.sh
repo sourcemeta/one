@@ -48,7 +48,10 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-unexpected error: The schema identifier is invalid
+error: The schema identifier is invalid
+  at path $(realpath "$TMP")/schemas/test.json
+  at keyword \$id
+  at value 123
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

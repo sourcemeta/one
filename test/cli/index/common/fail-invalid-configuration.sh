@@ -26,6 +26,7 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 error: Invalid configuration
+  at path $(realpath "$TMP")/one.json
 The value was expected to be an object that defines the property "url"
   at instance location ""
   at evaluate path "/required"

@@ -27,7 +27,7 @@ TEST(Configuration, valid_001) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -79,7 +79,7 @@ TEST(Configuration, valid_002) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -98,7 +98,7 @@ TEST(Configuration, valid_003) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -133,7 +133,7 @@ TEST(Configuration, valid_004) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -174,7 +174,7 @@ TEST(Configuration, valid_005) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -215,7 +215,7 @@ TEST(Configuration, valid_006) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -256,7 +256,7 @@ TEST(Configuration, valid_007) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -297,7 +297,7 @@ TEST(Configuration, valid_008) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 

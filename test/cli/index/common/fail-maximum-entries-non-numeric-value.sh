@@ -43,30 +43,14 @@ else
   sed -i 's/ \[.*\]//g' "$TMP/output.txt"
 fi
 
-cat << EOF > "$TMP/expected_1.txt"
+cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-unexpected error: stoull: no conversion
+error: Expected a numeric value for option
+  at option maximum-direct-directory-entries
+  with value abc
 EOF
 
-cat << EOF > "$TMP/expected_2.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/test.json (#1)
-(100%) Resolving: test.json
-unexpected error: stoul
-EOF
-
-cat << EOF > "$TMP/expected_3.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/test.json (#1)
-(100%) Resolving: test.json
-unexpected error: stoull
-EOF
-
-diff "$TMP/output.txt" "$TMP/expected_1.txt" || \
-  diff "$TMP/output.txt" "$TMP/expected_2.txt" || \
-  diff "$TMP/output.txt" "$TMP/expected_3.txt"
+diff "$TMP/output.txt" "$TMP/expected.txt"

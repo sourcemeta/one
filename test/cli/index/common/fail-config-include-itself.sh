@@ -27,9 +27,9 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 error: Circular reference detected in configuration
-  from $(realpath "$TMP")/self.json
-  at "/contents/x/include/include"
-  to $(realpath "$TMP")/self.json
+  from path $(realpath "$TMP")/self.json
+  at location "/contents/x/include/include"
+  to path $(realpath "$TMP")/self.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

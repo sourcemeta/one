@@ -17,7 +17,10 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-unexpected error: Failed to parse the JSON document
+error: Failed to parse the JSON document
+  at path $(realpath "$TMP")/one.json
+  at line 1
+  at column 3
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -1,12 +1,9 @@
 #!/bin/sh
-
 set -o errexit
 set -o nounset
-
 TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
-
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
@@ -22,19 +19,15 @@ cat << EOF > "$TMP/one.json"
   }
 }
 EOF
-
 mkdir "$TMP/schemas"
-
 cat << 'EOF' > "$TMP/schemas/test.json"
 {
   "$schema": "https://example.com/unknown-dialect",
   "$id": "https://example.com/test"
 }
 EOF
-
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
-
 # Remove thread information
 if [ "$(uname)" = "Darwin" ]
 then
@@ -42,7 +35,6 @@ then
 else
   sed -i 's/ \[.*\]//g' "$TMP/output.txt"
 fi
-
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
@@ -53,9 +45,6 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 13%) Producing: explorer/%/404.metapack
 ( 17%) Producing: schemas/example/schemas/test/%/schema.metapack
 error: Could not resolve the metaschema of the schema
-  https://sourcemeta.com/example/schemas/unknown-dialect
-
-Did you forget to register a schema with such URI in the one?
+  at identifier https://sourcemeta.com/example/schemas/unknown-dialect
 EOF
-
 diff "$TMP/output.txt" "$TMP/expected.txt"

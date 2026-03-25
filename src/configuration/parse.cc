@@ -83,6 +83,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
 namespace sourcemeta::one {
 
 auto Configuration::parse(const sourcemeta::core::JSON &data,
+                          const std::filesystem::path &configuration_path,
                           const std::filesystem::path &default_base_path)
     -> Configuration {
   const auto compiled_schema{sourcemeta::blaze::from_json(
@@ -91,7 +92,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   sourcemeta::blaze::Evaluator evaluator;
   sourcemeta::blaze::SimpleOutput output{data};
   if (!evaluator.validate(compiled_schema.value(), data, std::ref(output))) {
-    throw ConfigurationValidationError(output);
+    throw ConfigurationValidationError(configuration_path, output);
   }
 
   Configuration result;

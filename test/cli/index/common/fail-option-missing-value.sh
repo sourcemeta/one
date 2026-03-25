@@ -11,7 +11,8 @@ trap clean EXIT
 test "$CODE" = "1" || exit 1
 
 cat << 'EOF' > "$TMP/expected.txt"
-error: This option must take a value 'concurrency'
+error: This option must take a value
+  at option concurrency
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

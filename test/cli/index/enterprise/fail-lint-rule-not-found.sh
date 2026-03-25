@@ -51,8 +51,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 38%) Producing: schemas/test/test/%/stats.metapack
 ( 42%) Producing: schemas/test/test/%/bundle.metapack
 ( 47%) Producing: schemas/test/test/%/health.metapack
-error: could not locate the requested file
-  at $(realpath "$TMP")/rules/does-not-exist.json
+error: Could not locate the requested file
+  at path $(realpath "$TMP")/rules/does-not-exist.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

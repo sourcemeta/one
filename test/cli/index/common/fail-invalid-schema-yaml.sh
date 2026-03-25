@@ -43,7 +43,10 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.yaml (#1)
 (100%) Resolving: test.yaml
-unexpected error: YAML alias references undefined anchor
+error: YAML alias references undefined anchor
+  at path $(realpath "$TMP")/schemas/test.yaml
+  at line 1
+  at column 1
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

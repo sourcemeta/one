@@ -15,7 +15,7 @@ protected:
             "collections")};
     shared_configuration = std::make_unique<sourcemeta::one::Configuration>(
         sourcemeta::one::Configuration::parse(
-            raw_configuration,
+            raw_configuration, std::filesystem::path{CONFIGURATION_PATH},
             std::filesystem::path{CONFIGURATION_PATH}.parent_path()));
   }
 

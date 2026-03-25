@@ -11,7 +11,8 @@ trap clean EXIT
 test "$CODE" = "1" || exit 1
 
 cat << 'EOF' > "$TMP/expected.txt"
-error: Unknown option 'unknown-flag'
+error: Unknown option
+  at option unknown-flag
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -7,6 +7,8 @@ target_link_libraries(sourcemeta_one_resolver PUBLIC
   sourcemeta::one::configuration)
 
 target_link_libraries(sourcemeta_one_resolver PRIVATE
+  sourcemeta::core::error)
+target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::jsonschema)

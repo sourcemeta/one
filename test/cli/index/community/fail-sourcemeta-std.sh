@@ -21,9 +21,9 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 error: Could not locate built-in collection
-  from $(realpath "$TMP")/one.json
-  at "/extends"
-  to @sourcemeta/std/v0
+  from path $(realpath "$TMP")/one.json
+  at location "/extends"
+  to identifier @sourcemeta/std/v0
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -15,7 +15,9 @@ namespace sourcemeta::one {
 
 class ConfigurationValidationError : public std::exception {
 public:
-  ConfigurationValidationError(const sourcemeta::blaze::SimpleOutput &output) {
+  ConfigurationValidationError(std::filesystem::path path,
+                               const sourcemeta::blaze::SimpleOutput &output)
+      : path_{std::move(path)} {
     std::ostringstream stream;
     for (const auto &entry : output) {
       stream << entry.message << "\n";
@@ -33,11 +35,16 @@ public:
     return "Invalid configuration";
   }
 
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
   [[nodiscard]] auto stacktrace() const noexcept -> const auto & {
     return this->stacktrace_;
   }
 
 private:
+  std::filesystem::path path_;
   std::string stacktrace_;
 };
 

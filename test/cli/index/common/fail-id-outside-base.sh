@@ -51,7 +51,7 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
 error: The schema identifier is not relative to the corresponding base
-  at https://other.com/test
+  at identifier https://other.com/test
   with base https://example.com/
 EOF
 

@@ -1,11 +1,13 @@
 #include <sourcemeta/blaze/linter.h>
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/parallel.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
+#include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
@@ -81,6 +83,18 @@ static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
     &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
     nullptr,
 }};
+
+static auto parse_numeric_option(const sourcemeta::core::Options &app,
+                                 const std::string_view option)
+    -> unsigned long long {
+  const auto &raw{app.at(option).front()};
+  try {
+    return std::stoull(raw.data());
+  } catch (const std::invalid_argument &) {
+    throw sourcemeta::one::OptionInvalidNumericValueError(std::string{option},
+                                                          std::string{raw});
+  }
+}
 
 static auto print_progress(std::mutex &mutex, const std::size_t threads,
                            const std::string_view title,
@@ -192,7 +206,7 @@ static auto index_main(const std::string_view &program,
   }
 
   auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Resolve a URI to a schema filesystem path
@@ -250,7 +264,7 @@ static auto index_main(const std::string_view &program,
   // Mainly to not screw up the logs
   std::mutex mutex;
   const auto concurrency{app.contains("concurrency")
-                             ? std::stoull(app.at("concurrency").front().data())
+                             ? parse_numeric_option(app, "concurrency")
                              : std::thread::hardware_concurrency()};
 
   PROFILE_END(profiling, "Startup");
@@ -382,8 +396,7 @@ static auto index_main(const std::string_view &program,
   const sourcemeta::one::BuildLimits limits{
       .maximum_direct_directory_entries =
           app.contains("maximum-direct-directory-entries")
-              ? std::stoull(
-                    app.at("maximum-direct-directory-entries").front().data())
+              ? parse_numeric_option(app, "maximum-direct-directory-entries")
               : 1000};
 
   auto produce_plan{
@@ -486,37 +499,46 @@ auto main(int argc, char *argv[]) noexcept -> int {
     return index_main(program, app);
   } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
     std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from " << error.from().string() << "\n";
-    std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
-              << "\"\n";
-    std::cerr << "  to " << error.target().string() << "\n";
+    std::cerr << "  from path " << error.from().string() << "\n";
+    std::cerr << "  at location \""
+              << sourcemeta::core::to_string(error.location()) << "\"\n";
+    std::cerr << "  to path " << error.target().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from " << error.from().string() << "\n";
-    std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
-              << "\"\n";
-    std::cerr << "  to " << error.target().string() << "\n";
+    std::cerr << "  from path " << error.from().string() << "\n";
+    std::cerr << "  at location \""
+              << sourcemeta::core::to_string(error.location()) << "\"\n";
+    std::cerr << "  to path " << error.target().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
                &error) {
     std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from " << error.from().string() << "\n";
-    std::cerr << "  at \"" << sourcemeta::core::to_string(error.location())
-              << "\"\n";
-    std::cerr << "  to " << error.identifier() << "\n";
+    std::cerr << "  from path " << error.from().string() << "\n";
+    std::cerr << "  at location \""
+              << sourcemeta::core::to_string(error.location()) << "\"\n";
+    std::cerr << "  to identifier " << error.identifier() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
+    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
+              << "\n  with value " << error.value() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnexpectedValueFlagError &error) {
-    std::cerr << "error: " << error.what() << " '" << error.option() << "'\n";
+    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
+              << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsMissingOptionValueError &error) {
-    std::cerr << "error: " << error.what() << " '" << error.option() << "'\n";
+    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
+              << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnknownOptionError &error) {
-    std::cerr << "error: " << error.what() << " '" << error.option() << "'\n";
+    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
+              << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationValidationError &error) {
-    std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n"
+              << error.stacktrace();
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::MetaschemaError &error) {
     std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
@@ -535,15 +557,19 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::URIParseError &error) {
-    std::cerr << "error: " << error.what() << "\n  at column " << error.column()
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::URIParseError>
+               &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at column " << error.column()
               << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::SchemaUnknownDialectError &error) {
-    std::cerr << "error: " << error.what() << "\n";
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaUnknownDialectError> &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     std::cerr << "error: " << error.what() << "\n  at path "
@@ -551,35 +577,58 @@ auto main(int argc, char *argv[]) noexcept -> int {
               << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
-    std::cerr << "error: " << error.what() << "\n  at " << error.path().string()
-              << "\n";
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
-    std::cerr << "error: " << error.what() << "\n  at " << error.uri()
-              << "\n  with base " << error.base() << "\n";
+    std::cerr << "error: " << error.what() << "\n  at identifier "
+              << error.uri() << "\n  with base " << error.base() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
-    std::cerr << "error: " << error.what() << "\n  " << error.identifier()
-              << "\n";
+    std::cerr << "error: " << error.what() << "\n  at identifier "
+              << error.identifier() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    std::cerr << "error: " << error.what() << "\n  " << error.identifier()
-              << "\n\nDid you forget to register a schema with such URI in the "
-                 "one?\n";
+    std::cerr << "error: " << error.what() << "\n  at identifier "
+              << error.identifier() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    std::cerr << "error: " << error.what() << "\n  " << error.identifier()
-              << "\n    at schema location \"";
+    std::cerr << "error: " << error.what() << "\n  at identifier "
+              << error.identifier() << "\n  at schema location \"";
     sourcemeta::core::stringify(error.location(), std::cerr);
     std::cerr << "\"\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::JSONFileParseError &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at line " << error.line()
+              << "\n  at column " << error.column() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>
+               &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at line " << error.line()
+              << "\n  at column " << error.column() << "\n";
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>
+          &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at keyword " << error.keyword()
+              << "\n  at value " << error.value() << "\n";
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>
+               &error) {
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at identifier "
+              << error.identifier() << "\n";
     return EXIT_FAILURE;
   } catch (const std::filesystem::filesystem_error &error) {
     if (error.code() == std::make_error_condition(std::errc::file_exists) ||
         error.code() == std::make_error_condition(std::errc::not_a_directory)) {
-      std::cerr << "error: file already exists\n  at " << error.path1().string()
-                << "\n";
+      std::cerr << "error: File already exists\n  at path "
+                << error.path1().string() << "\n";
     } else if (error.code() == std::errc::no_such_file_or_directory) {
-      std::cerr << "error: could not locate the requested file\n  at "
+      std::cerr << "error: Could not locate the requested file\n  at path "
                 << error.path1().string() << "\n";
     } else {
       std::cerr << error.what() << "\n";

@@ -59,7 +59,9 @@ Detecting: $(realpath "$TMP")/schemas/a.json (#1)
 Detecting: $(realpath "$TMP")/schemas/b.json (#2)
 ( 50%) Resolving: a.json
 (100%) Resolving: b.json
-unexpected error: Cannot register the same identifier twice
+error: Cannot register the same identifier twice
+  at path $(realpath "$TMP")/schemas/b.json
+  at identifier https://sourcemeta.com/example/schemas/test
 EOF
 
 cat << EOF > "$TMP/expected_ba.txt"
@@ -69,7 +71,9 @@ Detecting: $(realpath "$TMP")/schemas/b.json (#1)
 Detecting: $(realpath "$TMP")/schemas/a.json (#2)
 ( 50%) Resolving: b.json
 (100%) Resolving: a.json
-unexpected error: Cannot register the same identifier twice
+error: Cannot register the same identifier twice
+  at path $(realpath "$TMP")/schemas/a.json
+  at identifier https://sourcemeta.com/example/schemas/test
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected_ab.txt" || \

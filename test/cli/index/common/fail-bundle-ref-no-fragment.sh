@@ -56,8 +56,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 17%) Producing: schemas/example/schemas/test/%/schema.metapack
 ( 21%) Producing: schemas/example/schemas/test/%/dependencies.metapack
 error: Could not resolve schema reference
-  https://sourcemeta.com/example/schemas/test#foo
-    at schema location "/allOf/0/\$ref"
+  at identifier https://sourcemeta.com/example/schemas/test#foo
+  at schema location "/allOf/0/\$ref"
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
