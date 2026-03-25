@@ -78,6 +78,8 @@ auto dereference(const std::filesystem::path &collections_path,
                       visited);
           accumulator.merge(std::move(extension).as_object());
         }
+
+        visited.erase(target_path.native());
       }
     }
 
@@ -104,6 +106,7 @@ auto dereference(const std::filesystem::path &collections_path,
     input.into(read_file(base, new_location, target_path,
                          input.at("include").to_string()));
     dereference(collections_path, target_path, input, new_location, visited);
+    visited.erase(target_path.native());
 
     // Revisit and relativize paths
   } else if (input.defines("path") && input.at("path").is_string()) {
@@ -180,7 +183,8 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   }
 
   std::unordered_set<std::string> visited;
-  visited.emplace(configuration_path.native());
+  visited.emplace(
+      std::filesystem::weakly_canonical(configuration_path).native());
   dereference(collections_path, configuration_path, data, {}, visited);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
