@@ -5,12 +5,13 @@
 #include <sourcemeta/blaze/linter.h>
 #include <sourcemeta/blaze/test.h>
 #include <sourcemeta/codegen/ir.h>
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 
-#include <cstdlib>          // EXIT_FAILURE
 #include <filesystem>       // std::filesystem
 #include <functional>       // std::function
 #include <initializer_list> // std::initializer_list
@@ -20,6 +21,8 @@
 #include <system_error>     // std::errc
 #include <type_traits>      // std::is_base_of_v
 #include <vector>           // std::vector
+
+#include "exit_code.h"
 
 namespace sourcemeta::jsonschema {
 
@@ -89,6 +92,12 @@ private:
 class OptionConflictError : public std::runtime_error {
 public:
   OptionConflictError(std::string message)
+      : std::runtime_error{std::move(message)} {}
+};
+
+class StdinError : public std::runtime_error {
+public:
+  explicit StdinError(std::string message)
       : std::runtime_error{std::move(message)} {}
 };
 
@@ -234,21 +243,26 @@ private:
   int exit_code_;
 };
 
-template <typename T> class FileError : public T {
-public:
-  template <typename... Args>
-  FileError(std::filesystem::path path, Args &&...args)
-      : T{std::forward<Args>(args)...}, path_{std::move(path)} {
-    assert(std::filesystem::exists(this->path_));
-  }
+inline auto stdin_path() -> std::filesystem::path {
+#ifdef _WIN32
+  return std::filesystem::path{"<stdin>"};
+#else
+  return std::filesystem::path{"/dev/stdin"};
+#endif
+}
 
-  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
-    return path_;
+inline auto stdin_path_string(const std::filesystem::path &p) -> std::string {
+#ifdef _WIN32
+  if (p.string() == "<stdin>") {
+    return "<stdin>";
   }
-
-private:
-  std::filesystem::path path_;
-};
+#else
+  if (p == std::filesystem::path{"/dev/stdin"}) {
+    return "/dev/stdin";
+  }
+#endif
+  return sourcemeta::core::weakly_canonical(p).string();
+}
 
 template <typename Exception>
 inline auto print_exception(const bool is_json, const Exception &exception)
@@ -338,20 +352,25 @@ inline auto print_exception(const bool is_json, const Exception &exception)
     }
   }
 
+  if constexpr (requires(const Exception &current) { current.regex(); }) {
+    if (is_json) {
+      error_json.assign("regex", sourcemeta::core::JSON{exception.regex()});
+    } else {
+      std::cerr << "  at regex " << exception.regex() << "\n";
+    }
+  }
+
   if constexpr (requires(const Exception &current) {
                   {
                     current.path()
                   } -> std::convertible_to<std::filesystem::path>;
                 }) {
+    const auto &error_path{exception.path()};
+    const auto error_path_string{stdin_path_string(error_path)};
     if (is_json) {
-      error_json.assign(
-          "filePath",
-          sourcemeta::core::JSON{
-              sourcemeta::core::weakly_canonical(exception.path()).string()});
+      error_json.assign("filePath", sourcemeta::core::JSON{error_path_string});
     } else {
-      std::cerr << "  at file path "
-                << sourcemeta::core::weakly_canonical(exception.path()).string()
-                << "\n";
+      std::cerr << "  at file path " << error_path_string << "\n";
     }
   } else if constexpr (requires(const Exception &current) {
                          {
@@ -379,6 +398,17 @@ inline auto print_exception(const bool is_json, const Exception &exception)
     } else {
       std::cerr << "  at location \""
                 << sourcemeta::core::to_string(exception.location()) << "\"\n";
+    }
+  }
+
+  if constexpr (requires(const Exception &current) {
+                  current.base().recompose();
+                }) {
+    if (is_json) {
+      error_json.assign("baseURI",
+                        sourcemeta::core::JSON{exception.base().recompose()});
+    } else {
+      std::cerr << "  at base uri " << exception.base().recompose() << "\n";
     }
   }
 
@@ -455,7 +485,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
   } catch (const InstallError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const ConfigurationNotFoundError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -465,43 +495,50 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                    "docs/install.markdown\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const LockNotFoundError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const LockParseError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const NotSchemaError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const YAMLInputError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_NOT_SUPPORTED;
   } catch (const InvalidLintRuleError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<DuplicateLintRuleError> &error) {
+    return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const sourcemeta::core::FileError<DuplicateLintRuleError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::blaze::LinterInvalidNameError> &error) {
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterInvalidNameError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::blaze::LinterMissingNameError> &error) {
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterInvalidNamePatternError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::LinterMissingNameError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const InvalidIncludeIdentifier &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const LintAutoFixError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -520,8 +557,9 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "https://github.com/sourcemeta/jsonschema/issues\n";
     }
 
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::blaze::TestParseError> &error) {
+    return EXIT_UNEXPECTED_ERROR;
+  } catch (const sourcemeta::core::FileError<sourcemeta::blaze::TestParseError>
+               &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -531,10 +569,9 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                    "docs/test.markdown\n";
     }
 
-    return EXIT_FAILURE;
-  } catch (
-      const FileError<sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>
-          &error) {
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::CompilerReferenceTargetNotSchemaError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -550,9 +587,9 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       }
     }
 
-    return EXIT_FAILURE;
-  } catch (
-      const FileError<sourcemeta::blaze::CompilerInvalidEntryPoint> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::CompilerInvalidEntryPoint> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -560,22 +597,36 @@ inline auto try_catch(const sourcemeta::core::Options &options,
           << "\nUse the `inspect` command to find valid schema locations\n";
     }
 
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaReferenceError> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::CompilerInvalidRegexError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::blaze::ConfigurationParseError> &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    return EXIT_FAILURE;
+    if (!is_json) {
+      std::cerr << "\nDetailed regex error messages are not yet supported\n"
+                   "Try tools like https://regex101.com to debug further\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
-      const FileError<sourcemeta::core::SchemaRelativeMetaschemaResolutionError>
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
           &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaResolutionError> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::ConfigurationParseError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaRelativeMetaschemaResolutionError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
+          &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -588,9 +639,9 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       }
     }
 
-    return EXIT_FAILURE;
-  } catch (
-      const FileError<sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -603,8 +654,25 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                    "`--default-dialect/-d`\n";
     }
 
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaKeywordError> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaUnknownDialectError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nAre you sure the input is a valid JSON Schema and its "
+                   "dialect is known?\n";
+      std::cerr
+          << "If the input does not declare the `$schema` keyword, you might "
+             "want to\n";
+      std::cerr << "explicitly declare a default dialect using "
+                   "`--default-dialect/-d`\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>
+          &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -612,48 +680,61 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                    "valid according to its meta-schema?\n";
     }
 
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaFrameError> &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaReferenceObjectResourceError>
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>
                &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaError> &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaReferenceObjectResourceError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::core::SchemaVocabularyError> &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
-      const FileError<sourcemeta::codegen::UnsupportedKeywordError> &error) {
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
-  } catch (const FileError<sourcemeta::codegen::UnsupportedKeywordValueError>
-               &error) {
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>
+          &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::codegen::UnsupportedKeywordError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::codegen::UnsupportedKeywordValueError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::codegen::UnexpectedSchemaError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
   } catch (const sourcemeta::core::JSONFileParseError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const sourcemeta::core::JSONParseError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
 
     // Command line parsing handling
+  } catch (const StdinError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const OptionConflictError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const InvalidOptionEnumerationValueError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -661,7 +742,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nRun the `help` command for usage information\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const PositionalArgumentError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -669,7 +750,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nFor example: " << error.example() << "\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const UnknownCommandError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -677,7 +758,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nRun the `help` command for usage information\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const sourcemeta::core::OptionsUnexpectedValueFlagError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -685,7 +766,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nRun the `help` command for usage information\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const sourcemeta::core::OptionsMissingOptionValueError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -693,7 +774,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nRun the `help` command for usage information\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const sourcemeta::core::OptionsUnknownOptionError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -701,17 +782,17 @@ inline auto try_catch(const sourcemeta::core::Options &options,
       std::cerr << "\nRun the `help` command for usage information\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_INVALID_CLI_ARGUMENTS;
 
     // Standard library handlers
   } catch (const std::filesystem::filesystem_error &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const std::runtime_error &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
-    return EXIT_FAILURE;
+    return EXIT_UNEXPECTED_ERROR;
   } catch (const std::exception &error) {
     const auto is_json{options.contains("json")};
     if (is_json) {
@@ -725,7 +806,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                 << "https://github.com/sourcemeta/jsonschema\n";
     }
 
-    return EXIT_FAILURE;
+    return EXIT_UNEXPECTED_ERROR;
   }
 }
 

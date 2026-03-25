@@ -9,7 +9,6 @@
 #include <algorithm> // std::sort, std::any_of, std::all_of, std::find_if, std::none_of
 #include <cassert> // assert
 #include <set>     // std::set
-#include <sstream> // std::ostringstream
 #include <utility> // std::move
 
 #include "compile_helpers.h"
@@ -20,19 +19,18 @@ static auto parse_regex(const std::string &pattern,
     -> sourcemeta::core::Regex {
   const auto result{sourcemeta::core::to_regex(pattern)};
   if (!result.has_value()) {
-    std::ostringstream message;
-    message << "Invalid regular expression: " << pattern;
-    throw sourcemeta::blaze::CompilerError(base, to_pointer(schema_location),
-                                           message.str());
+    throw sourcemeta::blaze::CompilerInvalidRegexError(
+        base, to_pointer(schema_location), pattern);
   }
 
   return result.value();
 }
 
 static auto
-relative_schema_location_size(const sourcemeta::blaze::Instruction &step)
+relative_schema_location_size(const sourcemeta::blaze::Context &context,
+                              const sourcemeta::blaze::Instruction &step)
     -> std::size_t {
-  return step.relative_schema_location.size();
+  return context.extra[step.extra_index].relative_schema_location.size();
 }
 
 static auto
@@ -106,7 +104,8 @@ compile_properties(const sourcemeta::blaze::Context &context,
   // we prefer to evaluate smaller subschemas first, in the hope of failing
   // earlier without spending a lot of time on other subschemas
   if (context.tweaks.properties_reorder) {
-    std::ranges::sort(properties, [](const auto &left, const auto &right) {
+    std::ranges::sort(properties, [&context](const auto &left,
+                                             const auto &right) {
       const auto left_size{recursive_template_size(left.second)};
       const auto right_size{recursive_template_size(right.second)};
       if (left_size == right_size) {
@@ -121,8 +120,9 @@ compile_properties(const sourcemeta::blaze::Context &context,
           // If both options have a direct enumeration, we choose
           // the one with the shorter relative schema location
           return relative_schema_location_size(
-                     left.second.at(left_direct_enumeration.value())) <
+                     context, left.second.at(left_direct_enumeration.value())) <
                  relative_schema_location_size(
+                     context,
                      right.second.at(right_direct_enumeration.value()));
         } else if (left_direct_enumeration.has_value()) {
           return true;
@@ -997,20 +997,23 @@ auto compiler_draft4_applicator_properties_with_options(
     if (context.mode == Mode::FastValidation && track_evaluation &&
         substeps.size() == 1 &&
         substeps.front().type == InstructionIndex::AssertionTypeStrict) {
-      children.push_back(rephrase(sourcemeta::blaze::InstructionIndex::
+      children.push_back(rephrase(context,
+                                  sourcemeta::blaze::InstructionIndex::
                                       AssertionPropertyTypeStrictEvaluate,
                                   substeps.front()));
     } else if (context.mode == Mode::FastValidation && track_evaluation &&
                substeps.size() == 1 &&
                substeps.front().type == InstructionIndex::AssertionType) {
       children.push_back(rephrase(
+          context,
           sourcemeta::blaze::InstructionIndex::AssertionPropertyTypeEvaluate,
           substeps.front()));
     } else if (context.mode == Mode::FastValidation && track_evaluation &&
                substeps.size() == 1 &&
                substeps.front().type ==
                    InstructionIndex::AssertionTypeStrictAny) {
-      children.push_back(rephrase(sourcemeta::blaze::InstructionIndex::
+      children.push_back(rephrase(context,
+                                  sourcemeta::blaze::InstructionIndex::
                                       AssertionPropertyTypeStrictAnyEvaluate,
                                   substeps.front()));
 
@@ -1018,18 +1021,21 @@ auto compiler_draft4_applicator_properties_with_options(
     } else if (context.mode == Mode::FastValidation && substeps.size() == 1 &&
                substeps.front().type ==
                    InstructionIndex::AssertionPropertyTypeStrict) {
-      children.push_back(unroll(
-          substeps.front(), effective_dynamic_context.base_instance_location));
+      children.push_back(
+          unroll(context, substeps.front(),
+                 effective_dynamic_context.base_instance_location));
     } else if (context.mode == Mode::FastValidation && substeps.size() == 1 &&
                substeps.front().type ==
                    InstructionIndex::AssertionPropertyType) {
-      children.push_back(unroll(
-          substeps.front(), effective_dynamic_context.base_instance_location));
+      children.push_back(
+          unroll(context, substeps.front(),
+                 effective_dynamic_context.base_instance_location));
     } else if (context.mode == Mode::FastValidation && substeps.size() == 1 &&
                substeps.front().type ==
                    InstructionIndex::AssertionPropertyTypeStrictAny) {
-      children.push_back(unroll(
-          substeps.front(), effective_dynamic_context.base_instance_location));
+      children.push_back(
+          unroll(context, substeps.front(),
+                 effective_dynamic_context.base_instance_location));
       // NOLINTEND(bugprone-branch-clone)
 
     } else {
@@ -1348,53 +1354,6 @@ auto compiler_draft4_validation_pattern(const Context &context,
                       .second = regex_string})};
 }
 
-auto compiler_draft4_validation_format(const Context &context,
-                                       const SchemaContext &schema_context,
-                                       const DynamicContext &dynamic_context,
-                                       const Instructions &) -> Instructions {
-  if (!schema_context.schema.at(dynamic_context.keyword).is_string()) {
-    return {};
-  }
-
-  if (schema_context.schema.defines("type") &&
-      schema_context.schema.at("type").is_string() &&
-      schema_context.schema.at("type").to_string() != "string") {
-    return {};
-  }
-
-  // Regular expressions
-
-  static const std::string FORMAT_REGEX_IPV4{
-      "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.(25[0-5]|2[0-4][0-"
-      "9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-"
-      "9][0-9]|[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"};
-
-  const auto &format{
-      schema_context.schema.at(dynamic_context.keyword).to_string()};
-
-  if (format == "uri") {
-    return {make(sourcemeta::blaze::InstructionIndex::AssertionStringType,
-                 context, schema_context, dynamic_context,
-                 ValueStringType::URI)};
-  }
-
-#define COMPILE_FORMAT_REGEX(name, regular_expression)                         \
-  if (format == (name)) {                                                      \
-    return {                                                                   \
-        make(sourcemeta::blaze::InstructionIndex::AssertionRegex, context,     \
-             schema_context, dynamic_context,                                  \
-             ValueRegex{parse_regex(regular_expression, schema_context.base,   \
-                                    schema_context.relative_pointer),          \
-                        (regular_expression)})};                               \
-  }
-
-  COMPILE_FORMAT_REGEX("ipv4", FORMAT_REGEX_IPV4)
-
-#undef COMPILE_FORMAT_REGEX
-
-  return {};
-}
-
 auto compiler_draft4_applicator_not(const Context &context,
                                     const SchemaContext &schema_context,
                                     const DynamicContext &dynamic_context,
@@ -1611,26 +1570,22 @@ auto compiler_draft4_applicator_items_with_options(
                           context, schema_context, dynamic_context, ValueNone{},
                           std::move(children))};
         if (std::get<ValueTypedHashes>(value_copy).second.first.size() == 3) {
-          return {Instruction{
-              .type = sourcemeta::blaze::InstructionIndex::
-                  LoopItemsPropertiesExactlyTypeStrictHash3,
-              .relative_schema_location = current.relative_schema_location,
-              .relative_instance_location = current.relative_instance_location,
-              .keyword_location = current.keyword_location,
-              .schema_resource = current.schema_resource,
-              .value = std::move(value_copy),
-              .children = {}}};
+          return {Instruction{.type = sourcemeta::blaze::InstructionIndex::
+                                  LoopItemsPropertiesExactlyTypeStrictHash3,
+                              .relative_instance_location =
+                                  current.relative_instance_location,
+                              .value = std::move(value_copy),
+                              .children = {},
+                              .extra_index = current.extra_index}};
         }
 
-        return {Instruction{
-            .type = sourcemeta::blaze::InstructionIndex::
-                LoopItemsPropertiesExactlyTypeStrictHash,
-            .relative_schema_location = current.relative_schema_location,
-            .relative_instance_location = current.relative_instance_location,
-            .keyword_location = current.keyword_location,
-            .schema_resource = current.schema_resource,
-            .value = std::move(value_copy),
-            .children = {}}};
+        return {Instruction{.type = sourcemeta::blaze::InstructionIndex::
+                                LoopItemsPropertiesExactlyTypeStrictHash,
+                            .relative_instance_location =
+                                current.relative_instance_location,
+                            .value = std::move(value_copy),
+                            .children = {},
+                            .extra_index = current.extra_index}};
       }
     }
 

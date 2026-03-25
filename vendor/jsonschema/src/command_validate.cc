@@ -140,22 +140,35 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
   }
 
   const auto &schema_path{options.positional().at(0)};
+  const bool schema_from_stdin = (schema_path == "-");
 
-  if (std::filesystem::is_directory(schema_path)) {
+  // Centralized duplicate stdin check for all positional arguments
+  check_no_duplicate_stdin(options.positional());
+
+  if (!schema_from_stdin && std::filesystem::is_directory(schema_path)) {
     throw std::filesystem::filesystem_error{
         "The input was supposed to be a file but it is a directory",
         schema_path, std::make_error_code(std::errc::is_a_directory)};
   }
 
-  const auto configuration_path{find_configuration(schema_path)};
+  const auto schema_config_base{schema_from_stdin
+                                    ? std::filesystem::current_path()
+                                    : std::filesystem::path(schema_path)};
+  const auto schema_resolution_base{
+      schema_from_stdin ? stdin_path() : std::filesystem::path(schema_path)};
+
+  const auto configuration_path{find_configuration(schema_config_base)};
   const auto &configuration{
-      read_configuration(options, configuration_path, schema_path)};
+      read_configuration(options, configuration_path, schema_config_base)};
   const auto dialect{default_dialect(options, configuration)};
 
-  const auto schema{sourcemeta::core::read_yaml_or_json(schema_path)};
+  const auto schema{schema_from_stdin
+                        ? read_from_stdin().document
+                        : sourcemeta::core::read_yaml_or_json(schema_path)};
 
   if (!sourcemeta::core::is_schema(schema)) {
-    throw NotSchemaError{schema_path};
+    throw NotSchemaError{schema_from_stdin ? stdin_path()
+                                           : schema_resolution_base};
   }
 
   const auto &custom_resolver{
@@ -165,7 +178,7 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
   const auto benchmark{options.contains("benchmark")};
   const auto benchmark_loop{parse_loop(options)};
   if (benchmark_loop == 0) {
-    throw std::runtime_error("The loop number cannot be zero");
+    throw OptionConflictError{"The loop number cannot be zero"};
   }
 
   const auto trace{options.contains("trace")};
@@ -177,7 +190,8 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
         "The --entrypoint option cannot be used with --template"};
   }
 
-  const auto schema_default_id{sourcemeta::jsonschema::default_id(schema_path)};
+  const auto schema_default_id{
+      sourcemeta::jsonschema::default_id(schema_resolution_base)};
 
   const sourcemeta::core::JSON bundled{[&]() {
     try {
@@ -185,30 +199,39 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
                                       custom_resolver, dialect,
                                       schema_default_id);
     } catch (const sourcemeta::core::SchemaKeywordError &error) {
-      throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaFrameError &error) {
-      throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaReferenceError &error) {
-      throw FileError<sourcemeta::core::SchemaReferenceError>(
-          schema_path, std::string{error.identifier()}, error.location(),
-          error.what());
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+          schema_resolution_base, std::string{error.identifier()},
+          error.location(), error.what());
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
-      throw FileError<
+      throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
-          schema_path, error);
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaResolutionError &error) {
-      throw FileError<sourcemeta::core::SchemaResolutionError>(schema_path,
-                                                               error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaResolutionError>(schema_resolution_base,
+                                                   error);
     } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-      throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
-          schema_path);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownBaseDialectError>(
+          schema_resolution_base);
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownDialectError>(schema_resolution_base);
     } catch (const sourcemeta::core::SchemaError &error) {
-      throw FileError<sourcemeta::core::SchemaError>(schema_path, error.what());
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+          schema_resolution_base, error.what());
     } catch (
         const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
-      throw FileError<sourcemeta::core::SchemaReferenceObjectResourceError>(
-          schema_path, error.identifier());
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaReferenceObjectResourceError>(
+          schema_resolution_base, error.identifier());
     }
   }()};
 
@@ -219,21 +242,29 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
     frame.analyse(bundled, sourcemeta::core::schema_walker, custom_resolver,
                   dialect, schema_default_id);
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
-    throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaFrameError &error) {
-    throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        schema_resolution_base, error);
   } catch (
       const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
-    throw FileError<sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
-        schema_path, error);
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    throw FileError<sourcemeta::core::SchemaResolutionError>(schema_path,
-                                                             error);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        schema_resolution_base, error);
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-    throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
-        schema_path);
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(
+        schema_resolution_base);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(schema_resolution_base);
   } catch (const sourcemeta::core::SchemaError &error) {
-    throw FileError<sourcemeta::core::SchemaError>(schema_path, error.what());
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        schema_resolution_base, error.what());
   }
 
   std::string entrypoint_uri{frame.root()};
@@ -242,8 +273,9 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
       entrypoint_uri = resolve_entrypoint(
           frame, std::string{options.at("entrypoint").front()});
     } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
-      throw FileError<sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_path,
-                                                                    error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_resolution_base,
+                                                        error);
     }
   }
 
@@ -252,33 +284,51 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
       return get_schema_template(bundled, custom_resolver, frame,
                                  entrypoint_uri, fast_mode, options);
     } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
-      throw FileError<sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_path,
-                                                                    error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_resolution_base,
+                                                        error);
+    } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidRegexError>(schema_resolution_base,
+                                                        error);
     } catch (
         const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
-      throw FileError<sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
-          schema_path, error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaKeywordError &error) {
-      throw FileError<sourcemeta::core::SchemaKeywordError>(schema_path, error);
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaFrameError &error) {
-      throw FileError<sourcemeta::core::SchemaFrameError>(schema_path, error);
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaReferenceError &error) {
-      throw FileError<sourcemeta::core::SchemaReferenceError>(
-          schema_path, std::string{error.identifier()}, error.location(),
-          error.what());
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+          schema_resolution_base, std::string{error.identifier()},
+          error.location(), error.what());
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
-      throw FileError<
+      throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
-          schema_path, error);
+          schema_resolution_base, error);
     } catch (const sourcemeta::core::SchemaResolutionError &error) {
-      throw FileError<sourcemeta::core::SchemaResolutionError>(schema_path,
-                                                               error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaResolutionError>(schema_resolution_base,
+                                                   error);
     } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-      throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
-          schema_path);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownBaseDialectError>(
+          schema_resolution_base);
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownDialectError>(schema_resolution_base);
+    } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaVocabularyError>(
+          schema_resolution_base, std::string{error.uri()}, error.what());
     } catch (const sourcemeta::core::SchemaError &error) {
-      throw FileError<sourcemeta::core::SchemaError>(schema_path, error.what());
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+          schema_resolution_base, error.what());
     }
   }()};
 
@@ -294,39 +344,51 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
     instance_arguments.push_back(".");
   }
 
+  if (trace && benchmark) {
+    throw OptionConflictError{
+        "The `--trace/-t` and `--benchmark/-b` options are mutually exclusive"};
+  }
+
   if (trace && instance_arguments.size() > 1) {
-    throw std::runtime_error{
+    throw OptionConflictError{
         "The `--trace/-t` option is only allowed given a single instance"};
   }
 
   if (benchmark && instance_arguments.size() > 1) {
-    throw std::runtime_error{
+    throw OptionConflictError{
         "The `--benchmark/-b` option is only allowed given a single instance"};
   }
 
   for (const auto &instance_path_view : instance_arguments) {
     const std::filesystem::path instance_path{instance_path_view};
     if (trace && instance_path.extension() == ".jsonl") {
-      throw std::runtime_error{
+      throw OptionConflictError{
           "The `--trace/-t` option is only allowed given a single instance"};
     }
 
-    if (trace && std::filesystem::is_directory(instance_path)) {
-      throw std::runtime_error{
+    if (trace && instance_path_view != "-" &&
+        std::filesystem::is_directory(instance_path)) {
+      throw OptionConflictError{
           "The `--trace/-t` option is only allowed given a single instance"};
     }
 
-    if (benchmark && std::filesystem::is_directory(instance_path)) {
-      throw std::runtime_error{"The `--benchmark/-b` option is only allowed "
-                               "given a single instance"};
+    if (benchmark && instance_path_view != "-" &&
+        std::filesystem::is_directory(instance_path)) {
+      throw OptionConflictError{"The `--benchmark/-b` option is only allowed "
+                                "given a single instance"};
     }
-    if (std::filesystem::is_directory(instance_path) ||
+    if (instance_path_view == "-" ||
+        std::filesystem::is_directory(instance_path) ||
         instance_path.extension() == ".jsonl" ||
         instance_path.extension() == ".yaml" ||
         instance_path.extension() == ".yml") {
       for (const auto &entry : for_each_json({instance_path_view}, options)) {
         std::ostringstream error;
         sourcemeta::blaze::SimpleOutput output{entry.second};
+        sourcemeta::blaze::TraceOutput trace_output{
+            sourcemeta::core::schema_walker, custom_resolver,
+            trace_callback(entry.positions, std::cout),
+            sourcemeta::core::empty_weak_pointer, frame};
         bool subresult{true};
         if (benchmark) {
           subresult = run_loop(
@@ -338,6 +400,9 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
             error << "error: Schema validation failure\n";
             result = false;
           }
+        } else if (trace) {
+          subresult = evaluator.validate(schema_template, entry.second,
+                                         std::ref(trace_output));
         } else if (fast_mode) {
           subresult = evaluator.validate(schema_template, entry.second);
         } else if (!json_output) {
@@ -347,6 +412,8 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
 
         if (benchmark) {
           continue;
+        } else if (trace) {
+          result = result && subresult;
         } else if (json_output) {
           if (!entry.multidocument) {
             std::cerr << entry.first << "\n";
@@ -374,7 +441,10 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
           }
           LOG_VERBOSE(options)
               << "\n  matches "
-              << sourcemeta::core::weakly_canonical(schema_path).string()
+              << (schema_from_stdin ? "/dev/stdin"
+                                    : sourcemeta::core::weakly_canonical(
+                                          schema_resolution_base)
+                                          .string())
               << "\n";
           print_annotations(output, options, entry.positions, std::cerr);
         } else {
@@ -396,12 +466,23 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
       }
     } else {
       sourcemeta::core::PointerPositionTracker tracker;
-      const auto instance{sourcemeta::core::read_yaml_or_json(
-          instance_path, std::ref(tracker))};
+      auto property_storage = std::make_shared<std::deque<std::string>>();
+      const bool track_positions{(!fast_mode && !benchmark) || trace};
+      const auto instance{[&]() -> sourcemeta::core::JSON {
+        if (track_positions) {
+          sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+          auto callback = make_position_callback(tracker, property_storage);
+          sourcemeta::core::read_yaml_or_json(instance_path, document,
+                                              callback);
+          return document;
+        }
+        return sourcemeta::core::read_yaml_or_json(instance_path);
+      }()};
       std::ostringstream error;
       sourcemeta::blaze::SimpleOutput output{instance};
       sourcemeta::blaze::TraceOutput trace_output{
           sourcemeta::core::schema_walker, custom_resolver,
+          trace_callback(tracker, std::cout),
           sourcemeta::core::empty_weak_pointer, frame};
       bool subresult{true};
       if (benchmark) {
@@ -423,8 +504,7 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
       }
 
       if (trace) {
-        print(trace_output, tracker, std::cout);
-        result = subresult;
+        result = result && subresult;
       } else if (json_output) {
         const auto suboutput{sourcemeta::blaze::standard(
             evaluator, schema_template, instance,
@@ -445,7 +525,11 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
             << "ok: "
             << sourcemeta::core::weakly_canonical(instance_path).string()
             << "\n  matches "
-            << sourcemeta::core::weakly_canonical(schema_path).string() << "\n";
+            << (schema_from_stdin
+                    ? "/dev/stdin"
+                    : sourcemeta::core::weakly_canonical(schema_resolution_base)
+                          .string())
+            << "\n";
         print_annotations(output, options, tracker, std::cerr);
       } else {
         std::cerr << "fail: "
@@ -459,8 +543,6 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
   }
 
   if (!result) {
-    // Report a different exit code for validation failures, to
-    // distinguish them from other errors
-    throw Fail{2};
+    throw Fail{EXIT_EXPECTED_FAILURE};
   }
 }

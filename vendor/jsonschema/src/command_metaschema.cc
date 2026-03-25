@@ -32,7 +32,8 @@ auto sourcemeta::jsonschema::metaschema(
 
   for (const auto &entry : for_each_json(options)) {
     if (!sourcemeta::core::is_schema(entry.second)) {
-      throw NotSchemaError{entry.resolution_base};
+      throw NotSchemaError{entry.from_stdin ? stdin_path()
+                                            : entry.resolution_base};
     }
 
     const auto configuration_path{find_configuration(entry.resolution_base)};
@@ -48,7 +49,8 @@ auto sourcemeta::jsonschema::metaschema(
       const auto dialect{
           sourcemeta::core::dialect(entry.second, default_dialect_option)};
       if (dialect.empty()) {
-        throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
+        throw sourcemeta::core::FileError<
+            sourcemeta::core::SchemaUnknownBaseDialectError>(
             entry.resolution_base);
       }
 
@@ -73,10 +75,10 @@ auto sourcemeta::jsonschema::metaschema(
       if (trace) {
         sourcemeta::blaze::TraceOutput output{
             sourcemeta::core::schema_walker, custom_resolver,
+            trace_callback(entry.positions, std::cout),
             sourcemeta::core::empty_weak_pointer, frame};
         result = evaluator.validate(cache.at(std::string{dialect}),
                                     entry.second, std::ref(output));
-        print(output, entry.positions, std::cout);
       } else if (json_output) {
         // Otherwise its impossible to correlate the output
         // when validating i.e. a directory of schemas
@@ -105,24 +107,35 @@ auto sourcemeta::jsonschema::metaschema(
           result = false;
         }
       }
+    } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidRegexError>(entry.resolution_base,
+                                                        error);
     } catch (
         const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
-      throw FileError<sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
           entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
-      throw FileError<
+      throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
           entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaResolutionError &error) {
-      throw FileError<sourcemeta::core::SchemaResolutionError>(
-          entry.resolution_base, error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaResolutionError>(entry.resolution_base,
+                                                   error);
+    } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaVocabularyError>(
+          entry.resolution_base, std::string{error.uri()}, error.what());
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownDialectError>(entry.resolution_base);
     }
   }
 
   if (!result) {
-    // Report a different exit code for validation failures, to
-    // distinguish them from other errors
-    throw Fail{2};
+    throw Fail{EXIT_EXPECTED_FAILURE};
   }
 }

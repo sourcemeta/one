@@ -20,7 +20,84 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
   bool result{true};
   std::vector<std::string> failed_files;
   const auto indentation{parse_indentation(options)};
-  for (const auto &entry : for_each_json(options)) {
+
+  const auto handle_stdin = [&]() {
+    const auto current_path{std::filesystem::current_path()};
+    const auto configuration_path{find_configuration(current_path)};
+    const auto &configuration{
+        read_configuration(options, configuration_path, current_path)};
+    const auto dialect{default_dialect(options, configuration)};
+    const auto &custom_resolver{
+        resolver(options, options.contains("http"), dialect, configuration)};
+    const auto display_path{stdin_path()};
+
+    std::string raw_stdin;
+    const auto parsed{read_from_stdin(&raw_stdin)};
+    if (parsed.yaml) {
+      throw YAMLInputError{"This command does not support YAML input files yet",
+                           display_path};
+    }
+
+    const auto &document{parsed.document};
+    const auto stdin_label{display_path.string()};
+
+    try {
+      if (options.contains("check")) {
+        std::ostringstream expected;
+        if (options.contains("keep-ordering")) {
+          sourcemeta::core::prettify(document, expected, indentation);
+        } else {
+          auto copy = document;
+          sourcemeta::core::format(copy, sourcemeta::core::schema_walker,
+                                   custom_resolver, dialect);
+          sourcemeta::core::prettify(copy, expected, indentation);
+        }
+        expected << "\n";
+
+        if (raw_stdin == expected.str()) {
+          LOG_VERBOSE(options) << "ok: " << stdin_label << "\n";
+        } else if (output_json) {
+          failed_files.push_back(stdin_label);
+          result = false;
+        } else {
+          std::cerr << "fail: " << stdin_label << "\n";
+          result = false;
+        }
+      } else {
+        if (options.contains("keep-ordering")) {
+          sourcemeta::core::prettify(document, std::cout, indentation);
+        } else {
+          auto copy = document;
+          sourcemeta::core::format(copy, sourcemeta::core::schema_walker,
+                                   custom_resolver, dialect);
+          sourcemeta::core::prettify(copy, std::cout, indentation);
+        }
+        std::cout << "\n";
+      }
+    } catch (const sourcemeta::core::SchemaKeywordError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+          display_path, error);
+    } catch (const sourcemeta::core::SchemaFrameError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+          display_path, error);
+    } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
+                 &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
+          display_path, error);
+    } catch (const sourcemeta::core::SchemaResolutionError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaResolutionError>(display_path, error);
+    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownBaseDialectError>(display_path);
+    } catch (const sourcemeta::core::SchemaError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+          display_path, error.what());
+    }
+  };
+
+  const auto handle_file_entry = [&](const InputJSON &entry) {
     if (entry.yaml) {
       throw YAMLInputError{"This command does not support YAML input files yet",
                            entry.resolution_base};
@@ -72,25 +149,50 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
         }
       }
     } catch (const sourcemeta::core::SchemaKeywordError &error) {
-      throw FileError<sourcemeta::core::SchemaKeywordError>(
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
           entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaFrameError &error) {
-      throw FileError<sourcemeta::core::SchemaFrameError>(entry.resolution_base,
-                                                          error);
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+          entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
-      throw FileError<
+      throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
           entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaResolutionError &error) {
-      throw FileError<sourcemeta::core::SchemaResolutionError>(
-          entry.resolution_base, error);
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaResolutionError>(entry.resolution_base,
+                                                   error);
     } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-      throw FileError<sourcemeta::core::SchemaUnknownBaseDialectError>(
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownBaseDialectError>(
           entry.resolution_base);
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownDialectError>(entry.resolution_base);
     } catch (const sourcemeta::core::SchemaError &error) {
-      throw FileError<sourcemeta::core::SchemaError>(entry.resolution_base,
-                                                     error.what());
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+          entry.resolution_base, error.what());
+    }
+  };
+
+  // Process arguments in order to preserve argument ordering semantics.
+  // When no positional arguments are given, default to for_each_json(options)
+  // which scans the current directory.
+  if (options.positional().empty()) {
+    for (const auto &entry : for_each_json(options)) {
+      handle_file_entry(entry);
+    }
+  } else {
+    check_no_duplicate_stdin(options.positional());
+    for (const auto &arg : options.positional()) {
+      if (arg == "-") {
+        handle_stdin();
+      } else {
+        for (const auto &entry : for_each_json({arg}, options)) {
+          handle_file_entry(entry);
+        }
+      }
     }
   }
 
@@ -118,8 +220,6 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
                 << "\n";
     }
 
-    // Report a different exit code for formatting check failures, to
-    // distinguish them from other errors
-    throw Fail{2};
+    throw Fail{EXIT_EXPECTED_FAILURE};
   }
 }

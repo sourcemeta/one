@@ -12,13 +12,17 @@
 #include "configuration.h"
 #include "logger.h"
 
-#include <algorithm>     // std::any_of, std::none_of, std::sort
+#include <algorithm>     // std::any_of, std::none_of, std::sort, std::count
 #include <cstddef>       // std::size_t
 #include <cstdint>       // std::uintptr_t
+#include <deque>         // std::deque
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::ref, std::hash
+#include <iostream>      // std::cin
+#include <memory>        // std::shared_ptr, std::make_shared
+#include <optional>      // std::optional
 #include <set>           // std::set
-#include <sstream>       // std::ostringstream
+#include <sstream>       // std::ostringstream, std::istringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
@@ -33,6 +37,8 @@ struct InputJSON {
   std::size_t index{0};
   bool multidocument{false};
   bool yaml{false};
+  bool from_stdin{false};
+  std::shared_ptr<std::deque<std::string>> property_storage;
   auto operator<(const InputJSON &other) const noexcept -> bool {
     return this->first < other.first;
   }
@@ -127,8 +133,8 @@ merge_configuration_ignore(const std::filesystem::path &configuration_path,
       blacklist.insert(ignore_path);
     }
   } catch (const sourcemeta::blaze::ConfigurationParseError &error) {
-    throw FileError<sourcemeta::blaze::ConfigurationParseError>(
-        configuration_path, error);
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::ConfigurationParseError>(configuration_path, error);
   }
 }
 
@@ -137,28 +143,91 @@ namespace {
 struct ParsedJSON {
   sourcemeta::core::JSON document;
   sourcemeta::core::PointerPositionTracker positions;
+  std::shared_ptr<std::deque<std::string>> property_storage;
   bool yaml{false};
 };
+
+inline auto
+make_position_callback(sourcemeta::core::PointerPositionTracker &tracker,
+                       std::shared_ptr<std::deque<std::string>> &storage)
+    -> sourcemeta::core::JSON::ParseCallback {
+  return
+      [&tracker, &storage](const sourcemeta::core::JSON::ParsePhase phase,
+                           const sourcemeta::core::JSON::Type type,
+                           const std::uint64_t line, const std::uint64_t column,
+                           const sourcemeta::core::JSON::ParseContext context,
+                           const std::size_t index,
+                           const sourcemeta::core::JSON::String &property) {
+        storage->emplace_back(property);
+        tracker(phase, type, line, column, context, index, storage->back());
+      };
+}
 
 inline auto read_file(const std::filesystem::path &path) -> ParsedJSON {
   const auto extension{path.extension()};
   sourcemeta::core::PointerPositionTracker positions;
+  auto property_storage = std::make_shared<std::deque<std::string>>();
+  sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
 
   if (extension == ".yaml" || extension == ".yml") {
-    return {sourcemeta::core::read_yaml(path, std::ref(positions)),
-            std::move(positions), true};
+    auto callback = make_position_callback(positions, property_storage);
+    sourcemeta::core::read_yaml(path, document, callback);
+    return {std::move(document), std::move(positions),
+            std::move(property_storage), true};
   } else if (extension == ".json") {
-    return {sourcemeta::core::read_json(path, std::ref(positions)),
-            std::move(positions), false};
+    auto callback = make_position_callback(positions, property_storage);
+    sourcemeta::core::read_json(path, document, callback);
+    return {std::move(document), std::move(positions),
+            std::move(property_storage), false};
   }
 
   try {
-    return {sourcemeta::core::read_json(path, std::ref(positions)),
-            std::move(positions), false};
+    auto callback = make_position_callback(positions, property_storage);
+    sourcemeta::core::read_json(path, document, callback);
+    return {std::move(document), std::move(positions),
+            std::move(property_storage), false};
   } catch (const sourcemeta::core::JSONParseError &) {
     sourcemeta::core::PointerPositionTracker yaml_positions;
-    return {sourcemeta::core::read_yaml(path, std::ref(yaml_positions)),
-            std::move(yaml_positions), true};
+    auto yaml_property_storage = std::make_shared<std::deque<std::string>>();
+    auto callback =
+        make_position_callback(yaml_positions, yaml_property_storage);
+    sourcemeta::core::read_yaml(path, document, callback);
+    return {std::move(document), std::move(yaml_positions),
+            std::move(yaml_property_storage), true};
+  }
+}
+
+// Read stdin into a buffer and try JSON first, then YAML
+inline auto read_from_stdin(std::string *raw_input = nullptr) -> ParsedJSON {
+  std::ostringstream buffer;
+  buffer << std::cin.rdbuf();
+  const auto input{buffer.str()};
+  if (raw_input != nullptr) {
+    *raw_input = input;
+  }
+
+  try {
+    std::istringstream json_stream{input};
+    sourcemeta::core::PointerPositionTracker positions;
+    auto property_storage = std::make_shared<std::deque<std::string>>();
+    sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+    auto callback = make_position_callback(positions, property_storage);
+    sourcemeta::core::parse_json(json_stream, document, callback);
+    return {std::move(document), std::move(positions),
+            std::move(property_storage), false};
+  } catch (const sourcemeta::core::JSONParseError &json_error) {
+    try {
+      std::istringstream yaml_stream{input};
+      sourcemeta::core::PointerPositionTracker positions;
+      auto property_storage = std::make_shared<std::deque<std::string>>();
+      sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+      auto callback = make_position_callback(positions, property_storage);
+      sourcemeta::core::parse_yaml(yaml_stream, document, callback);
+      return {std::move(document), std::move(positions),
+              std::move(property_storage), true};
+    } catch (...) {
+      throw sourcemeta::core::JSONFileParseError(stdin_path(), json_error);
+    }
   }
 }
 
@@ -168,6 +237,15 @@ handle_json_entry(const std::filesystem::path &entry_path,
                   const std::set<std::string> &extensions,
                   std::vector<sourcemeta::jsonschema::InputJSON> &result,
                   const sourcemeta::core::Options &options) -> void {
+  if (entry_path == "-") {
+    auto parsed{read_from_stdin()};
+    const auto path{stdin_path()};
+    result.push_back({path.string(), path, std::move(parsed.document),
+                      std::move(parsed.positions), 0, false, parsed.yaml, true,
+                      std::move(parsed.property_storage)});
+    return;
+  }
+
   if (std::filesystem::is_directory(entry_path)) {
     for (auto const &entry :
          std::filesystem::recursive_directory_iterator{entry_path}) {
@@ -192,7 +270,8 @@ handle_json_entry(const std::filesystem::path &entry_path,
         auto parsed{read_file(canonical)};
         result.push_back({canonical.string(), std::move(canonical),
                           std::move(parsed.document),
-                          std::move(parsed.positions), 0, false, parsed.yaml});
+                          std::move(parsed.positions), 0, false, parsed.yaml,
+                          false, std::move(parsed.property_storage)});
       }
     }
   } else {
@@ -210,8 +289,15 @@ handle_json_entry(const std::filesystem::path &entry_path,
           for (const auto &document : sourcemeta::core::JSONL{stream}) {
             // TODO: Get real positions for JSONL
             sourcemeta::core::PointerPositionTracker positions;
-            result.push_back({canonical.string(), canonical, document,
-                              std::move(positions), index, true});
+            result.push_back({canonical.string(),
+                              canonical,
+                              document,
+                              std::move(positions),
+                              index,
+                              true,
+                              false,
+                              false,
+                              {}});
             index += 1;
           }
         } catch (const sourcemeta::core::JSONParseError &error) {
@@ -227,31 +313,36 @@ handle_json_entry(const std::filesystem::path &entry_path,
           return;
         }
         auto stream{sourcemeta::core::read_file(canonical)};
-        std::vector<std::pair<sourcemeta::core::JSON,
-                              sourcemeta::core::PointerPositionTracker>>
-            documents;
+        struct MultiDocEntry {
+          sourcemeta::core::JSON document;
+          sourcemeta::core::PointerPositionTracker positions;
+          std::shared_ptr<std::deque<std::string>> property_storage;
+        };
+        std::vector<MultiDocEntry> documents;
         std::uint64_t line_offset{0};
         std::uint64_t max_line{0};
         while (stream.peek() != std::char_traits<char>::eof()) {
           sourcemeta::core::PointerPositionTracker positions;
+          auto property_storage = std::make_shared<std::deque<std::string>>();
           const std::uint64_t current_offset{line_offset};
           max_line = 0;
           auto callback =
-              [&positions, current_offset,
+              [&positions, &property_storage, current_offset,
                &max_line](const sourcemeta::core::JSON::ParsePhase phase,
                           const sourcemeta::core::JSON::Type type,
                           const std::uint64_t line, const std::uint64_t column,
                           const sourcemeta::core::JSON::ParseContext context,
                           const std::size_t index,
-                          const sourcemeta::core::JSON::StringView property) {
+                          const sourcemeta::core::JSON::String &property) {
                 max_line = std::max(max_line, line);
+                property_storage->emplace_back(property);
                 positions(phase, type, line + current_offset, column, context,
-                          index, property);
+                          index, property_storage->back());
               };
-          documents.emplace_back(sourcemeta::core::parse_yaml(stream, callback),
-                                 std::move(positions));
-          // The YAML parser reports the line of the next document separator,
-          // so we subtract 1 to get the actual lines consumed by this document
+          sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+          sourcemeta::core::parse_yaml(stream, document, callback);
+          documents.push_back({std::move(document), std::move(positions),
+                               std::move(property_storage)});
           line_offset += max_line > 0 ? max_line - 1 : 0;
         }
 
@@ -261,25 +352,29 @@ handle_json_entry(const std::filesystem::path &entry_path,
           std::size_t index{0};
           for (auto &entry : documents) {
             result.push_back({canonical.string(), canonical,
-                              std::move(entry.first), std::move(entry.second),
-                              index, true, true});
+                              std::move(entry.document),
+                              std::move(entry.positions), index, true, true,
+                              false, std::move(entry.property_storage)});
             index += 1;
           }
         } else if (documents.size() == 1) {
           result.push_back({canonical.string(), std::move(canonical),
-                            std::move(documents.front().first),
-                            std::move(documents.front().second), 0, false,
-                            true});
+                            std::move(documents.front().document),
+                            std::move(documents.front().positions), 0, false,
+                            true, false,
+                            std::move(documents.front().property_storage)});
         }
       } else {
-        if (std::filesystem::is_empty(canonical)) {
+        if (std::filesystem::is_regular_file(canonical) &&
+            std::filesystem::is_empty(canonical)) {
           return;
         }
         // TODO: Print a verbose message for what is getting parsed
         auto parsed{read_file(canonical)};
         result.push_back({canonical.string(), std::move(canonical),
                           std::move(parsed.document),
-                          std::move(parsed.positions), 0, false, parsed.yaml});
+                          std::move(parsed.positions), 0, false, parsed.yaml,
+                          false, std::move(parsed.property_storage)});
       }
     }
   }
@@ -287,9 +382,19 @@ handle_json_entry(const std::filesystem::path &entry_path,
 
 } // namespace
 
+inline auto
+check_no_duplicate_stdin(const std::vector<std::string_view> &arguments)
+    -> void {
+  if (std::count(arguments.cbegin(), arguments.cend(), "-") > 1) {
+    throw StdinError("Cannot read from standard input more than once");
+  }
+}
+
 inline auto for_each_json(const std::vector<std::string_view> &arguments,
                           const sourcemeta::core::Options &options)
     -> std::vector<InputJSON> {
+  check_no_duplicate_stdin(arguments);
+
   auto blacklist{parse_ignore(options)};
   std::vector<InputJSON> result;
 
@@ -314,6 +419,11 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
   } else {
     std::unordered_set<std::string> seen_configurations;
     for (const auto &entry : arguments) {
+      // Skip stdin when looking for configurations
+      if (entry == "-") {
+        continue;
+      }
+
       const auto entry_path{
           sourcemeta::core::weakly_canonical(std::filesystem::path{entry})};
       const auto configuration_path{
