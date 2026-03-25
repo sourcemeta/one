@@ -25,6 +25,19 @@ struct SearchEntry {
   std::uint8_t health;
 };
 
+#pragma pack(push, 1)
+struct SearchIndexHeader {
+  std::uint32_t entry_count;
+  std::uint32_t records_offset;
+};
+
+struct SearchRecordHeader {
+  std::uint16_t path_length;
+  std::uint16_t title_length;
+  std::uint16_t description_length;
+};
+#pragma pack(pop)
+
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t>;
