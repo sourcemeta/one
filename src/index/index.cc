@@ -612,8 +612,9 @@ auto main(int argc, char *argv[]) noexcept -> int {
               << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
-    std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.uri() << "\n  with base " << error.base() << "\n";
+    std::cerr << "error: " << error.what() << "\n  at path "
+              << error.path().string() << "\n  at identifier " << error.uri()
+              << "\n  with base " << error.base() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaReferenceObjectResourceError> &error) {

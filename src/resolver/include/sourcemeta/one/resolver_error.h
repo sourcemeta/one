@@ -28,12 +28,17 @@ private:
 
 class ResolverOutsideBaseError : public std::exception {
 public:
-  ResolverOutsideBaseError(sourcemeta::core::JSON::String uri,
+  ResolverOutsideBaseError(std::filesystem::path path,
+                           sourcemeta::core::JSON::String uri,
                            sourcemeta::core::JSON::String base)
-      : uri_{std::move(uri)}, base_{std::move(base)} {}
+      : path_{std::move(path)}, uri_{std::move(uri)}, base_{std::move(base)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "The schema identifier is not relative to the corresponding base";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
   }
 
   [[nodiscard]] auto uri() const noexcept
@@ -47,6 +52,7 @@ public:
   }
 
 private:
+  std::filesystem::path path_;
   sourcemeta::core::JSON::String uri_;
   sourcemeta::core::JSON::String base_;
 };

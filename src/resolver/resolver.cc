@@ -295,7 +295,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     }
     // A final check that everything went well
     if (!identifier.starts_with(collection.base)) {
-      throw ResolverOutsideBaseError(identifier, collection.base);
+      throw ResolverOutsideBaseError(path, identifier, collection.base);
     }
     // Otherwise we have things like "../" that should not be there
     assert(identifier.find("..") == std::string::npos);
