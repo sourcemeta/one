@@ -6,11 +6,12 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm> // std::transform
-#include <cassert>   // assert
-#include <cctype>    // std::tolower
-#include <mutex>     // std::mutex, std::lock_guard
-#include <string>    // std::string
+#include <algorithm>     // std::transform
+#include <cassert>       // assert
+#include <cctype>        // std::tolower
+#include <mutex>         // std::mutex, std::lock_guard
+#include <string>        // std::string
+#include <unordered_set> // std::unordered_set
 
 static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::JSON::String &uri,
@@ -108,6 +109,24 @@ auto Resolver::operator()(
   // Internally, we keep all schema URI identifiers as lowercase to avoid
   // tricky cases with case-insensitive operating systems
   const auto identifier{normalise_identifier(raw_identifier)};
+
+  // When resolving a schema, the resolver needs to determine its dialect in
+  // order to normalise references. This involves resolving the schema's
+  // metaschema, which may itself be a schema managed by this resolver. That
+  // triggers a re-entrant resolution call, and if the metaschema chain is
+  // circular, the resolver recurses infinitely. This set tracks which
+  // identifiers are currently being resolved so we can detect the cycle and
+  // return nullopt instead, letting the caller handle the missing metaschema.
+  thread_local std::unordered_set<std::string> resolving;
+  if (!resolving.emplace(identifier).second) {
+    return std::nullopt;
+  }
+
+  struct ResolveGuard {
+    std::string id;
+    ~ResolveGuard() { resolving.erase(id); }
+  } resolve_guard{std::string{identifier}};
+
   auto result{this->views.find(identifier)};
   // If we don't recognise the schema, try a fallback as a last resort
   if (result == this->views.cend()) {
