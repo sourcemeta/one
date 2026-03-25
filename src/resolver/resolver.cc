@@ -11,6 +11,7 @@
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard
+#include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
 
@@ -359,9 +360,14 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaUnknownDialectError>(path);
-  } catch (const sourcemeta::core::URIParseError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::URIParseError>(
-        path, error.column());
+  } catch (const sourcemeta::core::URIParseError &) {
+    const auto reread{sourcemeta::core::read_yaml_or_json(path)};
+    const auto &id_keyword{reread.defines("$id") ? "$id" : "id"};
+    std::ostringstream value_stream;
+    sourcemeta::core::stringify(reread.at(id_keyword), value_stream);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        path, id_keyword, value_stream.str(),
+        "The schema identifier is not a valid URI");
   } catch (const sourcemeta::core::YAMLParseError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>(
         path, error.line(), error.column(), error.what());

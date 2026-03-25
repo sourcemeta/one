@@ -588,12 +588,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::FileError<sourcemeta::core::URIParseError>
-               &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at column " << error.column()
-              << "\n";
-    return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::cerr << "error: " << error.what() << "\n";
     return EXIT_FAILURE;
