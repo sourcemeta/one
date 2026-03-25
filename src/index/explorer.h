@@ -529,9 +529,12 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
     const auto payload{sourcemeta::one::make_search(std::move(entries))};
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const std::string_view payload_view{
-        reinterpret_cast<const char *>(payload.data()), payload.size()};
+        payload.empty()
+            ? std::string_view{}
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            : std::string_view{reinterpret_cast<const char *>(payload.data()),
+                               payload.size()}};
     sourcemeta::one::metapack_write_text(
         action.destination, payload_view, "application/jsonl",
         // We don't want to compress this one so we can

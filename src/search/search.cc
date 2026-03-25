@@ -26,11 +26,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
     // TODO: Ideally we sort based on schema health too, given
     // lint results
-    if (left_score > 0) {
-      return left.path < right.path;
-    }
-
-    return false;
+    return left.path < right.path;
   });
 
   std::ostringstream buffer;
@@ -49,11 +45,16 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query) -> sourcemeta::core::JSON {
+  auto result{sourcemeta::core::JSON::make_array()};
+  if (payload_size == 0) {
+    return result;
+  }
+
+  assert(payload != nullptr);
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view data{reinterpret_cast<const char *>(payload),
                               payload_size};
 
-  auto result{sourcemeta::core::JSON::make_array()};
   std::size_t line_start{0};
   while (line_start < data.size()) {
     auto line_end{data.find('\n', line_start)};
@@ -69,7 +70,8 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     }
 
     if (std::ranges::search(line, query, [](const auto left, const auto right) {
-          return std::tolower(left) == std::tolower(right);
+          return std::tolower(static_cast<unsigned char>(left)) ==
+                 std::tolower(static_cast<unsigned char>(right));
         }).empty()) {
       continue;
     }
@@ -107,7 +109,9 @@ auto SearchView::ensure_open() -> void {
   assert(payload_start_option.has_value());
   const auto &payload_start{payload_start_option.value()};
   this->payload_size_ = this->view_->size() - payload_start;
-  this->payload_ = this->view_->as<std::uint8_t>(payload_start);
+  if (this->payload_size_ > 0) {
+    this->payload_ = this->view_->as<std::uint8_t>(payload_start);
+  }
 }
 
 auto SearchView::search(const std::string_view query)
