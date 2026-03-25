@@ -27,7 +27,7 @@ TEST(Configuration, valid_001) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -70,7 +70,12 @@ TEST(Configuration, valid_001) {
                     resolve.at("https://other.com/single.json"), "/foo.json");
   EXPECT_COLLECTION(configuration, "example/extension", lint.rules.size(), 0);
   EXPECT_COLLECTION(configuration, "example/extension", ignore.size(), 0);
-  EXPECT_COLLECTION(configuration, "example/extension", extra.size(), 0);
+  EXPECT_COLLECTION(configuration, "example/extension", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example/extension",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example/extension",
+                    extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
 }
 
 TEST(Configuration, valid_002) {
@@ -79,7 +84,7 @@ TEST(Configuration, valid_002) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -98,7 +103,7 @@ TEST(Configuration, valid_003) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -133,7 +138,7 @@ TEST(Configuration, valid_004) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -165,7 +170,11 @@ TEST(Configuration, valid_004) {
                     true);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 0);
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
-  EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
 }
 
 TEST(Configuration, valid_005) {
@@ -174,7 +183,7 @@ TEST(Configuration, valid_005) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -206,7 +215,11 @@ TEST(Configuration, valid_005) {
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
                                         "rules" / "another_rule.py"));
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
-  EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
 }
 
 TEST(Configuration, valid_006) {
@@ -215,7 +228,7 @@ TEST(Configuration, valid_006) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -247,7 +260,11 @@ TEST(Configuration, valid_006) {
                     std::filesystem::weakly_canonical(
                         std::filesystem::path{STUB_DIRECTORY} / "schemas" /
                         "example" / "extension" / "deprecated"));
-  EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
 }
 
 TEST(Configuration, valid_007) {
@@ -256,7 +273,7 @@ TEST(Configuration, valid_007) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 
@@ -288,7 +305,11 @@ TEST(Configuration, valid_007) {
                     std::filesystem::weakly_canonical(
                         std::filesystem::path{STUB_DIRECTORY} / "schemas" /
                         "example" / "extension" / "draft"));
-  EXPECT_COLLECTION(configuration, "example", extra.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
 }
 
 TEST(Configuration, valid_008) {
@@ -297,7 +318,7 @@ TEST(Configuration, valid_008) {
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path.parent_path())};
+      raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
 

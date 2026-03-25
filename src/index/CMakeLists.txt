@@ -18,9 +18,11 @@ target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::configuratio
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::web)
 
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::build)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::error)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::json)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::jsonschema)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::semver)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::alterschema)

@@ -37,8 +37,8 @@ echo "foobar" > "$TMP/output"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: file already exists
-  at $(realpath "$TMP")/output
+error: File already exists and is not a directory
+  at path $(realpath "$TMP")/output
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

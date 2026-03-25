@@ -60,7 +60,6 @@ remove_threads_information() {
 
 # Run 2: remove schema A (which is referenced by B)
 rm "$TMP/schemas/a.json"
-
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 \
     2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
@@ -73,8 +72,10 @@ Detecting: $(realpath "$TMP")/schemas/b.json (#1)
 (  7%) Producing: explorer/%/directory.metapack
 ( 15%) Producing: schemas/example/schemas/b/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
-  https://sourcemeta.com/example/schemas/a
+  at identifier https://sourcemeta.com/example/schemas/a
+  at path $(realpath "$TMP")/schemas/b.json
 
-Did you forget to register a schema with such URI in the one?
+Did you forget to register a schema with such URI?
 EOF
+
 diff "$TMP/output.txt" "$TMP/expected.txt"

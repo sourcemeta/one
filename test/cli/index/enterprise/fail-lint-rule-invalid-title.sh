@@ -56,6 +56,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 42%) Producing: schemas/test/test/%/bundle.metapack
 ( 47%) Producing: schemas/test/test/%/health.metapack
 error: The schema rule name must match ^[a-z0-9_/]+\$
+  at path $(realpath "$TMP")/rules/rule.json
   at name My Invalid Rule!
 EOF
 

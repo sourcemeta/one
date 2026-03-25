@@ -22,9 +22,9 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/a.json
 error: Circular reference detected in configuration
-  from $(realpath "$TMP")/b.json
-  at "/extends/extends"
-  to $(realpath "$TMP")/a.json
+  from path $(realpath "$TMP")/b.json
+  at location "/extends/extends"
+  to path $(realpath "$TMP")/a.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -19,6 +19,7 @@ struct Configuration {
                    const std::filesystem::path &collections_path)
       -> sourcemeta::core::JSON;
   static auto parse(const sourcemeta::core::JSON &data,
+                    const std::filesystem::path &configuration_path,
                     const std::filesystem::path &default_base_path)
       -> Configuration;
 

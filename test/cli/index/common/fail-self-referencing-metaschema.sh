@@ -62,9 +62,10 @@ Detecting: $(realpath "$TMP")/schemas/my-metaschema.json (#2)
 (  8%) Producing: explorer/%/404.metapack
 ( 11%) Producing: schemas/example/schemas/my-metaschema/%/schema.metapack
 error: Could not resolve the metaschema of the schema
-  https://sourcemeta.com/example/schemas/my-metaschema
+  at identifier https://sourcemeta.com/example/schemas/my-metaschema
+  at path $(realpath "$TMP")/schemas/my-metaschema.json
 
-Did you forget to register a schema with such URI in the one?
+Did you forget to register a schema with such URI?
 EOF
 
 cat << EOF > "$TMP/expected2.txt"

@@ -44,7 +44,7 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.yaml (#1)
 (100%) Resolving: test.yaml
 error: The file does not contain a valid JSON Schema
-  at $(realpath "$TMP")/schemas/test.yaml
+  at path $(realpath "$TMP")/schemas/test.yaml
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

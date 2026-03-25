@@ -9,27 +9,32 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
+  "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
       "contents": {
-        "schemas": {}
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas"
+        }
       }
     }
   }
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+mkdir "$TMP/schemas"
+
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" --resolve-schema "not a valid{uri" \
+  2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-error: Invalid configuration
-  at path $(realpath "$TMP")/one.json
-The value was expected to be an object that defines the property "url"
-  at instance location ""
-  at evaluate path "/required"
+error: Expected a valid URI value for option
+  at option resolve-schema
+  with value not a valid{uri
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

@@ -3,6 +3,8 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/linter.h>
 
+#include <sourcemeta/core/error.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/yaml.h>
 
 #include <string> // std::string
@@ -19,12 +21,28 @@ auto load_custom_lint_rules(
       configuration.default_dialect.value_or(std::string{})};
   for (const auto &rule_path : configuration.lint.rules) {
     auto rule_schema{sourcemeta::core::read_yaml_or_json(rule_path)};
-    custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
-        rule_schema, sourcemeta::core::schema_walker,
-        [&callback, &resolver](const auto identifier) {
-          return resolver(identifier, callback);
-        },
-        sourcemeta::blaze::default_schema_compiler, default_dialect));
+    try {
+      custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
+          rule_schema, sourcemeta::core::schema_walker,
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          },
+          sourcemeta::blaze::default_schema_compiler, default_dialect));
+    } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::LinterInvalidNamePatternError>(
+          rule_path, error.identifier(), error.regex());
+    } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::LinterInvalidNameError>(
+          rule_path, error.identifier(), error.what());
+    } catch (const sourcemeta::blaze::LinterMissingNameError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::LinterMissingNameError>(rule_path);
+    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
+    }
   }
 }
 

@@ -2,6 +2,7 @@
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
@@ -10,6 +11,7 @@
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard
+#include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
 
@@ -249,106 +251,127 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
   assert(path.is_absolute());
-  const auto schema{sourcemeta::core::read_yaml_or_json(path)};
-  if (!sourcemeta::core::is_schema(schema)) {
-    throw ResolverNotASchemaError(path);
+  try {
+    const auto schema{sourcemeta::core::read_yaml_or_json(path)};
+    if (!sourcemeta::core::is_schema(schema)) {
+      throw ResolverNotASchemaError(path);
+    }
+
+    const std::string default_dialect_str{
+        collection.default_dialect.value_or("")};
+
+    /////////////////////////////////////////////////////////////////////////////
+    // (2) Try our best to determine the identifier of the schema, defaulting to
+    // a file-system-based identifier based on the *current* URI
+    /////////////////////////////////////////////////////////////////////////////
+    const auto default_identifier{
+        sourcemeta::core::URI{collection.base}
+            .append_path(normalise_identifier(
+                std::filesystem::relative(path, collection.absolute_path)
+                    .string()))
+            .canonicalize()
+            .recompose()};
+    sourcemeta::core::URI identifier_uri{
+        normalise_identifier(sourcemeta::core::identify(
+            schema,
+            [this](const auto subidentifier) {
+              return this->operator()(subidentifier);
+            },
+            default_dialect_str, default_identifier))};
+    identifier_uri.canonicalize();
+    auto identifier{
+        identifier_uri.is_relative()
+            // TODO: Becase with `try_resolve_from`, `https://example.com/foo` +
+            // `bar.json` will be `https://example.com/bar.json` instead of
+            // `https://example.com/foo/bar.json`. Maybe we need an
+            // `append_from`?
+            ? (collection.base + "/" + identifier_uri.recompose())
+            : identifier_uri.recompose()};
+    // We have to do something if the schema is the base. Note that URI
+    // canonicalisation technically cannot remove trailing slashes as they might
+    // have meaning in certain use cases. But we still consider them equal in
+    // the context of the One
+    if (identifier == collection.base || identifier == collection.base + "/") {
+      identifier = default_identifier;
+    }
+    // A final check that everything went well
+    if (!identifier.starts_with(collection.base)) {
+      throw ResolverOutsideBaseError(path, identifier, collection.base);
+    }
+    // Otherwise we have things like "../" that should not be there
+    assert(identifier.find("..") == std::string::npos);
+
+    /////////////////////////////////////////////////////////////////////////////
+    // (3) Determine the new URI of the schema, from the one base URI
+    /////////////////////////////////////////////////////////////////////////////
+    const auto new_identifier{
+        rebase(collection, identifier, server_url, collection_relative_path)};
+    // Otherwise we have things like "../" that should not be there
+    assert(new_identifier.find("..") == std::string::npos);
+
+    /////////////////////////////////////////////////////////////////////////////
+    // (4) Determine the dialect of the schema, which we also need to make sure
+    // we rebase according to the one base URI, etc
+    /////////////////////////////////////////////////////////////////////////////
+    const auto raw_dialect{
+        sourcemeta::core::dialect(schema, default_dialect_str)};
+    if (raw_dialect.empty()) {
+      throw sourcemeta::core::SchemaUnknownDialectError();
+    }
+    const auto is_official_dialect{
+        sourcemeta::core::is_known_schema(raw_dialect)};
+    auto current_dialect{is_official_dialect
+                             ? std::string{raw_dialect}
+                             : rebase(collection,
+                                      normalise_identifier(raw_dialect),
+                                      server_url, collection_relative_path)};
+    // Otherwise we messed things up
+    assert(!current_dialect.ends_with("#.json"));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // (5) Safely one the schema entry in the resolver
+    /////////////////////////////////////////////////////////////////////////////
+
+    const auto evaluate{Configuration::should_evaluate(collection)};
+
+    std::unique_lock lock{this->mutex};
+    auto result{this->views.emplace(
+        new_identifier,
+        Entry{.path = path,
+              .relative_path = sourcemeta::core::URI{new_identifier}
+                                   .relative_to(server_url)
+                                   .recompose(),
+              .mtime = mtime,
+              .evaluate = evaluate,
+              .cache_path = std::nullopt,
+              .dialect = std::move(current_dialect),
+              .original_identifier = identifier,
+              .collection = &collection})};
+    lock.unlock();
+    if (!result.second && result.first->second.path != path) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+          path, result.first->first,
+          "Cannot register the same identifier twice");
+    }
+    return {result.first->first, result.first->second};
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        path, error.keyword(), error.value(), error.what());
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(path);
+  } catch (const sourcemeta::core::URIParseError &) {
+    const auto reread{sourcemeta::core::read_yaml_or_json(path)};
+    const auto &id_keyword{reread.defines("$id") ? "$id" : "id"};
+    std::ostringstream value_stream;
+    sourcemeta::core::stringify(reread.at(id_keyword), value_stream);
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        path, id_keyword, value_stream.str(),
+        "The schema identifier is not a valid URI");
+  } catch (const sourcemeta::core::YAMLParseError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>(
+        path, error.line(), error.column(), error.what());
   }
-
-  const std::string default_dialect_str{
-      collection.default_dialect.value_or("")};
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (2) Try our best to determine the identifier of the schema, defaulting to a
-  // file-system-based identifier based on the *current* URI
-  /////////////////////////////////////////////////////////////////////////////
-  const auto default_identifier{
-      sourcemeta::core::URI{collection.base}
-          .append_path(normalise_identifier(
-              std::filesystem::relative(path, collection.absolute_path)
-                  .string()))
-          .canonicalize()
-          .recompose()};
-  sourcemeta::core::URI identifier_uri{
-      normalise_identifier(sourcemeta::core::identify(
-          schema,
-          [this](const auto subidentifier) {
-            return this->operator()(subidentifier);
-          },
-          default_dialect_str, default_identifier))};
-  identifier_uri.canonicalize();
-  auto identifier{
-      identifier_uri.is_relative()
-          // TODO: Becase with `try_resolve_from`, `https://example.com/foo` +
-          // `bar.json` will be `https://example.com/bar.json` instead of
-          // `https://example.com/foo/bar.json`. Maybe we need an `append_from`?
-          ? (collection.base + "/" + identifier_uri.recompose())
-          : identifier_uri.recompose()};
-  // We have to do something if the schema is the base. Note that URI
-  // canonicalisation technically cannot remove trailing slashes as they might
-  // have meaning in certain use cases. But we still consider them equal in the
-  // context of the One
-  if (identifier == collection.base || identifier == collection.base + "/") {
-    identifier = default_identifier;
-  }
-  // A final check that everything went well
-  if (!identifier.starts_with(collection.base)) {
-    throw ResolverOutsideBaseError(identifier, collection.base);
-  }
-  // Otherwise we have things like "../" that should not be there
-  assert(identifier.find("..") == std::string::npos);
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (3) Determine the new URI of the schema, from the one base URI
-  /////////////////////////////////////////////////////////////////////////////
-  const auto new_identifier{
-      rebase(collection, identifier, server_url, collection_relative_path)};
-  // Otherwise we have things like "../" that should not be there
-  assert(new_identifier.find("..") == std::string::npos);
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (4) Determine the dialect of the schema, which we also need to make sure
-  // we rebase according to the one base URI, etc
-  /////////////////////////////////////////////////////////////////////////////
-  const auto raw_dialect{
-      sourcemeta::core::dialect(schema, default_dialect_str)};
-  if (raw_dialect.empty()) {
-    throw sourcemeta::core::SchemaUnknownDialectError();
-  }
-  const auto is_official_dialect{
-      sourcemeta::core::is_known_schema(raw_dialect)};
-  auto current_dialect{is_official_dialect
-                           ? std::string{raw_dialect}
-                           : rebase(collection,
-                                    normalise_identifier(raw_dialect),
-                                    server_url, collection_relative_path)};
-  // Otherwise we messed things up
-  assert(!current_dialect.ends_with("#.json"));
-
-  /////////////////////////////////////////////////////////////////////////////
-  // (5) Safely one the schema entry in the resolver
-  /////////////////////////////////////////////////////////////////////////////
-
-  const auto evaluate{Configuration::should_evaluate(collection)};
-
-  std::unique_lock lock{this->mutex};
-  auto result{this->views.emplace(
-      new_identifier,
-      Entry{.path = path,
-            .relative_path = sourcemeta::core::URI{new_identifier}
-                                 .relative_to(server_url)
-                                 .recompose(),
-            .mtime = mtime,
-            .evaluate = evaluate,
-            .cache_path = std::nullopt,
-            .dialect = std::move(current_dialect),
-            .original_identifier = identifier,
-            .collection = &collection})};
-  lock.unlock();
-  if (!result.second && result.first->second.path != path) {
-    throw sourcemeta::core::SchemaFrameError(
-        result.first->first, "Cannot register the same identifier twice");
-  }
-  return {result.first->first, result.first->second};
 }
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {

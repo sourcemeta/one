@@ -11,7 +11,8 @@ trap clean EXIT
 test "$CODE" = "1" || exit 1
 
 cat << 'EOF' > "$TMP/expected.txt"
-error: This flag cannot take a value 'verbose'
+error: This flag cannot take a value
+  at option verbose
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

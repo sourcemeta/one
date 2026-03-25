@@ -43,14 +43,15 @@ else
   sed -i 's/ \[.*\]//g' "$TMP/output.txt"
 fi
 
-# TODO: Improve this error message
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-error: The input is not a valid URI
-  at column 25
+error: The schema identifier is not a valid URI
+  at path $(realpath "$TMP")/schemas/test.json
+  at keyword \$id
+  at value "https://example.com/foo/%/bar.json"
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

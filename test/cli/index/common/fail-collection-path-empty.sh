@@ -40,6 +40,7 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/one.json (#1)
 (100%) Resolving: one.json
 error: Could not determine the dialect of the schema
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

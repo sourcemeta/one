@@ -56,6 +56,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 ( 42%) Producing: schemas/test/test/%/bundle.metapack
 ( 47%) Producing: schemas/test/test/%/health.metapack
 error: Custom linter rules are only available on the enterprise edition
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

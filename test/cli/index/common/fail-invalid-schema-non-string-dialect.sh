@@ -48,7 +48,10 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-unexpected error: The dialect value is invalid
+error: The dialect value is invalid
+  at path $(realpath "$TMP")/schemas/test.json
+  at keyword \$schema
+  at value 123
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
