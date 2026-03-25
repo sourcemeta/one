@@ -127,23 +127,6 @@ auto metapack_write_text(const std::filesystem::path &destination,
   write_metapack(destination, mime, encoding, extension, duration, content);
 }
 
-auto metapack_write_jsonl(const std::filesystem::path &destination,
-                          const std::vector<sourcemeta::core::JSON> &entries,
-                          const std::string_view mime,
-                          const MetapackEncoding encoding,
-                          const std::span<const std::uint8_t> extension,
-                          const std::chrono::milliseconds duration) -> void {
-  std::ostringstream buffer;
-  for (const auto &entry : entries) {
-    sourcemeta::core::stringify(entry, buffer);
-    buffer << '\n';
-  }
-
-  std::filesystem::create_directories(destination.parent_path());
-  write_metapack(destination, mime, encoding, extension, duration,
-                 buffer.str());
-}
-
 auto metapack_write_file(const std::filesystem::path &destination,
                          const std::filesystem::path &source,
                          const std::string_view mime,

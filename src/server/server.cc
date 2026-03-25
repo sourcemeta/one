@@ -156,7 +156,9 @@ static auto handle_self_v1_api_schemas_search(
     const std::filesystem::path &base, const std::span<std::string_view>,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  action_schema_search(base, request, response);
+  static sourcemeta::one::SearchView search_view{base / "explorer" / SENTINEL /
+                                                 "search.metapack"};
+  action_schema_search(search_view, request, response);
 }
 
 static auto handle_self_api_not_found(const std::filesystem::path &,
