@@ -1,1 +1,1 @@
-{ "extends": ["./read_invalid_005.json"] }
+{ "extends": [ "./read_invalid_005.json" ] }

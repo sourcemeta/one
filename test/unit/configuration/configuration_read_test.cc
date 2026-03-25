@@ -513,6 +513,18 @@ TEST(Configuration_read, read_invalid_003) {
   }
 }
 
+TEST(Configuration_read, read_valid_016_diamond_extends) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_016.json"};
+  const auto result{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  EXPECT_TRUE(result.is_object());
+  EXPECT_TRUE(result.defines("contents"));
+  EXPECT_TRUE(result.at("contents").defines("shared"));
+  EXPECT_TRUE(result.at("contents").defines("from_b"));
+  EXPECT_TRUE(result.at("contents").defines("from_c"));
+}
+
 TEST(Configuration_read, read_invalid_004_circular_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_004.json"};
