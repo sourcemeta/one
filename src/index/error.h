@@ -45,7 +45,7 @@ public:
       : option_{std::move(option)}, value_{std::move(value)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Expected a numeric value for option";
+    return "Expected a valid numeric value for option";
   }
 
   [[nodiscard]] auto option() const noexcept -> const std::string & {

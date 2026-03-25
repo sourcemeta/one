@@ -93,6 +93,9 @@ static auto parse_numeric_option(const sourcemeta::core::Options &app,
   } catch (const std::invalid_argument &) {
     throw sourcemeta::one::OptionInvalidNumericValueError(std::string{option},
                                                           std::string{raw});
+  } catch (const std::out_of_range &) {
+    throw sourcemeta::one::OptionInvalidNumericValueError(std::string{option},
+                                                          std::string{raw});
   }
 }
 

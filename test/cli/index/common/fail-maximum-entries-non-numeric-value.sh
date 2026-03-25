@@ -48,7 +48,7 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: test.json
-error: Expected a numeric value for option
+error: Expected a valid numeric value for option
   at option maximum-direct-directory-entries
   with value abc
 EOF
