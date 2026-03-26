@@ -38,13 +38,22 @@ struct SearchRecordHeader {
 };
 #pragma pack(pop)
 
+// Health is intentionally excluded from this enum as higher-health schemas
+// always rank first regardless of scope. This is a non-negotiable aspect of the
+// sort order to ensure that higher-quality schemas are always preferred.
+enum SearchScope : std::uint8_t {
+  SearchScopePath = 0b001,
+  SearchScopeTitle = 0b010,
+  SearchScopeDescription = 0b100
+};
+
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t>;
 
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto search(const std::uint8_t *payload, std::size_t payload_size,
-            std::string_view query, std::size_t limit)
+            std::string_view query, std::size_t limit, std::uint8_t scope)
     -> sourcemeta::core::JSON;
 
 class SOURCEMETA_ONE_SEARCH_EXPORT SearchView {
@@ -57,7 +66,7 @@ public:
   auto operator=(const SearchView &) -> SearchView & = delete;
   auto operator=(SearchView &&) -> SearchView & = delete;
 
-  auto search(std::string_view query, std::size_t limit)
+  auto search(std::string_view query, std::size_t limit, std::uint8_t scope)
       -> sourcemeta::core::JSON;
 
 private:
