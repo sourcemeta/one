@@ -35,13 +35,16 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
-# Remove thread information
-if [ "$(uname)" = "Darwin" ]
-then
-  sed -i '' 's/ \[.*\]//g' "$TMP/output.txt"
-else
-  sed -i 's/ \[.*\]//g' "$TMP/output.txt"
-fi
+remove_threads_information() {
+  expr='s/ \[[^]]*[^a-z-][^]]*\]//g'
+  if [ "$(uname -s)" = "Darwin" ]; then
+    sed -i '' "$expr" "$1"
+  else
+    sed -i "$expr" "$1"
+  fi
+}
+
+remove_threads_information "$TMP/output.txt"
 
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
