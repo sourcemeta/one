@@ -112,6 +112,8 @@ static auto case_insensitive_contains(const std::string_view haystack,
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query, const std::size_t limit,
             const std::uint8_t scope) -> sourcemeta::core::JSON {
+  assert((scope &
+          ~(SearchScopePath | SearchScopeTitle | SearchScopeDescription)) == 0);
   auto result{sourcemeta::core::JSON::make_array()};
   if (limit == 0 || payload == nullptr ||
       payload_size < sizeof(SearchIndexHeader)) {
