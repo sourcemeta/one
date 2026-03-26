@@ -531,7 +531,9 @@ struct GENERATE_EDITOR {
 static auto generate_blaze_template(
     const std::filesystem::path &destination,
     const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
-    const sourcemeta::blaze::Mode mode) -> void {
+    const sourcemeta::one::BuildDynamicCallback &callback,
+    sourcemeta::one::Resolver &resolver, const sourcemeta::blaze::Mode mode)
+    -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   const auto contents_option{
       sourcemeta::one::metapack_read_json(dependencies.front())};
@@ -540,10 +542,14 @@ static auto generate_blaze_template(
   sourcemeta::core::SchemaFrame frame{
       sourcemeta::core::SchemaFrame::Mode::References};
   frame.analyse(contents, sourcemeta::core::schema_walker,
-                sourcemeta::core::schema_resolver);
+                [&callback, &resolver](const auto identifier) {
+                  return resolver(identifier, callback);
+                });
   const auto schema_template{sourcemeta::blaze::compile(
       contents, sourcemeta::core::schema_walker,
-      sourcemeta::core::schema_resolver,
+      [&callback, &resolver](const auto identifier) {
+        return resolver(identifier, callback);
+      },
       sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
   const auto result{sourcemeta::blaze::to_json(schema_template)};
   const auto timestamp_end{std::chrono::steady_clock::now()};
@@ -557,24 +563,24 @@ static auto generate_blaze_template(
 struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &,
-                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    generate_blaze_template(action.destination, action.dependencies,
-                            sourcemeta::blaze::Mode::Exhaustive);
+    generate_blaze_template(action.destination, action.dependencies, callback,
+                            resolver, sourcemeta::blaze::Mode::Exhaustive);
   }
 };
 
 struct GENERATE_BLAZE_TEMPLATE_FAST {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &,
-                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    generate_blaze_template(action.destination, action.dependencies,
-                            sourcemeta::blaze::Mode::FastValidation);
+    generate_blaze_template(action.destination, action.dependencies, callback,
+                            resolver, sourcemeta::blaze::Mode::FastValidation);
   }
 };
 
