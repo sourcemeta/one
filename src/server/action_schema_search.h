@@ -23,7 +23,9 @@ static auto action_schema_search(sourcemeta::one::SearchView &search_view,
                  "missing-query",
                  "You must provide a query parameter to search for");
     } else {
-      auto result{search_view.search(query)};
+      // TODO: Allow configuring this
+      constexpr std::size_t MAXIMUM_SEARCH_RESULTS{10};
+      auto result{search_view.search(query, MAXIMUM_SEARCH_RESULTS)};
       response.write_status(sourcemeta::one::STATUS_OK);
       response.write_header("Access-Control-Allow-Origin", "*");
       response.write_header("Content-Type", "application/json");
