@@ -1,12 +1,12 @@
 vendorpull https://github.com/sourcemeta/vendorpull 1dcbac42809cf87cb5b045106b863e17ad84ba02
 uwebsockets https://github.com/uNetworking/uWebSockets v20.76.0
-core https://github.com/sourcemeta/core b97cf5b157022765ae54380bbb0b65b8b2d1792f
-blaze https://github.com/sourcemeta/blaze 983545b134e5fcd64a5820088339699af5df9010
-jsonbinpack https://github.com/sourcemeta/jsonbinpack 73ce1ed4df479094c2876458494c8f3417fc08dc
+core https://github.com/sourcemeta/core 56eab6ef118e9731df539d3a507db1c23241f911
+blaze https://github.com/sourcemeta/blaze 19fd0062386ed65799543dc32ac2e68688a39aaa
+jsonbinpack https://github.com/sourcemeta/jsonbinpack c1897f4fa8d0552016bb690b415b67120a0e9979
 hydra https://github.com/sourcemeta/hydra eef9a60014ec16f00bbebb5f272522207d48a9f8
 codegen https://github.com/sourcemeta/codegen 615532845e07353c3a4a95af40d0f4ad1a03b6ec
 libdeflate https://github.com/ebiggers/libdeflate v1.25
-jsonschema https://github.com/sourcemeta/jsonschema 220af0a37b98a05be34012ba6184f80e2c50900a
+jsonschema https://github.com/sourcemeta/jsonschema v14.16.2
 bootstrap https://github.com/twbs/bootstrap v5.3.3
 bootstrap-icons https://github.com/twbs/icons v1.11.3
 collections/sourcemeta/std/v0 https://github.com/sourcemeta/std v0.4.0
