@@ -110,9 +110,11 @@ static auto case_insensitive_contains(const std::string_view haystack,
 }
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
-            const std::string_view query) -> sourcemeta::core::JSON {
+            const std::string_view query, const std::size_t limit)
+    -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
-  if (payload == nullptr || payload_size < sizeof(SearchIndexHeader)) {
+  if (limit == 0 || payload == nullptr ||
+      payload_size < sizeof(SearchIndexHeader)) {
     return result;
   }
 
@@ -181,8 +183,7 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
                  sourcemeta::core::JSON{std::string{description}});
     result.push_back(std::move(entry));
 
-    constexpr auto MAXIMUM_SEARCH_COUNT{10};
-    if (result.array_size() >= MAXIMUM_SEARCH_COUNT) {
+    if (result.array_size() >= limit) {
       break;
     }
   }
@@ -211,10 +212,11 @@ auto SearchView::ensure_open() -> void {
   }
 }
 
-auto SearchView::search(const std::string_view query)
+auto SearchView::search(const std::string_view query, const std::size_t limit)
     -> sourcemeta::core::JSON {
   this->ensure_open();
-  return sourcemeta::one::search(this->payload_, this->payload_size_, query);
+  return sourcemeta::one::search(this->payload_, this->payload_size_, query,
+                                 limit);
 }
 
 } // namespace sourcemeta::one
