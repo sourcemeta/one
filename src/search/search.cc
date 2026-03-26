@@ -110,8 +110,10 @@ static auto case_insensitive_contains(const std::string_view haystack,
 }
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
-            const std::string_view query, const std::size_t limit)
-    -> sourcemeta::core::JSON {
+            const std::string_view query, const std::size_t limit,
+            const std::uint8_t scope) -> sourcemeta::core::JSON {
+  assert((scope &
+          ~(SearchScopePath | SearchScopeTitle | SearchScopeDescription)) == 0);
   auto result{sourcemeta::core::JSON::make_array()};
   if (limit == 0 || payload == nullptr ||
       payload_size < sizeof(SearchIndexHeader)) {
@@ -170,9 +172,21 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
                                        record_header->title_length),
         record_header->description_length};
 
-    if (!case_insensitive_contains(path, query) &&
-        !case_insensitive_contains(title, query) &&
-        !case_insensitive_contains(description, query)) {
+    bool matched{false};
+
+    if (!matched && (scope & SearchScopePath) != 0) {
+      matched = case_insensitive_contains(path, query);
+    }
+
+    if (!matched && (scope & SearchScopeTitle) != 0) {
+      matched = case_insensitive_contains(title, query);
+    }
+
+    if (!matched && (scope & SearchScopeDescription) != 0) {
+      matched = case_insensitive_contains(description, query);
+    }
+
+    if (!matched) {
       continue;
     }
 
@@ -212,11 +226,11 @@ auto SearchView::ensure_open() -> void {
   }
 }
 
-auto SearchView::search(const std::string_view query, const std::size_t limit)
-    -> sourcemeta::core::JSON {
+auto SearchView::search(const std::string_view query, const std::size_t limit,
+                        const std::uint8_t scope) -> sourcemeta::core::JSON {
   this->ensure_open();
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
-                                 limit);
+                                 limit, scope);
 }
 
 } // namespace sourcemeta::one
