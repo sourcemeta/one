@@ -53,17 +53,17 @@ EOF
 
 SEARCH="$TMP/output/explorer/%/search.metapack"
 
-extract_search_entries() {
-  strings "$1" | grep '^\[' | LC_ALL=C sort
+extract_search_paths() {
+  strings "$1" | grep '^/' | LC_ALL=C sort
 }
 
 # Run 1: full build with two schemas in separate directories
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-extract_search_entries "$SEARCH" > "$TMP/search_actual.txt"
+extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"
-["/left/schemas/a","",""]
-["/right/schemas/b","",""]
+/left/schemas/a
+/right/schemas/b
 EOF
 diff "$TMP/search_actual.txt" "$TMP/search_expected.txt"
 
@@ -78,10 +78,10 @@ EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-extract_search_entries "$SEARCH" > "$TMP/search_actual.txt"
+extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"
-["/left/schemas/a","",""]
-["/right/schemas/b","",""]
+/left/schemas/a
+/right/schemas/b
 EOF
 diff "$TMP/search_actual.txt" "$TMP/search_expected.txt"
 
@@ -95,10 +95,10 @@ EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
-extract_search_entries "$SEARCH" > "$TMP/search_actual.txt"
+extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"
-["/left/schemas/a","",""]
-["/right/schemas/b","",""]
-["/right/schemas/c","",""]
+/left/schemas/a
+/right/schemas/b
+/right/schemas/c
 EOF
 diff "$TMP/search_actual.txt" "$TMP/search_expected.txt"

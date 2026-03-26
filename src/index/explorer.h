@@ -540,7 +540,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
             : std::string_view{reinterpret_cast<const char *>(payload.data()),
                                payload.size()}};
     sourcemeta::one::metapack_write_text(
-        action.destination, payload_view, "application/jsonl",
+        action.destination, payload_view, "application/octet-stream",
         // We don't want to compress this one so we can
         // quickly skim through it while streaming it
         sourcemeta::one::MetapackEncoding::Identity, {},

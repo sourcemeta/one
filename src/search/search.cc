@@ -5,7 +5,8 @@
 #include <algorithm> // std::ranges::search
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
-#include <sstream>   // std::ostringstream
+#include <cstring>   // std::memcpy
+#include <limits>    // std::numeric_limits
 #include <utility>   // std::move
 
 namespace sourcemeta::one {
@@ -29,59 +30,155 @@ auto make_search(std::vector<SearchEntry> &&entries)
     return left.path < right.path;
   });
 
-  std::ostringstream buffer;
-  for (const auto &entry : entries) {
-    auto json_entry{sourcemeta::core::JSON::make_array()};
-    json_entry.push_back(sourcemeta::core::JSON{entry.path});
-    json_entry.push_back(sourcemeta::core::JSON{entry.title});
-    json_entry.push_back(sourcemeta::core::JSON{entry.description});
-    sourcemeta::core::stringify(json_entry, buffer);
-    buffer << '\n';
+  constexpr auto MAX_FIELD_LENGTH{
+      static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+  std::erase_if(entries, [](const SearchEntry &entry) {
+    return entry.path.size() > MAX_FIELD_LENGTH ||
+           entry.title.size() > MAX_FIELD_LENGTH ||
+           entry.description.size() > MAX_FIELD_LENGTH;
+  });
+
+  if (entries.empty()) {
+    return {};
   }
 
-  const auto result{buffer.str()};
-  return {result.begin(), result.end()};
+  const auto entry_count{static_cast<std::uint32_t>(entries.size())};
+
+  // Compute total payload size
+  std::size_t total_size{sizeof(SearchIndexHeader) +
+                         entry_count * sizeof(std::uint32_t)};
+  for (const auto &entry : entries) {
+    total_size += sizeof(SearchRecordHeader) + entry.path.size() +
+                  entry.title.size() + entry.description.size();
+  }
+
+  std::vector<std::uint8_t> payload(total_size);
+  const auto records_offset{static_cast<std::uint32_t>(
+      sizeof(SearchIndexHeader) + entry_count * sizeof(std::uint32_t))};
+
+  // Write header
+  SearchIndexHeader header{.entry_count = entry_count,
+                           .records_offset = records_offset};
+  std::memcpy(payload.data(), &header, sizeof(SearchIndexHeader));
+
+  // Write records and fill offset table
+  auto *offset_table{payload.data() + sizeof(SearchIndexHeader)};
+  std::size_t record_position{records_offset};
+  for (std::uint32_t entry_index{0}; entry_index < entry_count; ++entry_index) {
+    const auto &entry{entries[entry_index]};
+
+    // Write this record's offset into the table
+    const auto record_offset{static_cast<std::uint32_t>(record_position)};
+    std::memcpy(offset_table + entry_index * sizeof(std::uint32_t),
+                &record_offset, sizeof(std::uint32_t));
+
+    // Write record header
+    const SearchRecordHeader record_header{
+        .path_length = static_cast<std::uint16_t>(entry.path.size()),
+        .title_length = static_cast<std::uint16_t>(entry.title.size()),
+        .description_length =
+            static_cast<std::uint16_t>(entry.description.size())};
+    std::memcpy(payload.data() + record_position, &record_header,
+                sizeof(SearchRecordHeader));
+    record_position += sizeof(SearchRecordHeader);
+
+    // Write field data
+    std::memcpy(payload.data() + record_position, entry.path.data(),
+                entry.path.size());
+    record_position += entry.path.size();
+    std::memcpy(payload.data() + record_position, entry.title.data(),
+                entry.title.size());
+    record_position += entry.title.size();
+    std::memcpy(payload.data() + record_position, entry.description.data(),
+                entry.description.size());
+    record_position += entry.description.size();
+  }
+
+  assert(record_position == total_size);
+  return payload;
+}
+
+static auto case_insensitive_contains(const std::string_view haystack,
+                                      const std::string_view needle) -> bool {
+  return !std::ranges::search(
+              haystack, needle,
+              [](const auto left, const auto right) {
+                return std::tolower(static_cast<unsigned char>(left)) ==
+                       std::tolower(static_cast<unsigned char>(right));
+              })
+              .empty();
 }
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
-  if (payload_size == 0) {
+  if (payload == nullptr || payload_size < sizeof(SearchIndexHeader)) {
     return result;
   }
 
-  assert(payload != nullptr);
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const std::string_view data{reinterpret_cast<const char *>(payload),
-                              payload_size};
+  const auto *header{reinterpret_cast<const SearchIndexHeader *>(payload)};
 
-  std::size_t line_start{0};
-  while (line_start < data.size()) {
-    auto line_end{data.find('\n', line_start)};
-    if (line_end == std::string_view::npos) {
-      line_end = data.size();
+  if (header->entry_count == 0) {
+    return result;
+  }
+
+  const auto offset_table_end{sizeof(SearchIndexHeader) +
+                              static_cast<std::size_t>(header->entry_count) *
+                                  sizeof(std::uint32_t)};
+  if (offset_table_end > payload_size) {
+    return result;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
+      payload + sizeof(SearchIndexHeader))};
+
+  for (std::uint32_t entry_index{0}; entry_index < header->entry_count;
+       ++entry_index) {
+    const auto record_offset{offset_table[entry_index]};
+    if (record_offset + sizeof(SearchRecordHeader) > payload_size) {
+      break;
     }
 
-    const auto line{data.substr(line_start, line_end - line_start)};
-    line_start = line_end + 1;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const auto *record_header{
+        reinterpret_cast<const SearchRecordHeader *>(payload + record_offset)};
 
-    if (line.empty()) {
-      continue;
+    const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
+    const auto total_field_length{
+        static_cast<std::size_t>(record_header->path_length) +
+        record_header->title_length + record_header->description_length};
+    if (field_data_offset + total_field_length > payload_size) {
+      break;
     }
 
-    if (std::ranges::search(line, query, [](const auto left, const auto right) {
-          return std::tolower(static_cast<unsigned char>(left)) ==
-                 std::tolower(static_cast<unsigned char>(right));
-        }).empty()) {
+    const auto *field_data{payload + field_data_offset};
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view path{reinterpret_cast<const char *>(field_data),
+                                record_header->path_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view title{
+        reinterpret_cast<const char *>(field_data + record_header->path_length),
+        record_header->title_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view description{
+        reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->title_length),
+        record_header->description_length};
+
+    if (!case_insensitive_contains(path, query) &&
+        !case_insensitive_contains(title, query) &&
+        !case_insensitive_contains(description, query)) {
       continue;
     }
 
     auto entry{sourcemeta::core::JSON::make_object()};
-    const std::string line_string{line};
-    auto line_json{sourcemeta::core::parse_json(line_string)};
-    entry.assign("path", std::move(line_json.at(0)));
-    entry.assign("title", std::move(line_json.at(1)));
-    entry.assign("description", std::move(line_json.at(2)));
+    entry.assign("path", sourcemeta::core::JSON{std::string{path}});
+    entry.assign("title", sourcemeta::core::JSON{std::string{title}});
+    entry.assign("description",
+                 sourcemeta::core::JSON{std::string{description}});
     result.push_back(std::move(entry));
 
     constexpr auto MAXIMUM_SEARCH_COUNT{10};
