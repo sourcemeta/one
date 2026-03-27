@@ -4,10 +4,11 @@
 
 #include <gtest/gtest.h>
 
-#include <cstdint> // std::uint8_t, std::uint32_t
-#include <cstring> // std::memcpy
-#include <utility> // std::move
-#include <vector>  // std::vector
+#include <cstdint>     // std::uint8_t, std::uint32_t
+#include <cstring>     // std::memcpy
+#include <string_view> // std::string_view_literals
+#include <utility>     // std::move
+#include <vector>      // std::vector
 
 #define EXPECT_SEARCH_RESULT(result, index, expected_path, expected_title,     \
                              expected_description)                             \
@@ -743,4 +744,71 @@ TEST(Search_query, scope_combined_with_limit) {
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/a", "Match A", "Desc");
   EXPECT_SEARCH_RESULT(result, 1, "/b", "Match B", "Desc");
+}
+
+TEST(Search_query, query_with_embedded_null_does_not_match) {
+  using namespace std::string_view_literals;
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/test", "Title", "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "sche\0mas"sv, 10,
+      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+          sourcemeta::one::SearchScopeDescription)};
+  EXPECT_EQ(result.size(), 0);
+}
+
+TEST(Search_query, query_with_tab_does_not_match) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/test", "Title", "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "schemas\ttest", 10,
+      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+          sourcemeta::one::SearchScopeDescription)};
+  EXPECT_EQ(result.size(), 0);
+}
+
+TEST(Search_query, query_with_newline_does_not_match) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/test", "Title", "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "schemas\ntest", 10,
+      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+          sourcemeta::one::SearchScopeDescription)};
+  EXPECT_EQ(result.size(), 0);
+}
+
+TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
+  using namespace std::string_view_literals;
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {std::string("before\0after", 12), "Title", "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
+                                            "after", 10,
+                                            sourcemeta::one::SearchScopePath)};
+  EXPECT_EQ(result.size(), 1);
+}
+
+TEST(Search_query, entry_with_null_in_title_found_by_path) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/test", std::string("Foo\0Bar", 7), "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
+                                            "schemas", 10,
+                                            sourcemeta::one::SearchScopePath)};
+  EXPECT_EQ(result.size(), 1);
+}
+
+TEST(Search_query, query_only_null_bytes_matches_nothing) {
+  using namespace std::string_view_literals;
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/test", "Title", "Description", 80}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "\0\0\0"sv, 10,
+      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+          sourcemeta::one::SearchScopeDescription)};
+  EXPECT_EQ(result.size(), 0);
 }
