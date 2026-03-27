@@ -5,6 +5,15 @@ hide:
 
 # HTTP API
 
+!!! warning "Future change"
+
+    The HTTP API endpoints and the JSON Schemas that describe them (mounted
+    at `/self/v1/schemas`) are provided by the `@self/v1` built-in
+    collection. In a future release, these will only be available if your
+    [configuration file](configuration.md) includes `@self/v1` in the
+    `extends` array. We recommend adding `@self/v1` to your existing
+    `extends` array now to avoid disruption later.
+
 This API has been architected with performance as a primary consideration,
 ensuring fast response times and efficient resource utilization across all
 endpoints.

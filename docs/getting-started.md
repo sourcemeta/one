@@ -71,6 +71,7 @@ folder:
 ```json title="one.json"
 {
   "url": "http://localhost:8000",
+  "extends": [ "@self/v1" ],
   "html": {
     "name": "My First Registry"
   },
@@ -83,6 +84,14 @@ folder:
   }
 }
 ```
+
+!!! note
+
+    The `@self/v1` built-in collection provides the [HTTP API](api.md)
+    endpoints and the JSON Schemas that describe them (mounted at
+    `/self/v1/schemas`). In a future release, the HTTP API will only be
+    available if you explicitly include `@self/v1` in the `extends` array.
+    We recommend adding it now to avoid disruption later.
 
 ### Writing a `Dockerfile`
 
