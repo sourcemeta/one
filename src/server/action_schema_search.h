@@ -97,6 +97,14 @@ static auto action_schema_search(sourcemeta::one::SearchView &search_view,
         break;
       }
     }
+
+    if (scope == 0) {
+      json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+                 "invalid-search-scope",
+                 "The scope must be a comma-separated list of: path, title, "
+                 "description");
+      return;
+    }
   }
 
   auto result{search_view.search(query, limit, scope)};

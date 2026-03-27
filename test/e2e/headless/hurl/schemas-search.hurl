@@ -541,6 +541,52 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+# Error: scope with only commas
+GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.status" == 400
+jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# Error: scope with multiple commas only
+GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,,
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.status" == 400
+jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 # Duplicate scope values are accepted
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,path
 HTTP 200
