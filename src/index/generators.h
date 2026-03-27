@@ -36,7 +36,6 @@
 #include <sstream>       // std::ostringstream
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
-#include <variant>       // std::visit
 
 namespace sourcemeta::one {
 
@@ -114,7 +113,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
     assert(schema.has_value());
     const auto dialect_identifier{sourcemeta::core::dialect(schema.value())};
     assert(!dialect_identifier.empty());
-    const auto metaschema{resolver(dialect_identifier)};
+    const auto metaschema{resolver(dialect_identifier, callback)};
     assert(metaschema.has_value());
 
     // Validate the schemas against their meta-schemas
@@ -126,6 +125,22 @@ struct GENERATE_MATERIALISED_SCHEMA {
         schema.value(), std::ref(output))};
     if (!result) {
       throw MetaschemaError(output);
+    }
+
+    // Most schemas are not metaschemas, so this check is a nice
+    // heuristic to avoid the cost of resolving the base dialect
+    // on most of them
+    if (schema->is_object() && schema->defines("$vocabulary")) {
+      const auto declared_vocabularies{sourcemeta::core::parse_vocabularies(
+          schema.value(),
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          },
+          dialect_identifier)};
+      if (declared_vocabularies.has_value()) {
+        declared_vocabularies.value().throw_if_any_unknown_required(
+            "The metaschema requires an unrecognised vocabulary");
+      }
     }
 
     sourcemeta::core::format(
