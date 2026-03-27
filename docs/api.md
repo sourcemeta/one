@@ -243,10 +243,17 @@ GET /self/v1/api/schemas/metadata/{path}
 *This endpoint searches for JSON Schemas based on the provided query `{term}`.*
 
 ```
-GET /self/v1/api/schemas/search?q={term}
+GET /self/v1/api/schemas/search?q={term}[&limit={n}][&scope={fields}]
 ```
 
-Note that the this endpoint has a hard limit of 10 results.
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `q` | String | Yes | - | Search term (case-insensitive substring, at most 256 characters) |
+| `limit` | Integer | No | 10 | Maximum number of results, between 1 and 100 |
+| `scope` | String | No | `path,title,description` | Comma-separated fields to match against |
+
+The valid values for `scope` are `path`, `title`, and `description`, which can
+be combined in any order (i.e. `scope=title,description`).
 
 === "200"
 
@@ -255,6 +262,11 @@ Note that the this endpoint has a hard limit of 10 results.
     | `/*/path` | String | Yes | The relative URL of the schema |
     | `/*/title` | String | No | The title of the schema (may be an empty string) |
     | `/*/description` | String | No | The description of the schema (may be an empty string) |
+
+=== "400"
+
+    Returned when `q` is missing or empty, when `q` or `limit` do not match
+    their corresponding ranges, or any query parameter has an invalid type.
 
 ### Dependencies
 
