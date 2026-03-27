@@ -163,6 +163,7 @@ static auto execute_plan(std::mutex &mutex,
                   sourcemeta::core::SchemaResolutionError>(
                   entry->path, error.identifier(), error.what());
             }
+
             throw;
           } catch (const sourcemeta::core::SchemaReferenceError &error) {
             const auto *entry{
@@ -173,6 +174,7 @@ static auto execute_plan(std::mutex &mutex,
                   entry->path, error.identifier(), error.location(),
                   error.what());
             }
+
             throw;
           } catch (const sourcemeta::core::SchemaReferenceObjectResourceError
                        &error) {
@@ -183,6 +185,17 @@ static auto execute_plan(std::mutex &mutex,
                   sourcemeta::core::SchemaReferenceObjectResourceError>(
                   entry->path, error.identifier());
             }
+
+            throw;
+          } catch (const sourcemeta::core::SchemaVocabularyError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaVocabularyError>(
+                  entry->path, error.uri(), error.what());
+            }
+
             throw;
           }
 
@@ -669,6 +682,12 @@ auto main(int argc, char *argv[]) noexcept -> int {
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
     std::cerr << "error: " << error.what() << "\n";
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>
+          &error) {
+    std::cerr << "error: " << error.what() << "\n  at vocabulary "
+              << error.uri() << "\n  at path " << error.path().string() << "\n";
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
