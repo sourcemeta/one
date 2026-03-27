@@ -208,7 +208,7 @@ internal version:
 ```json hl_lines="3 8" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@sourcemeta/std/v0" ],
+  "extends": [ "@self/v1", "@sourcemeta/std/v0" ],
   "contents": {
     "my-first-collection": {
       "path": "./schemas",
@@ -248,7 +248,7 @@ collection identifier (prefixed with `@`). For example:
 ```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@geojson/v1.0.5", "../path/to/my/other/config/one.json" ]
+  "extends": [ "@self/v1", "@geojson/v1.0.5", "../path/to/my/other/config/one.json" ]
 }
 ```
 
