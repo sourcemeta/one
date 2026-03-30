@@ -89,8 +89,13 @@
       "type": "array",
       "items": {
         "anyOf": [
-          { "type": "string" },
-          { "type": "integer", "minimum": 0 }
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          }
         ]
       }
     }
