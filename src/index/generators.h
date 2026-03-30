@@ -269,7 +269,8 @@ struct GENERATE_DEPENDENCIES {
           auto trace{sourcemeta::core::JSON::make_object()};
           trace.assign("from", without_json_extension(origin));
           trace.assign("to", without_json_extension(target));
-          trace.assign("at", sourcemeta::core::to_json(pointer));
+          trace.assign("at", sourcemeta::core::JSON{
+                                 sourcemeta::core::to_string(pointer)});
           result.push_back(std::move(trace));
         });
     // Otherwise we are returning non-sense
@@ -403,11 +404,12 @@ struct GENERATE_HEALTH {
 
           auto pointers{sourcemeta::core::JSON::make_array()};
           if (outcome.locations.empty()) {
-            pointers.push_back(sourcemeta::core::to_json(pointer));
+            pointers.push_back(
+                sourcemeta::core::JSON{sourcemeta::core::to_string(pointer)});
           } else {
             for (const auto &location : outcome.locations) {
-              pointers.push_back(
-                  sourcemeta::core::to_json(pointer.concat(location)));
+              pointers.push_back(sourcemeta::core::JSON{
+                  sourcemeta::core::to_string(pointer.concat(location))});
             }
           }
 
