@@ -7,7 +7,7 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm>     // std::transform
+#include <algorithm>     // std::ranges::transform
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard

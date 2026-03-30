@@ -5,7 +5,7 @@
 
 #include <sourcemeta/one/build.h>
 
-#include <algorithm>  // std::sort
+#include <algorithm>  // std::ranges::sort
 #include <cstddef>    // std::size_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <set>        // std::set
@@ -235,12 +235,10 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
               std::string_view{expected_data});                                \
     auto actual_deps_##wave##_##index{                                         \
         action_ref_##wave##_##index.dependencies};                             \
-    std::sort(actual_deps_##wave##_##index.begin(),                            \
-              actual_deps_##wave##_##index.end());                             \
+    std::ranges::sort(actual_deps_##wave##_##index);                           \
     std::vector<std::filesystem::path> expected_deps_##wave##_##index{         \
         __VA_ARGS__};                                                          \
-    std::sort(expected_deps_##wave##_##index.begin(),                          \
-              expected_deps_##wave##_##index.end());                           \
+    std::ranges::sort(expected_deps_##wave##_##index);                         \
     EXPECT_EQ(actual_deps_##wave##_##index, expected_deps_##wave##_##index);   \
   } while (false)
 

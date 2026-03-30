@@ -8,7 +8,7 @@
 #include "request.h"
 #include "response.h"
 
-#include <algorithm>   // std::transform
+#include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
 #include <filesystem>  // std::filesystem
 #include <string>      // std::string
@@ -21,8 +21,8 @@ static auto action_jsonschema_serve(const std::filesystem::path &base,
     -> void {
   // Otherwise we may get unexpected results in case-sensitive file-systems
   std::string lowercase_path{path};
-  std::transform(
-      lowercase_path.begin(), lowercase_path.end(), lowercase_path.begin(),
+  std::ranges::transform(
+      lowercase_path, lowercase_path.begin(),
       [](const unsigned char character) { return std::tolower(character); });
 
   // Because Visual Studio Code famously does not support `$id` or `id`

@@ -19,8 +19,7 @@
 #include <sstream>     // std::ostringstream
 #include <stdexcept>   // std::runtime_error
 #include <string_view> // std::string_view
-#include <type_traits> // std::underlying_type_t
-#include <utility>     // std::move
+#include <utility>     // std::move, std::to_underlying, std::unreachable
 
 namespace {
 
@@ -64,14 +63,16 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
           step.assign("type", sourcemeta::core::JSON{"fail"});
         }
 
-        step.assign("name", sourcemeta::core::JSON{
-                                sourcemeta::blaze::InstructionNames
-                                    [static_cast<std::underlying_type_t<
-                                        sourcemeta::blaze::InstructionIndex>>(
-                                        instruction.type)]});
-        step.assign("evaluatePath", sourcemeta::core::to_json(evaluate_path));
+        step.assign("name",
+                    sourcemeta::core::JSON{
+                        sourcemeta::blaze::InstructionNames[std::to_underlying(
+                            instruction.type)]});
+        step.assign(
+            "evaluatePath",
+            sourcemeta::core::JSON{sourcemeta::core::to_string(evaluate_path)});
         step.assign("instanceLocation",
-                    sourcemeta::core::to_json(instance_location));
+                    sourcemeta::core::JSON{
+                        sourcemeta::core::to_string(instance_location)});
         auto instance_positions{tracker.get(
             // TODO: Can we avoid converting the weak pointer into a pointer
             // here?
@@ -83,7 +84,8 @@ auto trace(sourcemeta::blaze::Evaluator &evaluator,
             "instancePositions",
             sourcemeta::core::to_json(std::move(instance_positions).value()));
         step.assign("keywordLocation",
-                    sourcemeta::core::to_json(extra.keyword_location));
+                    sourcemeta::core::JSON{
+                        sourcemeta::core::to_string(extra.keyword_location)});
         step.assign("annotation", annotation);
 
         if (type == sourcemeta::blaze::EvaluationType::Pre) {
@@ -167,9 +169,7 @@ auto evaluate(const std::filesystem::path &template_path,
     case EvaluateType::Trace:
       return trace(evaluator, schema_template.value(), instance, template_path);
     default:
-      // We should never get here
-      assert(false);
-      return sourcemeta::core::JSON{nullptr};
+      std::unreachable();
   }
 }
 

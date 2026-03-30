@@ -6,7 +6,7 @@
 #include "response.h"
 #include "uwebsockets.h"
 
-#include <algorithm>   // std::sort
+#include <algorithm>   // std::ranges::sort
 #include <chrono>      // std::chrono::system_clock
 #include <exception>   // std::exception_ptr, std::current_exception
 #include <memory>      // std::shared_ptr, std::make_shared
@@ -130,10 +130,9 @@ public:
     }
 
     // For convenience, automatically sort by the quality value
-    std::sort(result.begin(), result.end(),
-              [](const auto &left, const auto &right) {
-                return left.second > right.second;
-              });
+    std::ranges::sort(result, [](const auto &left, const auto &right) {
+      return left.second > right.second;
+    });
 
     return result;
   }

@@ -13,7 +13,7 @@
 
 #include <sourcemeta/one/build.h>
 
-#include <algorithm>   // std::sort
+#include <algorithm>   // std::ranges::sort
 #include <cassert>     // assert
 #include <chrono>      // std::chrono
 #include <cmath>       // std::lround
@@ -855,9 +855,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       return left.name < right.name;
     };
 
-    std::sort(directory_entries.begin(), directory_entries.end(),
-              version_comparator);
-    std::sort(schema_entries.begin(), schema_entries.end(), version_comparator);
+    std::ranges::sort(directory_entries, version_comparator);
+    std::ranges::sort(schema_entries, version_comparator);
 
     for (auto &entry : directory_entries) {
       entries.push_back(std::move(entry.json));

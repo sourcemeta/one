@@ -11,8 +11,9 @@
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
-#include <iostream>    // std::cerr
+#include <format>      // std::format
 #include <mutex>       // std::mutex, std::lock_guard
+#include <print>       // std::print
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -23,27 +24,25 @@ constexpr auto SENTINEL{"%"};
 
 static auto write_link_header(sourcemeta::one::HTTPResponse &response,
                               const std::string_view schema_path) -> void {
-  std::ostringstream link;
-  link << "<" << schema_path << ">; rel=\"describedby\"";
-  response.write_header("Link", std::move(link).str());
+  response.write_header("Link",
+                        std::format("<{}>; rel=\"describedby\"", schema_path));
 }
 
 static auto log(std::string_view message) -> void {
   // Otherwise we can get messed up output interleaved from multiple threads
   static std::mutex log_mutex;
   std::lock_guard<std::mutex> guard{log_mutex};
-  std::cerr << "[" << sourcemeta::core::to_gmt(std::chrono::system_clock::now())
-            << "] " << std::this_thread::get_id() << ' ' << message << "\n";
+  std::print(stderr, "[{}] {} {}\n",
+             sourcemeta::core::to_gmt(std::chrono::system_clock::now()),
+             std::this_thread::get_id(), message);
 }
 
 static auto send_response(const char *const code,
                           const sourcemeta::one::HTTPRequest &request,
                           sourcemeta::one::HTTPResponse &response) -> void {
   response.send_without_content();
-  std::ostringstream line;
   assert(code);
-  line << code << ' ' << request.method() << ' ' << request.path();
-  log(std::move(line).str());
+  log(std::format("{} {} {}", code, request.method(), request.path()));
 }
 
 static auto send_response(const char *const code,
@@ -53,10 +52,8 @@ static auto send_response(const char *const code,
                           const sourcemeta::one::Encoding current_encoding)
     -> void {
   response.send(request, message, current_encoding);
-  std::ostringstream line;
   assert(code);
-  line << code << ' ' << request.method() << ' ' << request.path();
-  log(std::move(line).str());
+  log(std::format("{} {} {}", code, request.method(), request.path()));
 }
 
 // See https://www.rfc-editor.org/rfc/rfc7807
