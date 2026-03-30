@@ -6,7 +6,7 @@
 
 #include "template.h"
 
-#include <algorithm> // std::transform
+#include <algorithm> // std::ranges::transform
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
 

@@ -1,7 +1,7 @@
 vendorpull https://github.com/sourcemeta/vendorpull 1dcbac42809cf87cb5b045106b863e17ad84ba02
 uwebsockets https://github.com/uNetworking/uWebSockets v20.76.0
-core https://github.com/sourcemeta/core a5b788eeea69b697ca0b8347637ff3cec6fa3cdb
-blaze https://github.com/sourcemeta/blaze 19fd0062386ed65799543dc32ac2e68688a39aaa
+core https://github.com/sourcemeta/core 2582f8f5fffca707c3e4d5ba1c0cb0dc7a06dde4
+blaze https://github.com/sourcemeta/blaze c018dcbab745e7e8ec04478b3bd7f38ddd9f6d63
 jsonbinpack https://github.com/sourcemeta/jsonbinpack c1897f4fa8d0552016bb690b415b67120a0e9979
 hydra https://github.com/sourcemeta/hydra eef9a60014ec16f00bbebb5f272522207d48a9f8
 codegen https://github.com/sourcemeta/codegen 615532845e07353c3a4a95af40d0f4ad1a03b6ec

@@ -7,6 +7,7 @@
 
 #include <exception>  // std::exception
 #include <filesystem> // std::filesystem::path
+#include <format>     // std::format
 #include <sstream>    // std::ostringstream
 #include <string>     // std::string
 #include <utility>    // std::move
@@ -18,17 +19,19 @@ public:
   ConfigurationValidationError(std::filesystem::path path,
                                const sourcemeta::blaze::SimpleOutput &output)
       : path_{std::move(path)} {
-    std::ostringstream stream;
+    std::string result;
     for (const auto &entry : output) {
-      stream << entry.message << "\n";
-      stream << "  at instance location \"";
-      sourcemeta::core::stringify(entry.instance_location, stream);
-      stream << "\"\n";
-      stream << "  at evaluate path \"";
-      sourcemeta::core::stringify(entry.evaluate_path, stream);
-      stream << "\"\n";
+      std::ostringstream instance_location_stream;
+      sourcemeta::core::stringify(entry.instance_location,
+                                  instance_location_stream);
+      std::ostringstream evaluate_path_stream;
+      sourcemeta::core::stringify(entry.evaluate_path, evaluate_path_stream);
+      result += std::format("{}\n  at instance location \"{}\"\n"
+                            "  at evaluate path \"{}\"\n",
+                            entry.message, instance_location_stream.str(),
+                            evaluate_path_stream.str());
     }
-    this->stacktrace_ = stream.str();
+    this->stacktrace_ = std::move(result);
   }
 
   [[nodiscard]] auto what() const noexcept -> const char * override {

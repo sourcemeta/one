@@ -18,7 +18,7 @@
 #include "explorer.h"
 #include "generators.h"
 
-#include <algorithm>     // std::sort
+#include <algorithm>     // std::ranges::sort
 #include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
@@ -28,9 +28,9 @@
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
-#include <iomanip>       // std::setw, std::setfill
-#include <iostream>      // std::cerr, std::cout
 #include <mutex>         // std::mutex, std::lock_guard
+#include <print>         // std::print, std::println
+#include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
@@ -107,9 +107,8 @@ static auto print_progress(std::mutex &mutex, const std::size_t threads,
     -> void {
   const auto percentage{current * 100 / total};
   std::lock_guard<std::mutex> lock{mutex};
-  std::cerr << "(" << std::setfill(' ') << std::setw(3)
-            << static_cast<int>(percentage) << "%) " << title << ": " << prefix
-            << " [" << std::this_thread::get_id() << "/" << threads << "]\n";
+  std::print(stderr, "({:3}%) {}: {} [{}/{}]\n", static_cast<int>(percentage),
+             title, prefix, std::this_thread::get_id(), threads);
 }
 
 static auto execute_plan(std::mutex &mutex,
@@ -235,31 +234,31 @@ static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
   if (app.contains("help")) {
     if (!app.contains("skip-banner")) {
-      std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-                << sourcemeta::one::version() << "\n\n";
+      std::println("Sourcemeta One {} v{}\n", sourcemeta::one::edition(),
+                   sourcemeta::one::version());
     }
 
-    std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
-              << " <one.json> <path/to/output/directory>\n";
-    std::cout << USAGE_DETAILS;
+    std::println("Usage: {} <one.json> <path/to/output/directory>",
+                 std::filesystem::path{program}.filename().string());
+    std::print("{}", USAGE_DETAILS);
     return EXIT_SUCCESS;
   }
 
   if (app.positional().size() != 2) {
     if (!app.contains("skip-banner")) {
-      std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-                << sourcemeta::one::version() << "\n\n";
+      std::println("Sourcemeta One {} v{}\n", sourcemeta::one::edition(),
+                   sourcemeta::one::version());
     }
 
-    std::cout << "Usage: " << std::filesystem::path{program}.filename().string()
-              << " <one.json> <path/to/output/directory>\n";
-    std::cout << USAGE_DETAILS;
+    std::println("Usage: {} <one.json> <path/to/output/directory>",
+                 std::filesystem::path{program}.filename().string());
+    std::print("{}", USAGE_DETAILS);
     return EXIT_FAILURE;
   }
 
   if (!app.contains("skip-banner")) {
-    std::cerr << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-              << sourcemeta::one::version() << "\n";
+    std::println(stderr, "Sourcemeta One {} v{}", sourcemeta::one::edition(),
+                 sourcemeta::one::version());
   }
 
   PROFILE_INIT(profiling);
@@ -278,7 +277,7 @@ static auto index_main(const std::string_view &program,
         std::make_error_code(std::errc::file_exists)};
   }
 
-  std::cerr << "Writing output to: " << output_path.string() << "\n";
+  std::println(stderr, "Writing output to: {}", output_path.string());
 
   /////////////////////////////////////////////////////////////////////////////
   // (2) Process the configuration file
@@ -286,14 +285,15 @@ static auto index_main(const std::string_view &program,
 
   const auto configuration_path{
       std::filesystem::canonical(app.positional().at(0))};
-  std::cerr << "Using configuration: " << configuration_path.string() << "\n";
+  std::println(stderr, "Using configuration: {}", configuration_path.string());
   std::unordered_set<std::string> configuration_files;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, SOURCEMETA_ONE_COLLECTIONS, configuration_files)};
 
   if (app.contains("configuration")) {
-    sourcemeta::core::prettify(raw_configuration, std::cout);
-    std::cout << "\n";
+    std::ostringstream configuration_output;
+    sourcemeta::core::prettify(raw_configuration, configuration_output);
+    std::println("{}", configuration_output.str());
     return EXIT_SUCCESS;
   }
 
@@ -314,10 +314,10 @@ static auto index_main(const std::string_view &program,
           "resolve-schema", std::string{resolve_schema_value});
     }
 
-    std::cerr << "Resolving schema for URI: " << input_uri.recompose() << "\n";
+    std::println(stderr, "Resolving schema for URI: {}", input_uri.recompose());
     const auto result{configuration.resolve_schema(input_uri)};
     if (result.has_value()) {
-      std::cout << result.value().string() << "\n";
+      std::println("{}", result.value().string());
       return EXIT_SUCCESS;
     }
 
@@ -410,8 +410,8 @@ static auto index_main(const std::string_view &program,
         continue;
       }
 
-      std::cerr << "Detecting: " << entry.path().string() << " (#"
-                << detected_schemas.size() + 1 << ")\n";
+      std::println(stderr, "Detecting: {} (#{})", entry.path().string(),
+                   detected_schemas.size() + 1);
       detected_schemas.push_back({pair.first, std::cref(*collection),
                                   entry.path(), entry.last_write_time()});
     }
@@ -485,8 +485,9 @@ static auto index_main(const std::string_view &program,
 
         if (app.contains("verbose")) {
           std::lock_guard<std::mutex> lock{mutex};
-          std::cerr << result.second.get().original_identifier << " => "
-                    << result.first.get() << "\n";
+          std::println(stderr, "{} => {}",
+                       result.second.get().original_identifier,
+                       result.first.get());
         }
       },
       concurrency);
@@ -535,7 +536,7 @@ static auto index_main(const std::string_view &program,
 
   // TODO: Add a test for this
   if (app.contains("profile")) {
-    std::cerr << "Profiling...\n";
+    std::println(stderr, "Profiling...");
     std::vector<std::pair<std::filesystem::path, std::chrono::milliseconds>>
         durations;
     for (const auto &entry :
@@ -549,27 +550,26 @@ static auto index_main(const std::string_view &program,
           const auto &file_info{file_info_option.value()};
           durations.emplace_back(entry.path(), file_info.duration);
         } catch (...) {
-          std::cerr << "Could not profile file: " << entry.path() << "\n";
+          std::println(stderr, "Could not profile file: {}",
+                       entry.path().string());
           throw;
         }
       }
     }
 
-    std::sort(durations.begin(), durations.end(),
-              [](const auto &left, const auto &right) {
-                return left.second > right.second;
-              });
+    std::ranges::sort(durations, [](const auto &left, const auto &right) {
+      return left.second > right.second;
+    });
 
     constexpr std::size_t PROFILE_ENTRIES_MAXIMUM{25};
     for (std::size_t index = 0;
          index < std::min(durations.size(),
                           static_cast<std::size_t>(PROFILE_ENTRIES_MAXIMUM));
          index++) {
-      std::cout << durations[index].second.count() << "ms "
-                << std::filesystem::relative(durations[index].first,
-                                             canonical_output)
-                       .string()
-                << "\n";
+      std::println(
+          "{}ms {}", durations[index].second.count(),
+          std::filesystem::relative(durations[index].first, canonical_output)
+              .string());
     }
   }
 
@@ -577,7 +577,7 @@ static auto index_main(const std::string_view &program,
 
   if (app.contains("time")) {
     for (const auto &entry : profiling.first) {
-      std::cout << entry.second.count() << "ms " << entry.first << "\n";
+      std::println("{}ms {}", entry.second.count(), entry.first);
     }
   }
 
@@ -602,197 +602,202 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     return index_main(program, app);
   } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
-    std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from path " << error.from().string() << "\n";
-    std::cerr << "  at location \""
-              << sourcemeta::core::to_string(error.location()) << "\"\n";
-    std::cerr << "  to path " << error.target().string() << "\n";
+    std::print(stderr,
+               "error: {}\n  from path {}\n  at location \"{}\"\n"
+               "  to path {}\n",
+               error.what(), error.from().string(),
+               sourcemeta::core::to_string(error.location()),
+               error.target().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
-    std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from path " << error.from().string() << "\n";
-    std::cerr << "  at location \""
-              << sourcemeta::core::to_string(error.location()) << "\"\n";
-    std::cerr << "  to path " << error.target().string() << "\n";
+    std::print(stderr,
+               "error: {}\n  from path {}\n  at location \"{}\"\n"
+               "  to path {}\n",
+               error.what(), error.from().string(),
+               sourcemeta::core::to_string(error.location()),
+               error.target().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
                &error) {
-    std::cerr << "error: " << error.what() << "\n";
-    std::cerr << "  from path " << error.from().string() << "\n";
-    std::cerr << "  at location \""
-              << sourcemeta::core::to_string(error.location()) << "\"\n";
-    std::cerr << "  to identifier " << error.identifier() << "\n";
+    std::print(stderr,
+               "error: {}\n  from path {}\n  at location \"{}\"\n"
+               "  to identifier {}\n",
+               error.what(), error.from().string(),
+               sourcemeta::core::to_string(error.location()),
+               error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
-    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
-              << "\n  with value " << error.value() << "\n";
+    std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",
+               error.what(), error.option(), error.value());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidURIValueError &error) {
-    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
-              << "\n  with value " << error.value() << "\n";
+    std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",
+               error.what(), error.option(), error.value());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnexpectedValueFlagError &error) {
-    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
-              << "\n";
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
+               error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsMissingOptionValueError &error) {
-    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
-              << "\n";
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
+               error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnknownOptionError &error) {
-    std::cerr << "error: " << error.what() << "\n  at option " << error.option()
-              << "\n";
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
+               error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationValidationError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n"
-              << error.stacktrace();
+    std::print(stderr, "error: {}\n  at path {}\n{}", error.what(),
+               error.path().string(), error.stacktrace());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::MetaschemaError &error) {
-    std::cerr << "error: " << error.what() << "\n" << error.stacktrace();
+    std::print(stderr, "error: {}\n{}", error.what(), error.stacktrace());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::CustomRuleError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::LinterInvalidNamePatternError> &error) {
-    std::cerr << "error: The schema rule name must match " << error.regex()
-              << "\n  at path " << error.path().string() << "\n  at name "
-              << error.identifier() << "\n";
+    std::print(stderr,
+               "error: The schema rule name must match {}\n"
+               "  at path {}\n  at name {}\n",
+               error.regex(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
-    std::cerr << "error: The schema rule name must match " << error.regex()
-              << "\n  at name " << error.identifier() << "\n";
+    std::print(stderr,
+               "error: The schema rule name must match {}\n  at name {}\n",
+               error.regex(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::LinterInvalidNameError> &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at name " << error.identifier()
-              << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n  at name {}\n", error.what(),
+               error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
-    std::cerr << "error: " << error.what() << "\n  at name "
-              << error.identifier() << "\n";
+    std::print(stderr, "error: {}\n  at name {}\n", error.what(),
+               error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::LinterMissingNameError> &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
-    std::cerr << "error: " << error.what() << "\n";
+    std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>
           &error) {
-    std::cerr << "error: " << error.what() << "\n  at vocabulary "
-              << error.uri() << "\n  at path " << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at vocabulary {}\n  at path {}\n",
+               error.what(), error.uri(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
-    std::cerr << "error: " << error.what() << "\n";
+    std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaUnknownDialectError> &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  with count " << error.count()
-              << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n  with count {}\n",
+               error.what(), error.path().string(), error.count());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at identifier " << error.uri()
-              << "\n  with base " << error.base() << "\n";
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at identifier {}\n  with base {}\n",
+               error.what(), error.path().string(), error.uri(), error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaReferenceObjectResourceError> &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at identifier "
-              << error.identifier() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
+               error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
-    std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.identifier() << "\n";
+    std::print(stderr, "error: {}\n  at identifier {}\n", error.what(),
+               error.identifier());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
           &error) {
-    std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.identifier() << "\n  at path " << error.path().string()
-              << "\n\nDid you forget to register a schema with such URI?\n";
+    std::print(stderr,
+               "error: {}\n  at identifier {}\n  at path {}\n\n"
+               "Did you forget to register a schema with such URI?\n",
+               error.what(), error.identifier(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    std::cerr << "error: " << error.what() << "\n  at identifier "
-              << error.identifier()
-              << "\n\nDid you forget to register a schema with such URI?\n";
+    std::print(stderr,
+               "error: {}\n  at identifier {}\n\n"
+               "Did you forget to register a schema with such URI?\n",
+               error.what(), error.identifier());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
           &error) {
-    std::cerr << "error: " << error.what() << "\n  to identifier "
-              << error.identifier() << "\n  at path " << error.path().string()
-              << "\n  at location \"";
-    sourcemeta::core::stringify(error.location(), std::cerr);
-    std::cerr << "\"\n";
+    std::print(stderr,
+               "error: {}\n  to identifier {}\n  at path {}\n"
+               "  at location \"{}\"\n",
+               error.what(), error.identifier(), error.path().string(),
+               sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    std::cerr << "error: " << error.what() << "\n  to identifier "
-              << error.identifier() << "\n  at location \"";
-    sourcemeta::core::stringify(error.location(), std::cerr);
-    std::cerr << "\"\n";
+    std::print(stderr, "error: {}\n  to identifier {}\n  at location \"{}\"\n",
+               error.what(), error.identifier(),
+               sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::JSONFileParseError &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at line " << error.line()
-              << "\n  at column " << error.column() << "\n";
+    std::print(
+        stderr, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
+        error.what(), error.path().string(), error.line(), error.column());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>
                &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at line " << error.line()
-              << "\n  at column " << error.column() << "\n";
+    std::print(
+        stderr, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
+        error.what(), error.path().string(), error.line(), error.column());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>
           &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at keyword " << error.keyword()
-              << "\n  at value " << error.value() << "\n";
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at keyword {}\n"
+               "  at value {}\n",
+               error.what(), error.path().string(), error.keyword(),
+               error.value());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>
                &error) {
-    std::cerr << "error: " << error.what() << "\n  at path "
-              << error.path().string() << "\n  at identifier "
-              << error.identifier() << "\n";
+    std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
+               error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const std::filesystem::filesystem_error &error) {
     if (error.code() == std::make_error_condition(std::errc::file_exists) ||
         error.code() == std::make_error_condition(std::errc::not_a_directory)) {
-      std::cerr
-          << "error: File already exists and is not a directory\n  at path "
-          << error.path1().string() << "\n";
+      std::print(stderr,
+                 "error: File already exists and is not a directory\n"
+                 "  at path {}\n",
+                 error.path1().string());
     } else if (error.code() == std::errc::no_such_file_or_directory) {
-      std::cerr << "error: Could not locate the requested file\n  at path "
-                << error.path1().string() << "\n";
+      std::print(stderr,
+                 "error: Could not locate the requested file\n  at path {}\n",
+                 error.path1().string());
     } else {
-      std::cerr << error.what() << "\n";
+      std::println(stderr, "{}", error.what());
     }
 
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
-    std::cerr << "unexpected error: " << error.what() << "\n";
+    std::println(stderr, "unexpected error: {}", error.what());
     return EXIT_FAILURE;
   }
 }
