@@ -6,74 +6,13 @@
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
 #include <csignal>     // std::signal, SIGINT, SIGTERM
-#include <cstdint>     // std::uint16_t, std::uint32_t, std::stoul
+#include <cstdint>     // std::uint16_t
 #include <cstdlib>     // EXIT_FAILURE, std::exit
 #include <filesystem>  // std::filesystem
 #include <iostream>    // std::cout, std::cerr
 #include <limits>      // std::numeric_limits
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
-
-static auto handle_default(const std::filesystem::path &base,
-                           const std::span<std::string_view>,
-                           sourcemeta::one::HTTPRequest &request,
-                           sourcemeta::one::HTTPResponse &response) -> void {
-  if (request.path() == "/") {
-    if (request.prefers_html()) {
-      action_serve_metapack_file(request, response,
-                                 base / "explorer" / SENTINEL /
-                                     "directory-html.metapack",
-                                 sourcemeta::one::STATUS_OK);
-      return;
-    } else if (request.method() == "get" || request.method() == "head") {
-      json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-                 "not-found", "There is nothing at this URL");
-      return;
-    } else {
-      json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-                 "method-not-allowed",
-                 "This HTTP method is invalid for this URL");
-      return;
-    }
-  }
-
-  if (request.path().ends_with(".json")) {
-    action_jsonschema_serve(base,
-                            request.path().substr(1, request.path().size() - 6),
-                            request, response);
-    return;
-  }
-
-  const auto path{request.path().substr(1)};
-  if (request.method() == "get" || request.method() == "head") {
-    if (request.prefers_html()) {
-      auto absolute_path{base / "explorer" / path / SENTINEL};
-      if (std::filesystem::exists(absolute_path / "schema-html.metapack") &&
-          // To distinguish between entries that are both directories and
-          // schemas
-          !path.ends_with("/")) {
-        action_serve_metapack_file(request, response,
-                                   absolute_path / "schema-html.metapack",
-                                   sourcemeta::one::STATUS_OK);
-      } else {
-        absolute_path /= "directory-html.metapack";
-        if (std::filesystem::exists(absolute_path)) {
-          action_serve_metapack_file(request, response, absolute_path,
-                                     sourcemeta::one::STATUS_OK);
-        } else {
-          action_serve_metapack_file(
-              request, response, base / "explorer" / SENTINEL / "404.metapack",
-              sourcemeta::one::STATUS_NOT_FOUND);
-        }
-      }
-    } else {
-      action_jsonschema_serve(base, path, request, response);
-    }
-  } else {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
-  }
-}
 
 static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                      const std::filesystem::path &base,
@@ -92,29 +31,28 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches[index] = value;
           })};
 
-      if (handler == 0) {
-        handle_default(base, matches, request, response);
-      } else if (handler >= std::size(sourcemeta::one::ACTION_HANDLERS))
-          [[unlikely]] {
-        json_error(
-            request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
-            "unknown-handler-code",
-            "This server version does not implement the handler for this URL");
-      } else {
-        sourcemeta::one::ACTION_HANDLERS[handler](handler, router, base,
-                                                  matches, request, response);
-      }
+      sourcemeta::one::dispatch_action(handler, router, base, matches, request,
+                                       response);
     } else {
-      json_error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
-                 "cannot-satisfy-content-encoding",
-                 "The server cannot satisfy the request content encoding");
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
+          "cannot-satisfy-content-encoding",
+          "The server cannot satisfy the request content encoding",
+          // TODO: This implies the API is mounted
+          "/self/v1/schemas/api/error");
     }
   } catch (const std::exception &error) {
-    json_error(request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-               "uncaught-error", error.what());
+    sourcemeta::one::json_error(request, response,
+                                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                                "uncaught-error", error.what(),
+                                // TODO: This implies the API is mounted
+                                "/self/v1/schemas/api/error");
   } catch (...) {
-    json_error(request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-               "uncaught-error", "An unknown unexpected error occurred");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+        "uncaught-error", "An unknown unexpected error occurred",
+        // TODO: This implies the API is mounted
+        "/self/v1/schemas/api/error");
   }
 }
 
@@ -169,14 +107,16 @@ auto main(int argc, char *argv[]) noexcept -> int {
           const auto duration{
               std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::steady_clock::now() - timestamp_start)};
-          log("Listening on port " + std::to_string(bound_port) + " in " +
-              std::to_string(duration.count()) + " ms");
+          sourcemeta::one::HTTP_LOG("Listening on port " +
+                                    std::to_string(bound_port) + " in " +
+                                    std::to_string(duration.count()) + " ms");
         },
         [](const std::uint16_t requested_port) {
-          log("Failed to listen on port " + std::to_string(requested_port));
+          sourcemeta::one::HTTP_LOG("Failed to listen on port " +
+                                    std::to_string(requested_port));
         });
 
-    log("The server could not start");
+    sourcemeta::one::HTTP_LOG("The server could not start");
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
     std::cerr << "unexpected error: " << error.what() << "\n";

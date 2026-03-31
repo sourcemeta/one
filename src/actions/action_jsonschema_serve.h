@@ -4,8 +4,7 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/shared.h>
 
-#include <sourcemeta/one/actions_helpers.h>
-#include <sourcemeta/one/actions_serve_metapack_file.h>
+#include "action_serve_metapack_file.h"
 
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
@@ -32,7 +31,7 @@ inline auto action_jsonschema_serve(const std::filesystem::path &base,
                        user_agent.starts_with("VSCodium")};
   const auto is_deno{user_agent.starts_with("Deno/")};
   const auto bundle{!request.query("bundle").empty()};
-  auto absolute_path{base / "schemas" / lowercase_path / SENTINEL};
+  auto absolute_path{base / "schemas" / lowercase_path / "%"};
   if (is_vscode) {
     absolute_path /= "editor.metapack";
   } else if (bundle || is_deno) {
@@ -43,8 +42,9 @@ inline auto action_jsonschema_serve(const std::filesystem::path &base,
 
   if (request.method() != "get" && request.method() != "head" &&
       !std::filesystem::exists(absolute_path)) {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+        "There is nothing at this URL", "/self/v1/schemas/api/error");
     return;
   }
 

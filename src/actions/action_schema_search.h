@@ -6,8 +6,6 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/search.h>
 
-#include <sourcemeta/one/actions_helpers.h>
-
 #include <charconv>     // std::from_chars
 #include <cstdint>      // std::uint8_t
 #include <sstream>      // std::ostringstream
@@ -19,25 +17,29 @@ inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
                                  sourcemeta::one::HTTPResponse &response)
     -> void {
   if (request.method() != "get") {
-    json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-               "method-not-allowed",
-               "This HTTP method is invalid for this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+        "method-not-allowed", "This HTTP method is invalid for this URL",
+        "/self/v1/schemas/api/error");
     return;
   }
 
   const auto query{request.query("q")};
   if (query.empty()) {
-    json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-               "missing-query",
-               "You must provide a query parameter to search for");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_BAD_REQUEST, "missing-query",
+        "You must provide a query parameter to search for",
+        "/self/v1/schemas/api/error");
     return;
   }
 
   constexpr std::size_t MAXIMUM_QUERY_LENGTH{256};
   if (query.size() > MAXIMUM_QUERY_LENGTH) {
-    json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-               "invalid-search-query",
-               "The search query must not exceed 256 characters");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+        "invalid-search-query",
+        "The search query must not exceed 256 characters",
+        "/self/v1/schemas/api/error");
     return;
   }
 
@@ -53,9 +55,11 @@ inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
     if (error_code != std::errc{} ||
         pointer != limit_param.data() + limit_param.size() ||
         parsed_limit < 1 || parsed_limit > MAXIMUM_LIMIT) {
-      json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-                 "invalid-search-limit",
-                 "The limit must be a positive integer between 1 and 100");
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-search-limit",
+          "The limit must be a positive integer between 1 and 100",
+          "/self/v1/schemas/api/error");
       return;
     }
 
@@ -83,10 +87,12 @@ inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
       } else if (token == "description") {
         scope |= sourcemeta::one::SearchScopeDescription;
       } else {
-        json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-                   "invalid-search-scope",
-                   "The scope must be a comma-separated list of: path, title, "
-                   "description");
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+            "invalid-search-scope",
+            "The scope must be a comma-separated list of: path, title, "
+            "description",
+            "/self/v1/schemas/api/error");
         return;
       }
 
@@ -98,10 +104,12 @@ inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
     }
 
     if (scope == 0) {
-      json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-                 "invalid-search-scope",
-                 "The scope must be a comma-separated list of: path, title, "
-                 "description");
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-search-scope",
+          "The scope must be a comma-separated list of: path, title, "
+          "description",
+          "/self/v1/schemas/api/error");
       return;
     }
   }
@@ -110,11 +118,13 @@ inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
   response.write_status(sourcemeta::one::STATUS_OK);
   response.write_header("Access-Control-Allow-Origin", "*");
   response.write_header("Content-Type", "application/json");
-  write_link_header(response, "/self/v1/schemas/api/schemas/search/response");
+  sourcemeta::one::write_link_header(
+      response, "/self/v1/schemas/api/schemas/search/response");
   std::ostringstream output;
   sourcemeta::core::prettify(result, output);
-  send_response(sourcemeta::one::STATUS_OK, request, response, output.str(),
-                sourcemeta::one::Encoding::Identity);
+  sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request, response,
+                                 output.str(),
+                                 sourcemeta::one::Encoding::Identity);
 }
 
 #endif
