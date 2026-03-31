@@ -1,13 +1,12 @@
-#ifndef SOURCEMETA_ONE_SERVER_ACTION_SCHEMA_SEARCH_H
-#define SOURCEMETA_ONE_SERVER_ACTION_SCHEMA_SEARCH_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_H
+#define SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_H
 
 #include <sourcemeta/core/json.h>
 
+#include <sourcemeta/one/http.h>
 #include <sourcemeta/one/search.h>
 
-#include "helpers.h"
-
-#include <sourcemeta/one/http.h>
+#include <sourcemeta/one/actions_helpers.h>
 
 #include <charconv>     // std::from_chars
 #include <cstdint>      // std::uint8_t
@@ -15,7 +14,7 @@
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
 
-static auto action_schema_search(sourcemeta::one::SearchView &search_view,
+inline auto action_schema_search(sourcemeta::one::SearchView &search_view,
                                  sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response)
     -> void {

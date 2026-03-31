@@ -1,12 +1,11 @@
-#ifndef SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_SERVE_H
-#define SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_SERVE_H
-
-#include <sourcemeta/one/shared.h>
-
-#include "action_serve_metapack_file.h"
-#include "helpers.h"
+#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_H
+#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_H
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/shared.h>
+
+#include <sourcemeta/one/actions_helpers.h>
+#include <sourcemeta/one/actions_serve_metapack_file.h>
 
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
@@ -14,7 +13,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static auto action_jsonschema_serve(const std::filesystem::path &base,
+inline auto action_jsonschema_serve(const std::filesystem::path &base,
                                     const std::string_view &path,
                                     sourcemeta::one::HTTPRequest &request,
                                     sourcemeta::one::HTTPResponse &response)

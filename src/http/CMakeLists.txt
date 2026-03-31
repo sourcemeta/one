@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME http
-  PRIVATE_HEADERS uwebsockets.h request.h response.h)
+  PRIVATE_HEADERS uwebsockets.h request.h response.h app.h server.h)
 
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::one::gzip)

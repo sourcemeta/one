@@ -1,12 +1,11 @@
-#ifndef SOURCEMETA_ONE_SERVER_HELPERS_H
-#define SOURCEMETA_ONE_SERVER_HELPERS_H
+#ifndef SOURCEMETA_ONE_ACTIONS_HELPERS_H
+#define SOURCEMETA_ONE_ACTIONS_HELPERS_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/time.h>
 
-#include <sourcemeta/one/shared.h>
-
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
@@ -21,13 +20,13 @@
 
 constexpr auto SENTINEL{"%"};
 
-static auto write_link_header(sourcemeta::one::HTTPResponse &response,
+inline auto write_link_header(sourcemeta::one::HTTPResponse &response,
                               const std::string_view schema_path) -> void {
   response.write_header("Link",
                         std::format("<{}>; rel=\"describedby\"", schema_path));
 }
 
-static auto log(std::string_view message) -> void {
+inline auto log(std::string_view message) -> void {
   // Otherwise we can get messed up output interleaved from multiple threads
   static std::mutex log_mutex;
   std::lock_guard<std::mutex> guard{log_mutex};
@@ -36,7 +35,7 @@ static auto log(std::string_view message) -> void {
              std::this_thread::get_id(), message);
 }
 
-static auto send_response(const char *const code,
+inline auto send_response(const char *const code,
                           const sourcemeta::one::HTTPRequest &request,
                           sourcemeta::one::HTTPResponse &response) -> void {
   response.send_without_content();
@@ -44,7 +43,7 @@ static auto send_response(const char *const code,
   log(std::format("{} {} {}", code, request.method(), request.path()));
 }
 
-static auto send_response(const char *const code,
+inline auto send_response(const char *const code,
                           const sourcemeta::one::HTTPRequest &request,
                           sourcemeta::one::HTTPResponse &response,
                           const std::string &message,
@@ -56,7 +55,7 @@ static auto send_response(const char *const code,
 }
 
 // See https://www.rfc-editor.org/rfc/rfc7807
-static auto json_error(const sourcemeta::one::HTTPRequest &request,
+inline auto json_error(const sourcemeta::one::HTTPRequest &request,
                        sourcemeta::one::HTTPResponse &response,
                        const char *const code, std::string &&id,
                        std::string &&message) -> void {

@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_EVALUATE_H
-#define SOURCEMETA_ONE_SERVER_ACTION_JSONSCHEMA_EVALUATE_H
+#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_H
+#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -7,12 +7,11 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include "helpers.h"
-
-#include <sourcemeta/one/http.h>
+#include <sourcemeta/one/actions_helpers.h>
 
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem::path
@@ -175,7 +174,7 @@ auto evaluate(const std::filesystem::path &template_path,
 
 } // namespace sourcemeta::one
 
-static auto
+inline auto
 action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
                                     const sourcemeta::one::EvaluateType mode,
                                     sourcemeta::one::HTTPRequest &request,
@@ -216,7 +215,7 @@ action_jsonschema_evaluate_callback(const std::filesystem::path &template_path,
   }
 }
 
-static auto action_jsonschema_evaluate(const std::filesystem::path &base,
+inline auto action_jsonschema_evaluate(const std::filesystem::path &base,
                                        const std::string_view &path,
                                        sourcemeta::one::HTTPRequest &request,
                                        sourcemeta::one::HTTPResponse &response,
