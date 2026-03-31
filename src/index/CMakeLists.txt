@@ -11,6 +11,7 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::enterprise_index)
 endif()
 
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::actions)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::metapack)

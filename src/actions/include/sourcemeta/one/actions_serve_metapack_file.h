@@ -1,15 +1,14 @@
-#ifndef SOURCEMETA_ONE_SERVER_ACTION_SERVE_METAPACK_FILE_H
-#define SOURCEMETA_ONE_SERVER_ACTION_SERVE_METAPACK_FILE_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_H
+#define SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_H
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/time.h>
 
+#include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include "helpers.h"
-
-#include <sourcemeta/one/http.h>
+#include <sourcemeta/one/actions_helpers.h>
 
 #include <chrono>     // std::chrono::seconds
 #include <filesystem> // std::filesystem
@@ -23,7 +22,7 @@ struct MetapackDialectExtension {
 };
 #pragma pack(pop)
 
-static auto action_serve_metapack_file(
+inline auto action_serve_metapack_file(
     const sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response,
     const std::filesystem::path &absolute_path, const char *const code,

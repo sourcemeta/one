@@ -16,7 +16,6 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 #include <src/App.h>
-#include <src/LocalCluster.h>
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)

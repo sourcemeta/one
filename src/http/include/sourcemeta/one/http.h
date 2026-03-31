@@ -3,6 +3,7 @@
 
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
+#include <sourcemeta/one/http_server.h>
 #include <sourcemeta/one/http_uwebsockets.h>
 
 #endif

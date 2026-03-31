@@ -3,6 +3,7 @@
 
 #include "error.h"
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
