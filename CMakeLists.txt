@@ -86,6 +86,7 @@ endif()
 if(ONE_SERVER)
   find_package(uSockets REQUIRED)
   find_package(uWebSockets REQUIRED)
+  add_subdirectory(src/http)
   add_subdirectory(src/server)
 endif()
 

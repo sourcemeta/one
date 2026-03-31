@@ -6,8 +6,7 @@
 
 #include <sourcemeta/one/shared.h>
 
-#include "request.h"
-#include "response.h"
+#include <sourcemeta/one/http.h>
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock

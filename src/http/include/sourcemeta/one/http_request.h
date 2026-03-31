@@ -1,10 +1,10 @@
-#ifndef SOURCEMETA_ONE_SERVER_REQUEST_H
-#define SOURCEMETA_ONE_SERVER_REQUEST_H
+#ifndef SOURCEMETA_ONE_HTTP_REQUEST_H
+#define SOURCEMETA_ONE_HTTP_REQUEST_H
 
 #include <sourcemeta/core/time.h>
 
-#include "response.h"
-#include "uwebsockets.h"
+#include <sourcemeta/one/http_response.h>
+#include <sourcemeta/one/http_uwebsockets.h>
 
 #include <algorithm>   // std::ranges::sort
 #include <chrono>      // std::chrono::system_clock
