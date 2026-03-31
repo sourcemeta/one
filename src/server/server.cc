@@ -161,7 +161,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
       return EXIT_FAILURE;
     }
 
-    const auto port{static_cast<std::uint32_t>(std::stoul(argv[2]))};
+    const auto port{static_cast<std::uint16_t>(std::stoul(argv[2]))};
+    assert(port > 0);
 
     // Note we purposely DO NOT canonicalise in order to NOT resolve
     // symlinks in the output location
@@ -176,7 +177,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
     sourcemeta::one::HTTPServer(
-        static_cast<std::uint16_t>(port),
+        port,
         [&router, &base](sourcemeta::one::HTTPRequest &request,
                          sourcemeta::one::HTTPResponse &response) {
           dispatch(router, base, request, response);

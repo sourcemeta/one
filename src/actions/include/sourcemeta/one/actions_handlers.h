@@ -192,9 +192,17 @@ inline auto handle_self_static(const std::filesystem::path &,
                                sourcemeta::one::HTTPRequest &request,
                                sourcemeta::one::HTTPResponse &response)
     -> void {
-  action_serve_metapack_file(
-      request, response, sourcemeta::one::static_asset_path / matches.front(),
-      sourcemeta::one::STATUS_OK);
+  // Reject path traversal attempts
+  const auto &relative_path{matches.front()};
+  if (relative_path.find("..") != std::string_view::npos) {
+    json_error(request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+               "invalid-path", "The requested path is invalid");
+    return;
+  }
+
+  action_serve_metapack_file(request, response,
+                             sourcemeta::one::static_asset_path / relative_path,
+                             sourcemeta::one::STATUS_OK);
 }
 
 using Handler = auto (*)(const std::filesystem::path &,
