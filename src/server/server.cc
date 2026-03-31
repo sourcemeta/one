@@ -175,29 +175,25 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
-    sourcemeta::one::HTTPServer([&router, &base, port, timestamp_start](
-                                    sourcemeta::one::HTTPApp &app) -> void {
-      app.on_request([&router, &base](sourcemeta::one::HTTPRequest &request,
-                                      sourcemeta::one::HTTPResponse &response) {
-        dispatch(router, base, request, response);
-      });
-
-      app.listen(
-          static_cast<std::uint16_t>(port),
-          [port, timestamp_start](const std::uint16_t bound_port) -> void {
-            const auto timestamp_end{std::chrono::steady_clock::now()};
-            const auto duration{
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    timestamp_end - timestamp_start)};
-            if (bound_port > 0) {
-              assert(port == static_cast<std::uint32_t>(bound_port));
-              log("Listening on port " + std::to_string(bound_port) + " in " +
-                  std::to_string(duration.count()) + " ms");
-            } else {
-              log("Failed to listen on port " + std::to_string(port));
-            }
-          });
-    });
+    sourcemeta::one::HTTPServer(
+        static_cast<std::uint16_t>(port),
+        [&router, &base](sourcemeta::one::HTTPRequest &request,
+                         sourcemeta::one::HTTPResponse &response) {
+          dispatch(router, base, request, response);
+        },
+        [port, timestamp_start](const std::uint16_t bound_port) {
+          const auto timestamp_end{std::chrono::steady_clock::now()};
+          const auto duration{
+              std::chrono::duration_cast<std::chrono::milliseconds>(
+                  timestamp_end - timestamp_start)};
+          if (bound_port > 0) {
+            assert(port == static_cast<std::uint32_t>(bound_port));
+            log("Listening on port " + std::to_string(bound_port) + " in " +
+                std::to_string(duration.count()) + " ms");
+          } else {
+            log("Failed to listen on port " + std::to_string(port));
+          }
+        });
 
     log("The server could not start");
     return EXIT_FAILURE;
