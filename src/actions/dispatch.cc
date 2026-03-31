@@ -233,6 +233,7 @@ auto sourcemeta::one::dispatch_action(
         "unknown-handler-code",
         "This server version does not implement the handler for "
         "this URL",
+        // TODO: This implies the API is mounted
         "/self/v1/schemas/api/error");
     return;
   }

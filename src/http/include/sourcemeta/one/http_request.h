@@ -160,7 +160,8 @@ public:
   // - max_size: Maximum body size in bytes (default 1MB)
   // Note: If the request is aborted, the callback is not invoked
   template <typename Callback, typename ErrorCallback>
-  auto body(const Callback &callback, ErrorCallback on_error,
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
+  auto body(Callback callback, ErrorCallback on_error,
             std::size_t max_size = static_cast<std::size_t>(1024) * 1024)
       -> void {
     auto raw_response = this->response_;
