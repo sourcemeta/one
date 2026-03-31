@@ -285,6 +285,7 @@ static const Handler HANDLERS[] = {handle_default,
 
 static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                      const std::filesystem::path &base,
+                     // TODO: Encapsulate uWS behind `src/http`
                      uWS::HttpResponse<true> *const raw_response,
                      uWS::HttpRequest *const raw_request) noexcept -> void {
   sourcemeta::one::HTTPResponse response{raw_response};
@@ -366,6 +367,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
+    // TODO: Encapsulate uWS behind `src/http`
     uWS::LocalCluster(
         {}, [&router, &base, port, timestamp_start](uWS::SSLApp &app) -> void {
           app.any("/*",

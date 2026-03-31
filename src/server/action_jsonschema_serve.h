@@ -5,8 +5,8 @@
 
 #include "action_serve_metapack_file.h"
 #include "helpers.h"
-#include "request.h"
-#include "response.h"
+
+#include <sourcemeta/one/http.h>
 
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower

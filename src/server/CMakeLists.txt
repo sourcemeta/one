@@ -6,22 +6,15 @@ sourcemeta_executable(NAMESPACE sourcemeta PROJECT one NAME server
     action_schema_search.h
     action_serve_metapack_file.h
     helpers.h
-    request.h
-    response.h
-    server.cc
-    uwebsockets.h)
+    server.cc)
 
 set_target_properties(sourcemeta_one_server PROPERTIES OUTPUT_NAME sourcemeta-one-server)
 
+target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::crypto)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::uritemplate)
-target_link_libraries(sourcemeta_one_server PRIVATE uNetworking::uSockets)
-target_link_libraries(sourcemeta_one_server PRIVATE uNetworking::uWebSockets)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::gzip)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::metapack)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::blaze::evaluator)

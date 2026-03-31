@@ -11,8 +11,8 @@
 #include <sourcemeta/one/shared.h>
 
 #include "helpers.h"
-#include "request.h"
-#include "response.h"
+
+#include <sourcemeta/one/http.h>
 
 #include <cassert>     // assert
 #include <filesystem>  // std::filesystem::path

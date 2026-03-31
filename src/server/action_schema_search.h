@@ -6,8 +6,8 @@
 #include <sourcemeta/one/search.h>
 
 #include "helpers.h"
-#include "request.h"
-#include "response.h"
+
+#include <sourcemeta/one/http.h>
 
 #include <charconv>     // std::from_chars
 #include <cstdint>      // std::uint8_t
