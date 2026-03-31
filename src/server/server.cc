@@ -181,18 +181,15 @@ auto main(int argc, char *argv[]) noexcept -> int {
                          sourcemeta::one::HTTPResponse &response) {
           dispatch(router, base, request, response);
         },
-        [port, timestamp_start](const std::uint16_t bound_port) {
-          const auto timestamp_end{std::chrono::steady_clock::now()};
+        [timestamp_start](const std::uint16_t bound_port) {
           const auto duration{
               std::chrono::duration_cast<std::chrono::milliseconds>(
-                  timestamp_end - timestamp_start)};
-          if (bound_port > 0) {
-            assert(port == static_cast<std::uint32_t>(bound_port));
-            log("Listening on port " + std::to_string(bound_port) + " in " +
-                std::to_string(duration.count()) + " ms");
-          } else {
-            log("Failed to listen on port " + std::to_string(port));
-          }
+                  std::chrono::steady_clock::now() - timestamp_start)};
+          log("Listening on port " + std::to_string(bound_port) + " in " +
+              std::to_string(duration.count()) + " ms");
+        },
+        [](const std::uint16_t requested_port) {
+          log("Failed to listen on port " + std::to_string(requested_port));
         });
 
     log("The server could not start");
