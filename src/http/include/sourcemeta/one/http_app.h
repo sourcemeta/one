@@ -6,7 +6,6 @@
 #include <sourcemeta/one/http_uwebsockets.h>
 
 #include <cstdint> // std::uint16_t
-#include <string>  // std::string
 
 namespace sourcemeta::one {
 
@@ -14,9 +13,8 @@ class HTTPApp {
 public:
   explicit HTTPApp(uWS::SSLApp *app) : app_{app} {}
 
-  template <typename Handler>
-  auto on_request(const std::string_view pattern, Handler handler) -> void {
-    this->app_->any(std::string{pattern},
+  template <typename Handler> auto on_request(Handler handler) -> void {
+    this->app_->any("/*",
                     [handler = std::move(handler)](
                         auto *const raw_response,
                         auto *const raw_request) noexcept -> void {

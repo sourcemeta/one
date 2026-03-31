@@ -177,11 +177,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     sourcemeta::one::HTTPServer([&router, &base, port, timestamp_start](
                                     sourcemeta::one::HTTPApp &app) -> void {
-      app.on_request("/*",
-                     [&router, &base](sourcemeta::one::HTTPRequest &request,
+      app.on_request([&router, &base](sourcemeta::one::HTTPRequest &request,
                                       sourcemeta::one::HTTPResponse &response) {
-                       dispatch(router, base, request, response);
-                     });
+        dispatch(router, base, request, response);
+      });
 
       app.listen(
           static_cast<std::uint16_t>(port),
