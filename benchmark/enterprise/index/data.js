@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774909991769,
+  "lastUpdate": 1774968235841,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (enterprise)": [
@@ -7311,6 +7311,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "Index 10000 schemas",
             "value": 13207,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f7a3cc911d38413237339af51989665262a0b4fc",
+          "message": "Extract HTTP server wrappers to their own module (#795)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-03-31T09:59:06-04:00",
+          "tree_id": "d11a77a3cc7f21ff5b980ad465be6a7dba67a284",
+          "url": "https://github.com/sourcemeta/one/commit/f7a3cc911d38413237339af51989665262a0b4fc"
+        },
+        "date": 1774968229380,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 20,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 26,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 73,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 613,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 19,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 24,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 82,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 819,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 12,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 33,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 285,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 110,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 1042,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 12805,
             "unit": "ms"
           }
         ]
