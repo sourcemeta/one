@@ -64,23 +64,25 @@ public:
     }
   }
 
-  auto method() const noexcept -> std::string_view {
+  [[nodiscard]] auto method() const noexcept -> std::string_view {
     return this->request_ ? this->request_->getMethod() : this->method_;
   }
 
-  auto path() const noexcept -> std::string_view {
+  [[nodiscard]] auto path() const noexcept -> std::string_view {
     return this->request_ ? this->request_->getUrl() : this->path_;
   }
 
-  auto header(const std::string_view name) const noexcept -> std::string_view {
+  [[nodiscard]] auto header(const std::string_view name) const noexcept
+      -> std::string_view {
     return this->request_->getHeader(name);
   }
 
-  auto query(const std::string_view name) const noexcept -> std::string_view {
+  [[nodiscard]] auto query(const std::string_view name) const
+      -> std::string_view {
     return this->request_->getQuery(name);
   }
 
-  auto header_gmt(const std::string_view name) const noexcept
+  [[nodiscard]] auto header_gmt(const std::string_view name) const noexcept
       -> std::optional<std::chrono::system_clock::time_point> {
     const auto value{this->header(name)};
     if (value.empty()) {
@@ -96,7 +98,7 @@ public:
 
   // A header list element consists of the element value and its quality value
   // See https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
-  auto header_list(const std::string_view name) const
+  [[nodiscard]] auto header_list(const std::string_view name) const
       -> std::vector<std::pair<std::string, float>> {
     const auto value{this->header(name)};
     if (value.empty()) {
@@ -108,14 +110,14 @@ public:
     std::vector<std::pair<std::string, float>> result;
 
     while (std::getline(stream, token, ',')) {
-      const std::size_t start{token.find_first_not_of(" ")};
-      const std::size_t end{token.find_last_not_of(" ")};
+      const std::size_t start{token.find_first_not_of(' ')};
+      const std::size_t end{token.find_last_not_of(' ')};
       if (start == std::string::npos || end == std::string::npos) {
         continue;
       }
 
       // See https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
-      const std::size_t value_start{token.find_first_of(";")};
+      const std::size_t value_start{token.find_first_of(';')};
       if (value_start != std::string::npos && value_start + 3 < token.size() &&
           token[value_start + 1] == 'q' && token[value_start + 2] == '=') {
         result.emplace_back(token.substr(start, value_start - start),
@@ -137,16 +139,17 @@ public:
     return result;
   }
 
-  auto prefers_html() const noexcept -> bool {
+  [[nodiscard]] auto prefers_html() const noexcept -> bool {
     // TODO: We probably want to take Accept sequences and q= into account
     return this->header("accept").find("text/html") != std::string_view::npos;
   }
 
-  auto satisfiable_encoding() const noexcept -> bool {
+  [[nodiscard]] auto satisfiable_encoding() const noexcept -> bool {
     return this->satisfiable_encoding_;
   }
 
-  auto response_encoding() const noexcept -> sourcemeta::one::Encoding {
+  [[nodiscard]] auto response_encoding() const noexcept
+      -> sourcemeta::one::Encoding {
     return this->response_encoding_;
   }
 
@@ -157,8 +160,9 @@ public:
   // - max_size: Maximum body size in bytes (default 1MB)
   // Note: If the request is aborted, the callback is not invoked
   template <typename Callback, typename ErrorCallback>
-  auto body(Callback callback, ErrorCallback on_error,
-            std::size_t max_size = 1024 * 1024) -> void {
+  auto body(const Callback &callback, ErrorCallback on_error,
+            std::size_t max_size = static_cast<std::size_t>(1024) * 1024)
+      -> void {
     auto raw_response = this->response_;
     auto snapshot = std::make_shared<HTTPRequest>(
         std::string{this->method()}, std::string{this->path()},
@@ -169,6 +173,7 @@ public:
     raw_response->onAborted([completed]() mutable { *completed = true; });
 
     raw_response->onData(
+        // NOLINTNEXTLINE(bugprone-exception-escape)
         [raw_response, snapshot, buffer, completed, max_size, callback,
          on_error](std::string_view chunk, bool is_last) mutable {
           if (*completed) {

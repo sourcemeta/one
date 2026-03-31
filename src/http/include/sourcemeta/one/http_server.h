@@ -40,6 +40,7 @@ public:
             auto *app{new uWS::SSLApp(options)};
 
             app->any("/*",
+                     // NOLINTNEXTLINE(bugprone-exception-escape)
                      [&on_request](auto *const raw_response,
                                    auto *const raw_request) noexcept -> void {
                        HTTPResponse response{raw_response};

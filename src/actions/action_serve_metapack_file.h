@@ -8,8 +8,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <sourcemeta/one/actions_helpers.h>
-
 #include <chrono>     // std::chrono::seconds
 #include <filesystem> // std::filesystem
 #include <optional>   // std::optional
@@ -30,30 +28,34 @@ inline auto action_serve_metapack_file(
     const std::optional<std::string> &mime = std::nullopt,
     const std::optional<std::string> &link = std::nullopt) -> void {
   if (request.method() != "get" && request.method() != "head") {
-    json_error(request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-               "method-not-allowed",
-               "This HTTP method is invalid for this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+        "method-not-allowed", "This HTTP method is invalid for this URL",
+        "/self/v1/schemas/api/error");
     return;
   }
 
   if (!std::filesystem::exists(absolute_path)) {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+        "There is nothing at this URL", "/self/v1/schemas/api/error");
     return;
   }
 
   sourcemeta::core::FileView view{absolute_path};
   if (view.size() <
       sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+        "There is nothing at this URL", "/self/v1/schemas/api/error");
     return;
   }
 
   const auto info{sourcemeta::one::metapack_info(view)};
   if (!info.has_value()) {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+        "There is nothing at this URL", "/self/v1/schemas/api/error");
     return;
   }
 
@@ -71,7 +73,8 @@ inline auto action_serve_metapack_file(
       response.write_header("Access-Control-Allow-Origin", "*");
     }
 
-    send_response(sourcemeta::one::STATUS_NOT_MODIFIED, request, response);
+    sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
+                                   request, response);
     return;
   }
 
@@ -89,7 +92,8 @@ inline auto action_serve_metapack_file(
         response.write_header("Access-Control-Allow-Origin", "*");
       }
 
-      send_response(sourcemeta::one::STATUS_NOT_MODIFIED, request, response);
+      sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
+                                     request, response);
       return;
     }
   }
@@ -117,7 +121,7 @@ inline auto action_serve_metapack_file(
   // See
   // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
   if (link.has_value()) {
-    write_link_header(response, link.value());
+    sourcemeta::one::write_link_header(response, link.value());
   } else {
     const auto *dialect_ext{
         sourcemeta::one::metapack_extension<MetapackDialectExtension>(view)};
@@ -134,14 +138,15 @@ inline auto action_serve_metapack_file(
                                dialect_ext->dialect_length}
             : std::string_view{};
     if (!dialect.empty()) {
-      write_link_header(response, std::string{dialect});
+      sourcemeta::one::write_link_header(response, std::string{dialect});
     }
   }
 
   const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
   if (!payload_start.has_value()) {
-    json_error(request, response, sourcemeta::one::STATUS_NOT_FOUND,
-               "not-found", "There is nothing at this URL");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+        "There is nothing at this URL", "/self/v1/schemas/api/error");
     return;
   }
 
@@ -152,12 +157,39 @@ inline auto action_serve_metapack_file(
                              payload_size};
 
   if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
-    send_response(code, request, response, contents,
-                  sourcemeta::one::Encoding::GZIP);
+    sourcemeta::one::send_response(code, request, response, contents,
+                                   sourcemeta::one::Encoding::GZIP);
   } else {
-    send_response(code, request, response, contents,
-                  sourcemeta::one::Encoding::Identity);
+    sourcemeta::one::send_response(code, request, response, contents,
+                                   sourcemeta::one::Encoding::Identity);
   }
+}
+
+inline auto action_serve_metapack_file_relative(
+    const sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response,
+    const std::filesystem::path &base_path,
+    const std::string_view relative_path, const char *const code,
+    const bool enable_cors = false,
+    const std::optional<std::string> &mime = std::nullopt,
+    const std::optional<std::string> &link = std::nullopt) -> void {
+  if (base_path.empty()) {
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+        "missing-base-path", "The base path is not configured for this route",
+        "/self/v1/schemas/api/error");
+    return;
+  }
+
+  if (relative_path.find("..") != std::string_view::npos) {
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-path",
+        "The requested path is invalid", "/self/v1/schemas/api/error");
+    return;
+  }
+
+  action_serve_metapack_file(request, response, base_path / relative_path, code,
+                             enable_cors, mime, link);
 }
 
 #endif
