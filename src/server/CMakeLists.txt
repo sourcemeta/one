@@ -8,8 +8,6 @@ target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::actions)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::crypto)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::uritemplate)
 
-target_compile_definitions(sourcemeta_one_server
-  PRIVATE SOURCEMETA_ONE_STATIC="${ONE_PREFIX}/share/sourcemeta/one/static")
 
 install(TARGETS sourcemeta_one_server
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

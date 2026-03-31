@@ -75,23 +75,6 @@ static auto handle_default(const std::filesystem::path &base,
   }
 }
 
-static const Handler HANDLERS[] = {handle_default,
-                                   handle_self_v1_api_list,
-                                   handle_self_v1_api_list_path,
-                                   handle_self_v1_api_schemas_dependencies,
-                                   handle_self_v1_api_schemas_dependents,
-                                   handle_self_v1_api_schemas_health,
-                                   handle_self_v1_api_schemas_locations,
-                                   handle_self_v1_api_schemas_positions,
-                                   handle_self_v1_api_schemas_stats,
-                                   handle_self_v1_api_schemas_metadata,
-                                   handle_self_v1_api_schemas_evaluate,
-                                   handle_self_v1_api_schemas_trace,
-                                   handle_self_v1_api_schemas_search,
-                                   handle_self_api_not_found,
-                                   handle_self_static,
-                                   handle_self_v1_health};
-
 static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
                      const std::filesystem::path &base,
                      sourcemeta::one::HTTPRequest &request,
@@ -109,15 +92,17 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches[index] = value;
           })};
 
-      // For backwards compatibility in case the generated routes
-      // don't match this server version
-      if (handler >= std::size(HANDLERS)) [[unlikely]] {
+      if (handler == 0) {
+        handle_default(base, matches, request, response);
+      } else if (handler >= std::size(sourcemeta::one::ACTION_HANDLERS))
+          [[unlikely]] {
         json_error(
             request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
             "unknown-handler-code",
             "This server version does not implement the handler for this URL");
       } else {
-        HANDLERS[handler](base, matches, request, response);
+        sourcemeta::one::ACTION_HANDLERS[handler](handler, router, base,
+                                                  matches, request, response);
       }
     } else {
       json_error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
@@ -171,8 +156,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
       std::cout << "The output directory path must be absolute\n";
       return EXIT_FAILURE;
     }
-
-    sourcemeta::one::static_asset_path = SOURCEMETA_ONE_STATIC;
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
 
