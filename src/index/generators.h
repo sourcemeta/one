@@ -683,7 +683,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
                sourcemeta::one::HANDLER_SELF_V1_API_DEFAULT);
 
     if (action.data == "Full") {
-      router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC);
+      const sourcemeta::core::URITemplateRouter::Argument static_arguments[] = {
+          {"path", std::string_view{SOURCEMETA_ONE_STATIC}}};
+      router.add("/self/static/{+path}", sourcemeta::one::HANDLER_SELF_STATIC,
+                 static_arguments);
     }
 
     std::filesystem::create_directories(action.destination.parent_path());

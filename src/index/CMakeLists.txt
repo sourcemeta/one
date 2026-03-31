@@ -6,6 +6,8 @@ set_target_properties(sourcemeta_one_index PROPERTIES OUTPUT_NAME sourcemeta-one
 
 target_compile_definitions(sourcemeta_one_index
   PRIVATE SOURCEMETA_ONE_COLLECTIONS="${ONE_PREFIX}/share/sourcemeta/one/collections")
+target_compile_definitions(sourcemeta_one_index
+  PRIVATE SOURCEMETA_ONE_STATIC="${ONE_PREFIX}/share/sourcemeta/one/static")
 
 if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::enterprise_index)
