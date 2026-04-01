@@ -5,9 +5,12 @@
 #include "action_jsonschema_evaluate.h"
 #include "action_not_found.h"
 #include "action_schema_search.h"
-#include "action_serve_metapack_file.h"
+#include "action_serve_explorer_artifact.h"
+#include "action_serve_schema_artifact.h"
+#include "action_serve_static.h"
 
-#include <array> // std::array
+#include <array>   // std::array
+#include <utility> // std::to_underlying
 
 using Handler = auto (*)(const std::uint16_t,
                          const sourcemeta::core::URITemplateRouterView &,
@@ -31,19 +34,13 @@ static auto handle_self_v1_api_list(
     const std::filesystem::path &base, const std::span<std::string_view>,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{(base / "explorer" / "%" / "directory.metapack").string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeExplorerArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{{sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{path}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{sourcemeta::one::STATUS_OK}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{}},
+                     std::string_view{"directory"}},
                  sourcemeta::core::URITemplateRouter::ArgumentValue{
                      std::string_view{"/self/v1/schemas/api/list/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, {}, request, response, arguments);
 }
 
 static auto
@@ -53,21 +50,13 @@ handle_self_v1_api_list_path(const std::uint16_t,
                              const std::span<std::string_view> matches,
                              sourcemeta::one::HTTPRequest &request,
                              sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "explorer" / matches.front() / "%" / "directory.metapack")
-          .string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeExplorerArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{{sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{path}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{sourcemeta::one::STATUS_OK}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{}},
+                     std::string_view{"directory"}},
                  sourcemeta::core::URITemplateRouter::ArgumentValue{
                      std::string_view{"/self/v1/schemas/api/list/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_dependencies(
@@ -76,22 +65,14 @@ static auto handle_self_v1_api_schemas_dependencies(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "dependencies.metapack")
-          .string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"dependencies"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/dependencies/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_dependents(
@@ -100,22 +81,14 @@ static auto handle_self_v1_api_schemas_dependents(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "dependents.metapack")
-          .string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"dependents"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/dependents/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_health(
@@ -124,21 +97,14 @@ static auto handle_self_v1_api_schemas_health(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "health.metapack").string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"health"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/health/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_locations(
@@ -147,22 +113,14 @@ static auto handle_self_v1_api_schemas_locations(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "locations.metapack")
-          .string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"locations"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/locations/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_positions(
@@ -171,22 +129,14 @@ static auto handle_self_v1_api_schemas_positions(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "positions.metapack")
-          .string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"positions"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/positions/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_stats(
@@ -195,21 +145,14 @@ static auto handle_self_v1_api_schemas_stats(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "schemas" / matches.front() / "%" / "stats.metapack").string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeSchemaArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"stats"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/stats/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_metadata(
@@ -218,21 +161,14 @@ static auto handle_self_v1_api_schemas_metadata(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  const auto path{
-      (base / "explorer" / matches.front() / "%" / "schema.metapack").string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
+  static ActionServeExplorerArtifact instance{base};
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 2>
       arguments{
           {sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{path}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{sourcemeta::one::STATUS_OK}},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{true},
-           sourcemeta::core::URITemplateRouter::ArgumentValue{
-               std::string_view{}},
+               std::string_view{"schema"}},
            sourcemeta::core::URITemplateRouter::ArgumentValue{std::string_view{
                "/self/v1/schemas/api/schemas/metadata/response"}}}};
-  instance.run({}, {}, request, response, arguments);
+  instance.run(base, matches, request, response, arguments);
 }
 
 static auto handle_self_v1_api_schemas_evaluate(
@@ -242,9 +178,10 @@ static auto handle_self_v1_api_schemas_evaluate(
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
   static ActionJSONSchemaEvaluate instance{base};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 1>
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 1>
       arguments{{sourcemeta::core::URITemplateRouter::ArgumentValue{
-          std::int64_t{0}}}};
+          static_cast<std::int64_t>(std::to_underlying(
+              ActionJSONSchemaEvaluate::EvaluateMode::Standard))}}};
   instance.run(base, matches, request, response, arguments);
 }
 
@@ -255,9 +192,10 @@ static auto handle_self_v1_api_schemas_trace(
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
   static ActionJSONSchemaEvaluate instance{base};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 1>
+  static const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 1>
       arguments{{sourcemeta::core::URITemplateRouter::ArgumentValue{
-          std::int64_t{1}}}};
+          static_cast<std::int64_t>(std::to_underlying(
+              ActionJSONSchemaEvaluate::EvaluateMode::Trace))}}};
   instance.run(base, matches, request, response, arguments);
 }
 
@@ -295,36 +233,19 @@ handle_self_static(const std::uint16_t identifier,
                    const std::span<std::string_view> matches,
                    sourcemeta::one::HTTPRequest &request,
                    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeMetapackFile instance{base};
-  std::filesystem::path base_path;
+  static ActionServeStatic instance{base};
+  std::string_view static_path;
   router.arguments(identifier,
-                   [&base_path](const auto &key, const auto &value) {
+                   [&static_path](const auto &key, const auto &value) {
                      if (key == "path") {
-                       base_path = std::get<std::string_view>(value);
+                       static_path = std::get<std::string_view>(value);
                      }
                    });
 
-  if (base_path.empty()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-        "missing-base-path", "The base path is not configured for this route",
-        "/self/v1/schemas/api/error");
-    return;
-  }
-
-  const auto &relative_path{matches.front()};
-  const auto resolved_path{(base_path / relative_path).string()};
-  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 5>
-      arguments{{sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{resolved_path}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{sourcemeta::one::STATUS_OK}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{false},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{}},
-                 sourcemeta::core::URITemplateRouter::ArgumentValue{
-                     std::string_view{}}}};
-  instance.run({}, {}, request, response, arguments);
+  const std::array<sourcemeta::core::URITemplateRouter::ArgumentValue, 1>
+      arguments{
+          {sourcemeta::core::URITemplateRouter::ArgumentValue{static_path}}};
+  instance.run(base, matches, request, response, arguments);
 }
 
 static const std::array<Handler, 16> ACTION_HANDLERS = {

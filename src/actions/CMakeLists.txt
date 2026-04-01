@@ -6,7 +6,10 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_jsonschema_serve.h
     action_not_found.h
     action_schema_search.h
-    action_serve_metapack_file.h)
+    action_serve_explorer_artifact.h
+    action_serve_metapack_file.h
+    action_serve_schema_artifact.h
+    action_serve_static.h)
 
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)
