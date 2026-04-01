@@ -18,6 +18,8 @@
 
 class ActionServeMetapackFile {
 public:
+  explicit ActionServeMetapackFile(const std::filesystem::path &) {}
+
   static auto serve(const std::filesystem::path &absolute_path,
                     const char *code, bool enable_cors, std::string_view mime,
                     std::string_view link,

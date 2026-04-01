@@ -10,7 +10,6 @@
 #include <charconv>     // std::from_chars
 #include <cstdint>      // std::uint8_t
 #include <filesystem>   // std::filesystem
-#include <optional>     // std::optional
 #include <span>         // std::span
 #include <sstream>      // std::ostringstream
 #include <string_view>  // std::string_view
@@ -18,15 +17,15 @@
 
 class ActionSchemaSearch {
 public:
+  explicit ActionSchemaSearch(const std::filesystem::path &base)
+      : search_view_{base / "explorer" / "%" / "search.metapack"} {}
+
   auto
-  run(const std::filesystem::path &base, const std::span<std::string_view>,
+  run(const std::filesystem::path &, const std::span<std::string_view>,
       sourcemeta::one::HTTPRequest &request,
       sourcemeta::one::HTTPResponse &response,
       const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>)
       -> void {
-    if (!this->search_view_.has_value()) {
-      this->search_view_.emplace(base / "explorer" / "%" / "search.metapack");
-    }
 
     if (request.method() != "get") {
       sourcemeta::one::json_error(
@@ -126,7 +125,7 @@ public:
       }
     }
 
-    auto result{this->search_view_->search(query, limit, scope)};
+    auto result{this->search_view_.search(query, limit, scope)};
     response.write_status(sourcemeta::one::STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Content-Type", "application/json");
@@ -140,7 +139,7 @@ public:
   }
 
 private:
-  std::optional<sourcemeta::one::SearchView> search_view_;
+  sourcemeta::one::SearchView search_view_;
 };
 
 #endif

@@ -17,6 +17,8 @@
 
 class ActionJSONSchemaServe {
 public:
+  explicit ActionJSONSchemaServe(const std::filesystem::path &) {}
+
   static auto serve(const std::filesystem::path &base,
                     std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,

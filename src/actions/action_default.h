@@ -14,6 +14,8 @@
 
 class ActionDefault {
 public:
+  explicit ActionDefault(const std::filesystem::path &) {}
+
   auto
   run(const std::filesystem::path &base, const std::span<std::string_view>,
       sourcemeta::one::HTTPRequest &request,

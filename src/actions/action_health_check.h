@@ -11,6 +11,8 @@
 
 class ActionHealthCheck {
 public:
+  explicit ActionHealthCheck(const std::filesystem::path &) {}
+
   auto
   run(const std::filesystem::path &, const std::span<std::string_view>,
       sourcemeta::one::HTTPRequest &request,

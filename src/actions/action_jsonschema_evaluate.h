@@ -23,6 +23,8 @@
 
 class ActionJSONSchemaEvaluate {
 public:
+  explicit ActionJSONSchemaEvaluate(const std::filesystem::path &) {}
+
   auto
   run(const std::filesystem::path &base,
       const std::span<std::string_view> matches,
