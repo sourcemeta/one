@@ -5,7 +5,6 @@
 
 #include <sourcemeta/one/http.h>
 
-#include <cstdint>     // std::uint16_t
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string_view> // std::string_view
@@ -28,7 +27,7 @@ constexpr auto HANDLER_SELF_V1_API_DEFAULT = 13;
 constexpr auto HANDLER_SELF_STATIC = 14;
 constexpr auto HANDLER_SELF_V1_HEALTH = 15;
 
-auto dispatch_action(const std::uint16_t identifier,
+auto dispatch_action(const core::URITemplateRouter::Identifier identifier,
                      const core::URITemplateRouterView &router,
                      const std::filesystem::path &base,
                      const std::span<std::string_view> matches,

@@ -14,15 +14,23 @@
 
 class ActionServeSchemaArtifact {
 public:
-  explicit ActionServeSchemaArtifact(const std::filesystem::path &) {}
+  ActionServeSchemaArtifact(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : base_{base} {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "artifact") {
+        this->artifact_ = std::get<std::string_view>(value);
+      } else if (key == "responseSchema") {
+        this->response_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
 
-  auto
-  run(const std::filesystem::path &base,
-      const std::span<std::string_view> matches,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
-          arguments) -> void {
+  auto run(const std::span<std::string_view> matches,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
     if (matches.empty()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
@@ -31,13 +39,18 @@ public:
       return;
     }
 
-    const auto artifact{std::get<std::string_view>(arguments[0])};
-    const auto link{std::get<std::string_view>(arguments[1])};
-    auto absolute_path{base / "schemas" / matches.front() / "%"};
-    absolute_path /= std::string{artifact} + ".metapack";
+    auto absolute_path{this->base_ / "schemas" / matches.front() / "%"};
+    absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                   true, {}, link, request, response);
+                                   true, {}, this->response_schema_, request,
+                                   response);
   }
+
+private:
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const std::filesystem::path &base_;
+  std::string_view artifact_;
+  std::string_view response_schema_;
 };
 
 #endif

@@ -17,7 +17,10 @@
 
 class ActionJSONSchemaServe {
 public:
-  explicit ActionJSONSchemaServe(const std::filesystem::path &) {}
+  ActionJSONSchemaServe(const std::filesystem::path &base,
+                        const sourcemeta::core::URITemplateRouterView &,
+                        const sourcemeta::core::URITemplateRouter::Identifier)
+      : base_{base} {}
 
   static auto serve(const std::filesystem::path &base,
                     std::string_view schema_path,
@@ -65,15 +68,15 @@ public:
     }
   }
 
-  auto
-  run(const std::filesystem::path &base,
-      const std::span<std::string_view> matches,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>)
-      -> void {
-    serve(base, matches.front(), request, response);
+  auto run(const std::span<std::string_view> matches,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
+    serve(this->base_, matches.front(), request, response);
   }
+
+private:
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const std::filesystem::path &base_;
 };
 
 #endif

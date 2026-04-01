@@ -11,14 +11,13 @@
 
 class ActionNotFound {
 public:
-  explicit ActionNotFound(const std::filesystem::path &) {}
+  ActionNotFound(const std::filesystem::path &,
+                 const sourcemeta::core::URITemplateRouterView &,
+                 const sourcemeta::core::URITemplateRouter::Identifier) {}
 
-  auto
-  run(const std::filesystem::path &, const std::span<std::string_view>,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>)
-      -> void {
+  auto run(const std::span<std::string_view>,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
         "There is nothing at this URL", "/self/v1/schemas/api/error");

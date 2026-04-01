@@ -14,26 +14,39 @@
 
 class ActionServeExplorerArtifact {
 public:
-  explicit ActionServeExplorerArtifact(const std::filesystem::path &) {}
+  ActionServeExplorerArtifact(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : base_{base} {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "artifact") {
+        this->artifact_ = std::get<std::string_view>(value);
+      } else if (key == "responseSchema") {
+        this->response_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
 
-  auto
-  run(const std::filesystem::path &base,
-      const std::span<std::string_view> matches,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
-          arguments) -> void {
-    const auto artifact{std::get<std::string_view>(arguments[0])};
-    const auto link{std::get<std::string_view>(arguments[1])};
-    auto absolute_path{base / "explorer"};
+  auto run(const std::span<std::string_view> matches,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
+    auto absolute_path{this->base_ / "explorer"};
     if (!matches.empty()) {
       absolute_path /= matches.front();
     }
     absolute_path /= "%";
-    absolute_path /= std::string{artifact} + ".metapack";
+    absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                   true, {}, link, request, response);
+                                   true, {}, this->response_schema_, request,
+                                   response);
   }
+
+private:
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const std::filesystem::path &base_;
+  std::string_view artifact_;
+  std::string_view response_schema_;
 };
 
 #endif

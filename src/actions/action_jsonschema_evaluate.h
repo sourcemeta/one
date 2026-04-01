@@ -23,17 +23,22 @@
 
 class ActionJSONSchemaEvaluate {
 public:
-  explicit ActionJSONSchemaEvaluate(const std::filesystem::path &) {}
+  ActionJSONSchemaEvaluate(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : base_{base} {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "mode") {
+        this->mode_ = static_cast<EvaluateMode>(std::get<std::int64_t>(value));
+      }
+    });
+  }
 
-  auto
-  run(const std::filesystem::path &base,
-      const std::span<std::string_view> matches,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
-          arguments) -> void {
-    const auto mode{
-        static_cast<EvaluateMode>(std::get<std::int64_t>(arguments[0]))};
+  auto run(const std::span<std::string_view> matches,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
+    const auto &mode{this->mode_};
     const auto &path{matches.front()};
     // A CORS pre-flight request
     if (request.method() == "options") {
@@ -45,7 +50,7 @@ public:
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
     } else if (request.method() == "post") {
-      auto template_path{base / "schemas"};
+      auto template_path{this->base_ / "schemas"};
       template_path /= path;
       template_path /= "%";
       template_path /= "blaze-exhaustive.metapack";
@@ -290,6 +295,10 @@ private:
           "evaluation-error", exception.what(), "/self/v1/schemas/api/error");
     }
   }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const std::filesystem::path &base_;
+  EvaluateMode mode_{EvaluateMode::Standard};
 };
 
 #endif
