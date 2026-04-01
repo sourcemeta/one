@@ -3,90 +3,69 @@
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/time.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <chrono>     // std::chrono::seconds
-#include <filesystem> // std::filesystem
-#include <optional>   // std::optional
-#include <sstream>    // std::ostringstream
-#include <string>     // std::string
+#include <chrono>      // std::chrono::seconds
+#include <filesystem>  // std::filesystem
+#include <span>        // std::span
+#include <sstream>     // std::ostringstream
+#include <string>      // std::string
+#include <string_view> // std::string_view
 
-#pragma pack(push, 1)
-struct MetapackDialectExtension {
-  std::uint16_t dialect_length;
-};
-#pragma pack(pop)
+class ActionServeMetapackFile {
+public:
+  explicit ActionServeMetapackFile(const std::filesystem::path &) {}
 
-inline auto action_serve_metapack_file(
-    const sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response,
-    const std::filesystem::path &absolute_path, const char *const code,
-    const bool enable_cors = false,
-    const std::optional<std::string> &mime = std::nullopt,
-    const std::optional<std::string> &link = std::nullopt) -> void {
-  if (request.method() != "get" && request.method() != "head") {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-        "method-not-allowed", "This HTTP method is invalid for this URL",
-        "/self/v1/schemas/api/error");
-    return;
-  }
-
-  if (!std::filesystem::exists(absolute_path)) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL", "/self/v1/schemas/api/error");
-    return;
-  }
-
-  sourcemeta::core::FileView view{absolute_path};
-  if (view.size() <
-      sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL", "/self/v1/schemas/api/error");
-    return;
-  }
-
-  const auto info{sourcemeta::one::metapack_info(view)};
-  if (!info.has_value()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL", "/self/v1/schemas/api/error");
-    return;
-  }
-
-  // Note that `If-Modified-Since` can only be used with a `GET` or `HEAD`.
-  // See
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
-  const auto if_modified_since{request.header_gmt("if-modified-since")};
-  // Time comparison can be flaky, but adding a bit of tolerance leads
-  // to more consistent behavior.
-  if (if_modified_since.has_value() &&
-      (if_modified_since.value() + std::chrono::seconds(1)) >=
-          info->last_modified) {
-    response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
-    if (enable_cors) {
-      response.write_header("Access-Control-Allow-Origin", "*");
+  static auto serve(const std::filesystem::path &absolute_path,
+                    const char *code, bool enable_cors, std::string_view mime,
+                    std::string_view link,
+                    sourcemeta::one::HTTPRequest &request,
+                    sourcemeta::one::HTTPResponse &response) -> void {
+    if (request.method() != "get" && request.method() != "head") {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+          "method-not-allowed", "This HTTP method is invalid for this URL",
+          "/self/v1/schemas/api/error");
+      return;
     }
 
-    sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
-                                   request, response);
-    return;
-  }
+    if (!std::filesystem::exists(absolute_path)) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", "/self/v1/schemas/api/error");
+      return;
+    }
 
-  const auto &checksum{info->checksum_hex};
-  std::ostringstream etag_value_strong;
-  std::ostringstream etag_value_weak;
-  etag_value_strong << '"' << checksum << '"';
-  etag_value_weak << 'W' << '/' << '"' << checksum << '"';
-  for (const auto &match : request.header_list("if-none-match")) {
-    // Cache hit
-    if (match.first == "*" || match.first == etag_value_weak.str() ||
-        match.first == etag_value_strong.str()) {
+    sourcemeta::core::FileView view{absolute_path};
+    if (view.size() <
+        sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", "/self/v1/schemas/api/error");
+      return;
+    }
+
+    const auto info{sourcemeta::one::metapack_info(view)};
+    if (!info.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", "/self/v1/schemas/api/error");
+      return;
+    }
+
+    // Note that `If-Modified-Since` can only be used with a `GET` or `HEAD`.
+    // See
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
+    const auto if_modified_since{request.header_gmt("if-modified-since")};
+    // Time comparison can be flaky, but adding a bit of tolerance leads
+    // to more consistent behavior.
+    if (if_modified_since.has_value() &&
+        (if_modified_since.value() + std::chrono::seconds(1)) >=
+            info->last_modified) {
       response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
@@ -96,100 +75,117 @@ inline auto action_serve_metapack_file(
                                      request, response);
       return;
     }
-  }
 
-  response.write_status(code);
+    const auto &checksum{info->checksum_hex};
+    std::ostringstream etag_value_strong;
+    std::ostringstream etag_value_weak;
+    etag_value_strong << '"' << checksum << '"';
+    etag_value_weak << 'W' << '/' << '"' << checksum << '"';
+    for (const auto &match : request.header_list("if-none-match")) {
+      // Cache hit
+      if (match.first == "*" || match.first == etag_value_weak.str() ||
+          match.first == etag_value_strong.str()) {
+        response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
+        if (enable_cors) {
+          response.write_header("Access-Control-Allow-Origin", "*");
+        }
 
-  // To support requests from web browsers
-  if (enable_cors) {
-    response.write_header("Access-Control-Allow-Origin", "*");
-  }
+        sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
+                                       request, response);
+        return;
+      }
+    }
 
-  if (mime.has_value()) {
-    response.write_header("Content-Type", mime.value());
-  } else {
-    response.write_header("Content-Type", info->mime);
-  }
+    response.write_status(code);
 
-  response.write_header("Last-Modified",
-                        sourcemeta::core::to_gmt(info->last_modified));
+    // To support requests from web browsers
+    if (enable_cors) {
+      response.write_header("Access-Control-Allow-Origin", "*");
+    }
 
-  std::ostringstream etag;
-  etag << '"' << checksum << '"';
-  response.write_header("ETag", std::move(etag).str());
+    if (!mime.empty()) {
+      response.write_header("Content-Type", mime);
+    } else {
+      response.write_header("Content-Type", info->mime);
+    }
 
-  // See
-  // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
-  if (link.has_value()) {
-    sourcemeta::one::write_link_header(response, link.value());
-  } else {
-    const auto *dialect_ext{
-        sourcemeta::one::metapack_extension<MetapackDialectExtension>(view)};
-    const auto extension_total{sourcemeta::one::metapack_extension_size(view)};
-    const std::string_view dialect =
-        (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
-         sizeof(MetapackDialectExtension) + dialect_ext->dialect_length <=
-             extension_total)
-            ? std::string_view{reinterpret_cast<
-                                   const char *>(view.as<std::uint8_t>(
-                                   sourcemeta::one::metapack_extension_offset(
-                                       view) +
-                                   sizeof(MetapackDialectExtension))),
-                               dialect_ext->dialect_length}
-            : std::string_view{};
-    if (!dialect.empty()) {
-      sourcemeta::one::write_link_header(response, std::string{dialect});
+    response.write_header("Last-Modified",
+                          sourcemeta::core::to_gmt(info->last_modified));
+
+    std::ostringstream etag;
+    etag << '"' << checksum << '"';
+    response.write_header("ETag", std::move(etag).str());
+
+    // See
+    // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
+    if (!link.empty()) {
+      sourcemeta::one::write_link_header(response, link);
+    } else {
+      const auto *dialect_ext{
+          sourcemeta::one::metapack_extension<DialectExtension>(view)};
+      const auto extension_total{
+          sourcemeta::one::metapack_extension_size(view)};
+      const std::string_view dialect =
+          (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
+           sizeof(DialectExtension) + dialect_ext->dialect_length <=
+               extension_total)
+              ? std::string_view{reinterpret_cast<
+                                     const char *>(view.as<std::uint8_t>(
+                                     sourcemeta::one::metapack_extension_offset(
+                                         view) +
+                                     sizeof(DialectExtension))),
+                                 dialect_ext->dialect_length}
+              : std::string_view{};
+      if (!dialect.empty()) {
+        sourcemeta::one::write_link_header(response, std::string{dialect});
+      }
+    }
+
+    const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
+    if (!payload_start.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", "/self/v1/schemas/api/error");
+      return;
+    }
+
+    const auto payload_size{view.size() - payload_start.value()};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string contents{
+        reinterpret_cast<const char *>(
+            view.as<std::uint8_t>(payload_start.value())),
+        payload_size};
+
+    if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
+      sourcemeta::one::send_response(code, request, response, contents,
+                                     sourcemeta::one::Encoding::GZIP);
+    } else {
+      sourcemeta::one::send_response(code, request, response, contents,
+                                     sourcemeta::one::Encoding::Identity);
     }
   }
 
-  const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
-  if (!payload_start.has_value()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL", "/self/v1/schemas/api/error");
-    return;
+  auto
+  run(const std::filesystem::path &, const std::span<std::string_view>,
+      sourcemeta::one::HTTPRequest &request,
+      sourcemeta::one::HTTPResponse &response,
+      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
+          arguments) -> void {
+    const std::filesystem::path absolute_path{
+        std::get<std::string_view>(arguments[0])};
+    const auto *const code{std::get<std::string_view>(arguments[1]).data()};
+    const auto enable_cors{std::get<bool>(arguments[2])};
+    const auto mime{std::get<std::string_view>(arguments[3])};
+    const auto link{std::get<std::string_view>(arguments[4])};
+    serve(absolute_path, code, enable_cors, mime, link, request, response);
   }
 
-  const auto payload_size{view.size() - payload_start.value()};
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const std::string contents{reinterpret_cast<const char *>(
-                                 view.as<std::uint8_t>(payload_start.value())),
-                             payload_size};
-
-  if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
-    sourcemeta::one::send_response(code, request, response, contents,
-                                   sourcemeta::one::Encoding::GZIP);
-  } else {
-    sourcemeta::one::send_response(code, request, response, contents,
-                                   sourcemeta::one::Encoding::Identity);
-  }
-}
-
-inline auto action_serve_metapack_file_relative(
-    const sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response,
-    const std::filesystem::path &base_path,
-    const std::string_view relative_path, const char *const code,
-    const bool enable_cors = false,
-    const std::optional<std::string> &mime = std::nullopt,
-    const std::optional<std::string> &link = std::nullopt) -> void {
-  if (base_path.empty()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-        "missing-base-path", "The base path is not configured for this route",
-        "/self/v1/schemas/api/error");
-    return;
-  }
-
-  if (relative_path.find("..") != std::string_view::npos) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-path",
-        "The requested path is invalid", "/self/v1/schemas/api/error");
-    return;
-  }
-
-  action_serve_metapack_file(request, response, base_path / relative_path, code,
-                             enable_cors, mime, link);
-}
+private:
+#pragma pack(push, 1)
+  struct DialectExtension {
+    std::uint16_t dialect_length;
+  };
+#pragma pack(pop)
+};
 
 #endif
