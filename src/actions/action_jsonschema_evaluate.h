@@ -95,9 +95,9 @@ public:
     }
   }
 
-private:
   enum class EvaluateMode : std::uint8_t { Standard, Trace };
 
+private:
   static auto trace(sourcemeta::blaze::Evaluator &evaluator,
                     const sourcemeta::blaze::Template &schema_template,
                     const std::string &instance,
