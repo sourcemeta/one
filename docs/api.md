@@ -363,9 +363,9 @@ GET /self/v1/api/schemas/locations/{path}
     | `/static/*/base` | String | Yes | The base URI of the location |
     | `/static/*/baseDialect` | String | Yes | The base dialect of the schema |
     | `/static/*/dialect` | String | Yes | The JSON Schema dialect URI |
-    | `/static/*/parent` | Array / Null | No | The parent JSON Pointer tokens (if any) |
-    | `/static/*/pointer` | Array | Yes | The JSON Pointer tokens to this location from the root of the schema |
-    | `/static/*/relativePointer` | Array | Yes | The relative JSON Pointer tokens from its nearest base URI |
+    | `/static/*/parent` | String / Null | No | The parent JSON Pointer (if any) |
+    | `/static/*/pointer` | String | Yes | The JSON Pointer to this location from the root of the schema |
+    | `/static/*/relativePointer` | String | Yes | The relative JSON Pointer from its nearest base URI |
     | `/static/*/root` | String | Yes | The root URI of the schema |
     | `/static/*/type` | String | Yes | The type of location |
     | `/static/*/position` | Array | Yes | The entry location positions |
@@ -380,9 +380,9 @@ GET /self/v1/api/schemas/locations/{path}
     | `/dynamic/*/base` | String | Yes | The base URI of the location |
     | `/dynamic/*/baseDialect` | String | Yes | The base dialect of the schema |
     | `/dynamic/*/dialect` | String | Yes | The JSON Schema dialect URI |
-    | `/dynamic/*/parent` | Array / Null | No | The parent JSON Pointer tokens (if any) |
-    | `/dynamic/*/pointer` | Array | Yes | The JSON Pointer tokens to this location from the root of the schema |
-    | `/dynamic/*/relativePointer` | Array | Yes | The relative JSON Pointer tokens from its nearest base URI |
+    | `/dynamic/*/parent` | String / Null | No | The parent URI (if any) |
+    | `/dynamic/*/pointer` | String | Yes | The JSON Pointer to this location from the root of the schema |
+    | `/dynamic/*/relativePointer` | String | Yes | The relative JSON Pointer from its nearest base URI |
     | `/dynamic/*/root` | String | Yes | The root URI of the schema |
     | `/dynamic/*/type` | String | Yes | The type of location |
     | `/dynamic/*/position` | Array | Yes | The entry location positions |

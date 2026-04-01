@@ -66,7 +66,7 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/easygetopt.c"
     "${CURL_DIR}/lib/cf-https-connect.c"
     "${CURL_DIR}/lib/mime.h"
-    "${CURL_DIR}/lib/strdup.h"
+    "${CURL_DIR}/lib/curlx/strdup.h"
     "${CURL_DIR}/lib/fileinfo.h"
     "${CURL_DIR}/lib/curl_ldap.h"
     "${CURL_DIR}/lib/amigaos.h"
@@ -99,7 +99,8 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/tftp.c"
     "${CURL_DIR}/lib/curl_ntlm_core.h"
     "${CURL_DIR}/lib/mqtt.c"
-    "${CURL_DIR}/lib/config-plan9.h"
+    "${CURL_DIR}/lib/curlx/basename.c"
+    "${CURL_DIR}/lib/curlx/basename.h"
     "${CURL_DIR}/lib/noproxy.h"
     "${CURL_DIR}/lib/gopher.h"
     "${CURL_DIR}/lib/multihandle.h"
@@ -147,13 +148,11 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/vquic/curl_quiche.h"
     "${CURL_DIR}/lib/vquic/vquic.c"
     "${CURL_DIR}/lib/vquic/curl_ngtcp2.c"
-    "${CURL_DIR}/lib/vquic/curl_osslq.c"
     "${CURL_DIR}/lib/vquic/vquic-tls.c"
     "${CURL_DIR}/lib/vquic/curl_quiche.c"
     "${CURL_DIR}/lib/vquic/curl_ngtcp2.h"
     "${CURL_DIR}/lib/vquic/vquic.h"
     "${CURL_DIR}/lib/vquic/vquic-tls.h"
-    "${CURL_DIR}/lib/vquic/curl_osslq.h"
     "${CURL_DIR}/lib/vquic/vquic_int.h"
     "${CURL_DIR}/lib/cookie.h"
     "${CURL_DIR}/lib/uint-spbset.c"
@@ -168,7 +167,7 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/multiif.h"
     "${CURL_DIR}/lib/curl_endian.h"
     "${CURL_DIR}/lib/config-win32.h"
-    "${CURL_DIR}/lib/strdup.c"
+    "${CURL_DIR}/lib/curlx/strdup.c"
     "${CURL_DIR}/lib/mime.c"
     "${CURL_DIR}/lib/uint-bset.c"
     "${CURL_DIR}/lib/strequal.c"
@@ -181,7 +180,7 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/multi_ev.h"
     "${CURL_DIR}/lib/doh.h"
     "${CURL_DIR}/lib/http_negotiate.h"
-    "${CURL_DIR}/lib/curl_setup_once.h"
+    "${CURL_DIR}/lib/curlx/snprintf.c"
     "${CURL_DIR}/lib/curl_get_line.h"
     "${CURL_DIR}/lib/http_aws_sigv4.c"
     "${CURL_DIR}/lib/sockaddr.h"
@@ -250,7 +249,6 @@ if(NOT CURL_FOUND)
     "${CURL_DIR}/lib/curlx/strcopy.c"
     "${CURL_DIR}/lib/curlx/strcopy.h"
     "${CURL_DIR}/lib/curlx/snprintf.h"
-    "${CURL_DIR}/lib/curlx/binmode.h"
     "${CURL_DIR}/lib/setup-vms.h"
     "${CURL_DIR}/lib/hostip.h"
     "${CURL_DIR}/lib/content_encoding.h"
@@ -454,6 +452,7 @@ if(NOT CURL_FOUND)
     target_link_libraries(curl PRIVATE ws2_32)
     target_link_libraries(curl PRIVATE Crypt32)
     target_link_libraries(curl PRIVATE Secur32)
+    target_link_libraries(curl PRIVATE Iphlpapi)
   elseif(CMAKE_SYSTEM_NAME STREQUAL "MSYS")
     set(CURL_OS "\"MSYS\"")
     set(CURL_CA_BUNDLE "/usr/ssl/certs/ca-bundle.crt")

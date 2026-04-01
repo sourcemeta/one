@@ -60,18 +60,18 @@
               "type": "null"
             },
             {
-              "$ref": "#/$defs/pointer-tokens"
+              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
             }
           ]
         },
         "pointer": {
-          "$ref": "#/$defs/pointer-tokens"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
         },
         "position": {
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$ref": "#/$defs/pointer-tokens"
+          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
         },
         "root": {
           "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
@@ -84,20 +84,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "pointer-tokens": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "integer",
-            "minimum": 0
-          }
-        ]
-      }
     }
   }
 }
