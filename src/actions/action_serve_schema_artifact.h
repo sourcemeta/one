@@ -23,6 +23,14 @@ public:
       sourcemeta::one::HTTPResponse &response,
       const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
           arguments) -> void {
+    if (matches.empty()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+          "missing-schema-match", "This action requires a schema path match",
+          "/self/v1/schemas/api/error");
+      return;
+    }
+
     const auto artifact{std::get<std::string_view>(arguments[0])};
     const auto link{std::get<std::string_view>(arguments[1])};
     auto absolute_path{base / "schemas" / matches.front() / "%"};
