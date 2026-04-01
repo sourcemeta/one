@@ -11,14 +11,13 @@
 
 class ActionHealthCheck {
 public:
-  explicit ActionHealthCheck(const std::filesystem::path &) {}
+  ActionHealthCheck(const std::filesystem::path &,
+                    const sourcemeta::core::URITemplateRouterView &,
+                    const sourcemeta::core::URITemplateRouter::Identifier) {}
 
-  auto
-  run(const std::filesystem::path &, const std::span<std::string_view>,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>)
-      -> void {
+  auto run(const std::span<std::string_view>,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,

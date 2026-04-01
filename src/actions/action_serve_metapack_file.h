@@ -18,7 +18,10 @@
 
 class ActionServeMetapackFile {
 public:
-  explicit ActionServeMetapackFile(const std::filesystem::path &) {}
+  ActionServeMetapackFile(
+      const std::filesystem::path &,
+      const sourcemeta::core::URITemplateRouterView &,
+      const sourcemeta::core::URITemplateRouter::Identifier) {}
 
   static auto serve(const std::filesystem::path &absolute_path,
                     const char *code, bool enable_cors, std::string_view mime,
@@ -163,21 +166,6 @@ public:
       sourcemeta::one::send_response(code, request, response, contents,
                                      sourcemeta::one::Encoding::Identity);
     }
-  }
-
-  auto
-  run(const std::filesystem::path &, const std::span<std::string_view>,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>
-          arguments) -> void {
-    const std::filesystem::path absolute_path{
-        std::get<std::string_view>(arguments[0])};
-    const auto *const code{std::get<std::string_view>(arguments[1]).data()};
-    const auto enable_cors{std::get<bool>(arguments[2])};
-    const auto mime{std::get<std::string_view>(arguments[3])};
-    const auto link{std::get<std::string_view>(arguments[4])};
-    serve(absolute_path, code, enable_cors, mime, link, request, response);
   }
 
 private:

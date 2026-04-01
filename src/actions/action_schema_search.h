@@ -17,15 +17,14 @@
 
 class ActionSchemaSearch {
 public:
-  explicit ActionSchemaSearch(const std::filesystem::path &base)
+  ActionSchemaSearch(const std::filesystem::path &base,
+                     const sourcemeta::core::URITemplateRouterView &,
+                     const sourcemeta::core::URITemplateRouter::Identifier)
       : search_view_{base / "explorer" / "%" / "search.metapack"} {}
 
-  auto
-  run(const std::filesystem::path &, const std::span<std::string_view>,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response,
-      const std::span<const sourcemeta::core::URITemplateRouter::ArgumentValue>)
-      -> void {
+  auto run(const std::span<std::string_view>,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void {
 
     if (request.method() != "get") {
       sourcemeta::one::json_error(

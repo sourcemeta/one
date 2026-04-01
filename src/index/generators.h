@@ -655,27 +655,87 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     sourcemeta::core::URITemplateRouter router;
-    router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST);
+
+    const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
+        {"artifact", std::string_view{"directory"}},
+        {"responseSchema",
+         std::string_view{"/self/v1/schemas/api/list/response"}}};
+    router.add("/self/v1/api/list", sourcemeta::one::HANDLER_SELF_V1_API_LIST,
+               list_arguments);
     router.add("/self/v1/api/list/{+path}",
-               sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH);
+               sourcemeta::one::HANDLER_SELF_V1_API_LIST_PATH, list_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument
+        dependencies_arguments[] = {
+            {"artifact", std::string_view{"dependencies"}},
+            {"responseSchema",
+             std::string_view{
+                 "/self/v1/schemas/api/schemas/dependencies/response"}}};
     router.add("/self/v1/api/schemas/dependencies/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES,
+               dependencies_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument dependents_arguments[] =
+        {{"artifact", std::string_view{"dependents"}},
+         {"responseSchema",
+          std::string_view{
+              "/self/v1/schemas/api/schemas/dependents/response"}}};
     router.add("/self/v1/api/schemas/dependents/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS,
+               dependents_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {
+        {"artifact", std::string_view{"health"}},
+        {"responseSchema",
+         std::string_view{"/self/v1/schemas/api/schemas/health/response"}}};
     router.add("/self/v1/api/schemas/health/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_HEALTH,
+               health_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument locations_arguments[] =
+        {{"artifact", std::string_view{"locations"}},
+         {"responseSchema",
+          std::string_view{"/self/v1/schemas/api/schemas/locations/response"}}};
     router.add("/self/v1/api/schemas/locations/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS,
+               locations_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument positions_arguments[] =
+        {{"artifact", std::string_view{"positions"}},
+         {"responseSchema",
+          std::string_view{"/self/v1/schemas/api/schemas/positions/response"}}};
     router.add("/self/v1/api/schemas/positions/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_POSITIONS,
+               positions_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
+        {"artifact", std::string_view{"stats"}},
+        {"responseSchema",
+         std::string_view{"/self/v1/schemas/api/schemas/stats/response"}}};
     router.add("/self/v1/api/schemas/stats/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_STATS,
+               stats_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] = {
+        {"artifact", std::string_view{"schema"}},
+        {"responseSchema",
+         std::string_view{"/self/v1/schemas/api/schemas/metadata/response"}}};
     router.add("/self/v1/api/schemas/metadata/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_METADATA,
+               metadata_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] = {
+        {"mode", static_cast<std::int64_t>(0)}};
     router.add("/self/v1/api/schemas/evaluate/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_EVALUATE,
+               evaluate_arguments);
+
+    const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
+        {"mode", static_cast<std::int64_t>(1)}};
     router.add("/self/v1/api/schemas/trace/{+schema}",
-               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE);
+               sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_TRACE,
+               trace_arguments);
+
     router.add("/self/v1/api/schemas/search",
                sourcemeta::one::HANDLER_SELF_V1_API_SCHEMAS_SEARCH);
     router.add("/self/v1/health", sourcemeta::one::HANDLER_SELF_V1_HEALTH);
