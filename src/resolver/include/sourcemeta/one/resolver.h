@@ -19,7 +19,8 @@ namespace sourcemeta::one {
 
 class Resolver {
 public:
-  Resolver() = default;
+  explicit Resolver(std::string_view server_url);
+
   // Just to prevent mistakes
   Resolver(const Resolver &) = delete;
   auto operator=(const Resolver &) -> Resolver & = delete;
@@ -51,8 +52,7 @@ public:
       std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
                 std::reference_wrapper<const Entry>>;
 
-  auto add(const sourcemeta::core::JSON::String &server_url,
-           const std::filesystem::path &collection_relative_path,
+  auto add(const std::filesystem::path &collection_relative_path,
            const Configuration::Collection &collection,
            const std::filesystem::path &path,
            const std::filesystem::file_time_type mtime) -> Result;
@@ -73,7 +73,7 @@ public:
 private:
   Views views;
   std::shared_mutex mutex;
-  std::string server_url_path;
+  std::string_view server_url;
 };
 
 } // namespace sourcemeta::one

@@ -423,7 +423,7 @@ static auto index_main(const std::string_view &program,
   // (6) Resolve all detected schemas in parallel
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::one::Resolver resolver;
+  sourcemeta::one::Resolver resolver{configuration.url};
   resolver.reserve(detected_schemas.size());
 
   // Phase 1: populate resolver from cache for unchanged source files.
@@ -460,15 +460,15 @@ static auto index_main(const std::string_view &program,
   // Phase 2: resolve uncached schemas and commit to cache
   sourcemeta::core::parallel_for_each(
       uncached_schemas.begin(), uncached_schemas.end(),
-      [&configuration, &resolver, &mutex, &entries, &uncached_schemas,
+      [&resolver, &mutex, &entries, &uncached_schemas,
        &app](const auto &detected_ref, const auto threads, const auto cursor) {
         const auto &detected{detected_ref.get()};
         print_progress(mutex, threads, "Resolving",
                        detected.path.filename().string(), cursor,
                        uncached_schemas.size());
-        const auto result{resolver.add(
-            configuration.url, detected.collection_relative_path,
-            detected.collection.get(), detected.path, detected.mtime)};
+        const auto result{resolver.add(detected.collection_relative_path,
+                                       detected.collection.get(), detected.path,
+                                       detected.mtime)};
 
         {
           const auto &resolved{result.second.get()};

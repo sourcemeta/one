@@ -67,7 +67,7 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
               const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
               const sourcemeta::core::JSON::String &keyword,
               const sourcemeta::core::JSON::String &reference,
-              const std::string &url_path) -> void {
+              const std::string_view url) -> void {
   // We never want to mess with internal references.
   // We assume those are always well formed
   if (reference.starts_with('#')) {
@@ -77,9 +77,9 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   // If we have a match in the configuration resolver, then trust that.
   const auto match{collection.resolve.find(reference)};
   if (match != collection.resolve.cend()) {
-    sourcemeta::core::URI target{url_path};
+    sourcemeta::core::URI target{url};
     target.append_path(match->second);
-    schema.assign(keyword, sourcemeta::core::JSON{target.recompose()});
+    schema.assign(keyword, sourcemeta::core::JSON{target.path().value_or("")});
     return;
   }
 
@@ -102,6 +102,8 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
 }
 
 namespace sourcemeta::one {
+
+Resolver::Resolver(const std::string_view url) : server_url{url} {}
 
 auto Resolver::operator()(
     std::string_view raw_identifier,
@@ -215,7 +217,7 @@ auto Resolver::operator()(
         if (maybe_ref && maybe_ref->is_string()) {
           normalise_ref(*result->second.collection, entry.second.base,
                         subschema, "$ref", maybe_ref->to_string(),
-                        this->server_url_path);
+                        this->server_url);
         }
 
         if (entry.second.base_dialect ==
@@ -225,8 +227,7 @@ auto Resolver::operator()(
           if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
             normalise_ref(*result->second.collection, entry.second.base,
                           subschema, "$dynamicRef",
-                          maybe_dynamic_ref->to_string(),
-                          this->server_url_path);
+                          maybe_dynamic_ref->to_string(), this->server_url);
           }
         }
       }
@@ -247,16 +248,10 @@ auto Resolver::operator()(
   return schema;
 }
 
-auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
-                   const std::filesystem::path &collection_relative_path,
+auto Resolver::add(const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
                    const std::filesystem::file_time_type mtime) -> Result {
-  if (this->server_url_path.empty()) {
-    this->server_url_path =
-        sourcemeta::core::URI{server_url}.path().value_or("");
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
@@ -314,8 +309,9 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     /////////////////////////////////////////////////////////////////////////////
     // (3) Determine the new URI of the schema, from the one base URI
     /////////////////////////////////////////////////////////////////////////////
-    const auto new_identifier{
-        rebase(collection, identifier, server_url, collection_relative_path)};
+    const auto new_identifier{rebase(collection, identifier,
+                                     std::string{this->server_url},
+                                     collection_relative_path)};
     // Otherwise we have things like "../" that should not be there
     assert(new_identifier.find("..") == std::string::npos);
 
@@ -330,11 +326,11 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
     }
     const auto is_official_dialect{
         sourcemeta::core::is_known_schema(raw_dialect)};
-    auto current_dialect{is_official_dialect
-                             ? std::string{raw_dialect}
-                             : rebase(collection,
-                                      normalise_identifier(raw_dialect),
-                                      server_url, collection_relative_path)};
+    auto current_dialect{
+        is_official_dialect
+            ? std::string{raw_dialect}
+            : rebase(collection, normalise_identifier(raw_dialect),
+                     std::string{this->server_url}, collection_relative_path)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -349,7 +345,7 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
         new_identifier,
         Entry{.path = path,
               .relative_path = sourcemeta::core::URI{new_identifier}
-                                   .relative_to(server_url)
+                                   .relative_to(std::string{this->server_url})
                                    .recompose(),
               .mtime = mtime,
               .evaluate = evaluate,
