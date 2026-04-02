@@ -24,10 +24,32 @@ Sourcemeta One is available in two editions:
   hosting solution that competes with Sourcemeta. After four years from each
   release, the code transitions to AGPL-3.0.
 
-- **Enterprise**: Includes additional features and supply chain security
-  capabilities not available in the Community edition. Requires a [commercial
+- **Enterprise**: Includes the [Standard
+  Library](https://github.com/sourcemeta/std), additional features, and supply
+  chain security capabilities not available in the Community edition. Requires
+  a [commercial
   license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
   from Sourcemeta.
+
+## Standard Library
+
+The Enterprise edition includes a growing library of hand-crafted high-quality
+schemas maintained by Sourcemeta. The standard library provides ready-to-use
+schemas for commonly used standards and specifications such as IETF URIs, email
+addresses, JSON Pointers, HTTP problem details, and IEEE POSIX paths, among
+others. To use it, add `@sourcemeta/std/v0` to the
+[`extends`](configuration.md#extends) property of your configuration file.
+
+For organizations looking to double down on their JSON Schema governance
+initiative, the standard library provides a strong foundation of high-quality
+schemas ready on day one, removing the need to invest significant time and
+effort into authoring and maintaining a large catalog of schemas from scratch.
+
+Every schema in the standard library is maintained by a member of the JSON
+Schema Technical Steering Committee, extensively unit tested, performance tuned
+for production use, and checked for compliance against the JSON Schema
+specification. As part of the Enterprise plan, Sourcemeta will extend the
+standard library with any additional standard your organization requires.
 
 ## Supply Chain Security
 
