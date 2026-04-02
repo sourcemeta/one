@@ -38,8 +38,7 @@ schemas maintained by Sourcemeta. The standard library provides ready-to-use
 schemas for commonly used standards and specifications such as IETF URIs, email
 addresses, JSON Pointers, HTTP problem details, and IEEE POSIX paths, among
 others. To use it, add `@sourcemeta/std/v0` to the
-[`extends`](configuration.md#extends-optional) property of your configuration
-file.
+[`extends`](configuration.md#extends) property of your configuration file.
 
 For organizations looking to double down on their JSON Schema governance
 initiative, the standard library provides a strong foundation of high-quality

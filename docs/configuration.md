@@ -201,13 +201,13 @@ an Enterprise customer, let's say your schema collection depends on
 [GeoJSON](https://geojson.org) and has various references to its latest
 official URL: `https://geojson.org/schema/GeoJSON.json`. Instead of depending
 on an external resource outside your control, you can configure the instance to
-extend from the `@sourcemeta/std` built-in collection and rephrase the
+extend from the `@sourcemeta/std/v0` built-in collection and rephrase the
 `https://geojson.org/schema/GeoJSON.json` references to consume from the
 internal version:
 
 !!! note
 
-    The `@sourcemeta/std` standard library is only available to Enterprise
+    The `@sourcemeta/std/v0` standard library is only available to Enterprise
     customers. Learn more about [commercial
     licensing](commercial.md#standard-library).
 
