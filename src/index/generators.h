@@ -652,9 +652,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    sourcemeta::core::URITemplateRouter router;
+    sourcemeta::core::URITemplateRouter router{
+        sourcemeta::core::URI{configuration.url}.path().value_or("")};
 
     const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
         {"artifact", std::string_view{"directory"}},

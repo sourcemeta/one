@@ -1,0 +1,13 @@
+{
+  "url": "http://localhost:8000/v1/catalog",
+  "extends": [ "@self/v1" ],
+  "contents": {
+    "example": {
+      "path": "./schemas/example"
+    },
+    "rebased": {
+      "baseUri": "https://other.example.com",
+      "path": "./schemas/rebased"
+    }
+  }
+}
