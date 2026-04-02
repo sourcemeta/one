@@ -27,8 +27,6 @@ protected:
 std::unique_ptr<sourcemeta::one::Configuration>
     ResolverTest::shared_configuration{nullptr};
 
-#define RESOLVER_INIT(name) sourcemeta::one::Resolver name;
-
 #define RESOLVER_EXPECT(resolver, expected_uri, expected_schema)               \
   {                                                                            \
     const auto schema{(resolver)(expected_uri)};                               \
@@ -38,7 +36,7 @@ std::unique_ptr<sourcemeta::one::Configuration>
 
 #define RESOLVER_IMPORT(resolver, collection_name, relative_path)              \
   (resolver).add(                                                              \
-      ResolverTest::shared_configuration->url, collection_name,                \
+      collection_name,                                                         \
       std::get<sourcemeta::one::Configuration::Collection>(                    \
           ResolverTest::shared_configuration->entries.at(collection_name)),    \
       std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path), \
@@ -58,7 +56,7 @@ std::unique_ptr<sourcemeta::one::Configuration>
   }
 
 TEST_F(ResolverTest, idempotent) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
@@ -86,7 +84,7 @@ TEST_F(ResolverTest, idempotent) {
 }
 
 TEST_F(ResolverTest, iterators) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -105,7 +103,7 @@ TEST_F(ResolverTest, iterators) {
 }
 
 TEST_F(ResolverTest, duplicate_id) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id-json.json",
                "https://example.com/schemas/2020-12-with-id-json",
                "http://localhost:8000/example/2020-12-with-id-json",
@@ -120,7 +118,7 @@ TEST_F(ResolverTest, duplicate_id) {
 }
 
 TEST_F(ResolverTest, case_insensitive_lookup) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -149,7 +147,7 @@ TEST_F(ResolverTest, case_insensitive_lookup) {
 }
 
 TEST_F(ResolverTest, example_official_2020_12_meta) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   EXPECT_TRUE(
       resolver("https://json-schema.org/draft/2020-12/schema").has_value());
   EXPECT_EQ(resolver("https://json-schema.org/draft/2020-12/schema"),
@@ -158,7 +156,7 @@ TEST_F(ResolverTest, example_official_2020_12_meta) {
 }
 
 TEST_F(ResolverTest, example_2020_12_with_id) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -169,7 +167,7 @@ TEST_F(ResolverTest, example_2020_12_with_id) {
 }
 
 TEST_F(ResolverTest, example_2020_12_with_id_json) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id-json.json",
                "https://example.com/schemas/2020-12-with-id-json",
                "http://localhost:8000/example/2020-12-with-id-json",
@@ -180,7 +178,7 @@ TEST_F(ResolverTest, example_2020_12_with_id_json) {
 }
 
 TEST_F(ResolverTest, example_2020_12_with_id_schema_json) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.schema.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -191,7 +189,7 @@ TEST_F(ResolverTest, example_2020_12_with_id_schema_json) {
 }
 
 TEST_F(ResolverTest, example_2020_12_without_id_schema_json) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-without-id.schema.json",
                "https://example.com/schemas/2020-12-without-id",
                "http://localhost:8000/example/2020-12-without-id",
@@ -202,7 +200,7 @@ TEST_F(ResolverTest, example_2020_12_without_id_schema_json) {
 }
 
 TEST_F(ResolverTest, example_2020_12_schema_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-extension.json",
                "https://example.com/schemas/schema-extension",
                "http://localhost:8000/example/schema-extension",
@@ -213,7 +211,7 @@ TEST_F(ResolverTest, example_2020_12_schema_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_yaml_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-yaml-extension.json",
                "https://example.com/schemas/yaml-extension",
                "http://localhost:8000/example/yaml-extension",
@@ -224,7 +222,7 @@ TEST_F(ResolverTest, example_2020_12_yaml_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_yml_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-yml-extension.json",
                "https://example.com/schemas/yml-extension",
                "http://localhost:8000/example/yml-extension",
@@ -235,7 +233,7 @@ TEST_F(ResolverTest, example_2020_12_yml_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_schema_yaml_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-yaml-extension.json",
                "https://example.com/schemas/schema-yaml-extension",
                "http://localhost:8000/example/schema-yaml-extension",
@@ -246,7 +244,7 @@ TEST_F(ResolverTest, example_2020_12_schema_yaml_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_schema_yml_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-yml-extension.json",
                "https://example.com/schemas/schema-yml-extension",
                "http://localhost:8000/example/schema-yml-extension",
@@ -257,7 +255,7 @@ TEST_F(ResolverTest, example_2020_12_schema_yml_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_yaml_json_mix_extension) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-yaml-json-mix-extension.json",
                "https://example.com/schemas/yaml-json-mix-extension",
                "http://localhost:8000/example/yaml-json-mix-extension",
@@ -268,7 +266,7 @@ TEST_F(ResolverTest, example_2020_12_yaml_json_mix_extension) {
 }
 
 TEST_F(ResolverTest, example_2020_12_semver) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-semver.json",
                "https://example.com/schemas/semver/v1.2.3",
                "http://localhost:8000/example/semver/v1.2.3",
@@ -279,7 +277,7 @@ TEST_F(ResolverTest, example_2020_12_semver) {
 }
 
 TEST_F(ResolverTest, example_2020_12_pointer_ref_casing_relative) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(
       resolver, "example", "2020-12-pointer-ref-casing-relative.json",
       "https://example.com/schemas/2020-12-pointer-ref-casing-relative",
@@ -298,7 +296,7 @@ TEST_F(ResolverTest, example_2020_12_pointer_ref_casing_relative) {
 }
 
 TEST_F(ResolverTest, example_only_id) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "only-id.json",
                "https://example.com/schemas/only-id",
                "http://localhost:8000/example/only-id",
@@ -309,7 +307,7 @@ TEST_F(ResolverTest, example_only_id) {
 }
 
 TEST_F(ResolverTest, example_2020_12_anonymous) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-anonymous.json",
                "https://example.com/schemas/2020-12-anonymous",
                "http://localhost:8000/example/2020-12-anonymous",
@@ -320,7 +318,7 @@ TEST_F(ResolverTest, example_2020_12_anonymous) {
 }
 
 TEST_F(ResolverTest, example_2020_12_embedded_resource) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-embedded-resource.json",
                "https://example.com/schemas/2020-12-embedded-resource",
                "http://localhost:8000/example/2020-12-embedded-resource",
@@ -342,7 +340,7 @@ TEST_F(ResolverTest, example_2020_12_embedded_resource) {
 }
 
 TEST_F(ResolverTest, example_2020_12_absolute_ref) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
 
   // We expect absolute references to be made relative
   RESOLVER_ADD(resolver, "example", "2020-12-absolute-ref.json",
@@ -356,7 +354,7 @@ TEST_F(ResolverTest, example_2020_12_absolute_ref) {
 }
 
 TEST_F(ResolverTest, example_2020_12_relative_id) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-relative-id.json",
                "https://example.com/schemas/2020-12-relative-id",
@@ -368,7 +366,7 @@ TEST_F(ResolverTest, example_2020_12_relative_id) {
 }
 
 TEST_F(ResolverTest, example_2020_12_ref_with_casing) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-ref-with-casing.json",
                "https://example.com/schemas/2020-12-ref-with-casing",
@@ -381,7 +379,7 @@ TEST_F(ResolverTest, example_2020_12_ref_with_casing) {
 }
 
 TEST_F(ResolverTest, example_2020_12_id_with_casing) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-id-with-casing.json",
                "https://example.com/schemas/2020-12-id-with-casing",
                "http://localhost:8000/example/2020-12-id-with-casing",
@@ -406,7 +404,7 @@ TEST_F(ResolverTest, example_2020_12_id_with_casing) {
 }
 
 TEST_F(ResolverTest, example_2020_12_ref_needs_rebase) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-ref-needs-rebase.json",
                "https://example.com/schemas/2020-12-ref-needs-rebase",
                "http://localhost:8000/example/2020-12-ref-needs-rebase",
@@ -418,7 +416,7 @@ TEST_F(ResolverTest, example_2020_12_ref_needs_rebase) {
 }
 
 TEST_F(ResolverTest, example_2020_12_meta) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-meta.json",
                "https://example.com/schemas/2020-12-meta",
                "http://localhost:8000/example/2020-12-meta",
@@ -432,7 +430,7 @@ TEST_F(ResolverTest, example_2020_12_meta) {
 }
 
 TEST_F(ResolverTest, example_2020_12_circular) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-circular.json",
                "https://example.com/schemas/2020-12-circular",
                "http://localhost:8000/example/2020-12-circular",
@@ -444,7 +442,7 @@ TEST_F(ResolverTest, example_2020_12_circular) {
 }
 
 TEST_F(ResolverTest, example_2020_12_meta_schema) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   const auto schema_result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-meta-schema.json")};
 
@@ -462,7 +460,7 @@ TEST_F(ResolverTest, example_2020_12_meta_schema) {
 }
 
 TEST_F(ResolverTest, example_2020_12_base_with_trailing_slash) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-base-with-trailing-slash.json",
                "https://example.com/schemas/2020-12-base-with-trailing-slash",
                "http://localhost:8000/example/2020-12-base-with-trailing-slash",
@@ -473,7 +471,7 @@ TEST_F(ResolverTest, example_2020_12_base_with_trailing_slash) {
 }
 
 TEST_F(ResolverTest, base_slash_2020_12_equal_to_base) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "base-slash", "2020-12-equal-to-base.json",
                "https://example.com/slash/2020-12-equal-to-base",
                "http://localhost:8000/base-slash/2020-12-equal-to-base",
@@ -484,7 +482,7 @@ TEST_F(ResolverTest, base_slash_2020_12_equal_to_base) {
 }
 
 TEST_F(ResolverTest, example_2019_09_recursive_ref) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2019-09-recursive-ref.json",
                "https://example.com/schemas/2019-09-recursive-ref",
                "http://localhost:8000/example/2019-09-recursive-ref",
@@ -499,7 +497,7 @@ TEST_F(ResolverTest, example_2019_09_recursive_ref) {
 }
 
 TEST_F(ResolverTest, example_draft4_internal_ref) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "draft4-internal-ref.json",
                "https://example.com/schemas/draft4-internal-ref",
                "http://localhost:8000/example/draft4-internal-ref",
@@ -516,7 +514,7 @@ TEST_F(ResolverTest, example_draft4_internal_ref) {
 }
 
 TEST_F(ResolverTest, example_draft4_trailing_hash_with_ref) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "draft4-trailing-hash-with-ref.json",
                "https://example.com/schemas/draft4-trailing-hash-with-ref",
                "http://localhost:8000/example/draft4-trailing-hash-with-ref",
@@ -531,7 +529,7 @@ TEST_F(ResolverTest, example_draft4_trailing_hash_with_ref) {
 }
 
 TEST_F(ResolverTest, meta_draft4_override) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "meta-draft4", "draft4-override.json",
                "http://json-schema.org/draft-04/schema",
                "http://localhost:8000/meta-draft4/schema",
@@ -542,7 +540,7 @@ TEST_F(ResolverTest, meta_draft4_override) {
 }
 
 TEST_F(ResolverTest, entry_lookup) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
 
   const auto &entry{
@@ -554,7 +552,7 @@ TEST_F(ResolverTest, entry_lookup) {
 }
 
 TEST_F(ResolverTest, non_schema_file) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   try {
     RESOLVER_IMPORT(resolver, "example", "non-schema-array.json");
     FAIL();
@@ -564,13 +562,13 @@ TEST_F(ResolverTest, non_schema_file) {
 }
 
 TEST_F(ResolverTest, no_dialect) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   EXPECT_THROW(RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json"),
                sourcemeta::core::SchemaUnknownDialectError);
 }
 
 TEST_F(ResolverTest, non_string_ref_no_crash) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "non-string-ref.json")};
   EXPECT_THROW(resolver(result.first.get()),
@@ -578,12 +576,81 @@ TEST_F(ResolverTest, non_string_ref_no_crash) {
 }
 
 TEST_F(ResolverTest, no_base_anonymous) {
-  RESOLVER_INIT(resolver);
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "no-base", "anonymous.json",
                "http://localhost:8000/anonymous",
                "http://localhost:8000/no-base/anonymous",
                R"JSON({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "http://localhost:8000/no-base/anonymous"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_with_id) {
+  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-with-id");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-with-id");
+  RESOLVER_EXPECT(resolver,
+                  "http://localhost:8000/v1/catalog/example/2020-12-with-id",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-with-id"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_anonymous) {
+  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "2020-12-anonymous.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-anonymous");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-anonymous");
+  RESOLVER_EXPECT(resolver,
+                  "http://localhost:8000/v1/catalog/example/2020-12-anonymous",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-anonymous"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_ref_needs_rebase) {
+  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
+  RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "2020-12-ref-needs-rebase.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-ref-needs-rebase");
+  EXPECT_EQ(
+      result.first.get(),
+      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase");
+  RESOLVER_EXPECT(
+      resolver,
+      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
+      R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
+    "$ref": "/v1/catalog/example/2020-12-with-id"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_absolute_ref) {
+  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "2020-12-absolute-ref.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-absolute-ref");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref");
+  RESOLVER_EXPECT(
+      resolver, "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref",
+      R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref",
+    "$ref": "2020-12-id"
   })JSON");
 }

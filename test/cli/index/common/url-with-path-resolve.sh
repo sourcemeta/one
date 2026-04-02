@@ -15,7 +15,7 @@ cat << EOF > "$TMP/one.json"
       "baseUri": "https://other.example.com",
       "path": "./schemas",
       "resolve": {
-        "https://external.example.com/types.json": "/schemas/example/types.json"
+        "https://external.example.com/types.json": "/example/types.json"
       }
     }
   }
