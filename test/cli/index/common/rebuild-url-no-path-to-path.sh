@@ -10,7 +10,6 @@ trap clean EXIT
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://example.com",
-  "html": {},
   "contents": {
     "example": {
       "baseUri": "https://example.com",
@@ -56,7 +55,6 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://example.com/schemas",
-  "html": {},
   "contents": {
     "example": {
       "baseUri": "https://example.com",
@@ -69,6 +67,31 @@ EOF
 # Must trigger full rebuild because configuration changed
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
-grep -c "Producing:" "$TMP/output.txt" > "$TMP/count.txt"
-# There must be at least one Producing line (full rebuild)
-test "$(cat "$TMP/count.txt")" -gt 0
+cat << EOF > "$TMP/expected.txt"
+Writing output to: $(realpath "$TMP")/output
+Using configuration: $(realpath "$TMP")/one.json
+Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
+(100%) Resolving: foo.json
+(  4%) Producing: configuration.json
+(  9%) Producing: version.json
+( 14%) Producing: explorer/%/404.metapack
+( 19%) Producing: schemas/example/foo/%/schema.metapack
+( 23%) Producing: schemas/example/foo/%/dependencies.metapack
+( 28%) Producing: schemas/example/foo/%/locations.metapack
+( 33%) Producing: schemas/example/foo/%/positions.metapack
+( 38%) Producing: schemas/example/foo/%/stats.metapack
+( 42%) Producing: schemas/example/foo/%/bundle.metapack
+( 47%) Producing: schemas/example/foo/%/health.metapack
+( 52%) Producing: explorer/example/foo/%/schema.metapack
+( 57%) Producing: schemas/example/foo/%/blaze-exhaustive.metapack
+( 61%) Producing: schemas/example/foo/%/blaze-fast.metapack
+( 66%) Producing: schemas/example/foo/%/editor.metapack
+( 71%) Producing: explorer/example/%/directory.metapack
+( 76%) Producing: explorer/example/foo/%/schema-html.metapack
+( 80%) Producing: explorer/%/directory.metapack
+( 85%) Producing: explorer/example/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory-html.metapack
+( 95%) Producing: explorer/%/search.metapack
+(100%) Producing: routes.bin
+EOF
+diff "$TMP/output.txt" "$TMP/expected.txt"

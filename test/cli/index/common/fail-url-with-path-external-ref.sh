@@ -10,7 +10,6 @@ trap clean EXIT
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://example.com/schemas",
-  "html": false,
   "contents": {
     "test": {
       "path": "./schemas"
@@ -47,9 +46,10 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 (100%) Resolving: foo.json
-(  5%) Producing: configuration.json
-( 11%) Producing: version.json
-( 17%) Producing: schemas/test/foo/%/schema.metapack
+(  4%) Producing: configuration.json
+(  9%) Producing: version.json
+( 14%) Producing: explorer/%/404.metapack
+( 19%) Producing: schemas/test/foo/%/schema.metapack
 ( 23%) Producing: schemas/test/foo/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
   at identifier https://other.example.com/external

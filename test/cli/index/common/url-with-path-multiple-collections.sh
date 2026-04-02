@@ -10,7 +10,6 @@ trap clean EXIT
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://example.com/schemas",
-  "html": false,
   "contents": {
     "first": {
       "baseUri": "https://example.com/first",
@@ -52,19 +51,25 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./configuration.json
 ./explorer
 ./explorer/%
+./explorer/%/404.metapack
+./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack
 ./explorer/%/search.metapack
 ./explorer/first
 ./explorer/first/%
+./explorer/first/%/directory-html.metapack
 ./explorer/first/%/directory.metapack
 ./explorer/first/a
 ./explorer/first/a/%
+./explorer/first/a/%/schema-html.metapack
 ./explorer/first/a/%/schema.metapack
 ./explorer/second
 ./explorer/second/%
+./explorer/second/%/directory-html.metapack
 ./explorer/second/%/directory.metapack
 ./explorer/second/b
 ./explorer/second/b/%
+./explorer/second/b/%/schema-html.metapack
 ./explorer/second/b/%/schema.metapack
 ./routes.bin
 ./schemas
