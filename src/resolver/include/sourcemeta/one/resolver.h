@@ -73,6 +73,7 @@ public:
 private:
   Views views;
   std::shared_mutex mutex;
+  std::string server_url_path;
 };
 
 } // namespace sourcemeta::one

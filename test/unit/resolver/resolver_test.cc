@@ -45,6 +45,16 @@ std::unique_ptr<sourcemeta::one::Configuration>
       std::filesystem::last_write_time(std::filesystem::path{SCHEMAS_PATH} /   \
                                        collection_name / (relative_path)))
 
+#define RESOLVER_IMPORT_WITH_URL(resolver, server_url, collection_name,        \
+                                 relative_path)                                \
+  (resolver).add(                                                              \
+      (server_url), collection_name,                                           \
+      std::get<sourcemeta::one::Configuration::Collection>(                    \
+          ResolverTest::shared_configuration->entries.at(collection_name)),    \
+      std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path), \
+      std::filesystem::last_write_time(std::filesystem::path{SCHEMAS_PATH} /   \
+                                       collection_name / (relative_path)))
+
 #define RESOLVER_ADD(resolver, collection_name, relative_path,                 \
                      expected_current_uri, expected_final_uri,                 \
                      expected_schema)                                          \
@@ -585,5 +595,77 @@ TEST_F(ResolverTest, no_base_anonymous) {
                R"JSON({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "http://localhost:8000/no-base/anonymous"
+  })JSON");
+}
+
+static const std::string PATH_URL{"http://localhost:8000/v1/catalog"};
+
+TEST_F(ResolverTest, path_url_with_id) {
+  RESOLVER_INIT(resolver);
+  const auto result{RESOLVER_IMPORT_WITH_URL(resolver, PATH_URL, "example",
+                                             "2020-12-with-id.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-with-id");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-with-id");
+  RESOLVER_EXPECT(resolver,
+                  "http://localhost:8000/v1/catalog/example/2020-12-with-id",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-with-id"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_anonymous) {
+  RESOLVER_INIT(resolver);
+  const auto result{RESOLVER_IMPORT_WITH_URL(resolver, PATH_URL, "example",
+                                             "2020-12-anonymous.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-anonymous");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-anonymous");
+  RESOLVER_EXPECT(resolver,
+                  "http://localhost:8000/v1/catalog/example/2020-12-anonymous",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-anonymous"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_ref_needs_rebase) {
+  RESOLVER_INIT(resolver);
+  RESOLVER_IMPORT_WITH_URL(resolver, PATH_URL, "example",
+                           "2020-12-with-id.json");
+  const auto result{RESOLVER_IMPORT_WITH_URL(resolver, PATH_URL, "example",
+                                             "2020-12-ref-needs-rebase.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-ref-needs-rebase");
+  EXPECT_EQ(
+      result.first.get(),
+      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase");
+  RESOLVER_EXPECT(
+      resolver,
+      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
+      R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
+    "$ref": "/v1/catalog/example/2020-12-with-id"
+  })JSON");
+}
+
+TEST_F(ResolverTest, path_url_absolute_ref) {
+  RESOLVER_INIT(resolver);
+  const auto result{RESOLVER_IMPORT_WITH_URL(resolver, PATH_URL, "example",
+                                             "2020-12-absolute-ref.json")};
+  EXPECT_EQ(result.second.get().original_identifier,
+            "https://example.com/schemas/2020-12-absolute-ref");
+  EXPECT_EQ(result.first.get(),
+            "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref");
+  RESOLVER_EXPECT(
+      resolver, "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref",
+      R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/v1/catalog/example/2020-12-absolute-ref",
+    "$ref": "2020-12-id"
   })JSON");
 }

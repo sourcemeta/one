@@ -66,7 +66,8 @@ static auto
 normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
               const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
               const sourcemeta::core::JSON::String &keyword,
-              const sourcemeta::core::JSON::String &reference) -> void {
+              const sourcemeta::core::JSON::String &reference,
+              const std::string &url_path) -> void {
   // We never want to mess with internal references.
   // We assume those are always well formed
   if (reference.starts_with('#')) {
@@ -76,7 +77,9 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   // If we have a match in the configuration resolver, then trust that.
   const auto match{collection.resolve.find(reference)};
   if (match != collection.resolve.cend()) {
-    schema.assign(keyword, sourcemeta::core::JSON{match->second});
+    sourcemeta::core::URI target{url_path};
+    target.append_path(match->second);
+    schema.assign(keyword, sourcemeta::core::JSON{target.recompose()});
     return;
   }
 
@@ -211,7 +214,8 @@ auto Resolver::operator()(
         const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
         if (maybe_ref && maybe_ref->is_string()) {
           normalise_ref(*result->second.collection, entry.second.base,
-                        subschema, "$ref", maybe_ref->to_string());
+                        subschema, "$ref", maybe_ref->to_string(),
+                        this->server_url_path);
         }
 
         if (entry.second.base_dialect ==
@@ -221,7 +225,8 @@ auto Resolver::operator()(
           if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
             normalise_ref(*result->second.collection, entry.second.base,
                           subschema, "$dynamicRef",
-                          maybe_dynamic_ref->to_string());
+                          maybe_dynamic_ref->to_string(),
+                          this->server_url_path);
           }
         }
       }
@@ -247,6 +252,11 @@ auto Resolver::add(const sourcemeta::core::JSON::String &server_url,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
                    const std::filesystem::file_time_type mtime) -> Result {
+  if (this->server_url_path.empty()) {
+    this->server_url_path =
+        sourcemeta::core::URI{server_url}.path().value_or("");
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
