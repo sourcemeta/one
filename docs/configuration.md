@@ -132,7 +132,7 @@ contain the actual schema definitions that power your instance.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/path`         | String  | :red_circle: **Yes** (unless `includes` is set) | N/A | The path (relative to the location of the configuration file) to the directory which includes the schemas for this collection. The directory will be recursively traversed in search of `.json`, `.yaml`, or `.yml` schemas |
+| `/path`         | String  | :red_circle: **Yes** (unless `include` is set) | N/A | The path (relative to the location of the configuration file) to the directory which includes the schemas for this collection. The directory will be recursively traversed in search of `.json`, `.yaml`, or `.yml` schemas |
 | `/baseUri`         | String  | No  | *The `file://` URI of the configuration directory* | The base URI of every schema file that is part of this collection, for rebasing purposes. If a schema defines an explicit identifier that is not relative to this base URI, the generation of the instance will fail |
 | `/defaultDialect` | String  | No  | None | The default JSON Schema dialect URI to use for schemas that do not declare the `$schema` keyword |
 | `/title`        | String  | No  | None | The concise title of the schema collection |
@@ -140,7 +140,7 @@ contain the actual schema definitions that power your instance.
 | `/email`        | String  | No  | None | The e-mail address associated with the schema collection |
 | `/github`       | String  | No  | None | The GitHub organisation or `organisation/repository` identifier associated with the schema collection |
 | `/website`      | String  | No  | None | The absolute URL to the website associated with the schema collection |
-| `/includes`     | String  | No  | None | A `jsonschema.json` manifest definition to include in-place. See the [Includes](#includes) section for more information. **If this property is set, none of the other properties can be set (including `path`)** |
+| `/include`     | String  | No  | None | A `jsonschema.json` manifest definition to include in-place. See the [Include](#include) section for more information. **If this property is set, none of the other properties can be set (including `path`)** |
 | `/resolve`      | Object  | No  | None | A URI-to-URI map to hook into the schema reference resolution process. See the [Resolve](#resolve) section for more information |
 | `/lint`      | Object  | No  | None | Linting configuration for this schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of file paths (relative to the configuration file location) to custom linting rule definitions |
@@ -157,9 +157,9 @@ contain the actual schema definitions that power your instance.
     organise them into a tree of nested subdirectories. A large number of
     schemas spread across multiple levels of directories scales well.
 
-### Includes
+### Include
 
-The `includes` property enables modular schema collection management by
+The `include` property enables modular schema collection management by
 allowing you to extract collection definitions into separate `jsonschema.json`
 files and reference them in-place. Unlike inline definitions, this approach
 promotes reusability across multiple configuration files while maintaining
@@ -173,7 +173,7 @@ during processing. For example:
   "url": "https://schemas.example.com",
   "contents": {
     "my-first-collection": {
-      "includes": "./jsonschema.json"
+      "include": "./jsonschema.json"
     }
   }
 }
@@ -186,7 +186,7 @@ during processing. For example:
 }
 ```
 
-If a directory path is provided to the `includes` property, the instance will
+If a directory path is provided to the `include` property, the instance will
 look for a file called `jsonschema.json` inside such directory.
 
 ### Resolve
@@ -196,14 +196,20 @@ resolution process. When set, the object translates any reference that equals a
 property name in the object to the corresponding property value.
 
 This is useful when mounting schemas that consume other external schemas and
-you want to route the reference back into the instance. For example, let's say
-your schema collection depends on [GeoJSON](https://geojson.org) and has
-various references to its latest official URL:
-`https://geojson.org/schema/GeoJSON.json`. Instead of depending on an external
-resource outside your control, you can configure the instance to extend from
-the `@sourcemeta/std` built-in collection and rephrase the
+you want to route the reference back into the instance. For example, if you are
+an Enterprise customer, let's say your schema collection depends on
+[GeoJSON](https://geojson.org) and has various references to its latest
+official URL: `https://geojson.org/schema/GeoJSON.json`. Instead of depending
+on an external resource outside your control, you can configure the instance to
+extend from the `@sourcemeta/std` built-in collection and rephrase the
 `https://geojson.org/schema/GeoJSON.json` references to consume from the
 internal version:
+
+!!! note
+
+    The `@sourcemeta/std` standard library is only available to Enterprise
+    customers. Learn more about [commercial
+    licensing](commercial.md#standard-library).
 
 ```json hl_lines="3 8" title="one.json"
 {
@@ -248,7 +254,7 @@ collection identifier (prefixed with `@`). For example:
 ```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@self/v1", "@geojson/v1.0.5", "../path/to/my/other/config/one.json" ]
+  "extends": [ "@self/v1", "../path/to/my/other/config/one.json" ]
 }
 ```
 
