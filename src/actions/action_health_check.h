@@ -7,13 +7,15 @@
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 
 class ActionHealthCheck {
 public:
   ActionHealthCheck(const std::filesystem::path &,
-                    const sourcemeta::core::URITemplateRouterView &,
-                    const sourcemeta::core::URITemplateRouter::Identifier) {}
+                    const sourcemeta::core::URITemplateRouterView &router,
+                    const sourcemeta::core::URITemplateRouter::Identifier)
+      : base_path_{router.base_path()} {}
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
@@ -22,7 +24,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          "/self/v1/schemas/api/error");
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -31,6 +33,9 @@ public:
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
                                    response);
   }
+
+private:
+  std::string_view base_path_;
 };
 
 #endif

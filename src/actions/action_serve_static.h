@@ -9,6 +9,7 @@
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 
 class ActionServeStatic {
@@ -16,7 +17,8 @@ public:
   ActionServeStatic(
       const std::filesystem::path &,
       const sourcemeta::core::URITemplateRouterView &router,
-      const sourcemeta::core::URITemplateRouter::Identifier identifier) {
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : router_base_path_{router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "path") {
         this->base_path_ = std::get<std::string_view>(value);
@@ -31,16 +33,17 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "missing-base-path", "The base path is not configured for this route",
-          "/self/v1/schemas/api/error");
+          std::string{this->router_base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
     ActionServeMetapackFile::serve(this->base_path_ / matches.front(),
                                    sourcemeta::one::STATUS_OK, false, {}, {},
-                                   request, response);
+                                   request, response, this->router_base_path_);
   }
 
 private:
+  std::string_view router_base_path_;
   std::filesystem::path base_path_;
 };
 

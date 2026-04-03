@@ -28,7 +28,8 @@ public:
       if (!path.starts_with(this->base_path_)) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", "/self/v1/schemas/api/error");
+            "There is nothing at this URL",
+            std::string{this->base_path_} + "/self/v1/schemas/api/error");
         return;
       }
 
@@ -41,27 +42,29 @@ public:
 
     if (path.empty()) {
       if (request.prefers_html()) {
-        ActionServeMetapackFile::serve(
-            this->base_ / "explorer" / "%" / "directory-html.metapack",
-            sourcemeta::one::STATUS_OK, false, {}, {}, request, response);
+        ActionServeMetapackFile::serve(this->base_ / "explorer" / "%" /
+                                           "directory-html.metapack",
+                                       sourcemeta::one::STATUS_OK, false, {},
+                                       {}, request, response, this->base_path_);
         return;
       } else if (request.method() == "get" || request.method() == "head") {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", "/self/v1/schemas/api/error");
+            "There is nothing at this URL",
+            std::string{this->base_path_} + "/self/v1/schemas/api/error");
         return;
       } else {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
             "method-not-allowed", "This HTTP method is invalid for this URL",
-            "/self/v1/schemas/api/error");
+            std::string{this->base_path_} + "/self/v1/schemas/api/error");
         return;
       }
     }
 
     if (path.ends_with(".json")) {
       ActionJSONSchemaServe::serve(this->base_, path.substr(0, path.size() - 5),
-                                   request, response);
+                                   request, response, this->base_path_);
       return;
     }
 
@@ -72,27 +75,30 @@ public:
             !path.ends_with("/")) {
           ActionServeMetapackFile::serve(explorer_path / "schema-html.metapack",
                                          sourcemeta::one::STATUS_OK, false, {},
-                                         {}, request, response);
+                                         {}, request, response,
+                                         this->base_path_);
         } else {
           explorer_path /= "directory-html.metapack";
           if (std::filesystem::exists(explorer_path)) {
-            ActionServeMetapackFile::serve(explorer_path,
-                                           sourcemeta::one::STATUS_OK, false,
-                                           {}, {}, request, response);
+            ActionServeMetapackFile::serve(
+                explorer_path, sourcemeta::one::STATUS_OK, false, {}, {},
+                request, response, this->base_path_);
           } else {
-            ActionServeMetapackFile::serve(this->base_ / "explorer" / "%" /
-                                               "404.metapack",
-                                           sourcemeta::one::STATUS_NOT_FOUND,
-                                           false, {}, {}, request, response);
+            ActionServeMetapackFile::serve(
+                this->base_ / "explorer" / "%" / "404.metapack",
+                sourcemeta::one::STATUS_NOT_FOUND, false, {}, {}, request,
+                response, this->base_path_);
           }
         }
       } else {
-        ActionJSONSchemaServe::serve(this->base_, path, request, response);
+        ActionJSONSchemaServe::serve(this->base_, path, request, response,
+                                     this->base_path_);
       }
     } else {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
     }
   }
 

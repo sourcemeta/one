@@ -1,3 +1,5 @@
+const basePath = document.querySelector('meta[name="base-path"]')?.content || '';
+
 function pluralize(count, singular, plural) {
   return count === 1 ? singular : plural;
 }
@@ -26,7 +28,8 @@ document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (el
   const path = element.getAttribute("data-sourcemeta-ui-dependencies");
   const origin = window.location.origin;
   const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
-  const response = await window.fetch(`/self/v1/api/schemas/dependencies${path}`);
+  const schemaPath = basePath && path.startsWith(basePath) ? path.substring(basePath.length) : path;
+  const response = await window.fetch(`${basePath}/self/v1/api/schemas/dependencies${schemaPath}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependencies.";
     return;
@@ -104,7 +107,8 @@ document.querySelectorAll("[data-sourcemeta-ui-dependents]").forEach(async (elem
   const path = element.getAttribute("data-sourcemeta-ui-dependents");
   const origin = window.location.origin;
   const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
-  const response = await window.fetch(`/self/v1/api/schemas/dependents${path}`);
+  const schemaPath = basePath && path.startsWith(basePath) ? path.substring(basePath.length) : path;
+  const response = await window.fetch(`${basePath}/self/v1/api/schemas/dependents${schemaPath}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependents.";
     return;

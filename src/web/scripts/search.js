@@ -1,3 +1,4 @@
+const basePath = document.querySelector('meta[name="base-path"]')?.content || '';
 const search = document.getElementById('search');
 const searchResult = document.getElementById('search-result');
 let hasSearchResults = false;
@@ -31,7 +32,7 @@ search.addEventListener('input', (event) => {
     }
 
     console.log('Searching for:', event.target.value);
-    const response = await fetch(`/self/v1/api/schemas/search?q=${encodeURIComponent(event.target.value)}`);
+    const response = await fetch(`${basePath}/self/v1/api/schemas/search?q=${encodeURIComponent(event.target.value)}`);
     if (!response.ok) {
       return;
     }

@@ -28,10 +28,11 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
-static auto make_breadcrumb(const std::filesystem::path &relative_path,
+static auto make_breadcrumb(const std::string &base_path,
+                            const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
-  std::filesystem::path current_path{"/"};
+  std::filesystem::path current_path{base_path + "/"};
   const auto parts_count{
       std::distance(relative_path.begin(), relative_path.end())};
   std::size_t index{0};
@@ -358,7 +359,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
@@ -381,8 +382,9 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("bytes", sourcemeta::core::JSON{static_cast<std::size_t>(
                                schema_info.content_bytes)});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
-    result.assign("path", sourcemeta::core::JSON{
-                              "/" + resolver_entry.relative_path.string()});
+    result.assign(
+        "path", sourcemeta::core::JSON{configuration.base_path + "/" +
+                                       resolver_entry.relative_path.string()});
     const auto base_dialect{sourcemeta::core::base_dialect(
         schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
@@ -463,7 +465,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     }
 
     result.assign("breadcrumb",
-                  make_breadcrumb(resolver_entry.relative_path, false));
+                  make_breadcrumb(configuration.base_path,
+                                  resolver_entry.relative_path, false));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -887,15 +890,18 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     meta.assign("entries", std::move(entries));
 
     if (relative_path == ".") {
-      meta.assign("path", sourcemeta::core::JSON{"/"});
+      meta.assign("path",
+                  sourcemeta::core::JSON{configuration.base_path + "/"});
       meta.assign("url", sourcemeta::core::JSON{configuration.url});
-      meta.assign("breadcrumb", make_breadcrumb(std::filesystem::path{}, true));
+      meta.assign("breadcrumb", make_breadcrumb(configuration.base_path,
+                                                std::filesystem::path{}, true));
     } else {
-      meta.assign("path", sourcemeta::core::JSON{std::string{"/"} +
+      meta.assign("path", sourcemeta::core::JSON{configuration.base_path + "/" +
                                                  relative_path.string()});
       meta.assign("url", sourcemeta::core::JSON{configuration.url + "/" +
                                                 relative_path.string()});
-      meta.assign("breadcrumb", make_breadcrumb(relative_path, true));
+      meta.assign("breadcrumb", make_breadcrumb(configuration.base_path,
+                                                relative_path, true));
     }
 
     const auto directory_name{

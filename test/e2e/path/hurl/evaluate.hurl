@@ -3,19 +3,18 @@ Content-Type: application/json
 "hello"
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -24,19 +23,18 @@ Content-Type: application/json
 1234
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == false
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -45,10 +43,9 @@ Content-Type: application/json
 { "name": "hello" }
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 jsonpath "$.annotations" count == 1
@@ -56,12 +53,12 @@ jsonpath "$.annotations[0].absoluteKeywordLocation" == "{{base}}/v1/catalog/exam
 jsonpath "$.annotations[0].instanceLocation" == ""
 jsonpath "$.annotations[0].keywordLocation" == "/properties"
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -70,7 +67,7 @@ Content-Type: application/json
 { "name": 123 }
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == false
 
@@ -79,21 +76,20 @@ Content-Type: application/json
 { "value": true }
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.valid" == true
 jsonpath "$.annotations" count == 1
 jsonpath "$.annotations[0].absoluteKeywordLocation" == "{{base}}/v1/catalog/rebased/with-ref#/properties"
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/response
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -102,7 +98,7 @@ Content-Type: application/json
 3.14
 HTTP 200
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -138,20 +134,19 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 ```
 {{last_response}}
 ```
 HTTP 200
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true

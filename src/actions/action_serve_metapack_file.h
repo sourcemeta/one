@@ -27,19 +27,21 @@ public:
                     const char *code, bool enable_cors, std::string_view mime,
                     std::string_view link,
                     sourcemeta::one::HTTPRequest &request,
-                    sourcemeta::one::HTTPResponse &response) -> void {
+                    sourcemeta::one::HTTPResponse &response,
+                    std::string_view base_path = {}) -> void {
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          "/self/v1/schemas/api/error");
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 
     if (!std::filesystem::exists(absolute_path)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -48,7 +50,8 @@ public:
         sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -56,7 +59,8 @@ public:
     if (!info.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -148,7 +152,8 @@ public:
     if (!payload_start.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 

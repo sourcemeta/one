@@ -74,7 +74,8 @@ inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
-inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
+inline auto make_footer(sourcemeta::core::HTMLWriter &writer,
+                        const Configuration &configuration) -> void {
   std::string information{" "};
   information += edition();
   information += " v";
@@ -89,7 +90,7 @@ inline auto make_footer(sourcemeta::core::HTMLWriter &writer) -> void {
   // Left section
   writer.small().attribute("class", "mb-2 mb-md-0");
   writer.img()
-      .attribute("src", "/self/static/icon.svg")
+      .attribute("src", configuration.base_path + "/self/static/icon.svg")
       .attribute("alt", "Sourcemeta")
       .attribute("height", "25")
       .attribute("width", "25")
@@ -144,33 +145,39 @@ inline auto make_head(sourcemeta::core::HTMLWriter &writer,
   writer.meta()
       .attribute("name", "description")
       .attribute("content", description);
+  writer.meta()
+      .attribute("name", "base-path")
+      .attribute("content", configuration.base_path);
   writer.link().attribute("rel", "canonical").attribute("href", canonical);
   writer.link()
       .attribute("rel", "stylesheet")
       .attribute("href",
                  // For cache busting, to force browsers to refresh styles
                  // on any update
-                 std::string{"/self/static/style.min.css?v="} +
+                 configuration.base_path + "/self/static/style.min.css?v=" +
                      std::string{SOURCEMETA_ONE_CSS_CHECKSUM});
   writer.link()
       .attribute("rel", "icon")
-      .attribute("href", "/self/static/favicon.ico")
+      .attribute("href", configuration.base_path + "/self/static/favicon.ico")
       .attribute("sizes", "any");
   writer.link()
       .attribute("rel", "icon")
-      .attribute("href", "/self/static/icon.svg")
+      .attribute("href", configuration.base_path + "/self/static/icon.svg")
       .attribute("type", "image/svg+xml");
   writer.link()
       .attribute("rel", "shortcut icon")
-      .attribute("href", "/self/static/apple-touch-icon.png")
+      .attribute("href",
+                 configuration.base_path + "/self/static/apple-touch-icon.png")
       .attribute("type", "image/png");
   writer.link()
       .attribute("rel", "apple-touch-icon")
-      .attribute("href", "/self/static/apple-touch-icon.png")
+      .attribute("href",
+                 configuration.base_path + "/self/static/apple-touch-icon.png")
       .attribute("sizes", "180x180");
   writer.link()
       .attribute("rel", "manifest")
-      .attribute("href", "/self/static/manifest.webmanifest");
+      .attribute("href",
+                 configuration.base_path + "/self/static/manifest.webmanifest");
   writer.raw(configuration.html->head.value_or(""));
   writer.close();
 }
@@ -187,14 +194,14 @@ inline auto make_page(sourcemeta::core::HTMLWriter &writer,
   writer.body().attribute("class", "h-100 d-flex flex-column");
   make_navigation(writer, configuration);
   std::forward<BodyWriter>(write_body)(writer);
-  make_footer(writer);
+  make_footer(writer, configuration);
   writer.script()
       .attribute("async", "")
       .attribute("defer", "")
       .attribute("src",
                  // For cache busting, to force browsers to refresh styles
                  // on any update
-                 std::string{"/self/static/main.min.js?v="} +
+                 configuration.base_path + "/self/static/main.min.js?v=" +
                      std::string{SOURCEMETA_ONE_JS_CHECKSUM});
   writer.close();
   writer.close();
