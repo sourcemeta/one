@@ -654,8 +654,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    sourcemeta::core::URITemplateRouter router{
-        sourcemeta::core::URI{configuration.url}.path().value_or("")};
+    sourcemeta::core::URITemplateRouter router{configuration.base_path};
 
     const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
         {"artifact", std::string_view{"directory"}},

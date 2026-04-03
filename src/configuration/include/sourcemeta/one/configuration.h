@@ -30,6 +30,7 @@ struct Configuration {
       -> Configuration;
 
   sourcemeta::core::JSON::String url;
+  sourcemeta::core::JSON::String base_path;
 
   struct HTML {
     sourcemeta::core::JSON::String name;

@@ -341,3 +341,53 @@ TEST(Configuration, valid_008) {
                                         "folder" / "rules" / "my_rule.py"));
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
 }
+
+TEST(Configuration, base_path_none) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "base_path_none.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.base_path, "");
+}
+
+TEST(Configuration, base_path_slash) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "base_path_slash.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.base_path, "");
+}
+
+TEST(Configuration, base_path_simple) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "base_path_simple.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.base_path, "/v1/catalog");
+}
+
+TEST(Configuration, base_path_trailing_slash) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "base_path_trailing_slash.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.base_path, "/v1/catalog");
+}
+
+TEST(Configuration, base_path_deep) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "base_path_deep.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
+}

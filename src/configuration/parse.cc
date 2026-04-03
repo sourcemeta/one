@@ -95,7 +95,13 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   }
 
   Configuration result;
-  result.url = sourcemeta::core::URI::canonicalize(data.at("url").to_string());
+  sourcemeta::core::URI server_url{data.at("url").to_string()};
+  server_url.canonicalize();
+  result.url = server_url.recompose();
+  result.base_path = server_url.path().value_or("");
+  while (result.base_path.ends_with('/')) {
+    result.base_path.pop_back();
+  }
 
   if (data.defines("html")) {
     if (data.at("html").is_boolean() && !data.at("html").to_boolean()) {
