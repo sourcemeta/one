@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
-  SOURCES dispatch.cc
+  SOURCES dispatch.cc schema_directory.cc
     action_default.h
     action_health_check.h
     action_jsonschema_evaluate.h
