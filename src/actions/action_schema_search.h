@@ -12,15 +12,17 @@
 #include <filesystem>   // std::filesystem
 #include <span>         // std::span
 #include <sstream>      // std::ostringstream
+#include <string>       // std::string
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
 
 class ActionSchemaSearch {
 public:
   ActionSchemaSearch(const std::filesystem::path &base,
-                     const sourcemeta::core::URITemplateRouterView &,
+                     const sourcemeta::core::URITemplateRouterView &router,
                      const sourcemeta::core::URITemplateRouter::Identifier)
-      : search_view_{base / "explorer" / "%" / "search.metapack"} {}
+      : search_view_{base / "explorer" / "%" / "search.metapack"},
+        base_path_{router.base_path()} {}
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
@@ -30,7 +32,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          "/self/v1/schemas/api/error");
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -39,7 +41,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_BAD_REQUEST,
           "missing-query", "You must provide a query parameter to search for",
-          "/self/v1/schemas/api/error");
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -49,7 +51,7 @@ public:
           request, response, sourcemeta::one::STATUS_BAD_REQUEST,
           "invalid-search-query",
           "The search query must not exceed 256 characters",
-          "/self/v1/schemas/api/error");
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -69,7 +71,7 @@ public:
             request, response, sourcemeta::one::STATUS_BAD_REQUEST,
             "invalid-search-limit",
             "The limit must be a positive integer between 1 and 100",
-            "/self/v1/schemas/api/error");
+            std::string{this->base_path_} + "/self/v1/schemas/api/error");
         return;
       }
 
@@ -102,7 +104,7 @@ public:
               "invalid-search-scope",
               "The scope must be a comma-separated list of: path, title, "
               "description",
-              "/self/v1/schemas/api/error");
+              std::string{this->base_path_} + "/self/v1/schemas/api/error");
           return;
         }
 
@@ -119,7 +121,7 @@ public:
             "invalid-search-scope",
             "The scope must be a comma-separated list of: path, title, "
             "description",
-            "/self/v1/schemas/api/error");
+            std::string{this->base_path_} + "/self/v1/schemas/api/error");
         return;
       }
     }
@@ -129,7 +131,8 @@ public:
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Content-Type", "application/json");
     sourcemeta::one::write_link_header(
-        response, "/self/v1/schemas/api/schemas/search/response");
+        response, std::string{this->base_path_} +
+                      "/self/v1/schemas/api/schemas/search/response");
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
@@ -139,6 +142,7 @@ public:
 
 private:
   sourcemeta::one::SearchView search_view_;
+  std::string_view base_path_;
 };
 
 #endif

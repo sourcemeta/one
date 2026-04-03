@@ -12,7 +12,8 @@
 namespace sourcemeta::one::html {
 
 inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
-                            const sourcemeta::core::JSON &breadcrumb) -> void {
+                            const sourcemeta::core::JSON &breadcrumb,
+                            const std::string &base_path) -> void {
   assert(breadcrumb.is_array());
   assert(!breadcrumb.empty());
 
@@ -25,7 +26,7 @@ inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
 
   // First item: back arrow
   writer.li().attribute("class", "breadcrumb-item");
-  writer.a().attribute("href", "/");
+  writer.a().attribute("href", base_path + "/");
   writer.i().attribute("class", "bi bi-arrow-left").close();
   writer.close();
   writer.close();

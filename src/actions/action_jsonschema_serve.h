@@ -18,14 +18,15 @@
 class ActionJSONSchemaServe {
 public:
   ActionJSONSchemaServe(const std::filesystem::path &base,
-                        const sourcemeta::core::URITemplateRouterView &,
+                        const sourcemeta::core::URITemplateRouterView &router,
                         const sourcemeta::core::URITemplateRouter::Identifier)
-      : base_{base} {}
+      : base_{base}, base_path_{router.base_path()} {}
 
   static auto serve(const std::filesystem::path &base,
                     std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,
-                    sourcemeta::one::HTTPResponse &response) -> void {
+                    sourcemeta::one::HTTPResponse &response,
+                    std::string_view base_path = {}) -> void {
     // Otherwise we may get unexpected results in case-sensitive file-systems
     std::string lowercase_path{schema_path};
     std::ranges::transform(
@@ -53,7 +54,8 @@ public:
         !std::filesystem::exists(absolute_path)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", "/self/v1/schemas/api/error");
+          "There is nothing at this URL",
+          std::string{base_path} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -61,22 +63,24 @@ public:
       // For HTTP imports, as Deno won't like the `application/schema+json` one
       ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                      true, "application/json", {}, request,
-                                     response);
+                                     response, base_path);
     } else {
       ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                     true, {}, {}, request, response);
+                                     true, {}, {}, request, response,
+                                     base_path);
     }
   }
 
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void {
-    serve(this->base_, matches.front(), request, response);
+    serve(this->base_, matches.front(), request, response, this->base_path_);
   }
 
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;
+  std::string_view base_path_;
 };
 
 #endif

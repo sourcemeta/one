@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://other.example.com/with-id",
+  "type": "boolean"
+}

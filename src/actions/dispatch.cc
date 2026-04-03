@@ -9,7 +9,8 @@
 #include "action_serve_schema_artifact.h"
 #include "action_serve_static.h"
 
-#include <array> // std::array
+#include <array>  // std::array
+#include <string> // std::string
 
 using Handler = auto (*)(const sourcemeta::core::URITemplateRouter::Identifier,
                          const sourcemeta::core::URITemplateRouterView &,
@@ -218,7 +219,7 @@ auto sourcemeta::one::dispatch_action(
         "This server version does not implement the handler for "
         "this URL",
         // TODO: This implies the API is mounted
-        "/self/v1/schemas/api/error");
+        std::string{router.base_path()} + "/self/v1/schemas/api/error");
     return;
   }
 

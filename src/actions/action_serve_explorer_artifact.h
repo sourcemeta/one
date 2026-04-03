@@ -18,7 +18,7 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : base_{base} {
+      : base_{base}, base_path_{router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "artifact") {
         this->artifact_ = std::get<std::string_view>(value);
@@ -39,12 +39,13 @@ public:
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                    true, {}, this->response_schema_, request,
-                                   response);
+                                   response, this->base_path_);
   }
 
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;
+  std::string_view base_path_;
   std::string_view artifact_;
   std::string_view response_schema_;
 };

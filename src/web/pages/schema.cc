@@ -43,7 +43,8 @@ auto GENERATE_WEB_SCHEMA::handler(
   html::make_page(
       writer, configuration, canonical, title, description,
       [&](sourcemeta::core::HTMLWriter &w) {
-        html::make_breadcrumb(w, meta.at("breadcrumb"));
+        html::make_breadcrumb(w, meta.at("breadcrumb"),
+                              configuration.base_path);
 
         w.div().attribute("class", "container-fluid p-4");
 

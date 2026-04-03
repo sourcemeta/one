@@ -34,7 +34,9 @@ document.addEventListener("click", async (event) => {
   const url = element.getAttribute('data-sourcemeta-ui-editor-highlight');
   const pointers = JSON.parse(element.getAttribute('data-sourcemeta-ui-editor-highlight-pointers'));
   if (EDITORS[url]) {
-    const positions = await window.fetch(`/self/v1/api/schemas/positions${url.replace(/\.json$/i, "")}`);
+    const mainBasePath = document.querySelector('meta[name="base-path"]')?.content || '';
+    const schemaUrl = mainBasePath && url.startsWith(mainBasePath) ? url.substring(mainBasePath.length) : url;
+    const positions = await window.fetch(`${mainBasePath}/self/v1/api/schemas/positions${schemaUrl.replace(/\.json$/i, "")}`);
     if (!positions.ok) {
       throw new Error(positions.statusText);
     }
