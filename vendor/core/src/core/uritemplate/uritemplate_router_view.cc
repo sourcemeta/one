@@ -14,7 +14,7 @@ namespace sourcemeta::core {
 namespace {
 
 constexpr std::uint32_t ROUTER_MAGIC = 0x52544552; // "RTER"
-constexpr std::uint32_t ROUTER_VERSION = 2;
+constexpr std::uint32_t ROUTER_VERSION = 3;
 constexpr std::uint32_t NO_CHILD = std::numeric_limits<std::uint32_t>::max();
 
 // Type tags for argument value serialization
@@ -28,6 +28,8 @@ struct RouterHeader {
   std::uint32_t node_count;
   std::uint32_t string_table_offset;
   std::uint32_t arguments_offset;
+  std::uint32_t base_path_offset;
+  std::uint32_t base_path_length;
 };
 
 struct ArgumentEntryHeader {
@@ -36,9 +38,20 @@ struct ArgumentEntryHeader {
   std::uint32_t blob_length;
 };
 
+struct alignas(8) SerializedNode {
+  std::uint32_t string_offset;
+  std::uint32_t string_length;
+  std::uint32_t first_literal_child;
+  std::uint32_t literal_child_count;
+  std::uint32_t variable_child;
+  URITemplateRouter::NodeType type;
+  std::uint8_t padding;
+  URITemplateRouter::Identifier identifier;
+};
+
 // Binary search for a literal child matching the given segment
 inline auto binary_search_literal_children(
-    const URITemplateRouterView::Node *nodes, const char *string_table,
+    const SerializedNode *nodes, const char *string_table,
     const std::size_t string_table_size, const std::uint32_t first_child,
     const std::uint32_t child_count, const char *segment,
     const std::uint32_t segment_length) noexcept -> std::uint32_t {
@@ -82,7 +95,7 @@ inline auto binary_search_literal_children(
 
 auto URITemplateRouterView::save(const URITemplateRouter &router,
                                  const std::filesystem::path &path) -> void {
-  std::vector<Node> nodes;
+  std::vector<SerializedNode> nodes;
   std::string string_table;
   std::queue<const URITemplateRouter::Node *> queue;
   std::unordered_map<const URITemplateRouter::Node *, std::uint32_t>
@@ -90,7 +103,7 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
 
   const auto &root = router.root();
 
-  Node root_serialized{};
+  SerializedNode root_serialized{};
   root_serialized.string_offset = 0;
   root_serialized.string_length = 0;
   root_serialized.type = URITemplateRouter::NodeType::Root;
@@ -125,7 +138,7 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
     const auto *node = queue.front();
     queue.pop();
 
-    Node serialized{};
+    SerializedNode serialized{};
     serialized.string_offset = static_cast<std::uint32_t>(string_table.size());
     serialized.type = node->type;
     serialized.string_length = static_cast<std::uint32_t>(node->value.size());
@@ -224,14 +237,22 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
     argument_entries.push_back(entry);
   }
 
+  // Append the base path to the string table
+  const auto base_path_string_offset =
+      static_cast<std::uint32_t>(string_table.size());
+  const auto base_path_value = router.base_path();
+  string_table.append(base_path_value.data(), base_path_value.size());
+
   RouterHeader header{};
   header.magic = ROUTER_MAGIC;
   header.version = ROUTER_VERSION;
   header.node_count = static_cast<std::uint32_t>(nodes.size());
   header.string_table_offset = static_cast<std::uint32_t>(
-      sizeof(RouterHeader) + nodes.size() * sizeof(Node));
+      sizeof(RouterHeader) + nodes.size() * sizeof(SerializedNode));
   header.arguments_offset = static_cast<std::uint32_t>(
       header.string_table_offset + string_table.size());
+  header.base_path_offset = base_path_string_offset;
+  header.base_path_length = static_cast<std::uint32_t>(base_path_value.size());
 
   std::ofstream file(path, std::ios::binary);
   if (!file) {
@@ -239,8 +260,9 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
   }
 
   file.write(reinterpret_cast<const char *>(&header), sizeof(header));
-  file.write(reinterpret_cast<const char *>(nodes.data()),
-             static_cast<std::streamsize>(nodes.size() * sizeof(Node)));
+  file.write(
+      reinterpret_cast<const char *>(nodes.data()),
+      static_cast<std::streamsize>(nodes.size() * sizeof(SerializedNode)));
   file.write(string_table.data(),
              static_cast<std::streamsize>(string_table.size()));
 
@@ -306,15 +328,15 @@ auto URITemplateRouterView::match(const std::string_view path,
   }
 
   if (header->node_count == 0 ||
-      header->node_count >
-          (this->data_.size() - sizeof(RouterHeader)) / sizeof(Node)) {
+      header->node_count > (this->data_.size() - sizeof(RouterHeader)) /
+                               sizeof(SerializedNode)) {
     return 0;
   }
 
-  const auto *nodes =
-      reinterpret_cast<const Node *>(this->data_.data() + sizeof(RouterHeader));
+  const auto *nodes = reinterpret_cast<const SerializedNode *>(
+      this->data_.data() + sizeof(RouterHeader));
   const auto nodes_size =
-      static_cast<std::size_t>(header->node_count) * sizeof(Node);
+      static_cast<std::size_t>(header->node_count) * sizeof(SerializedNode);
   const auto expected_string_table_offset = sizeof(RouterHeader) + nodes_size;
   if (header->string_table_offset < expected_string_table_offset ||
       header->string_table_offset > this->data_.size()) {
@@ -597,6 +619,39 @@ auto URITemplateRouterView::arguments(
 
     return;
   }
+}
+
+auto URITemplateRouterView::base_path() const noexcept -> std::string_view {
+  if (this->data_.size() < sizeof(RouterHeader)) {
+    return {};
+  }
+
+  const auto *header =
+      reinterpret_cast<const RouterHeader *>(this->data_.data());
+  if (header->magic != ROUTER_MAGIC || header->version != ROUTER_VERSION) {
+    return {};
+  }
+
+  if (header->base_path_length == 0) {
+    return {};
+  }
+
+  if (header->string_table_offset > this->data_.size() ||
+      header->arguments_offset < header->string_table_offset ||
+      header->arguments_offset > this->data_.size()) {
+    return {};
+  }
+
+  const auto *string_table = reinterpret_cast<const char *>(
+      this->data_.data() + header->string_table_offset);
+  const auto string_table_size =
+      header->arguments_offset - header->string_table_offset;
+  if (header->base_path_offset > string_table_size ||
+      header->base_path_length > string_table_size - header->base_path_offset) {
+    return {};
+  }
+
+  return {string_table + header->base_path_offset, header->base_path_length};
 }
 
 } // namespace sourcemeta::core
