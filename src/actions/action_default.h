@@ -25,7 +25,9 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void {
     auto path{request.path()};
     if (!this->base_path_.empty()) {
-      if (!path.starts_with(this->base_path_)) {
+      if (!path.starts_with(this->base_path_) ||
+          (path.size() > this->base_path_.size() &&
+           path[this->base_path_.size()] != '/')) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
             "There is nothing at this URL",

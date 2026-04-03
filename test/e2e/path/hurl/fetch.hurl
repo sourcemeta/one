@@ -186,6 +186,10 @@ Access-Control-Allow-Origin: *
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 
+# Base path boundary: /v1/catalogexample must not match /v1/catalog
+GET {{base}}/v1/catalogexample/string.json
+HTTP 404
+
 GET {{base}}/v1/catalog
 Accept: text/html
 HTTP 200
