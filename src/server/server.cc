@@ -26,13 +26,17 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
           std::numeric_limits<
               sourcemeta::core::URITemplateRouter::Index>::max()>
           matches;
-      const auto handler{router.match(
-          request.path(), [](const auto index, auto, const auto value) {
+      std::size_t matches_size{0};
+      const auto handler{
+          router.match(request.path(), [&matches_size](const auto index, auto,
+                                                       const auto value) {
             matches[index] = value;
+            matches_size = static_cast<std::size_t>(index) + 1;
           })};
 
-      sourcemeta::one::dispatch_action(handler, router, base, matches, request,
-                                       response);
+      sourcemeta::one::dispatch_action(handler, router, base,
+                                       std::span{matches.data(), matches_size},
+                                       request, response);
     } else {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,

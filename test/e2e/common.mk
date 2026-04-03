@@ -26,9 +26,11 @@ up: $(COMPOSE)
 	$(DOCKER) compose --progress plain --file $< build
 	$(DOCKER) compose --progress plain --file $< up --detach --wait
 
+# Note we run the tests multiple times to have a higher
+# chance of catching any potential flakiness
 .PHONY: test-hurl
 test-hurl:
-	$(HURL) --test --variable base=$(BASE):$(PORT) \
+	$(HURL) --repeat 10 --test --variable base=$(BASE):$(PORT) \
 		--variable edition=$(EDITION_DISPLAY) hurl/*.hurl
 
 .PHONY: test-playwright
