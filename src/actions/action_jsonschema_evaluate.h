@@ -12,14 +12,16 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <cassert>     // assert
-#include <cstdint>     // std::uint8_t
-#include <filesystem>  // std::filesystem::path
-#include <span>        // std::span
-#include <sstream>     // std::ostringstream
-#include <stdexcept>   // std::runtime_error
-#include <string_view> // std::string_view
-#include <utility>     // std::move, std::to_underlying, std::unreachable
+#include <cassert>       // assert
+#include <cstdint>       // std::uint8_t
+#include <filesystem>    // std::filesystem::path
+#include <span>          // std::span
+#include <sstream>       // std::ostringstream
+#include <stdexcept>     // std::runtime_error
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move, std::to_underlying
 
 class ActionJSONSchemaEvaluate {
 public:
@@ -27,7 +29,7 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : base_{base} {
+      : base_{base}, server_url_path_{router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "mode") {
         this->mode_ = static_cast<EvaluateMode>(std::get<std::int64_t>(value));
@@ -72,12 +74,12 @@ public:
       }
 
       request.body(
-          [mode, template_path = std::move(template_path)](
+          [this, mode, template_path = std::move(template_path)](
               sourcemeta::one::HTTPRequest &callback_request,
               sourcemeta::one::HTTPResponse &callback_response,
               std::string &&body, bool too_big) {
-            body_callback(template_path, mode, callback_request,
-                          callback_response, std::move(body), too_big);
+            this->body_callback(template_path, mode, callback_request,
+                                callback_response, std::move(body), too_big);
           },
           [](sourcemeta::one::HTTPRequest &callback_request,
              sourcemeta::one::HTTPResponse &callback_response,
@@ -103,15 +105,80 @@ public:
   enum class EvaluateMode : std::uint8_t { Standard, Trace };
 
 private:
-  static auto trace(sourcemeta::blaze::Evaluator &evaluator,
-                    const sourcemeta::blaze::Template &schema_template,
-                    const std::string &instance,
-                    const std::filesystem::path &template_path)
+  auto
+  resolve_vocabulary(const std::string_view keyword_location,
+                     const sourcemeta::core::WeakPointer &evaluate_path,
+                     const sourcemeta::core::JSON &static_locations,
+                     std::unordered_map<std::string, sourcemeta::core::JSON>
+                         &referenced_locations) -> sourcemeta::core::JSON {
+    const std::string keyword_location_string{keyword_location};
+    const sourcemeta::core::JSON *location{nullptr};
+    if (static_locations.defines(keyword_location_string)) {
+      location = &static_locations.at(keyword_location_string);
+    } else {
+      const auto fragment_position{keyword_location_string.find('#')};
+      const std::string schema_uri{
+          keyword_location_string.substr(0, fragment_position)};
+
+      auto cached{referenced_locations.find(schema_uri)};
+      if (cached == referenced_locations.end()) {
+        const auto directory{sourcemeta::one::schema_directory(
+            this->base_, this->server_url_path_, keyword_location_string)};
+        if (directory.has_value()) {
+          const auto locations_path{directory.value() / "locations.metapack"};
+          if (std::filesystem::exists(locations_path)) {
+            auto locations{sourcemeta::one::metapack_read_json(locations_path)};
+            if (locations.has_value() && locations.value().is_object() &&
+                locations.value().defines("static")) {
+              cached = referenced_locations
+                           .emplace(schema_uri, std::move(locations.value()))
+                           .first;
+            }
+          }
+        }
+      }
+
+      if (cached != referenced_locations.end()) {
+        const auto &ref_static{cached->second.at("static")};
+        if (ref_static.defines(keyword_location_string)) {
+          location = &ref_static.at(keyword_location_string);
+        }
+      }
+    }
+
+    if (location == nullptr || !location->is_object() ||
+        !location->defines("baseDialect") || !location->defines("dialect")) {
+      return sourcemeta::core::JSON{nullptr};
+    }
+
+    const auto base_dialect{sourcemeta::core::to_base_dialect(
+        location->at("baseDialect").to_string())};
+    if (!base_dialect.has_value()) {
+      return sourcemeta::core::JSON{nullptr};
+    }
+
+    const auto vocabularies{sourcemeta::core::vocabularies(
+        sourcemeta::core::schema_resolver, base_dialect.value(),
+        location->at("dialect").to_string())};
+    const auto &walker_result{sourcemeta::core::schema_walker(
+        evaluate_path.back().to_property(), vocabularies)};
+    if (walker_result.vocabulary.has_value()) {
+      return sourcemeta::core::to_json(std::string{
+          sourcemeta::core::to_string(walker_result.vocabulary.value())});
+    }
+
+    return sourcemeta::core::JSON{nullptr};
+  }
+
+  auto trace(sourcemeta::blaze::Evaluator &evaluator,
+             const sourcemeta::blaze::Template &schema_template,
+             const std::string &instance,
+             const std::filesystem::path &template_path)
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
     auto locations_path{template_path.parent_path() / "locations.metapack"};
-    // TODO: Cache this across runs?
+    // TODO: Cache loaded locations across trace requests for performance
     const auto locations_option{
         sourcemeta::one::metapack_read_json(locations_path)};
     assert(locations_option.has_value());
@@ -121,12 +188,20 @@ private:
     }
     const auto &static_locations{locations.at("static")};
 
+    // When tracing through $ref, keyword locations may point into referenced
+    // schemas whose locations are in separate metapack files. This map holds
+    // lazily loaded locations for referenced schemas, keyed by schema URI.
+    // TODO: Cache loaded locations across trace requests for performance
+    std::unordered_map<std::string, sourcemeta::core::JSON>
+        referenced_locations;
+
     sourcemeta::core::PointerPositionTracker tracker;
     sourcemeta::core::JSON instance_json{nullptr};
     sourcemeta::core::parse_json(instance, instance_json, std::ref(tracker));
     const auto result{evaluator.validate(
         schema_template, instance_json,
-        [&steps, &tracker, &static_locations, &instance_json](
+        [this, &steps, &tracker, &static_locations, &instance_json,
+         &referenced_locations](
             const sourcemeta::blaze::EvaluationType type, const bool valid,
             const sourcemeta::blaze::Instruction &instruction,
             const sourcemeta::blaze::InstructionExtra &extra,
@@ -178,33 +253,11 @@ private:
                             instance_location, instance_json, annotation)});
           }
 
-          // Determine keyword vocabulary
-          const auto &current_location{
-              static_locations.at(extra.keyword_location)};
-          if (!current_location.is_object() ||
-              !current_location.defines("baseDialect") ||
-              !current_location.defines("dialect")) {
-            throw std::runtime_error("Failed to resolve base dialect");
-          }
-
-          const auto base_dialect_result{sourcemeta::core::to_base_dialect(
-              current_location.at("baseDialect").to_string())};
-          if (!base_dialect_result.has_value()) {
-            throw std::runtime_error("Failed to resolve base dialect");
-          }
-          const auto vocabularies{sourcemeta::core::vocabularies(
-              sourcemeta::core::schema_resolver, base_dialect_result.value(),
-              current_location.at("dialect").to_string())};
-          const auto &walker_result{sourcemeta::core::schema_walker(
-              evaluate_path.back().to_property(), vocabularies)};
-          if (walker_result.vocabulary.has_value()) {
-            step.assign("vocabulary",
-                        sourcemeta::core::to_json(
-                            std::string{sourcemeta::core::to_string(
-                                walker_result.vocabulary.value())}));
-          } else {
-            step.assign("vocabulary", sourcemeta::core::to_json(nullptr));
-          }
+          step.assign("vocabulary",
+                      this->resolve_vocabulary(
+                          sourcemeta::core::to_string(extra.keyword_location),
+                          evaluate_path, static_locations,
+                          referenced_locations));
 
           steps.push_back(std::move(step));
         })};
@@ -215,8 +268,8 @@ private:
     return document;
   }
 
-  static auto evaluate(const std::filesystem::path &template_path,
-                       const std::string &instance, const EvaluateMode mode)
+  auto evaluate(const std::filesystem::path &template_path,
+                const std::string &instance, const EvaluateMode mode)
       -> sourcemeta::core::JSON {
     if (!std::filesystem::exists(template_path)) {
       throw std::runtime_error("Schema template not found");
@@ -243,18 +296,18 @@ private:
             sourcemeta::core::parse_json(instance),
             sourcemeta::blaze::StandardOutput::Basic);
       case EvaluateMode::Trace:
-        return trace(evaluator, schema_template.value(), instance,
-                     template_path);
+        return this->trace(evaluator, schema_template.value(), instance,
+                           template_path);
       default:
         std::unreachable();
     }
   }
 
-  static auto body_callback(const std::filesystem::path &template_path,
-                            const EvaluateMode mode,
-                            sourcemeta::one::HTTPRequest &request,
-                            sourcemeta::one::HTTPResponse &response,
-                            std::string &&body, bool too_big) -> void {
+  auto body_callback(const std::filesystem::path &template_path,
+                     const EvaluateMode mode,
+                     sourcemeta::one::HTTPRequest &request,
+                     sourcemeta::one::HTTPResponse &response,
+                     std::string &&body, bool too_big) -> void {
     if (too_big) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
@@ -272,7 +325,7 @@ private:
     }
 
     try {
-      const auto result{evaluate(template_path, body, mode)};
+      const auto result{this->evaluate(template_path, body, mode)};
       response.write_status(sourcemeta::one::STATUS_OK);
       response.write_header("Content-Type", "application/json");
       response.write_header("Access-Control-Allow-Origin", "*");
@@ -298,6 +351,7 @@ private:
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;
+  std::string_view server_url_path_;
   EvaluateMode mode_{EvaluateMode::Standard};
 };
 

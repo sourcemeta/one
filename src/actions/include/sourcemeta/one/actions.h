@@ -5,7 +5,8 @@
 
 #include <sourcemeta/one/http.h>
 
-#include <filesystem>  // std::filesystem
+#include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
 
@@ -32,6 +33,11 @@ auto dispatch_action(const core::URITemplateRouter::Identifier identifier,
                      const std::filesystem::path &base,
                      const std::span<std::string_view> matches,
                      HTTPRequest &request, HTTPResponse &response) -> void;
+
+auto schema_directory(const std::filesystem::path &output,
+                      const std::string_view base_path,
+                      const std::string_view uri)
+    -> std::optional<std::filesystem::path>;
 
 } // namespace sourcemeta::one
 
