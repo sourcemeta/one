@@ -130,7 +130,8 @@ Congratulations! You've just built your first Sourcemeta One instance in under
 two minutes (told you so!). Whilst our single-schema service might seem modest,
 you've got the perfect foundation to experiment and expand.
 
-Ready to take things further? Take a look at our
+Ready to take things further? Take a look at our more comprehensive
+getting-started [guide](guide/index.md). Also explore our
 [integrations](integrations.md) which cover ways on which you can pull and use
 the schemas in a growing amount of programming languages and applications.
 

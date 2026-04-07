@@ -24,6 +24,12 @@ plugins:
 nav:
   - index.md
   - getting-started.md
+  - Guide:
+    - guide/index.md
+    - guide/approach.md
+    - guide/setup.md
+    - guide/development.md
+    - guide/evolution.md
   - configuration.md
   - integrations.md
   - api.md
