@@ -25,8 +25,11 @@ nav:
   - index.md
   - getting-started.md
   - Guide:
-    - Introduction: guide/index.md
-    - guide/problem.md
+    - guide/index.md
+    - guide/approach.md
+    - guide/setup.md
+    - guide/development.md
+    - guide/evolution.md
   - configuration.md
   - integrations.md
   - api.md

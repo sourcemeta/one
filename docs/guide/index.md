@@ -70,7 +70,7 @@ the optimistic number.
 These are not symptoms of bad engineers or underinvestment in tooling. Most of
 these organisations already have tooling. They are symptoms of a missing layer.
 
-## Why this keeps happening? The industry standardised on OpenAPI and stopped one layer too high
+## The industry standardised on OpenAPI and stopped one layer too high
 
 These are not random failures. They have a common structural cause.
 
@@ -86,26 +86,6 @@ clear documentation. What it does not do is help you share anything *across*
 specs. The OpenAPI spec is always the starting point, and it is never
 decomposed further.
 
-This is not a criticism of API spec first as a practice. Designing the contract
-before writing code is genuinely better than the alternative. But API spec
-first still takes the OpenAPI specification as its atom, which means the
-schemas inside it remain ungoverned, uninventoried, and unshared across teams.
-You can be entirely rigorous about your OpenAPI spec and still end up with five
-definitions of `Customer`. The discipline is real. The level of abstraction is
-wrong.
-
-What makes this particularly hard to notice is that the tooling actively
-reinforces the false confidence. A team runs their OpenAPI spec through a
-linter. It passes. Naming conventions: consistent. Response codes: correct.
-Required fields: present. But the linter checked the structure of the spec, not
-the quality of the schemas inside it. It did not ask whether `Customer` was
-well-modelled, whether it duplicated something three other teams had already
-defined, or whether it diverged from an industry standard. The spec looks
-clean. The schema layer is still a mess. Most OpenAPI linters treat schema
-content as largely opaque, because the schema layer is not what they were
-designed to govern. You can pass every lint rule and still have a fundamental
-governance problem.
-
 This matters because a non-trivial OpenAPI spec is, in terms of raw content,
 mostly schemas. The endpoints, the HTTP verbs, the status codes: that is
 structural boilerplate. The substance is the definitions. What a `Customer`
@@ -118,6 +98,27 @@ Teams write OpenAPI specs in isolation. Each spec defines its own schemas
 inline, because that is what every tutorial shows and because there was nowhere
 central to put them even if a team wanted to. The result: every OpenAPI spec is
 an island. Individually excellent. Collectively incoherent.
+
+## But what about API spec first?
+
+Designing the contract before writing code is genuinely better than the
+alternative. But API spec first still takes the OpenAPI specification as its
+atom, which means the schemas inside it remain ungoverned, uninventoried, and
+unshared across teams.  You can be entirely rigorous about your OpenAPI spec
+and still end up with five definitions of `Customer`. The discipline is real.
+The level of abstraction is wrong.
+
+What makes this particularly hard to notice is that the tooling actively
+reinforces the false confidence. A team runs their OpenAPI spec through a
+linter. It passes. Naming conventions: consistent. Response codes: correct.
+Required fields: present. But the linter checked the structure of the spec, not
+the quality of the schemas inside it. It did not ask whether `Customer` was
+well-modelled, whether it duplicated something three other teams had already
+defined, or whether it diverged from an industry standard. The spec looks
+clean. The schema layer is still a mess. Most OpenAPI linters treat schema
+content as largely opaque, because the schema layer is not what they were
+designed to govern. You can pass every lint rule and still have a fundamental
+governance problem.
 
 ## AI makes this more urgent, not less
 
@@ -142,7 +143,7 @@ underneath.*
 
 An AI agent consuming a well-defined, rich shared schema behaves consistently
 and predictably. An AI agent consuming five slightly different inline schemas
-with loose descriptions and no metadata five slightly different
+with loose descriptions and no metadata result in five slightly different
 interpretations, all potentially incorrect.
 
 ## The solution is to treat schemas as their own layer
@@ -158,4 +159,4 @@ landscape, has been left as an afterthought embedded inside individual specs:
 invisible and ungoverned.*
 
 That is what this guide addresses. Not another linter for your OpenAPI specs. A
-foundation for the layer beneath them.
+foundation for properly introducing and governing the layer beneath them.
