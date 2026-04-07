@@ -27,7 +27,7 @@ nav:
   - Guide:
     - guide/index.md
     - guide/approach.md
-    - guide/setup.md
+    - guide/adoption.md
     - guide/development.md
     - guide/evolution.md
   - configuration.md
