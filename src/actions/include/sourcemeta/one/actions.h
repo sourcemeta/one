@@ -5,6 +5,7 @@
 
 #include <sourcemeta/one/http.h>
 
+#include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional
 #include <span>        // std::span
@@ -12,21 +13,24 @@
 
 namespace sourcemeta::one {
 
-constexpr auto HANDLER_SELF_V1_API_LIST = 1;
-constexpr auto HANDLER_SELF_V1_API_LIST_PATH = 2;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_DEPENDENCIES = 3;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_DEPENDENTS = 4;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_HEALTH = 5;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_LOCATIONS = 6;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_POSITIONS = 7;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_STATS = 8;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_METADATA = 9;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_EVALUATE = 10;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_TRACE = 11;
-constexpr auto HANDLER_SELF_V1_API_SCHEMAS_SEARCH = 12;
-constexpr auto HANDLER_SELF_V1_API_DEFAULT = 13;
-constexpr auto HANDLER_SELF_STATIC = 14;
-constexpr auto HANDLER_SELF_V1_HEALTH = 15;
+#define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
+  X(DEFAULT, ActionDefault)                                                    \
+  X(HEALTH_CHECK, ActionHealthCheck)                                           \
+  X(NOT_FOUND, ActionNotFound)                                                 \
+  X(SCHEMA_ARTIFACT, ActionServeSchemaArtifact)                                \
+  X(EXPLORER_ARTIFACT, ActionServeExplorerArtifact)                            \
+  X(JSONSCHEMA_EVALUATE, ActionJSONSchemaEvaluate)                             \
+  X(SCHEMA_SEARCH, ActionSchemaSearch)                                         \
+  X(SERVE_STATIC, ActionServeStatic)
+
+#define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class) ACTION_TYPE_##Name,
+
+enum : std::uint8_t {
+  SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_ACTION_TYPE)
+      ACTION_TYPE_COUNT
+};
+
+#undef SOURCEMETA_ONE_DEFINE_ACTION_TYPE
 
 class Action {
 public:
@@ -60,11 +64,14 @@ private:
   std::string_view base_path_;
 };
 
-auto dispatch_action(const core::URITemplateRouter::Identifier identifier,
-                     const core::URITemplateRouterView &router,
-                     const std::filesystem::path &base,
-                     const std::span<std::string_view> matches,
-                     HTTPRequest &request, HTTPResponse &response) -> void;
+auto actions_initialize(const core::URITemplateRouterView &router) -> void;
+
+auto actions_dispatch(const core::URITemplateRouter::Identifier identifier,
+                      const core::URITemplateRouter::Identifier context,
+                      const core::URITemplateRouterView &router,
+                      const std::filesystem::path &base,
+                      const std::span<std::string_view> matches,
+                      HTTPRequest &request, HTTPResponse &response) -> void;
 
 } // namespace sourcemeta::one
 

@@ -9,210 +9,67 @@
 #include "action_serve_schema_artifact.h"
 #include "action_serve_static.h"
 
-#include <array>  // std::array
-#include <string> // std::string
+#include <array>   // std::array
+#include <cstddef> // std::size_t
+#include <memory>  // std::unique_ptr, std::make_unique
+#include <mutex>   // std::once_flag, std::call_once
+#include <string>  // std::string
 
-using Handler = auto (*)(const sourcemeta::core::URITemplateRouter::Identifier,
-                         const sourcemeta::core::URITemplateRouterView &,
-                         const std::filesystem::path &,
-                         const std::span<std::string_view>,
-                         sourcemeta::one::HTTPRequest &,
-                         sourcemeta::one::HTTPResponse &) -> void;
-
+template <typename T>
 static auto
-handle_default(const sourcemeta::core::URITemplateRouter::Identifier identifier,
-               const sourcemeta::core::URITemplateRouterView &router,
-               const std::filesystem::path &base,
-               const std::span<std::string_view> matches,
-               sourcemeta::one::HTTPRequest &request,
-               sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionDefault instance{base, router, identifier};
-  instance.run(matches, request, response);
+make_action(const std::filesystem::path &base,
+            const sourcemeta::core::URITemplateRouterView &router,
+            const sourcemeta::core::URITemplateRouter::Identifier identifier)
+    -> std::unique_ptr<sourcemeta::one::Action> {
+  return std::make_unique<T>(base, router, identifier);
 }
 
-static auto handle_self_v1_api_list(
+using ActionConstructFunction =
+    auto (*)(const std::filesystem::path &,
+             const sourcemeta::core::URITemplateRouterView &,
+             sourcemeta::core::URITemplateRouter::Identifier)
+        -> std::unique_ptr<sourcemeta::one::Action>;
+
+#define SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY(Name, Class)                     \
+  table[sourcemeta::one::ACTION_TYPE_##Name] = &make_action<Class>;
+
+static constexpr std::array<ActionConstructFunction,
+                            sourcemeta::one::ACTION_TYPE_COUNT>
+    CONSTRUCTORS{[] {
+      std::array<ActionConstructFunction, sourcemeta::one::ACTION_TYPE_COUNT>
+          table{};
+      SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY)
+      return table;
+    }()};
+
+#undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
+
+struct Slot {
+  std::unique_ptr<sourcemeta::one::Action> instance;
+  std::once_flag flag;
+};
+
+// Heap array because Slot contains a non-movable std::once_flag
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
+static std::unique_ptr<Slot[]> SLOTS;
+static std::size_t SLOTS_SIZE{0};
+
+auto sourcemeta::one::actions_initialize(
+    const sourcemeta::core::URITemplateRouterView &router) -> void {
+  SLOTS_SIZE = router.size() + 1;
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+  SLOTS = std::make_unique<Slot[]>(SLOTS_SIZE);
+}
+
+auto sourcemeta::one::actions_dispatch(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
+    const sourcemeta::core::URITemplateRouter::Identifier context,
     const sourcemeta::core::URITemplateRouterView &router,
     const std::filesystem::path &base,
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeExplorerArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_list_path(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeExplorerArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_dependencies(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_dependents(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_health(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_locations(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_positions(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_stats(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeSchemaArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_metadata(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeExplorerArtifact instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_evaluate(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionJSONSchemaEvaluate instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_trace(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionJSONSchemaEvaluate instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_api_schemas_search(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionSchemaSearch instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_api_not_found(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionNotFound instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_v1_health(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionHealthCheck instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static auto handle_self_static(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  static ActionServeStatic instance{base, router, identifier};
-  instance.run(matches, request, response);
-}
-
-static const std::array<Handler, 16> ACTION_HANDLERS = {
-    {handle_default, handle_self_v1_api_list, handle_self_v1_api_list_path,
-     handle_self_v1_api_schemas_dependencies,
-     handle_self_v1_api_schemas_dependents, handle_self_v1_api_schemas_health,
-     handle_self_v1_api_schemas_locations, handle_self_v1_api_schemas_positions,
-     handle_self_v1_api_schemas_stats, handle_self_v1_api_schemas_metadata,
-     handle_self_v1_api_schemas_evaluate, handle_self_v1_api_schemas_trace,
-     handle_self_v1_api_schemas_search, handle_self_api_not_found,
-     handle_self_static, handle_self_v1_health}};
-
-auto sourcemeta::one::dispatch_action(
-    const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
-    const std::span<std::string_view> matches,
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) -> void {
-  if (identifier >= std::size(ACTION_HANDLERS)) [[unlikely]] {
+  if (identifier >= SLOTS_SIZE || context >= CONSTRUCTORS.size()) [[unlikely]] {
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
         "unknown-handler-code",
@@ -223,6 +80,10 @@ auto sourcemeta::one::dispatch_action(
     return;
   }
 
-  ACTION_HANDLERS[identifier](identifier, router, base, matches, request,
-                              response);
+  auto &slot{SLOTS[identifier]};
+  std::call_once(slot.flag, [&] {
+    slot.instance = CONSTRUCTORS[context](base, router, identifier);
+  });
+
+  slot.instance->run(matches, request, response);
 }
