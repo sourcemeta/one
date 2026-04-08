@@ -94,7 +94,8 @@ domain model exactly. While convenient, that flexibility can initially feel
 daunting.
 
 The answer: start simple. Structure matters less than you think, because you
-can always reorganise later in a backwards-compatible way. For example:
+can always [reorganise later in a backwards-compatible
+way](evolution.md#redirecting-consumers-when-schemas-move). For example:
 
 ```
 /shared
@@ -237,7 +238,11 @@ registry more comprehensive and the next iteration faster.
 ## The cycle compounds
 
 Early on, most schemas in each new API are novel. Over time, most already exist
-in the registry. The proportion of new work shrinks with each iteration.
+in the registry. The proportion of new work shrinks with each iteration, until
+designing a new API becomes largely an assembly exercise: declare the
+endpoints, [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) what you
+need, and ship with confidence in definitions already reviewed and proven in
+production.
 
 The platform team monitors what is being extracted: which schemas appear across
 APIs in different forms, which local definitions duplicate canonical ones,

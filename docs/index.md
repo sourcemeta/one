@@ -43,7 +43,7 @@ can discover, browse, consume, and understand your data contracts.
 **API Governance**: Establish organisation-wide standards for API design by
 centralizing schema management, easily consuming external JSON Schema data
 models, tracking schema quality, and ensuring consistency across teams and
-services.
+services. Our [guide](guide/index.md) walks through the approach end-to-end.
 
 **Tooling Infrastructure**: API and schema tooling companies can embed
 Sourcemeta One as a foundational component in their own products. For example,
@@ -148,3 +148,7 @@ us](mailto:hello@sourcemeta.com) any time. We are friendly!
 Ready to transform your scattered schemas into a powerful discovery platform?
 Head over to the [Getting Started](getting-started.md) guide and get up and
 running in minutes.
+
+Prefer to understand the *why* before the *how*? Our [guide to schema-first
+API governance](guide/index.md) walks through the problem, the mental model,
+and how to incrementally adopt it across an existing API landscape.
