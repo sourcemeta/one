@@ -663,4 +663,34 @@ auto URITemplateRouterView::base_path() const noexcept -> std::string_view {
   return {string_table + header->base_path_offset, header->base_path_length};
 }
 
+auto URITemplateRouterView::size() const noexcept -> std::size_t {
+  if (this->data_.size() < sizeof(RouterHeader)) {
+    return 0;
+  }
+
+  const auto *header =
+      reinterpret_cast<const RouterHeader *>(this->data_.data());
+  if (header->magic != ROUTER_MAGIC || header->version != ROUTER_VERSION) {
+    return 0;
+  }
+
+  if (header->node_count == 0 ||
+      header->node_count > (this->data_.size() - sizeof(RouterHeader)) /
+                               sizeof(SerializedNode)) {
+    return 0;
+  }
+
+  const auto *nodes = reinterpret_cast<const SerializedNode *>(
+      this->data_.data() + sizeof(RouterHeader));
+
+  std::size_t count = 0;
+  for (std::uint32_t index = 0; index < header->node_count; ++index) {
+    if (nodes[index].identifier != 0) {
+      count += 1;
+    }
+  }
+
+  return count;
+}
+
 } // namespace sourcemeta::core

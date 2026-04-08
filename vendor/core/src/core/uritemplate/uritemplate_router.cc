@@ -109,6 +109,10 @@ auto URITemplateRouter::base_path() const noexcept -> std::string_view {
   return this->base_path_;
 }
 
+auto URITemplateRouter::size() const noexcept -> std::size_t {
+  return this->size_;
+}
+
 auto URITemplateRouter::add(const std::string_view uri_template,
                             const Identifier identifier,
                             const Identifier context,
@@ -141,6 +145,9 @@ auto URITemplateRouter::add(const std::string_view uri_template,
 
   if (uri_template.empty()) {
     auto &target = current ? *current : this->root_;
+    if (target.identifier == 0) {
+      this->size_ += 1;
+    }
     target.identifier = identifier;
     target.context = context;
     if (!arguments.empty()) {
@@ -310,6 +317,9 @@ auto URITemplateRouter::add(const std::string_view uri_template,
   }
 
   if (!absorbed && current != nullptr) {
+    if (current->identifier == 0) {
+      this->size_ += 1;
+    }
     current->identifier = identifier;
     current->context = context;
     if (!arguments.empty()) {

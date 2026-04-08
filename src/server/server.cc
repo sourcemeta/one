@@ -34,9 +34,9 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches_size = static_cast<std::size_t>(index) + 1;
           })};
 
-      sourcemeta::one::dispatch_action(match_result.first, router, base,
-                                       std::span{matches.data(), matches_size},
-                                       request, response);
+      sourcemeta::one::actions_dispatch(
+          match_result.first, match_result.second, router, base,
+          std::span{matches.data(), matches_size}, request, response);
     } else {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
@@ -100,6 +100,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
+    sourcemeta::one::actions_initialize(router);
 
     sourcemeta::one::HTTPServer(
         port,

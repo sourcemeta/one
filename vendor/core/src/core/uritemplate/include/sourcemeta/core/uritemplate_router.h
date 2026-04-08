@@ -106,10 +106,14 @@ public:
   /// Access the base path prefix
   [[nodiscard]] auto base_path() const noexcept -> std::string_view;
 
+  /// Get the number of registered routes
+  [[nodiscard]] auto size() const noexcept -> std::size_t;
+
 private:
   Node root_;
   std::string base_path_;
   std::vector<std::pair<Identifier, std::vector<Argument>>> arguments_;
+  std::size_t size_{0};
 };
 
 /// @ingroup uritemplate
@@ -144,6 +148,9 @@ public:
 
   /// Access the base path prefix
   [[nodiscard]] auto base_path() const noexcept -> std::string_view;
+
+  /// Get the number of registered routes
+  [[nodiscard]] auto size() const noexcept -> std::size_t;
 
 private:
   std::vector<std::uint8_t> data_;
