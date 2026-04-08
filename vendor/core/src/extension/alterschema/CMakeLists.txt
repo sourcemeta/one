@@ -85,6 +85,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT core NAME alterschema
     linter/enum_to_const.h
     linter/equal_numeric_bounds_to_const.h
     linter/forbid_empty_enum.h
+    linter/incoherent_min_max_contains.h
     linter/invalid_external_ref.h
     linter/items_array_default.h
     linter/items_schema_default.h

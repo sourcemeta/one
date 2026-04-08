@@ -27,14 +27,14 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
               sourcemeta::core::URITemplateRouter::Index>::max()>
           matches;
       std::size_t matches_size{0};
-      const auto handler{
+      const auto match_result{
           router.match(request.path(), [&matches_size](const auto index, auto,
                                                        const auto value) {
             matches[index] = value;
             matches_size = static_cast<std::size_t>(index) + 1;
           })};
 
-      sourcemeta::one::dispatch_action(handler, router, base,
+      sourcemeta::one::dispatch_action(match_result.first, router, base,
                                        std::span{matches.data(), matches_size},
                                        request, response);
     } else {
