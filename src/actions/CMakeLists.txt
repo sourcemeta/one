@@ -1,15 +1,15 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
   SOURCES dispatch.cc schema_directory.cc
-    action_default.h
-    action_health_check.h
-    action_jsonschema_evaluate.h
-    action_jsonschema_serve.h
-    action_not_found.h
-    action_schema_search.h
-    action_serve_explorer_artifact.h
-    action_serve_metapack_file.h
-    action_serve_schema_artifact.h
-    action_serve_static.h)
+    action_default_v1.h
+    action_health_check_v1.h
+    action_jsonschema_evaluate_v1.h
+    action_jsonschema_serve_v1.h
+    action_not_found_v1.h
+    action_schema_search_v1.h
+    action_serve_explorer_artifact_v1.h
+    action_serve_metapack_file_v1.h
+    action_serve_schema_artifact_v1.h
+    action_serve_static_v1.h)
 
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)

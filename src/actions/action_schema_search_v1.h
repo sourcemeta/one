@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_H
-#define SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
+#define SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
@@ -17,11 +17,11 @@
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
 
-class ActionSchemaSearch : public sourcemeta::one::Action {
+class ActionSchemaSearch_v1 : public sourcemeta::one::Action {
 public:
-  ActionSchemaSearch(const std::filesystem::path &base,
-                     const sourcemeta::core::URITemplateRouterView &router,
-                     const sourcemeta::core::URITemplateRouter::Identifier)
+  ActionSchemaSearch_v1(const std::filesystem::path &base,
+                        const sourcemeta::core::URITemplateRouterView &router,
+                        const sourcemeta::core::URITemplateRouter::Identifier)
       : sourcemeta::one::Action{base, router.base_path()},
         search_view_{base / "explorer" / "%" / "search.metapack"} {}
 

@@ -1,21 +1,21 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_STATIC_H
-#define SOURCEMETA_ONE_ACTIONS_SERVE_STATIC_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_STATIC_V1_H
+#define SOURCEMETA_ONE_ACTIONS_SERVE_STATIC_V1_H
 
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
-#include "action_serve_metapack_file.h"
+#include "action_serve_metapack_file_v1.h"
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionServeStatic : public sourcemeta::one::Action {
+class ActionServeStatic_v1 : public sourcemeta::one::Action {
 public:
-  ActionServeStatic(
+  ActionServeStatic_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
@@ -38,9 +38,9 @@ public:
       return;
     }
 
-    ActionServeMetapackFile::serve(this->file_root_ / matches.front(),
-                                   sourcemeta::one::STATUS_OK, false, {}, {},
-                                   request, response, this->base_path());
+    ActionServeMetapackFile_v1::serve(this->file_root_ / matches.front(),
+                                      sourcemeta::one::STATUS_OK, false, {}, {},
+                                      request, response, this->base_path());
   }
 
 private:
