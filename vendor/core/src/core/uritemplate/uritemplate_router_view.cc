@@ -1,5 +1,6 @@
 #include <sourcemeta/core/uritemplate.h>
 
+#include <array>         // std::array
 #include <cassert>       // assert
 #include <cstring>       // std::memcmp, std::memcpy
 #include <fstream>       // std::ofstream, std::ifstream
@@ -14,7 +15,7 @@ namespace sourcemeta::core {
 namespace {
 
 constexpr std::uint32_t ROUTER_MAGIC = 0x52544552; // "RTER"
-constexpr std::uint32_t ROUTER_VERSION = 3;
+constexpr std::uint32_t ROUTER_VERSION = 4;
 constexpr std::uint32_t NO_CHILD = std::numeric_limits<std::uint32_t>::max();
 
 // Type tags for argument value serialization
@@ -47,6 +48,8 @@ struct alignas(8) SerializedNode {
   URITemplateRouter::NodeType type;
   std::uint8_t padding;
   URITemplateRouter::Identifier identifier;
+  URITemplateRouter::Identifier context;
+  std::array<std::uint8_t, 6> padding2;
 };
 
 // Binary search for a literal child matching the given segment
@@ -109,6 +112,7 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
   root_serialized.type = URITemplateRouter::NodeType::Root;
   root_serialized.padding = 0;
   root_serialized.identifier = root.identifier;
+  root_serialized.context = root.context;
 
   if (root.literals.empty()) {
     root_serialized.first_literal_child = NO_CHILD;
@@ -146,6 +150,7 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
 
     serialized.padding = 0;
     serialized.identifier = node->identifier;
+    serialized.context = node->context;
 
     const auto first_child_index =
         static_cast<std::uint32_t>(nodes.size() + queue.size() + 1);
@@ -314,23 +319,24 @@ URITemplateRouterView::URITemplateRouterView(const std::uint8_t *data,
                                              const std::size_t size)
     : data_{data, data + size} {}
 
-auto URITemplateRouterView::match(const std::string_view path,
-                                  const URITemplateRouter::Callback &callback)
-    const -> URITemplateRouter::Identifier {
+auto URITemplateRouterView::match(
+    const std::string_view path,
+    const URITemplateRouter::Callback &callback) const
+    -> std::pair<URITemplateRouter::Identifier, URITemplateRouter::Identifier> {
   if (this->data_.size() < sizeof(RouterHeader)) {
-    return 0;
+    return {};
   }
 
   const auto *header =
       reinterpret_cast<const RouterHeader *>(this->data_.data());
   if (header->magic != ROUTER_MAGIC || header->version != ROUTER_VERSION) {
-    return 0;
+    return {};
   }
 
   if (header->node_count == 0 ||
       header->node_count > (this->data_.size() - sizeof(RouterHeader)) /
                                sizeof(SerializedNode)) {
-    return 0;
+    return {};
   }
 
   const auto *nodes = reinterpret_cast<const SerializedNode *>(
@@ -340,12 +346,12 @@ auto URITemplateRouterView::match(const std::string_view path,
   const auto expected_string_table_offset = sizeof(RouterHeader) + nodes_size;
   if (header->string_table_offset < expected_string_table_offset ||
       header->string_table_offset > this->data_.size()) {
-    return 0;
+    return {};
   }
 
   if (header->arguments_offset < header->string_table_offset ||
       header->arguments_offset > this->data_.size()) {
-    return 0;
+    return {};
   }
 
   const auto *string_table = reinterpret_cast<const char *>(
@@ -355,26 +361,29 @@ auto URITemplateRouterView::match(const std::string_view path,
 
   // Empty path matches empty template
   if (path.empty()) {
-    return nodes[0].identifier;
+    return {nodes[0].identifier, nodes[0].context};
   }
 
   // Root path "/" is stored as an empty literal segment
   if (path.size() == 1 && path[0] == '/') {
     const auto &root = nodes[0];
     if (root.first_literal_child == NO_CHILD) {
-      return 0;
+      return {};
     }
 
     if (root.first_literal_child >= header->node_count ||
         root.literal_child_count >
             header->node_count - root.first_literal_child) {
-      return 0;
+      return {};
     }
 
     const auto match = binary_search_literal_children(
         nodes, string_table, string_table_size, root.first_literal_child,
         root.literal_child_count, "", 0);
-    return match != NO_CHILD ? nodes[match].identifier : 0;
+    if (match == NO_CHILD) {
+      return {};
+    }
+    return {nodes[match].identifier, nodes[match].context};
   }
 
   // Walk the trie, matching each path segment
@@ -401,7 +410,7 @@ auto URITemplateRouterView::match(const std::string_view path,
 
     // Empty segment (from double slash or trailing slash) doesn't match
     if (segment_length == 0) {
-      return 0;
+      return {};
     }
 
     const auto &node = nodes[current_node];
@@ -411,7 +420,7 @@ auto URITemplateRouterView::match(const std::string_view path,
     if (node.first_literal_child != NO_CHILD) {
       if (node.first_literal_child >= node_count ||
           node.literal_child_count > node_count - node.first_literal_child) {
-        return 0;
+        return {};
       }
 
       const auto literal_match = binary_search_literal_children(
@@ -432,7 +441,7 @@ auto URITemplateRouterView::match(const std::string_view path,
       if (node.variable_child >= node_count ||
           variable_index >
               std::numeric_limits<URITemplateRouter::Index>::max()) {
-        return 0;
+        return {};
       }
 
       const auto &variable_node = nodes[node.variable_child];
@@ -440,7 +449,7 @@ auto URITemplateRouterView::match(const std::string_view path,
       if (variable_node.string_offset > string_table_size ||
           variable_node.string_length >
               string_table_size - variable_node.string_offset) {
-        return 0;
+        return {};
       }
 
       // Check if this is an expansion (catch-all)
@@ -451,7 +460,7 @@ auto URITemplateRouterView::match(const std::string_view path,
                  {string_table + variable_node.string_offset,
                   variable_node.string_length},
                  {segment_start, remaining_length});
-        return variable_node.identifier;
+        return {variable_node.identifier, variable_node.context};
       }
 
       // Regular variable - match single segment
@@ -469,10 +478,10 @@ auto URITemplateRouterView::match(const std::string_view path,
     }
 
     // No match
-    return 0;
+    return {};
   }
 
-  return nodes[current_node].identifier;
+  return {nodes[current_node].identifier, nodes[current_node].context};
 }
 
 auto URITemplateRouterView::arguments(

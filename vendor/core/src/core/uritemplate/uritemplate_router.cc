@@ -111,6 +111,7 @@ auto URITemplateRouter::base_path() const noexcept -> std::string_view {
 
 auto URITemplateRouter::add(const std::string_view uri_template,
                             const Identifier identifier,
+                            const Identifier context,
                             const std::span<const Argument> arguments) -> void {
   assert(identifier > 0);
 
@@ -141,6 +142,7 @@ auto URITemplateRouter::add(const std::string_view uri_template,
   if (uri_template.empty()) {
     auto &target = current ? *current : this->root_;
     target.identifier = identifier;
+    target.context = context;
     if (!arguments.empty()) {
       assert(std::ranges::none_of(this->arguments_,
                                   [&identifier](const auto &entry) {
@@ -309,6 +311,7 @@ auto URITemplateRouter::add(const std::string_view uri_template,
 
   if (!absorbed && current != nullptr) {
     current->identifier = identifier;
+    current->context = context;
     if (!arguments.empty()) {
       assert(std::ranges::none_of(this->arguments_,
                                   [&identifier](const auto &entry) {
@@ -345,16 +348,17 @@ auto URITemplateRouter::arguments() const noexcept
 }
 
 auto URITemplateRouter::match(const std::string_view path,
-                              const Callback &callback) const -> Identifier {
+                              const Callback &callback) const
+    -> std::pair<Identifier, Identifier> {
   if (path.empty()) {
-    return this->root_.identifier;
+    return {this->root_.identifier, this->root_.context};
   }
 
   if (path.size() == 1 && path[0] == '/') {
     if (auto *child = find_literal_child(this->root_.literals, "")) {
-      return child->identifier;
+      return {child->identifier, child->context};
     }
-    return 0;
+    return {};
   }
 
   const Node *current = nullptr;
@@ -382,7 +386,7 @@ auto URITemplateRouter::match(const std::string_view path,
 
     // Empty segment (from double slash or trailing slash) doesn't match
     if (segment.empty()) {
-      return 0;
+      return {};
     }
 
     if (auto *literal_match = find_literal_child(*literal_children, segment)) {
@@ -395,14 +399,14 @@ auto URITemplateRouter::match(const std::string_view path,
             segment_start, static_cast<std::size_t>(path_end - segment_start)};
         callback(static_cast<URITemplateRouter::Index>(variable_index),
                  (*variable_child)->value, remaining);
-        return (*variable_child)->identifier;
+        return {(*variable_child)->identifier, (*variable_child)->context};
       }
       callback(static_cast<URITemplateRouter::Index>(variable_index),
                (*variable_child)->value, segment);
       ++variable_index;
       current = variable_child->get();
     } else {
-      return 0;
+      return {};
     }
 
     literal_children = &current->literals;
@@ -417,7 +421,8 @@ auto URITemplateRouter::match(const std::string_view path,
     ++position;
   }
 
-  return current ? current->identifier : this->root_.identifier;
+  return current ? std::pair{current->identifier, current->context}
+                 : std::pair{this->root_.identifier, this->root_.context};
 }
 
 } // namespace sourcemeta::core

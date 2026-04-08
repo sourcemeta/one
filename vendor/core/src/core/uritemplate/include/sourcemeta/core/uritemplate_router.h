@@ -56,6 +56,7 @@ public:
   /// A node in the router trie
   struct Node {
     Identifier identifier{0};
+    Identifier context{0};
     NodeType type{NodeType::Root};
     std::string_view value;
 
@@ -82,12 +83,14 @@ public:
   /// Add a route to the router. Make sure the string lifetime survives the
   /// router
   auto add(const std::string_view uri_template, const Identifier identifier,
+           const Identifier context = 0,
            const std::span<const Argument> arguments = {}) -> void;
 
   /// Match a path against the router. Note the callback might fire for
   /// initial matches even though the entire match might still fail
   [[nodiscard]] auto match(const std::string_view path,
-                           const Callback &callback) const -> Identifier;
+                           const Callback &callback) const
+      -> std::pair<Identifier, Identifier>;
 
   /// Access the root node of the trie
   [[nodiscard]] auto root() const noexcept -> const Node &;
@@ -131,7 +134,8 @@ public:
   /// initial matches even though the entire match might still fail
   [[nodiscard]] auto match(const std::string_view path,
                            const URITemplateRouter::Callback &callback) const
-      -> URITemplateRouter::Identifier;
+      -> std::pair<URITemplateRouter::Identifier,
+                   URITemplateRouter::Identifier>;
 
   /// Access the stored arguments for a given route identifier
   auto arguments(const URITemplateRouter::Identifier identifier,
