@@ -23,6 +23,8 @@ public:
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "path") {
         this->file_root_ = std::get<std::string_view>(value);
+      } else if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
       }
     });
   }
@@ -34,17 +36,18 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "missing-base-path", "The base path is not configured for this route",
-          std::string{this->base_path()} + "/self/v1/schemas/api/error");
+          this->error_schema_);
       return;
     }
 
     ActionServeMetapackFile_v1::serve(this->file_root_ / matches.front(),
                                       sourcemeta::one::STATUS_OK, false, {}, {},
-                                      request, response, this->base_path());
+                                      request, response, this->error_schema_);
   }
 
 private:
   std::filesystem::path file_root_;
+  std::string_view error_schema_;
 };
 
 #endif

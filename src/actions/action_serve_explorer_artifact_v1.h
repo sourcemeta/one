@@ -25,6 +25,8 @@ public:
         this->artifact_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
       }
     });
   }
@@ -40,12 +42,13 @@ public:
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                       true, {}, this->response_schema_, request,
-                                      response, this->base_path());
+                                      response, this->error_schema_);
   }
 
 private:
   std::string_view artifact_;
   std::string_view response_schema_;
+  std::string_view error_schema_;
 };
 
 #endif

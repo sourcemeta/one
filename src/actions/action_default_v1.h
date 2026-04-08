@@ -16,10 +16,21 @@
 
 class ActionDefault_v1 : public sourcemeta::one::Action {
 public:
-  ActionDefault_v1(const std::filesystem::path &base,
-                   const sourcemeta::core::URITemplateRouterView &router,
-                   const sourcemeta::core::URITemplateRouter::Identifier)
-      : sourcemeta::one::Action{base, router.base_path()} {}
+  ActionDefault_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : sourcemeta::one::Action{base, router.base_path()} {
+    // TODO: This implies the API is mounted
+    this->error_schema_ =
+        std::string{this->base_path()} + "/self/v1/schemas/api/error";
+
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
@@ -31,8 +42,7 @@ public:
            path[this->base_path().size()] != '/')) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL",
-            std::string{this->base_path()} + "/self/v1/schemas/api/error");
+            "There is nothing at this URL", this->error_schema_);
         return;
       }
 
@@ -48,19 +58,18 @@ public:
         ActionServeMetapackFile_v1::serve(
             this->base() / "explorer" / "%" / "directory-html.metapack",
             sourcemeta::one::STATUS_OK, false, {}, {}, request, response,
-            this->base_path());
+            this->error_schema_);
         return;
       } else if (request.method() == "get" || request.method() == "head") {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL",
-            std::string{this->base_path()} + "/self/v1/schemas/api/error");
+            "There is nothing at this URL", this->error_schema_);
         return;
       } else {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
             "method-not-allowed", "This HTTP method is invalid for this URL",
-            std::string{this->base_path()} + "/self/v1/schemas/api/error");
+            this->error_schema_);
         return;
       }
     }
@@ -68,7 +77,7 @@ public:
     if (path.ends_with(".json")) {
       ActionJSONSchemaServe_v1::serve(this->base(),
                                       path.substr(0, path.size() - 5), request,
-                                      response, this->base_path());
+                                      response, this->error_schema_);
       return;
     }
 
@@ -80,31 +89,34 @@ public:
           ActionServeMetapackFile_v1::serve(
               explorer_path / "schema-html.metapack",
               sourcemeta::one::STATUS_OK, false, {}, {}, request, response,
-              this->base_path());
+              this->error_schema_);
         } else {
           explorer_path /= "directory-html.metapack";
           if (std::filesystem::exists(explorer_path)) {
             ActionServeMetapackFile_v1::serve(
                 explorer_path, sourcemeta::one::STATUS_OK, false, {}, {},
-                request, response, this->base_path());
+                request, response, this->error_schema_);
           } else {
             ActionServeMetapackFile_v1::serve(
                 this->base() / "explorer" / "%" / "404.metapack",
                 sourcemeta::one::STATUS_NOT_FOUND, false, {}, {}, request,
-                response, this->base_path());
+                response, this->error_schema_);
           }
         }
       } else {
         ActionJSONSchemaServe_v1::serve(this->base(), path, request, response,
-                                        this->base_path());
+                                        this->error_schema_);
       }
     } else {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL",
-          std::string{this->base_path()} + "/self/v1/schemas/api/error");
+          "There is nothing at this URL", this->error_schema_);
     }
   }
+
+private:
+  // TODO: This should be a string view
+  std::string error_schema_;
 };
 
 #endif

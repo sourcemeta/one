@@ -53,7 +53,8 @@ inline auto send_response(const char *const code, const HTTPRequest &request,
 // See https://www.rfc-editor.org/rfc/rfc7807
 inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
                        const char *const code, std::string &&identifier,
-                       std::string &&message, std::string &&schema) -> void {
+                       std::string &&message, const std::string_view schema)
+    -> void {
   auto object{sourcemeta::core::JSON::make_object()};
   object.assign("title", sourcemeta::core::JSON{"sourcemeta:one/" +
                                                 std::move(identifier)});
