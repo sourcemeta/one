@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_H
-#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_H
+#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_V1_H
+#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_EVALUATE_V1_H
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -24,9 +24,9 @@
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::to_underlying
 
-class ActionJSONSchemaEvaluate : public sourcemeta::one::Action {
+class ActionJSONSchemaEvaluate_v1 : public sourcemeta::one::Action {
 public:
-  ActionJSONSchemaEvaluate(
+  ActionJSONSchemaEvaluate_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)

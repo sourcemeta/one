@@ -14,14 +14,14 @@
 namespace sourcemeta::one {
 
 #define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
-  X(DEFAULT, ActionDefault)                                                    \
-  X(HEALTH_CHECK, ActionHealthCheck)                                           \
-  X(NOT_FOUND, ActionNotFound)                                                 \
-  X(SCHEMA_ARTIFACT, ActionServeSchemaArtifact)                                \
-  X(EXPLORER_ARTIFACT, ActionServeExplorerArtifact)                            \
-  X(JSONSCHEMA_EVALUATE, ActionJSONSchemaEvaluate)                             \
-  X(SCHEMA_SEARCH, ActionSchemaSearch)                                         \
-  X(SERVE_STATIC, ActionServeStatic)
+  X(DEFAULT_V1, ActionDefault_v1)                                              \
+  X(HEALTH_CHECK_V1, ActionHealthCheck_v1)                                     \
+  X(NOT_FOUND_V1, ActionNotFound_v1)                                           \
+  X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1)                          \
+  X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
+  X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
+  X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \
+  X(SERVE_STATIC_V1, ActionServeStatic_v1)
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class) ACTION_TYPE_##Name,
 

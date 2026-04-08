@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_NOT_FOUND_H
-#define SOURCEMETA_ONE_ACTIONS_NOT_FOUND_H
+#ifndef SOURCEMETA_ONE_ACTIONS_NOT_FOUND_V1_H
+#define SOURCEMETA_ONE_ACTIONS_NOT_FOUND_V1_H
 
 #include <sourcemeta/core/uritemplate.h>
 
@@ -11,11 +11,11 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionNotFound : public sourcemeta::one::Action {
+class ActionNotFound_v1 : public sourcemeta::one::Action {
 public:
-  ActionNotFound(const std::filesystem::path &base,
-                 const sourcemeta::core::URITemplateRouterView &router,
-                 const sourcemeta::core::URITemplateRouter::Identifier)
+  ActionNotFound_v1(const std::filesystem::path &base,
+                    const sourcemeta::core::URITemplateRouterView &router,
+                    const sourcemeta::core::URITemplateRouter::Identifier)
       : sourcemeta::one::Action{base, router.base_path()} {}
 
   auto run(const std::span<std::string_view>,

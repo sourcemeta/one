@@ -1,13 +1,13 @@
 #include <sourcemeta/one/actions.h>
 
-#include "action_default.h"
-#include "action_health_check.h"
-#include "action_jsonschema_evaluate.h"
-#include "action_not_found.h"
-#include "action_schema_search.h"
-#include "action_serve_explorer_artifact.h"
-#include "action_serve_schema_artifact.h"
-#include "action_serve_static.h"
+#include "action_default_v1.h"
+#include "action_health_check_v1.h"
+#include "action_jsonschema_evaluate_v1.h"
+#include "action_not_found_v1.h"
+#include "action_schema_search_v1.h"
+#include "action_serve_explorer_artifact_v1.h"
+#include "action_serve_schema_artifact_v1.h"
+#include "action_serve_static_v1.h"
 
 #include <array>   // std::array
 #include <cstddef> // std::size_t

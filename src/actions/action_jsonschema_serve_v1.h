@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_H
-#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_H
+#ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_V1_H
+#define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_V1_H
 
 #include <sourcemeta/core/uritemplate.h>
 
@@ -7,7 +7,7 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/shared.h>
 
-#include "action_serve_metapack_file.h"
+#include "action_serve_metapack_file_v1.h"
 
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
@@ -16,11 +16,12 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionJSONSchemaServe : public sourcemeta::one::Action {
+class ActionJSONSchemaServe_v1 : public sourcemeta::one::Action {
 public:
-  ActionJSONSchemaServe(const std::filesystem::path &base,
-                        const sourcemeta::core::URITemplateRouterView &router,
-                        const sourcemeta::core::URITemplateRouter::Identifier)
+  ActionJSONSchemaServe_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier)
       : sourcemeta::one::Action{base, router.base_path()} {}
 
   static auto serve(const std::filesystem::path &base,
@@ -62,13 +63,13 @@ public:
 
     if (is_deno) {
       // For HTTP imports, as Deno won't like the `application/schema+json` one
-      ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                     true, "application/json", {}, request,
-                                     response, base_path);
+      ActionServeMetapackFile_v1::serve(
+          absolute_path, sourcemeta::one::STATUS_OK, true, "application/json",
+          {}, request, response, base_path);
     } else {
-      ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                     true, {}, {}, request, response,
-                                     base_path);
+      ActionServeMetapackFile_v1::serve(absolute_path,
+                                        sourcemeta::one::STATUS_OK, true, {},
+                                        {}, request, response, base_path);
     }
   }
 

@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_H
-#define SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_V1_H
+#define SOURCEMETA_ONE_ACTIONS_SERVE_METAPACK_FILE_V1_H
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/time.h>
@@ -16,9 +16,9 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionServeMetapackFile {
+class ActionServeMetapackFile_v1 {
 public:
-  ActionServeMetapackFile(
+  ActionServeMetapackFile_v1(
       const std::filesystem::path &,
       const sourcemeta::core::URITemplateRouterView &,
       const sourcemeta::core::URITemplateRouter::Identifier) {}
