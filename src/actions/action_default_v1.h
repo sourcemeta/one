@@ -21,10 +21,6 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
       : sourcemeta::one::Action{base, router.base_path()} {
-    // TODO: This implies the API is mounted
-    this->error_schema_ =
-        std::string{this->base_path()} + "/self/v1/schemas/api/error";
-
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
@@ -115,8 +111,7 @@ public:
   }
 
 private:
-  // TODO: This should be a string view
-  std::string error_schema_;
+  std::string_view error_schema_;
 };
 
 #endif
