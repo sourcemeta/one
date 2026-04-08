@@ -43,10 +43,18 @@ public:
   virtual auto run(const std::span<std::string_view> matches,
                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
+  [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
+    return this->base_;
+  }
+
+  [[nodiscard]] auto base_path() const noexcept -> std::string_view {
+    return this->base_path_;
+  }
+
   [[nodiscard]] auto schema_directory(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
-protected:
+private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;
   std::string_view base_path_;

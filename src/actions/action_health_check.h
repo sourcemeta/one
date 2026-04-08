@@ -25,7 +25,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 

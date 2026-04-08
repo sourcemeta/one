@@ -34,13 +34,13 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "missing-base-path", "The base path is not configured for this route",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
     ActionServeMetapackFile::serve(this->file_root_ / matches.front(),
                                    sourcemeta::one::STATUS_OK, false, {}, {},
-                                   request, response, this->base_path_);
+                                   request, response, this->base_path());
   }
 
 private:

@@ -53,7 +53,7 @@ public:
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
     } else if (request.method() == "post") {
-      auto template_path{this->base_ / "schemas"};
+      auto template_path{this->base() / "schemas"};
       template_path /= path;
       template_path /= "%";
       template_path /= "blaze-exhaustive.metapack";
@@ -64,12 +64,12 @@ public:
               request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
               "no-template",
               "This schema was not precompiled for schema evaluation",
-              std::string{this->base_path_} + "/self/v1/schemas/api/error");
+              std::string{this->base_path()} + "/self/v1/schemas/api/error");
         } else {
           sourcemeta::one::json_error(
               request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
               "There is nothing at this URL",
-              std::string{this->base_path_} + "/self/v1/schemas/api/error");
+              std::string{this->base_path()} + "/self/v1/schemas/api/error");
         }
 
         return;
@@ -93,14 +93,15 @@ public:
                   callback_request, callback_response,
                   sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
                   "uncaught-error", exception.what(),
-                  std::string{this->base_path_} + "/self/v1/schemas/api/error");
+                  std::string{this->base_path()} +
+                      "/self/v1/schemas/api/error");
             }
           });
     } else {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
     }
   }
 
@@ -313,7 +314,7 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
           "payload-too-large", "The request body is too large",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -321,7 +322,7 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_BAD_REQUEST, "no-instance",
           "You must pass an instance to validate against",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -332,11 +333,11 @@ private:
       response.write_header("Access-Control-Allow-Origin", "*");
       if (mode == EvaluateMode::Trace) {
         sourcemeta::one::write_link_header(
-            response, std::string{this->base_path_} +
+            response, std::string{this->base_path()} +
                           "/self/v1/schemas/api/schemas/trace/response");
       } else {
         sourcemeta::one::write_link_header(
-            response, std::string{this->base_path_} +
+            response, std::string{this->base_path()} +
                           "/self/v1/schemas/api/schemas/evaluate/response");
       }
 
@@ -349,7 +350,7 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "evaluation-error", exception.what(),
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
     }
   }
 

@@ -36,15 +36,15 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "missing-schema-match", "This action requires a schema path match",
-          std::string{this->base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
-    auto absolute_path{this->base_ / "schemas" / matches.front() / "%"};
+    auto absolute_path{this->base() / "schemas" / matches.front() / "%"};
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                    true, {}, this->response_schema_, request,
-                                   response, this->base_path_);
+                                   response, this->base_path());
   }
 
 private:

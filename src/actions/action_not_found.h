@@ -24,7 +24,7 @@ public:
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
         "There is nothing at this URL",
-        std::string{this->base_path_} + "/self/v1/schemas/api/error");
+        std::string{this->base_path()} + "/self/v1/schemas/api/error");
   }
 };
 

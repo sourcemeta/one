@@ -75,7 +75,7 @@ public:
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void override {
-    serve(this->base_, matches.front(), request, response, this->base_path_);
+    serve(this->base(), matches.front(), request, response, this->base_path());
   }
 };
 

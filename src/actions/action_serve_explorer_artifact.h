@@ -32,7 +32,7 @@ public:
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void override {
-    auto absolute_path{this->base_ / "explorer"};
+    auto absolute_path{this->base() / "explorer"};
     if (!matches.empty()) {
       absolute_path /= matches.front();
     }
@@ -40,7 +40,7 @@ public:
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                    true, {}, this->response_schema_, request,
-                                   response, this->base_path_);
+                                   response, this->base_path());
   }
 
 private:
