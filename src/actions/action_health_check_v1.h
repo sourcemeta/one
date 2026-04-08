@@ -13,10 +13,17 @@
 
 class ActionHealthCheck_v1 : public sourcemeta::one::Action {
 public:
-  ActionHealthCheck_v1(const std::filesystem::path &base,
-                       const sourcemeta::core::URITemplateRouterView &router,
-                       const sourcemeta::core::URITemplateRouter::Identifier)
-      : sourcemeta::one::Action{base, router.base_path()} {}
+  ActionHealthCheck_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : sourcemeta::one::Action{base, router.base_path()} {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
@@ -25,7 +32,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          std::string{this->base_path()} + "/self/v1/schemas/api/error");
+          this->error_schema_);
       return;
     }
 
@@ -34,6 +41,9 @@ public:
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
                                    response);
   }
+
+private:
+  std::string_view error_schema_;
 };
 
 #endif

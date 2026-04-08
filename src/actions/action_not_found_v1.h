@@ -13,19 +13,28 @@
 
 class ActionNotFound_v1 : public sourcemeta::one::Action {
 public:
-  ActionNotFound_v1(const std::filesystem::path &base,
-                    const sourcemeta::core::URITemplateRouterView &router,
-                    const sourcemeta::core::URITemplateRouter::Identifier)
-      : sourcemeta::one::Action{base, router.base_path()} {}
+  ActionNotFound_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : sourcemeta::one::Action{base, router.base_path()} {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void override {
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL",
-        std::string{this->base_path()} + "/self/v1/schemas/api/error");
+        "There is nothing at this URL", this->error_schema_);
   }
+
+private:
+  std::string_view error_schema_;
 };
 
 #endif

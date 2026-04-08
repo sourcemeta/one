@@ -28,20 +28,19 @@ public:
                     std::string_view link,
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
-                    std::string_view base_path = {}) -> void {
+                    std::string_view error_schema) -> void {
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          std::string{base_path} + "/self/v1/schemas/api/error");
+          error_schema);
       return;
     }
 
     if (!std::filesystem::exists(absolute_path)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL",
-          std::string{base_path} + "/self/v1/schemas/api/error");
+          "There is nothing at this URL", error_schema);
       return;
     }
 
@@ -50,8 +49,7 @@ public:
         sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL",
-          std::string{base_path} + "/self/v1/schemas/api/error");
+          "There is nothing at this URL", error_schema);
       return;
     }
 
@@ -59,8 +57,7 @@ public:
     if (!info.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL",
-          std::string{base_path} + "/self/v1/schemas/api/error");
+          "There is nothing at this URL", error_schema);
       return;
     }
 
@@ -152,8 +149,7 @@ public:
     if (!payload_start.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL",
-          std::string{base_path} + "/self/v1/schemas/api/error");
+          "There is nothing at this URL", error_schema);
       return;
     }
 
