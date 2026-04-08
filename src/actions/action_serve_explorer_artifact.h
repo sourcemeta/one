@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
 #include "action_serve_metapack_file.h"
@@ -12,13 +13,13 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionServeExplorerArtifact {
+class ActionServeExplorerArtifact : public sourcemeta::one::Action {
 public:
   ActionServeExplorerArtifact(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : base_{base}, base_path_{router.base_path()} {
+      : sourcemeta::one::Action{base, router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "artifact") {
         this->artifact_ = std::get<std::string_view>(value);
@@ -30,8 +31,8 @@ public:
 
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
-    auto absolute_path{this->base_ / "explorer"};
+           sourcemeta::one::HTTPResponse &response) -> void override {
+    auto absolute_path{this->base() / "explorer"};
     if (!matches.empty()) {
       absolute_path /= matches.front();
     }
@@ -39,13 +40,10 @@ public:
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                    true, {}, this->response_schema_, request,
-                                   response, this->base_path_);
+                                   response, this->base_path());
   }
 
 private:
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  const std::filesystem::path &base_;
-  std::string_view base_path_;
   std::string_view artifact_;
   std::string_view response_schema_;
 };

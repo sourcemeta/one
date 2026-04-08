@@ -2,9 +2,7 @@
 
 namespace sourcemeta::one {
 
-auto schema_directory(const std::filesystem::path &output,
-                      const std::string_view base_path,
-                      const std::string_view uri)
+auto Action::schema_directory(const std::string_view uri) const
     -> std::optional<std::filesystem::path> {
   const auto scheme_end{uri.find("://")};
   if (scheme_end == std::string_view::npos) {
@@ -23,8 +21,8 @@ auto schema_directory(const std::filesystem::path &output,
     return std::nullopt;
   }
 
-  if (!base_path.empty() && uri_path.starts_with(base_path)) {
-    uri_path = uri_path.substr(base_path.size());
+  if (!this->base_path_.empty() && uri_path.starts_with(this->base_path_)) {
+    uri_path = uri_path.substr(this->base_path_.size());
   }
 
   if (uri_path.starts_with('/')) {
@@ -35,7 +33,7 @@ auto schema_directory(const std::filesystem::path &output,
     return std::nullopt;
   }
 
-  return output / "schemas" / uri_path / "%";
+  return this->base_ / "schemas" / uri_path / "%";
 }
 
 } // namespace sourcemeta::one

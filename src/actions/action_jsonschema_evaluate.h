@@ -8,6 +8,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
@@ -23,13 +24,13 @@
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::to_underlying
 
-class ActionJSONSchemaEvaluate {
+class ActionJSONSchemaEvaluate : public sourcemeta::one::Action {
 public:
   ActionJSONSchemaEvaluate(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : base_{base}, server_url_path_{router.base_path()} {
+      : sourcemeta::one::Action{base, router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "mode") {
         this->mode_ = static_cast<EvaluateMode>(std::get<std::int64_t>(value));
@@ -39,7 +40,7 @@ public:
 
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
+           sourcemeta::one::HTTPResponse &response) -> void override {
     const auto &mode{this->mode_};
     const auto &path{matches.front()};
     // A CORS pre-flight request
@@ -52,7 +53,7 @@ public:
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
     } else if (request.method() == "post") {
-      auto template_path{this->base_ / "schemas"};
+      auto template_path{this->base() / "schemas"};
       template_path /= path;
       template_path /= "%";
       template_path /= "blaze-exhaustive.metapack";
@@ -63,14 +64,12 @@ public:
               request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
               "no-template",
               "This schema was not precompiled for schema evaluation",
-              std::string{this->server_url_path_} +
-                  "/self/v1/schemas/api/error");
+              std::string{this->base_path()} + "/self/v1/schemas/api/error");
         } else {
           sourcemeta::one::json_error(
               request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
               "There is nothing at this URL",
-              std::string{this->server_url_path_} +
-                  "/self/v1/schemas/api/error");
+              std::string{this->base_path()} + "/self/v1/schemas/api/error");
         }
 
         return;
@@ -94,7 +93,7 @@ public:
                   callback_request, callback_response,
                   sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
                   "uncaught-error", exception.what(),
-                  std::string{this->server_url_path_} +
+                  std::string{this->base_path()} +
                       "/self/v1/schemas/api/error");
             }
           });
@@ -102,7 +101,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          std::string{this->server_url_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
     }
   }
 
@@ -126,8 +125,7 @@ private:
 
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
-        const auto directory{sourcemeta::one::schema_directory(
-            this->base_, this->server_url_path_, keyword_location_string)};
+        const auto directory{this->schema_directory(keyword_location_string)};
         if (directory.has_value()) {
           const auto locations_path{directory.value() / "locations.metapack"};
           if (std::filesystem::exists(locations_path)) {
@@ -316,7 +314,7 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
           "payload-too-large", "The request body is too large",
-          std::string{this->server_url_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -324,7 +322,7 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_BAD_REQUEST, "no-instance",
           "You must pass an instance to validate against",
-          std::string{this->server_url_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
       return;
     }
 
@@ -335,11 +333,11 @@ private:
       response.write_header("Access-Control-Allow-Origin", "*");
       if (mode == EvaluateMode::Trace) {
         sourcemeta::one::write_link_header(
-            response, std::string{this->server_url_path_} +
+            response, std::string{this->base_path()} +
                           "/self/v1/schemas/api/schemas/trace/response");
       } else {
         sourcemeta::one::write_link_header(
-            response, std::string{this->server_url_path_} +
+            response, std::string{this->base_path()} +
                           "/self/v1/schemas/api/schemas/evaluate/response");
       }
 
@@ -352,13 +350,10 @@ private:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "evaluation-error", exception.what(),
-          std::string{this->server_url_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path()} + "/self/v1/schemas/api/error");
     }
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  const std::filesystem::path &base_;
-  std::string_view server_url_path_;
   EvaluateMode mode_{EvaluateMode::Standard};
 };
 
