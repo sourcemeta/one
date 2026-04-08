@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
 #include <filesystem>  // std::filesystem
@@ -10,16 +11,16 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionHealthCheck {
+class ActionHealthCheck : public sourcemeta::one::Action {
 public:
-  ActionHealthCheck(const std::filesystem::path &,
+  ActionHealthCheck(const std::filesystem::path &base,
                     const sourcemeta::core::URITemplateRouterView &router,
                     const sourcemeta::core::URITemplateRouter::Identifier)
-      : base_path_{router.base_path()} {}
+      : sourcemeta::one::Action{base, router.base_path()} {}
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
+           sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -33,9 +34,6 @@ public:
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
                                    response);
   }
-
-private:
-  std::string_view base_path_;
 };
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/shared.h>
 
@@ -15,12 +16,12 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionJSONSchemaServe {
+class ActionJSONSchemaServe : public sourcemeta::one::Action {
 public:
   ActionJSONSchemaServe(const std::filesystem::path &base,
                         const sourcemeta::core::URITemplateRouterView &router,
                         const sourcemeta::core::URITemplateRouter::Identifier)
-      : base_{base}, base_path_{router.base_path()} {}
+      : sourcemeta::one::Action{base, router.base_path()} {}
 
   static auto serve(const std::filesystem::path &base,
                     std::string_view schema_path,
@@ -73,14 +74,9 @@ public:
 
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
+           sourcemeta::one::HTTPResponse &response) -> void override {
     serve(this->base_, matches.front(), request, response, this->base_path_);
   }
-
-private:
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  const std::filesystem::path &base_;
-  std::string_view base_path_;
 };
 
 #endif

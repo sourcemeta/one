@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
 #include "action_serve_metapack_file.h"
@@ -12,39 +13,38 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionServeStatic {
+class ActionServeStatic : public sourcemeta::one::Action {
 public:
   ActionServeStatic(
-      const std::filesystem::path &,
+      const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : router_base_path_{router.base_path()} {
+      : sourcemeta::one::Action{base, router.base_path()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "path") {
-        this->base_path_ = std::get<std::string_view>(value);
+        this->file_root_ = std::get<std::string_view>(value);
       }
     });
   }
 
   auto run(const std::span<std::string_view> matches,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
-    if (this->base_path_.empty()) {
+           sourcemeta::one::HTTPResponse &response) -> void override {
+    if (this->file_root_.empty()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
           "missing-base-path", "The base path is not configured for this route",
-          std::string{this->router_base_path_} + "/self/v1/schemas/api/error");
+          std::string{this->base_path_} + "/self/v1/schemas/api/error");
       return;
     }
 
-    ActionServeMetapackFile::serve(this->base_path_ / matches.front(),
+    ActionServeMetapackFile::serve(this->file_root_ / matches.front(),
                                    sourcemeta::one::STATUS_OK, false, {}, {},
-                                   request, response, this->router_base_path_);
+                                   request, response, this->base_path_);
   }
 
 private:
-  std::string_view router_base_path_;
-  std::filesystem::path base_path_;
+  std::filesystem::path file_root_;
 };
 
 #endif

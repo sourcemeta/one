@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/search.h>
 
@@ -16,17 +17,17 @@
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
 
-class ActionSchemaSearch {
+class ActionSchemaSearch : public sourcemeta::one::Action {
 public:
   ActionSchemaSearch(const std::filesystem::path &base,
                      const sourcemeta::core::URITemplateRouterView &router,
                      const sourcemeta::core::URITemplateRouter::Identifier)
-      : search_view_{base / "explorer" / "%" / "search.metapack"},
-        base_path_{router.base_path()} {}
+      : sourcemeta::one::Action{base, router.base_path()},
+        search_view_{base / "explorer" / "%" / "search.metapack"} {}
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
+           sourcemeta::one::HTTPResponse &response) -> void override {
 
     if (request.method() != "get") {
       sourcemeta::one::json_error(
@@ -142,7 +143,6 @@ public:
 
 private:
   sourcemeta::one::SearchView search_view_;
-  std::string_view base_path_;
 };
 
 #endif

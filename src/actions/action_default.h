@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
 #include "action_jsonschema_serve.h"
@@ -13,16 +14,16 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionDefault {
+class ActionDefault : public sourcemeta::one::Action {
 public:
   ActionDefault(const std::filesystem::path &base,
                 const sourcemeta::core::URITemplateRouterView &router,
                 const sourcemeta::core::URITemplateRouter::Identifier)
-      : base_{base}, base_path_{router.base_path()} {}
+      : sourcemeta::one::Action{base, router.base_path()} {}
 
   auto run(const std::span<std::string_view>,
            sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void {
+           sourcemeta::one::HTTPResponse &response) -> void override {
     auto path{request.path()};
     if (!this->base_path_.empty()) {
       if (!path.starts_with(this->base_path_) ||
@@ -103,11 +104,6 @@ public:
           std::string{this->base_path_} + "/self/v1/schemas/api/error");
     }
   }
-
-private:
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  const std::filesystem::path &base_;
-  std::string_view base_path_;
 };
 
 #endif
