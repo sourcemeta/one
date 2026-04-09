@@ -63,6 +63,30 @@ test.describe('Navigation with base path', () => {
     await expect(page).toHaveURL(new RegExp(`${BASE_PATH}/example/`));
   });
 
+  test('renders a "Special directories" heading on the root page',
+    async ({ page }) => {
+    await page.goto(BASE_PATH);
+    const heading = page.getByRole('heading', { name: 'Special directories' });
+    await expect(heading).toBeVisible();
+  });
+
+  test('lists /self under the special directories table on the root page',
+    async ({ page }) => {
+    await page.goto(BASE_PATH);
+    const specialTable = page.locator(
+      'h6:has-text("Special directories") + table');
+    const selfLink = specialTable.locator(`a[href="${BASE_PATH}/self/"]`);
+    await expect(selfLink).toBeVisible();
+  });
+
+  test('does not list /self in the regular directories table on the root page',
+    async ({ page }) => {
+    await page.goto(BASE_PATH);
+    const regularTable = page.locator('table').first();
+    const selfLink = regularTable.locator(`a[href="${BASE_PATH}/self/"]`);
+    await expect(selfLink).toHaveCount(0);
+  });
+
   test('static assets load correctly', async ({ page }) => {
     const responses = [];
     page.on('response', (response) => {

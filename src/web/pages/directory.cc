@@ -7,9 +7,8 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <cassert>    // assert
-#include <chrono>     // std::chrono
-#include <filesystem> // std::filesystem
+#include <cassert> // assert
+#include <chrono>  // std::chrono
 
 namespace sourcemeta::one {
 
@@ -38,7 +37,8 @@ auto GENERATE_WEB_DIRECTORY::handler(
                     html::make_breadcrumb(w, directory.at("breadcrumb"),
                                           configuration.base_path);
                     html::make_directory_header(w, directory);
-                    html::make_file_manager(w, directory);
+                    html::make_file_manager(w, directory,
+                                            configuration.base_path);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

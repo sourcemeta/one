@@ -7,9 +7,8 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <cassert>    // assert
-#include <chrono>     // std::chrono
-#include <filesystem> // std::filesystem
+#include <cassert> // assert
+#include <chrono>  // std::chrono
 
 namespace {
 
@@ -49,7 +48,8 @@ auto GENERATE_WEB_INDEX::handler(
   html::make_page(writer, configuration, canonical, title, description,
                   [&](sourcemeta::core::HTMLWriter &w) {
                     make_hero(w, configuration);
-                    html::make_file_manager(w, directory);
+                    html::make_file_manager(w, directory,
+                                            configuration.base_path);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
