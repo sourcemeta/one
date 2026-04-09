@@ -5,8 +5,11 @@
 
 #include <sourcemeta/one/http.h>
 
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
+#include <memory>      // std::unique_ptr
+#include <mutex>       // std::once_flag
 #include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
@@ -64,14 +67,42 @@ private:
   std::string_view base_path_;
 };
 
-auto actions_initialize(const core::URITemplateRouterView &router) -> void;
+class ActionDispatcher {
+public:
+  ActionDispatcher(const std::filesystem::path &base,
+                   const core::URITemplateRouterView &router);
+  ~ActionDispatcher() = default;
 
-auto actions_dispatch(const core::URITemplateRouter::Identifier identifier,
-                      const core::URITemplateRouter::Identifier context,
-                      const core::URITemplateRouterView &router,
-                      const std::filesystem::path &base,
-                      const std::span<std::string_view> matches,
-                      HTTPRequest &request, HTTPResponse &response) -> void;
+  // To avoid mistakes
+  ActionDispatcher(const ActionDispatcher &) = delete;
+  ActionDispatcher(ActionDispatcher &&) = delete;
+  auto operator=(const ActionDispatcher &) -> ActionDispatcher & = delete;
+  auto operator=(ActionDispatcher &&) -> ActionDispatcher & = delete;
+
+  auto dispatch(const core::URITemplateRouter::Identifier identifier,
+                const core::URITemplateRouter::Identifier context,
+                const std::span<std::string_view> matches, HTTPRequest &request,
+                HTTPResponse &response) -> void;
+
+  auto error(const HTTPRequest &request, HTTPResponse &response,
+             const char *const code, std::string &&identifier,
+             std::string &&message) const -> void;
+
+private:
+  struct Slot {
+    std::unique_ptr<Action> instance;
+    std::once_flag flag;
+  };
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const std::filesystem::path &base_;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  const core::URITemplateRouterView &router_;
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+  std::unique_ptr<Slot[]> slots_;
+  std::size_t slots_size_;
+  std::string_view default_error_schema_;
+};
 
 } // namespace sourcemeta::one
 

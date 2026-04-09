@@ -14,8 +14,9 @@
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
 
-static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
-                     const std::filesystem::path &base,
+// TODO: Maybe we should merge this entire function into `ActionDispatcher`?
+static auto dispatch(sourcemeta::one::ActionDispatcher &actions,
+                     const sourcemeta::core::URITemplateRouterView &router,
                      sourcemeta::one::HTTPRequest &request,
                      sourcemeta::one::HTTPResponse &response) noexcept -> void {
   try {
@@ -34,29 +35,22 @@ static auto dispatch(const sourcemeta::core::URITemplateRouterView &router,
             matches_size = static_cast<std::size_t>(index) + 1;
           })};
 
-      sourcemeta::one::actions_dispatch(
-          match_result.first, match_result.second, router, base,
-          std::span{matches.data(), matches_size}, request, response);
+      actions.dispatch(match_result.first, match_result.second,
+                       std::span{matches.data(), matches_size}, request,
+                       response);
     } else {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
-          "cannot-satisfy-content-encoding",
-          "The server cannot satisfy the request content encoding",
-          // TODO: This implies the API is mounted
-          "/self/v1/schemas/api/error");
+      actions.error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
+                    "cannot-satisfy-content-encoding",
+                    "The server cannot satisfy the request content encoding");
     }
   } catch (const std::exception &error) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                                "uncaught-error", error.what(),
-                                // TODO: This implies the API is mounted
-                                "/self/v1/schemas/api/error");
+    actions.error(request, response,
+                  sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                  "uncaught-error", error.what());
   } catch (...) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-        "uncaught-error", "An unknown unexpected error occurred",
-        // TODO: This implies the API is mounted
-        "/self/v1/schemas/api/error");
+    actions.error(request, response,
+                  sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                  "uncaught-error", "An unknown unexpected error occurred");
   }
 }
 
@@ -100,13 +94,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
-    sourcemeta::one::actions_initialize(router);
+    sourcemeta::one::ActionDispatcher actions{base, router};
 
     sourcemeta::one::HTTPServer(
         port,
-        [&router, &base](sourcemeta::one::HTTPRequest &request,
-                         sourcemeta::one::HTTPResponse &response) {
-          dispatch(router, base, request, response);
+        [&actions, &router](sourcemeta::one::HTTPRequest &request,
+                            sourcemeta::one::HTTPResponse &response) {
+          dispatch(actions, router, request, response);
         },
         [timestamp_start](const std::uint16_t bound_port) {
           const auto duration{

@@ -9,11 +9,10 @@
 #include "action_serve_schema_artifact_v1.h"
 #include "action_serve_static_v1.h"
 
-#include <array>   // std::array
-#include <cstddef> // std::size_t
-#include <memory>  // std::unique_ptr, std::make_unique
-#include <mutex>   // std::once_flag, std::call_once
-#include <string>  // std::string
+#include <array>  // std::array
+#include <memory> // std::unique_ptr, std::make_unique
+#include <mutex>  // std::once_flag, std::call_once
+#include <string> // std::string
 
 template <typename T>
 static auto
@@ -44,45 +43,47 @@ static constexpr std::array<ActionConstructFunction,
 
 #undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
 
-struct Slot {
-  std::unique_ptr<sourcemeta::one::Action> instance;
-  std::once_flag flag;
-};
-
-// Heap array because Slot contains a non-movable std::once_flag
-// NOLINTNEXTLINE(modernize-avoid-c-arrays)
-static std::unique_ptr<Slot[]> SLOTS;
-static std::size_t SLOTS_SIZE{0};
-
-auto sourcemeta::one::actions_initialize(
-    const sourcemeta::core::URITemplateRouterView &router) -> void {
-  SLOTS_SIZE = router.size() + 1;
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  SLOTS = std::make_unique<Slot[]>(SLOTS_SIZE);
+sourcemeta::one::ActionDispatcher::ActionDispatcher(
+    const std::filesystem::path &base,
+    const sourcemeta::core::URITemplateRouterView &router)
+    : base_{base}, router_{router},
+      // NOLINTNEXTLINE(modernize-avoid-c-arrays)
+      slots_{std::make_unique<Slot[]>(router.size() + 1)},
+      slots_size_{router.size() + 1} {
+  router.arguments(0, [this](const auto &key, const auto &value) {
+    if (key == "errorSchema") {
+      this->default_error_schema_ = std::get<std::string_view>(value);
+    }
+  });
 }
 
-auto sourcemeta::one::actions_dispatch(
+auto sourcemeta::one::ActionDispatcher::error(
+    const sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response, const char *const code,
+    std::string &&identifier, std::string &&message) const -> void {
+  sourcemeta::one::json_error(request, response, code, std::move(identifier),
+                              std::move(message), this->default_error_schema_);
+}
+
+auto sourcemeta::one::ActionDispatcher::dispatch(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
     const sourcemeta::core::URITemplateRouter::Identifier context,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::filesystem::path &base,
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  if (identifier >= SLOTS_SIZE || context >= CONSTRUCTORS.size()) [[unlikely]] {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
-        "unknown-handler-code",
-        "This server version does not implement the handler for "
-        "this URL",
-        // TODO: This implies the API is mounted
-        std::string{router.base_path()} + "/self/v1/schemas/api/error");
+  if (identifier >= this->slots_size_ || context >= CONSTRUCTORS.size())
+      [[unlikely]] {
+    this->error(request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
+                "unknown-handler-code",
+                "This server version does not implement the handler for "
+                "this URL");
     return;
   }
 
-  auto &slot{SLOTS[identifier]};
-  std::call_once(slot.flag, [&] {
-    slot.instance = CONSTRUCTORS[context](base, router, identifier);
+  auto &slot{this->slots_[identifier]};
+  std::call_once(slot.flag, [this, &slot, context, identifier] {
+    slot.instance =
+        CONSTRUCTORS[context](this->base_, this->router_, identifier);
   });
 
   slot.instance->run(matches, request, response);

@@ -29,6 +29,8 @@ namespace sourcemeta::core {
 /// DOES NOT define expansion. So this is an opinionated non-standard adaptation
 /// of URI Template for path routing purposes
 class SOURCEMETA_CORE_URITEMPLATE_EXPORT URITemplateRouter {
+  friend class URITemplateRouterView;
+
 public:
   /// A handler identifier 0 means "no handler"
   using Identifier = std::uint16_t;
@@ -86,6 +88,11 @@ public:
            const Identifier context = 0,
            const std::span<const Argument> arguments = {}) -> void;
 
+  /// Register a fallback context and arguments to be returned when matching
+  /// a path that does not correspond to any registered route
+  auto otherwise(const Identifier context,
+                 const std::span<const Argument> arguments = {}) -> void;
+
   /// Match a path against the router. Note the callback might fire for
   /// initial matches even though the entire match might still fail
   [[nodiscard]] auto match(const std::string_view path,
@@ -111,6 +118,7 @@ public:
 
 private:
   Node root_;
+  Node otherwise_;
   std::string base_path_;
   std::vector<std::pair<Identifier, std::vector<Argument>>> arguments_;
   std::size_t size_{0};

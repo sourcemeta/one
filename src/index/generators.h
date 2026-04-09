@@ -689,6 +689,11 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
 
+    const sourcemeta::core::URITemplateRouter::Argument otherwise_arguments[] =
+        {{"errorSchema", std::string_view{error_schema}}};
+    router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1,
+                     otherwise_arguments);
+
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
     const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
