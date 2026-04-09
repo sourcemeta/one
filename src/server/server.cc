@@ -14,6 +14,7 @@
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
 
+// TODO: Maybe we should merge this entire function into `ActionDispatcher`?
 static auto dispatch(sourcemeta::one::ActionDispatcher &actions,
                      const sourcemeta::core::URITemplateRouterView &router,
                      sourcemeta::one::HTTPRequest &request,
@@ -38,25 +39,18 @@ static auto dispatch(sourcemeta::one::ActionDispatcher &actions,
                        std::span{matches.data(), matches_size}, request,
                        response);
     } else {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
-          "cannot-satisfy-content-encoding",
-          "The server cannot satisfy the request content encoding",
-          // TODO: This implies the API is mounted
-          "/self/v1/schemas/api/error");
+      actions.error(request, response, sourcemeta::one::STATUS_NOT_ACCEPTABLE,
+                    "cannot-satisfy-content-encoding",
+                    "The server cannot satisfy the request content encoding");
     }
   } catch (const std::exception &error) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                                "uncaught-error", error.what(),
-                                // TODO: This implies the API is mounted
-                                "/self/v1/schemas/api/error");
+    actions.error(request, response,
+                  sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                  "uncaught-error", error.what());
   } catch (...) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-        "uncaught-error", "An unknown unexpected error occurred",
-        // TODO: This implies the API is mounted
-        "/self/v1/schemas/api/error");
+    actions.error(request, response,
+                  sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                  "uncaught-error", "An unknown unexpected error occurred");
   }
 }
 

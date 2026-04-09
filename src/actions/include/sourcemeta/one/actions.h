@@ -84,6 +84,10 @@ public:
                 const std::span<std::string_view> matches, HTTPRequest &request,
                 HTTPResponse &response) -> void;
 
+  auto error(const HTTPRequest &request, HTTPResponse &response,
+             const char *const code, std::string &&identifier,
+             std::string &&message) const -> void;
+
 private:
   struct Slot {
     std::unique_ptr<Action> instance;

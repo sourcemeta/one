@@ -57,6 +57,14 @@ sourcemeta::one::ActionDispatcher::ActionDispatcher(
   });
 }
 
+auto sourcemeta::one::ActionDispatcher::error(
+    const sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response, const char *const code,
+    std::string &&identifier, std::string &&message) const -> void {
+  sourcemeta::one::json_error(request, response, code, std::move(identifier),
+                              std::move(message), this->default_error_schema_);
+}
+
 auto sourcemeta::one::ActionDispatcher::dispatch(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
     const sourcemeta::core::URITemplateRouter::Identifier context,
@@ -65,12 +73,10 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
     sourcemeta::one::HTTPResponse &response) -> void {
   if (identifier >= this->slots_size_ || context >= CONSTRUCTORS.size())
       [[unlikely]] {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
-        "unknown-handler-code",
-        "This server version does not implement the handler for "
-        "this URL",
-        this->default_error_schema_);
+    this->error(request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
+                "unknown-handler-code",
+                "This server version does not implement the handler for "
+                "this URL");
     return;
   }
 
