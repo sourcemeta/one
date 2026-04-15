@@ -124,6 +124,82 @@ favourite web browser, and you'll be greeted by your very own instance:
 
 ![The landing page of the Hello World example registry](./assets/my-first-registry.png)
 
+### Ingesting Schemas with `$id`
+
+In the example above, our person schema had no `$id` property. Sourcemeta One
+assigned it an identifier based on the filename and the registry URL, resulting
+in `http://localhost:8000/my-first-collection/person`. But what happens when you
+want to ingest a schema you don't control that already declares its own `$id`
+pointing to a different domain?
+
+For example, imagine you want to host a third-party schema whose `$id` is
+`https://example.com/schemas/v2/address` on your own registry at
+`http://localhost:8000`. The schema has its own canonical identifier, but you
+want to serve it alongside your own schemas without modifying its contents.
+This is a common scenario when building a registry that aggregates schemas from
+multiple sources.
+
+The [`baseUri`](configuration.md#collections) collection option solves this. It
+tells Sourcemeta One which base URI the schemas in a collection originally
+belong to, so it can correctly rebase their identifiers onto your registry URL.
+
+Let's say the third-party schema lives locally at
+`vendor/example/v2/address.json`:
+
+```json hl_lines="3" title="vendor/example/v2/address.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/v2/address",
+  "title": "Address",
+  "type": "object",
+  "required": [ "street", "city" ],
+  "properties": {
+    "street": { "type": "string" },
+    "city": { "type": "string" },
+    "postcode": { "type": "string" }
+  }
+}
+```
+
+To ingest it, configure a collection with a `baseUri` that matches the prefix
+of the schema's original `$id`. The indexer will strip this base and remap the
+remainder onto your registry URL, prepended by the collection key:
+
+```json hl_lines="11" title="one.json"
+{
+  "url": "http://localhost:8000",
+  "extends": [ "@self/v1" ],
+  "html": {
+    "name": "My Registry"
+  },
+  "contents": {
+    "external-schemas": {
+      "title": "External Schemas",
+      "path": "./vendor/example",
+      "baseUri": "https://example.com/schemas"
+    }
+  }
+}
+```
+
+With this configuration, the schema's `$id`
+(`https://example.com/schemas/v2/address`) is made relative to `baseUri`
+(`https://example.com/schemas`), yielding the suffix `v2/address`. The
+collection key `external-schemas` is then prepended, producing the final
+registry path `http://localhost:8000/external-schemas/v2/address`.
+
+Without `baseUri`, the default base is your top-level `url`
+(`http://localhost:8000`). The schema's `$id` would not be relative to that
+base, and the indexer would report an error.
+
+!!! tip
+
+    For a real-world example, take a look at the configuration file that powers
+    [schemas.sourcemeta.com](https://schemas.sourcemeta.com), which ingests
+    schemas from many third-party sources using `baseUri`. [Find the
+    configuration file
+    here](https://github.com/sourcemeta/one/blob/main/public/one.json)
+
 ### Next Steps
 
 Congratulations! You've just built your first Sourcemeta One instance in under
