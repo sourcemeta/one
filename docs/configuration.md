@@ -133,7 +133,7 @@ contain the actual schema definitions that power your instance.
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
 | `/path`         | String  | :red_circle: **Yes** (unless `include` is set) | N/A | The path (relative to the location of the configuration file) to the directory which includes the schemas for this collection. The directory will be recursively traversed in search of `.json`, `.yaml`, or `.yml` schemas |
-| `/baseUri`         | String  | No  | *The `file://` URI of the configuration directory* | The base URI of every schema file that is part of this collection, for rebasing purposes. If a schema defines an explicit identifier that is not relative to this base URI, the generation of the instance will fail |
+| `/baseUri`         | String  | No  | *The top-level `url`* | The base URI of every schema file that is part of this collection, for rebasing purposes. If a schema defines an explicit identifier that is not relative to this base URI, the generation of the instance will fail |
 | `/defaultDialect` | String  | No  | None | The default JSON Schema dialect URI to use for schemas that do not declare the `$schema` keyword |
 | `/title`        | String  | No  | None | The concise title of the schema collection |
 | `/description`  | String  | No  | None | A longer description of the schema collection |
