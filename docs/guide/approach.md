@@ -55,6 +55,15 @@ OpenAPI](https://www.amazon.com/Automating-API-Delivery-APIOps-OpenAPI/dp/163343
 extends that thinking one layer deeper, to the schema layer those definitions
 depend on.
 
+Fran Méndez, creator of [AsyncAPI](https://www.asyncapi.com/), arrives at the
+same architecture from the event-driven side in [Shift: The Playbook for
+Event-Driven Architecture Advocacy](https://leadtheshift.co) (2026). The
+chapter _Strategy 12, "Implementing Incremental Schema Governance,"_ prescribes
+a central Git repository of contracts, CI-enforced validation, federated review
+via pull requests, and a human-friendly event catalog on top. The pattern is
+the same whether the contracts are JSON Schemas powering REST APIs or AsyncAPI
+files powering event streams.
+
 ## Why Git? Governance by construction
 
 *This approach is a direct application of [GitOps](https://opengitops.dev/):
