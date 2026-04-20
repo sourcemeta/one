@@ -55,6 +55,20 @@ OpenAPI](https://www.amazon.com/Automating-API-Delivery-APIOps-OpenAPI/dp/163343
 extends that thinking one layer deeper, to the schema layer those definitions
 depend on.
 
+Enterprise organisations are already adopting this exact workflow for OpenAPI
+specifications.
+[Afosto](https://www.krakend.io/case-study/afosto/) maintains OpenAPI
+definitions in per-service Git repositories, "committed to a central repository
+during the CI process," which "triggers a new gateway build."
+[Medibank](https://www.postman.com/customer-stories/medibank/) adopted
+contract-first development where "API endpoints, data structures,
+request/response formats" are defined and reviewed before implementation.
+[Paymenttools](https://tyk.io/case-studies/paymenttools/) routes every API
+change through Git, where it gets "automatically validated" against "PCI and
+ISO compliance" rules. These organisations have proven the GitOps model works
+for API specifications. Extending it one layer deeper, to the schemas inside
+those specifications, is the natural next step.
+
 Fran Méndez, creator of [AsyncAPI](https://www.asyncapi.com/), arrives at the
 same architecture from the event-driven side in [Shift: The Playbook for
 Event-Driven Architecture Advocacy](https://leadtheshift.co) (2026). The
