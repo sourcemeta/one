@@ -27,7 +27,7 @@ by a different team. [AT&T](https://www.mulesoft.com/case-studies/att) had
 easy to find the right API."  At
 [Toast](https://www.postman.com/customer-stories/toast/), the duplication was
 pervasive enough that after adopting a shared platform, 70% of engineers
-reported it reduced duplicate work, as teams were "no longer recreating
+reported that it reduced duplicate work, as teams were "no longer recreating
 functionality that already exists."
 [Lexitas](https://boomi.com/customer/lexitas/) had to deduplicate 80% of its
 customer records after 40 acquisitions, each with its own definition of
