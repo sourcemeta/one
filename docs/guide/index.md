@@ -19,6 +19,20 @@ that is a string in one API and a nested object in another. `dateOfBirth` here,
 `dob` there. `email` required in three specs, optional in two, and only
 validated in one.
 
+This is not hypothetical.
+[Sanofi](https://www.postman.com/customer-stories/sanofi/) found that "up to
+twenty separate APIs were used to send emails" alone, each built independently
+by a different team. [AT&T](https://www.mulesoft.com/case-studies/att) had
+"multiple teams building the same API," compounded by the fact that it was "not
+easy to find the right API."  At
+[Toast](https://www.postman.com/customer-stories/toast/), the duplication was
+pervasive enough that after adopting a shared platform, 70% of engineers
+reported that it reduced duplicate work, as teams were "no longer recreating
+functionality that already exists."
+[Lexitas](https://boomi.com/customer/lexitas/) had to deduplicate 80% of its
+customer records after 40 acquisitions, each with its own definition of
+"Customer."
+
 **Discoverability.** A sixth team arrives. They search for existing
 definitions, find nothing organised or trustworthy, and write their own. The
 problem does not just persist, it compounds. According to [Postman's 2025 State
@@ -42,6 +56,27 @@ your teams are spending effort reinventing it, most probably to lesser quality.
 The consequence either way is the same: every integration boundary in your
 system, internal or external, requires a translation layer that would not exist
 if everyone had agreed on the same definitions to begin with.
+
+[Saint-Gobain](https://www.mulesoft.com/case-studies/saint-gobain-manufacturing),
+operating across 76 countries, found that "disjointed data models, and
+point-to-point integrations were hampering real-time visibility of global
+performance."
+[SECU](https://www.mulesoft.com/case-studies/secu) described the same problem
+more bluntly: "the same data was being pulled multiple ways. That was
+inconsistent, difficult to support, and less secure than taking a standard
+approach." At [Yotpo](https://boomi.com/customer/yotpo/), the consequence was
+operational: "schema mismatches broke pipelines."
+
+**Drift.** Inconsistent definitions also drift silently over time. [Cover
+Genius](https://www.postman.com/customer-stories/cover-genius/) discovered that
+while their documentation stated only three fields were required, "in practice,
+seven were necessary." At
+[Flix](https://www.postman.com/customer-stories/flix/), developers shared
+static JSON files via email, and "the static files created uncertainty over
+whether the shared specification was the latest version." At
+[Lightspeed](https://bump.sh/blog/enhancing-lightspeed-api-management/),
+"there was no way to notify partners or show exactly what had changed" when API
+modifications occurred.
 
 ## The data confirms it
 
