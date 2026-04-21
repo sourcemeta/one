@@ -216,6 +216,10 @@ file](configuration.md), exploring the [HTTP API](api.md), and having a peek at
 [schemas.sourcemeta.com](https://schemas.sourcemeta.com) to see what a
 fully-fledged public instance looks like in the wild.
 
+If you have an [Enterprise](commercial.md) license, you can also define [custom
+linter rules](configuration.md#linter) to enforce your organisation's naming
+conventions and structural patterns across all your schemas.
+
 ## Using Docker
 
 Sourcemeta One is exclusively distributed as Docker images published to [GitHub

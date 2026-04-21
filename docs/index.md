@@ -68,8 +68,10 @@ without building complex JSON Schema infrastructure from scratch.
   like [broken auto-completion of
   meta-schemas](https://github.com/microsoft/vscode-json-languageservice/issues/149)
 - :material-check: __Schema Health Checks__ Monitor and guarantee schema best
-  practices with comprehensive built-in linting. The most advanced JSON Schema
-  linter available, designed with input from the JSON Schema organisation
+  practices with comprehensive built-in linting and [custom
+  rules](configuration.md#linter)
+  ([Enterprise](commercial.md)). The most advanced JSON Schema linter
+  available, designed with input from the JSON Schema organisation
 - :material-api: __Rich HTTP API__ High-performance programmatic access for
   CI/CD pipelines, tooling integration, and custom workflows. Check out the
   [documentation](api.md) to learn more
