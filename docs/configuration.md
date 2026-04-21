@@ -143,7 +143,7 @@ contain the actual schema definitions that power your instance.
 | `/include`     | String  | No  | None | A `jsonschema.json` manifest definition to include in-place. See the [Include](#include) section for more information. **If this property is set, none of the other properties can be set (including `path`)** |
 | `/resolve`      | Object  | No  | None | A URI-to-URI map to hook into the schema reference resolution process. See the [Resolve](#resolve) section for more information |
 | `/lint`      | Object  | No  | None | Linting configuration for this schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
-| `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of file paths (relative to the configuration file location) to custom linting rule definitions |
+| `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of file paths (relative to the configuration file location) to custom linting rule definitions. See the [Linter](#linter) section for more information |
 | `/ignore`      | Array  | No  | None | An array of file paths (relative to the configuration file location) to exclude from the schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers |
@@ -225,6 +225,75 @@ internal version:
   }
 }
 ```
+
+### Linter
+
+!!! success "Enterprise"
+
+    Custom linter rules are only available in the
+    [Enterprise](commercial.md) edition. Learn more about [commercial
+    licensing](commercial.md).
+
+Sourcemeta One ships with a growing comprehensive set of built-in universal
+linting rules. The `lint/rules` property lets you extend that default set with
+rules specific to your organisation: naming conventions, required annotations,
+structural patterns, or any other constraint that matters to your governance
+standards. Violations are surfaced alongside the built-in checks in the
+registry's health analysis.
+
+A custom rule is a JSON Schema file written in any supported dialect. During
+indexing, each rule is evaluated against every subschema in every schema of the
+collection. The rule must declare a `title` (used as the unique rule
+identifier) and should include a `description` (shown to developers when a
+violation is reported).
+
+!!! note
+
+    Rules apply to every subschema individually, not to the top-level schema
+    document as a whole. For example, a rule that requires every subschema to
+    define `title` will be checked against every nested subschema too, not only
+    the root.
+
+For example, say your organisation requires all schema property names to follow
+camelCase. Create a rule file like this:
+
+```json title="rules/camelcase.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custom/all_properties_camelcase",
+  "description": "Ensure camelCase properties",
+  "properties": {
+    "properties": {
+      "propertyNames": {
+        "pattern": "^[a-z][a-zA-Z0-9]*$"
+      }
+    }
+  }
+}
+```
+
+This rule targets subschemas that define `properties` and asserts that all
+property names within must match the camelCase pattern. Because the rule is
+evaluated against every subschema, it catches violations at every nesting
+level. Then register it in your configuration file:
+
+```json hl_lines="6-8" title="one.json"
+{
+  "url": "https://schemas.example.com",
+  "contents": {
+    "my-collection": {
+      "path": "./schemas",
+      "lint": {
+        "rules": [ "./rules/camelcase.json" ]
+      }
+    }
+  }
+}
+```
+
+Rule file paths are relative to the configuration file location. You can list
+multiple rules in the array to enforce several constraints at once. Rule names
+must be unique across all rules in a collection.
 
 ## Pages
 

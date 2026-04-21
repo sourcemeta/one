@@ -183,7 +183,8 @@ the process: the closer you get to 100%, the better your schemas become.
     include your own explanation and remediation guidance, so when a schema
     fails a check, the developer sees exactly what is expected and why. This
     turns the registry's health analysis into a living style guide for your
-    data contracts.
+    data contracts. See the [Linter](../configuration.md#linter) configuration
+    section on writing your own custom rules.
 
 ## Step 6: Update the OpenAPI spec to reference the registry
 
