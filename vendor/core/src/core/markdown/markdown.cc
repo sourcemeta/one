@@ -6,8 +6,12 @@
 
 #include <array>   // std::array
 #include <cstdlib> // std::free
-#include <mutex>   // std::once_flag, std::call_once
 #include <string>  // std::string
+
+namespace {
+const bool cmark_initialized =
+    (cmark_gfm_core_extensions_ensure_registered(), true);
+}
 
 namespace sourcemeta::core {
 
@@ -15,8 +19,6 @@ auto markdown_to_html(const std::string_view input) -> std::string {
   static constexpr auto options{CMARK_OPT_VALIDATE_UTF8 | CMARK_OPT_FOOTNOTES |
                                 CMARK_OPT_STRIKETHROUGH_DOUBLE_TILDE |
                                 CMARK_OPT_GITHUB_PRE_LANG};
-  static std::once_flag cmark_init_flag;
-  std::call_once(cmark_init_flag, cmark_gfm_core_extensions_ensure_registered);
 
   auto *parser{cmark_parser_new(options)};
 
