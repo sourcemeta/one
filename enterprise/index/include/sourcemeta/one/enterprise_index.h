@@ -7,6 +7,9 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/configuration.h>
 
+#include <sourcemeta/core/html.h>
+
+#include <filesystem>    // std::filesystem::path
 #include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
 
@@ -18,6 +21,9 @@ auto load_custom_lint_rules(
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
     const sourcemeta::one::BuildDynamicCallback &callback) -> void;
+
+auto render_documentation(sourcemeta::core::HTMLWriter &writer,
+                          const std::filesystem::path &metapack_path) -> void;
 
 } // namespace sourcemeta::one
 

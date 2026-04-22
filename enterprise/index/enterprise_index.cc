@@ -5,7 +5,9 @@
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/markdown.h>
 #include <sourcemeta/core/yaml.h>
+#include <sourcemeta/one/metapack.h>
 
 #include <string> // std::string
 
@@ -45,6 +47,20 @@ auto load_custom_lint_rules(
           sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
     }
   }
+}
+
+auto render_documentation(sourcemeta::core::HTMLWriter &writer,
+                          const std::filesystem::path &metapack_path) -> void {
+  const auto content{metapack_read_text(metapack_path)};
+  if (!content.has_value()) {
+    return;
+  }
+
+  writer.div().attribute("class", "card mt-4");
+  writer.div().attribute("class", "card-body documentation");
+  writer.raw(sourcemeta::core::markdown_to_html(content.value()));
+  writer.close();
+  writer.close();
 }
 
 } // namespace sourcemeta::one

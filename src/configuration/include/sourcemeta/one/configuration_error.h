@@ -142,6 +142,61 @@ private:
   std::filesystem::path target_;
 };
 
+class ConfigurationDocumentationNotFoundError : public std::exception {
+public:
+  ConfigurationDocumentationNotFoundError(std::filesystem::path from,
+                                          sourcemeta::core::Pointer location,
+                                          std::filesystem::path target)
+      : from_{std::move(from)}, location_{std::move(location)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Could not read the documentation file";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path from_;
+  sourcemeta::core::Pointer location_;
+  std::filesystem::path target_;
+};
+
+class ConfigurationDocumentationAtPrefixError : public std::exception {
+public:
+  ConfigurationDocumentationAtPrefixError(std::filesystem::path from,
+                                          sourcemeta::core::Pointer location)
+      : from_{std::move(from)}, location_{std::move(location)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The @ prefix is not supported for documentation paths";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path from_;
+  sourcemeta::core::Pointer location_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

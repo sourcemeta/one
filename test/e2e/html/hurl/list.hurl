@@ -13,6 +13,7 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 75
+jsonpath "$.documentation" not exists
 jsonpath "$.entries" count >= 2
 jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].title" == "Self"
@@ -21,6 +22,7 @@ jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].schemas" == 31
 jsonpath "$.entries[0].path" == "/self/"
+jsonpath "$.entries[0].documentation" not exists
 jsonpath "$.entries[1].name" == "test"
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
@@ -28,6 +30,7 @@ jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 12
 jsonpath "$.entries[1].schemas" == 44
 jsonpath "$.entries[1].path" == "/test/"
+jsonpath "$.entries[1].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -57,22 +60,26 @@ jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 44
+jsonpath "$.documentation" not exists
 jsonpath "$.entries" count == 12
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].path" == "/test/v2.0/"
+jsonpath "$.entries[0].documentation" not exists
 jsonpath "$.entries[1].name" == "bundling"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 59
 jsonpath "$.entries[1].schemas" == 2
 jsonpath "$.entries[1].path" == "/test/bundling/"
+jsonpath "$.entries[1].documentation" not exists
 jsonpath "$.entries[2].name" == "camelcase"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 25
 jsonpath "$.entries[2].schemas" == 2
 jsonpath "$.entries[2].path" == "/test/camelcase/"
+jsonpath "$.entries[2].documentation" not exists
 jsonpath "$.entries[3].name" == "doc"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 0
@@ -81,44 +88,53 @@ jsonpath "$.entries[3].path" == "/test/doc/"
 jsonpath "$.entries[3].title" == "A sample schema folder"
 jsonpath "$.entries[3].description" == "For **testing** purposes with a [link](https://example.com)"
 jsonpath "$.entries[3].github" == "sourcemeta/one"
+jsonpath "$.entries[3].documentation" not exists
 jsonpath "$.entries[4].name" == "extension"
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].health" == 17
 jsonpath "$.entries[4].schemas" == 3
 jsonpath "$.entries[4].path" == "/test/extension/"
+jsonpath "$.entries[4].documentation" not exists
 jsonpath "$.entries[5].name" == "hyper"
 jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.entries[5].health" == 34
 jsonpath "$.entries[5].schemas" == 1
 jsonpath "$.entries[5].path" == "/test/hyper/"
+jsonpath "$.entries[5].documentation" not exists
 jsonpath "$.entries[6].name" == "markdown-alert"
 jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].schemas" == 1
 jsonpath "$.entries[6].path" == "/test/markdown-alert/"
+jsonpath "$.entries[6].documentation" not exists
 jsonpath "$.entries[7].name" == "no-base"
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].health" == 0
 jsonpath "$.entries[7].schemas" == 2
 jsonpath "$.entries[7].path" == "/test/no-base/"
+jsonpath "$.entries[7].documentation" not exists
 jsonpath "$.entries[8].name" == "no-blaze"
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 0
 jsonpath "$.entries[8].schemas" == 1
 jsonpath "$.entries[8].path" == "/test/no-blaze/"
+jsonpath "$.entries[8].documentation" not exists
 jsonpath "$.entries[9].name" == "same"
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].health" == 0
 jsonpath "$.entries[9].schemas" == 1
 jsonpath "$.entries[9].path" == "/test/same/"
+jsonpath "$.entries[9].documentation" not exists
 jsonpath "$.entries[10].name" == "schemas"
 jsonpath "$.entries[10].type" == "directory"
 jsonpath "$.entries[10].health" == 7
 jsonpath "$.entries[10].schemas" == 25
 jsonpath "$.entries[10].path" == "/test/schemas/"
+jsonpath "$.entries[10].documentation" not exists
 jsonpath "$.entries[11].name" == "unsafe-alert"
 jsonpath "$.entries[11].type" == "directory"
 jsonpath "$.entries[11].schemas" == 1
 jsonpath "$.entries[11].path" == "/test/unsafe-alert/"
+jsonpath "$.entries[11].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -143,6 +159,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
 jsonpath "$.schemas" == 1
+jsonpath "$.documentation" not exists
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -160,6 +177,7 @@ jsonpath "$.entries[0].provenance" == null
 jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
+jsonpath "$.entries[0].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -207,6 +225,7 @@ jsonpath "$.path" == "/test/schemas/versions"
 jsonpath "$.url" == "{{base}}/test/schemas/versions"
 jsonpath "$.health" == 0
 jsonpath "$.schemas" == 1
+jsonpath "$.documentation" not exists
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -226,6 +245,7 @@ jsonpath "$.entries[0].provenance" == null
 jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
+jsonpath "$.entries[0].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -251,6 +271,7 @@ jsonpath "$.path" == "/test/schemas/clash/foo"
 jsonpath "$.url" == "{{base}}/test/schemas/clash/foo"
 jsonpath "$.health" == 0
 jsonpath "$.schemas" == 1
+jsonpath "$.documentation" not exists
 jsonpath "$.breadcrumb" count == 4
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -272,6 +293,7 @@ jsonpath "$.entries[0].provenance" == null
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/bar"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
+jsonpath "$.entries[0].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -297,6 +319,7 @@ jsonpath "$.path" == "/test/schemas/clash"
 jsonpath "$.url" == "{{base}}/test/schemas/clash"
 jsonpath "$.health" == 0
 jsonpath "$.schemas" == 2
+jsonpath "$.documentation" not exists
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -310,6 +333,7 @@ jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/"
+jsonpath "$.entries[0].documentation" not exists
 jsonpath "$.entries[1].name" == "foo"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].bytes" == 120
@@ -321,6 +345,7 @@ jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
 jsonpath "$.entries[1].alert" == null
 jsonpath "$.entries[1].provenance" == null
+jsonpath "$.entries[1].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -346,6 +371,7 @@ jsonpath "$.path" == "/test/extension"
 jsonpath "$.url" == "{{base}}/test/extension"
 jsonpath "$.health" == 17
 jsonpath "$.schemas" == 3
+jsonpath "$.documentation" not exists
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -363,6 +389,7 @@ jsonpath "$.entries[0].provenance" == null
 jsonpath "$.entries[0].path" == "/test/extension/to-without"
 jsonpath "$.entries[0].health" == 50
 jsonpath "$.entries[0].dependencies" == 1
+jsonpath "$.entries[0].documentation" not exists
 jsonpath "$.entries[1].bytes" == 132
 jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
@@ -374,6 +401,7 @@ jsonpath "$.entries[1].provenance" == null
 jsonpath "$.entries[1].path" == "/test/extension/with"
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
+jsonpath "$.entries[1].documentation" not exists
 jsonpath "$.entries[2].bytes" == 135
 jsonpath "$.entries[2].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].dialect" == "http://json-schema.org/draft-07/schema#"
@@ -385,6 +413,7 @@ jsonpath "$.entries[2].provenance" == null
 jsonpath "$.entries[2].path" == "/test/extension/without"
 jsonpath "$.entries[2].health" == 0
 jsonpath "$.entries[2].dependencies" == 0
+jsonpath "$.entries[2].documentation" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

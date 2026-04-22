@@ -1,14 +1,16 @@
 #include <gtest/gtest.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/one/build.h>
+#include <sourcemeta/one/configuration.h>
 
 #include "build_test_utils.h"
 
 #include <filesystem>    // std::filesystem::path
+#include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_map> // std::unordered_map
-#include <vector>        // std::vector
 
 TEST(Build_delta, full_empty_registry) {
   const std::filesystem::path output{"/output"};
@@ -18,7 +20,7 @@ TEST(Build_delta, full_empty_registry) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 7);
 
@@ -60,7 +62,7 @@ TEST(Build_delta, full_single_schema) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
@@ -189,7 +191,7 @@ TEST(Build_delta, incremental_changed_same_mtime) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
@@ -232,7 +234,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -381,7 +383,7 @@ TEST(Build_delta, incremental_one_schema_added) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -501,7 +503,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
@@ -617,7 +619,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
@@ -729,7 +731,7 @@ TEST(Build_delta, full_with_comment) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "Hello world", {})};
+                                         false, "Hello world", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
 
@@ -773,7 +775,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 8);
 
@@ -820,7 +822,7 @@ TEST(Build_delta, incremental_with_comment) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "Hello world", {})};
+                                         true, "Hello world", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -934,7 +936,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -1054,7 +1056,7 @@ TEST(Build_delta, incremental_no_changes_adds_comment) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "hello", {})};
+                                         true, "hello", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
@@ -1093,7 +1095,7 @@ TEST(Build_delta, incremental_no_changes_removes_comment) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 1, 1);
 
@@ -1130,7 +1132,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
@@ -1178,7 +1180,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
@@ -1226,7 +1228,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
 
@@ -1270,7 +1272,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
@@ -1377,7 +1379,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", {})};
+                                         false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 19);
 
@@ -1489,7 +1491,7 @@ TEST(Build_delta, incremental_evaluate_false) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 14);
 
@@ -1604,7 +1606,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
@@ -1673,7 +1675,7 @@ TEST(Build_delta, incremental_missing_bundle) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 7);
 
@@ -1755,7 +1757,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
 
@@ -1815,10 +1817,10 @@ TEST(Build_delta, incremental_missing_web_not_checked_headless) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(40)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", true, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 0, 0);
 
@@ -1866,7 +1868,7 @@ TEST(Build_delta, mtime_nothing_changed) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 0, 0);
 
@@ -1918,7 +1920,7 @@ TEST(Build_delta, mtime_source_newer) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2052,7 +2054,7 @@ TEST(Build_delta, mtime_no_entry) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2187,7 +2189,7 @@ TEST(Build_delta, mtime_no_file_mark) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -2303,7 +2305,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 28);
 
@@ -2495,7 +2497,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 40);
 
@@ -2751,7 +2753,7 @@ TEST(Build_delta, mtime_reverse_dep) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 27);
 
@@ -2927,7 +2929,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 16);
 
@@ -3023,10 +3025,10 @@ TEST(Build_delta, headless_full_empty_registry) {
   const std::filesystem::path output{"/output"};
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas;
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", false, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 4, 5);
 
@@ -3055,10 +3057,10 @@ TEST(Build_delta, headless_full_single_schema) {
   const sourcemeta::one::BuildState entries;
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", false, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 16);
 
@@ -3156,10 +3158,10 @@ TEST(Build_delta, headless_incremental) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", true, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 6, 13);
 
@@ -3262,10 +3264,10 @@ TEST(Build_delta, full_to_headless_removes_web) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(200)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", true, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
 
@@ -3381,10 +3383,10 @@ TEST(Build_delta, full_to_headless_no_change_removes_web) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo",
        {.path = "/src/foo.json", .relative_path = "foo", .mtime = MTIME(100)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", true, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 2, 5);
 
@@ -3433,7 +3435,7 @@ TEST(Build_delta, headless_to_full_incremental) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -3573,7 +3575,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
@@ -3685,10 +3687,10 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                   {.file_mark = MTIME(100), .dependencies = {}});
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "2.0.0", false, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "2.0.0", false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 19);
 
@@ -3790,10 +3792,10 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
   const sourcemeta::one::Resolver::Views schemas{
       {"https://example.com/test",
        {"/src/test.json", "example/test", MTIME(100)}}};
-  const auto plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
-                             sourcemeta::one::BuildPlan::Type::Headless,
-                             entries, output, schemas, "1.0.0", false, "", {})};
+  const auto plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce,
+      sourcemeta::one::BuildPlan::Type::Headless, entries, output, schemas,
+      "1.0.0", false, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 17);
 
@@ -3948,7 +3950,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
 
@@ -4193,7 +4195,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -4332,7 +4334,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
   const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         true, "", {})};
+                                         true, "", {}, {})};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
 
@@ -4465,7 +4467,7 @@ TEST(Build_delta, limits_zero_does_not_enforce) {
   EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", limits));
+                                         false, "", limits, {}));
 }
 
 TEST(Build_delta, limits_directory_entries_within_limit) {
@@ -4479,7 +4481,7 @@ TEST(Build_delta, limits_directory_entries_within_limit) {
   EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", limits));
+                                         false, "", limits, {}));
 }
 
 TEST(Build_delta, limits_directory_entries_exceeded_flat) {
@@ -4494,7 +4496,7 @@ TEST(Build_delta, limits_directory_entries_exceeded_flat) {
   try {
     sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                            sourcemeta::one::BuildPlan::Type::Full, entries,
-                           output, schemas, "1.0.0", false, "", limits);
+                           output, schemas, "1.0.0", false, "", limits, {});
     FAIL();
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     EXPECT_EQ(error.path(), output / "schemas");
@@ -4515,7 +4517,7 @@ TEST(Build_delta, limits_directory_entries_nested_ok) {
   EXPECT_NO_THROW(sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                                          sourcemeta::one::BuildPlan::Type::Full,
                                          entries, output, schemas, "1.0.0",
-                                         false, "", limits));
+                                         false, "", limits, {}));
 }
 
 TEST(Build_delta, limits_directory_entries_subdirectories_count) {
@@ -4530,7 +4532,7 @@ TEST(Build_delta, limits_directory_entries_subdirectories_count) {
   try {
     sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
                            sourcemeta::one::BuildPlan::Type::Full, entries,
-                           output, schemas, "1.0.0", false, "", limits);
+                           output, schemas, "1.0.0", false, "", limits, {});
     FAIL();
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     EXPECT_EQ(error.path(), output / "schemas");
@@ -4538,4 +4540,502 @@ TEST(Build_delta, limits_directory_entries_subdirectories_count) {
   } catch (...) {
     FAIL();
   }
+}
+
+TEST(Build_delta, full_single_schema_with_documentation) {
+  const std::filesystem::path output{"/output"};
+  const sourcemeta::one::BuildState entries;
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
+
+  sourcemeta::one::Configuration configuration;
+  auto extra{sourcemeta::core::JSON::make_object()};
+  extra.assign("x-sourcemeta-one:documentation",
+               sourcemeta::core::JSON{"/docs/readme.md"});
+  sourcemeta::one::Configuration::Collection collection;
+  collection.extra = std::move(extra);
+  configuration.entries.emplace("foo", std::move(collection));
+
+  // TODO: Improve the use of sha256 for strings in Core
+  std::ostringstream hash_stream;
+  sourcemeta::core::sha256("/docs/readme.md", hash_stream);
+  const auto static_path{output / "static" / (hash_stream.str() + ".metapack")};
+
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", {}, configuration)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 22);
+
+  EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
+                "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 3, WebNotFound,
+                output / "explorer" / "%" / "404.metapack", "",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 1, 3, Materialise,
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 2, 3, StaticFile, static_path, "text/markdown",
+                std::filesystem::path{"/docs/readme.md"});
+
+  EXPECT_ACTION(plan, 2, 0, 5, DirectoryList,
+                output / "explorer" / "foo" / "%" / "directory.metapack", "",
+                static_path);
+  EXPECT_ACTION(plan, 2, 1, 5, Dependencies,
+                output / "schemas" / "foo" / "%" / "dependencies.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 2, 5, Locations,
+                output / "schemas" / "foo" / "%" / "locations.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 3, 5, Positions,
+                output / "schemas" / "foo" / "%" / "positions.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 4, 5, Stats,
+                output / "schemas" / "foo" / "%" / "stats.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 3, 0, 3, WebDirectory,
+      output / "explorer" / "foo" / "%" / "directory-html.metapack", "",
+      output / "explorer" / "foo" / "%" / "directory.metapack", static_path);
+  EXPECT_ACTION(plan, 3, 1, 3, Bundle,
+                output / "schemas" / "foo" / "%" / "bundle.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 2, 3, Health,
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
+                output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
+                output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
+                output / "schemas" / "foo" / "%" / "editor.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+
+  EXPECT_ACTION_UNORDERED(plan, 5, 0, 2, DirectoryList,
+                          output / "explorer" / "%" / "directory.metapack", "",
+                          output / "explorer" / "foo" / "%" / "schema.metapack",
+                          output / "explorer" / "foo" / "%" /
+                              "directory.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
+                output / "explorer" / "foo" / "%" / "schema-html.metapack",
+                "https://example.com/foo",
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack");
+
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      static_path, output / "schemas" / "foo" / "%" / "schema.metapack",
+      output / "schemas" / "foo" / "%" / "dependencies.metapack",
+      output / "schemas" / "foo" / "%" / "locations.metapack",
+      output / "schemas" / "foo" / "%" / "positions.metapack",
+      output / "schemas" / "foo" / "%" / "stats.metapack",
+      output / "schemas" / "foo" / "%" / "bundle.metapack",
+      output / "schemas" / "foo" / "%" / "health.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+      output / "schemas" / "foo" / "%" / "editor.metapack",
+      output / "explorer" / "foo" / "%" / "schema.metapack",
+      output / "explorer" / "foo" / "%" / "schema-html.metapack",
+      output / "explorer" / "foo" / "%" / "directory.metapack",
+      output / "explorer" / "foo" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "404.metapack", output / "routes.bin");
+}
+
+TEST(Build_delta, full_two_collections_same_documentation) {
+  const std::filesystem::path output{"/output"};
+  const sourcemeta::one::BuildState entries;
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/alpha/a",
+       {"/src/alpha/a.json", "alpha/a", MTIME(100)}},
+      {"https://example.com/beta/b",
+       {"/src/beta/b.json", "beta/b", MTIME(100)}}};
+
+  sourcemeta::one::Configuration configuration;
+
+  auto extra_alpha{sourcemeta::core::JSON::make_object()};
+  extra_alpha.assign("x-sourcemeta-one:documentation",
+                     sourcemeta::core::JSON{"/docs/shared.md"});
+  sourcemeta::one::Configuration::Collection collection_alpha;
+  collection_alpha.extra = std::move(extra_alpha);
+  configuration.entries.emplace("alpha", std::move(collection_alpha));
+
+  auto extra_beta{sourcemeta::core::JSON::make_object()};
+  extra_beta.assign("x-sourcemeta-one:documentation",
+                    sourcemeta::core::JSON{"/docs/shared.md"});
+  sourcemeta::one::Configuration::Collection collection_beta;
+  collection_beta.extra = std::move(extra_beta);
+  configuration.entries.emplace("beta", std::move(collection_beta));
+
+  // TODO: Improve the use of sha256 for strings in Core
+  std::ostringstream hash_stream;
+  sourcemeta::core::sha256("/docs/shared.md", hash_stream);
+  const auto static_path{output / "static" / (hash_stream.str() + ".metapack")};
+
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", {}, configuration)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 36);
+
+  EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
+                "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 4, WebNotFound,
+                output / "explorer" / "%" / "404.metapack", "",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 1, 4, Materialise,
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack",
+                "https://example.com/alpha/a",
+                std::filesystem::path{"/"} / "src" / "alpha" / "a.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 2, 4, Materialise,
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack",
+                "https://example.com/beta/b",
+                std::filesystem::path{"/"} / "src" / "beta" / "b.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 3, 4, StaticFile, static_path, "text/markdown",
+                std::filesystem::path{"/docs/shared.md"});
+
+  EXPECT_ACTION(plan, 2, 0, 8, Dependencies,
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "dependencies.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 1, 8, Locations,
+                output / "schemas" / "alpha" / "a" / "%" / "locations.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 2, 8, Positions,
+                output / "schemas" / "alpha" / "a" / "%" / "positions.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 3, 8, Stats,
+                output / "schemas" / "alpha" / "a" / "%" / "stats.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 4, 8, Dependencies,
+                output / "schemas" / "beta" / "b" / "%" /
+                    "dependencies.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 5, 8, Locations,
+                output / "schemas" / "beta" / "b" / "%" / "locations.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 6, 8, Positions,
+                output / "schemas" / "beta" / "b" / "%" / "positions.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 7, 8, Stats,
+                output / "schemas" / "beta" / "b" / "%" / "stats.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack");
+
+  EXPECT_ACTION(plan, 3, 0, 4, Bundle,
+                output / "schemas" / "alpha" / "a" / "%" / "bundle.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 4, Health,
+                output / "schemas" / "alpha" / "a" / "%" / "health.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 2, 4, Bundle,
+                output / "schemas" / "beta" / "b" / "%" / "bundle.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack",
+                output / "schemas" / "beta" / "b" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 3, 4, Health,
+                output / "schemas" / "beta" / "b" / "%" / "health.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack",
+                output / "schemas" / "beta" / "b" / "%" /
+                    "dependencies.metapack");
+
+  EXPECT_ACTION(plan, 4, 0, 8, SchemaMetadata,
+                output / "explorer" / "alpha" / "a" / "%" / "schema.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "alpha" / "a" / "%" / "health.metapack",
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 1, 8, SchemaMetadata,
+                output / "explorer" / "beta" / "b" / "%" / "schema.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "schema.metapack",
+                output / "schemas" / "beta" / "b" / "%" / "health.metapack",
+                output / "schemas" / "beta" / "b" / "%" /
+                    "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 2, 8, BlazeExhaustive,
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "blaze-exhaustive.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 3, 8, BlazeFast,
+                output / "schemas" / "alpha" / "a" / "%" /
+                    "blaze-fast.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 4, 8, Editor,
+                output / "schemas" / "alpha" / "a" / "%" / "editor.metapack",
+                "https://example.com/alpha/a",
+                output / "schemas" / "alpha" / "a" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 5, 8, BlazeExhaustive,
+                output / "schemas" / "beta" / "b" / "%" /
+                    "blaze-exhaustive.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 6, 8, BlazeFast,
+                output / "schemas" / "beta" / "b" / "%" / "blaze-fast.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 7, 8, Editor,
+                output / "schemas" / "beta" / "b" / "%" / "editor.metapack",
+                "https://example.com/beta/b",
+                output / "schemas" / "beta" / "b" / "%" / "bundle.metapack");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 4, DirectoryList,
+      output / "explorer" / "alpha" / "%" / "directory.metapack", "",
+      output / "explorer" / "alpha" / "a" / "%" / "schema.metapack",
+      static_path);
+  EXPECT_ACTION(plan, 5, 1, 4, WebSchema,
+                output / "explorer" / "alpha" / "a" / "%" /
+                    "schema-html.metapack",
+                "https://example.com/alpha/a",
+                output / "explorer" / "alpha" / "a" / "%" / "schema.metapack",
+                output / "schemas" / "alpha" / "a" / "%" / "health.metapack");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 2, 4, DirectoryList,
+      output / "explorer" / "beta" / "%" / "directory.metapack", "",
+      output / "explorer" / "beta" / "b" / "%" / "schema.metapack",
+      static_path);
+  EXPECT_ACTION(plan, 5, 3, 4, WebSchema,
+                output / "explorer" / "beta" / "b" / "%" /
+                    "schema-html.metapack",
+                "https://example.com/beta/b",
+                output / "explorer" / "beta" / "b" / "%" / "schema.metapack",
+                output / "schemas" / "beta" / "b" / "%" / "health.metapack");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 6, 0, 3, DirectoryList,
+      output / "explorer" / "%" / "directory.metapack", "",
+      output / "explorer" / "alpha" / "%" / "directory.metapack",
+      output / "explorer" / "beta" / "%" / "directory.metapack");
+  EXPECT_ACTION_UNORDERED(
+      plan, 6, 1, 3, WebDirectory,
+      output / "explorer" / "alpha" / "%" / "directory-html.metapack", "",
+      output / "explorer" / "alpha" / "%" / "directory.metapack", static_path);
+  EXPECT_ACTION_UNORDERED(
+      plan, 6, 2, 3, WebDirectory,
+      output / "explorer" / "beta" / "%" / "directory-html.metapack", "",
+      output / "explorer" / "beta" / "%" / "directory.metapack", static_path);
+
+  EXPECT_ACTION(plan, 7, 0, 2, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION_UNORDERED(
+      plan, 7, 1, 2, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      "", output / "explorer" / "alpha" / "%" / "directory.metapack",
+      output / "explorer" / "beta" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      static_path, output / "schemas" / "alpha" / "a" / "%" / "schema.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "dependencies.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "locations.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "positions.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "stats.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "bundle.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "health.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "blaze-fast.metapack",
+      output / "schemas" / "alpha" / "a" / "%" / "editor.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "schema.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "dependencies.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "locations.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "positions.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "stats.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "bundle.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "health.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "blaze-fast.metapack",
+      output / "schemas" / "beta" / "b" / "%" / "editor.metapack",
+      output / "explorer" / "alpha" / "a" / "%" / "schema.metapack",
+      output / "explorer" / "alpha" / "a" / "%" / "schema-html.metapack",
+      output / "explorer" / "alpha" / "%" / "directory.metapack",
+      output / "explorer" / "alpha" / "%" / "directory-html.metapack",
+      output / "explorer" / "beta" / "b" / "%" / "schema.metapack",
+      output / "explorer" / "beta" / "b" / "%" / "schema-html.metapack",
+      output / "explorer" / "beta" / "%" / "directory.metapack",
+      output / "explorer" / "beta" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "404.metapack", output / "routes.bin");
+}
+
+TEST(Build_delta, full_no_documentation_no_static_file) {
+  const std::filesystem::path output{"/output"};
+  const sourcemeta::one::BuildState entries;
+  const sourcemeta::one::Resolver::Views schemas{
+      {"https://example.com/foo", {"/src/foo.json", "foo", MTIME(100)}}};
+
+  sourcemeta::one::Configuration configuration;
+  sourcemeta::one::Configuration::Collection collection;
+  configuration.entries.emplace("foo", std::move(collection));
+
+  const auto plan{sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce,
+                                         sourcemeta::one::BuildPlan::Type::Full,
+                                         entries, output, schemas, "1.0.0",
+                                         false, "", {}, configuration)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
+
+  EXPECT_ACTION(plan, 0, 0, 2, Configuration, output / "configuration.json",
+                "");
+  EXPECT_ACTION(plan, 0, 1, 2, Version, output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 2, WebNotFound,
+                output / "explorer" / "%" / "404.metapack", "",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 1, 1, 2, Materialise,
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 4, Dependencies,
+                output / "schemas" / "foo" / "%" / "dependencies.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 1, 4, Locations,
+                output / "schemas" / "foo" / "%" / "locations.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 2, 4, Positions,
+                output / "schemas" / "foo" / "%" / "positions.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 2, 3, 4, Stats,
+                output / "schemas" / "foo" / "%" / "stats.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack");
+
+  EXPECT_ACTION(plan, 3, 0, 2, Bundle,
+                output / "schemas" / "foo" / "%" / "bundle.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 3, 1, 2, Health,
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+
+  EXPECT_ACTION(plan, 4, 0, 4, SchemaMetadata,
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack",
+                output / "schemas" / "foo" / "%" / "dependencies.metapack");
+  EXPECT_ACTION(plan, 4, 1, 4, BlazeExhaustive,
+                output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 2, 4, BlazeFast,
+                output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+  EXPECT_ACTION(plan, 4, 3, 4, Editor,
+                output / "schemas" / "foo" / "%" / "editor.metapack",
+                "https://example.com/foo",
+                output / "schemas" / "foo" / "%" / "bundle.metapack");
+
+  EXPECT_ACTION(plan, 5, 0, 2, DirectoryList,
+                output / "explorer" / "%" / "directory.metapack", "",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
+  EXPECT_ACTION(plan, 5, 1, 2, WebSchema,
+                output / "explorer" / "foo" / "%" / "schema-html.metapack",
+                "https://example.com/foo",
+                output / "explorer" / "foo" / "%" / "schema.metapack",
+                output / "schemas" / "foo" / "%" / "health.metapack");
+
+  EXPECT_ACTION(plan, 6, 0, 2, WebIndex,
+                output / "explorer" / "%" / "directory-html.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
+                output / "explorer" / "%" / "search.metapack", "",
+                output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "schemas" / "foo" / "%" / "schema.metapack",
+      output / "schemas" / "foo" / "%" / "dependencies.metapack",
+      output / "schemas" / "foo" / "%" / "locations.metapack",
+      output / "schemas" / "foo" / "%" / "positions.metapack",
+      output / "schemas" / "foo" / "%" / "stats.metapack",
+      output / "schemas" / "foo" / "%" / "bundle.metapack",
+      output / "schemas" / "foo" / "%" / "health.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
+      output / "schemas" / "foo" / "%" / "blaze-fast.metapack",
+      output / "schemas" / "foo" / "%" / "editor.metapack",
+      output / "explorer" / "foo" / "%" / "schema.metapack",
+      output / "explorer" / "foo" / "%" / "schema-html.metapack",
+      output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory-html.metapack",
+      output / "explorer" / "%" / "404.metapack", output / "routes.bin");
 }

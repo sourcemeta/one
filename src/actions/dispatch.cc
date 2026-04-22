@@ -7,6 +7,7 @@
 #include "action_schema_search_v1.h"
 #include "action_serve_explorer_artifact_v1.h"
 #include "action_serve_schema_artifact_v1.h"
+#include "action_serve_static_file_v1.h"
 #include "action_serve_static_v1.h"
 
 #include <array>  // std::array

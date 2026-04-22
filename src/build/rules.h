@@ -197,7 +197,8 @@ enum class DirectoryDependencyKind : std::uint8_t {
   ChildDirectories,
   AllDirectoryListings,
   SameDirectoryTarget,
-  ExternalConfig
+  ExternalConfig,
+  StaticFile
 };
 
 struct DirectoryDependency {
@@ -205,7 +206,7 @@ struct DirectoryDependency {
   const char *filename;
 };
 
-static constexpr std::size_t MAX_DIRECTORY_DEPENDENCIES = 2;
+static constexpr std::size_t MAX_DIRECTORY_DEPENDENCIES = 3;
 
 struct DirectoryRule {
   BuildPlan::Action::Type action;
@@ -226,8 +227,10 @@ static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
      .dependencies = {{{.kind = DirectoryDependencyKind::SchemaMetadata,
                         .filename = nullptr},
                        {.kind = DirectoryDependencyKind::ChildDirectories,
+                        .filename = nullptr},
+                       {.kind = DirectoryDependencyKind::StaticFile,
                         .filename = nullptr}}},
-     .dependency_count = 2},
+     .dependency_count = 3},
 
     {.action = BuildPlan::Action::Type::SearchIndex,
      .filename = "search.metapack",
@@ -244,8 +247,10 @@ static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
      .scope = DirectoryScope::RootOnly,
      .only_full_rebuild = false,
      .dependencies = {{{.kind = DirectoryDependencyKind::SameDirectoryTarget,
-                        .filename = "directory.metapack"}}},
-     .dependency_count = 1},
+                        .filename = "directory.metapack"},
+                       {.kind = DirectoryDependencyKind::StaticFile,
+                        .filename = nullptr}}},
+     .dependency_count = 2},
 
     {.action = BuildPlan::Action::Type::WebDirectory,
      .filename = "directory-html.metapack",
@@ -253,8 +258,10 @@ static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
      .scope = DirectoryScope::NonRoot,
      .only_full_rebuild = false,
      .dependencies = {{{.kind = DirectoryDependencyKind::SameDirectoryTarget,
-                        .filename = "directory.metapack"}}},
-     .dependency_count = 1},
+                        .filename = "directory.metapack"},
+                       {.kind = DirectoryDependencyKind::StaticFile,
+                        .filename = nullptr}}},
+     .dependency_count = 2},
 
     {.action = BuildPlan::Action::Type::WebNotFound,
      .filename = "404.metapack",

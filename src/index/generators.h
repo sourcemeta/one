@@ -642,6 +642,37 @@ struct GENERATE_STATS {
   }
 };
 
+struct GENERATE_STATIC_FILE {
+  static constexpr std::size_t MAX_STATIC_FILE_SIZE{1048576};
+
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+    const auto &source_path{action.dependencies.at(0)};
+    const auto file_size{std::filesystem::file_size(source_path)};
+    if (file_size > MAX_STATIC_FILE_SIZE) {
+      throw StaticFileTooLargeError(source_path, file_size);
+    }
+
+    std::ifstream stream{source_path, std::ios::binary};
+    assert(stream.is_open());
+    const std::string content{std::istreambuf_iterator<char>{stream},
+                              std::istreambuf_iterator<char>{}};
+
+    std::filesystem::create_directories(action.destination.parent_path());
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+    sourcemeta::one::metapack_write_text(
+        action.destination, content, std::string{action.data},
+        sourcemeta::one::MetapackEncoding::GZIP, {},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+
 struct GENERATE_URITEMPLATE_ROUTES {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -792,6 +823,15 @@ struct GENERATE_URITEMPLATE_ROUTES {
         {{"errorSchema", std::string_view{error_schema}}};
     router.add("/self/v1/api/{+any}", next_id++,
                sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1, not_found_arguments);
+
+    {
+      const sourcemeta::core::URITemplateRouter::Argument
+          static_file_arguments[] = {
+              {"errorSchema", std::string_view{error_schema}}};
+      router.add("/self/v1/static/{hash}", next_id++,
+                 sourcemeta::one::ACTION_TYPE_SERVE_STATIC_FILE_V1,
+                 static_file_arguments);
+    }
 
     if (action.data == "Full") {
       const sourcemeta::core::URITemplateRouter::Argument static_arguments[] = {

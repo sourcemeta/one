@@ -317,11 +317,9 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
                               const sourcemeta::core::JSON &directory,
                               const std::string &base_path) -> void {
   if (directory.at("entries").empty()) {
-    writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
     writer.p(
         "Things look a bit empty over here. Try ingesting some schemas using "
         "the configuration file!");
-    writer.close();
     return;
   }
 
@@ -339,8 +337,6 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
       has_regular_entries = true;
     }
   }
-
-  writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
   if (has_regular_entries) {
     writer.table().attribute(
@@ -374,8 +370,6 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
     writer.close();
     writer.close();
   }
-
-  writer.close();
 }
 
 } // namespace sourcemeta::one::html

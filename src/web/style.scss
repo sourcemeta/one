@@ -31,7 +31,7 @@ $breadcrumb-font-size: 15px;
 @import "../../vendor/bootstrap/scss/button-group";
 @import "../../vendor/bootstrap/scss/nav";
 @import "../../vendor/bootstrap/scss/navbar";
-// @import "../../vendor/bootstrap/scss/card";
+@import "../../vendor/bootstrap/scss/card";
 // @import "../../vendor/bootstrap/scss/accordion";
 @import "../../vendor/bootstrap/scss/breadcrumb";
 // @import "../../vendor/bootstrap/scss/pagination";
@@ -72,4 +72,21 @@ table tr > th[scope="row"] {
 // The last paragraph inside an alert will create weird spacing otherwise
 .alert > p:last-child {
   @extend .mb-0;
+}
+
+// Render inline code like GitHub instead of Bootstrap's pink
+code {
+  color: inherit;
+  background-color: var(--bs-tertiary-bg);
+  padding: 0.2em 0.4em;
+  font-size: $code-font-size;
+}
+
+// Scale down rendered documentation to fit within the page
+.documentation {
+  font-size: $font-size-sm;
+  h1 { @extend .h5; }
+  h2 { @extend .h6; }
+  h3, h4, h5, h6 { font-size: $font-size-base; }
+  > *:last-child { @extend .mb-0; }
 }

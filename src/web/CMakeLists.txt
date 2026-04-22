@@ -5,6 +5,12 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME web
     pages/schema.cc
     pages/not_found.cc)
 
+if(ONE_ENTERPRISE)
+  target_compile_definitions(sourcemeta_one_web
+    PRIVATE SOURCEMETA_ONE_ENTERPRISE)
+  target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::enterprise_index)
+endif()
+
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::html)

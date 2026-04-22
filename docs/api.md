@@ -82,6 +82,7 @@ navigation and discovery purposes.
     | `/email` | String | No | The e-mail address associated with the directory |
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
+    | `/documentation` | String | No | For directories that correspond to a collection with documentation configured, a relative URL to the static file containing the raw Markdown content. Only available in the [Enterprise](commercial.md) edition |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
     | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
@@ -105,6 +106,27 @@ navigation and discovery purposes.
 === "404"
 
     The directory does not exist.
+
+## Static Files
+
+### Fetch
+
+*This endpoint serves a static file by its hash identifier.*
+
+```
+GET {base_path}/self/v1/static/{hash}
+```
+
+Static files are external assets (such as documentation Markdown files)
+that have been indexed into the registry.
+
+=== "200"
+
+    The raw file content.
+
+=== "404"
+
+    The static file does not exist.
 
 ## Schemas
 

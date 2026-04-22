@@ -1,14 +1,19 @@
 #include <sourcemeta/one/build.h>
+#include <sourcemeta/one/configuration.h>
+
+#include <sourcemeta/core/crypto.h>
 
 #include "rules.h"
 
 #include <algorithm>     // std::ranges::sort, std::ranges::all_of
 #include <cassert>       // assert
 #include <cstdint>       // std::size_t
+#include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
+#include <variant>       // std::get_if
 #include <vector>        // std::vector
 
 namespace sourcemeta::one {
@@ -194,7 +199,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
            const bool incremental, const std::string_view comment,
-           const BuildLimits &limits) -> BuildPlan {
+           const BuildLimits &limits, const Configuration &configuration)
+    -> BuildPlan {
   assert(output.is_absolute());
   assert(std::ranges::all_of(schemas, [](const auto &entry) {
     return entry.second.path.is_absolute() &&
@@ -487,6 +493,34 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         }
 
         if (!base_set.contains(entry_path.substr(0, sentinel_position + 2))) {
+          fast_path_dirty = true;
+          break;
+        }
+      }
+    }
+
+    if (!fast_path_dirty) {
+      for (const auto &[entry_path, entry_value] : configuration.entries) {
+        const auto *collection{
+            std::get_if<Configuration::Collection>(&entry_value)};
+        if (!collection ||
+            !collection->extra.defines("x-sourcemeta-one:documentation")) {
+          continue;
+        }
+
+        const auto &documentation_path{
+            collection->extra.at("x-sourcemeta-one:documentation").to_string()};
+        std::ostringstream hash_stream;
+        sourcemeta::core::sha256(documentation_path, hash_stream);
+        const auto static_destination{
+            (output / "static" / (hash_stream.str() + ".metapack"))
+                .lexically_normal()
+                .string()};
+        const std::filesystem::path source_path{documentation_path};
+        if (!std::filesystem::exists(static_destination) ||
+            (std::filesystem::exists(source_path) &&
+             std::filesystem::last_write_time(source_path) >
+                 std::filesystem::last_write_time(static_destination))) {
           fast_path_dirty = true;
           break;
         }
@@ -854,8 +888,38 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
     return {.output = output, .type = build_type, .waves = {}, .size = 0};
   }
 
+  bool has_dirty_static_files{false};
+  std::vector<std::filesystem::path> dirty_static_collection_paths;
+  for (const auto &[entry_path, entry_value] : configuration.entries) {
+    const auto *collection{
+        std::get_if<Configuration::Collection>(&entry_value)};
+    if (!collection ||
+        !collection->extra.defines("x-sourcemeta-one:documentation")) {
+      continue;
+    }
+
+    const auto &documentation_path{
+        collection->extra.at("x-sourcemeta-one:documentation").to_string()};
+    std::ostringstream hash_stream;
+    sourcemeta::core::sha256(documentation_path, hash_stream);
+    const auto static_destination{
+        (output / "static" / (hash_stream.str() + ".metapack"))
+            .lexically_normal()
+            .string()};
+    const std::filesystem::path source_path{documentation_path};
+    const auto is_dirty{
+        !std::filesystem::exists(static_destination) ||
+        (std::filesystem::exists(source_path) &&
+         std::filesystem::last_write_time(source_path) >
+             std::filesystem::last_write_time(static_destination))};
+    if (is_dirty || is_full) {
+      has_dirty_static_files = true;
+      dirty_static_collection_paths.emplace_back(entry_path);
+    }
+  }
+
   const auto has_schema_work{is_full || !dirty_set.empty() || has_missing_web ||
-                             has_potential_stale};
+                             has_potential_stale || has_dirty_static_files};
 
   std::vector<std::filesystem::path> affected_relative_paths;
   if (has_schema_work) {
@@ -868,6 +932,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       if (dirty_set.contains(schema.root_path)) {
         affected_relative_paths.emplace_back(schema.info->relative_path);
       }
+    }
+
+    for (const auto &collection_path : dirty_static_collection_paths) {
+      affected_relative_paths.emplace_back(collection_path / ".");
     }
 
     auto has_graph_change{false};
@@ -917,6 +985,51 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         collect_affected_directories(schemas_path, affected_relative_paths)};
     const auto all_directories{
         collect_affected_directories(schemas_path, all_relative_paths)};
+
+    {
+      static constexpr std::string_view STATIC_DIRECTORY{"static"};
+      static constexpr std::string_view DOCUMENTATION_MIME{"text/markdown"};
+      std::unordered_set<std::string> static_file_destinations;
+      for (const auto &[entry_path, entry_value] : configuration.entries) {
+        const auto *collection{
+            std::get_if<Configuration::Collection>(&entry_value)};
+        if (!collection ||
+            !collection->extra.defines("x-sourcemeta-one:documentation")) {
+          continue;
+        }
+
+        const auto &documentation_path{
+            collection->extra.at("x-sourcemeta-one:documentation").to_string()};
+        std::ostringstream hash_stream;
+        sourcemeta::core::sha256(documentation_path, hash_stream);
+        auto destination{
+            (output / STATIC_DIRECTORY / (hash_stream.str() + ".metapack"))
+                .lexically_normal()
+                .string()};
+
+        if (static_file_destinations.contains(destination)) {
+          continue;
+        }
+
+        static_file_destinations.insert(destination);
+
+        const std::filesystem::path source_path{documentation_path};
+        bool is_dirty{!std::filesystem::exists(destination)};
+        if (!is_dirty && std::filesystem::exists(source_path)) {
+          const auto source_mtime{
+              std::filesystem::last_write_time(source_path)};
+          const auto destination_mtime{
+              std::filesystem::last_write_time(destination)};
+          is_dirty = source_mtime > destination_mtime;
+        }
+
+        if (is_dirty || is_full) {
+          declare_target(targets, BuildPlan::Action::Type::StaticFile,
+                         destination, {documentation_path}, DOCUMENTATION_MIME);
+          dirty_set.insert(std::move(destination));
+        }
+      }
+    }
 
     for (const auto &rule : DIRECTORY_RULES) {
       if (rule.gate == TargetGate::FullOnly &&
@@ -1006,6 +1119,26 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             case DirectoryDependencyKind::ExternalConfig:
               rule_dependencies.push_back(configuration_string);
               break;
+            case DirectoryDependencyKind::StaticFile: {
+              const auto entry_match{configuration.entries.find(relative)};
+              if (entry_match != configuration.entries.cend()) {
+                const auto *collection{std::get_if<Configuration::Collection>(
+                    &entry_match->second)};
+                if (collection && collection->extra.defines(
+                                      "x-sourcemeta-one:documentation")) {
+                  const auto &documentation_path{
+                      collection->extra.at("x-sourcemeta-one:documentation")
+                          .to_string()};
+                  std::ostringstream hash_stream;
+                  sourcemeta::core::sha256(documentation_path, hash_stream);
+                  rule_dependencies.push_back(
+                      (output / "static" / (hash_stream.str() + ".metapack"))
+                          .lexically_normal()
+                          .string());
+                }
+              }
+              break;
+            }
           }
         }
 
@@ -1105,6 +1238,23 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
     known_bases.insert(explorer_string + '/' + SENTINEL);
+
+    for (const auto &[entry_path, entry_value] : configuration.entries) {
+      const auto *collection{
+          std::get_if<Configuration::Collection>(&entry_value)};
+      if (!collection ||
+          !collection->extra.defines("x-sourcemeta-one:documentation")) {
+        continue;
+      }
+
+      const auto &documentation_path{
+          collection->extra.at("x-sourcemeta-one:documentation").to_string()};
+      std::ostringstream hash_stream;
+      sourcemeta::core::sha256(documentation_path, hash_stream);
+      known_bases.insert((output / "static" / (hash_stream.str() + ".metapack"))
+                             .lexically_normal()
+                             .string());
+    }
 
     std::unordered_set<std::string> known_ancestors;
     known_ancestors.reserve(known_bases.size() * 3);
