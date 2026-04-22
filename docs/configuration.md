@@ -136,7 +136,7 @@ contain the actual schema definitions that power your instance.
 | `/baseUri`         | String  | No  | *The top-level `url`* | The base URI of every schema file that is part of this collection, for rebasing purposes. If a schema defines an explicit identifier that is not relative to this base URI, the generation of the instance will fail |
 | `/defaultDialect` | String  | No  | None | The default JSON Schema dialect URI to use for schemas that do not declare the `$schema` keyword |
 | `/title`        | String  | No  | None | The concise title of the schema collection |
-| `/description`  | String  | No  | None | A longer description of the schema collection |
+| `/description`  | String  | No  | None | A longer description of the schema collection. The web explorer renders this as Markdown |
 | `/email`        | String  | No  | None | The e-mail address associated with the schema collection |
 | `/github`       | String  | No  | None | The GitHub organisation or `organisation/repository` identifier associated with the schema collection |
 | `/website`      | String  | No  | None | The absolute URL to the website associated with the schema collection |
@@ -146,7 +146,7 @@ contain the actual schema definitions that power your instance.
 | `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of file paths (relative to the configuration file location) to custom linting rule definitions. See the [Linter](#linter) section for more information |
 | `/ignore`      | Array  | No  | None | An array of file paths (relative to the configuration file location) to exclude from the schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
-| `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers |
+| `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
 
 !!! warning
 

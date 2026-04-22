@@ -78,7 +78,7 @@ navigation and discovery purposes.
     | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path segment |
     | `/breadcrumb/*/url` | String | Yes | The relative URL of the breadcrumb location |
     | `/title` | String | No | The title associated with the directory |
-    | `/description` | String | No | The description associated with the directory |
+    | `/description` | String | No | The description associated with the directory. The web explorer renders this as Markdown |
     | `/email` | String | No | The e-mail address associated with the directory |
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
@@ -90,7 +90,7 @@ navigation and discovery purposes.
     | `/entries/*/health` | Integer | No | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
     | `/entries/*/title` | String | No | The title associated with the entry |
-    | `/entries/*/description` | String | No | The description associated with the entry |
+    | `/entries/*/description` | String | No | The description associated with the entry. The web explorer renders this as Markdown |
     | `/entries/*/email` | String | No | For `directory` entries, the e-mail address associated with the entry |
     | `/entries/*/github` | String | No | For `directory` entries, the GitHub organisation or repository associated with the entry |
     | `/entries/*/website` | String | No | For `directory` entries, the website URL associated with the entry |
@@ -99,7 +99,7 @@ navigation and discovery purposes.
     | `/entries/*/baseDialect` | String | No | For `schema` entries, the base dialect URI of the entry |
     | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
     | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
-    | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection |
+    | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
     | `/entries/*/provenance` | String / Null | No | For `schema` entries, the origin of the schema collection, if any |
 
 === "404"
@@ -235,9 +235,9 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/health` | Integer | Yes | The health score of the schema |
     | `/dependencies` | Integer | Yes | The number of direct and indirect dependencies of the schema |
     | `/bytes` | Integer | Yes | The bytes that the schema occupies |
-    | `/alert` | String / Null | No | The human readable alert message for the schema collection, if any |
+    | `/alert` | String / Null | No | The human readable alert message for the schema collection, if any. The web explorer renders this as Markdown |
     | `/title` | String | No | The title of the schema, if any |
-    | `/description` | String | No | The description of the schema, if any |
+    | `/description` | String | No | The description of the schema, if any. The web explorer renders this as Markdown |
     | `/examples` | Array | Yes | Up to 10 of the schema examples, if any |
     | `/breadcrumb` | Array | Yes | The breadcrumb of the schema |
     | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path |
@@ -270,7 +270,7 @@ be combined in any order (i.e. `scope=title,description`).
     |----------|------|----------|-------------|
     | `/*/path` | String | Yes | The relative URL of the schema |
     | `/*/title` | String | No | The title of the schema (may be an empty string) |
-    | `/*/description` | String | No | The description of the schema (may be an empty string) |
+    | `/*/description` | String | No | The description of the schema (may be an empty string). The web explorer renders this as Markdown |
 
 === "400"
 
@@ -337,8 +337,8 @@ GET /self/v1/api/schemas/health/{path}
     | `/errors/*/pointers` | Array | Yes | The paths where the issue occurs |
     | `/errors/*/pointers/*` | String | Yes | A JSON Pointer path of where the issue occurs |
     | `/errors/*/name` | String | Yes | The identifier name of the health issue |
-    | `/errors/*/message` | String | Yes | Human-readable description of the issue |
-    | `/errors/*/description` | String / Null | No | Additional description (may be null) |
+    | `/errors/*/message` | String | Yes | Human-readable description of the issue. The web explorer renders this as Markdown |
+    | `/errors/*/description` | String / Null | No | Additional description (may be null). The web explorer renders this as Markdown |
 
 === "404"
 

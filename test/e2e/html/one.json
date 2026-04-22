@@ -44,7 +44,7 @@
         },
         "doc": {
           "title": "A sample schema folder",
-          "description": "For testing purposes",
+          "description": "For **testing** purposes with a [link](https://example.com)",
           "github": "sourcemeta/one",
           "baseUri": "https://example.com/doc",
           "path": "./schemas/test/doc"
@@ -64,6 +64,16 @@
         },
         "no-base": {
           "path": "./schemas/test/no-base"
+        },
+        "markdown-alert": {
+          "baseUri": "https://example.com/markdown-alert",
+          "path": "./schemas/test/markdown-alert",
+          "x-sourcemeta-one:alert": "This is **important**: check the [docs](https://example.com)"
+        },
+        "unsafe-alert": {
+          "baseUri": "https://example.com/unsafe-alert",
+          "path": "./schemas/test/unsafe-alert",
+          "x-sourcemeta-one:alert": "Safe text <script>alert('xss')</script> end <iframe src='evil'></iframe>"
         }
       }
     }
