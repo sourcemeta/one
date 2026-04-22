@@ -9,7 +9,7 @@
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
-#include <sourcemeta/core/alterschema.h>
+#include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/core/editorschema.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -19,7 +19,6 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/configuration.h>
 #include <sourcemeta/blaze/evaluator.h>
-#include <sourcemeta/blaze/linter.h>
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
 #include <sourcemeta/one/enterprise_index.h>
@@ -432,7 +431,7 @@ struct GENERATE_HEALTH {
 
 private:
   struct CacheEntry {
-    sourcemeta::core::SchemaTransformer bundle;
+    sourcemeta::blaze::SchemaTransformer bundle;
     std::unordered_set<std::string_view> custom_names;
   };
 
@@ -451,12 +450,8 @@ private:
     }
 
     auto entry{std::make_unique<CacheEntry>()};
-    sourcemeta::core::add(entry->bundle,
-                          sourcemeta::core::AlterSchemaMode::Linter);
-    entry->bundle.add<sourcemeta::blaze::ValidExamples>(
-        sourcemeta::blaze::default_schema_compiler);
-    entry->bundle.add<sourcemeta::blaze::ValidDefault>(
-        sourcemeta::blaze::default_schema_compiler);
+    sourcemeta::blaze::add(entry->bundle,
+                           sourcemeta::blaze::AlterSchemaMode::Linter);
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     sourcemeta::one::load_custom_lint_rules(entry->bundle, entry->custom_names,

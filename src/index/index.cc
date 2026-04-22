@@ -1,4 +1,4 @@
-#include <sourcemeta/blaze/linter.h>
+#include <sourcemeta/blaze/alterschema.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
@@ -658,32 +658,32 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::LinterInvalidNamePatternError> &error) {
+           sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {
     std::print(stderr,
                "error: The schema rule name must match {}\n"
                "  at path {}\n  at name {}\n",
                error.regex(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
+  } catch (const sourcemeta::blaze::SchemaRuleInvalidNamePatternError &error) {
     std::print(stderr,
                "error: The schema rule name must match {}\n  at name {}\n",
                error.regex(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::LinterInvalidNameError> &error) {
+           sourcemeta::blaze::SchemaRuleInvalidNameError> &error) {
     std::print(stderr, "error: {}\n  at path {}\n  at name {}\n", error.what(),
                error.path().string(), error.identifier());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
+  } catch (const sourcemeta::blaze::SchemaRuleInvalidNameError &error) {
     std::print(stderr, "error: {}\n  at name {}\n", error.what(),
                error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::LinterMissingNameError> &error) {
+           sourcemeta::blaze::SchemaRuleMissingNameError> &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::LinterMissingNameError &error) {
+  } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &error) {
     std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (

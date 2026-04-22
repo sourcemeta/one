@@ -29,7 +29,7 @@ target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::jsonschema)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::semver)
-target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::alterschema)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::alterschema)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::editorschema)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::parallel)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::options)
@@ -37,7 +37,7 @@ target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::core::uritemplate
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::compiler)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::output)
-target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::linter)
+target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::blaze::alterschema)
 
 install(TARGETS sourcemeta_one_index
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

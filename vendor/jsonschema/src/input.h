@@ -403,6 +403,22 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
     const auto configuration_path{find_configuration(current_path)};
     const auto &configuration{read_configuration(options, configuration_path)};
 
+    const auto &scan_path = configuration.has_value()
+                                ? configuration.value().absolute_path
+                                : current_path;
+
+    if (!configuration_path.has_value()) {
+      LOG_WARNING() << "Recursively processing every file in "
+                    << sourcemeta::core::weakly_canonical(current_path).string()
+                    << " as no input was provided\n";
+    } else if (configuration.has_value() &&
+               !configuration.value().absolute_path_explicit) {
+      LOG_WARNING()
+          << "Recursively processing every file in "
+          << sourcemeta::core::weakly_canonical(scan_path).string()
+          << " as the configuration file does not set an explicit path\n";
+    }
+
     if (configuration_path.has_value()) {
       merge_configuration_ignore(configuration_path.value(), blacklist,
                                  options);
@@ -410,10 +426,7 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
 
     const auto extensions{parse_extensions(options, configuration)};
 
-    handle_json_entry(configuration.has_value()
-                          ? configuration.value().absolute_path
-                          : current_path,
-                      blacklist, extensions, result, options);
+    handle_json_entry(scan_path, blacklist, extensions, result, options);
     std::sort(result.begin(), result.end(),
               [](const auto &left, const auto &right) { return left < right; });
   } else {

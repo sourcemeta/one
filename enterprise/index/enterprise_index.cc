@@ -1,7 +1,7 @@
 #include <sourcemeta/one/enterprise_index.h>
 
+#include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
-#include <sourcemeta/blaze/linter.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
@@ -12,7 +12,7 @@
 namespace sourcemeta::one {
 
 auto load_custom_lint_rules(
-    sourcemeta::core::SchemaTransformer &bundle,
+    sourcemeta::blaze::SchemaTransformer &bundle,
     std::unordered_set<std::string_view> &custom_names,
     const sourcemeta::blaze::Configuration &configuration,
     const sourcemeta::one::Resolver &resolver,
@@ -28,17 +28,18 @@ auto load_custom_lint_rules(
             return resolver(identifier, callback);
           },
           sourcemeta::blaze::default_schema_compiler, default_dialect));
-    } catch (const sourcemeta::blaze::LinterInvalidNamePatternError &error) {
+    } catch (
+        const sourcemeta::blaze::SchemaRuleInvalidNamePatternError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::LinterInvalidNamePatternError>(
+          sourcemeta::blaze::SchemaRuleInvalidNamePatternError>(
           rule_path, error.identifier(), error.regex());
-    } catch (const sourcemeta::blaze::LinterInvalidNameError &error) {
+    } catch (const sourcemeta::blaze::SchemaRuleInvalidNameError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::LinterInvalidNameError>(
+          sourcemeta::blaze::SchemaRuleInvalidNameError>(
           rule_path, error.identifier(), error.what());
-    } catch (const sourcemeta::blaze::LinterMissingNameError &) {
+    } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::LinterMissingNameError>(rule_path);
+          sourcemeta::blaze::SchemaRuleMissingNameError>(rule_path);
     } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
