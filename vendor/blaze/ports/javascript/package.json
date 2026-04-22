@@ -1,6 +1,6 @@
 {
   "name": "@sourcemeta/blaze",
-  "version": "0.0.2",
+  "version": "0.0.0",
   "description": "A pure JavaScript port of the evaluator from Blaze, a high-performance C++ JSON Schema validator. Zero dependencies. Supports Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12 with schema-specific code generation for near-native speed",
   "type": "module",
   "main": "./index.mjs",
@@ -56,10 +56,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sourcemeta/blaze.git",
-    "directory": "ports/javascript"
+    "url": "git+https://github.com/sourcemeta/jsonschema.git",
+    "directory": "vendor/blaze/ports/javascript"
   },
   "publishConfig": {
+    "provenance": true,
     "access": "public"
   },
   "files": [
