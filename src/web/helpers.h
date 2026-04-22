@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_WEB_HELPERS_H_
 
 #include <sourcemeta/core/html.h>
+#include <sourcemeta/core/markdown.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/shared.h>
 
@@ -157,8 +158,9 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 
   if (directory.defines("description")) {
-    writer.p().attribute("class", "text-secondary");
-    writer.text(directory.at("description").to_string());
+    writer.div().attribute("class", "text-secondary");
+    writer.raw(sourcemeta::core::markdown_to_html(
+        directory.at("description").to_string()));
     writer.close();
   }
 
@@ -250,9 +252,13 @@ inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 
   // Description column
-  writer.td();
-  writer.small(
-      entry.defines("description") ? entry.at("description").to_string() : "-");
+  writer.td().attribute("class", "small");
+  if (entry.defines("description")) {
+    writer.raw(sourcemeta::core::markdown_to_html(
+        entry.at("description").to_string()));
+  } else {
+    writer.text("-");
+  }
   writer.close();
 
   // Schemas column

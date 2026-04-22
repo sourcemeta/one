@@ -21,7 +21,7 @@
         "std": {
           "contents": {
             "v0": {
-              "x-sourcemeta-one:alert": "By using this schema, you confirm you agree to its <a href=\"https://github.com/sourcemeta/std/blob/main/LICENSE\">license</a>"
+              "x-sourcemeta-one:alert": "By using this schema, you confirm you agree to its [license](https://github.com/sourcemeta/std/blob/main/LICENSE)"
             }
           }
         }

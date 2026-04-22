@@ -4,6 +4,7 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
+#include <sourcemeta/core/markdown.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
@@ -59,8 +60,9 @@ auto GENERATE_WEB_SCHEMA::handler(
           w.close();
         }
         if (meta.defines("description")) {
-          w.p().attribute("class", "text-secondary");
-          w.text(meta.at("description").to_string());
+          w.div().attribute("class", "text-secondary");
+          w.raw(sourcemeta::core::markdown_to_html(
+              meta.at("description").to_string()));
           w.close();
         }
         w.a()
@@ -258,7 +260,8 @@ auto GENERATE_WEB_SCHEMA::handler(
           w.div()
               .attribute("class", "alert alert-warning mb-3")
               .attribute("role", "alert");
-          w.raw(meta.at("alert").to_string());
+          w.raw(
+              sourcemeta::core::markdown_to_html(meta.at("alert").to_string()));
           w.close();
         }
 
@@ -442,13 +445,15 @@ auto GENERATE_WEB_SCHEMA::handler(
               w.close();
             }
 
-            w.p().attribute("class", "mb-0 mt-2");
-            w.text(error.at("message").to_string());
+            w.div().attribute("class", "mb-0 mt-2");
+            w.raw(sourcemeta::core::markdown_to_html(
+                error.at("message").to_string()));
             w.close();
 
             if (error.at("description").is_string()) {
-              w.small().attribute("class", "mt-2");
-              w.text(error.at("description").to_string());
+              w.div().attribute("class", "small mt-2");
+              w.raw(sourcemeta::core::markdown_to_html(
+                  error.at("description").to_string()));
               w.close();
             }
 

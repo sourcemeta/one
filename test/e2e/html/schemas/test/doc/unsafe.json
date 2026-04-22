@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/doc/unsafe.json",
+  "title": "Unsafe test",
+  "description": "Hello <script>alert('xss')</script> world <iframe src='evil'></iframe> end",
+  "type": "string"
+}
