@@ -220,16 +220,15 @@ auto metapack_read_json(const std::filesystem::path &path)
   payload_offset += *extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
+  if (header->content_bytes == 0 || header->content_bytes > payload_data_size) {
+    return std::nullopt;
+  }
 
   if (header->encoding == MetapackEncoding::GZIP) {
     const auto decompressed{
         sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
                                 payload_data_size, header->content_bytes)};
     return sourcemeta::core::parse_json(decompressed);
-  }
-
-  if (header->content_bytes > payload_data_size) {
-    return std::nullopt;
   }
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -265,14 +264,13 @@ auto metapack_read_text(const std::filesystem::path &path)
   payload_offset += *extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
+  if (header->content_bytes == 0 || header->content_bytes > payload_data_size) {
+    return std::nullopt;
+  }
 
   if (header->encoding == MetapackEncoding::GZIP) {
     return sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
                                    payload_data_size, header->content_bytes);
-  }
-
-  if (header->content_bytes > payload_data_size) {
-    return std::nullopt;
   }
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

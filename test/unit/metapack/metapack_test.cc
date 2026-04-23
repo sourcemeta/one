@@ -8,6 +8,7 @@
 #include <chrono>     // std::chrono
 #include <cstring>    // std::memcpy
 #include <filesystem> // std::filesystem
+#include <fstream>    // std::ofstream
 #include <span>       // std::span
 #include <string>     // std::string
 #include <vector>     // std::vector
@@ -235,4 +236,28 @@ TEST(Metapack, write_and_read_text_gzip_with_extension) {
   const auto result{sourcemeta::one::metapack_read_text(path)};
   EXPECT_TRUE(result.has_value());
   EXPECT_EQ(result.value(), "Compressed text with extension\n");
+}
+
+TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
+  const auto path{test_path("bad_content_bytes.metapack")};
+
+  sourcemeta::one::metapack_write_text(
+      path, "short", "text/plain",
+      sourcemeta::one::MetapackEncoding::Identity, {},
+      std::chrono::milliseconds{0});
+
+  // Corrupt the header to advertise more payload than actually exists
+  {
+    std::fstream file{path, std::ios::binary | std::ios::in | std::ios::out};
+    ASSERT_TRUE(file.good());
+    const std::uint64_t bad_content_bytes{999999};
+    file.seekp(offsetof(sourcemeta::one::MetapackHeader, content_bytes),
+               std::ios::beg);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    file.write(reinterpret_cast<const char *>(&bad_content_bytes),
+               sizeof(bad_content_bytes));
+  }
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_FALSE(result.has_value());
 }
