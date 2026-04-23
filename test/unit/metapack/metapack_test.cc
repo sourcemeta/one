@@ -242,9 +242,8 @@ TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
   const auto path{test_path("bad_content_bytes.metapack")};
 
   sourcemeta::one::metapack_write_text(
-      path, "short", "text/plain",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      path, "short", "text/plain", sourcemeta::one::MetapackEncoding::Identity,
+      {}, std::chrono::milliseconds{0});
 
   // Corrupt the header to advertise more payload than actually exists
   {
