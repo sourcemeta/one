@@ -391,3 +391,35 @@ TEST(Configuration, base_path_deep) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
 }
+
+TEST(Configuration, is_collection_base_true) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_001.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_TRUE(configuration.is_collection_base("example/extension"));
+}
+
+TEST(Configuration, is_collection_base_false_for_page) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_001.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_FALSE(configuration.is_collection_base("example"));
+  EXPECT_FALSE(configuration.is_collection_base("test"));
+}
+
+TEST(Configuration, is_collection_base_false_for_unknown) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_001.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_FALSE(configuration.is_collection_base("nonexistent"));
+  EXPECT_FALSE(configuration.is_collection_base("example/nonexistent"));
+}
