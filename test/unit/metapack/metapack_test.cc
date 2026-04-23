@@ -160,3 +160,79 @@ TEST(Metapack, extension_nullptr_when_too_small) {
       sourcemeta::one::metapack_extension<TestExtension>(view)};
   EXPECT_EQ(read_extension, nullptr);
 }
+
+TEST(Metapack, write_and_read_text_identity) {
+  const auto path{test_path("text_identity.metapack")};
+
+  sourcemeta::one::metapack_write_text(
+      path, "Hello, world!", "text/plain",
+      sourcemeta::one::MetapackEncoding::Identity, {},
+      std::chrono::milliseconds{1});
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), "Hello, world!\n");
+}
+
+TEST(Metapack, write_and_read_text_gzip) {
+  const auto path{test_path("text_gzip.metapack")};
+
+  sourcemeta::one::metapack_write_text(path, "Compressed text content",
+                                       "text/plain",
+                                       sourcemeta::one::MetapackEncoding::GZIP,
+                                       {}, std::chrono::milliseconds{2});
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), "Compressed text content\n");
+}
+
+TEST(Metapack, write_and_read_text_identity_with_extension) {
+  const auto path{test_path("text_identity_ext.metapack")};
+
+  std::vector<std::uint8_t> extension_bytes;
+  TestExtension extension_header{};
+  extension_header.value = 99;
+  extension_header.name_length = 0;
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *header_bytes{
+      reinterpret_cast<const std::uint8_t *>(&extension_header)};
+  extension_bytes.insert(extension_bytes.end(), header_bytes,
+                         header_bytes + sizeof(TestExtension));
+
+  sourcemeta::one::metapack_write_text(
+      path, "Text with extension", "text/plain",
+      sourcemeta::one::MetapackEncoding::Identity,
+      std::span<const std::uint8_t>{extension_bytes},
+      std::chrono::milliseconds{0});
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), "Text with extension\n");
+}
+
+TEST(Metapack, write_and_read_text_gzip_with_extension) {
+  const auto path{test_path("text_gzip_ext.metapack")};
+
+  std::vector<std::uint8_t> extension_bytes;
+  TestExtension extension_header{};
+  extension_header.value = 77;
+  extension_header.name_length = 0;
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *header_bytes{
+      reinterpret_cast<const std::uint8_t *>(&extension_header)};
+  extension_bytes.insert(extension_bytes.end(), header_bytes,
+                         header_bytes + sizeof(TestExtension));
+
+  sourcemeta::one::metapack_write_text(
+      path, "Compressed text with extension", "text/plain",
+      sourcemeta::one::MetapackEncoding::GZIP,
+      std::span<const std::uint8_t>{extension_bytes},
+      std::chrono::milliseconds{0});
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), "Compressed text with extension\n");
+}

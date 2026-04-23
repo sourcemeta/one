@@ -213,10 +213,11 @@ auto metapack_read_json(const std::filesystem::path &path)
   }
 
   const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
-  payload_offset += sizeof(std::uint32_t) + *extension_size;
-  if (payload_offset > view.size()) {
+  payload_offset += sizeof(std::uint32_t);
+  if (*extension_size > view.size() - payload_offset) {
     return std::nullopt;
   }
+  payload_offset += *extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
 
@@ -227,10 +228,14 @@ auto metapack_read_json(const std::filesystem::path &path)
     return sourcemeta::core::parse_json(decompressed);
   }
 
+  if (header->content_bytes > payload_data_size) {
+    return std::nullopt;
+  }
+
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *payload_data{
       reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
-  const std::string payload_string{payload_data, payload_data_size};
+  const std::string payload_string{payload_data, header->content_bytes};
   return sourcemeta::core::parse_json(payload_string);
 }
 
@@ -253,10 +258,11 @@ auto metapack_read_text(const std::filesystem::path &path)
   }
 
   const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
-  payload_offset += sizeof(std::uint32_t) + *extension_size;
-  if (payload_offset > view.size()) {
+  payload_offset += sizeof(std::uint32_t);
+  if (*extension_size > view.size() - payload_offset) {
     return std::nullopt;
   }
+  payload_offset += *extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
 
@@ -265,10 +271,14 @@ auto metapack_read_text(const std::filesystem::path &path)
                                    payload_data_size, header->content_bytes);
   }
 
+  if (header->content_bytes > payload_data_size) {
+    return std::nullopt;
+  }
+
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *payload_data{
       reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
-  return std::string{payload_data, payload_data_size};
+  return std::string{payload_data, header->content_bytes};
 }
 
 auto metapack_info(const sourcemeta::core::FileView &view)
@@ -329,10 +339,11 @@ auto metapack_payload_offset(const sourcemeta::core::FileView &view)
   }
 
   const auto *extension_size{view.as<std::uint32_t>(offset)};
-  offset += sizeof(std::uint32_t) + *extension_size;
-  if (offset > view.size()) {
+  offset += sizeof(std::uint32_t);
+  if (*extension_size > view.size() - offset) {
     return std::nullopt;
   }
+  offset += *extension_size;
 
   return offset;
 }
