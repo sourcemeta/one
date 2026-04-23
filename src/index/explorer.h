@@ -1,12 +1,15 @@
 #ifndef SOURCEMETA_ONE_INDEX_EXPLORER_H_
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
+#include "error.h"
+
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/semver.h>
@@ -22,10 +25,12 @@
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <tuple>       // std::tuple
 #include <utility>     // std::move
+#include <variant>     // std::get_if
 #include <vector>      // std::vector
 
 static auto make_breadcrumb(const std::string &base_path,
@@ -871,6 +876,32 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     auto meta{sourcemeta::core::JSON::make_object()};
 
     inflate_metadata(configuration, relative_path, meta);
+
+    {
+      const auto entry_match{configuration.entries.find(relative_path)};
+      if (entry_match != configuration.entries.cend()) {
+        const auto *collection{
+            std::get_if<sourcemeta::one::Configuration::Collection>(
+                &entry_match->second)};
+        if (collection &&
+            collection->extra.defines("x-sourcemeta-one:documentation")) {
+#if !defined(SOURCEMETA_ONE_ENTERPRISE)
+          throw DocumentationNotSupportedError(std::filesystem::path{
+              collection->extra.at("x-sourcemeta-one:path").to_string()});
+#else
+          const auto &documentation_path{
+              collection->extra.at("x-sourcemeta-one:documentation")
+                  .to_string()};
+          std::ostringstream hash_stream;
+          sourcemeta::core::sha256(documentation_path, hash_stream);
+          meta.assign("documentation",
+                      sourcemeta::core::JSON{configuration.base_path +
+                                             "/self/v1/static/" +
+                                             hash_stream.str()});
+#endif
+        }
+      }
+    }
 
     if (!scores.empty()) {
       const auto accumulated_health = static_cast<int>(

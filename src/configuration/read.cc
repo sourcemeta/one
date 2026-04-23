@@ -124,6 +124,30 @@ auto dereference(const std::filesystem::path &collections_path,
                    sourcemeta::core::JSON{base.string()});
     }
 
+    if (input.defines("x-sourcemeta-one:documentation") &&
+        input.at("x-sourcemeta-one:documentation").is_string()) {
+      const auto documentation_value{
+          input.at("x-sourcemeta-one:documentation").to_string()};
+      if (documentation_value.starts_with("@")) {
+        throw sourcemeta::one::ConfigurationDocumentationAtPrefixError(
+            base, location.concat({"x-sourcemeta-one:documentation"}));
+      }
+
+      const std::filesystem::path documentation_path{documentation_value};
+      const auto resolved_documentation{std::filesystem::weakly_canonical(
+          base.parent_path() / documentation_path)};
+      if (!std::filesystem::is_regular_file(resolved_documentation)) {
+        throw sourcemeta::one::ConfigurationDocumentationNotFoundError(
+            base, location.concat({"x-sourcemeta-one:documentation"}),
+            resolved_documentation);
+      }
+
+      input.at("x-sourcemeta-one:documentation")
+          .into(sourcemeta::core::JSON{resolved_documentation});
+      all_files.emplace(
+          std::filesystem::weakly_canonical(resolved_documentation).native());
+    }
+
     // Recurse on children, if any
   } else if (input.defines("contents") && input.at("contents").is_object()) {
     // TODO: All of this dance because we can't get mutable iterators out of

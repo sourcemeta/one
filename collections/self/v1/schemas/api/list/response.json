@@ -125,6 +125,9 @@
     },
     "website": {
       "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+    },
+    "documentation": {
+      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
     }
   },
   "additionalProperties": false

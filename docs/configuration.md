@@ -147,6 +147,7 @@ contain the actual schema definitions that power your instance.
 | `/ignore`      | Array  | No  | None | An array of file paths (relative to the configuration file location) to exclude from the schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
+| `/x-sourcemeta-one:documentation` (**Enterprise**) | String  | No  | N/A | Path (relative to the configuration file) to a Markdown documentation file for this collection. Rendered in the web explorer below the file listing. See the [Documentation](#documentation) section for more information |
 
 !!! warning
 
@@ -294,6 +295,44 @@ level. Then register it in your configuration file:
 Rule file paths are relative to the configuration file location. You can list
 multiple rules in the array to enforce several constraints at once. Rule names
 must be unique across all rules in a collection.
+
+### Documentation
+
+!!! success "Enterprise"
+
+    Collection documentation is only available in the
+    [Enterprise](commercial.md) edition. Learn more about [commercial
+    licensing](commercial.md).
+
+The `x-sourcemeta-one:documentation` property lets you attach a Markdown file
+to a schema collection. The content is rendered in the web explorer below the
+file listing, similar to how GitHub renders a README.
+
+```json hl_lines="6" title="one.json"
+{
+  "url": "https://schemas.example.com",
+  "contents": {
+    "my-collection": {
+      "path": "./schemas",
+      "x-sourcemeta-one:documentation": "./docs/my-collection.md"
+    }
+  }
+}
+```
+
+The path is relative to the configuration file location. The documentation
+file must exist at indexing time.
+
+The Markdown content is rendered using GitHub Flavored Markdown (GFM),
+supporting tables, autolinks, strikethrough, task lists, and footnotes.
+Unsafe HTML (such as `<script>` or `<iframe>` tags) is automatically
+filtered for security.
+
+!!! note
+
+    Documentation files are limited to 1 MB in size. For larger documents,
+    consider splitting them into smaller files or linking to external
+    documentation from within the Markdown content.
 
 ## Pages
 

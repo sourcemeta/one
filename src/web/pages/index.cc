@@ -45,12 +45,14 @@ auto GENERATE_WEB_INDEX::handler(
   const auto title{configuration.html->name + " Schemas"};
   const auto &description{configuration.html->description};
   sourcemeta::core::HTMLWriter writer;
-  html::make_page(writer, configuration, canonical, title, description,
-                  [&](sourcemeta::core::HTMLWriter &w) {
-                    make_hero(w, configuration);
-                    html::make_file_manager(w, directory,
-                                            configuration.base_path);
-                  });
+  html::make_page(
+      writer, configuration, canonical, title, description,
+      [&](sourcemeta::core::HTMLWriter &w) {
+        make_hero(w, configuration);
+        w.div().attribute("class", "container-fluid p-4 flex-grow-1");
+        html::make_file_manager(w, directory, configuration.base_path);
+        w.close();
+      });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
   metapack_write_text(action.destination, writer.str(), "text/html",

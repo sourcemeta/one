@@ -25,9 +25,10 @@ Sourcemeta One is available in two editions:
   release, the code transitions to AGPL-3.0.
 
 - **Enterprise**: Includes the [Standard
-  Library](https://github.com/sourcemeta/std), additional features, and supply
-  chain security capabilities not available in the Community edition. Requires
-  a [commercial
+  Library](https://github.com/sourcemeta/std), additional features such as
+  [custom linter rules](configuration.md#linter), [collection
+  documentation](configuration.md#documentation), and supply chain security
+  capabilities not available in the Community edition. Requires a [commercial
   license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
   from Sourcemeta.
 

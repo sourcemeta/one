@@ -4,4 +4,6 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME build
 target_link_libraries(sourcemeta_one_build PUBLIC
   sourcemeta::core::json
   sourcemeta::core::io
-  sourcemeta::one::resolver)
+  sourcemeta::core::crypto
+  sourcemeta::one::resolver
+  sourcemeta::one::configuration)

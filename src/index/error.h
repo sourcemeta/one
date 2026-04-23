@@ -103,6 +103,46 @@ private:
   std::filesystem::path path_;
 };
 
+class DocumentationNotSupportedError : public std::exception {
+public:
+  DocumentationNotSupportedError(std::filesystem::path path)
+      : path_{std::move(path)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Collection documentation is only available on the enterprise "
+           "edition";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
+class StaticFileTooLargeError : public std::exception {
+public:
+  StaticFileTooLargeError(std::filesystem::path path, std::size_t size)
+      : path_{std::move(path)}, size_{size} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Static file exceeds the maximum allowed size";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto size() const noexcept -> std::size_t {
+    return this->size_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::size_t size_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

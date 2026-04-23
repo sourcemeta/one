@@ -6,6 +6,7 @@
 #endif
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 
 #include <sourcemeta/one/build_error.h>
@@ -46,6 +47,7 @@ struct BuildPlan {
       Configuration,
       Version,
       Routes,
+      StaticFile,
       Remove
     };
 
@@ -106,7 +108,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const Resolver::Views &schemas, const std::string_view version,
            bool incremental, const std::string_view comment,
-           const BuildLimits &limits) -> BuildPlan;
+           const BuildLimits &limits, const Configuration &configuration)
+    -> BuildPlan;
 
 } // namespace sourcemeta::one
 

@@ -24,7 +24,8 @@ namespace sourcemeta::one {
   X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
   X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \
-  X(SERVE_STATIC_V1, ActionServeStatic_v1)
+  X(SERVE_STATIC_V1, ActionServeStatic_v1)                                     \
+  X(SERVE_STATIC_FILE_V1, ActionServeStaticFile_v1)
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class) ACTION_TYPE_##Name,
 

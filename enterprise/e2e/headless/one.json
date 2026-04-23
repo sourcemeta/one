@@ -1,13 +1,16 @@
 {
   "url": "http://localhost:8000",
+  "html": false,
   "extends": [ "@self/v1" ],
   "contents": {
     "test": {
+      "baseUri": "https://example.com/schemas",
       "path": "./schemas/test",
-      "lint": {
-        "rules": [ "./rules/camelcase.json" ]
-      },
       "x-sourcemeta-one:documentation": "./docs/test-readme.md"
+    },
+    "other": {
+      "baseUri": "https://example.com/other",
+      "path": "./schemas/other"
     }
   }
 }

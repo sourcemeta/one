@@ -59,7 +59,7 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
     -> void;
 
-static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
+static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
     &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
     &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
@@ -82,6 +82,7 @@ static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
     &sourcemeta::one::GENERATE_CONFIGURATION::handler,
     &sourcemeta::one::GENERATE_VERSION::handler,
     &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
+    &sourcemeta::one::GENERATE_STATIC_FILE::handler,
     nullptr,
 }};
 
@@ -504,19 +505,19 @@ static auto index_main(const std::string_view &program,
               ? parse_numeric_option(app, "maximum-direct-directory-entries")
               : 1000};
 
-  auto produce_plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce, build_type,
-                             entries, canonical_output, resolver.data(),
-                             this_version, incremental, comment, limits)};
+  auto produce_plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Produce, build_type, entries,
+      canonical_output, resolver.data(), this_version, incremental, comment,
+      limits, configuration)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
   PROFILE_END(profiling, "Producing (Build)");
 
-  auto combine_plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Combine, build_type,
-                             entries, canonical_output, resolver.data(),
-                             this_version, incremental, comment, limits)};
+  auto combine_plan{sourcemeta::one::delta(
+      sourcemeta::one::BuildPhase::Combine, build_type, entries,
+      canonical_output, resolver.data(), this_version, incremental, comment,
+      limits, configuration)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");
@@ -617,6 +618,21 @@ auto main(int argc, char *argv[]) noexcept -> int {
                sourcemeta::core::to_string(error.location()),
                error.target().string());
     return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ConfigurationDocumentationNotFoundError &error) {
+    std::print(stderr,
+               "error: {}\n  from path {}\n  at location \"{}\"\n"
+               "  to path {}\n",
+               error.what(), error.from().string(),
+               sourcemeta::core::to_string(error.location()),
+               error.target().string());
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ConfigurationDocumentationAtPrefixError &error) {
+    std::print(stderr, "error: {}\n  from path {}\n  at location \"{}\"\n",
+               error.what(), error.from().string(),
+               sourcemeta::core::to_string(error.location()));
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
                &error) {
     std::print(stderr,
@@ -656,6 +672,14 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::CustomRuleError &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::DocumentationNotSupportedError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::StaticFileTooLargeError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n  with size {}\n",
+               error.what(), error.path().string(), error.size());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {

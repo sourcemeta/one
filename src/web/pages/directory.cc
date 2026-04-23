@@ -7,6 +7,10 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/one/enterprise_index.h>
+#endif
+
 #include <cassert> // assert
 #include <chrono>  // std::chrono
 
@@ -31,15 +35,24 @@ auto GENERATE_WEB_DIRECTORY::handler(
       directory.defines("description")
           ? directory.at("description").to_string()
           : ("Schemas located at " + directory.at("path").to_string())};
+
   sourcemeta::core::HTMLWriter writer;
-  html::make_page(writer, configuration, canonical, title, description,
-                  [&](sourcemeta::core::HTMLWriter &w) {
-                    html::make_breadcrumb(w, directory.at("breadcrumb"),
-                                          configuration.base_path);
-                    html::make_directory_header(w, directory);
-                    html::make_file_manager(w, directory,
-                                            configuration.base_path);
-                  });
+  html::make_page(
+      writer, configuration, canonical, title, description,
+      [&](sourcemeta::core::HTMLWriter &w) {
+        html::make_breadcrumb(w, directory.at("breadcrumb"),
+                              configuration.base_path);
+        html::make_directory_header(w, directory);
+        w.div().attribute("class", "container-fluid p-4 flex-grow-1");
+        html::make_file_manager(w, directory, configuration.base_path);
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+        if (directory.defines("documentation") &&
+            action.dependencies.size() > 1) {
+          render_documentation(w, action.dependencies.at(1));
+        }
+#endif
+        w.close();
+      });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
   metapack_write_text(action.destination, writer.str(), "text/html",
