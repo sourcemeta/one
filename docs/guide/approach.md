@@ -78,12 +78,12 @@ via pull requests, and a human-friendly event catalog on top. The pattern is
 the same whether the contracts are JSON Schemas powering REST APIs or AsyncAPI
 files powering event streams.
 
-Annegret Junker and Fabrizio Lazzaretti's [Crafting Great APIs with
-Domain-Driven
+In [Crafting Great APIs with Domain-Driven
 Design](https://www.amazon.com/Crafting-Great-APIs-Domain-Driven-Design/dp/B0DYNMWP67)
-(Apress, 2025) advocate for APIOps as a practice that brings API design,
-implementation, and operation closer to each other, doing for APIs what DevOps
-does for code. At its core, the process is rooted on storing API definitions and
+(Apress, 2025), Annegret Junker and Fabrizio Lazzaretti also advocate for
+APIOps as a practice that brings API design, implementation, and operation
+closer to each other, doing for APIs what DevOps does for code. At its core,
+the process is rooted in storing API definitions and
 their declarative configurations in a central version-controlled repository, and
 reconciling the desired state of the API against it.
 
