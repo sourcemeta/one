@@ -36,9 +36,9 @@ customer records after 40 acquisitions, each with its own definition of
 **Discoverability.** A sixth team arrives. They search for existing
 definitions, find nothing organised or trustworthy, and write their own. The
 problem does not just persist, it compounds. According to [Postman's 2025 State
-of the API Report](https://www.postman.com/state-of-api/2025/), **34% of
-developers cannot find the APIs they need within their own organisation**, and
-**55% struggle with inconsistent documentation**. Teams are rebuilding work
+of the API Report](https://www.postman.com/state-of-api/2025/), *34% of
+developers cannot find the APIs they need within their own organisation*, and
+*55% struggle with inconsistent documentation*. Teams are rebuilding work
 that already exists because there is no reliable way to know what already
 exists and to actually reuse it.
 
@@ -84,17 +84,17 @@ This pattern is not a niche complaint. It became the norm.
 
 [SmartBear's 2023 State of Software Quality: API
 report](https://smartbear.com/state-of-software-quality/api/), surveying over
-1,100 API practitioners across 17 industries, found that **API standardisation
-is the top challenge cited by 51% of organisations**, ahead of security,
+1,100 API practitioners across 17 industries, found that *API standardisation
+is the top challenge cited by 51% of organisations*, ahead of security,
 tooling, and performance. It has held the top spot in every edition of the
 survey since 2016.
 
 [Axway's 2024 State of Enterprise API Maturity
 report](https://resources.axway.com/build-api-marketplace/rpt-state-of-enterprise-api-maturity-in-2024-en),
 based on 600 senior IT and business decision-makers across nine countries,
-found that **78% of enterprise leaders do not know how many APIs their
-organisation has**, and **74% acknowledge that more than 20% of their APIs are
-entirely unmanaged**. If organisations cannot account for their APIs, the
+found that *78% of enterprise leaders do not know how many APIs their
+organisation has*, and *74% acknowledge that more than 20% of their APIs are
+entirely unmanaged*. If organisations cannot account for their APIs, the
 things that are at least visible as endpoints, as documentation pages, as
 things that break in production, consider how much less visible the schema
 layer inside those APIs must be. APIs surface in logs, in incidents, in partner
@@ -137,7 +137,14 @@ an island. Individually excellent. Collectively incoherent.
 ## But what about API spec first?
 
 Designing the contract before writing code is genuinely better than the
-alternative. But API spec first still takes the OpenAPI specification as its
+alternative. As Junker and Lazzaretti argue in [Crafting Great APIs with
+Domain-Driven
+Design](https://www.amazon.com/Crafting-Great-APIs-Domain-Driven-Design/dp/B0DYNMWP67)
+(Apress, 2025), code-first specifications are typically difficult to read
+because they are generated out of quite technical code, making it harder to
+involve stakeholders, testers, and technical writers.
+
+But API spec first still takes the OpenAPI specification as its
 atom, which means the schemas inside it remain ungoverned, uninventoried, and
 unshared across teams.  You can be entirely rigorous about your OpenAPI spec
 and still end up with five definitions of `Customer`. The discipline is real.
