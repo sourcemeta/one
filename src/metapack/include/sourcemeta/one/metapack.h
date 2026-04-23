@@ -84,6 +84,10 @@ auto metapack_read_json(const std::filesystem::path &path)
     -> std::optional<sourcemeta::core::JSON>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
+auto metapack_read_text(const std::filesystem::path &path)
+    -> std::optional<std::string>;
+
+SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_info(const sourcemeta::core::FileView &view)
     -> std::optional<MetapackInfo>;
 
