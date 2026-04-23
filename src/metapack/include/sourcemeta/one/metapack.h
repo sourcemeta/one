@@ -20,6 +20,7 @@ namespace sourcemeta::one {
 
 static constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
 static constexpr std::uint16_t METAPACK_VERSION{1};
+static constexpr std::uint64_t METAPACK_MAX_DECOMPRESSION_RATIO{1024};
 
 enum class MetapackEncoding : std::uint8_t { Identity = 0, GZIP = 1 };
 
