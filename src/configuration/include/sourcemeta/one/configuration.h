@@ -68,6 +68,13 @@ struct Configuration {
     return value == nullptr || !value->is_boolean() || value->to_boolean();
   }
 
+  [[nodiscard]] auto
+  is_collection_base(const std::filesystem::path &relative_path) const -> bool {
+    const auto match{this->entries.find(relative_path)};
+    return match != this->entries.cend() &&
+           std::get_if<Collection>(&match->second) != nullptr;
+  }
+
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;
 };
