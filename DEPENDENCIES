@@ -3,9 +3,8 @@ uwebsockets https://github.com/uNetworking/uWebSockets v20.77.0
 core https://github.com/sourcemeta/core 757a8a1ab62f3000a6c49288075084a2ced962c5
 blaze https://github.com/sourcemeta/blaze cc001b6957983bcdd69c50db48f26ede2303e4ba
 jsonbinpack https://github.com/sourcemeta/jsonbinpack 8b93f69a1270d8d05eed6bb9e106c4d6613bb257
-hydra https://github.com/sourcemeta/hydra 8cbbe5739c31d282a822dece8ed36ef0120cccbe
+jsonschema https://github.com/sourcemeta/jsonschema e3398b968fb71a43bfe50651edf5019e72db0dbd
 libdeflate https://github.com/ebiggers/libdeflate v1.25
-jsonschema https://github.com/sourcemeta/jsonschema 16bf27099681a56dd0aa88e9712b14f68b054f65
 bootstrap https://github.com/twbs/bootstrap v5.3.3
 bootstrap-icons https://github.com/twbs/icons v1.11.3
 collections/sourcemeta/std/v0 https://github.com/sourcemeta/std v0.4.0
