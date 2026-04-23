@@ -225,7 +225,8 @@ auto metapack_read_json(const std::filesystem::path &path)
   }
 
   if (header->encoding == MetapackEncoding::GZIP) {
-    if (header->content_bytes / payload_data_size > METAPACK_MAX_DECOMPRESSION_RATIO) {
+    if (header->content_bytes / payload_data_size >
+        METAPACK_MAX_DECOMPRESSION_RATIO) {
       return std::nullopt;
     }
 
@@ -277,7 +278,8 @@ auto metapack_read_text(const std::filesystem::path &path)
   }
 
   if (header->encoding == MetapackEncoding::GZIP) {
-    if (header->content_bytes / payload_data_size > METAPACK_MAX_DECOMPRESSION_RATIO) {
+    if (header->content_bytes / payload_data_size >
+        METAPACK_MAX_DECOMPRESSION_RATIO) {
       return std::nullopt;
     }
 
