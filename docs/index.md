@@ -89,6 +89,29 @@ without building complex JSON Schema infrastructure from scratch.
 
 </div>
 
+## Stateless by Design
+
+Sourcemeta One has no database, no write path, and no stateful persistence. It
+deploys out of a Git repository that represents the source of truth in your
+organisation. This is not a missing feature. It is the core architectural
+decision that makes everything else stronger.
+
+This means that the only way to change what the registry serves is to change
+what is in Git, which means going through a pull request: proposable,
+reviewable, reversible, and audited by default. This is a direct application of
+[GitOps](https://opengitops.dev/), where governance is not a policy people
+follow but a structural property of the system.
+
+In comparison, stateful registries that accept writes directly over their API
+must bolt approval workflows on top, rebuilding what Git already provides
+natively. By removing the write path entirely, every schema change
+automatically flows through the same review process, branch protection rules,
+and CI checks your engineers already use for code. No additional plugin system
+required.
+
+For a deeper look at this approach and how it applies to schema-first API
+governance, see our [guide](guide/approach.md).
+
 ## Enterprise Ready
 
 **Zero-dependency deployment**: Maintain complete control over your schema data
