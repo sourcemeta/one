@@ -238,6 +238,41 @@ TEST(Metapack, write_and_read_text_gzip_with_extension) {
   EXPECT_EQ(result.value(), "Compressed text with extension\n");
 }
 
+TEST(Metapack, write_and_read_json_gzip_large) {
+  const auto path{test_path("gzip_large.metapack")};
+  auto document{sourcemeta::core::JSON::make_object()};
+  for (int index = 0; index < 200; index++) {
+    document.assign("key_" + std::to_string(index),
+                    sourcemeta::core::JSON{"value_" + std::to_string(index)});
+  }
+
+  sourcemeta::one::metapack_write_json(path, document, "application/json",
+                                       sourcemeta::one::MetapackEncoding::GZIP,
+                                       {}, std::chrono::milliseconds{0});
+
+  const auto result{sourcemeta::one::metapack_read_json(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_TRUE(result.value().is_object());
+  EXPECT_EQ(result.value().at("key_0").to_string(), "value_0");
+  EXPECT_EQ(result.value().at("key_199").to_string(), "value_199");
+}
+
+TEST(Metapack, write_and_read_text_gzip_large) {
+  const auto path{test_path("text_gzip_large.metapack")};
+  std::string large_text;
+  for (int index = 0; index < 200; index++) {
+    large_text += "This is line number " + std::to_string(index) + ". ";
+  }
+
+  sourcemeta::one::metapack_write_text(path, large_text, "text/plain",
+                                       sourcemeta::one::MetapackEncoding::GZIP,
+                                       {}, std::chrono::milliseconds{0});
+
+  const auto result{sourcemeta::one::metapack_read_text(path)};
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), large_text + "\n");
+}
+
 TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
   const auto path{test_path("bad_content_bytes.metapack")};
 
