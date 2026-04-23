@@ -54,8 +54,8 @@ Accept: text/html
 HTTP 200
 Content-Type: text/html
 [Asserts]
-xpath "boolean(//hr)" == true
-xpath "boolean(//h1[text()='Test Collection'])" == true
+xpath "boolean(//div[contains(@class, 'card')]//div[contains(@class, 'documentation')])" == true
+xpath "boolean(//div[contains(@class, 'documentation')]//h1[text()='Test Collection'])" == true
 xpath "boolean(//strong[text()='test schemas'])" == true
 xpath "boolean(//a[@href='https://example.com/guide'][text()='example guide'])" == true
 xpath "boolean(//em[text()='emphasis'])" == true
@@ -67,8 +67,8 @@ Accept: text/html
 HTTP 200
 Content-Type: text/html
 [Asserts]
-xpath "count(//div[contains(@class, 'pb-4')]//script)" == 0
-xpath "count(//div[contains(@class, 'pb-4')]//iframe)" == 0
+xpath "count(//div[contains(@class, 'documentation')]//script)" == 0
+xpath "count(//div[contains(@class, 'documentation')]//iframe)" == 0
 
 # The self collection does not have the documentation field
 GET {{base}}/self/v1/api/list/self
