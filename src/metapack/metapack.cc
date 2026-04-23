@@ -234,6 +234,43 @@ auto metapack_read_json(const std::filesystem::path &path)
   return sourcemeta::core::parse_json(payload_string);
 }
 
+auto metapack_read_text(const std::filesystem::path &path)
+    -> std::optional<std::string> {
+  sourcemeta::core::FileView view{path};
+  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
+    return std::nullopt;
+  }
+
+  const auto *header{view.as<MetapackHeader>()};
+  if (header->magic != METAPACK_MAGIC ||
+      header->format_version != METAPACK_VERSION) {
+    return std::nullopt;
+  }
+
+  auto payload_offset{sizeof(MetapackHeader) + header->mime_length};
+  if (payload_offset + sizeof(std::uint32_t) > view.size()) {
+    return std::nullopt;
+  }
+
+  const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
+  payload_offset += sizeof(std::uint32_t) + *extension_size;
+  if (payload_offset > view.size()) {
+    return std::nullopt;
+  }
+
+  const auto payload_data_size{view.size() - payload_offset};
+
+  if (header->encoding == MetapackEncoding::GZIP) {
+    return sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
+                                   payload_data_size, header->content_bytes);
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *payload_data{
+      reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
+  return std::string{payload_data, payload_data_size};
+}
+
 auto metapack_info(const sourcemeta::core::FileView &view)
     -> std::optional<MetapackInfo> {
   if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
