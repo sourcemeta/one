@@ -1,9 +1,8 @@
 #include <sourcemeta/one/metapack.h>
 
 #include <sourcemeta/core/crypto.h>
+#include <sourcemeta/core/gzip.h>
 #include <sourcemeta/core/io.h>
-
-#include <sourcemeta/one/gzip.h>
 
 #include <cassert>     // assert
 #include <cstring>     // std::memcpy
@@ -35,9 +34,7 @@ static auto write_binary_header(std::ostream &output,
   header.content_bytes = uncompressed_size;
   header.duration = duration.count();
 
-  std::ostringstream checksum_hex;
-  sourcemeta::core::sha256(payload, checksum_hex);
-  const auto hex_string{checksum_hex.str()};
+  const auto hex_string{sourcemeta::core::sha256(payload)};
   for (std::size_t index{0}; index < 32 && index * 2 + 1 < hex_string.size();
        index++) {
     const auto byte_string{hex_string.substr(index * 2, 2)};
@@ -76,7 +73,7 @@ static auto write_metapack(const std::filesystem::path &destination,
                       content.size());
 
   if (encoding == MetapackEncoding::GZIP) {
-    const auto compressed{sourcemeta::one::gzip(
+    const auto compressed{sourcemeta::core::gzip(
         reinterpret_cast<const std::uint8_t *>(content.data()),
         content.size())};
     output.write(compressed.data(),
@@ -231,8 +228,8 @@ auto metapack_read_json(const std::filesystem::path &path)
     }
 
     const auto decompressed{
-        sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
-                                payload_data_size, header->content_bytes)};
+        sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
+                                 payload_data_size, header->content_bytes)};
     return sourcemeta::core::parse_json(decompressed);
   }
 
@@ -283,8 +280,8 @@ auto metapack_read_text(const std::filesystem::path &path)
       return std::nullopt;
     }
 
-    return sourcemeta::one::gunzip(view.as<std::uint8_t>(payload_offset),
-                                   payload_data_size, header->content_bytes);
+    return sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
+                                    payload_data_size, header->content_bytes);
   }
 
   if (header->content_bytes > payload_data_size) {
