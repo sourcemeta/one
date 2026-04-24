@@ -16,10 +16,14 @@
     "required": [ "from", "to" ],
     "properties": {
       "from": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "type": "string",
+        "format": "uri"
       },
       "to": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "type": "string",
+        "format": "uri"
       }
     },
     "additionalProperties": false

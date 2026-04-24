@@ -1,18 +1,4 @@
 {
   "x-sourcemeta-one:provenance": "@@COLLECTION_NAMESPACE@",
-  "path": "./schemas",
-  "resolve": {
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path": "/self/v1/schemas/common/ieee/posix/2017/path.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address": "/self/v1/schemas/common/ietf/email/address.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer": "/self/v1/schemas/common/ietf/jsonpointer/pointer.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/problem-details/problem": "/self/v1/schemas/common/ietf/problem-details/problem.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri": "/self/v1/schemas/common/ietf/uri/uri.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference": "/self/v1/schemas/common/ietf/uri/uri-reference.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative": "/self/v1/schemas/common/ietf/uri/uri-relative.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url": "/self/v1/schemas/common/ietf/uri/url.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/urn": "/self/v1/schemas/common/ietf/uri/urn.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-absolute": "/self/v1/schemas/common/ieee/posix/2017/path-absolute.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path-relative": "/self/v1/schemas/common/ieee/posix/2017/path-relative.json",
-    "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/http/status": "/self/v1/schemas/common/ietf/http/status.json"
-  }
+  "path": "./schemas"
 }

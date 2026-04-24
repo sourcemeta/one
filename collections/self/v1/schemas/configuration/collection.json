@@ -25,37 +25,48 @@
       "type": "boolean"
     },
     "x-sourcemeta-one:path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+      "$ref": "./path.json"
     },
     "x-sourcemeta-one:provenance": {
       "$ref": "./rpath.json"
     },
     "baseUri": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri-reference"
     },
     "defaultDialect": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     },
     "email": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "email"
     },
     "github": {
       "type": "string"
     },
     "path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+      "$ref": "./path.json"
     },
     "resolve": {
       "type": "object",
       "propertyNames": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "format": "uri-reference"
       },
       "additionalProperties": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-reference"
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "type": "string",
+        "format": "uri-reference"
       }
     },
     "website": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     },
     "lint": {
       "type": "object",
@@ -63,7 +74,7 @@
         "rules": {
           "type": "array",
           "items": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+            "$ref": "./path.json"
           }
         }
       },
@@ -72,7 +83,7 @@
     "ignore": {
       "type": "array",
       "items": {
-        "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ieee/posix/2017/path"
+        "$ref": "./path.json"
       }
     }
   },

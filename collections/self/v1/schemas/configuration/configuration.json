@@ -33,7 +33,9 @@
               "type": "string"
             },
             "url": {
-              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+              "$comment": "TODO: Use Format Assertion when supported on Blaze",
+              "type": "string",
+              "format": "uri"
             }
           },
           "additionalProperties": false
@@ -51,7 +53,9 @@
       "additionalProperties": false
     },
     "url": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     }
   },
   "additionalProperties": false

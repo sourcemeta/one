@@ -36,14 +36,18 @@
             "type": "string"
           },
           "path": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "uri-reference"
           }
         },
         "additionalProperties": false
       }
     },
     "email": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "email"
     },
     "entries": {
       "type": "array",
@@ -63,7 +67,9 @@
                 "const": "directory"
               },
               "email": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "email"
               },
               "github": {
                 "type": "string"
@@ -81,10 +87,14 @@
                 "type": "string"
               },
               "path": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri-reference"
               },
               "website": {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri"
               }
             },
             "additionalProperties": false
@@ -118,13 +128,19 @@
       "minimum": 0
     },
     "path": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri-reference"
     },
     "url": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     },
     "website": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     }
   },
   "additionalProperties": false

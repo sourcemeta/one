@@ -34,10 +34,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 1
-jsonpath "$[0].from" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
-jsonpath "$[0].to" == "{{base}}/self/v1/schemas/common/ietf/uri/url"
-jsonpath "$[0].at" == "/items/properties/from/$ref"
+jsonpath "$" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

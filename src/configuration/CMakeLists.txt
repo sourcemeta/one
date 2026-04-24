@@ -4,7 +4,6 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
 
 # Compile the configuration schema
 set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
-set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/v0/schemas/2020-12")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
   COMMAND "${JSONSCHEMA_BIN}" compile
     --include CONFIGURATION
@@ -16,16 +15,8 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
     "${ONE_SCHEMAS}/configuration/contents.json"
     "${ONE_SCHEMAS}/configuration/extends.json"
     "${ONE_SCHEMAS}/configuration/page.json"
-    "${ONE_SCHEMAS}/configuration/rpath.json"
-    "${STD_SCHEMAS}/ietf/email/address.json"
-    "${STD_SCHEMAS}/ieee/posix/2017/path.json"
-    "${STD_SCHEMAS}/ieee/posix/2017/path-absolute.json"
-    "${STD_SCHEMAS}/ieee/posix/2017/path-relative.json"
-    "${STD_SCHEMAS}/ietf/uri/uri-reference.json"
-    "${STD_SCHEMAS}/ietf/uri/uri-relative.json"
-    "${STD_SCHEMAS}/ietf/uri/uri.json"
-    "${STD_SCHEMAS}/ietf/uri/url.json"
-    "${STD_SCHEMAS}/ietf/uri/urn.json")
+    "${ONE_SCHEMAS}/configuration/path.json"
+    "${ONE_SCHEMAS}/configuration/rpath.json")
 
 target_include_directories(sourcemeta_one_configuration PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 

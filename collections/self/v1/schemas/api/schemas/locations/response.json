@@ -46,13 +46,19 @@
           "enum": [ "resource", "anchor", "pointer", "subschema" ]
         },
         "base": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "baseDialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "dialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "parent": {
           "anyOf": [
@@ -60,21 +66,29 @@
               "type": "null"
             },
             {
-              "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+              "$comment": "TODO: Use Format Assertion when supported on Blaze",
+              "type": "string",
+              "format": "json-pointer"
             }
           ]
         },
         "pointer": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "json-pointer"
         },
         "position": {
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "json-pointer"
         },
         "root": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "propertyName": {
           "type": "boolean"

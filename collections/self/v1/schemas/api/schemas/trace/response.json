@@ -32,10 +32,14 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "json-pointer"
           },
           "instanceLocation": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/jsonpointer/pointer"
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "json-pointer"
           },
           "instancePositions": {
             "type": "array",
@@ -47,7 +51,9 @@
             }
           },
           "keywordLocation": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "uri"
           },
           "message": {
             "type": [ "string", "null" ]
@@ -61,7 +67,9 @@
                 "type": "null"
               },
               {
-                "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri"
               }
             ]
           }

@@ -131,10 +131,10 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.bytes" == 1422
+jsonpath "$.bytes" == 1558
 jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.health" == 100
-jsonpath "$.dependencies" == 16
+jsonpath "$.dependencies" == 6
 jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.identifier" == "{{base}}/self/v1/schemas/configuration/configuration"
 jsonpath "$.path" == "/self/v1/schemas/configuration/configuration"

@@ -37,7 +37,9 @@
             "type": "string"
           },
           "path": {
-            "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "uri-reference"
           }
         },
         "additionalProperties": false
@@ -73,14 +75,18 @@
           "type": [ "string", "null" ]
         },
         "baseDialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "bytes": {
           "type": "integer",
           "minimum": 0
         },
         "dialect": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "health": {
           "type": "integer",
@@ -88,10 +94,14 @@
           "minimum": 0
         },
         "identifier": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
         },
         "path": {
-          "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/uri-relative"
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri-reference"
         },
         "provenance": {
           "type": [ "string", "null" ]
