@@ -9,6 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
+  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "html": false,
   "contents": {
@@ -49,14 +50,14 @@ EOF
 
 # It should fail with a low limit
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
-  --maximum-direct-directory-entries 2 \
+  --maximum-direct-directory-entries 2 --concurrency 1 \
   2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 error: Too many entries in a single directory
-  at path $(realpath "$TMP")/output/schemas/example/schemas
-  with count 3
+  at path $(realpath "$TMP")/output/schemas/self/v1/schemas/api/schemas
+  with count 11
 EOF
 
 tail -n 3 "$TMP/output.txt" > "$TMP/actual.txt"
@@ -67,7 +68,8 @@ rm -rf "$TMP/output"
 "$1" --skip-banner "$TMP/one.json" "$TMP/output"
 
 # It should succeed when total schemas exceed the limit but are spread
-# across a directory hierarchy where no single directory has more than 2
+# across a directory hierarchy where no single directory has more than the limit.
+# The limit must be above 11 since self/v1's api/schemas directory has 11 entries.
 rm -rf "$TMP/output"
 rm -rf "$TMP/schemas"
 mkdir -p "$TMP/schemas/a" "$TMP/schemas/b"
@@ -94,4 +96,4 @@ cat << 'EOF' > "$TMP/schemas/b/three.json"
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
-  --maximum-direct-directory-entries 2
+  --maximum-direct-directory-entries 12

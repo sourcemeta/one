@@ -9,6 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
+  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -59,12 +60,52 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/custom-meta.json (#1)
 Detecting: $(realpath "$TMP")/schemas/test.json (#2)
-( 50%) Resolving: custom-meta.json
-(100%) Resolving: test.json
-(  2%) Producing: configuration.json
-(  5%) Producing: version.json
-(  8%) Producing: explorer/%/404.metapack
-( 11%) Producing: schemas/example/schemas/custom-meta/%/schema.metapack
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#22)
+(  4%) Resolving: custom-meta.json
+(  9%) Resolving: test.json
+( 13%) Resolving: path.json
+( 18%) Resolving: extends.json
+( 22%) Resolving: configuration.json
+( 27%) Resolving: contents.json
+( 31%) Resolving: collection.json
+( 36%) Resolving: rpath.json
+( 40%) Resolving: page.json
+( 45%) Resolving: error.json
+( 50%) Resolving: response.json
+( 54%) Resolving: response.json
+( 59%) Resolving: response.json
+( 63%) Resolving: response.json
+( 68%) Resolving: position.json
+( 72%) Resolving: response.json
+( 77%) Resolving: response.json
+( 81%) Resolving: response.json
+( 86%) Resolving: response.json
+( 90%) Resolving: response.json
+( 95%) Resolving: response.json
+(100%) Resolving: response.json
+(  0%) Producing: configuration.json
+(  0%) Producing: version.json
+(  0%) Producing: explorer/%/404.metapack
+(  1%) Producing: schemas/example/schemas/custom-meta/%/schema.metapack
 error: The schema does not adhere to its metaschema
 The value was expected to be of type object but it was of type string
   at instance location "/\$vocabulary"

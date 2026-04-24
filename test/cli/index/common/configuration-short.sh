@@ -9,6 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
+  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -35,8 +36,26 @@ EOF
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" -g > "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 {
-  "url": "https://sourcemeta.com/",
   "contents": {
+    "self": {
+      "title": "Self",
+      "description": "The schemas that define the current version of this instance",
+      "email": "hello@sourcemeta.com",
+      "github": "sourcemeta/one",
+      "website": "https://www.sourcemeta.com",
+      "contents": {
+        "v1": {
+          "contents": {
+            "schemas": {
+              "x-sourcemeta-one:provenance": "@self/v1",
+              "path": "$ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas",
+              "x-sourcemeta-one:path": "$ONE_PREFIX/share/sourcemeta/one/collections/self/v1/jsonschema.json",
+              "baseUri": "https://sourcemeta.com/"
+            }
+          }
+        }
+      }
+    },
     "example": {
       "contents": {
         "schemas": {
@@ -47,6 +66,7 @@ cat << EOF > "$TMP/expected.txt"
       }
     }
   },
+  "url": "https://sourcemeta.com/",
   "html": {
     "name": "Sourcemeta",
     "description": "The next-generation JSON Schema platform"

@@ -9,6 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 { "url": "https://sourcemeta.com/" }
+  "extends": [ "@self/v1" ],
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency abc 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
