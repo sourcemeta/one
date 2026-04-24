@@ -42,74 +42,74 @@ remove_threads_information() {
   fi
 }
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" -v --concurrency 1 2> "$TMP/output.txt"
+"$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" -v --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#2)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#21)
 (  4%) Resolving: example/schemas/foo.json
 https://example.com/foo => https://sourcemeta.com/example/schemas/foo
-(  9%) Resolving: self/v1/schemas/configuration/path.json
-https://sourcemeta.com/configuration/path => https://sourcemeta.com/self/v1/schemas/configuration/path
-( 14%) Resolving: self/v1/schemas/configuration/extends.json
-https://sourcemeta.com/configuration/extends => https://sourcemeta.com/self/v1/schemas/configuration/extends
-( 19%) Resolving: self/v1/schemas/configuration/configuration.json
-https://sourcemeta.com/configuration/configuration => https://sourcemeta.com/self/v1/schemas/configuration/configuration
-( 23%) Resolving: self/v1/schemas/configuration/contents.json
-https://sourcemeta.com/configuration/contents => https://sourcemeta.com/self/v1/schemas/configuration/contents
-( 28%) Resolving: self/v1/schemas/configuration/collection.json
-https://sourcemeta.com/configuration/collection => https://sourcemeta.com/self/v1/schemas/configuration/collection
-( 33%) Resolving: self/v1/schemas/configuration/rpath.json
-https://sourcemeta.com/configuration/rpath => https://sourcemeta.com/self/v1/schemas/configuration/rpath
-( 38%) Resolving: self/v1/schemas/configuration/page.json
-https://sourcemeta.com/configuration/page => https://sourcemeta.com/self/v1/schemas/configuration/page
-( 42%) Resolving: self/v1/schemas/api/error.json
+(  9%) Resolving: self/v1/schemas/api/error.json
 https://sourcemeta.com/api/error => https://sourcemeta.com/self/v1/schemas/api/error
-( 47%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-https://sourcemeta.com/api/schemas/trace/response => https://sourcemeta.com/self/v1/schemas/api/schemas/trace/response
-( 52%) Resolving: self/v1/schemas/api/schemas/health/response.json
-https://sourcemeta.com/api/schemas/health/response => https://sourcemeta.com/self/v1/schemas/api/schemas/health/response
-( 57%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-https://sourcemeta.com/api/schemas/dependents/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependents/response
-( 61%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-https://sourcemeta.com/api/schemas/dependencies/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependencies/response
-( 66%) Resolving: self/v1/schemas/api/schemas/position.json
-https://sourcemeta.com/api/schemas/position => https://sourcemeta.com/self/v1/schemas/api/schemas/position
-( 71%) Resolving: self/v1/schemas/api/schemas/search/response.json
-https://sourcemeta.com/api/schemas/search/response => https://sourcemeta.com/self/v1/schemas/api/schemas/search/response
-( 76%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-https://sourcemeta.com/api/schemas/evaluate/response => https://sourcemeta.com/self/v1/schemas/api/schemas/evaluate/response
-( 80%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-https://sourcemeta.com/api/schemas/locations/response => https://sourcemeta.com/self/v1/schemas/api/schemas/locations/response
-( 85%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-https://sourcemeta.com/api/schemas/positions/response => https://sourcemeta.com/self/v1/schemas/api/schemas/positions/response
-( 90%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-https://sourcemeta.com/api/schemas/metadata/response => https://sourcemeta.com/self/v1/schemas/api/schemas/metadata/response
-( 95%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-https://sourcemeta.com/api/schemas/stats/response => https://sourcemeta.com/self/v1/schemas/api/schemas/stats/response
-(100%) Resolving: self/v1/schemas/api/list/response.json
+( 14%) Resolving: self/v1/schemas/api/list/response.json
 https://sourcemeta.com/api/list/response => https://sourcemeta.com/self/v1/schemas/api/list/response
+( 19%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+https://sourcemeta.com/api/schemas/dependencies/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependencies/response
+( 23%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+https://sourcemeta.com/api/schemas/dependents/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependents/response
+( 28%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+https://sourcemeta.com/api/schemas/evaluate/response => https://sourcemeta.com/self/v1/schemas/api/schemas/evaluate/response
+( 33%) Resolving: self/v1/schemas/api/schemas/health/response.json
+https://sourcemeta.com/api/schemas/health/response => https://sourcemeta.com/self/v1/schemas/api/schemas/health/response
+( 38%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+https://sourcemeta.com/api/schemas/locations/response => https://sourcemeta.com/self/v1/schemas/api/schemas/locations/response
+( 42%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+https://sourcemeta.com/api/schemas/metadata/response => https://sourcemeta.com/self/v1/schemas/api/schemas/metadata/response
+( 47%) Resolving: self/v1/schemas/api/schemas/position.json
+https://sourcemeta.com/api/schemas/position => https://sourcemeta.com/self/v1/schemas/api/schemas/position
+( 52%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+https://sourcemeta.com/api/schemas/positions/response => https://sourcemeta.com/self/v1/schemas/api/schemas/positions/response
+( 57%) Resolving: self/v1/schemas/api/schemas/search/response.json
+https://sourcemeta.com/api/schemas/search/response => https://sourcemeta.com/self/v1/schemas/api/schemas/search/response
+( 61%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+https://sourcemeta.com/api/schemas/stats/response => https://sourcemeta.com/self/v1/schemas/api/schemas/stats/response
+( 66%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+https://sourcemeta.com/api/schemas/trace/response => https://sourcemeta.com/self/v1/schemas/api/schemas/trace/response
+( 71%) Resolving: self/v1/schemas/configuration/collection.json
+https://sourcemeta.com/configuration/collection => https://sourcemeta.com/self/v1/schemas/configuration/collection
+( 76%) Resolving: self/v1/schemas/configuration/configuration.json
+https://sourcemeta.com/configuration/configuration => https://sourcemeta.com/self/v1/schemas/configuration/configuration
+( 80%) Resolving: self/v1/schemas/configuration/contents.json
+https://sourcemeta.com/configuration/contents => https://sourcemeta.com/self/v1/schemas/configuration/contents
+( 85%) Resolving: self/v1/schemas/configuration/extends.json
+https://sourcemeta.com/configuration/extends => https://sourcemeta.com/self/v1/schemas/configuration/extends
+( 90%) Resolving: self/v1/schemas/configuration/page.json
+https://sourcemeta.com/configuration/page => https://sourcemeta.com/self/v1/schemas/configuration/page
+( 95%) Resolving: self/v1/schemas/configuration/path.json
+https://sourcemeta.com/configuration/path => https://sourcemeta.com/self/v1/schemas/configuration/path
+(100%) Resolving: self/v1/schemas/configuration/rpath.json
+https://sourcemeta.com/configuration/rpath => https://sourcemeta.com/self/v1/schemas/configuration/rpath
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  1%) Producing: explorer/%/404.metapack

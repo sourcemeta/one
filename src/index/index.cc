@@ -216,6 +216,7 @@ Global Options:
 Index Options:
 
    --verbose, -v                  Enable verbose output
+   --deterministic, -d            Deterministic output across platforms
    --concurrency, -c <number>     Set the number of concurrent threads
    --profile, -p                  Output information about slowest steps
    --time, -t                     Output high-level timing information
@@ -381,6 +382,7 @@ static auto index_main(const std::string_view &program,
     std::filesystem::file_time_type mtime;
   };
 
+  const auto deterministic{app.contains("deterministic")};
   std::vector<DetectedSchema> detected_schemas;
   for (const auto &pair : configuration.entries) {
     const auto *collection{
@@ -410,12 +412,33 @@ static auto index_main(const std::string_view &program,
         continue;
       }
 
-      std::println(stderr, "Detecting: {} (#{})", entry.path().string(),
-                   detected_schemas.size() + 1);
+      if (!deterministic) {
+        std::println(stderr, "Detecting: {} (#{})", entry.path().string(),
+                     detected_schemas.size() + 1);
+      }
+
       detected_schemas.push_back({pair.first, std::cref(*collection),
                                   entry.path(), entry.last_write_time()});
     }
   };
+
+  if (deterministic) {
+    std::ranges::sort(detected_schemas, [](const auto &left,
+                                           const auto &right) {
+      const auto left_key{
+          left.collection_relative_path /
+          left.path.lexically_relative(left.collection.get().absolute_path)};
+      const auto right_key{
+          right.collection_relative_path /
+          right.path.lexically_relative(right.collection.get().absolute_path)};
+      return left_key < right_key;
+    });
+    std::size_t count{0};
+    for (const auto &detected : detected_schemas) {
+      std::println(stderr, "Detecting: {} (#{})", detected.path.string(),
+                   ++count);
+    }
+  }
 
   PROFILE_END(profiling, "Detect");
 
@@ -598,6 +621,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     app.flag("configuration", {"g"});
     app.option("resolve-schema", {"r"});
     app.flag("skip-banner", {"s"});
+    app.flag("deterministic", {"d"});
     app.option("comment", {"m"});
     app.option("maximum-direct-directory-entries", {});
     app.parse(argc, argv);
