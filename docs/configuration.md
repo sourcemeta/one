@@ -195,31 +195,27 @@ The `resolve` property is an advanced feature to hook into the schema reference
 resolution process. When set, the object translates any reference that equals a
 property name in the object to the corresponding property value.
 
-This is useful when mounting schemas that consume other external schemas and
-you want to route the reference back into the instance. For example, if you are
-an Enterprise customer, let's say your schema collection depends on
-[GeoJSON](https://geojson.org) and has various references to its latest
-official URL: `https://geojson.org/schema/GeoJSON.json`. Instead of depending
-on an external resource outside your control, you can configure the instance to
-extend from the `@sourcemeta/std/v0` built-in collection and rephrase the
-`https://geojson.org/schema/GeoJSON.json` references to consume from the
-internal version:
+This is useful when mounting two schema collections where one references the
+other through an absolute URL. For example, IPTC's [News in
+JSON](https://www.iptc.org/std/ninjs/) schemas contain `$ref` references to
+`https://geojson.org/schema/GeoJSON.json`. If you also host a vendored copy of
+the [GeoJSON](https://geojson.org) schemas, you can use `resolve` to route
+those external references back into your instance instead of depending on a
+resource outside your control:
 
-!!! note
-
-    The `@sourcemeta/std/v0` standard library is only available to Enterprise
-    customers. Learn more about [commercial
-    licensing](commercial.md#standard-library).
-
-```json hl_lines="3 8" title="one.json"
+```json hl_lines="8" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@self/v1", "@sourcemeta/std/v0" ],
   "contents": {
-    "my-first-collection": {
-      "path": "./schemas",
+    "geojson": {
+      "baseUri": "https://geojson.org/schema",
+      "path": "./vendor/geojson"
+    },
+    "ninjs": {
+      "baseUri": "http://www.iptc.org/std/ninjs",
+      "path": "./vendor/ninjs",
       "resolve": {
-        "https://geojson.org/schema/GeoJSON.json": "/sourcemeta/std/v0/ietf/geojson/schema.json"
+        "https://geojson.org/schema/GeoJSON.json": "/geojson/GeoJSON.json"
       }
     }
   }
