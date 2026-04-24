@@ -43,10 +43,10 @@ if(NOT uWebSockets_FOUND)
     "${UWEBSOCKETS_PUBLIC_HEADER}" ${UWEBSOCKETS_PRIVATE_HEADERS})
 
   # Avoid "uWebSockets: <version>" default header
-  target_compile_definitions(uwebsockets
-    INTERFACE UWS_HTTPRESPONSE_NO_WRITEMARK)
-
-  target_link_libraries(uwebsockets INTERFACE ZLIB::ZLIB)
+  target_compile_definitions(uwebsockets INTERFACE UWS_HTTPRESPONSE_NO_WRITEMARK)
+  # Disable WebSocket per-message deflate compression
+  # This project only uses uWebSockets for HTTP, not WebSockets
+  target_compile_definitions(uwebsockets INTERFACE UWS_NO_ZLIB)
   target_link_libraries(uwebsockets INTERFACE uNetworking::uSockets)
 
   target_include_directories(usockets PUBLIC

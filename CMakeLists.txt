@@ -26,7 +26,9 @@ message(STATUS "Sourcemeta One edition: ${ONE_EDITION}")
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
 find_package(JSONBinPack REQUIRED)
-find_package(JSONSchema REQUIRED)
+find_program(JSONSCHEMA_BIN NAMES jsonschema
+  PATHS "${PROJECT_SOURCE_DIR}/node_modules/.bin"
+  NO_DEFAULT_PATH REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -99,13 +101,13 @@ sourcemeta_target_shellcheck(SOURCES
 
 set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
 add_custom_target(jsonschema_fmt_test
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt --check ${SOURCEMETA_SCHEMAS})
+  COMMAND "${JSONSCHEMA_BIN}" fmt --check ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_fmt
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" fmt ${SOURCEMETA_SCHEMAS})
+  COMMAND "${JSONSCHEMA_BIN}" fmt ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_metaschema
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" metaschema ${SOURCEMETA_SCHEMAS})
+  COMMAND "${JSONSCHEMA_BIN}" metaschema ${SOURCEMETA_SCHEMAS})
 add_custom_target(jsonschema_lint
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" lint
+  COMMAND "${JSONSCHEMA_BIN}" lint
   ${SOURCEMETA_SCHEMAS})
 
 if(ONE_TESTS)
@@ -114,7 +116,7 @@ if(ONE_TESTS)
   set(SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/collections")
 
   add_test(NAME one.schemas COMMAND
-    "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
+    "${JSONSCHEMA_BIN}" test --extension .test.json
     ${SCHEMA_TEST_DIRECTORIES})
 
   add_subdirectory(test/js)
