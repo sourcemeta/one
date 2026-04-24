@@ -33,12 +33,14 @@ Sourcemeta One is available in two editions:
 
 ## Standard Library
 
-The Enterprise edition includes a growing library of hand-crafted high-quality
-schemas maintained by Sourcemeta. The standard library provides ready-to-use
-schemas for commonly used standards and specifications such as IETF URIs, email
-addresses, JSON Pointers, HTTP problem details, and IEEE POSIX paths, among
-others. To use it, add `@sourcemeta/std/v0` to the
-[`extends`](configuration.md#extends) property of your configuration file.
+Sourcemeta maintains a growing library of hand-crafted high-quality schemas
+called the [Standard Library](https://github.com/sourcemeta/std). The standard
+library provides ready-to-use schemas for commonly used standards and
+specifications such as IETF URIs, email addresses, JSON Pointers, HTTP problem
+details, and IEEE POSIX paths, among others. To use it, pull
+[`https://github.com/sourcemeta/std`](https://github.com/sourcemeta/std) as a
+Git submodule and point to its schemas from your configuration file using a
+relative [`path`](configuration.md#path).
 
 For organizations looking to double down on their JSON Schema governance
 initiative, the standard library provides a strong foundation of high-quality

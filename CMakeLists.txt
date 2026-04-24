@@ -113,10 +113,6 @@ if(ONE_TESTS)
 
   set(SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/collections")
 
-  if(ONE_ENTERPRISE)
-    list(APPEND SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/enterprise/collections")
-  endif()
-
   add_test(NAME one.schemas COMMAND
     "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
     ${SCHEMA_TEST_DIRECTORIES})
