@@ -43,6 +43,7 @@ if(NOT LibDeflate_FOUND)
   endif()
 
   if(SOURCEMETA_COMPILER_MSVC)
+    target_compile_options(libdeflate PRIVATE /wd4113)
     target_compile_options(libdeflate PRIVATE /wd4244)
     target_compile_options(libdeflate PRIVATE /wd4267)
   endif()
@@ -53,9 +54,36 @@ if(NOT LibDeflate_FOUND)
       PUBLIC_HEADER "${LIBDEFLATE_PUBLIC_HEADER}"
       C_VISIBILITY_PRESET "default"
       C_VISIBILITY_INLINES_HIDDEN FALSE
-      EXPORT_NAME libdeflate)
+      EXPORT_NAME LibDeflate)
 
   add_library(LibDeflate::LibDeflate ALIAS libdeflate)
+
+  if(SOURCEMETA_CORE_INSTALL)
+    include(GNUInstallDirs)
+    install(TARGETS libdeflate
+      EXPORT libdeflate
+      PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        COMPONENT sourcemeta_core_dev
+      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        COMPONENT sourcemeta_core
+      LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        COMPONENT sourcemeta_core
+        NAMELINK_COMPONENT sourcemeta_core_dev
+      ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        COMPONENT sourcemeta_core_dev)
+    install(EXPORT libdeflate
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libdeflate"
+      NAMESPACE LibDeflate::
+      COMPONENT sourcemeta_core_dev)
+
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/libdeflate-config.cmake
+      "include(\"\${CMAKE_CURRENT_LIST_DIR}/libdeflate.cmake\")\n"
+      "check_required_components(\"libdeflate\")\n")
+    install(FILES
+      "${CMAKE_CURRENT_BINARY_DIR}/libdeflate-config.cmake"
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libdeflate"
+      COMPONENT sourcemeta_core_dev)
+  endif()
 
   set(LibDeflate_FOUND ON)
 endif()

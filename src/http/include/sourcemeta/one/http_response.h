@@ -1,7 +1,7 @@
 #ifndef SOURCEMETA_ONE_HTTP_RESPONSE_H
 #define SOURCEMETA_ONE_HTTP_RESPONSE_H
 
-#include <sourcemeta/one/gzip.h>
+#include <sourcemeta/core/gzip.h>
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/one/http_uwebsockets.h>
@@ -120,9 +120,9 @@ public:
     if (expected_encoding == Encoding::GZIP) {
       this->response_->writeHeader("Content-Encoding", "gzip");
       if (current_encoding == Encoding::Identity) {
-        auto effective_message{
-            gzip(reinterpret_cast<const std::uint8_t *>(message.data()),
-                 message.size())};
+        auto effective_message{sourcemeta::core::gzip(
+            reinterpret_cast<const std::uint8_t *>(message.data()),
+            message.size())};
         if (method == "head") {
           this->response_->endWithoutBody(effective_message.size());
           this->response_->end();
@@ -139,9 +139,9 @@ public:
       }
     } else if (expected_encoding == Encoding::Identity) {
       if (current_encoding == Encoding::GZIP) {
-        auto effective_message{
-            gunzip(reinterpret_cast<const std::uint8_t *>(message.data()),
-                   message.size())};
+        auto effective_message{sourcemeta::core::gunzip(
+            reinterpret_cast<const std::uint8_t *>(message.data()),
+            message.size())};
         if (method == "head") {
           this->response_->endWithoutBody(effective_message.size());
           this->response_->end();

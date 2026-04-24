@@ -7,22 +7,42 @@ import { fileURLToPath } from "node:url";
 const LICENSES = {
   "core": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "blaze": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "hydra": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "codegen": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "jsonschema": "AGPL-3.0-only",
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
   "pcre2": "BSD-3-Clause",
-  "zlib": "Zlib",
-  "curl": "curl",
-  "nghttp2": "MIT",
-  "cpr": "MIT",
-  "c-ares": "MIT",
-  "libpsl": "MIT",
-  "openssl": "Apache-2.0"
+  "libdeflate": "MIT",
+  "cmark-gfm": "BSD-2-Clause"
 };
+
+const IGNORED = new Set([
+  "vendorpull",
+  "jsontestsuite",
+  "yaml-test-suite",
+  "jsonschema-test-suite",
+  "referencing-suite",
+  "uritemplate-test",
+  "pyca-cryptography",
+  "googletest",
+  "googlebenchmark",
+  "jsonschema-2020-12",
+  "jsonschema-2019-09",
+  "jsonschema-draft7",
+  "jsonschema-draft6",
+  "jsonschema-draft4",
+  "jsonschema-draft3",
+  "jsonschema-draft2",
+  "jsonschema-draft1",
+  "jsonschema-draft0",
+  "openapi",
+  "spdx"
+]);
+
+const IGNORED_PREFIXES = [
+  "public/",
+  "collections/"
+];
 
 const versionFile = process.argv[2];
 if (!versionFile) {
@@ -44,6 +64,7 @@ const files = [
 ].filter(existsSync).sort();
 
 const seenUrls = new Set();
+const usedLicenses = new Set();
 const packages = [{
   name: "sourcemeta-one-enterprise",
   SPDXID: "SPDXRef-RootPackage",
@@ -64,8 +85,15 @@ for (const file of files) {
   for (const line of readFileSync(file, "utf-8").split("\n")) {
     if (!line.trim()) continue;
     const [name, url, entryVersion] = line.split(/\s+/);
+    if (IGNORED.has(name) || IGNORED_PREFIXES.some((prefix) => name.startsWith(prefix))
+        || seenUrls.has(url)) continue;
     const license = LICENSES[name];
-    if (!license || seenUrls.has(url)) continue;
+    if (!license) {
+      process.stderr.write(
+        `ERROR: dependency "${name}" (from ${file}) has no LICENSES entry\n`);
+      process.exit(1);
+    }
+    usedLicenses.add(name);
     seenUrls.add(url);
     index += 1;
     const spdxid = `SPDXRef-Vendor-${index}`;
@@ -83,6 +111,14 @@ for (const file of files) {
       relatedSpdxElement: spdxid
     });
   }
+}
+
+const staleLicenses = Object.keys(LICENSES).filter(
+  (name) => !usedLicenses.has(name));
+if (staleLicenses.length > 0) {
+  process.stderr.write(
+    `ERROR: stale LICENSES entries: ${staleLicenses.join(", ")}\n`);
+  process.exit(1);
 }
 
 process.stdout.write(JSON.stringify({
