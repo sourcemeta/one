@@ -23,13 +23,17 @@
       "$ref": "./contents.json"
     },
     "email": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/email/address"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "email"
     },
     "github": {
       "type": "string"
     },
     "website": {
-      "$ref": "https://schemas.sourcemeta.com/sourcemeta/std/v0/ietf/uri/url"
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
     }
   },
   "additionalProperties": false
