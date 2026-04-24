@@ -32,6 +32,13 @@ catalogs with enterprise-grade governance capabilities.
 Check out a live public example instance of Sourcemeta One at
 [schemas.sourcemeta.com](https://schemas.sourcemeta.com).
 
+!!! tip "New to schema-first API governance?"
+
+    To get the most value out of Sourcemeta One, read our
+    [guide](guide/index.md) first. It explains why the schema layer matters,
+    how existing API tooling leaves it ungoverned, and how to adopt
+    schema-first governance incrementally across your organisation.
+
 ## Use Cases
 
 **Schema Catalog**: Most organisations have JSON Schemas scattered across Git
