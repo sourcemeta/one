@@ -8,8 +8,7 @@ clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
-{ "url": "https://sourcemeta.com/" }
-  "extends": [ "@self/v1" ],
+{ "extends": [ "@self/v1" ], "url": "https://sourcemeta.com/" }
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 99999999999999999999999 \
