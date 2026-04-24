@@ -6,12 +6,11 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
 set(ONE_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
 set(STD_SCHEMAS "${PROJECT_SOURCE_DIR}/vendor/collections/sourcemeta/std/v0/schemas/2020-12")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
-  COMMAND "$<TARGET_FILE:jsonschema_cli>" compile
+  COMMAND "${JSONSCHEMA_BIN}" compile
     --include CONFIGURATION
     "${ONE_SCHEMAS}/configuration/configuration.json"
     > "${CMAKE_CURRENT_BINARY_DIR}/template.h"
   DEPENDS
-    "$<TARGET_FILE:jsonschema_cli>"
     "${ONE_SCHEMAS}/configuration/configuration.json"
     "${ONE_SCHEMAS}/configuration/collection.json"
     "${ONE_SCHEMAS}/configuration/contents.json"
