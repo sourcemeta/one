@@ -27,6 +27,7 @@ COPY src /source/src
 COPY contrib /source/contrib
 COPY collections /source/collections
 COPY vendor /source/vendor
+COPY DEPENDENCIES /source/DEPENDENCIES
 COPY CMakeLists.txt /source/CMakeLists.txt
 COPY enterprise /source/enterprise
 
