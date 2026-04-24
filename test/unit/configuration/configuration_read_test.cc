@@ -777,6 +777,41 @@ TEST(Configuration_read, read_valid_016_diamond_extends) {
   EXPECT_TRUE(result.at("contents").defines("from_c"));
 }
 
+TEST(Configuration_read, read_invalid_002_extends_at_path) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_invalid_002.json"};
+
+  try {
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationReadError &error) {
+    EXPECT_EQ(error.from(), configuration_path);
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()), "/extends");
+    SUCCEED();
+  } catch (...) {
+    FAIL();
+  }
+}
+
+TEST(Configuration_read, read_invalid_003_include_at_path) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_invalid_003.json"};
+
+  try {
+    sourcemeta::one::Configuration::read(configuration_path,
+                                         COLLECTIONS_DIRECTORY);
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationReadError &error) {
+    EXPECT_EQ(error.from(), configuration_path);
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
+              "/contents/example/include");
+    SUCCEED();
+  } catch (...) {
+    FAIL();
+  }
+}
+
 TEST(Configuration_read, read_invalid_004_circular_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_004.json"};
