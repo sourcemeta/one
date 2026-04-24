@@ -161,13 +161,13 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 ( 25%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/locations.metapack
 ( 26%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
 ( 26%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/stats.metapack
-( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
+( 26%) Producing: schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
 ( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/locations.metapack
 ( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/positions.metapack
-( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/stats.metapack
+( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/stats.metapack
 ( 28%) Producing: schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
 ( 28%) Producing: schemas/self/v1/schemas/configuration/configuration/%/locations.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
+( 28%) Producing: schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
 ( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/stats.metapack
 ( 29%) Producing: schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
 ( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/locations.metapack
@@ -201,7 +201,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 ( 39%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/health.metapack
 ( 40%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
 ( 40%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/health.metapack
-( 41%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
+( 40%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
 ( 41%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/health.metapack
 ( 41%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack
 ( 42%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/health.metapack
