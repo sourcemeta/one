@@ -239,8 +239,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#21)
 ( 50%) Producing: schemas/self/v1/schemas/configuration/rpath/%/health.metapack
 ( 50%) Producing: schemas/test/test/%/bundle.metapack
 ( 50%) Producing: schemas/test/test/%/health.metapack
-error: Could not locate the requested file
-  at path /private/var/folders/x5/zz8tbtzn7857872xy419xvr80000gn/T/rules/rule.json
+error: Custom linter rules are only available on the enterprise edition
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
