@@ -22,6 +22,7 @@ Global Options:
 Index Options:
 
    --verbose, -v                  Enable verbose output
+   --deterministic, -d            Stable (but slower) log output across platforms
    --concurrency, -c <number>     Set the number of concurrent threads
    --profile, -p                  Output information about slowest steps
    --time, -t                     Output high-level timing information

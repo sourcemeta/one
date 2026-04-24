@@ -9,6 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
+  "extends": [ "@self/v1" ],
   "url": "http://localhost:8000",
   "contents": {
     "example": {
@@ -27,7 +28,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Usage: $(basename "$1") <one.json> <path/to/output/directory>
+Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 
 Global Options:
 
@@ -39,6 +40,7 @@ Global Options:
 Index Options:
 
    --verbose, -v                  Enable verbose output
+   --deterministic, -d            Stable (but slower) log output across platforms
    --concurrency, -c <number>     Set the number of concurrent threads
    --profile, -p                  Output information about slowest steps
    --time, -t                     Output high-level timing information

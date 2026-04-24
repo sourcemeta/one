@@ -25,6 +25,7 @@ resolve_schema_no_match() {
 
 cat << EOF > "$TMP/one.json"
 {
+  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "schemas": {
