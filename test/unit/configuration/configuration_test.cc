@@ -46,6 +46,11 @@ TEST(Configuration, valid_001) {
   EXPECT_PAGE(configuration, "self", email, "hello@sourcemeta.com");
   EXPECT_PAGE(configuration, "self", github, "sourcemeta/one");
   EXPECT_PAGE(configuration, "self", website, "https://www.sourcemeta.com");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", description, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", email, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", github, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", website, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -103,6 +108,7 @@ TEST(Configuration, valid_002) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -132,6 +138,7 @@ TEST(Configuration, valid_003) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -172,6 +179,7 @@ TEST(Configuration, valid_004) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -219,6 +227,7 @@ TEST(Configuration, valid_005) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -269,6 +278,7 @@ TEST(Configuration, valid_006) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -319,6 +329,7 @@ TEST(Configuration, valid_007) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");
@@ -369,6 +380,7 @@ TEST(Configuration, valid_008) {
   EXPECT_EQ(configuration.entries.size(), 4);
 
   EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
                     std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
                         "v1" / "schemas");

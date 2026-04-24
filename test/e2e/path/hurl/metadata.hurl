@@ -18,7 +18,6 @@ jsonpath "$.examples" count == 0
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
 jsonpath "$.alert" == null
-
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "example"
 jsonpath "$.breadcrumb[0].path" == "/v1/catalog/example/"
@@ -54,7 +53,6 @@ jsonpath "$.examples" count == 0
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
 jsonpath "$.alert" == null
-
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "rebased"
 jsonpath "$.breadcrumb[0].path" == "/v1/catalog/rebased/"

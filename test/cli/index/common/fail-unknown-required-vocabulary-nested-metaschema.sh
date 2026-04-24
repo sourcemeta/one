@@ -64,7 +64,6 @@ remove_threads_information() {
 test "$CODE" = "1"
 remove_threads_information "$TMP/output.txt"
 
-
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
