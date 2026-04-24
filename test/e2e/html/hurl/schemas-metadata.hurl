@@ -132,7 +132,7 @@ header "Last-Modified" exists
 jsonpath "$.bytes" == 1558
 jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.health" == 100
-jsonpath "$.dependencies" == 6
+jsonpath "$.dependencies" == 5
 jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.identifier" == "{{base}}/self/v1/schemas/configuration/configuration"
 jsonpath "$.path" == "/self/v1/schemas/configuration/configuration"

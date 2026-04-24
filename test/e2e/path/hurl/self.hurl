@@ -10,13 +10,12 @@ Access-Control-Allow-Origin: *
 Link: </v1/catalog/self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.entries[?(@.name == 'self')].type" nth 0 == "directory"
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```
 {{last_response}}
 ```
@@ -32,13 +31,12 @@ Access-Control-Allow-Origin: *
 Link: </v1/catalog/self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.entries" count >= 1
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```
 {{last_response}}
 ```
@@ -65,14 +63,13 @@ Access-Control-Allow-Origin: *
 Link: </v1/catalog/self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/v1/catalog/self/v1/schemas/configuration/configuration"
 jsonpath "$.title" == "The Sourcemeta One configuration file format"
 
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/metadata/response
 ```
 {{last_response}}
 ```
