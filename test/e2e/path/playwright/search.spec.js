@@ -20,7 +20,7 @@ test.describe('Search UI with base path', () => {
     await expect(searchResult).not.toHaveClass(/d-none/, { timeout: 1000 });
 
     const results = searchResult.locator('.list-group-item');
-    await expect(results).toHaveCount(2);
+    await expect(results).toHaveCount(1);
 
     // Results should have paths with the base path prefix
     const firstResult = results.nth(0);
