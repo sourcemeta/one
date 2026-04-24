@@ -20,4 +20,4 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.entries" count == 0
+jsonpath "$.entries" count == 1
