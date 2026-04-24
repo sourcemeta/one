@@ -57,26 +57,26 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#18)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#20)
-(  5%) Resolving: path.json
-( 10%) Resolving: extends.json
-( 15%) Resolving: configuration.json
-( 20%) Resolving: contents.json
-( 25%) Resolving: collection.json
-( 30%) Resolving: rpath.json
-( 35%) Resolving: page.json
-( 40%) Resolving: error.json
-( 45%) Resolving: response.json
-( 50%) Resolving: response.json
-( 55%) Resolving: response.json
-( 60%) Resolving: response.json
-( 65%) Resolving: position.json
-( 70%) Resolving: response.json
-( 75%) Resolving: response.json
-( 80%) Resolving: response.json
-( 85%) Resolving: response.json
-( 90%) Resolving: response.json
-( 95%) Resolving: response.json
-(100%) Resolving: response.json
+(  5%) Resolving: self/v1/schemas/configuration/path.json
+( 10%) Resolving: self/v1/schemas/configuration/extends.json
+( 15%) Resolving: self/v1/schemas/configuration/configuration.json
+( 20%) Resolving: self/v1/schemas/configuration/contents.json
+( 25%) Resolving: self/v1/schemas/configuration/collection.json
+( 30%) Resolving: self/v1/schemas/configuration/rpath.json
+( 35%) Resolving: self/v1/schemas/configuration/page.json
+( 40%) Resolving: self/v1/schemas/api/error.json
+( 45%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 55%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 60%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 65%) Resolving: self/v1/schemas/api/schemas/position.json
+( 70%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 75%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 80%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 85%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 90%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 95%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+(100%) Resolving: self/v1/schemas/api/list/response.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  1%) Producing: explorer/%/404.metapack
@@ -862,7 +862,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#21)
-(100%) Resolving: test.json
+(100%) Resolving: schemas/test.json
 (  5%) Producing: schemas/schemas/test/%/schema.metapack
 ( 11%) Producing: schemas/schemas/test/%/dependencies.metapack
 ( 17%) Producing: schemas/schemas/test/%/locations.metapack

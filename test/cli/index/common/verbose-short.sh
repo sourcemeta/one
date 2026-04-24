@@ -68,47 +68,47 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#21)
-(  4%) Resolving: foo.json
+(  4%) Resolving: example/schemas/foo.json
 https://example.com/foo => https://sourcemeta.com/example/schemas/foo
-(  9%) Resolving: path.json
+(  9%) Resolving: self/v1/schemas/configuration/path.json
 https://sourcemeta.com/configuration/path => https://sourcemeta.com/self/v1/schemas/configuration/path
-( 14%) Resolving: extends.json
+( 14%) Resolving: self/v1/schemas/configuration/extends.json
 https://sourcemeta.com/configuration/extends => https://sourcemeta.com/self/v1/schemas/configuration/extends
-( 19%) Resolving: configuration.json
+( 19%) Resolving: self/v1/schemas/configuration/configuration.json
 https://sourcemeta.com/configuration/configuration => https://sourcemeta.com/self/v1/schemas/configuration/configuration
-( 23%) Resolving: contents.json
+( 23%) Resolving: self/v1/schemas/configuration/contents.json
 https://sourcemeta.com/configuration/contents => https://sourcemeta.com/self/v1/schemas/configuration/contents
-( 28%) Resolving: collection.json
+( 28%) Resolving: self/v1/schemas/configuration/collection.json
 https://sourcemeta.com/configuration/collection => https://sourcemeta.com/self/v1/schemas/configuration/collection
-( 33%) Resolving: rpath.json
+( 33%) Resolving: self/v1/schemas/configuration/rpath.json
 https://sourcemeta.com/configuration/rpath => https://sourcemeta.com/self/v1/schemas/configuration/rpath
-( 38%) Resolving: page.json
+( 38%) Resolving: self/v1/schemas/configuration/page.json
 https://sourcemeta.com/configuration/page => https://sourcemeta.com/self/v1/schemas/configuration/page
-( 42%) Resolving: error.json
+( 42%) Resolving: self/v1/schemas/api/error.json
 https://sourcemeta.com/api/error => https://sourcemeta.com/self/v1/schemas/api/error
-( 47%) Resolving: response.json
+( 47%) Resolving: self/v1/schemas/api/schemas/trace/response.json
 https://sourcemeta.com/api/schemas/trace/response => https://sourcemeta.com/self/v1/schemas/api/schemas/trace/response
-( 52%) Resolving: response.json
+( 52%) Resolving: self/v1/schemas/api/schemas/health/response.json
 https://sourcemeta.com/api/schemas/health/response => https://sourcemeta.com/self/v1/schemas/api/schemas/health/response
-( 57%) Resolving: response.json
+( 57%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
 https://sourcemeta.com/api/schemas/dependents/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependents/response
-( 61%) Resolving: response.json
+( 61%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
 https://sourcemeta.com/api/schemas/dependencies/response => https://sourcemeta.com/self/v1/schemas/api/schemas/dependencies/response
-( 66%) Resolving: position.json
+( 66%) Resolving: self/v1/schemas/api/schemas/position.json
 https://sourcemeta.com/api/schemas/position => https://sourcemeta.com/self/v1/schemas/api/schemas/position
-( 71%) Resolving: response.json
+( 71%) Resolving: self/v1/schemas/api/schemas/search/response.json
 https://sourcemeta.com/api/schemas/search/response => https://sourcemeta.com/self/v1/schemas/api/schemas/search/response
-( 76%) Resolving: response.json
+( 76%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
 https://sourcemeta.com/api/schemas/evaluate/response => https://sourcemeta.com/self/v1/schemas/api/schemas/evaluate/response
-( 80%) Resolving: response.json
+( 80%) Resolving: self/v1/schemas/api/schemas/locations/response.json
 https://sourcemeta.com/api/schemas/locations/response => https://sourcemeta.com/self/v1/schemas/api/schemas/locations/response
-( 85%) Resolving: response.json
+( 85%) Resolving: self/v1/schemas/api/schemas/positions/response.json
 https://sourcemeta.com/api/schemas/positions/response => https://sourcemeta.com/self/v1/schemas/api/schemas/positions/response
-( 90%) Resolving: response.json
+( 90%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
 https://sourcemeta.com/api/schemas/metadata/response => https://sourcemeta.com/self/v1/schemas/api/schemas/metadata/response
-( 95%) Resolving: response.json
+( 95%) Resolving: self/v1/schemas/api/schemas/stats/response.json
 https://sourcemeta.com/api/schemas/stats/response => https://sourcemeta.com/self/v1/schemas/api/schemas/stats/response
-(100%) Resolving: response.json
+(100%) Resolving: self/v1/schemas/api/list/response.json
 https://sourcemeta.com/api/list/response => https://sourcemeta.com/self/v1/schemas/api/list/response
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json

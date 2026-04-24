@@ -70,7 +70,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#21)
-(  4%) Resolving: test.json
+(  4%) Resolving: example/schemas/test.json
 error: The schema identifier is not relative to the corresponding base
   at path $(realpath "$TMP")/schemas/test.json
   at identifier https://other.com/test

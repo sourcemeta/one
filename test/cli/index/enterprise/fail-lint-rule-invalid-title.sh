@@ -68,27 +68,27 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#20)
 Detecting: $(realpath "$TMP")/schemas/test.json (#21)
-(  4%) Resolving: path.json
-(  9%) Resolving: extends.json
-( 14%) Resolving: configuration.json
-( 19%) Resolving: contents.json
-( 23%) Resolving: collection.json
-( 28%) Resolving: rpath.json
-( 33%) Resolving: page.json
-( 38%) Resolving: error.json
-( 42%) Resolving: response.json
-( 47%) Resolving: response.json
-( 52%) Resolving: response.json
-( 57%) Resolving: response.json
-( 61%) Resolving: position.json
-( 66%) Resolving: response.json
-( 71%) Resolving: response.json
-( 76%) Resolving: response.json
-( 80%) Resolving: response.json
-( 85%) Resolving: response.json
-( 90%) Resolving: response.json
-( 95%) Resolving: response.json
-(100%) Resolving: test.json
+(  4%) Resolving: self/v1/schemas/configuration/path.json
+(  9%) Resolving: self/v1/schemas/configuration/extends.json
+( 14%) Resolving: self/v1/schemas/configuration/configuration.json
+( 19%) Resolving: self/v1/schemas/configuration/contents.json
+( 23%) Resolving: self/v1/schemas/configuration/collection.json
+( 28%) Resolving: self/v1/schemas/configuration/rpath.json
+( 33%) Resolving: self/v1/schemas/configuration/page.json
+( 38%) Resolving: self/v1/schemas/api/error.json
+( 42%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 47%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 52%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 57%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 61%) Resolving: self/v1/schemas/api/schemas/position.json
+( 66%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 71%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 76%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 80%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 85%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 90%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 95%) Resolving: self/v1/schemas/api/list/response.json
+(100%) Resolving: test/test.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  1%) Producing: explorer/%/404.metapack
@@ -239,7 +239,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#21)
 ( 50%) Producing: schemas/self/v1/schemas/configuration/rpath/%/health.metapack
 ( 50%) Producing: schemas/test/test/%/bundle.metapack
 ( 50%) Producing: schemas/test/test/%/health.metapack
-error: The schema rule name must match ^[a-z0-9_/]+$
+error: The schema rule name must match ^[a-z0-9_/]+\$
   at path $(realpath "$TMP")/rules/rule.json
   at name My Invalid Rule!
 EOF

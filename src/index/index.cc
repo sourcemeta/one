@@ -464,8 +464,11 @@ static auto index_main(const std::string_view &program,
        &app](const auto &detected_ref, const auto threads, const auto cursor) {
         const auto &detected{detected_ref.get()};
         print_progress(mutex, threads, "Resolving",
-                       detected.path.filename().string(), cursor,
-                       uncached_schemas.size());
+                       (detected.collection_relative_path /
+                        detected.path.lexically_relative(
+                            detected.collection.get().absolute_path))
+                           .string(),
+                       cursor, uncached_schemas.size());
         const auto result{resolver.add(detected.collection_relative_path,
                                        detected.collection.get(), detected.path,
                                        detected.mtime)};

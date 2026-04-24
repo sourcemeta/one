@@ -78,8 +78,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#21)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#22)
-(  4%) Resolving: a.json
-(  9%) Resolving: b.json
+(  4%) Resolving: example/schemas/a.json
+(  9%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice
   at path $(realpath "$TMP")/schemas/b.json
   at identifier https://sourcemeta.com/example/schemas/test
@@ -110,8 +110,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#21)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#22)
-(  4%) Resolving: a.json
-(  9%) Resolving: b.json
+(  4%) Resolving: example/schemas/a.json
+(  9%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice
   at path $(realpath "$TMP")/schemas/b.json
   at identifier https://sourcemeta.com/example/schemas/test
