@@ -71,7 +71,6 @@ folder:
 ```json title="one.json"
 {
   "url": "http://localhost:8000",
-  "extends": [ "@self/v1" ],
   "html": {
     "name": "My First Registry"
   },
@@ -84,14 +83,6 @@ folder:
   }
 }
 ```
-
-!!! note
-
-    The `@self/v1` built-in collection provides the [HTTP API](api.md)
-    endpoints and the JSON Schemas that describe them (mounted at
-    `/self/v1/schemas`). In a future release, the HTTP API will only be
-    available if you explicitly include `@self/v1` in the `extends` array.
-    We recommend adding it now to avoid disruption later.
 
 ### Writing a `Dockerfile`
 
@@ -165,10 +156,9 @@ To ingest it, configure a collection with a `baseUri` that matches the prefix
 of the schema's original `$id`. The indexer will strip this base and remap the
 remainder onto your registry URL, prepended by the collection key:
 
-```json hl_lines="11" title="one.json"
+```json hl_lines="10" title="one.json"
 {
   "url": "http://localhost:8000",
-  "extends": [ "@self/v1" ],
   "html": {
     "name": "My Registry"
   },

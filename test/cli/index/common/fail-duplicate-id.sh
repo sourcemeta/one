@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -77,7 +76,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#22)
 (  4%) Resolving: example/schemas/a.json
 (  9%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice
@@ -109,7 +107,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#22)
 (  4%) Resolving: example/schemas/a.json
 (  9%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice

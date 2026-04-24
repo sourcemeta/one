@@ -644,15 +644,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
                sourcemeta::core::to_string(error.location()),
                error.target().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
-               &error) {
-    std::print(stderr,
-               "error: {}\n  from path {}\n  at location \"{}\"\n"
-               "  to identifier {}\n",
-               error.what(), error.from().string(),
-               sourcemeta::core::to_string(error.location()),
-               error.identifier());
-    return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
     std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",
                error.what(), error.option(), error.value());

@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -47,7 +46,6 @@ cat << EOF > "$TMP/expected.txt"
         "v1": {
           "contents": {
             "schemas": {
-              "x-sourcemeta-one:provenance": "@self/v1",
               "path": "$ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas",
               "x-sourcemeta-one:path": "$ONE_PREFIX/share/sourcemeta/one/collections/self/v1/jsonschema.json",
               "baseUri": "https://sourcemeta.com/"

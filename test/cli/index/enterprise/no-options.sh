@@ -11,7 +11,7 @@ trap clean EXIT
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Usage: $(basename "$1") <one.json> <path/to/output/directory>
+Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 
 Global Options:
 

@@ -24,7 +24,6 @@
 #include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <tuple>       // std::tuple
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
@@ -118,7 +117,6 @@ struct MetapackExplorerSchemaExtension {
   std::uint16_t title_length;
   std::uint16_t description_length;
   std::uint16_t alert_length;
-  std::uint16_t provenance_length;
 };
 
 struct MetapackDirectoryExtension {
@@ -284,26 +282,13 @@ explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
                                    extension->alert_length);
 }
 
-inline auto
-explorer_extension_provenance(const MetapackExplorerSchemaExtension *extension,
-                              const std::uint8_t *base) -> std::string_view {
-  const std::size_t offset{
-      static_cast<std::size_t>(extension->path_length) +
-      extension->identifier_length + extension->base_dialect_length +
-      extension->dialect_length + extension->title_length +
-      extension->description_length + extension->alert_length};
-  return explorer_extension_string(extension, base, offset,
-                                   extension->provenance_length);
-}
-
 static auto make_explorer_schema_extension(
     const std::int64_t health, const std::int64_t bytes,
     const std::int64_t dependencies, const MetapackVersionInfo &version,
     const std::string_view path, const std::string_view identifier,
     const std::string_view base_dialect, const std::string_view dialect,
     const std::string_view title, const std::string_view description,
-    const std::string_view alert, const std::string_view provenance)
-    -> std::vector<std::uint8_t> {
+    const std::string_view alert) -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -311,11 +296,10 @@ static auto make_explorer_schema_extension(
   assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(alert.size() <= std::numeric_limits<std::uint16_t>::max());
-  assert(provenance.size() <= std::numeric_limits<std::uint16_t>::max());
 
-  const auto strings_size{
-      path.size() + identifier.size() + base_dialect.size() + dialect.size() +
-      title.size() + description.size() + alert.size() + provenance.size()};
+  const auto strings_size{path.size() + identifier.size() +
+                          base_dialect.size() + dialect.size() + title.size() +
+                          description.size() + alert.size()};
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackExplorerSchemaExtension) + strings_size);
 
@@ -331,7 +315,6 @@ static auto make_explorer_schema_extension(
   header.title_length = static_cast<std::uint16_t>(title.size());
   header.description_length = static_cast<std::uint16_t>(description.size());
   header.alert_length = static_cast<std::uint16_t>(alert.size());
-  header.provenance_length = static_cast<std::uint16_t>(provenance.size());
 
   auto *cursor{result.data()};
   std::memcpy(cursor, &header, sizeof(header));
@@ -349,7 +332,6 @@ static auto make_explorer_schema_extension(
   append(title);
   append(description);
   append(alert);
-  append(provenance);
 
   return result;
 }
@@ -456,14 +438,6 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("alert", sourcemeta::core::JSON{nullptr});
     }
 
-    if (collection.extra.defines("x-sourcemeta-one:provenance")) {
-      assert(collection.extra.at("x-sourcemeta-one:provenance").is_string());
-      result.assign("provenance",
-                    collection.extra.at("x-sourcemeta-one:provenance"));
-    } else {
-      result.assign("provenance", sourcemeta::core::JSON{nullptr});
-    }
-
     result.assign("breadcrumb",
                   make_breadcrumb(configuration.base_path,
                                   resolver_entry.relative_path, false));
@@ -481,10 +455,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         result.defines("title") ? result.at("title").to_string() : "",
         result.defines("description") ? result.at("description").to_string()
                                       : "",
-        result.at("alert").is_string() ? result.at("alert").to_string() : "",
-        result.at("provenance").is_string()
-            ? result.at("provenance").to_string()
-            : "")};
+        result.at("alert").is_string() ? result.at("alert").to_string() : "")};
 
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
@@ -822,15 +793,6 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
                             sourcemeta::core::JSON{std::string{alert}});
         } else {
           entry_json.assign("alert", sourcemeta::core::JSON{nullptr});
-        }
-
-        const auto provenance{
-            explorer_extension_provenance(extension, extension_base)};
-        if (!provenance.empty()) {
-          entry_json.assign("provenance",
-                            sourcemeta::core::JSON{std::string{provenance}});
-        } else {
-          entry_json.assign("provenance", sourcemeta::core::JSON{nullptr});
         }
 
         scores.emplace_back(extension->health);

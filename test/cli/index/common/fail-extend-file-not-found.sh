@@ -10,7 +10,7 @@ trap clean EXIT
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://sourcemeta.com/",
-  "extends": [ "@self/v1",  "./nonexistent.json" ]
+  "extends": [ "./nonexistent.json" ]
 }
 EOF
 

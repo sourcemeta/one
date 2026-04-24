@@ -13,7 +13,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -90,7 +89,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#18)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#21)
 ( 20%) Producing: explorer/%/directory.metapack
 ( 40%) Producing: explorer/%/directory-html.metapack
 ( 60%) Producing: explorer/%/search.metapack
@@ -269,10 +267,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/configuration/path/%
 ./explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
 ./explorer/self/v1/schemas/configuration/path/%/schema.metapack
-./explorer/self/v1/schemas/configuration/rpath
-./explorer/self/v1/schemas/configuration/rpath/%
-./explorer/self/v1/schemas/configuration/rpath/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -554,19 +548,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/configuration/path/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/path/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/path/%/stats.metapack
-./schemas/self/v1/schemas/configuration/rpath
-./schemas/self/v1/schemas/configuration/rpath/%
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
 ./state.bin
 ./version.json
 EOF

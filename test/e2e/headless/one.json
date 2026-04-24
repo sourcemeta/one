@@ -1,7 +1,6 @@
 {
   "url": "http://localhost:8000",
   "html": false,
-  "extends": [ "@self/v1" ],
   "contents": {
     "test": {
       "title": "Test",
