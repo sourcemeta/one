@@ -1,8 +1,5 @@
 {
   "url": "http://localhost:8000",
-  "api": {},
-  "html": {
-    "name": "Title",
-    "description": "Description"
-  }
+  "api": false,
+  "html": false
 }

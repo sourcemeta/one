@@ -1,12 +1,3 @@
 {
-  "url": "http://localhost:8000",
-  "extends": [ "./read_valid_010.json" ],
-  "html": false,
-  "contents": {
-    "test": {
-      "title": "A sample schema folder",
-      "description": "For testing purposes",
-      "github": "sourcemeta/one"
-    }
-  }
+  "include": "./read_valid_001.json"
 }

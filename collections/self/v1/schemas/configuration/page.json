@@ -16,9 +16,6 @@
     "description": {
       "type": "string"
     },
-    "extends": {
-      "$ref": "./extends.json"
-    },
     "contents": {
       "$ref": "./contents.json"
     },

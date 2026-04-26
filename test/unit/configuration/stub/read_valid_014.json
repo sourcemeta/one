@@ -6,18 +6,7 @@
   },
   "contents": {
     "example": {
-      "title": "Test",
-      "baseUri": "https://example.com/extension",
-      "path": "./schemas/example/extension",
-      "defaultDialect": "http://json-schema.org/draft-07/schema#",
-      "resolve": {
-        "https://other.com/single.json": "/foo.json"
-      },
-      "contents": {
-        "foo": {
-          "include": "./read_partial_001.json"
-        }
-      }
+      "path": "./schemas/example/extension"
     }
   }
 }

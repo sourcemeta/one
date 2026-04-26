@@ -1,12 +1,4 @@
 {
   "url": "http://localhost:8000",
-  "html": {
-    "name": "Title",
-    "description": "Description"
-  },
-  "contents": {
-    "example": {
-      "path": "./schemas/example/extension"
-    }
-  }
+  "extends": [ "./read_valid_015_b.json", "./read_valid_015_c.json" ]
 }

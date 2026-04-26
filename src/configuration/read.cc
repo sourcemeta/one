@@ -43,13 +43,15 @@ auto dereference(const std::filesystem::path &base,
                  sourcemeta::core::JSON &input,
                  const sourcemeta::core::Pointer &location,
                  std::unordered_set<std::string> &visited,
-                 std::unordered_set<std::string> &all_files) -> void {
+                 std::unordered_set<std::string> &all_files, const bool is_root)
+    -> void {
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
 
-    // Read extensions
-  } else if (input.defines("extends") && input.at("extends").is_array()) {
+    // Read extensions (only at the top level, not inside contents)
+  } else if (is_root && input.defines("extends") &&
+             input.at("extends").is_array()) {
     auto accumulator{sourcemeta::core::JSON::make_object()};
     for (const auto &entry : input.at("extends").as_array()) {
       if (entry.is_string()) {
@@ -63,7 +65,8 @@ auto dereference(const std::filesystem::path &base,
         all_files.emplace(target_path.native());
         auto extension{read_file(base, new_location, target_path)};
         if (extension.is_object()) {
-          dereference(target_path, extension, new_location, visited, all_files);
+          dereference(target_path, extension, new_location, visited, all_files,
+                      true);
           accumulator.merge(std::move(extension).as_object());
         }
 
@@ -75,7 +78,7 @@ auto dereference(const std::filesystem::path &base,
     accumulator.merge(input.as_object());
     input = std::move(accumulator);
     assert(!input.defines("extends"));
-    dereference(base, input, location, visited, all_files);
+    dereference(base, input, location, visited, all_files, is_root);
 
     // Read included files
   } else if (!location.empty() && input.defines("include") &&
@@ -92,7 +95,7 @@ auto dereference(const std::filesystem::path &base,
     }
     all_files.emplace(target_path.native());
     input.into(read_file(base, new_location, target_path));
-    dereference(target_path, input, new_location, visited, all_files);
+    dereference(target_path, input, new_location, visited, all_files, is_root);
     visited.erase(target_path.native());
 
     // Revisit and relativize paths
@@ -117,7 +120,8 @@ auto dereference(const std::filesystem::path &base,
                            [](const auto &entry) { return entry.first; });
     for (const auto &key : keys) {
       dereference(base, input.at("contents").at(key),
-                  location.concat({"contents", key}), visited, all_files);
+                  location.concat({"contents", key}), visited, all_files,
+                  false);
     }
   }
 }
@@ -198,7 +202,7 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   configuration_files.emplace(canonical_config);
   std::unordered_set<std::string> visited;
   visited.emplace(canonical_config);
-  dereference(configuration_path, data, {}, visited, configuration_files);
+  dereference(configuration_path, data, {}, visited, configuration_files, true);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {

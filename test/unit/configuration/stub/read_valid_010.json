@@ -1,6 +1,7 @@
 {
   "url": "http://localhost:8000",
-  "html": {},
+  "extends": [ "./read_valid_009.json" ],
+  "html": false,
   "contents": {
     "test": {
       "title": "A sample schema folder",
