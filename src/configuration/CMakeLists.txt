@@ -13,9 +13,7 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
     "${ONE_SCHEMAS}/configuration/configuration.json"
     "${ONE_SCHEMAS}/configuration/collection.json"
     "${ONE_SCHEMAS}/configuration/contents.json"
-    "${ONE_SCHEMAS}/configuration/extends.json"
-    "${ONE_SCHEMAS}/configuration/page.json"
-    "${ONE_SCHEMAS}/configuration/path.json")
+    "${ONE_SCHEMAS}/configuration/page.json")
 
 target_include_directories(sourcemeta_one_configuration PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 

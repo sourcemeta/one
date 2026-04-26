@@ -62,9 +62,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#14)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#15)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#17)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#19)
 Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 (  5%) Resolving: self/v1/schemas/api/error.json
 ( 10%) Resolving: self/v1/schemas/api/list/response.json
@@ -82,9 +80,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 ( 70%) Resolving: self/v1/schemas/configuration/collection.json
 ( 75%) Resolving: self/v1/schemas/configuration/configuration.json
 ( 80%) Resolving: self/v1/schemas/configuration/contents.json
-( 85%) Resolving: self/v1/schemas/configuration/extends.json
 ( 90%) Resolving: self/v1/schemas/configuration/page.json
-( 95%) Resolving: self/v1/schemas/configuration/path.json
 (100%) Resolving: test/test.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
@@ -105,9 +101,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 (  6%) Producing: schemas/self/v1/schemas/configuration/collection/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/configuration/configuration/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/configuration/contents/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/configuration/extends/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/configuration/page/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/configuration/path/%/schema.metapack
 (  8%) Producing: schemas/test/test/%/schema.metapack
 (  8%) Producing: schemas/self/v1/schemas/api/error/%/dependencies.metapack
 (  8%) Producing: schemas/self/v1/schemas/api/error/%/locations.metapack
@@ -173,18 +167,10 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 ( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/locations.metapack
 ( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/positions.metapack
 ( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/stats.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/extends/%/locations.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/extends/%/positions.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/extends/%/stats.metapack
 ( 32%) Producing: schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
 ( 32%) Producing: schemas/self/v1/schemas/configuration/page/%/locations.metapack
 ( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/positions.metapack
 ( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/stats.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/path/%/dependencies.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/locations.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/positions.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/stats.metapack
 ( 35%) Producing: schemas/test/test/%/dependencies.metapack
 ( 35%) Producing: schemas/test/test/%/locations.metapack
 ( 36%) Producing: schemas/test/test/%/positions.metapack
@@ -221,12 +207,8 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#20)
 ( 46%) Producing: schemas/self/v1/schemas/configuration/configuration/%/health.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/health.metapack
-( 48%) Producing: schemas/self/v1/schemas/configuration/extends/%/bundle.metapack
-( 48%) Producing: schemas/self/v1/schemas/configuration/extends/%/health.metapack
 ( 48%) Producing: schemas/self/v1/schemas/configuration/page/%/bundle.metapack
 ( 49%) Producing: schemas/self/v1/schemas/configuration/page/%/health.metapack
-( 49%) Producing: schemas/self/v1/schemas/configuration/path/%/bundle.metapack
-( 49%) Producing: schemas/self/v1/schemas/configuration/path/%/health.metapack
 ( 50%) Producing: schemas/test/test/%/bundle.metapack
 ( 50%) Producing: schemas/test/test/%/health.metapack
 error: Custom linter rules are only available on the enterprise edition
