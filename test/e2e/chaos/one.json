@@ -1,6 +1,5 @@
 {
   "url": "http://localhost:8000",
-  "extends": [ "@self/v1" ],
   "contents": {
     "test": {
       "contents": {

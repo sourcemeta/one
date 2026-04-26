@@ -328,51 +328,44 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
   const auto self_path{base_path + "/self"};
   const auto self_path_slash{base_path + "/self/"};
 
-  // First pass: check what we have
-  bool has_regular_entries = false;
-  bool has_special_entries = false;
-  for (const auto &entry : directory.at("entries").as_array()) {
-    const auto path = entry.at("path").to_string();
-    if (path == self_path || path == self_path_slash) {
-      has_special_entries = true;
-    } else {
-      has_regular_entries = true;
-    }
-  }
-
   writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
-  if (has_regular_entries) {
-    writer.table().attribute(
-        "class", "table table-bordered border-light-subtle table-light");
-    make_file_manager_table_header(writer);
-    writer.tbody();
-    for (const auto &entry : directory.at("entries").as_array()) {
-      const auto path = entry.at("path").to_string();
-      if (path != self_path && path != self_path_slash) {
-        make_file_manager_row(writer, entry);
+  bool has_regular_entries{false};
+  for (const auto &entry : directory.at("entries").as_array()) {
+    const auto path{entry.at("path").to_string()};
+    if (path != self_path && path != self_path_slash) {
+      if (!has_regular_entries) {
+        writer.table().attribute(
+            "class", "table table-bordered border-light-subtle table-light");
+        make_file_manager_table_header(writer);
+        writer.tbody();
+        has_regular_entries = true;
       }
+
+      make_file_manager_row(writer, entry);
     }
+  }
+
+  if (has_regular_entries) {
     writer.close();
     writer.close();
   }
 
-  if (has_special_entries) {
-    writer.h6().attribute("class", "text-secondary mt-4 mb-3");
-    writer.text("Special directories");
-    writer.close();
-    writer.table().attribute(
-        "class", "table table-bordered border-light-subtle table-light");
-    make_file_manager_table_header(writer);
-    writer.tbody();
-    for (const auto &entry : directory.at("entries").as_array()) {
-      const auto path = entry.at("path").to_string();
-      if (path == self_path || path == self_path_slash) {
-        make_file_manager_row(writer, entry);
-      }
+  for (const auto &entry : directory.at("entries").as_array()) {
+    const auto path{entry.at("path").to_string()};
+    if (path == self_path || path == self_path_slash) {
+      writer.h6().attribute("class", "text-secondary mt-4 mb-3");
+      writer.text("Special directories");
+      writer.close();
+      writer.table().attribute(
+          "class", "table table-bordered border-light-subtle table-light");
+      make_file_manager_table_header(writer);
+      writer.tbody();
+      make_file_manager_row(writer, entry);
+      writer.close();
+      writer.close();
+      break;
     }
-    writer.close();
-    writer.close();
   }
 
   writer.close();

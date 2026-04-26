@@ -9,7 +9,6 @@
       "path": "/schemas/user.json",
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
       "dialect": "https://json-schema.org/draft/2020-12/schema",
-      "provenance": null,
       "health": 100,
       "breadcrumb": [
         {
@@ -57,7 +56,6 @@
         "path",
         "baseDialect",
         "dialect",
-        "provenance",
         "health"
       ],
       "properties": {
@@ -102,9 +100,6 @@
           "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri-reference"
-        },
-        "provenance": {
-          "type": [ "string", "null" ]
         }
       }
     }

@@ -6,4 +6,4 @@ target_link_libraries(sourcemeta_one_configuration_unit
 target_compile_definitions(sourcemeta_one_configuration_unit
   PRIVATE STUB_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/stub")
 target_compile_definitions(sourcemeta_one_configuration_unit
-  PRIVATE COLLECTIONS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/stub/collections")
+  PRIVATE COLLECTIONS_DIRECTORY="${PROJECT_SOURCE_DIR}/collections")

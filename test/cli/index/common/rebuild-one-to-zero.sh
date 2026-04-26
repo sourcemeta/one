@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "schemas": {
@@ -65,28 +64,26 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#18)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#21)
-(  4%) Resolving: schemas/test.json
-(  9%) Resolving: self/v1/schemas/api/error.json
-( 14%) Resolving: self/v1/schemas/api/list/response.json
-( 19%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 23%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 28%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 33%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 38%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 42%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 47%) Resolving: self/v1/schemas/api/schemas/position.json
-( 52%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 57%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 61%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 66%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 71%) Resolving: self/v1/schemas/configuration/collection.json
-( 76%) Resolving: self/v1/schemas/configuration/configuration.json
-( 80%) Resolving: self/v1/schemas/configuration/contents.json
-( 85%) Resolving: self/v1/schemas/configuration/extends.json
-( 90%) Resolving: self/v1/schemas/configuration/page.json
-( 95%) Resolving: self/v1/schemas/configuration/path.json
-(100%) Resolving: self/v1/schemas/configuration/rpath.json
+(  5%) Resolving: schemas/test.json
+( 10%) Resolving: self/v1/schemas/api/error.json
+( 15%) Resolving: self/v1/schemas/api/list/response.json
+( 20%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 25%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 30%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 35%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 40%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 45%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/position.json
+( 55%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 60%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 65%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 70%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 75%) Resolving: self/v1/schemas/configuration/collection.json
+( 80%) Resolving: self/v1/schemas/configuration/configuration.json
+( 85%) Resolving: self/v1/schemas/configuration/contents.json
+( 90%) Resolving: self/v1/schemas/configuration/extends.json
+( 95%) Resolving: self/v1/schemas/configuration/page.json
+(100%) Resolving: self/v1/schemas/configuration/path.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  1%) Producing: explorer/%/404.metapack
@@ -103,14 +100,13 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 (  4%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/schema.metapack
 (  5%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/schema.metapack
 (  5%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
-(  5%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
+(  6%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/configuration/collection/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/configuration/configuration/%/schema.metapack
-(  6%) Producing: schemas/self/v1/schemas/configuration/contents/%/schema.metapack
+(  7%) Producing: schemas/self/v1/schemas/configuration/contents/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/configuration/extends/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/configuration/page/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/configuration/path/%/schema.metapack
-(  8%) Producing: schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
+(  8%) Producing: schemas/self/v1/schemas/configuration/path/%/schema.metapack
 (  8%) Producing: schemas/schemas/test/%/dependencies.metapack
 (  8%) Producing: schemas/schemas/test/%/locations.metapack
 (  9%) Producing: schemas/schemas/test/%/positions.metapack
@@ -121,80 +117,76 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 10%) Producing: schemas/self/v1/schemas/api/error/%/stats.metapack
 ( 11%) Producing: schemas/self/v1/schemas/api/list/response/%/dependencies.metapack
 ( 11%) Producing: schemas/self/v1/schemas/api/list/response/%/locations.metapack
-( 11%) Producing: schemas/self/v1/schemas/api/list/response/%/positions.metapack
+( 12%) Producing: schemas/self/v1/schemas/api/list/response/%/positions.metapack
 ( 12%) Producing: schemas/self/v1/schemas/api/list/response/%/stats.metapack
 ( 12%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack
-( 12%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/locations.metapack
+( 13%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/locations.metapack
 ( 13%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/positions.metapack
 ( 13%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/stats.metapack
-( 13%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack
+( 14%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack
 ( 14%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/locations.metapack
 ( 14%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/positions.metapack
-( 14%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack
+( 15%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack
 ( 15%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack
 ( 15%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/locations.metapack
-( 15%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/positions.metapack
+( 16%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/positions.metapack
 ( 16%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/stats.metapack
 ( 16%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack
-( 16%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/locations.metapack
+( 17%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/locations.metapack
 ( 17%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/positions.metapack
-( 17%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/stats.metapack
-( 17%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
+( 18%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/stats.metapack
+( 18%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
 ( 18%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/locations.metapack
-( 18%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/positions.metapack
-( 18%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/stats.metapack
+( 19%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/positions.metapack
+( 19%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/stats.metapack
 ( 19%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack
-( 19%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/locations.metapack
+( 20%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/locations.metapack
 ( 20%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/positions.metapack
 ( 20%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/stats.metapack
-( 20%) Producing: schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
+( 21%) Producing: schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
 ( 21%) Producing: schemas/self/v1/schemas/api/schemas/position/%/locations.metapack
 ( 21%) Producing: schemas/self/v1/schemas/api/schemas/position/%/positions.metapack
-( 21%) Producing: schemas/self/v1/schemas/api/schemas/position/%/stats.metapack
+( 22%) Producing: schemas/self/v1/schemas/api/schemas/position/%/stats.metapack
 ( 22%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack
 ( 22%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/locations.metapack
-( 22%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/positions.metapack
+( 23%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/positions.metapack
 ( 23%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/stats.metapack
-( 23%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
-( 23%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/locations.metapack
+( 24%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
+( 24%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/locations.metapack
 ( 24%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/positions.metapack
-( 24%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/stats.metapack
-( 24%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
+( 25%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/stats.metapack
+( 25%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
 ( 25%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/locations.metapack
-( 25%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/positions.metapack
-( 25%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/stats.metapack
+( 26%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/positions.metapack
+( 26%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/stats.metapack
 ( 26%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack
-( 26%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/locations.metapack
-( 26%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
+( 27%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/locations.metapack
+( 27%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
 ( 27%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/stats.metapack
-( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
-( 27%) Producing: schemas/self/v1/schemas/configuration/collection/%/locations.metapack
+( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
+( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/locations.metapack
 ( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/positions.metapack
-( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/stats.metapack
-( 28%) Producing: schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/locations.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/stats.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/locations.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/contents/%/positions.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/contents/%/stats.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/extends/%/locations.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/extends/%/positions.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/extends/%/stats.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/locations.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/positions.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/stats.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/dependencies.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/locations.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/path/%/positions.metapack
-( 35%) Producing: schemas/self/v1/schemas/configuration/path/%/stats.metapack
-( 35%) Producing: schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-( 35%) Producing: schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-( 36%) Producing: schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-( 36%) Producing: schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
+( 29%) Producing: schemas/self/v1/schemas/configuration/collection/%/stats.metapack
+( 29%) Producing: schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
+( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/locations.metapack
+( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
+( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/stats.metapack
+( 31%) Producing: schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
+( 31%) Producing: schemas/self/v1/schemas/configuration/contents/%/locations.metapack
+( 31%) Producing: schemas/self/v1/schemas/configuration/contents/%/positions.metapack
+( 32%) Producing: schemas/self/v1/schemas/configuration/contents/%/stats.metapack
+( 32%) Producing: schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
+( 32%) Producing: schemas/self/v1/schemas/configuration/extends/%/locations.metapack
+( 33%) Producing: schemas/self/v1/schemas/configuration/extends/%/positions.metapack
+( 33%) Producing: schemas/self/v1/schemas/configuration/extends/%/stats.metapack
+( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
+( 34%) Producing: schemas/self/v1/schemas/configuration/page/%/locations.metapack
+( 34%) Producing: schemas/self/v1/schemas/configuration/page/%/positions.metapack
+( 34%) Producing: schemas/self/v1/schemas/configuration/page/%/stats.metapack
+( 35%) Producing: schemas/self/v1/schemas/configuration/path/%/dependencies.metapack
+( 35%) Producing: schemas/self/v1/schemas/configuration/path/%/locations.metapack
+( 36%) Producing: schemas/self/v1/schemas/configuration/path/%/positions.metapack
+( 36%) Producing: schemas/self/v1/schemas/configuration/path/%/stats.metapack
 ( 36%) Producing: schemas/schemas/test/%/bundle.metapack
 ( 37%) Producing: schemas/schemas/test/%/health.metapack
 ( 37%) Producing: schemas/self/v1/schemas/api/error/%/bundle.metapack
@@ -204,10 +196,10 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 38%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack
 ( 39%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/health.metapack
 ( 39%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle.metapack
-( 40%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/health.metapack
+( 39%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/health.metapack
 ( 40%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack
 ( 40%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/health.metapack
-( 41%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
+( 40%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
 ( 41%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/health.metapack
 ( 41%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
 ( 42%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/health.metapack
@@ -227,20 +219,18 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 46%) Producing: schemas/self/v1/schemas/configuration/collection/%/health.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/health.metapack
-( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
+( 48%) Producing: schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
 ( 48%) Producing: schemas/self/v1/schemas/configuration/contents/%/health.metapack
 ( 48%) Producing: schemas/self/v1/schemas/configuration/extends/%/bundle.metapack
-( 48%) Producing: schemas/self/v1/schemas/configuration/extends/%/health.metapack
+( 49%) Producing: schemas/self/v1/schemas/configuration/extends/%/health.metapack
 ( 49%) Producing: schemas/self/v1/schemas/configuration/page/%/bundle.metapack
 ( 49%) Producing: schemas/self/v1/schemas/configuration/page/%/health.metapack
-( 49%) Producing: schemas/self/v1/schemas/configuration/path/%/bundle.metapack
+( 50%) Producing: schemas/self/v1/schemas/configuration/path/%/bundle.metapack
 ( 50%) Producing: schemas/self/v1/schemas/configuration/path/%/health.metapack
-( 50%) Producing: schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-( 50%) Producing: schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-( 51%) Producing: explorer/schemas/test/%/schema.metapack
+( 50%) Producing: explorer/schemas/test/%/schema.metapack
 ( 51%) Producing: explorer/self/v1/schemas/api/error/%/schema.metapack
 ( 51%) Producing: explorer/self/v1/schemas/api/list/response/%/schema.metapack
-( 52%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
+( 51%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
 ( 52%) Producing: explorer/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
 ( 52%) Producing: explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
 ( 53%) Producing: explorer/self/v1/schemas/api/schemas/health/response/%/schema.metapack
@@ -257,25 +247,24 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 56%) Producing: explorer/self/v1/schemas/configuration/extends/%/schema.metapack
 ( 57%) Producing: explorer/self/v1/schemas/configuration/page/%/schema.metapack
 ( 57%) Producing: explorer/self/v1/schemas/configuration/path/%/schema.metapack
-( 57%) Producing: explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
-( 58%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
+( 57%) Producing: schemas/schemas/test/%/blaze-exhaustive.metapack
 ( 58%) Producing: schemas/schemas/test/%/blaze-fast.metapack
 ( 58%) Producing: schemas/schemas/test/%/editor.metapack
 ( 59%) Producing: schemas/self/v1/schemas/api/error/%/blaze-exhaustive.metapack
 ( 59%) Producing: schemas/self/v1/schemas/api/error/%/blaze-fast.metapack
-( 60%) Producing: schemas/self/v1/schemas/api/error/%/editor.metapack
+( 59%) Producing: schemas/self/v1/schemas/api/error/%/editor.metapack
 ( 60%) Producing: schemas/self/v1/schemas/api/list/response/%/blaze-exhaustive.metapack
 ( 60%) Producing: schemas/self/v1/schemas/api/list/response/%/blaze-fast.metapack
-( 61%) Producing: schemas/self/v1/schemas/api/list/response/%/editor.metapack
+( 60%) Producing: schemas/self/v1/schemas/api/list/response/%/editor.metapack
 ( 61%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-exhaustive.metapack
 ( 61%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-fast.metapack
-( 62%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack
+( 61%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack
 ( 62%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-exhaustive.metapack
 ( 62%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-fast.metapack
-( 63%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack
+( 62%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack
 ( 63%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-exhaustive.metapack
 ( 63%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-fast.metapack
-( 64%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack
+( 63%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack
 ( 64%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/blaze-exhaustive.metapack
 ( 64%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/blaze-fast.metapack
 ( 65%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/editor.metapack
@@ -295,58 +284,55 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 69%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/blaze-fast.metapack
 ( 70%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/editor.metapack
 ( 70%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-exhaustive.metapack
-( 70%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack
+( 71%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack
 ( 71%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/editor.metapack
 ( 71%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-exhaustive.metapack
-( 71%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack
+( 72%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack
 ( 72%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/editor.metapack
 ( 72%) Producing: schemas/self/v1/schemas/configuration/collection/%/blaze-exhaustive.metapack
-( 72%) Producing: schemas/self/v1/schemas/configuration/collection/%/blaze-fast.metapack
+( 73%) Producing: schemas/self/v1/schemas/configuration/collection/%/blaze-fast.metapack
 ( 73%) Producing: schemas/self/v1/schemas/configuration/collection/%/editor.metapack
 ( 73%) Producing: schemas/self/v1/schemas/configuration/configuration/%/blaze-exhaustive.metapack
-( 73%) Producing: schemas/self/v1/schemas/configuration/configuration/%/blaze-fast.metapack
+( 74%) Producing: schemas/self/v1/schemas/configuration/configuration/%/blaze-fast.metapack
 ( 74%) Producing: schemas/self/v1/schemas/configuration/configuration/%/editor.metapack
 ( 74%) Producing: schemas/self/v1/schemas/configuration/contents/%/blaze-exhaustive.metapack
-( 74%) Producing: schemas/self/v1/schemas/configuration/contents/%/blaze-fast.metapack
+( 75%) Producing: schemas/self/v1/schemas/configuration/contents/%/blaze-fast.metapack
 ( 75%) Producing: schemas/self/v1/schemas/configuration/contents/%/editor.metapack
 ( 75%) Producing: schemas/self/v1/schemas/configuration/extends/%/blaze-exhaustive.metapack
-( 75%) Producing: schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack
+( 76%) Producing: schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack
 ( 76%) Producing: schemas/self/v1/schemas/configuration/extends/%/editor.metapack
-( 76%) Producing: schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack
-( 76%) Producing: schemas/self/v1/schemas/configuration/page/%/blaze-fast.metapack
+( 77%) Producing: schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack
+( 77%) Producing: schemas/self/v1/schemas/configuration/page/%/blaze-fast.metapack
 ( 77%) Producing: schemas/self/v1/schemas/configuration/page/%/editor.metapack
-( 77%) Producing: schemas/self/v1/schemas/configuration/path/%/blaze-exhaustive.metapack
-( 77%) Producing: schemas/self/v1/schemas/configuration/path/%/blaze-fast.metapack
+( 78%) Producing: schemas/self/v1/schemas/configuration/path/%/blaze-exhaustive.metapack
+( 78%) Producing: schemas/self/v1/schemas/configuration/path/%/blaze-fast.metapack
 ( 78%) Producing: schemas/self/v1/schemas/configuration/path/%/editor.metapack
-( 78%) Producing: schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-( 78%) Producing: schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-( 79%) Producing: schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
 ( 79%) Producing: explorer/schemas/%/directory.metapack
-( 80%) Producing: explorer/schemas/test/%/schema-html.metapack
-( 80%) Producing: explorer/self/v1/schemas/api/error/%/schema-html.metapack
+( 79%) Producing: explorer/schemas/test/%/schema-html.metapack
+( 79%) Producing: explorer/self/v1/schemas/api/error/%/schema-html.metapack
 ( 80%) Producing: explorer/self/v1/schemas/api/list/%/directory.metapack
-( 81%) Producing: explorer/self/v1/schemas/api/list/response/%/schema-html.metapack
-( 81%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/%/directory.metapack
+( 80%) Producing: explorer/self/v1/schemas/api/list/response/%/schema-html.metapack
+( 80%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/%/directory.metapack
 ( 81%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema-html.metapack
-( 82%) Producing: explorer/self/v1/schemas/api/schemas/dependents/%/directory.metapack
-( 82%) Producing: explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
+( 81%) Producing: explorer/self/v1/schemas/api/schemas/dependents/%/directory.metapack
+( 81%) Producing: explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
 ( 82%) Producing: explorer/self/v1/schemas/api/schemas/evaluate/%/directory.metapack
-( 83%) Producing: explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema-html.metapack
+( 82%) Producing: explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema-html.metapack
 ( 83%) Producing: explorer/self/v1/schemas/api/schemas/health/%/directory.metapack
 ( 83%) Producing: explorer/self/v1/schemas/api/schemas/health/response/%/schema-html.metapack
-( 84%) Producing: explorer/self/v1/schemas/api/schemas/locations/%/directory.metapack
+( 83%) Producing: explorer/self/v1/schemas/api/schemas/locations/%/directory.metapack
 ( 84%) Producing: explorer/self/v1/schemas/api/schemas/locations/response/%/schema-html.metapack
 ( 84%) Producing: explorer/self/v1/schemas/api/schemas/metadata/%/directory.metapack
-( 85%) Producing: explorer/self/v1/schemas/api/schemas/metadata/response/%/schema-html.metapack
+( 84%) Producing: explorer/self/v1/schemas/api/schemas/metadata/response/%/schema-html.metapack
 ( 85%) Producing: explorer/self/v1/schemas/api/schemas/position/%/schema-html.metapack
 ( 85%) Producing: explorer/self/v1/schemas/api/schemas/positions/%/directory.metapack
-( 86%) Producing: explorer/self/v1/schemas/api/schemas/positions/response/%/schema-html.metapack
+( 85%) Producing: explorer/self/v1/schemas/api/schemas/positions/response/%/schema-html.metapack
 ( 86%) Producing: explorer/self/v1/schemas/api/schemas/search/%/directory.metapack
 ( 86%) Producing: explorer/self/v1/schemas/api/schemas/search/response/%/schema-html.metapack
-( 87%) Producing: explorer/self/v1/schemas/api/schemas/stats/%/directory.metapack
+( 86%) Producing: explorer/self/v1/schemas/api/schemas/stats/%/directory.metapack
 ( 87%) Producing: explorer/self/v1/schemas/api/schemas/stats/response/%/schema-html.metapack
 ( 87%) Producing: explorer/self/v1/schemas/api/schemas/trace/%/directory.metapack
-( 88%) Producing: explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
+( 87%) Producing: explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
 ( 88%) Producing: explorer/self/v1/schemas/configuration/%/directory.metapack
 ( 88%) Producing: explorer/self/v1/schemas/configuration/collection/%/schema-html.metapack
 ( 89%) Producing: explorer/self/v1/schemas/configuration/configuration/%/schema-html.metapack
@@ -354,17 +340,16 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 89%) Producing: explorer/self/v1/schemas/configuration/extends/%/schema-html.metapack
 ( 90%) Producing: explorer/self/v1/schemas/configuration/page/%/schema-html.metapack
 ( 90%) Producing: explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
-( 90%) Producing: explorer/self/v1/schemas/configuration/rpath/%/schema-html.metapack
-( 91%) Producing: explorer/schemas/%/directory-html.metapack
+( 90%) Producing: explorer/schemas/%/directory-html.metapack
 ( 91%) Producing: explorer/self/v1/schemas/api/list/%/directory-html.metapack
 ( 91%) Producing: explorer/self/v1/schemas/api/schemas/%/directory.metapack
-( 92%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/%/directory-html.metapack
+( 91%) Producing: explorer/self/v1/schemas/api/schemas/dependencies/%/directory-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
-( 93%) Producing: explorer/self/v1/schemas/api/schemas/health/%/directory-html.metapack
+( 92%) Producing: explorer/self/v1/schemas/api/schemas/health/%/directory-html.metapack
 ( 93%) Producing: explorer/self/v1/schemas/api/schemas/locations/%/directory-html.metapack
 ( 93%) Producing: explorer/self/v1/schemas/api/schemas/metadata/%/directory-html.metapack
-( 94%) Producing: explorer/self/v1/schemas/api/schemas/positions/%/directory-html.metapack
+( 93%) Producing: explorer/self/v1/schemas/api/schemas/positions/%/directory-html.metapack
 ( 94%) Producing: explorer/self/v1/schemas/api/schemas/search/%/directory-html.metapack
 ( 94%) Producing: explorer/self/v1/schemas/api/schemas/stats/%/directory-html.metapack
 ( 95%) Producing: explorer/self/v1/schemas/api/schemas/trace/%/directory-html.metapack
@@ -382,27 +367,26 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 ( 99%) Producing: explorer/%/directory-html.metapack
 ( 99%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
-(  4%) Combining: schemas/schemas/test/%/dependents.metapack
-(  9%) Combining: schemas/self/v1/schemas/api/error/%/dependents.metapack
-( 14%) Combining: schemas/self/v1/schemas/api/list/response/%/dependents.metapack
-( 19%) Combining: schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
-( 23%) Combining: schemas/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
-( 28%) Combining: schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack
-( 33%) Combining: schemas/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
-( 38%) Combining: schemas/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
-( 42%) Combining: schemas/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
-( 47%) Combining: schemas/self/v1/schemas/api/schemas/position/%/dependents.metapack
-( 52%) Combining: schemas/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
-( 57%) Combining: schemas/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
-( 61%) Combining: schemas/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
-( 66%) Combining: schemas/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack
-( 71%) Combining: schemas/self/v1/schemas/configuration/collection/%/dependents.metapack
-( 76%) Combining: schemas/self/v1/schemas/configuration/configuration/%/dependents.metapack
-( 80%) Combining: schemas/self/v1/schemas/configuration/contents/%/dependents.metapack
-( 85%) Combining: schemas/self/v1/schemas/configuration/extends/%/dependents.metapack
-( 90%) Combining: schemas/self/v1/schemas/configuration/page/%/dependents.metapack
-( 95%) Combining: schemas/self/v1/schemas/configuration/path/%/dependents.metapack
-(100%) Combining: schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
+(  5%) Combining: schemas/schemas/test/%/dependents.metapack
+( 10%) Combining: schemas/self/v1/schemas/api/error/%/dependents.metapack
+( 15%) Combining: schemas/self/v1/schemas/api/list/response/%/dependents.metapack
+( 20%) Combining: schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
+( 25%) Combining: schemas/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
+( 30%) Combining: schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack
+( 35%) Combining: schemas/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
+( 40%) Combining: schemas/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
+( 45%) Combining: schemas/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
+( 50%) Combining: schemas/self/v1/schemas/api/schemas/position/%/dependents.metapack
+( 55%) Combining: schemas/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
+( 60%) Combining: schemas/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
+( 65%) Combining: schemas/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
+( 70%) Combining: schemas/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack
+( 75%) Combining: schemas/self/v1/schemas/configuration/collection/%/dependents.metapack
+( 80%) Combining: schemas/self/v1/schemas/configuration/configuration/%/dependents.metapack
+( 85%) Combining: schemas/self/v1/schemas/configuration/contents/%/dependents.metapack
+( 90%) Combining: schemas/self/v1/schemas/configuration/extends/%/dependents.metapack
+( 95%) Combining: schemas/self/v1/schemas/configuration/page/%/dependents.metapack
+(100%) Combining: schemas/self/v1/schemas/configuration/path/%/dependents.metapack
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
@@ -570,10 +554,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/configuration/path/%
 ./explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
 ./explorer/self/v1/schemas/configuration/path/%/schema.metapack
-./explorer/self/v1/schemas/configuration/rpath
-./explorer/self/v1/schemas/configuration/rpath/%
-./explorer/self/v1/schemas/configuration/rpath/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/schemas
@@ -854,19 +834,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/configuration/path/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/path/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/path/%/stats.metapack
-./schemas/self/v1/schemas/configuration/rpath
-./schemas/self/v1/schemas/configuration/rpath/%
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
 ./state.bin
 ./version.json
 EOF
@@ -900,7 +867,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#17)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#18)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#20)
 ( 20%) Producing: explorer/%/directory.metapack
 ( 40%) Producing: explorer/%/directory-html.metapack
 ( 60%) Producing: explorer/%/search.metapack
@@ -1065,10 +1031,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/configuration/path/%
 ./explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
 ./explorer/self/v1/schemas/configuration/path/%/schema.metapack
-./explorer/self/v1/schemas/configuration/rpath
-./explorer/self/v1/schemas/configuration/rpath/%
-./explorer/self/v1/schemas/configuration/rpath/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/self
@@ -1335,19 +1297,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/configuration/path/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/path/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/path/%/stats.metapack
-./schemas/self/v1/schemas/configuration/rpath
-./schemas/self/v1/schemas/configuration/rpath/%
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
 ./state.bin
 ./version.json
 EOF

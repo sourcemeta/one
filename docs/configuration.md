@@ -55,9 +55,9 @@ structuring your instance.
 
 !!! note
 
-    While any content tree structure is supported, you cannot create a
-    top-level entry called `self`, as this namespace is reserved for the [HTTP
-    API](api.md) and other internal functionality.
+    The `/self` namespace is reserved for the built-in [HTTP API](api.md)
+    and internal functionality. It is always present and cannot be
+    overridden by user content.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
@@ -312,14 +312,13 @@ contains the schema collections they own.
 
 The `extends` property enables configuration inheritance, allowing you to build
 upon existing configuration files for enhanced reusability and modularity. This
-property accepts an array of strings where each entry represents either a file
-path (relative from the configuration file location) or a built-in schema
-collection identifier (prefixed with `@`). For example:
+property accepts an array of file paths (relative from the configuration file
+location). For example:
 
 ```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@self/v1", "../path/to/my/other/config/one.json" ]
+  "extends": [ "../path/to/my/other/config/one.json" ]
 }
 ```
 

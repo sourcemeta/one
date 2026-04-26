@@ -25,7 +25,6 @@ EOF
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "http://localhost:8000",
   "html": false,
   "contents": {
@@ -167,9 +166,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/configuration/path
 ./explorer/self/v1/schemas/configuration/path/%
 ./explorer/self/v1/schemas/configuration/path/%/schema.metapack
-./explorer/self/v1/schemas/configuration/rpath
-./explorer/self/v1/schemas/configuration/rpath/%
-./explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -463,19 +459,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/self/v1/schemas/configuration/path/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/path/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/path/%/stats.metapack
-./schemas/self/v1/schemas/configuration/rpath
-./schemas/self/v1/schemas/configuration/rpath/%
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
 ./state.bin
 ./version.json
 EOF

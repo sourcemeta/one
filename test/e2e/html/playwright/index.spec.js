@@ -35,4 +35,11 @@ test.describe('Home page directory listing', () => {
     const testInSpecial = specialTable.locator('a[href="/test/"]');
     await expect(testInSpecial).toHaveCount(0);
   });
+
+  test('can navigate to /self/v1/schemas and see configuration schemas',
+    async ({ page }) => {
+    await page.goto('/self/v1/schemas/');
+    const heading = page.locator('td a[href*="configuration"]');
+    await expect(heading).toBeVisible();
+  });
 });

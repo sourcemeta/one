@@ -18,7 +18,6 @@ jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/v2.0/schema"
 jsonpath "$.path" == "/test/v2.0/schema"
 jsonpath "$.alert" == null
-jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
@@ -57,7 +56,6 @@ jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/schemas/string"
 jsonpath "$.path" == "/test/schemas/string"
 jsonpath "$.alert" == null
-jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 10
 jsonpath "$.examples[0]" == "example_01"
 jsonpath "$.examples[1]" == "example_02"
@@ -119,7 +117,6 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# With built-in library provenance
 GET {{base}}/self/v1/api/schemas/metadata/self/v1/schemas/configuration/configuration
 Accept: application/json
 HTTP 200
@@ -135,14 +132,13 @@ header "Last-Modified" exists
 jsonpath "$.bytes" == 1558
 jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.health" == 100
-jsonpath "$.dependencies" == 6
+jsonpath "$.dependencies" == 5
 jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.identifier" == "{{base}}/self/v1/schemas/configuration/configuration"
 jsonpath "$.path" == "/self/v1/schemas/configuration/configuration"
 jsonpath "$.title" == "The Sourcemeta One configuration file format"
 jsonpath "$.description" == "The configuration file format used to configured One instances"
 jsonpath "$.alert" == null
-jsonpath "$.provenance" == "@self/v1"
 jsonpath "$.examples" count == 1
 jsonpath "$.breadcrumb" count == 5
 jsonpath "$.breadcrumb[0].name" == "self"
@@ -230,7 +226,6 @@ jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/bundling/double"
 jsonpath "$.path" == "/test/bundling/double"
 jsonpath "$.alert" == null
-jsonpath "$.provenance" == null
 jsonpath "$.examples" count == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"

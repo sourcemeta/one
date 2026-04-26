@@ -38,7 +38,22 @@ TEST(Configuration, valid_001) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 3);
+  EXPECT_EQ(configuration.entries.size(), 6);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self", description,
+              "The schemas that define the current version of this instance");
+  EXPECT_PAGE(configuration, "self", email, "hello@sourcemeta.com");
+  EXPECT_PAGE(configuration, "self", github, "sourcemeta/one");
+  EXPECT_PAGE(configuration, "self", website, "https://www.sourcemeta.com");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", description, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", email, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", github, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_PAGE(configuration, "example", title, "Sourcemeta");
   EXPECT_PAGE(configuration, "example", description, "My description");
@@ -90,7 +105,13 @@ TEST(Configuration, valid_002) {
 
   EXPECT_FALSE(configuration.html.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_PAGE(configuration, "test", title, "A sample schema folder");
   EXPECT_PAGE(configuration, "test", description, "For testing purposes");
@@ -114,7 +135,13 @@ TEST(Configuration, valid_003) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -149,7 +176,13 @@ TEST(Configuration, valid_004) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -191,7 +224,13 @@ TEST(Configuration, valid_005) {
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -236,7 +275,13 @@ TEST(Configuration, valid_006) {
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -281,7 +326,13 @@ TEST(Configuration, valid_007) {
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -326,7 +377,13 @@ TEST(Configuration, valid_008) {
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", absolute_path,

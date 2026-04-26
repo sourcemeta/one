@@ -27,9 +27,6 @@
     "x-sourcemeta-one:path": {
       "$ref": "./path.json"
     },
-    "x-sourcemeta-one:provenance": {
-      "$ref": "./rpath.json"
-    },
     "baseUri": {
       "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",

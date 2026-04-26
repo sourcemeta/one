@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://sourcemeta.com/",
   "contents": {
     "example": {
@@ -65,7 +64,7 @@ remove_threads_information() {
 test "$CODE" = "1"
 remove_threads_information "$TMP/output.txt"
 
-cat << EOF > "$TMP/expected1.txt"
+cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/meta-a.json (#1)
@@ -89,32 +88,30 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configur
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#20)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#22)
 (  4%) Resolving: example/schemas/meta-a.json
 (  9%) Resolving: example/schemas/meta-b.json
-( 13%) Resolving: self/v1/schemas/api/error.json
-( 18%) Resolving: self/v1/schemas/api/list/response.json
-( 22%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 27%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 31%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 36%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 40%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 45%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 50%) Resolving: self/v1/schemas/api/schemas/position.json
-( 54%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 59%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 63%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 68%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 72%) Resolving: self/v1/schemas/configuration/collection.json
-( 77%) Resolving: self/v1/schemas/configuration/configuration.json
-( 81%) Resolving: self/v1/schemas/configuration/contents.json
-( 86%) Resolving: self/v1/schemas/configuration/extends.json
-( 90%) Resolving: self/v1/schemas/configuration/page.json
-( 95%) Resolving: self/v1/schemas/configuration/path.json
-(100%) Resolving: self/v1/schemas/configuration/rpath.json
+( 14%) Resolving: self/v1/schemas/api/error.json
+( 19%) Resolving: self/v1/schemas/api/list/response.json
+( 23%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 28%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 33%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 38%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 42%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 47%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 52%) Resolving: self/v1/schemas/api/schemas/position.json
+( 57%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 61%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 66%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 71%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 76%) Resolving: self/v1/schemas/configuration/collection.json
+( 80%) Resolving: self/v1/schemas/configuration/configuration.json
+( 85%) Resolving: self/v1/schemas/configuration/contents.json
+( 90%) Resolving: self/v1/schemas/configuration/extends.json
+( 95%) Resolving: self/v1/schemas/configuration/page.json
+(100%) Resolving: self/v1/schemas/configuration/path.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
-(  0%) Producing: explorer/%/404.metapack
+(  1%) Producing: explorer/%/404.metapack
 (  1%) Producing: schemas/example/schemas/meta-a/%/schema.metapack
 (  1%) Producing: schemas/example/schemas/meta-b/%/schema.metapack
 error: The metaschema requires an unrecognised vocabulary
@@ -122,21 +119,4 @@ error: The metaschema requires an unrecognised vocabulary
   at path $(realpath "$TMP")/schemas/meta-b.json
 EOF
 
-cat << EOF > "$TMP/expected2.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/meta-b.json (#1)
-Detecting: $(realpath "$TMP")/schemas/meta-a.json (#2)
-( 50%) Resolving: meta-b.json
-(100%) Resolving: meta-a.json
-(  2%) Producing: configuration.json
-(  5%) Producing: version.json
-(  8%) Producing: explorer/%/404.metapack
-( 11%) Producing: schemas/example/schemas/meta-a/%/schema.metapack
-( 14%) Producing: schemas/example/schemas/meta-b/%/schema.metapack
-error: The metaschema requires an unrecognised vocabulary
-  at vocabulary https://example.com/vocab/totally-unknown
-  at path $(realpath "$TMP")/schemas/meta-b.json
-EOF
-
-diff "$TMP/output.txt" "$TMP/expected1.txt" || diff "$TMP/output.txt" "$TMP/expected2.txt"
+diff "$TMP/output.txt" "$TMP/expected.txt"
