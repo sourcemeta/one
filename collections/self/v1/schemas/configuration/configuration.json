@@ -16,6 +16,10 @@
     "contents": {
       "$ref": "./contents.json"
     },
+    "api": {
+      "type": [ "object", "boolean" ],
+      "additionalProperties": false
+    },
     "html": {
       "type": [ "object", "boolean" ],
       "properties": {
@@ -58,5 +62,24 @@
       "format": "uri"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "dependentSchemas": {
+    "api": {
+      "if": {
+        "properties": {
+          "api": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [ "html" ],
+        "properties": {
+          "html": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
 }

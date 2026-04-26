@@ -68,7 +68,8 @@ cat << EOF > "$TMP/expected.txt"
   "html": {
     "name": "Sourcemeta",
     "description": "The next-generation JSON Schema platform"
-  }
+  },
+  "api": {}
 }
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

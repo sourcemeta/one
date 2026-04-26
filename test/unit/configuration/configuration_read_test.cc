@@ -23,6 +23,7 @@ TEST(Configuration_read, read_valid_001) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Title",
       "description": "Description"
@@ -88,6 +89,7 @@ TEST(Configuration_read, read_valid_002) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -140,6 +142,7 @@ TEST(Configuration_read, read_valid_003) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -191,6 +194,7 @@ TEST(Configuration_read, read_valid_004) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -245,6 +249,7 @@ TEST(Configuration_read, read_valid_005) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -299,6 +304,7 @@ TEST(Configuration_read, read_valid_006) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -346,6 +352,7 @@ TEST(Configuration_read, read_valid_007) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -389,6 +396,7 @@ TEST(Configuration_read, read_valid_008) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": false,
     "contents": {
       "self": {
@@ -431,6 +439,7 @@ TEST(Configuration_read, read_valid_009) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -476,6 +485,7 @@ TEST(Configuration_read, read_valid_010) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -521,6 +531,7 @@ TEST(Configuration_read, read_valid_011) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": false,
     "contents": {
       "self": {
@@ -582,6 +593,7 @@ TEST(Configuration_read, read_valid_012) {
       }
     },
     "include": "./read_valid_001.json",
+    "api": {},
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
@@ -602,6 +614,7 @@ TEST(Configuration_read, read_valid_013) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Title",
       "description": "Description"
@@ -653,6 +666,7 @@ TEST(Configuration_read, read_valid_014) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Title",
       "description": "Description"
@@ -708,6 +722,7 @@ TEST(Configuration_read, read_valid_015) {
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
+    "api": {},
     "html": {
       "name": "Title",
       "description": "Description"
@@ -932,4 +947,100 @@ TEST(Configuration_read, read_configuration_files_with_include_chain) {
           std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
           "jsonschema.json")
           .native()));
+}
+
+TEST(Configuration_read, read_valid_017_api_explicit_object) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_017.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+
+  std::string text{R"JSON({
+    "url": "http://localhost:8000",
+    "api": {},
+    "html": {
+      "name": "Title",
+      "description": "Description"
+    },
+    "contents": {
+      "self": {
+        "title": "Self",
+        "description": "The schemas that define the current version of this instance",
+        "email": "hello@sourcemeta.com",
+        "github": "sourcemeta/one",
+        "website": "https://www.sourcemeta.com",
+        "contents": {
+          "v1": {
+            "contents": {
+              "schemas": {
+                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
+                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "baseUri": "http://localhost:8000"
+              }
+            }
+          }
+        }
+      }
+    }
+  })JSON"};
+
+  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  const auto expected{sourcemeta::core::parse_json(text)};
+  EXPECT_EQ(raw_configuration, expected);
+}
+
+TEST(Configuration_read, read_valid_018_api_false_html_false) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_018.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+
+  std::string text{R"JSON({
+    "url": "http://localhost:8000",
+    "api": false,
+    "html": false
+  })JSON"};
+
+  const auto expected{sourcemeta::core::parse_json(text)};
+  EXPECT_EQ(raw_configuration, expected);
+}
+
+TEST(Configuration_read, read_valid_019_api_true_coerced_to_object) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_019.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+
+  std::string text{R"JSON({
+    "url": "http://localhost:8000",
+    "api": {},
+    "html": {
+      "name": "Title",
+      "description": "Description"
+    },
+    "contents": {
+      "self": {
+        "title": "Self",
+        "description": "The schemas that define the current version of this instance",
+        "email": "hello@sourcemeta.com",
+        "github": "sourcemeta/one",
+        "website": "https://www.sourcemeta.com",
+        "contents": {
+          "v1": {
+            "contents": {
+              "schemas": {
+                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
+                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "baseUri": "http://localhost:8000"
+              }
+            }
+          }
+        }
+      }
+    }
+  })JSON"};
+
+  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  const auto expected{sourcemeta::core::parse_json(text)};
+  EXPECT_EQ(raw_configuration, expected);
 }

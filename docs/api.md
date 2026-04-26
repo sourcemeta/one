@@ -7,8 +7,9 @@ hide:
 
 !!! info
 
-    The HTTP API and the JSON Schemas that describe it (mounted at
-    `/self/v1/schemas`) are always available on every Sourcemeta One instance.
+    The HTTP API is enabled by default on every Sourcemeta One instance.
+    It can be disabled by setting `api` to `false` in the
+    [configuration file](configuration.md#api).
 
 This API has been architected with performance as a primary consideration,
 ensuring fast response times and efficient resource utilization across all

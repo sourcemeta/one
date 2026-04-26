@@ -48,6 +48,7 @@ struct Configuration {
   };
 
   std::optional<HTML> html;
+  bool api{true};
 
   struct Page {
     std::optional<sourcemeta::core::JSON::String> title;

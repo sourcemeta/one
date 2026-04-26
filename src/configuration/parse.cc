@@ -127,6 +127,12 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
+  if (data.defines("api")) {
+    if (data.at("api").is_boolean() && !data.at("api").to_boolean()) {
+      result.api = false;
+    }
+  }
+
   entries_from_json(result.entries, "", data, default_base_path);
 
   return result;
