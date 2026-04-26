@@ -53,6 +53,11 @@ jobs:
         with:
           path: test/e2e/html
           edition: ${{ matrix.edition.name }}
+      - name: E2E (no-api)
+        uses: ./.github/actions/e2e
+        with:
+          path: test/e2e/no-api
+          edition: ${{ matrix.edition.name }}
       - name: E2E (chaos)
         uses: ./.github/actions/e2e
         with:

@@ -170,19 +170,28 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
-  const auto self_path{std::filesystem::weakly_canonical(
-      collections_path / "self" / "v1" / "one.json")};
+  if (data.is_object() && data.defines("api") && data.at("api").is_boolean() &&
+      data.at("api").to_boolean()) {
+    data.at("api").into_object();
+  } else if (!data.defines("api")) {
+    data.assign("api", sourcemeta::core::JSON::make_object());
+  }
+
   if (!data.defines("extends")) {
     data.assign("extends", sourcemeta::core::JSON::make_array());
   }
 
-  auto extends_copy{sourcemeta::core::JSON::make_array()};
-  extends_copy.push_back(sourcemeta::core::JSON{self_path.string()});
-  for (const auto &entry : data.at("extends").as_array()) {
-    extends_copy.push_back(entry);
-  }
+  if (!(data.at("api").is_boolean() && !data.at("api").to_boolean())) {
+    const auto self_path{std::filesystem::weakly_canonical(
+        collections_path / "self" / "v1" / "one.json")};
+    auto extends_copy{sourcemeta::core::JSON::make_array()};
+    extends_copy.push_back(sourcemeta::core::JSON{self_path.string()});
+    for (const auto &entry : data.at("extends").as_array()) {
+      extends_copy.push_back(entry);
+    }
 
-  data.assign("extends", std::move(extends_copy));
+    data.assign("extends", std::move(extends_copy));
+  }
 
   const auto canonical_config{
       std::filesystem::weakly_canonical(configuration_path).native()};

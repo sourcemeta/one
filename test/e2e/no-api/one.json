@@ -1,0 +1,18 @@
+{
+  "url": "http://localhost:8000",
+  "api": false,
+  "html": false,
+  "contents": {
+    "test": {
+      "title": "Test",
+      "description": "A directory full of testing schemas",
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/schemas",
+          "path": "./schemas",
+          "defaultDialect": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    }
+  }
+}

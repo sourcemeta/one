@@ -30,6 +30,7 @@ TEST(Configuration, valid_001) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -102,6 +103,7 @@ TEST(Configuration, valid_002) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_FALSE(configuration.html.has_value());
 
@@ -127,6 +129,7 @@ TEST(Configuration, valid_003) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -168,6 +171,7 @@ TEST(Configuration, valid_004) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -219,6 +223,7 @@ TEST(Configuration, valid_005) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -270,6 +275,7 @@ TEST(Configuration, valid_006) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -321,6 +327,7 @@ TEST(Configuration, valid_007) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -372,6 +379,7 @@ TEST(Configuration, valid_008) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -479,4 +487,58 @@ TEST(Configuration, is_collection_base_false_for_unknown) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_FALSE(configuration.is_collection_base("nonexistent"));
   EXPECT_FALSE(configuration.is_collection_base("example/nonexistent"));
+}
+
+TEST(Configuration, valid_009_api_enabled) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_009.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_EQ(configuration.base_path, "");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+  EXPECT_FALSE(configuration.html.value().head.has_value());
+  EXPECT_FALSE(configuration.html.value().hero.has_value());
+  EXPECT_FALSE(configuration.html.value().action.has_value());
+
+  EXPECT_EQ(configuration.entries.size(), 3);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self", description,
+              "The schemas that define the current version of this instance");
+  EXPECT_PAGE(configuration, "self", email, "hello@sourcemeta.com");
+  EXPECT_PAGE(configuration, "self", github, "sourcemeta/one");
+  EXPECT_PAGE(configuration, "self", website, "https://www.sourcemeta.com");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", description, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", email, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", github, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" /
+                        "v1" / "schemas");
+}
+
+TEST(Configuration, valid_010_api_disabled) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_010.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_EQ(configuration.base_path, "");
+  EXPECT_FALSE(configuration.api);
+
+  EXPECT_FALSE(configuration.html.has_value());
+
+  EXPECT_EQ(configuration.entries.size(), 0);
 }

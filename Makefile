@@ -75,6 +75,7 @@ docker: docker-build
 	$(MAKE) -C test/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/headless EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/html EDITION=$(EDITION)
+	$(MAKE) -C test/e2e/no-api EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/chaos EDITION=$(EDITION)
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)

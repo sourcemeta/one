@@ -152,6 +152,91 @@
           }
         }
       }
+    },
+    {
+      "description": "API as empty object with HTML enabled",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": {},
+        "html": {
+          "name": "Title",
+          "description": "Description"
+        },
+        "contents": {
+          "test": {
+            "title": "A sample schema folder",
+            "description": "For testing purposes",
+            "github": "sourcemeta/one"
+          }
+        }
+      }
+    },
+    {
+      "description": "API as true with HTML enabled",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": true,
+        "html": {
+          "name": "Title",
+          "description": "Description"
+        },
+        "contents": {
+          "test": {
+            "title": "A sample schema folder",
+            "description": "For testing purposes",
+            "github": "sourcemeta/one"
+          }
+        }
+      }
+    },
+    {
+      "description": "API explicitly false with HTML explicitly false",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": false,
+        "html": false
+      }
+    },
+    {
+      "description": "API as empty object with HTML explicitly false",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": {},
+        "html": false
+      }
+    },
+    {
+      "description": "API as true with HTML explicitly false",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": true,
+        "html": false
+      }
+    },
+    {
+      "description": "API false with HTML as object is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": false,
+        "html": {
+          "name": "Title",
+          "description": "Description"
+        }
+      }
+    },
+    {
+      "description": "API false without HTML set is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "api": false
+      }
     }
   ]
 }
