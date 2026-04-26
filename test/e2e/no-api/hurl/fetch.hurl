@@ -40,6 +40,7 @@ header "ETag" exists
 HEAD {{base}}/test/schemas/string.json
 HTTP 200
 Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Asserts]
 bytes count == 0
