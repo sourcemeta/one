@@ -1,4 +1,8 @@
 {
   "url": "http://localhost:8000",
-  "extends": [ "./read_valid_016_b.json", "./read_valid_016_c.json" ]
+  "api": {},
+  "html": {
+    "name": "Title",
+    "description": "Description"
+  }
 }

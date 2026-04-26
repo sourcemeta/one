@@ -329,11 +329,7 @@ TEST(Configuration_read, read_valid_006) {
         }
       },
       "here": {
-        "contents": {
-          "test": {
-            "title": "Imported utility"
-          }
-        }
+        "title": "With standard name"
       }
     }
   })JSON"};
@@ -353,10 +349,7 @@ TEST(Configuration_read, read_valid_007) {
   std::string text{R"JSON({
     "url": "http://localhost:8000",
     "api": {},
-    "html": {
-      "name": "Sourcemeta",
-      "description": "The next-generation JSON Schema platform"
-    },
+    "html": false,
     "contents": {
       "self": {
         "title": "Self",
@@ -376,8 +369,10 @@ TEST(Configuration_read, read_valid_007) {
           }
         }
       },
-      "here": {
-        "title": "With standard name"
+      "test": {
+        "title": "A sample schema folder",
+        "description": "For testing purposes",
+        "github": "sourcemeta/one"
       }
     }
   })JSON"};
@@ -397,7 +392,10 @@ TEST(Configuration_read, read_valid_008) {
   std::string text{R"JSON({
     "url": "http://localhost:8000",
     "api": {},
-    "html": false,
+    "html": {
+      "name": "Sourcemeta",
+      "description": "The next-generation JSON Schema platform"
+    },
     "contents": {
       "self": {
         "title": "Self",
@@ -486,10 +484,7 @@ TEST(Configuration_read, read_valid_010) {
   std::string text{R"JSON({
     "url": "http://localhost:8000",
     "api": {},
-    "html": {
-      "name": "Sourcemeta",
-      "description": "The next-generation JSON Schema platform"
-    },
+    "html": false,
     "contents": {
       "self": {
         "title": "Self",
@@ -530,49 +525,6 @@ TEST(Configuration_read, read_valid_011) {
       configuration_path, COLLECTIONS_DIRECTORY)};
 
   std::string text{R"JSON({
-    "url": "http://localhost:8000",
-    "api": {},
-    "html": false,
-    "contents": {
-      "self": {
-        "title": "Self",
-        "description": "The schemas that define the current version of this instance",
-        "email": "hello@sourcemeta.com",
-        "github": "sourcemeta/one",
-        "website": "https://www.sourcemeta.com",
-        "contents": {
-          "v1": {
-            "contents": {
-              "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
-                "baseUri": "http://localhost:8000"
-              }
-            }
-          }
-        }
-      },
-      "test": {
-        "title": "A sample schema folder",
-        "description": "For testing purposes",
-        "github": "sourcemeta/one"
-      }
-    }
-  })JSON"};
-
-  replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
-  const auto expected{sourcemeta::core::parse_json(text)};
-  EXPECT_EQ(raw_configuration, expected);
-}
-
-TEST(Configuration_read, read_valid_012) {
-  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_012.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
-
-  std::string text{R"JSON({
     "contents": {
       "self": {
         "title": "Self",
@@ -597,6 +549,58 @@ TEST(Configuration_read, read_valid_012) {
     "html": {
       "name": "Sourcemeta",
       "description": "The next-generation JSON Schema platform"
+    }
+  })JSON"};
+
+  replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
+  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  const auto expected{sourcemeta::core::parse_json(text)};
+  EXPECT_EQ(raw_configuration, expected);
+}
+
+TEST(Configuration_read, read_valid_012) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "read_valid_012.json"};
+  const auto raw_configuration{sourcemeta::one::Configuration::read(
+      configuration_path, COLLECTIONS_DIRECTORY)};
+
+  std::string text{R"JSON({
+    "url": "http://localhost:8000",
+    "api": {},
+    "html": {
+      "name": "Title",
+      "description": "Description"
+    },
+    "contents": {
+      "self": {
+        "title": "Self",
+        "description": "The schemas that define the current version of this instance",
+        "email": "hello@sourcemeta.com",
+        "github": "sourcemeta/one",
+        "website": "https://www.sourcemeta.com",
+        "contents": {
+          "v1": {
+            "contents": {
+              "schemas": {
+                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
+                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "baseUri": "http://localhost:8000"
+              }
+            }
+          }
+        }
+      },
+      "example": {
+        "title": "Test",
+        "baseUri": "https://example.com/extension",
+        "path": "STUB_DIRECTORY/schemas/example/extension",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_012.json",
+        "defaultDialect": "http://json-schema.org/draft-07/schema#",
+        "resolve": {
+          "https://other.com/single.json": "/foo.json"
+        },
+        "include": "./read_partial_001.json"
+      }
     }
   })JSON"};
 
@@ -647,7 +651,11 @@ TEST(Configuration_read, read_valid_013) {
         "resolve": {
           "https://other.com/single.json": "/foo.json"
         },
-        "include": "./read_partial_001.json"
+        "contents": {
+          "foo": {
+            "include": "./read_partial_001.json"
+          }
+        }
       }
     }
   })JSON"};
@@ -691,64 +699,8 @@ TEST(Configuration_read, read_valid_014) {
         }
       },
       "example": {
-        "title": "Test",
-        "baseUri": "https://example.com/extension",
         "path": "STUB_DIRECTORY/schemas/example/extension",
         "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_014.json",
-        "defaultDialect": "http://json-schema.org/draft-07/schema#",
-        "resolve": {
-          "https://other.com/single.json": "/foo.json"
-        },
-        "contents": {
-          "foo": {
-            "include": "./read_partial_001.json"
-          }
-        }
-      }
-    }
-  })JSON"};
-
-  replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
-  const auto expected{sourcemeta::core::parse_json(text)};
-  EXPECT_EQ(raw_configuration, expected);
-}
-
-TEST(Configuration_read, read_valid_015) {
-  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_015.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
-
-  std::string text{R"JSON({
-    "url": "http://localhost:8000",
-    "api": {},
-    "html": {
-      "name": "Title",
-      "description": "Description"
-    },
-    "contents": {
-      "self": {
-        "title": "Self",
-        "description": "The schemas that define the current version of this instance",
-        "email": "hello@sourcemeta.com",
-        "github": "sourcemeta/one",
-        "website": "https://www.sourcemeta.com",
-        "contents": {
-          "v1": {
-            "contents": {
-              "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
-                "baseUri": "http://localhost:8000"
-              }
-            }
-          }
-        }
-      },
-      "example": {
-        "path": "STUB_DIRECTORY/schemas/example/extension",
-        "x-sourcemeta-one:path": "STUB_DIRECTORY/read_valid_015.json",
         "baseUri": "http://localhost:8000"
       }
     }
@@ -780,9 +732,9 @@ TEST(Configuration_read, read_invalid_001) {
   }
 }
 
-TEST(Configuration_read, read_valid_016_diamond_extends) {
+TEST(Configuration_read, read_valid_015_diamond_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_016.json"};
+                                "read_valid_015.json"};
   const auto result{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
   EXPECT_TRUE(result.is_object());
@@ -887,7 +839,7 @@ TEST(Configuration_read, read_configuration_files_no_extends_no_includes) {
 
 TEST(Configuration_read, read_configuration_files_with_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_016.json"};
+                                "read_valid_015.json"};
   std::unordered_set<std::string> configuration_files;
   sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
@@ -907,15 +859,15 @@ TEST(Configuration_read, read_configuration_files_with_extends) {
           .native()));
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
-                                        "read_valid_016_b.json")
+                                        "read_valid_015_b.json")
           .native()));
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
-                                        "read_valid_016_c.json")
+                                        "read_valid_015_c.json")
           .native()));
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
-                                        "read_valid_016_d.json")
+                                        "read_valid_015_d.json")
           .native()));
 }
 
@@ -949,9 +901,9 @@ TEST(Configuration_read, read_configuration_files_with_include_chain) {
           .native()));
 }
 
-TEST(Configuration_read, read_valid_017_api_explicit_object) {
+TEST(Configuration_read, read_valid_016_api_explicit_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_017.json"};
+                                "read_valid_016.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
 
@@ -989,9 +941,9 @@ TEST(Configuration_read, read_valid_017_api_explicit_object) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_018_api_false_html_false) {
+TEST(Configuration_read, read_valid_017_api_false_html_false) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_018.json"};
+                                "read_valid_017.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
 
@@ -1005,9 +957,9 @@ TEST(Configuration_read, read_valid_018_api_false_html_false) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_019_api_true_coerced_to_object) {
+TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "read_valid_019.json"};
+                                "read_valid_018.json"};
   const auto raw_configuration{sourcemeta::one::Configuration::read(
       configuration_path, COLLECTIONS_DIRECTORY)};
 
