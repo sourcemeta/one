@@ -206,7 +206,7 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#18)
 ( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/health.metapack
 ( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
-( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/health.metapack
+( 48%) Producing: schemas/self/v1/schemas/configuration/contents/%/health.metapack
 ( 48%) Producing: schemas/self/v1/schemas/configuration/page/%/bundle.metapack
 ( 49%) Producing: schemas/self/v1/schemas/configuration/page/%/health.metapack
 ( 49%) Producing: schemas/test/test/%/bundle.metapack
