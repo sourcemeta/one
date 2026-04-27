@@ -17,7 +17,7 @@
         "required": [ "include" ],
         "properties": {
           "include": {
-            "$ref": "./path.json"
+            "type": "string"
           }
         },
         "additionalProperties": false

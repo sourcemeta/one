@@ -60,29 +60,25 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#14)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#15)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#19)
-Detecting: $(realpath "$TMP")/schemas/foo.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#17)
+Detecting: $(realpath "$TMP")/schemas/foo.json (#18)
 (  5%) Resolving: self/v1/schemas/api/error.json
-( 10%) Resolving: self/v1/schemas/api/list/response.json
-( 15%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 20%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 25%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 30%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 35%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 40%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 45%) Resolving: self/v1/schemas/api/schemas/position.json
-( 50%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 55%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 60%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 65%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 70%) Resolving: self/v1/schemas/configuration/collection.json
-( 75%) Resolving: self/v1/schemas/configuration/configuration.json
-( 80%) Resolving: self/v1/schemas/configuration/contents.json
-( 85%) Resolving: self/v1/schemas/configuration/extends.json
-( 90%) Resolving: self/v1/schemas/configuration/page.json
-( 95%) Resolving: self/v1/schemas/configuration/path.json
+( 11%) Resolving: self/v1/schemas/api/list/response.json
+( 16%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 22%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 27%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 33%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 38%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 44%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/position.json
+( 55%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 61%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 66%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 72%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 77%) Resolving: self/v1/schemas/configuration/collection.json
+( 83%) Resolving: self/v1/schemas/configuration/configuration.json
+( 88%) Resolving: self/v1/schemas/configuration/contents.json
+( 94%) Resolving: self/v1/schemas/configuration/page.json
 (100%) Resolving: test/foo.json
 error: The schema identifier is not relative to the corresponding base
   at path $(realpath "$TMP")/schemas/foo.json

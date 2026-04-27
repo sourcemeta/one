@@ -86,9 +86,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/sche
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#15)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#16)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#18)
 ( 20%) Producing: explorer/%/directory.metapack
 ( 40%) Producing: explorer/%/directory-html.metapack
 ( 60%) Producing: explorer/%/search.metapack
@@ -255,18 +253,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/configuration/contents/%
 ./explorer/self/v1/schemas/configuration/contents/%/schema-html.metapack
 ./explorer/self/v1/schemas/configuration/contents/%/schema.metapack
-./explorer/self/v1/schemas/configuration/extends
-./explorer/self/v1/schemas/configuration/extends/%
-./explorer/self/v1/schemas/configuration/extends/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/extends/%/schema.metapack
 ./explorer/self/v1/schemas/configuration/page
 ./explorer/self/v1/schemas/configuration/page/%
 ./explorer/self/v1/schemas/configuration/page/%/schema-html.metapack
 ./explorer/self/v1/schemas/configuration/page/%/schema.metapack
-./explorer/self/v1/schemas/configuration/path
-./explorer/self/v1/schemas/configuration/path/%
-./explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/path/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -509,19 +499,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/configuration/contents/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/contents/%/stats.metapack
-./schemas/self/v1/schemas/configuration/extends
-./schemas/self/v1/schemas/configuration/extends/%
-./schemas/self/v1/schemas/configuration/extends/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/extends/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/extends/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/extends/%/editor.metapack
-./schemas/self/v1/schemas/configuration/extends/%/health.metapack
-./schemas/self/v1/schemas/configuration/extends/%/locations.metapack
-./schemas/self/v1/schemas/configuration/extends/%/positions.metapack
-./schemas/self/v1/schemas/configuration/extends/%/schema.metapack
-./schemas/self/v1/schemas/configuration/extends/%/stats.metapack
 ./schemas/self/v1/schemas/configuration/page
 ./schemas/self/v1/schemas/configuration/page/%
 ./schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack
@@ -535,19 +512,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/configuration/page/%/positions.metapack
 ./schemas/self/v1/schemas/configuration/page/%/schema.metapack
 ./schemas/self/v1/schemas/configuration/page/%/stats.metapack
-./schemas/self/v1/schemas/configuration/path
-./schemas/self/v1/schemas/configuration/path/%
-./schemas/self/v1/schemas/configuration/path/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/path/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/path/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/path/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/path/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/path/%/editor.metapack
-./schemas/self/v1/schemas/configuration/path/%/health.metapack
-./schemas/self/v1/schemas/configuration/path/%/locations.metapack
-./schemas/self/v1/schemas/configuration/path/%/positions.metapack
-./schemas/self/v1/schemas/configuration/path/%/schema.metapack
-./schemas/self/v1/schemas/configuration/path/%/stats.metapack
 ./state.bin
 ./version.json
 EOF

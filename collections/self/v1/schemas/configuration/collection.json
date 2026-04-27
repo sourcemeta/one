@@ -25,7 +25,7 @@
       "type": "boolean"
     },
     "x-sourcemeta-one:path": {
-      "$ref": "./path.json"
+      "type": "string"
     },
     "baseUri": {
       "$comment": "TODO: Use Format Assertion when supported on Blaze",
@@ -46,7 +46,7 @@
       "type": "string"
     },
     "path": {
-      "$ref": "./path.json"
+      "type": "string"
     },
     "resolve": {
       "type": "object",
@@ -71,7 +71,7 @@
         "rules": {
           "type": "array",
           "items": {
-            "$ref": "./path.json"
+            "type": "string"
           }
         }
       },
@@ -80,7 +80,7 @@
     "ignore": {
       "type": "array",
       "items": {
-        "$ref": "./path.json"
+        "type": "string"
       }
     }
   },
