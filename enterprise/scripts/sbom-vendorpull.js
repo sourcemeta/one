@@ -13,7 +13,8 @@ const LICENSES = {
   "bootstrap-icons": "MIT",
   "pcre2": "BSD-3-Clause",
   "libdeflate": "MIT",
-  "cmark-gfm": "BSD-2-Clause"
+  "cmark-gfm": "BSD-2-Clause",
+  "zlib": "Zlib"
 };
 
 const IGNORED = new Set([
