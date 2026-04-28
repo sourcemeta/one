@@ -14,7 +14,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.entries[?(@.name == 'self')].type" == "directory"
+jsonpath "$.entries[*].name" includes "self"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

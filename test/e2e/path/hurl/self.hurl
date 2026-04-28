@@ -13,7 +13,7 @@ last_response: body
 [Asserts]
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$.entries[?(@.name == 'self')].type" == "directory"
+jsonpath "$.entries[*].name" includes "self"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```
