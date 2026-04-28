@@ -36,10 +36,10 @@ test.describe('Home page directory listing', () => {
     await expect(testInSpecial).toHaveCount(0);
   });
 
-  test('can navigate to /self/v1/schemas and see configuration schemas',
+  test('can navigate to /self/v1/schemas and see api schemas',
     async ({ page }) => {
     await page.goto('/self/v1/schemas/');
-    const heading = page.locator('td a[href*="configuration"]');
-    await expect(heading).toBeVisible();
+    const heading = page.locator('td a[href*="api"]');
+    await expect(heading.first()).toBeVisible();
   });
 });
