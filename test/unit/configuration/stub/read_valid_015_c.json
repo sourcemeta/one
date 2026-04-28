@@ -1,0 +1,8 @@
+{
+  "extends": [ "./read_valid_015_d.json" ],
+  "contents": {
+    "from_c": {
+      "title": "From C"
+    }
+  }
+}

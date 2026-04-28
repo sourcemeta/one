@@ -55,16 +55,17 @@ structuring your instance.
 
 !!! note
 
-    While any content tree structure is supported, you cannot create a
-    top-level entry called `self`, as this namespace is reserved for the [HTTP
-    API](api.md) and other internal functionality.
+    The `/self` namespace is reserved for the built-in [HTTP API](api.md)
+    and internal functionality. It is always present and cannot be
+    overridden by user content.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
 | `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. The absolute URL _may_ have a path component |
 | `/extends`      | Array   | No  | None | One or more configuration files to extend from. See the [Extends](#extends) section for more information |
 | `/contents`     | Object  | No  | None | The top-level [Collections](#collections) and [Pages](#pages) that compose the instance |
-| `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. See the [HTML](#html) section for more details |
+| `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. Enabling the HTML explorer implies the API must also be enabled. See the [HTML](#html) section for more details |
+| `/api`         | Object or Boolean  | No  | `{}` | Controls whether the HTTP API is accessible. If set to `false`, the JSON API is disabled. Can only be set to `false` when `/html` is also set to `false` |
 
 For example, a minimal configuration that mounts a single schema collection
 (`./schemas`) at URL `https://schemas.example.com/my-first-collection` may look
@@ -312,14 +313,13 @@ contains the schema collections they own.
 
 The `extends` property enables configuration inheritance, allowing you to build
 upon existing configuration files for enhanced reusability and modularity. This
-property accepts an array of strings where each entry represents either a file
-path (relative from the configuration file location) or a built-in schema
-collection identifier (prefixed with `@`). For example:
+property accepts an array of file paths (relative from the configuration file
+location). For example:
 
 ```json hl_lines="3" title="one.json"
 {
   "url": "https://schemas.example.com",
-  "extends": [ "@self/v1", "../path/to/my/other/config/one.json" ]
+  "extends": [ "../path/to/my/other/config/one.json" ]
 }
 ```
 

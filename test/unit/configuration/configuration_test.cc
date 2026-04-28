@@ -24,12 +24,13 @@
 TEST(Configuration, valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -38,7 +39,21 @@ TEST(Configuration, valid_001) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 3);
+  EXPECT_EQ(configuration.entries.size(), 6);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self", description,
+              "The schemas that define the current version of this instance");
+  EXPECT_PAGE(configuration, "self", email, "hello@sourcemeta.com");
+  EXPECT_PAGE(configuration, "self", github, "sourcemeta/one");
+  EXPECT_PAGE(configuration, "self", website, "https://www.sourcemeta.com");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", description, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", email, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", github, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_PAGE(configuration, "example", title, "Sourcemeta");
   EXPECT_PAGE(configuration, "example", description, "My description");
@@ -81,16 +96,22 @@ TEST(Configuration, valid_001) {
 TEST(Configuration, valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_002.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_FALSE(configuration.html.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_PAGE(configuration, "test", title, "A sample schema folder");
   EXPECT_PAGE(configuration, "test", description, "For testing purposes");
@@ -100,12 +121,13 @@ TEST(Configuration, valid_002) {
 TEST(Configuration, valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_003.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -114,7 +136,12 @@ TEST(Configuration, valid_003) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -135,12 +162,13 @@ TEST(Configuration, valid_003) {
 TEST(Configuration, valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_004.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
@@ -149,7 +177,12 @@ TEST(Configuration, valid_004) {
   EXPECT_FALSE(configuration.html.value().hero.has_value());
   EXPECT_FALSE(configuration.html.value().action.has_value());
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -180,18 +213,24 @@ TEST(Configuration, valid_004) {
 TEST(Configuration, valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_005.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -225,18 +264,24 @@ TEST(Configuration, valid_005) {
 TEST(Configuration, valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_006.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -270,18 +315,24 @@ TEST(Configuration, valid_006) {
 TEST(Configuration, valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_007.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
@@ -315,18 +366,24 @@ TEST(Configuration, valid_007) {
 TEST(Configuration, valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_008.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
   EXPECT_EQ(configuration.html.value().name, "Title");
   EXPECT_EQ(configuration.html.value().description, "Description");
 
-  EXPECT_EQ(configuration.entries.size(), 1);
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
 
   EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", absolute_path,
@@ -345,8 +402,8 @@ TEST(Configuration, valid_008) {
 TEST(Configuration, base_path_none) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_none.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "");
@@ -355,8 +412,8 @@ TEST(Configuration, base_path_none) {
 TEST(Configuration, base_path_slash) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_slash.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "");
@@ -365,8 +422,8 @@ TEST(Configuration, base_path_slash) {
 TEST(Configuration, base_path_simple) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_simple.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
@@ -375,8 +432,8 @@ TEST(Configuration, base_path_simple) {
 TEST(Configuration, base_path_trailing_slash) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_trailing_slash.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
@@ -385,8 +442,8 @@ TEST(Configuration, base_path_trailing_slash) {
 TEST(Configuration, base_path_deep) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_deep.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
@@ -395,8 +452,8 @@ TEST(Configuration, base_path_deep) {
 TEST(Configuration, is_collection_base_true) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_TRUE(configuration.is_collection_base("example/extension"));
@@ -405,8 +462,8 @@ TEST(Configuration, is_collection_base_true) {
 TEST(Configuration, is_collection_base_false_for_page) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_FALSE(configuration.is_collection_base("example"));
@@ -416,10 +473,63 @@ TEST(Configuration, is_collection_base_false_for_page) {
 TEST(Configuration, is_collection_base_false_for_unknown) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_FALSE(configuration.is_collection_base("nonexistent"));
   EXPECT_FALSE(configuration.is_collection_base("example/nonexistent"));
+}
+
+TEST(Configuration, valid_009_api_enabled) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_009.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_EQ(configuration.base_path, "");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+  EXPECT_FALSE(configuration.html.value().head.has_value());
+  EXPECT_FALSE(configuration.html.value().hero.has_value());
+  EXPECT_FALSE(configuration.html.value().action.has_value());
+
+  EXPECT_EQ(configuration.entries.size(), 3);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self", description,
+              "The schemas that define the current version of this instance");
+  EXPECT_PAGE(configuration, "self", email, "hello@sourcemeta.com");
+  EXPECT_PAGE(configuration, "self", github, "sourcemeta/one");
+  EXPECT_PAGE(configuration, "self", website, "https://www.sourcemeta.com");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", description, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", email, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", github, std::nullopt);
+  EXPECT_PAGE(configuration, "self/v1", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
+}
+
+TEST(Configuration, valid_010_api_disabled) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_010.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_EQ(configuration.base_path, "");
+  EXPECT_FALSE(configuration.api);
+
+  EXPECT_FALSE(configuration.html.has_value());
+
+  EXPECT_EQ(configuration.entries.size(), 0);
 }

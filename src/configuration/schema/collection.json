@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Collection",
+  "description": "Represents a set of schemas to be mounted into the One",
+  "examples": [
+    {
+      "title": "My Schema Collection",
+      "description": "A collection of JSON Schemas",
+      "path": "schemas"
+    }
+  ],
+  "x-lint-exclude": [ "simple_properties_identifiers" ],
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "x-sourcemeta-one:alert": {
+      "type": "string"
+    },
+    "x-sourcemeta-one:evaluate": {
+      "type": "boolean"
+    },
+    "x-sourcemeta-one:path": {
+      "type": "string"
+    },
+    "baseUri": {
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "defaultDialect": {
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
+    },
+    "email": {
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "email"
+    },
+    "github": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "resolve": {
+      "type": "object",
+      "propertyNames": {
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "format": "uri-reference"
+      },
+      "additionalProperties": {
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "type": "string",
+        "format": "uri-reference"
+      }
+    },
+    "website": {
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
+    },
+    "lint": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

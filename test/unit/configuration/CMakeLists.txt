@@ -6,4 +6,16 @@ target_link_libraries(sourcemeta_one_configuration_unit
 target_compile_definitions(sourcemeta_one_configuration_unit
   PRIVATE STUB_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/stub")
 target_compile_definitions(sourcemeta_one_configuration_unit
-  PRIVATE COLLECTIONS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/stub/collections")
+  PRIVATE SELF_DIRECTORY="${PROJECT_SOURCE_DIR}/src/self")
+
+set(CONFIGURATION_SCHEMA "${PROJECT_SOURCE_DIR}/src/configuration/schema")
+
+add_test(NAME one.configuration.schema COMMAND
+  "${JSONSCHEMA_BIN}" test --extension .test.json
+  "${CMAKE_CURRENT_SOURCE_DIR}/configuration.test.json")
+add_test(NAME one.configuration.schema.fmt COMMAND
+  "${JSONSCHEMA_BIN}" fmt --check "${CONFIGURATION_SCHEMA}")
+add_test(NAME one.configuration.schema.metaschema COMMAND
+  "${JSONSCHEMA_BIN}" metaschema "${CONFIGURATION_SCHEMA}")
+add_test(NAME one.configuration.schema.lint COMMAND
+  "${JSONSCHEMA_BIN}" lint "${CONFIGURATION_SCHEMA}")

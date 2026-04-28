@@ -9,3 +9,5 @@ target_compile_definitions(sourcemeta_one_resolver_unit
   PRIVATE SCHEMAS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/schemas")
 target_compile_definitions(sourcemeta_one_resolver_unit
   PRIVATE CONFIGURATION_PATH="${CMAKE_CURRENT_SOURCE_DIR}/one.json")
+target_compile_definitions(sourcemeta_one_resolver_unit
+  PRIVATE SELF_DIRECTORY="${PROJECT_SOURCE_DIR}/src/self")

@@ -289,7 +289,7 @@ static auto index_main(const std::string_view &program,
   std::println(stderr, "Using configuration: {}", configuration_path.string());
   std::unordered_set<std::string> configuration_files;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, SOURCEMETA_ONE_COLLECTIONS, configuration_files)};
+      configuration_path, SOURCEMETA_ONE_SELF, configuration_files)};
 
   if (app.contains("configuration")) {
     std::ostringstream configuration_output;
@@ -643,15 +643,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.from().string(),
                sourcemeta::core::to_string(error.location()),
                error.target().string());
-    return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ConfigurationUnknownBuiltInCollectionError
-               &error) {
-    std::print(stderr,
-               "error: {}\n  from path {}\n  at location \"{}\"\n"
-               "  to identifier {}\n",
-               error.what(), error.from().string(),
-               sourcemeta::core::to_string(error.location()),
-               error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
     std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",

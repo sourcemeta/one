@@ -12,27 +12,18 @@ namespace {
 
 auto read_file(const std::filesystem::path &current,
                const sourcemeta::core::Pointer &location,
-               const std::filesystem::path &path, const std::string &original)
-    -> sourcemeta::core::JSON {
+               const std::filesystem::path &path) -> sourcemeta::core::JSON {
   try {
     return sourcemeta::core::read_json(path);
   } catch (const std::filesystem::filesystem_error &) {
-    if (original.starts_with("@")) {
-      throw sourcemeta::one::ConfigurationUnknownBuiltInCollectionError(
-          current, location, original);
-    } else {
-      throw sourcemeta::one::ConfigurationReadError(current, location, path);
-    }
+    throw sourcemeta::one::ConfigurationReadError(current, location, path);
   }
 }
 
 auto resolve_path(const std::filesystem::path &base,
-                  const std::filesystem::path &rpath,
                   const std::filesystem::path &value) -> std::filesystem::path {
   if (value.is_absolute()) {
     return std::filesystem::weakly_canonical(value);
-  } else if (value.string().starts_with("@")) {
-    return std::filesystem::weakly_canonical(rpath / value.string().substr(1));
   } else {
     return std::filesystem::weakly_canonical(base / value);
   }
@@ -48,36 +39,34 @@ auto maybe_suffix(const std::filesystem::path &path,
   }
 }
 
-auto dereference(const std::filesystem::path &collections_path,
-                 const std::filesystem::path &base,
+auto dereference(const std::filesystem::path &base,
                  sourcemeta::core::JSON &input,
                  const sourcemeta::core::Pointer &location,
                  std::unordered_set<std::string> &visited,
-                 std::unordered_set<std::string> &all_files) -> void {
+                 std::unordered_set<std::string> &all_files, const bool is_root)
+    -> void {
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
 
-    // Read extensions
-  } else if (input.defines("extends") && input.at("extends").is_array()) {
+    // Read extensions (only at the top level, not inside contents)
+  } else if (is_root && input.defines("extends") &&
+             input.at("extends").is_array()) {
     auto accumulator{sourcemeta::core::JSON::make_object()};
     for (const auto &entry : input.at("extends").as_array()) {
       if (entry.is_string()) {
-        const auto target_path{
-            maybe_suffix(resolve_path(base.parent_path(), collections_path,
-                                      entry.to_string()),
-                         "one.json")};
+        const auto target_path{maybe_suffix(
+            resolve_path(base.parent_path(), entry.to_string()), "one.json")};
         const auto new_location{location.concat({"extends"})};
         if (!visited.emplace(target_path.native()).second) {
           throw sourcemeta::one::ConfigurationCyclicReferenceError(
               base, new_location, target_path);
         }
         all_files.emplace(target_path.native());
-        auto extension{
-            read_file(base, new_location, target_path, entry.to_string())};
+        auto extension{read_file(base, new_location, target_path)};
         if (extension.is_object()) {
-          dereference(collections_path, target_path, extension, new_location,
-                      visited, all_files);
+          dereference(target_path, extension, new_location, visited, all_files,
+                      true);
           accumulator.merge(std::move(extension).as_object());
         }
 
@@ -89,27 +78,24 @@ auto dereference(const std::filesystem::path &collections_path,
     accumulator.merge(input.as_object());
     input = std::move(accumulator);
     assert(!input.defines("extends"));
-    dereference(collections_path, base, input, location, visited, all_files);
+    dereference(base, input, location, visited, all_files, is_root);
 
     // Read included files
   } else if (!location.empty() && input.defines("include") &&
              input.at("include").is_string() &&
              // We only permit `include` by itself
              input.size() == 1) {
-    const auto target_path{
-        maybe_suffix(resolve_path(base.parent_path(), collections_path,
-                                  input.at("include").to_string()),
-                     "jsonschema.json")};
+    const auto target_path{maybe_suffix(
+        resolve_path(base.parent_path(), input.at("include").to_string()),
+        "jsonschema.json")};
     const auto new_location{location.concat({"include"})};
     if (!visited.emplace(target_path.native()).second) {
       throw sourcemeta::one::ConfigurationCyclicReferenceError(
           base, new_location, target_path);
     }
     all_files.emplace(target_path.native());
-    input.into(read_file(base, new_location, target_path,
-                         input.at("include").to_string()));
-    dereference(collections_path, target_path, input, new_location, visited,
-                all_files);
+    input.into(read_file(base, new_location, target_path));
+    dereference(target_path, input, new_location, visited, all_files, is_root);
     visited.erase(target_path.native());
 
     // Revisit and relativize paths
@@ -133,8 +119,9 @@ auto dereference(const std::filesystem::path &collections_path,
                            std::back_inserter(keys),
                            [](const auto &entry) { return entry.first; });
     for (const auto &key : keys) {
-      dereference(collections_path, base, input.at("contents").at(key),
-                  location.concat({"contents", key}), visited, all_files);
+      dereference(base, input.at("contents").at(key),
+                  location.concat({"contents", key}), visited, all_files,
+                  false);
     }
   }
 }
@@ -167,7 +154,7 @@ auto default_base_uri(sourcemeta::core::JSON &contents,
 namespace sourcemeta::one {
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
-                         const std::filesystem::path &collections_path,
+                         const std::filesystem::path &self_path,
                          std::unordered_set<std::string> &configuration_files)
     -> sourcemeta::core::JSON {
   auto data{sourcemeta::core::read_json(configuration_path)};
@@ -187,13 +174,35 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
+  if (data.is_object() && data.defines("api") && data.at("api").is_boolean() &&
+      data.at("api").to_boolean()) {
+    data.at("api").into_object();
+  } else if (!data.defines("api")) {
+    data.assign("api", sourcemeta::core::JSON::make_object());
+  }
+
+  if (!data.defines("extends")) {
+    data.assign("extends", sourcemeta::core::JSON::make_array());
+  }
+
+  if (!(data.at("api").is_boolean() && !data.at("api").to_boolean())) {
+    const auto self_one_path{
+        std::filesystem::weakly_canonical(self_path / "v1" / "one.json")};
+    auto extends_copy{sourcemeta::core::JSON::make_array()};
+    extends_copy.push_back(sourcemeta::core::JSON{self_one_path.string()});
+    for (const auto &entry : data.at("extends").as_array()) {
+      extends_copy.push_back(entry);
+    }
+
+    data.assign("extends", std::move(extends_copy));
+  }
+
   const auto canonical_config{
       std::filesystem::weakly_canonical(configuration_path).native()};
   configuration_files.emplace(canonical_config);
   std::unordered_set<std::string> visited;
   visited.emplace(canonical_config);
-  dereference(collections_path, configuration_path, data, {}, visited,
-              configuration_files);
+  dereference(configuration_path, data, {}, visited, configuration_files, true);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
@@ -204,10 +213,10 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
 }
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
-                         const std::filesystem::path &collections_path)
+                         const std::filesystem::path &self_path)
     -> sourcemeta::core::JSON {
   std::unordered_set<std::string> configuration_files;
-  return read(configuration_path, collections_path, configuration_files);
+  return read(configuration_path, self_path, configuration_files);
 }
 
 } // namespace sourcemeta::one

@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "extends": [ "@self/v1" ],
   "url": "https://example.com/schemas",
   "contents": {
     "example": {
@@ -178,38 +177,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/trace/response/%
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
-./explorer/self/v1/schemas/configuration
-./explorer/self/v1/schemas/configuration/%
-./explorer/self/v1/schemas/configuration/%/directory-html.metapack
-./explorer/self/v1/schemas/configuration/%/directory.metapack
-./explorer/self/v1/schemas/configuration/collection
-./explorer/self/v1/schemas/configuration/collection/%
-./explorer/self/v1/schemas/configuration/collection/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/collection/%/schema.metapack
-./explorer/self/v1/schemas/configuration/configuration
-./explorer/self/v1/schemas/configuration/configuration/%
-./explorer/self/v1/schemas/configuration/configuration/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/configuration/%/schema.metapack
-./explorer/self/v1/schemas/configuration/contents
-./explorer/self/v1/schemas/configuration/contents/%
-./explorer/self/v1/schemas/configuration/contents/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/contents/%/schema.metapack
-./explorer/self/v1/schemas/configuration/extends
-./explorer/self/v1/schemas/configuration/extends/%
-./explorer/self/v1/schemas/configuration/extends/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/extends/%/schema.metapack
-./explorer/self/v1/schemas/configuration/page
-./explorer/self/v1/schemas/configuration/page/%
-./explorer/self/v1/schemas/configuration/page/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/page/%/schema.metapack
-./explorer/self/v1/schemas/configuration/path
-./explorer/self/v1/schemas/configuration/path/%
-./explorer/self/v1/schemas/configuration/path/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/path/%/schema.metapack
-./explorer/self/v1/schemas/configuration/rpath
-./explorer/self/v1/schemas/configuration/rpath/%
-./explorer/self/v1/schemas/configuration/rpath/%/schema-html.metapack
-./explorer/self/v1/schemas/configuration/rpath/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -411,98 +378,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/stats.metapack
-./schemas/self/v1/schemas/configuration
-./schemas/self/v1/schemas/configuration/collection
-./schemas/self/v1/schemas/configuration/collection/%
-./schemas/self/v1/schemas/configuration/collection/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/collection/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/collection/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/collection/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/collection/%/editor.metapack
-./schemas/self/v1/schemas/configuration/collection/%/health.metapack
-./schemas/self/v1/schemas/configuration/collection/%/locations.metapack
-./schemas/self/v1/schemas/configuration/collection/%/positions.metapack
-./schemas/self/v1/schemas/configuration/collection/%/schema.metapack
-./schemas/self/v1/schemas/configuration/collection/%/stats.metapack
-./schemas/self/v1/schemas/configuration/configuration
-./schemas/self/v1/schemas/configuration/configuration/%
-./schemas/self/v1/schemas/configuration/configuration/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/editor.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/health.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/locations.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/schema.metapack
-./schemas/self/v1/schemas/configuration/configuration/%/stats.metapack
-./schemas/self/v1/schemas/configuration/contents
-./schemas/self/v1/schemas/configuration/contents/%
-./schemas/self/v1/schemas/configuration/contents/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/contents/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/contents/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/contents/%/editor.metapack
-./schemas/self/v1/schemas/configuration/contents/%/health.metapack
-./schemas/self/v1/schemas/configuration/contents/%/locations.metapack
-./schemas/self/v1/schemas/configuration/contents/%/positions.metapack
-./schemas/self/v1/schemas/configuration/contents/%/schema.metapack
-./schemas/self/v1/schemas/configuration/contents/%/stats.metapack
-./schemas/self/v1/schemas/configuration/extends
-./schemas/self/v1/schemas/configuration/extends/%
-./schemas/self/v1/schemas/configuration/extends/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/extends/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/extends/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/extends/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/extends/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/extends/%/editor.metapack
-./schemas/self/v1/schemas/configuration/extends/%/health.metapack
-./schemas/self/v1/schemas/configuration/extends/%/locations.metapack
-./schemas/self/v1/schemas/configuration/extends/%/positions.metapack
-./schemas/self/v1/schemas/configuration/extends/%/schema.metapack
-./schemas/self/v1/schemas/configuration/extends/%/stats.metapack
-./schemas/self/v1/schemas/configuration/page
-./schemas/self/v1/schemas/configuration/page/%
-./schemas/self/v1/schemas/configuration/page/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/page/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/page/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/page/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/page/%/editor.metapack
-./schemas/self/v1/schemas/configuration/page/%/health.metapack
-./schemas/self/v1/schemas/configuration/page/%/locations.metapack
-./schemas/self/v1/schemas/configuration/page/%/positions.metapack
-./schemas/self/v1/schemas/configuration/page/%/schema.metapack
-./schemas/self/v1/schemas/configuration/page/%/stats.metapack
-./schemas/self/v1/schemas/configuration/path
-./schemas/self/v1/schemas/configuration/path/%
-./schemas/self/v1/schemas/configuration/path/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/path/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/path/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/path/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/path/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/path/%/editor.metapack
-./schemas/self/v1/schemas/configuration/path/%/health.metapack
-./schemas/self/v1/schemas/configuration/path/%/locations.metapack
-./schemas/self/v1/schemas/configuration/path/%/positions.metapack
-./schemas/self/v1/schemas/configuration/path/%/schema.metapack
-./schemas/self/v1/schemas/configuration/path/%/stats.metapack
-./schemas/self/v1/schemas/configuration/rpath
-./schemas/self/v1/schemas/configuration/rpath/%
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/blaze-fast.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/bundle.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependencies.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/dependents.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/editor.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/health.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/locations.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/positions.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/schema.metapack
-./schemas/self/v1/schemas/configuration/rpath/%/stats.metapack
 ./state.bin
 ./version.json
 EOF
@@ -516,26 +391,19 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/extends.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/path.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/rpath.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#14)
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

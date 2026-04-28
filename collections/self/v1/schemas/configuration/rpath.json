@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Relocatable Path",
-  "description": "A path that references a built-in collection using the @ prefix syntax",
-  "examples": [ "@sourcemeta/json-schema", "@sourcemeta/one/schemas" ],
-  "type": "string",
-  "pattern": "^@[a-z0-9/.-]+$"
-}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The Sourcemeta One configuration file format",
+  "description": "The configuration file format used to configured One instances",
+  "examples": [
+    {
+      "url": "https://schemas.example.com"
+    }
+  ],
+  "type": "object",
+  "required": [ "url" ],
+  "properties": {
+    "extends": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "contents": {
+      "$ref": "./contents.json"
+    },
+    "api": {
+      "type": [ "object", "boolean" ],
+      "additionalProperties": false
+    },
+    "html": {
+      "type": [ "object", "boolean" ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "action": {
+          "type": "object",
+          "required": [ "title", "url", "icon" ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "url": {
+              "$comment": "TODO: Use Format Assertion when supported on Blaze",
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        },
+        "head": {
+          "type": "string"
+        },
+        "hero": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "url": {
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false,
+  "dependentSchemas": {
+    "api": {
+      "if": {
+        "properties": {
+          "api": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [ "html" ],
+        "properties": {
+          "html": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

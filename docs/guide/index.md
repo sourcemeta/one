@@ -124,8 +124,9 @@ decomposed further.
 This matters because a non-trivial OpenAPI spec is, in terms of raw content,
 mostly schemas. The endpoints, the HTTP verbs, the status codes: that is
 structural boilerplate. The substance is the definitions. What a `Customer`
-looks like. What an `Invoice` contains. What an `Address` requires. In any
-real-world API, well over 80% of what matters lives in the schema layer.
+looks like. What an `Invoice` contains. What an `Address` requires. In fact,
+*[in 76% of modern OpenAPI specs, JSON Schema dominates the
+specification](https://www.sourcemeta.com/blog/json-schema-dominates-openapi/)*.
 
 And nobody talked about sharing that layer.
 

@@ -5,14 +5,11 @@ hide:
 
 # HTTP API
 
-!!! warning "Future change"
+!!! info
 
-    The HTTP API endpoints and the JSON Schemas that describe them (mounted
-    at `/self/v1/schemas`) are provided by the `@self/v1` built-in
-    collection. In a future release, these will only be available if your
-    [configuration file](configuration.md) includes `@self/v1` in the
-    `extends` array. We recommend adding `@self/v1` to your existing
-    `extends` array now to avoid disruption later.
+    The HTTP API is enabled by default on every Sourcemeta One instance.
+    It can be disabled by setting `api` to `false` in the
+    [configuration file](configuration.md#api).
 
 This API has been architected with performance as a primary consideration,
 ensuring fast response times and efficient resource utilization across all
@@ -100,7 +97,6 @@ navigation and discovery purposes.
     | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
     | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
     | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
-    | `/entries/*/provenance` | String / Null | No | For `schema` entries, the origin of the schema collection, if any |
 
 === "404"
 

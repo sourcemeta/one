@@ -1,0 +1,20 @@
+{
+  "contents": {
+    "self": {
+      "title": "Self",
+      "description": "The schemas that define the current version of this instance",
+      "email": "hello@sourcemeta.com",
+      "github": "sourcemeta/one",
+      "website": "https://www.sourcemeta.com",
+      "contents": {
+        "v1": {
+          "contents": {
+            "schemas": {
+              "path": "./schemas"
+            }
+          }
+        }
+      }
+    }
+  }
+}

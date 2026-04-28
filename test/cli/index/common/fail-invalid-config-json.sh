@@ -9,7 +9,6 @@ trap clean EXIT
 
 cat << 'EOF' > "$TMP/one.json"
 { invalid json
-  "extends": [ "@self/v1" ],
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"

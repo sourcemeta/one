@@ -18,11 +18,11 @@ namespace sourcemeta::one {
 
 struct Configuration {
   static auto read(const std::filesystem::path &configuration_path,
-                   const std::filesystem::path &collections_path,
+                   const std::filesystem::path &self_path,
                    std::unordered_set<std::string> &configuration_files)
       -> sourcemeta::core::JSON;
   static auto read(const std::filesystem::path &configuration_path,
-                   const std::filesystem::path &collections_path)
+                   const std::filesystem::path &self_path)
       -> sourcemeta::core::JSON;
   static auto parse(const sourcemeta::core::JSON &data,
                     const std::filesystem::path &configuration_path,
@@ -48,6 +48,7 @@ struct Configuration {
   };
 
   std::optional<HTML> html;
+  bool api{true};
 
   struct Page {
     std::optional<sourcemeta::core::JSON::String> title;
