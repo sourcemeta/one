@@ -64,7 +64,9 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   response.write_status(code);
   response.write_header("Content-Type", "application/problem+json");
   response.write_header("Access-Control-Allow-Origin", "*");
-  write_link_header(response, schema);
+  if (!schema.empty()) {
+    write_link_header(response, schema);
+  }
 
   std::ostringstream output;
   sourcemeta::core::prettify(object, output);

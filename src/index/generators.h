@@ -684,14 +684,15 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
 
-    const sourcemeta::core::URITemplateRouter::Argument otherwise_arguments[] =
-        {{"errorSchema", std::string_view{error_schema}}};
-    router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1,
-                     otherwise_arguments);
-
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
     if (configuration.api) {
+      const sourcemeta::core::URITemplateRouter::Argument
+          otherwise_arguments[] = {
+              {"errorSchema", std::string_view{error_schema}}};
+      router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1,
+                       otherwise_arguments);
+
       const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
           {"artifact", std::string_view{"directory"}},
           {"responseSchema", std::string_view{list_schema}},
@@ -808,6 +809,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
                    sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
       }
+    } else {
+      router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1);
     }
 
     std::filesystem::create_directories(action.destination.parent_path());
