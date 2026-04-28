@@ -5,8 +5,10 @@ Licensor: Sourcemeta OU
 Licensed Work: Sourcemeta One
 
 Additional Use Grant: You may make use of the Licensed Work as if under the
-terms of the AGPL-3.0, provided that you may not use the Licensed Work for or
-as part of a hosting solution or product that competes with Licensor.
+terms of the AGPL-3.0, provided that you may not use or modify the Licensed
+Work (i) for or as part of a hosting solution that competes with Licensor, or
+(ii) to reimplement, replicate, or otherwise provide functionality equivalent
+to the Enterprise edition.
 
 The `enterprise/` directory of the source repository contains code specific to
 the Enterprise edition of Sourcemeta One. This code is not available under the
