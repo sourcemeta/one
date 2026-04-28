@@ -102,6 +102,31 @@ navigation and discovery purposes.
 
     The directory does not exist.
 
+### Static
+
+*This endpoint serves static assets such as stylesheets, scripts, icons, and
+the web manifest used by the HTML web explorer.*
+
+```
+GET /self/v1/static/{path}
+```
+
+This endpoint is always mounted, but web assets are only served when the
+[`html`](configuration.md#html) configuration option is enabled.
+
+=== "200"
+
+    The static asset contents with its corresponding `Content-Type` header.
+
+=== "404"
+
+    The static asset does not exist, or the instance is running in headless
+    mode.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
 ## Schemas
 
 ### Fetch

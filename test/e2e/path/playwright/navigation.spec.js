@@ -90,7 +90,7 @@ test.describe('Navigation with base path', () => {
   test('static assets load correctly', async ({ page }) => {
     const responses = [];
     page.on('response', (response) => {
-      if (response.url().includes('/self/static/')) {
+      if (response.url().includes('/self/v1/static/')) {
         responses.push({
           url: response.url(),
           status: response.status()
