@@ -5,7 +5,7 @@ sourcemeta_executable(NAMESPACE sourcemeta PROJECT one NAME index
 set_target_properties(sourcemeta_one_index PROPERTIES OUTPUT_NAME sourcemeta-one-index)
 
 target_compile_definitions(sourcemeta_one_index
-  PRIVATE SOURCEMETA_ONE_COLLECTIONS="${ONE_PREFIX}/share/sourcemeta/one/collections")
+  PRIVATE SOURCEMETA_ONE_SELF="${ONE_PREFIX}/share/sourcemeta/one/self")
 target_compile_definitions(sourcemeta_one_index
   PRIVATE SOURCEMETA_ONE_STATIC="${ONE_PREFIX}/share/sourcemeta/one/static")
 

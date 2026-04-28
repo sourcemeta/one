@@ -46,41 +46,33 @@ remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#1)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#1)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#2)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#13)
 Detecting: $(realpath "$TMP")/schemas/test.json (#18)
-(  5%) Resolving: self/v1/schemas/api/error.json
-( 11%) Resolving: self/v1/schemas/api/list/response.json
-( 16%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 22%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 27%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 33%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 38%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 44%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+(  7%) Resolving: self/v1/schemas/api/error.json
+( 14%) Resolving: self/v1/schemas/api/list/response.json
+( 21%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 28%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 35%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 42%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 57%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
 ( 50%) Resolving: self/v1/schemas/api/schemas/position.json
-( 55%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 61%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 66%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 72%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 77%) Resolving: self/v1/schemas/configuration/collection.json
-( 83%) Resolving: self/v1/schemas/configuration/configuration.json
-( 88%) Resolving: self/v1/schemas/configuration/contents.json
-( 94%) Resolving: self/v1/schemas/configuration/page.json
+( 71%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 78%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 85%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 92%) Resolving: self/v1/schemas/api/schemas/trace/response.json
 (100%) Resolving: test/test.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
@@ -98,10 +90,6 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#18)
 (  5%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/schema.metapack
 (  5%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
-(  6%) Producing: schemas/self/v1/schemas/configuration/collection/%/schema.metapack
-(  6%) Producing: schemas/self/v1/schemas/configuration/configuration/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/configuration/contents/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/configuration/page/%/schema.metapack
 (  8%) Producing: schemas/test/test/%/schema.metapack
 (  8%) Producing: schemas/self/v1/schemas/api/error/%/dependencies.metapack
 (  8%) Producing: schemas/self/v1/schemas/api/error/%/locations.metapack
@@ -155,22 +143,6 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#18)
 ( 27%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/locations.metapack
 ( 27%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
 ( 28%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/stats.metapack
-( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/dependencies.metapack
-( 28%) Producing: schemas/self/v1/schemas/configuration/collection/%/locations.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/collection/%/positions.metapack
-( 29%) Producing: schemas/self/v1/schemas/configuration/collection/%/stats.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/dependencies.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/locations.metapack
-( 30%) Producing: schemas/self/v1/schemas/configuration/configuration/%/positions.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/configuration/%/stats.metapack
-( 31%) Producing: schemas/self/v1/schemas/configuration/contents/%/dependencies.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/contents/%/locations.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/contents/%/positions.metapack
-( 32%) Producing: schemas/self/v1/schemas/configuration/contents/%/stats.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/dependencies.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/locations.metapack
-( 33%) Producing: schemas/self/v1/schemas/configuration/page/%/positions.metapack
-( 34%) Producing: schemas/self/v1/schemas/configuration/page/%/stats.metapack
 ( 34%) Producing: schemas/test/test/%/dependencies.metapack
 ( 35%) Producing: schemas/test/test/%/locations.metapack
 ( 35%) Producing: schemas/test/test/%/positions.metapack
@@ -201,14 +173,6 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#18)
 ( 45%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/health.metapack
 ( 45%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack
 ( 45%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/health.metapack
-( 46%) Producing: schemas/self/v1/schemas/configuration/collection/%/bundle.metapack
-( 46%) Producing: schemas/self/v1/schemas/configuration/collection/%/health.metapack
-( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/bundle.metapack
-( 47%) Producing: schemas/self/v1/schemas/configuration/configuration/%/health.metapack
-( 47%) Producing: schemas/self/v1/schemas/configuration/contents/%/bundle.metapack
-( 48%) Producing: schemas/self/v1/schemas/configuration/contents/%/health.metapack
-( 48%) Producing: schemas/self/v1/schemas/configuration/page/%/bundle.metapack
-( 49%) Producing: schemas/self/v1/schemas/configuration/page/%/health.metapack
 ( 49%) Producing: schemas/test/test/%/bundle.metapack
 ( 49%) Producing: schemas/test/test/%/health.metapack
 error: Custom linter rules are only available on the enterprise edition

@@ -76,9 +76,7 @@ if(ONE_INDEX)
   add_subdirectory(src/resolver)
   add_subdirectory(src/web)
   add_subdirectory(src/index)
-  add_subdirectory(collections)
-  add_dependencies(sourcemeta_one_index
-    sourcemeta_one_collections)
+  add_subdirectory(src/self)
 
   if(ONE_ENTERPRISE)
     add_subdirectory(enterprise/index)
@@ -97,25 +95,8 @@ sourcemeta_target_clang_format(SOURCES
 sourcemeta_target_shellcheck(SOURCES
   test/*.sh docker/*.sh enterprise/scripts/*.sh benchmark/*.sh)
 
-set(SOURCEMETA_SCHEMAS "${PROJECT_SOURCE_DIR}/collections/self/v1/schemas")
-add_custom_target(jsonschema_fmt_test
-  COMMAND "${JSONSCHEMA_BIN}" fmt --check ${SOURCEMETA_SCHEMAS})
-add_custom_target(jsonschema_fmt
-  COMMAND "${JSONSCHEMA_BIN}" fmt ${SOURCEMETA_SCHEMAS})
-add_custom_target(jsonschema_metaschema
-  COMMAND "${JSONSCHEMA_BIN}" metaschema ${SOURCEMETA_SCHEMAS})
-add_custom_target(jsonschema_lint
-  COMMAND "${JSONSCHEMA_BIN}" lint
-  ${SOURCEMETA_SCHEMAS})
-
 if(ONE_TESTS)
   enable_testing()
-
-  set(SCHEMA_TEST_DIRECTORIES "${PROJECT_SOURCE_DIR}/collections")
-
-  add_test(NAME one.schemas COMMAND
-    "${JSONSCHEMA_BIN}" test --extension .test.json
-    ${SCHEMA_TEST_DIRECTORIES})
 
   add_subdirectory(test/js)
 
@@ -129,6 +110,7 @@ if(ONE_TESTS)
     add_subdirectory(test/unit/configuration)
     add_subdirectory(test/unit/resolver)
     add_subdirectory(test/unit/actions)
+    add_subdirectory(test/unit/self)
   endif()
   add_subdirectory(test/cli)
 endif()

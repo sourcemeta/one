@@ -18,8 +18,8 @@ auto replace_all(std::string &text, const std::string &from,
 TEST(Configuration_read, read_valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_001.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -39,8 +39,8 @@ TEST(Configuration_read, read_valid_001) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -75,7 +75,7 @@ TEST(Configuration_read, read_valid_001) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   replace_all(text, "BASE_URI", "http://localhost:8000");
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
@@ -84,8 +84,8 @@ TEST(Configuration_read, read_valid_001) {
 TEST(Configuration_read, read_valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_002.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -105,8 +105,8 @@ TEST(Configuration_read, read_valid_002) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -128,7 +128,7 @@ TEST(Configuration_read, read_valid_002) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   replace_all(text, "BASE_URI", "http://localhost:8000");
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
@@ -137,8 +137,8 @@ TEST(Configuration_read, read_valid_002) {
 TEST(Configuration_read, read_valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_003.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -158,8 +158,8 @@ TEST(Configuration_read, read_valid_003) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -181,7 +181,7 @@ TEST(Configuration_read, read_valid_003) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -189,8 +189,8 @@ TEST(Configuration_read, read_valid_003) {
 TEST(Configuration_read, read_valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_004.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -210,8 +210,8 @@ TEST(Configuration_read, read_valid_004) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -236,7 +236,7 @@ TEST(Configuration_read, read_valid_004) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -244,8 +244,8 @@ TEST(Configuration_read, read_valid_004) {
 TEST(Configuration_read, read_valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_005.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -265,8 +265,8 @@ TEST(Configuration_read, read_valid_005) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -291,7 +291,7 @@ TEST(Configuration_read, read_valid_005) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -299,8 +299,8 @@ TEST(Configuration_read, read_valid_005) {
 TEST(Configuration_read, read_valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_006.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -320,8 +320,8 @@ TEST(Configuration_read, read_valid_006) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -335,7 +335,7 @@ TEST(Configuration_read, read_valid_006) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -343,8 +343,8 @@ TEST(Configuration_read, read_valid_006) {
 TEST(Configuration_read, read_valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_007.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -361,8 +361,8 @@ TEST(Configuration_read, read_valid_007) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -378,7 +378,7 @@ TEST(Configuration_read, read_valid_007) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -386,8 +386,8 @@ TEST(Configuration_read, read_valid_007) {
 TEST(Configuration_read, read_valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_008.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -407,8 +407,8 @@ TEST(Configuration_read, read_valid_008) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -424,7 +424,7 @@ TEST(Configuration_read, read_valid_008) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -432,8 +432,8 @@ TEST(Configuration_read, read_valid_008) {
 TEST(Configuration_read, read_valid_009) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_009.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -453,8 +453,8 @@ TEST(Configuration_read, read_valid_009) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -470,7 +470,7 @@ TEST(Configuration_read, read_valid_009) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -478,8 +478,8 @@ TEST(Configuration_read, read_valid_009) {
 TEST(Configuration_read, read_valid_010) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_010.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -496,8 +496,8 @@ TEST(Configuration_read, read_valid_010) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -513,7 +513,7 @@ TEST(Configuration_read, read_valid_010) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -521,8 +521,8 @@ TEST(Configuration_read, read_valid_010) {
 TEST(Configuration_read, read_valid_011) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_011.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "contents": {
@@ -536,8 +536,8 @@ TEST(Configuration_read, read_valid_011) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json"
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json"
               }
             }
           }
@@ -553,7 +553,7 @@ TEST(Configuration_read, read_valid_011) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -561,8 +561,8 @@ TEST(Configuration_read, read_valid_011) {
 TEST(Configuration_read, read_valid_012) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_012.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -582,8 +582,8 @@ TEST(Configuration_read, read_valid_012) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -605,7 +605,7 @@ TEST(Configuration_read, read_valid_012) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -613,8 +613,8 @@ TEST(Configuration_read, read_valid_012) {
 TEST(Configuration_read, read_valid_013) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_013.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -634,8 +634,8 @@ TEST(Configuration_read, read_valid_013) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -661,7 +661,7 @@ TEST(Configuration_read, read_valid_013) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -669,8 +669,8 @@ TEST(Configuration_read, read_valid_013) {
 TEST(Configuration_read, read_valid_014) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_014.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -690,8 +690,8 @@ TEST(Configuration_read, read_valid_014) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -707,7 +707,7 @@ TEST(Configuration_read, read_valid_014) {
   })JSON"};
 
   replace_all(text, "STUB_DIRECTORY", STUB_DIRECTORY);
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -717,8 +717,7 @@ TEST(Configuration_read, read_invalid_001) {
                                 "read_invalid_001.json"};
 
   try {
-    sourcemeta::one::Configuration::read(configuration_path,
-                                         COLLECTIONS_DIRECTORY);
+    sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     EXPECT_EQ(error.from(), configuration_path);
@@ -735,8 +734,8 @@ TEST(Configuration_read, read_invalid_001) {
 TEST(Configuration_read, read_valid_015_diamond_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_015.json"};
-  const auto result{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto result{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   EXPECT_TRUE(result.is_object());
   EXPECT_TRUE(result.defines("contents"));
   EXPECT_TRUE(result.at("contents").defines("shared"));
@@ -749,8 +748,7 @@ TEST(Configuration_read, read_invalid_002_extends_at_path) {
                                 "read_invalid_002.json"};
 
   try {
-    sourcemeta::one::Configuration::read(configuration_path,
-                                         COLLECTIONS_DIRECTORY);
+    sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     EXPECT_EQ(error.from(), configuration_path);
@@ -766,8 +764,7 @@ TEST(Configuration_read, read_invalid_003_include_at_path) {
                                 "read_invalid_003.json"};
 
   try {
-    sourcemeta::one::Configuration::read(configuration_path,
-                                         COLLECTIONS_DIRECTORY);
+    sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     EXPECT_EQ(error.from(), configuration_path);
@@ -784,8 +781,7 @@ TEST(Configuration_read, read_invalid_004_circular_extends) {
                                 "read_invalid_004.json"};
 
   try {
-    sourcemeta::one::Configuration::read(configuration_path,
-                                         COLLECTIONS_DIRECTORY);
+    sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
     EXPECT_EQ(error.target(), std::filesystem::weakly_canonical(
@@ -803,8 +799,7 @@ TEST(Configuration_read, read_invalid_006_circular_include) {
                                 "read_invalid_006.json"};
 
   try {
-    sourcemeta::one::Configuration::read(configuration_path,
-                                         COLLECTIONS_DIRECTORY);
+    sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY);
     FAIL();
   } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
     EXPECT_EQ(error.target(), std::filesystem::weakly_canonical(
@@ -819,21 +814,15 @@ TEST(Configuration_read, read_configuration_files_no_extends_no_includes) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_001.json"};
   std::unordered_set<std::string> configuration_files;
-  sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+  sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY,
+                                       configuration_files);
 
-  EXPECT_EQ(configuration_files.size(), 3);
+  EXPECT_EQ(configuration_files.size(), 2);
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(configuration_path).native()));
   EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "one.json")
-          .native()));
-  EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "jsonschema.json")
+      std::filesystem::weakly_canonical(std::filesystem::path{SELF_DIRECTORY} /
+                                        "v1" / "one.json")
           .native()));
 }
 
@@ -841,21 +830,15 @@ TEST(Configuration_read, read_configuration_files_with_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_015.json"};
   std::unordered_set<std::string> configuration_files;
-  sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+  sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY,
+                                       configuration_files);
 
-  EXPECT_EQ(configuration_files.size(), 6);
+  EXPECT_EQ(configuration_files.size(), 5);
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(configuration_path).native()));
   EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "one.json")
-          .native()));
-  EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "jsonschema.json")
+      std::filesystem::weakly_canonical(std::filesystem::path{SELF_DIRECTORY} /
+                                        "v1" / "one.json")
           .native()));
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
@@ -875,10 +858,10 @@ TEST(Configuration_read, read_configuration_files_with_include_chain) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_002.json"};
   std::unordered_set<std::string> configuration_files;
-  sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY, configuration_files);
+  sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY,
+                                       configuration_files);
 
-  EXPECT_EQ(configuration_files.size(), 5);
+  EXPECT_EQ(configuration_files.size(), 4);
   EXPECT_TRUE(configuration_files.contains(
       std::filesystem::weakly_canonical(configuration_path).native()));
   EXPECT_TRUE(configuration_files.contains(
@@ -890,22 +873,16 @@ TEST(Configuration_read, read_configuration_files_with_include_chain) {
                                         "folder" / "jsonschema.json")
           .native()));
   EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "one.json")
-          .native()));
-  EXPECT_TRUE(configuration_files.contains(
-      std::filesystem::weakly_canonical(
-          std::filesystem::path{COLLECTIONS_DIRECTORY} / "self" / "v1" /
-          "jsonschema.json")
+      std::filesystem::weakly_canonical(std::filesystem::path{SELF_DIRECTORY} /
+                                        "v1" / "one.json")
           .native()));
 }
 
 TEST(Configuration_read, read_valid_016_api_explicit_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_016.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -925,8 +902,8 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -936,7 +913,7 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
     }
   })JSON"};
 
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }
@@ -944,8 +921,8 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
 TEST(Configuration_read, read_valid_017_api_false_html_false) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_017.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -960,8 +937,8 @@ TEST(Configuration_read, read_valid_017_api_false_html_false) {
 TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_018.json"};
-  const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, COLLECTIONS_DIRECTORY)};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
     "url": "http://localhost:8000",
@@ -981,8 +958,8 @@ TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
           "v1": {
             "contents": {
               "schemas": {
-                "path": "COLLECTIONS_DIRECTORY/self/v1/schemas",
-                "x-sourcemeta-one:path": "COLLECTIONS_DIRECTORY/self/v1/jsonschema.json",
+                "path": "SELF_DIRECTORY/v1/schemas",
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -992,7 +969,7 @@ TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
     }
   })JSON"};
 
-  replace_all(text, "COLLECTIONS_DIRECTORY", COLLECTIONS_DIRECTORY);
+  replace_all(text, "SELF_DIRECTORY", SELF_DIRECTORY);
   const auto expected{sourcemeta::core::parse_json(text)};
   EXPECT_EQ(raw_configuration, expected);
 }

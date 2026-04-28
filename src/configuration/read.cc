@@ -154,7 +154,7 @@ auto default_base_uri(sourcemeta::core::JSON &contents,
 namespace sourcemeta::one {
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
-                         const std::filesystem::path &collections_path,
+                         const std::filesystem::path &self_path,
                          std::unordered_set<std::string> &configuration_files)
     -> sourcemeta::core::JSON {
   auto data{sourcemeta::core::read_json(configuration_path)};
@@ -186,10 +186,10 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   }
 
   if (!(data.at("api").is_boolean() && !data.at("api").to_boolean())) {
-    const auto self_path{std::filesystem::weakly_canonical(
-        collections_path / "self" / "v1" / "one.json")};
+    const auto self_one_path{
+        std::filesystem::weakly_canonical(self_path / "v1" / "one.json")};
     auto extends_copy{sourcemeta::core::JSON::make_array()};
-    extends_copy.push_back(sourcemeta::core::JSON{self_path.string()});
+    extends_copy.push_back(sourcemeta::core::JSON{self_one_path.string()});
     for (const auto &entry : data.at("extends").as_array()) {
       extends_copy.push_back(entry);
     }
@@ -213,10 +213,10 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
 }
 
 auto Configuration::read(const std::filesystem::path &configuration_path,
-                         const std::filesystem::path &collections_path)
+                         const std::filesystem::path &self_path)
     -> sourcemeta::core::JSON {
   std::unordered_set<std::string> configuration_files;
-  return read(configuration_path, collections_path, configuration_files);
+  return read(configuration_path, self_path, configuration_files);
 }
 
 } // namespace sourcemeta::one

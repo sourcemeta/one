@@ -289,7 +289,7 @@ static auto index_main(const std::string_view &program,
   std::println(stderr, "Using configuration: {}", configuration_path.string());
   std::unordered_set<std::string> configuration_files;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
-      configuration_path, SOURCEMETA_ONE_COLLECTIONS, configuration_files)};
+      configuration_path, SOURCEMETA_ONE_SELF, configuration_files)};
 
   if (app.contains("configuration")) {
     std::ostringstream configuration_output;
