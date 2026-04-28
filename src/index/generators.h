@@ -651,42 +651,42 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       const sourcemeta::core::JSON &) -> void {
     sourcemeta::core::URITemplateRouter router{configuration.base_path};
 
+    const auto list_schema{configuration.base_path +
+                           "/self/v1/schemas/api/list/response"};
+    const auto dependencies_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/dependencies/response"};
+    const auto dependents_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/dependents/response"};
+    const auto health_schema{configuration.base_path +
+                             "/self/v1/schemas/api/schemas/health/response"};
+    const auto locations_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/locations/response"};
+    const auto positions_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/positions/response"};
+    const auto stats_schema{configuration.base_path +
+                            "/self/v1/schemas/api/schemas/stats/response"};
+    const auto metadata_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/metadata/response"};
+    const auto evaluate_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/evaluate/response"};
+    const auto trace_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/trace/response"};
+    const auto search_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/search/response"};
+    const auto error_schema{configuration.base_path +
+                            "/self/v1/schemas/api/error"};
+
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
     if (configuration.api) {
-      const auto list_schema{configuration.base_path +
-                             "/self/v1/schemas/api/list/response"};
-      const auto dependencies_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/dependencies/response"};
-      const auto dependents_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/dependents/response"};
-      const auto health_schema{configuration.base_path +
-                               "/self/v1/schemas/api/schemas/health/response"};
-      const auto locations_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/locations/response"};
-      const auto positions_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/positions/response"};
-      const auto stats_schema{configuration.base_path +
-                              "/self/v1/schemas/api/schemas/stats/response"};
-      const auto metadata_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/metadata/response"};
-      const auto evaluate_response_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/evaluate/response"};
-      const auto trace_response_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/trace/response"};
-      const auto search_response_schema{
-          configuration.base_path +
-          "/self/v1/schemas/api/schemas/search/response"};
-      const auto error_schema{configuration.base_path +
-                              "/self/v1/schemas/api/error"};
-
       const sourcemeta::core::URITemplateRouter::Argument
           otherwise_arguments[] = {
               {"errorSchema", std::string_view{error_schema}}};
