@@ -1,4 +1,4 @@
-GET {{base}}/self/static/main.min.js
+GET {{base}}/self/v1/static/main.min.js
 HTTP 200
 Content-Type: text/javascript
 [Asserts]

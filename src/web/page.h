@@ -90,7 +90,7 @@ inline auto make_footer(sourcemeta::core::HTMLWriter &writer,
   // Left section
   writer.small().attribute("class", "mb-2 mb-md-0");
   writer.img()
-      .attribute("src", configuration.base_path + "/self/static/icon.svg")
+      .attribute("src", configuration.base_path + "/self/v1/static/icon.svg")
       .attribute("alt", "Sourcemeta")
       .attribute("height", "25")
       .attribute("width", "25")
@@ -154,30 +154,31 @@ inline auto make_head(sourcemeta::core::HTMLWriter &writer,
       .attribute("href",
                  // For cache busting, to force browsers to refresh styles
                  // on any update
-                 configuration.base_path + "/self/static/style.min.css?v=" +
+                 configuration.base_path + "/self/v1/static/style.min.css?v=" +
                      std::string{SOURCEMETA_ONE_CSS_CHECKSUM});
   writer.link()
       .attribute("rel", "icon")
-      .attribute("href", configuration.base_path + "/self/static/favicon.ico")
+      .attribute("href",
+                 configuration.base_path + "/self/v1/static/favicon.ico")
       .attribute("sizes", "any");
   writer.link()
       .attribute("rel", "icon")
-      .attribute("href", configuration.base_path + "/self/static/icon.svg")
+      .attribute("href", configuration.base_path + "/self/v1/static/icon.svg")
       .attribute("type", "image/svg+xml");
   writer.link()
       .attribute("rel", "shortcut icon")
-      .attribute("href",
-                 configuration.base_path + "/self/static/apple-touch-icon.png")
+      .attribute("href", configuration.base_path +
+                             "/self/v1/static/apple-touch-icon.png")
       .attribute("type", "image/png");
   writer.link()
       .attribute("rel", "apple-touch-icon")
-      .attribute("href",
-                 configuration.base_path + "/self/static/apple-touch-icon.png")
+      .attribute("href", configuration.base_path +
+                             "/self/v1/static/apple-touch-icon.png")
       .attribute("sizes", "180x180");
   writer.link()
       .attribute("rel", "manifest")
-      .attribute("href",
-                 configuration.base_path + "/self/static/manifest.webmanifest");
+      .attribute("href", configuration.base_path +
+                             "/self/v1/static/manifest.webmanifest");
   writer.raw(configuration.html->head.value_or(""));
   writer.close();
 }
@@ -201,7 +202,7 @@ inline auto make_page(sourcemeta::core::HTMLWriter &writer,
       .attribute("src",
                  // For cache busting, to force browsers to refresh styles
                  // on any update
-                 configuration.base_path + "/self/static/main.min.js?v=" +
+                 configuration.base_path + "/self/v1/static/main.min.js?v=" +
                      std::string{SOURCEMETA_ONE_JS_CHECKSUM});
   writer.close();
   writer.close();

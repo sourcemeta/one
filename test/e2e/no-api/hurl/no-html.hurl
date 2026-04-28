@@ -8,7 +8,7 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-GET {{base}}/self/static/main.js
+GET {{base}}/self/v1/static/main.js
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -18,7 +18,7 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-GET {{base}}/self/static/main.css
+GET {{base}}/self/v1/static/main.css
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *

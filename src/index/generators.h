@@ -805,7 +805,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
              {"errorSchema", std::string_view{error_schema}}};
-        router.add("/self/static/{+path}", next_id++,
+        router.add("/self/v1/static/{+path}", next_id++,
+                   sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
+                   static_arguments);
+      } else {
+        const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
+            {{"errorSchema", std::string_view{error_schema}}};
+        router.add("/self/v1/static/{+path}", next_id++,
                    sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
       }

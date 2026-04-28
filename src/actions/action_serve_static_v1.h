@@ -33,10 +33,17 @@ public:
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void override {
     if (this->file_root_.empty()) {
+      if (request.method() != "get" && request.method() != "head") {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+            "method-not-allowed", "This HTTP method is invalid for this URL",
+            this->error_schema_);
+        return;
+      }
+
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-          "missing-base-path", "The base path is not configured for this route",
-          this->error_schema_);
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", this->error_schema_);
       return;
     }
 
