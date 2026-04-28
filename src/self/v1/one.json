@@ -10,7 +10,7 @@
         "v1": {
           "contents": {
             "schemas": {
-              "include": "./jsonschema.json"
+              "path": "./schemas"
             }
           }
         }

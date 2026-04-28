@@ -55,41 +55,33 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/custom-meta.json (#1)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/error.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/list/response.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependencies/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/evaluate/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/health/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/locations/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/metadata/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/position.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/positions/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/search/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/stats/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/api/schemas/trace/response.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/collection.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/configuration.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/contents.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/collections/self/v1/schemas/configuration/page.json (#18)
-(  5%) Resolving: example/schemas/custom-meta.json
-( 11%) Resolving: self/v1/schemas/api/error.json
-( 16%) Resolving: self/v1/schemas/api/list/response.json
-( 22%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 27%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 33%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 38%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 44%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 50%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 55%) Resolving: self/v1/schemas/api/schemas/position.json
-( 61%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 66%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 72%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 77%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 83%) Resolving: self/v1/schemas/configuration/collection.json
-( 88%) Resolving: self/v1/schemas/configuration/configuration.json
-( 94%) Resolving: self/v1/schemas/configuration/contents.json
-(100%) Resolving: self/v1/schemas/configuration/page.json
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#14)
+(  7%) Resolving: example/schemas/custom-meta.json
+( 14%) Resolving: self/v1/schemas/api/error.json
+( 21%) Resolving: self/v1/schemas/api/list/response.json
+( 28%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 35%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 42%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 57%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 64%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 71%) Resolving: self/v1/schemas/api/schemas/position.json
+( 78%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 85%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 92%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+(100%) Resolving: self/v1/schemas/api/schemas/trace/response.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  1%) Producing: explorer/%/404.metapack

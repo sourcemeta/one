@@ -25,7 +25,6 @@ COPY package-lock.json /source/package-lock.json
 COPY cmake /source/cmake
 COPY src /source/src
 COPY contrib /source/contrib
-COPY collections /source/collections
 COPY vendor /source/vendor
 COPY DEPENDENCIES /source/DEPENDENCIES
 COPY CMakeLists.txt /source/CMakeLists.txt
@@ -62,12 +61,6 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --target clang_format_test
 RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --target shellcheck
-RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
-  --target jsonschema_fmt_test
-RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
-  --target jsonschema_metaschema
-RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
-  --target jsonschema_lint
 
 # Run a few times to rule out any flakiness
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
