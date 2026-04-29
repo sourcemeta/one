@@ -979,5 +979,10 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 99%) Producing: explorer/%/directory-html.metapack
 ( 99%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
+EOF
+diff "$TMP/output.txt" "$TMP/expected.txt"
+
+cd "$TMP/output"
+find . -mindepth 1 | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
 diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"

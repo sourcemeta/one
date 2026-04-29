@@ -447,5 +447,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 91%) Combining: schemas/self/v1/schemas/mcp/ping/response/%/dependents.metapack
 ( 95%) Combining: schemas/self/v1/schemas/mcp/request/%/dependents.metapack
 (100%) Combining: schemas/self/v1/schemas/mcp/response/%/dependents.metapack
+EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
