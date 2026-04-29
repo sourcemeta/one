@@ -17,6 +17,7 @@
     "method": {
       "const": "notifications/initialized"
     },
+    "id": false,
     "params": {
       "type": "object",
       "properties": {
