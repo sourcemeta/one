@@ -5,7 +5,6 @@
   "examples": [
     {
       "jsonrpc": "2.0",
-      "id": null,
       "error": {
         "code": -32700,
         "message": "Parse error"
@@ -30,13 +29,14 @@
     }
   ],
   "type": "object",
-  "required": [ "jsonrpc", "id", "error" ],
+  "required": [ "jsonrpc", "error" ],
   "properties": {
     "jsonrpc": {
       "const": "2.0"
     },
     "id": {
-      "type": [ "string", "integer", "null" ]
+      "$comment": "MCP overrides JSON-RPC 2.0 here. Pure JSON-RPC 2.0 mandates `id: null` when the server cannot read the request id, but MCP forbids null and instead makes id optional",
+      "type": [ "string", "integer" ]
     },
     "error": {
       "anyOf": [
