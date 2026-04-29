@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Initialize Request",
+  "description": "Connection handshake from a client",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {
+          "roots": {
+            "listChanged": true
+          },
+          "sampling": {}
+        },
+        "clientInfo": {
+          "name": "claude-code",
+          "version": "1.0.0"
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "method", "params" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "method": {
+      "const": "initialize"
+    },
+    "params": {
+      "type": "object",
+      "required": [ "protocolVersion", "capabilities", "clientInfo" ],
+      "properties": {
+        "_meta": {
+          "type": "object",
+          "properties": {
+            "progressToken": {
+              "type": [ "string", "integer" ]
+            }
+          }
+        },
+        "protocolVersion": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "roots": {
+              "type": "object",
+              "properties": {
+                "listChanged": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "sampling": {
+              "type": "object",
+              "properties": {
+                "context": {
+                  "type": "object"
+                },
+                "tools": {
+                  "type": "object"
+                }
+              }
+            },
+            "elicitation": {
+              "type": "object",
+              "properties": {
+                "form": {
+                  "type": "object"
+                },
+                "url": {
+                  "type": "object"
+                }
+              }
+            },
+            "tasks": {
+              "type": "object",
+              "properties": {
+                "cancel": {
+                  "type": "object"
+                },
+                "list": {
+                  "type": "object"
+                },
+                "requests": {
+                  "type": "object",
+                  "properties": {
+                    "elicitation": {
+                      "type": "object",
+                      "properties": {
+                        "create": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "sampling": {
+                      "type": "object",
+                      "properties": {
+                        "createMessage": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "experimental": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "clientInfo": {
+          "type": "object",
+          "required": [ "name", "version" ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "websiteUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "icons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [ "src" ],
+                "properties": {
+                  "src": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "sizes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "theme": {
+                    "enum": [ "dark", "light" ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

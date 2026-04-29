@@ -57,20 +57,38 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#11)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#12)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#13)
-Detecting: $(realpath "$TMP")/schemas/foo.json (#14)
-(  7%) Resolving: self/v1/schemas/api/error.json
-( 14%) Resolving: self/v1/schemas/api/list/response.json
-( 21%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 28%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 35%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 42%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 50%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 57%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 64%) Resolving: self/v1/schemas/api/schemas/position.json
-( 71%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 78%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 85%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 92%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#22)
+Detecting: $(realpath "$TMP")/schemas/foo.json (#23)
+(  4%) Resolving: self/v1/schemas/api/error.json
+(  8%) Resolving: self/v1/schemas/api/list/response.json
+( 13%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 17%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 21%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 26%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 30%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 34%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 39%) Resolving: self/v1/schemas/api/schemas/position.json
+( 43%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 47%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 52%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 56%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 60%) Resolving: self/v1/schemas/mcp/error.json
+( 65%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 69%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 73%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 78%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 82%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 86%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 91%) Resolving: self/v1/schemas/mcp/request.json
+( 95%) Resolving: self/v1/schemas/mcp/response.json
 (100%) Resolving: test/foo.json
 error: The schema identifier is not relative to the corresponding base
   at path $(realpath "$TMP")/schemas/foo.json

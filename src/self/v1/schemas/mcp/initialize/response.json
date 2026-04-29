@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Initialize Response",
+  "description": "Sourcemeta One's response to a client's initialization",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {},
+        "serverInfo": {
+          "name": "sourcemeta-one",
+          "version": "1.0.0"
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "type": "object",
+      "required": [ "protocolVersion", "capabilities", "serverInfo" ],
+      "properties": {
+        "protocolVersion": {
+          "const": "2025-11-25"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false
+        },
+        "serverInfo": {
+          "type": "object",
+          "required": [ "name", "version" ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

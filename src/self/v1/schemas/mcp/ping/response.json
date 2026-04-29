@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Ping Response",
+  "description": "Sourcemeta One's response to a liveness check",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "result": {}
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "const": {}
+    }
+  },
+  "additionalProperties": false
+}
