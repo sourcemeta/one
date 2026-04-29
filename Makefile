@@ -102,8 +102,8 @@ sandbox: sandbox-index
 test-e2e:
 	$(HURL) --test \
 		--variable base=http://localhost:$(SANDBOX_PORT) \
-		$(SANDBOX)/hurl/*.all.hurl \
-		$(SANDBOX)/hurl/*.$(EDITION).hurl
+		$(wildcard $(SANDBOX)/hurl/*.all.hurl) \
+		$(wildcard $(SANDBOX)/hurl/*.$(EDITION).hurl)
 
 .PHONY: test-ui
 test-ui: node_modules

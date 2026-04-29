@@ -29,8 +29,8 @@ up: $(COMPOSE)
 .PHONY: test-hurl
 test-hurl:
 	$(HURL) --repeat 10 --test --variable base=$(BASE):$(PORT) \
-		hurl/*.all.hurl \
-		hurl/*.$(EDITION).hurl
+		$(wildcard hurl/*.all.hurl) \
+		$(wildcard hurl/*.$(EDITION).hurl)
 
 .PHONY: test-playwright
 test-playwright:
