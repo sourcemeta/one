@@ -63,23 +63,41 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#12)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#13)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#14)
-(  7%) Resolving: example/schemas/test.json
-( 14%) Resolving: self/v1/schemas/api/error.json
-( 21%) Resolving: self/v1/schemas/api/list/response.json
-( 28%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 35%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 42%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 50%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 57%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 64%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 71%) Resolving: self/v1/schemas/api/schemas/position.json
-( 78%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 85%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 92%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-(100%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#22)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#23)
+(  4%) Resolving: example/schemas/test.json
+(  8%) Resolving: self/v1/schemas/api/error.json
+( 13%) Resolving: self/v1/schemas/api/list/response.json
+( 17%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 21%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 26%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 30%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 34%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 39%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 43%) Resolving: self/v1/schemas/api/schemas/position.json
+( 47%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 52%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 56%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 60%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 65%) Resolving: self/v1/schemas/mcp/error.json
+( 69%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 73%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 78%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 82%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 86%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 91%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 95%) Resolving: self/v1/schemas/mcp/request.json
+(100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
-(  1%) Producing: explorer/%/404.metapack
+(  0%) Producing: explorer/%/404.metapack
 (  1%) Producing: schemas/example/schemas/test/%/schema.metapack
 error: Could not resolve the metaschema of the schema
   at identifier https://sourcemeta.com/example/schemas/test

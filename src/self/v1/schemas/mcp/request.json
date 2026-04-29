@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Request",
+  "description": "Any incoming MCP request the server accepts",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {},
+        "clientInfo": {
+          "name": "claude-code",
+          "version": "1.0.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "ping"
+    }
+  ],
+  "anyOf": [
+    {
+      "$ref": "./initialize/request.json"
+    },
+    {
+      "$ref": "./notifications/initialized.json"
+    },
+    {
+      "$ref": "./notifications/cancelled.json"
+    },
+    {
+      "$ref": "./ping/request.json"
+    }
+  ]
+}

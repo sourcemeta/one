@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Initialized Notification",
+  "description": "Client signal that the handshake is complete and normal operation may begin",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "method" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "method": {
+      "const": "notifications/initialized"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "_meta": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

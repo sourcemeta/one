@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Cancelled Notification",
+  "description": "Cancellation hint from a client for an in-flight request. Sourcemeta One accepts and discards these",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/cancelled",
+      "params": {
+        "requestId": 7
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/cancelled",
+      "params": {
+        "requestId": "abc-123",
+        "reason": "user pressed escape"
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "method", "params" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "method": {
+      "const": "notifications/cancelled"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": [ "string", "integer" ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "_meta": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

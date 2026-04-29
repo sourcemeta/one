@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Response",
+  "description": "Any outgoing MCP response the server returns",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {},
+        "serverInfo": {
+          "name": "sourcemeta-one",
+          "version": "1.0.0"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {}
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": null,
+      "error": {
+        "code": -32700,
+        "message": "Parse error"
+      }
+    }
+  ],
+  "anyOf": [
+    {
+      "$ref": "./initialize/response.json"
+    },
+    {
+      "$ref": "./ping/response.json"
+    },
+    {
+      "$ref": "./error.json"
+    }
+  ]
+}
