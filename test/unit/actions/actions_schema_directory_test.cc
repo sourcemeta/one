@@ -12,6 +12,10 @@ public:
 
   auto run(const std::span<std::string_view>, sourcemeta::one::HTTPRequest &,
            sourcemeta::one::HTTPResponse &) -> void override {}
+
+  auto mcp(const sourcemeta::core::JSON &) -> sourcemeta::core::JSON override {
+    return sourcemeta::core::JSON::make_object();
+  }
 };
 
 } // namespace

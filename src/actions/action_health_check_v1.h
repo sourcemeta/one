@@ -6,6 +6,8 @@
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
+#include "mcp.h"
+
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
@@ -40,6 +42,10 @@ public:
     response.write_header("Access-Control-Allow-Origin", "*");
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
                                    response);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &) -> sourcemeta::core::JSON override {
+    return sourcemeta::one::mcp_empty();
   }
 
 private:

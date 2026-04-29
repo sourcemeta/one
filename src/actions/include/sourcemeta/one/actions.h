@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_H
 #define SOURCEMETA_ONE_ACTIONS_H
 
+#include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -49,6 +50,9 @@ public:
 
   virtual auto run(const std::span<std::string_view> matches,
                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
+
+  virtual auto mcp(const sourcemeta::core::JSON &input)
+      -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
     return this->base_;

@@ -8,6 +8,7 @@
 
 #include "action_jsonschema_serve_v1.h"
 #include "action_serve_metapack_file_v1.h"
+#include "mcp.h"
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
@@ -108,6 +109,11 @@ public:
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
           "There is nothing at this URL", this->error_schema_);
     }
+  }
+
+  auto mcp(const sourcemeta::core::JSON &) -> sourcemeta::core::JSON override {
+    return sourcemeta::one::mcp_error("mcp-not-supported",
+                                      "This action cannot be invoked via MCP");
   }
 
 private:

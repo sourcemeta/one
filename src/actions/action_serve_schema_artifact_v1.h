@@ -5,9 +5,12 @@
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/metapack.h>
 
 #include "action_serve_metapack_file_v1.h"
+#include "mcp.h"
 
+#include <cassert>     // assert
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
@@ -47,6 +50,23 @@ public:
     ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                       true, {}, this->response_schema_, request,
                                       response, this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &input)
+      -> sourcemeta::core::JSON override {
+    assert(input.is_object());
+    assert(input.defines("schema"));
+    assert(input.at("schema").is_string());
+
+    auto absolute_path{this->base() / "schemas" /
+                       input.at("schema").to_string() / "%"};
+    absolute_path /= std::string{this->artifact_} + ".metapack";
+    auto payload{sourcemeta::one::metapack_read_json(absolute_path)};
+    if (!payload.has_value()) {
+      return sourcemeta::one::mcp_error("not-found",
+                                        "There is nothing at this URL");
+    }
+    return sourcemeta::one::mcp_json(std::move(payload).value());
   }
 
 private:
