@@ -40,6 +40,9 @@
       "github": "modelcontextprotocol",
       "website": "https://modelcontextprotocol.io",
       "contents": {
+        "2025-11-25": {
+          "path": "../vendor/public/modelcontextprotocol/schema/2025-11-25"
+        },
         "2025-06-18": {
           "path": "../vendor/public/modelcontextprotocol/schema/2025-06-18"
         },
