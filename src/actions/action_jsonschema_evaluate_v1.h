@@ -13,6 +13,8 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
+#include "mcp.h"
+
 #include <cassert>       // assert
 #include <cstdint>       // std::uint8_t
 #include <filesystem>    // std::filesystem::path
@@ -57,10 +59,7 @@ public:
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
     } else if (request.method() == "post") {
-      auto template_path{this->base() / "schemas"};
-      template_path /= path;
-      template_path /= "%";
-      template_path /= "blaze-exhaustive.metapack";
+      auto template_path{this->build_template_path(path)};
       if (!std::filesystem::exists(template_path)) {
         const auto schema_path{template_path.parent_path() / "schema.metapack"};
         if (std::filesystem::exists(schema_path)) {
@@ -106,9 +105,50 @@ public:
     }
   }
 
+  auto mcp(const sourcemeta::core::JSON &input)
+      -> sourcemeta::core::JSON override {
+    assert(input.is_object());
+    assert(input.defines("schema"));
+    assert(input.at("schema").is_string());
+    assert(input.defines("instance"));
+
+    const auto template_path{
+        this->build_template_path(input.at("schema").to_string())};
+    if (!std::filesystem::exists(template_path)) {
+      const auto schema_path{template_path.parent_path() / "schema.metapack"};
+      if (std::filesystem::exists(schema_path)) {
+        return sourcemeta::one::mcp_error(
+            "no-template",
+            "This schema was not precompiled for schema evaluation");
+      }
+      return sourcemeta::one::mcp_error("schema-not-found",
+                                        "There is no schema at that path");
+    }
+
+    std::ostringstream stringified_instance;
+    sourcemeta::core::stringify(input.at("instance"), stringified_instance);
+
+    try {
+      return sourcemeta::one::mcp_json(this->evaluate(
+          template_path, stringified_instance.str(), this->mode_));
+    } catch (const std::exception &exception) {
+      return sourcemeta::one::mcp_error("evaluation-error", exception.what());
+    }
+  }
+
   enum class EvaluateMode : std::uint8_t { Standard, Trace };
 
 private:
+  [[nodiscard]] auto
+  build_template_path(const std::string_view schema_path) const
+      -> std::filesystem::path {
+    auto template_path{this->base() / "schemas"};
+    template_path /= schema_path;
+    template_path /= "%";
+    template_path /= "blaze-exhaustive.metapack";
+    return template_path;
+  }
+
   auto
   resolve_vocabulary(const std::string_view keyword_location,
                      const sourcemeta::core::WeakPointer &evaluate_path,

@@ -7,6 +7,7 @@
 #include <sourcemeta/one/http.h>
 
 #include "action_serve_metapack_file_v1.h"
+#include "mcp.h"
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
@@ -50,6 +51,11 @@ public:
     ActionServeMetapackFile_v1::serve(this->file_root_ / matches.front(),
                                       sourcemeta::one::STATUS_OK, false, {}, {},
                                       request, response, this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &) -> sourcemeta::core::JSON override {
+    return sourcemeta::one::mcp_error("mcp-not-supported",
+                                      "This action cannot be invoked via MCP");
   }
 
 private:

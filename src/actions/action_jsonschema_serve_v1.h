@@ -8,6 +8,7 @@
 #include <sourcemeta/one/shared.h>
 
 #include "action_serve_metapack_file_v1.h"
+#include "mcp.h"
 
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
@@ -83,6 +84,11 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void override {
     serve(this->base(), matches.front(), request, response,
           this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &) -> sourcemeta::core::JSON override {
+    return sourcemeta::one::mcp_error("mcp-not-supported",
+                                      "This action cannot be invoked via MCP");
   }
 
 private:

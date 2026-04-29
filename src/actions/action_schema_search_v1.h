@@ -8,14 +8,19 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/search.h>
 
+#include "mcp.h"
+
+#include <cassert>      // assert
 #include <charconv>     // std::from_chars
-#include <cstdint>      // std::uint8_t
+#include <cstdint>      // std::uint8_t, std::int64_t
 #include <filesystem>   // std::filesystem
+#include <optional>     // std::optional, std::nullopt
 #include <span>         // std::span
 #include <sstream>      // std::ostringstream
 #include <string>       // std::string
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
+#include <utility>      // std::cmp_less_equal
 
 class ActionSchemaSearch_v1 : public sourcemeta::one::Action {
 public:
@@ -55,7 +60,6 @@ public:
       return;
     }
 
-    constexpr std::size_t MAXIMUM_QUERY_LENGTH{256};
     if (query.size() > MAXIMUM_QUERY_LENGTH) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_BAD_REQUEST,
@@ -65,17 +69,15 @@ public:
       return;
     }
 
-    constexpr std::size_t DEFAULT_LIMIT{10};
-    constexpr std::size_t MAXIMUM_LIMIT{100};
     std::size_t limit{DEFAULT_LIMIT};
-    const auto limit_param{request.query("limit")};
-    if (!limit_param.empty()) {
+    const auto limit_parameter{request.query("limit")};
+    if (!limit_parameter.empty()) {
       std::size_t parsed_limit{0};
       const auto [pointer, error_code] = std::from_chars(
-          limit_param.data(), limit_param.data() + limit_param.size(),
-          parsed_limit);
+          limit_parameter.data(),
+          limit_parameter.data() + limit_parameter.size(), parsed_limit);
       if (error_code != std::errc{} ||
-          pointer != limit_param.data() + limit_param.size() ||
+          pointer != limit_parameter.data() + limit_parameter.size() ||
           parsed_limit < 1 || parsed_limit > MAXIMUM_LIMIT) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_BAD_REQUEST,
@@ -88,55 +90,18 @@ public:
       limit = parsed_limit;
     }
 
-    std::uint8_t scope{sourcemeta::one::SearchScopePath |
-                       sourcemeta::one::SearchScopeTitle |
-                       sourcemeta::one::SearchScopeDescription};
-    const auto scope_param{request.query("scope")};
-    if (!scope_param.empty()) {
-      scope = 0;
-      std::string_view remaining{scope_param};
-      while (!remaining.empty()) {
-        const auto comma{remaining.find(',')};
-        const auto token{comma != std::string_view::npos
-                             ? remaining.substr(0, comma)
-                             : remaining};
-        if (token.empty()) {
-          // Skip empty tokens from trailing commas
-        } else if (token == "path") {
-          scope |= sourcemeta::one::SearchScopePath;
-        } else if (token == "title") {
-          scope |= sourcemeta::one::SearchScopeTitle;
-        } else if (token == "description") {
-          scope |= sourcemeta::one::SearchScopeDescription;
-        } else {
-          sourcemeta::one::json_error(
-              request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-              "invalid-search-scope",
-              "The scope must be a comma-separated list of: path, title, "
-              "description",
-              this->error_schema_);
-          return;
-        }
-
-        if (comma != std::string_view::npos) {
-          remaining = remaining.substr(comma + 1);
-        } else {
-          break;
-        }
-      }
-
-      if (scope == 0) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-            "invalid-search-scope",
-            "The scope must be a comma-separated list of: path, title, "
-            "description",
-            this->error_schema_);
-        return;
-      }
+    const auto parsed_scope{parse_scope(request.query("scope"))};
+    if (!parsed_scope.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-search-scope",
+          "The scope must be a comma-separated list of: path, title, "
+          "description",
+          this->error_schema_);
+      return;
     }
 
-    auto result{this->search_view_.search(query, limit, scope)};
+    auto result{this->search_view_.search(query, limit, parsed_scope.value())};
     response.write_status(sourcemeta::one::STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Content-Type", "application/json");
@@ -148,7 +113,84 @@ public:
                                    sourcemeta::one::Encoding::Identity);
   }
 
+  auto mcp(const sourcemeta::core::JSON &input)
+      -> sourcemeta::core::JSON override {
+    assert(input.is_object());
+    assert(input.defines("q"));
+    assert(input.at("q").is_string());
+    const auto &query{input.at("q").to_string()};
+    assert(!query.empty());
+    assert(query.size() <= MAXIMUM_QUERY_LENGTH);
+
+    std::size_t limit{DEFAULT_LIMIT};
+    if (input.defines("limit")) {
+      assert(input.at("limit").is_integer());
+      const auto parsed_limit{input.at("limit").to_integer()};
+      assert(parsed_limit >= 1);
+      assert(std::cmp_less_equal(parsed_limit, MAXIMUM_LIMIT));
+      limit = static_cast<std::size_t>(parsed_limit);
+    }
+
+    std::string_view scope_parameter;
+    if (input.defines("scope")) {
+      assert(input.at("scope").is_string());
+      scope_parameter = input.at("scope").to_string();
+    }
+
+    const auto parsed_scope{parse_scope(scope_parameter)};
+    assert(parsed_scope.has_value());
+
+    return sourcemeta::one::mcp_json(
+        this->search_view_.search(query, limit, parsed_scope.value()));
+  }
+
 private:
+  static auto parse_scope(const std::string_view scope_parameter)
+      -> std::optional<std::uint8_t> {
+    std::uint8_t scope{sourcemeta::one::SearchScopePath |
+                       sourcemeta::one::SearchScopeTitle |
+                       sourcemeta::one::SearchScopeDescription};
+    if (scope_parameter.empty()) {
+      return scope;
+    }
+
+    scope = 0;
+    std::string_view remaining{scope_parameter};
+    while (!remaining.empty()) {
+      const auto comma{remaining.find(',')};
+      const auto token{comma != std::string_view::npos
+                           ? remaining.substr(0, comma)
+                           : remaining};
+      if (token.empty()) {
+        // Skip empty tokens from trailing commas
+      } else if (token == "path") {
+        scope |= sourcemeta::one::SearchScopePath;
+      } else if (token == "title") {
+        scope |= sourcemeta::one::SearchScopeTitle;
+      } else if (token == "description") {
+        scope |= sourcemeta::one::SearchScopeDescription;
+      } else {
+        return std::nullopt;
+      }
+
+      if (comma != std::string_view::npos) {
+        remaining = remaining.substr(comma + 1);
+      } else {
+        break;
+      }
+    }
+
+    if (scope == 0) {
+      return std::nullopt;
+    }
+
+    return scope;
+  }
+
+  static constexpr std::size_t MAXIMUM_QUERY_LENGTH{256};
+  static constexpr std::size_t DEFAULT_LIMIT{10};
+  static constexpr std::size_t MAXIMUM_LIMIT{100};
+
   sourcemeta::one::SearchView search_view_;
   std::string_view response_schema_;
   std::string_view error_schema_;
