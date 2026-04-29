@@ -21,7 +21,6 @@ PARALLEL ?= 4
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
-EDITION_DISPLAY = $(if $(filter ON,$(ENTERPRISE)),Enterprise,Community)
 SANDBOX ?= test/e2e/html
 SANDBOX_PORT ?= 8000
 
@@ -103,8 +102,8 @@ sandbox: sandbox-index
 test-e2e:
 	$(HURL) --test \
 		--variable base=http://localhost:$(SANDBOX_PORT) \
-		--variable edition=$(EDITION_DISPLAY) \
-		$(SANDBOX)/hurl/*.hurl
+		$(wildcard $(SANDBOX)/hurl/*.all.hurl) \
+		$(wildcard $(SANDBOX)/hurl/*.$(EDITION).hurl)
 
 .PHONY: test-ui
 test-ui: node_modules
