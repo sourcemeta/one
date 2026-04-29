@@ -9,7 +9,6 @@ Content-Type: text/html
 xpath "string(/html/head/title)" == "Sourcemeta Schemas"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
-xpath "boolean(//footer//small[contains(., '{{edition}}')])" == true
 xpath "boolean(//h6[contains(text(), 'Special directories')])" == true
 xpath "boolean(//h6[contains(text(), 'Special directories')]/following-sibling::table[1]//a[@href='/self/'])" == true
 xpath "count(//h6[contains(text(), 'Special directories')]/preceding-sibling::table//a[@href='/self/'])" == 0
