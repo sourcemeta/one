@@ -12,8 +12,6 @@ EDITION ?= enterprise
 export PORT
 export EDITION
 
-EDITION_DISPLAY = $(if $(filter enterprise,$(EDITION)),Enterprise,Community)
-
 .PHONY: all
 all:
 	$(MAKE) down
@@ -31,7 +29,8 @@ up: $(COMPOSE)
 .PHONY: test-hurl
 test-hurl:
 	$(HURL) --repeat 10 --test --variable base=$(BASE):$(PORT) \
-		--variable edition=$(EDITION_DISPLAY) hurl/*.hurl
+		hurl/*.all.hurl \
+		hurl/*.$(EDITION).hurl
 
 .PHONY: test-playwright
 test-playwright:
