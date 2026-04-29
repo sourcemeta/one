@@ -5,6 +5,7 @@
   "examples": [
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": -32700,
         "message": "Parse error"
@@ -29,13 +30,13 @@
     }
   ],
   "type": "object",
-  "required": [ "jsonrpc", "error" ],
+  "required": [ "jsonrpc", "id", "error" ],
   "properties": {
     "jsonrpc": {
       "const": "2.0"
     },
     "id": {
-      "type": [ "string", "integer" ]
+      "type": [ "string", "integer", "null" ]
     },
     "error": {
       "anyOf": [
