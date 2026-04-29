@@ -28,6 +28,7 @@
     "method": {
       "const": "notifications/cancelled"
     },
+    "id": false,
     "params": {
       "type": "object",
       "properties": {
