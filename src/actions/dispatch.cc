@@ -3,6 +3,7 @@
 #include "action_default_v1.h"
 #include "action_health_check_v1.h"
 #include "action_jsonschema_evaluate_v1.h"
+#include "action_mcp_v1.h"
 #include "action_not_found_v1.h"
 #include "action_schema_search_v1.h"
 #include "action_serve_explorer_artifact_v1.h"

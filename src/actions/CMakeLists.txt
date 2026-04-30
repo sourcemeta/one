@@ -9,7 +9,8 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_serve_explorer_artifact_v1.h
     action_serve_metapack_file_v1.h
     action_serve_schema_artifact_v1.h
-    action_serve_static_v1.h)
+    action_serve_static_v1.h
+    action_mcp_v1.h)
 
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)
@@ -22,3 +23,8 @@ target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::one::metapack)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::blaze::output)
+
+if(ONE_ENTERPRISE)
+  target_link_libraries(sourcemeta_one_actions
+    PUBLIC sourcemeta::one::enterprise_server)
+endif()
