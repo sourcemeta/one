@@ -107,6 +107,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   server_url.userinfo("");
   server_url.query("");
   server_url.fragment("");
+  server_url.canonicalize();
   result.origin = server_url.recompose();
 
   if (data.defines("html")) {
