@@ -407,6 +407,7 @@ TEST(Configuration, base_path_none) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
 TEST(Configuration, base_path_slash) {
@@ -417,6 +418,7 @@ TEST(Configuration, base_path_slash) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
 TEST(Configuration, base_path_simple) {
@@ -427,6 +429,7 @@ TEST(Configuration, base_path_simple) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
 TEST(Configuration, base_path_trailing_slash) {
@@ -437,6 +440,7 @@ TEST(Configuration, base_path_trailing_slash) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
 TEST(Configuration, base_path_deep) {
@@ -447,6 +451,72 @@ TEST(Configuration, base_path_deep) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
   EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
+}
+
+TEST(Configuration, origin_https_default_port) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_https_default_port.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.url, "https://example.com/schemas");
+  EXPECT_EQ(configuration.base_path, "/schemas");
+  EXPECT_EQ(configuration.origin, "https://example.com");
+}
+
+TEST(Configuration, origin_custom_port) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_custom_port.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.url, "https://example.com:9443/api");
+  EXPECT_EQ(configuration.base_path, "/api");
+  EXPECT_EQ(configuration.origin, "https://example.com:9443");
+}
+
+TEST(Configuration, origin_with_userinfo) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_userinfo.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_query) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_query.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_fragment) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_fragment.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_userinfo_query_fragment_port) {
+  const auto configuration_path{
+      std::filesystem::path{STUB_DIRECTORY} /
+      "origin_with_userinfo_query_fragment_port.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com:8000");
 }
 
 TEST(Configuration, is_collection_base_true) {
