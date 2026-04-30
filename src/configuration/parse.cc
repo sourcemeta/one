@@ -103,6 +103,9 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     result.base_path.pop_back();
   }
 
+  server_url.path("");
+  result.origin = server_url.recompose();
+
   if (data.defines("html")) {
     if (data.at("html").is_boolean() && !data.at("html").to_boolean()) {
       result.html = std::nullopt;
