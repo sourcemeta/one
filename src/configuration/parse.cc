@@ -9,6 +9,7 @@
 #include <algorithm> // std::ranges::transform
 #include <cassert>   // assert
 #include <cctype>    // std::tolower
+#include <string>    // std::string, std::to_string
 
 namespace {
 
@@ -103,8 +104,17 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     result.base_path.pop_back();
   }
 
-  server_url.path("");
-  result.origin = server_url.recompose();
+  // TODO: Sourcemeta Core's URI class lacks setters for `query` and `userinfo`,
+  // so we cannot clear them through the public API and have to assemble the
+  // origin from `scheme`, `host`, and `port` directly. Add those setters to
+  // Core and revisit this
+  result.origin = std::string{server_url.scheme().value()};
+  result.origin.append("://");
+  result.origin.append(server_url.host().value());
+  if (server_url.port().has_value()) {
+    result.origin.push_back(':');
+    result.origin.append(std::to_string(server_url.port().value()));
+  }
 
   if (data.defines("html")) {
     if (data.at("html").is_boolean() && !data.at("html").to_boolean()) {

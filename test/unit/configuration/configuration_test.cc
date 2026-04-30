@@ -478,6 +478,47 @@ TEST(Configuration, origin_custom_port) {
   EXPECT_EQ(configuration.origin, "https://example.com:9443");
 }
 
+TEST(Configuration, origin_with_userinfo) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_userinfo.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_query) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_query.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_fragment) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "origin_with_fragment.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com");
+}
+
+TEST(Configuration, origin_with_userinfo_query_fragment_port) {
+  const auto configuration_path{
+      std::filesystem::path{STUB_DIRECTORY} /
+      "origin_with_userinfo_query_fragment_port.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+  EXPECT_EQ(configuration.origin, "http://example.com:8000");
+}
+
 TEST(Configuration, is_collection_base_true) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
