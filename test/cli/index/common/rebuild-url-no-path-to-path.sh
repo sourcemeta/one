@@ -554,6 +554,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/mcp/response/%/stats.metapack
 ./state.bin
 ./version.json
+EOF
 
 diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"
 
@@ -561,7 +562,6 @@ diff "$TMP/manifest.txt" "$TMP/expected_manifest.txt"
 "$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
@@ -587,6 +587,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.jso
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#21)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#22)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#23)
+EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # Run 3: change URL from no-path to path
@@ -606,7 +607,6 @@ EOF
 "$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
@@ -981,4 +981,5 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 99%) Producing: explorer/%/directory-html.metapack
 ( 99%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
+EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
