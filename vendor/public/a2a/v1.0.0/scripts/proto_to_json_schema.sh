@@ -1,0 +1,120 @@
+#!/bin/bash
+set -euo pipefail
+# Convert proto files to JSON Schema in a single operation.
+# Usage: proto_to_json_schema.sh <output_json_schema>
+
+OUTPUT=${1:-}
+if [[ -z "$OUTPUT" ]]; then
+  echo "Usage: $0 <output.json>" >&2
+  exit 1
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROTO_DIR="$ROOT_DIR/specification"
+PROTO_FILE="$PROTO_DIR/a2a.proto"
+GOOGLEAPIS_DIR="${GOOGLEAPIS_DIR:-}"
+
+check_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Error: $1 not found on PATH" >&2
+    exit 1
+  fi
+}
+
+# Check dependencies
+check_command "protoc"
+check_command "protoc-gen-jsonschema"
+check_command "jq"
+
+# Verify protoc-gen-jsonschema is the correct implementation (bufbuild/protoschema-plugins)
+# The bufbuild implementation outputs a version string starting with "v" (e.g., "v0.5.2")
+# Other implementations (like chrusty/protoc-gen-jsonschema) typically output "protoc-gen-jsonschema version X.Y.Z"
+PLUGIN_VERSION=$(protoc-gen-jsonschema --version 2>&1 || true)
+if [[ ! "$PLUGIN_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Error: Incorrect protoc-gen-jsonschema plugin detected." >&2
+  echo "Current version output: '$PLUGIN_VERSION'" >&2
+  echo "This script requires the plugin from github.com/bufbuild/protoschema-plugins" >&2
+  echo "Please install it with:" >&2
+  echo "  go install github.com/bufbuild/protoschema-plugins/cmd/protoc-gen-jsonschema@latest" >&2
+  exit 1
+fi
+
+# Create temporary directory for intermediate files
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+# Setup include paths for googleapis
+INCLUDE_FLAGS=("-I$PROTO_DIR")
+if [ -n "$GOOGLEAPIS_DIR" ]; then
+  INCLUDE_FLAGS+=("-I$GOOGLEAPIS_DIR")
+elif [ -d "$ROOT_DIR/third_party/googleapis" ]; then
+  INCLUDE_FLAGS+=("-I$ROOT_DIR/third_party/googleapis")
+elif [ -d "/usr/local/include/google/api" ]; then
+  INCLUDE_FLAGS+=("-I/usr/local/include")
+fi
+
+# Verify googleapis annotations are available
+ANNOTATIONS_FOUND=false
+for inc in "${INCLUDE_FLAGS[@]}"; do
+  dir="${inc#-I}"
+  if [ -f "$dir/google/api/annotations.proto" ]; then
+    ANNOTATIONS_FOUND=true
+    break
+  fi
+done
+if [ "$ANNOTATIONS_FOUND" != true ]; then
+  echo "Error: google/api/annotations.proto not found in include paths" >&2
+  echo "Set GOOGLEAPIS_DIR env var or ensure third_party/googleapis exists" >&2
+  exit 1
+fi
+
+# Step 0: Pre-process proto
+echo "→ Cleaning proto comments..." >&2
+
+# Define path for the cleaned proto in the temp directory
+CLEAN_PROTO_FILE="$TEMP_DIR/$(basename "$PROTO_FILE")"
+
+# Use grep to remove lines containing specific patterns:
+# 1. matches "// --8<--"
+# 2. matches "// protolint:"
+grep -v -e "// --8<--" -e "// protolint:" "$PROTO_FILE" >"$CLEAN_PROTO_FILE"
+
+# Add the temp dir to the include path so protoc finds the clean file context
+# We prepend it so it takes precedence over the original file
+INCLUDE_FLAGS=("-I$TEMP_DIR" "${INCLUDE_FLAGS[@]}")
+
+# Step 1: Generate self-contained JSON Schema bundles (one per top-level
+# message) with JSON field names (camelCase) and internal `#/$defs/...` refs
+echo "→ Generating JSON Schema from proto..." >&2
+if ! protoc "${INCLUDE_FLAGS[@]}" \
+  --jsonschema_out="$TEMP_DIR" \
+  --jsonschema_opt=target=json-bundle \
+  "$CLEAN_PROTO_FILE" 2>&1; then
+  echo "Error: protoc generation failed" >&2
+  exit 1
+fi
+
+# Step 2: Merge the per-message bundles into a single file by combining their
+# `$defs` maps. Internal refs (`#/$defs/...`) keep resolving after the merge.
+echo "→ Creating JSON Schema bundle..." >&2
+
+# Check if any bundle files were generated
+JSON_FILES=("$TEMP_DIR"/*.bundle.json)
+if [ ! -f "${JSON_FILES[0]}" ]; then
+  echo "Error: No JSON schema files generated" >&2
+  exit 1
+fi
+
+jq -s '
+  {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    title: "A2A Protocol Schemas",
+    description: "Non-normative JSON Schema bundle extracted from proto definitions.",
+    version: "v1",
+    "$defs": (reduce .[] as $bundle ({}; . + $bundle["$defs"]))
+  }
+' "$TEMP_DIR"/*.bundle.json >"$OUTPUT"
+
+# Count definitions
+DEF_COUNT=$(jq '."$defs" | length' "$OUTPUT")
+echo "✓ Generated $OUTPUT with $DEF_COUNT definitions" >&2
