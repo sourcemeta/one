@@ -10,7 +10,8 @@
         "protocolVersion": "2025-11-25",
         "capabilities": {},
         "serverInfo": {
-          "name": "sourcemeta-one",
+          "name": "sourcemeta-one-enterprise",
+          "title": "Sourcemeta One Enterprise",
           "version": "1.0.0"
         }
       }

@@ -700,6 +700,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
         "/self/v1/schemas/api/schemas/search/response"};
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
+    const auto mcp_request_schema{configuration.base_path +
+                                  "/self/v1/schemas/mcp/request"};
+    const auto mcp_response_schema{configuration.base_path +
+                                   "/self/v1/schemas/mcp/response"};
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
@@ -810,6 +814,12 @@ struct GENERATE_URITEMPLATE_ROUTES {
       router.add("/self/v1/health", next_id++,
                  sourcemeta::one::ACTION_TYPE_HEALTH_CHECK_V1,
                  health_check_arguments);
+
+      const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
+          {"requestSchema", std::string_view{mcp_request_schema}},
+          {"responseSchema", std::string_view{mcp_response_schema}}};
+      router.add("/self/v1/mcp", next_id++, sourcemeta::one::ACTION_TYPE_MCP_V1,
+                 mcp_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           not_found_arguments[] = {

@@ -26,6 +26,27 @@
         "message": "Enterprise edition required",
         "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": 2,
+        "message": "Forbidden origin"
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": 3,
+        "message": "Unsupported protocol version"
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": 4,
+        "message": "Method not allowed"
+      }
     }
   ],
   "type": "object",
@@ -55,6 +76,45 @@
             },
             "data": {
               "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": 2
+            },
+            "message": {
+              "const": "Forbidden origin"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": 3
+            },
+            "message": {
+              "const": "Unsupported protocol version"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": 4
+            },
+            "message": {
+              "const": "Method not allowed"
             }
           },
           "additionalProperties": false

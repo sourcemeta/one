@@ -10,7 +10,8 @@
         "protocolVersion": "2025-11-25",
         "capabilities": {},
         "serverInfo": {
-          "name": "sourcemeta-one",
+          "name": "sourcemeta-one-enterprise",
+          "title": "Sourcemeta One Enterprise",
           "version": "1.0.0"
         }
       }
@@ -38,15 +39,15 @@
         },
         "serverInfo": {
           "type": "object",
-          "required": [ "name", "version" ],
+          "required": [ "name", "title", "version" ],
           "properties": {
             "name": {
+              "enum": [ "sourcemeta-one", "sourcemeta-one-enterprise" ]
+            },
+            "title": {
               "type": "string"
             },
             "version": {
-              "type": "string"
-            },
-            "title": {
               "type": "string"
             }
           },

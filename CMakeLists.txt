@@ -65,6 +65,10 @@ if(ONE_INDEX OR ONE_SERVER)
   add_subdirectory(src/search)
   add_subdirectory(src/http)
   add_subdirectory(src/actions)
+
+  if(ONE_ENTERPRISE)
+    add_subdirectory(enterprise/server)
+  endif()
 endif()
 
 if(ONE_INDEX)

@@ -19,5 +19,5 @@ runs:
       run: >
         make -C ${{ inputs.path }}
         EDITION=${{ inputs.edition }}
-        HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:7.0.0'
+        HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:8.0.1'
       shell: bash
