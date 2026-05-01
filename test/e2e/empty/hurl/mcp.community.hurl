@@ -14,7 +14,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -41,7 +41,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -68,7 +68,7 @@ this is not even json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -95,7 +95,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body

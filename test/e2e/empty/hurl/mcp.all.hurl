@@ -1,7 +1,7 @@
 GET {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -23,7 +23,7 @@ jsonpath "$.valid" == true
 DELETE {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -45,7 +45,7 @@ jsonpath "$.valid" == true
 PUT {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -68,7 +68,7 @@ OPTIONS {{base}}/self/v1/mcp
 HTTP 204
 [Asserts]
 bytes count == 0
-header "Access-Control-Allow-Origin" == "*"
+header "Access-Control-Allow-Origin" == "http://localhost:8000"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"
