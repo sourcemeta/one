@@ -72,6 +72,7 @@ HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
 [Asserts]
 bytes count == 0
+header "Link" not exists
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -86,6 +87,7 @@ HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
 [Asserts]
 bytes count == 0
+header "Link" not exists
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -100,6 +102,7 @@ HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
 [Asserts]
 bytes count == 0
+header "Link" not exists
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json

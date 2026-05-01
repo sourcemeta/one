@@ -201,12 +201,6 @@ auto handle_jsonrpc_message(
   }
 
   if (looks_like_notification(request_json)) {
-    if (!matches_request_schema(request_schema_template, request_json)) {
-      write_json_envelope(request, response, allowed_origin, response_schema,
-                          invalid_request(nullptr));
-      return;
-    }
-
     write_accepted(request, response, allowed_origin);
     return;
   }

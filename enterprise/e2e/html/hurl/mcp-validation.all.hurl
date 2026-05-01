@@ -280,26 +280,11 @@ Content-Type: application/json
 ```
 { "jsonrpc": "2.0", "method": "notifications/cancelled" }
 ```
-HTTP 200
-Content-Type: application/json
+HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
-jsonpath "$.error.code" == -32600
-jsonpath "$.error.message" == "Invalid Request"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
+bytes count == 0
+header "Link" not exists
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -310,23 +295,8 @@ Content-Type: application/json
   "params": { "requestId": null }
 }
 ```
-HTTP 200
-Content-Type: application/json
+HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
-jsonpath "$.error.code" == -32600
-jsonpath "$.error.message" == "Invalid Request"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
+bytes count == 0
+header "Link" not exists
