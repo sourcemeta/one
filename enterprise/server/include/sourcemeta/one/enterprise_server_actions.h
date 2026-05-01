@@ -5,23 +5,27 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 
-#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 
 #include <filesystem>  // std::filesystem::path
-#include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionMCP_v1 : public sourcemeta::one::Action {
+class EnterpriseMCP {
 public:
-  ActionMCP_v1(const std::filesystem::path &base,
-               const sourcemeta::core::URITemplateRouterView &router,
-               sourcemeta::core::URITemplateRouter::Identifier identifier);
+  EnterpriseMCP(const std::filesystem::path &base,
+                const sourcemeta::core::URITemplateRouterView &router,
+                sourcemeta::core::URITemplateRouter::Identifier identifier);
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override;
+  // To avoid mistakes
+  EnterpriseMCP(const EnterpriseMCP &) = delete;
+  EnterpriseMCP(EnterpriseMCP &&) = delete;
+  auto operator=(const EnterpriseMCP &) -> EnterpriseMCP & = delete;
+  auto operator=(EnterpriseMCP &&) -> EnterpriseMCP & = delete;
+  ~EnterpriseMCP() = default;
+
+  auto run(sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void;
 
 private:
   std::string allowed_origin_;

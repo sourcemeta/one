@@ -2,7 +2,31 @@
 #define SOURCEMETA_ONE_ACTIONS_MCP_V1_H
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/core/uritemplate.h>
+
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/enterprise_server.h>
+#include <sourcemeta/one/http.h>
+
+#include <filesystem>  // std::filesystem
+#include <span>        // std::span
+#include <string_view> // std::string_view
+
+class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
+public:
+  ActionMCP_v1(const std::filesystem::path &base,
+               const sourcemeta::core::URITemplateRouterView &router,
+               const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      : sourcemeta::one::Action{base, router.base_path()},
+        EnterpriseMCP{base, router, identifier} {}
+
+  auto run(const std::span<std::string_view>,
+           sourcemeta::one::HTTPRequest &request,
+           sourcemeta::one::HTTPResponse &response) -> void override {
+    EnterpriseMCP::run(request, response);
+  }
+};
+
 #else
 
 #include <sourcemeta/core/json.h>

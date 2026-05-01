@@ -250,11 +250,10 @@ auto handle_jsonrpc_message(
 
 } // namespace
 
-ActionMCP_v1::ActionMCP_v1(
+EnterpriseMCP::EnterpriseMCP(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
-    const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : sourcemeta::one::Action{base, router.base_path()} {
+    const sourcemeta::core::URITemplateRouter::Identifier identifier) {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -265,21 +264,20 @@ ActionMCP_v1::ActionMCP_v1(
         }
       });
 
-  const auto metadata{
-      sourcemeta::core::read_json(this->base() / "metadata.json")};
+  const auto metadata{sourcemeta::core::read_json(base / "metadata.json")};
   this->allowed_origin_ = metadata.at("origin").to_string();
 
+  const auto base_path{router.base_path()};
   std::string_view request_schema_path{request_schema};
-  if (!this->base_path().empty() &&
-      request_schema_path.starts_with(this->base_path())) {
-    request_schema_path.remove_prefix(this->base_path().size());
+  if (!base_path.empty() && request_schema_path.starts_with(base_path)) {
+    request_schema_path.remove_prefix(base_path.size());
   }
   if (request_schema_path.starts_with('/')) {
     request_schema_path.remove_prefix(1);
   }
 
-  const auto template_path{this->base() / "schemas" / request_schema_path /
-                           "%" / "blaze-exhaustive.metapack"};
+  const auto template_path{base / "schemas" / request_schema_path / "%" /
+                           "blaze-exhaustive.metapack"};
   const auto template_json{sourcemeta::one::metapack_read_json(template_path)};
   assert(template_json.has_value());
   auto compiled{sourcemeta::blaze::from_json(template_json.value())};
@@ -287,9 +285,8 @@ ActionMCP_v1::ActionMCP_v1(
   this->request_schema_template_ = std::move(compiled.value());
 }
 
-auto ActionMCP_v1::run(const std::span<std::string_view>,
-                       sourcemeta::one::HTTPRequest &request,
-                       sourcemeta::one::HTTPResponse &response) -> void {
+auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
+                        sourcemeta::one::HTTPResponse &response) -> void {
   const auto origin_header{request.header("origin")};
   if (!origin_header.empty() && origin_header != this->allowed_origin_) {
     write_envelope(request, response, this->allowed_origin_,
