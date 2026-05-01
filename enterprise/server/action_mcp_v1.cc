@@ -258,14 +258,16 @@ ActionMCP_v1::ActionMCP_v1(
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
-        if (key == "allowedOrigin") {
-          this->allowed_origin_ = std::get<std::string_view>(value);
-        } else if (key == "responseSchema") {
+        if (key == "responseSchema") {
           this->response_schema_ = std::get<std::string_view>(value);
         } else if (key == "requestSchema") {
           request_schema = std::get<std::string_view>(value);
         }
       });
+
+  const auto metadata{
+      sourcemeta::core::read_json(this->base() / "metadata.json")};
+  this->allowed_origin_ = metadata.at("origin").to_string();
 
   std::string_view request_schema_path{request_schema};
   if (!this->base_path().empty() &&
@@ -327,7 +329,7 @@ auto ActionMCP_v1::run(const std::span<std::string_view>,
   }
 
   request.body(
-      [allowed_origin = this->allowed_origin_,
+      [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_,
        &request_schema_template = this->request_schema_template_](
           sourcemeta::one::HTTPRequest &callback_request,
@@ -343,7 +345,7 @@ auto ActionMCP_v1::run(const std::span<std::string_view>,
                                allowed_origin, response_schema,
                                request_schema_template, std::move(body));
       },
-      [allowed_origin = this->allowed_origin_,
+      [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_](
           sourcemeta::one::HTTPRequest &callback_request,
           sourcemeta::one::HTTPResponse &callback_response,

@@ -817,8 +817,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
-          {"responseSchema", std::string_view{mcp_response_schema}},
-          {"allowedOrigin", std::string_view{configuration.origin}}};
+          {"responseSchema", std::string_view{mcp_response_schema}}};
       router.add("/self/v1/mcp", next_id++, sourcemeta::one::ACTION_TYPE_MCP_V1,
                  mcp_arguments);
 

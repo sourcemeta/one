@@ -10,6 +10,7 @@
 
 #include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 
 class ActionMCP_v1 : public sourcemeta::one::Action {
@@ -23,7 +24,7 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void override;
 
 private:
-  std::string_view allowed_origin_;
+  std::string allowed_origin_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;
 };

@@ -14,6 +14,7 @@
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
@@ -28,6 +29,10 @@ public:
         this->response_schema_ = std::get<std::string_view>(value);
       }
     });
+
+    const auto metadata{
+        sourcemeta::core::read_json(this->base() / "metadata.json")};
+    this->allowed_origin_ = metadata.at("origin").to_string();
   }
 
   auto run(const std::span<std::string_view>,
@@ -35,7 +40,8 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
-      response.write_header("Access-Control-Allow-Origin", "*");
+      response.write_header("Access-Control-Allow-Origin",
+                            this->allowed_origin_);
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
@@ -68,7 +74,7 @@ public:
 
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
-    response.write_header("Access-Control-Allow-Origin", "*");
+    response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
     if (!this->response_schema_.empty()) {
       sourcemeta::one::write_link_header(response, this->response_schema_);
     }
@@ -80,6 +86,7 @@ public:
   }
 
 private:
+  std::string allowed_origin_;
   std::string_view response_schema_;
 };
 
