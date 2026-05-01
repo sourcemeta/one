@@ -59,7 +59,7 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
     -> void;
 
-static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
+static constexpr std::array<BuildHandlerFunction, 24> HANDLERS{{
     &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
     &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
     &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
@@ -80,6 +80,7 @@ static constexpr std::array<BuildHandlerFunction, 23> HANDLERS{{
     &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
     &sourcemeta::one::GENERATE_COMMENT::handler,
     &sourcemeta::one::GENERATE_CONFIGURATION::handler,
+    &sourcemeta::one::GENERATE_METADATA::handler,
     &sourcemeta::one::GENERATE_VERSION::handler,
     &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
     nullptr,

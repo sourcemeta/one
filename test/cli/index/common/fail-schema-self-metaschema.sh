@@ -96,8 +96,9 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 95%) Resolving: self/v1/schemas/mcp/request.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
+(  0%) Producing: metadata.json
 (  0%) Producing: version.json
-(  0%) Producing: explorer/%/404.metapack
+(  1%) Producing: explorer/%/404.metapack
 (  1%) Producing: schemas/example/schemas/test/%/schema.metapack
 error: Could not resolve the metaschema of the schema
   at identifier https://sourcemeta.com/example/schemas/test

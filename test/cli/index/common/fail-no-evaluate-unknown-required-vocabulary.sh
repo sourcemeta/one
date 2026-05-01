@@ -111,7 +111,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 95%) Resolving: self/v1/schemas/mcp/request.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
-(  0%) Producing: version.json
+(  0%) Producing: metadata.json
+(  1%) Producing: version.json
 (  1%) Producing: schemas/example/custom-meta/%/schema.metapack
 error: The metaschema requires an unrecognised vocabulary
   at vocabulary https://example.com/vocab/totally-unknown
@@ -125,9 +126,10 @@ Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 Detecting: $(realpath "$TMP")/schemas/custom-meta.json (#2)
 ( 50%) Resolving: test.json
 (100%) Resolving: custom-meta.json
-(  4%) Producing: configuration.json
-(  8%) Producing: version.json
-( 12%) Producing: schemas/example/custom-meta/%/schema.metapack
+(  3%) Producing: configuration.json
+(  7%) Producing: metadata.json
+( 11%) Producing: version.json
+( 15%) Producing: schemas/example/custom-meta/%/schema.metapack
 error: The metaschema requires an unrecognised vocabulary
   at vocabulary https://example.com/vocab/totally-unknown
   at path $(realpath "$TMP")/schemas/custom-meta.json

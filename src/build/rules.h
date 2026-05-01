@@ -278,12 +278,15 @@ struct GlobalRule {
   GlobalTrigger trigger;
 };
 
-static constexpr std::array<GlobalRule, 4> GLOBAL_RULES{{
+static constexpr std::array<GlobalRule, 5> GLOBAL_RULES{{
     {.action = BuildPlan::Action::Type::Version,
      .filename = "version.json",
      .trigger = GlobalTrigger::FullRebuild},
     {.action = BuildPlan::Action::Type::Configuration,
      .filename = "configuration.json",
+     .trigger = GlobalTrigger::FullRebuild},
+    {.action = BuildPlan::Action::Type::Metadata,
+     .filename = "metadata.json",
      .trigger = GlobalTrigger::FullRebuild},
     {.action = BuildPlan::Action::Type::Comment,
      .filename = "comment.json",
@@ -308,6 +311,8 @@ static constexpr const auto &VERSION_RULE =
     find_global_rule(BuildPlan::Action::Type::Version);
 static constexpr const auto &CONFIGURATION_RULE =
     find_global_rule(BuildPlan::Action::Type::Configuration);
+static constexpr const auto &METADATA_RULE =
+    find_global_rule(BuildPlan::Action::Type::Metadata);
 static constexpr const auto &COMMENT_RULE =
     find_global_rule(BuildPlan::Action::Type::Comment);
 
