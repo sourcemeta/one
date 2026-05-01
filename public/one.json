@@ -60,6 +60,9 @@
       "github": "a2aproject",
       "website": "https://a2a-protocol.org",
       "contents": {
+        "v1.0.0": {
+          "path": "../vendor/public/a2a/v1.0.0/specification/json"
+        },
         "v0.3.0": {
           "path": "../vendor/public/a2a/v0.3.0/specification/json"
         },

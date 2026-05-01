@@ -8,6 +8,7 @@ bootstrap-icons https://github.com/twbs/icons v1.11.3
 collections/sourcemeta/std/v0 https://github.com/sourcemeta/std v0.4.0
 spdx https://github.com/spdx/spdx-spec v2.3
 public/modelcontextprotocol https://github.com/modelcontextprotocol/modelcontextprotocol 2025-11-25
+public/a2a/v1.0.0 https://github.com/a2aproject/A2A v1.0.0
 public/a2a/v0.3.0 https://github.com/a2aproject/A2A v0.3.0
 public/a2a/v0.2.6 https://github.com/a2aproject/A2A v0.2.6
 public/a2a/v0.2.5 https://github.com/a2aproject/A2A v0.2.5
