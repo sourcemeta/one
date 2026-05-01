@@ -101,6 +101,23 @@ struct GENERATE_CONFIGURATION {
   }
 };
 
+struct GENERATE_METADATA {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    std::filesystem::create_directories(action.destination.parent_path());
+    std::ofstream stream{action.destination};
+    assert(!stream.fail());
+    auto metadata{sourcemeta::core::JSON::make_object()};
+    metadata.assign("url", sourcemeta::core::JSON{configuration.url});
+    metadata.assign("origin", sourcemeta::core::JSON{configuration.origin});
+    sourcemeta::core::stringify(metadata, stream);
+  }
+};
+
 struct GENERATE_MATERIALISED_SCHEMA {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,

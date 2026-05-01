@@ -227,6 +227,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/test/schemas/test-1/%
 ./explorer/test/schemas/test-1/%/schema-html.metapack
 ./explorer/test/schemas/test-1/%/schema.metapack
+./metadata.json
 ./routes.bin
 ./schemas
 ./schemas/self

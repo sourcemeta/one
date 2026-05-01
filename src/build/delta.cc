@@ -393,6 +393,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
   const auto version_path{output / VERSION_RULE.filename};
   const auto configuration_path{output / CONFIGURATION_RULE.filename};
+  const auto metadata_path{output / METADATA_RULE.filename};
   const auto comment_path{output / COMMENT_RULE.filename};
   const auto is_full{!incremental};
   const auto schemas_path{output / SCHEMAS_DIRECTORY};
@@ -1251,6 +1252,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
          .destination = configuration_path,
          .dependencies = {},
          .data = {}});
+    initialization_wave.push_back({.type = BuildPlan::Action::Type::Metadata,
+                                   .destination = metadata_path,
+                                   .dependencies = {},
+                                   .data = {}});
     if (!comment.empty()) {
       initialization_wave.push_back({.type = BuildPlan::Action::Type::Comment,
                                      .destination = comment_path,

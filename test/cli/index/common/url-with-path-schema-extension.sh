@@ -219,6 +219,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/response/%
 ./explorer/self/v1/schemas/mcp/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/response/%/schema.metapack
+./metadata.json
 ./routes.bin
 ./schemas
 ./schemas/example

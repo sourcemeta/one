@@ -48,19 +48,20 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: example/test.json
 (  5%) Producing: configuration.json
-( 11%) Producing: version.json
-( 17%) Producing: schemas/example/test/%/schema.metapack
-( 23%) Producing: schemas/example/test/%/dependencies.metapack
-( 29%) Producing: schemas/example/test/%/locations.metapack
-( 35%) Producing: schemas/example/test/%/positions.metapack
-( 41%) Producing: schemas/example/test/%/stats.metapack
-( 47%) Producing: schemas/example/test/%/bundle.metapack
-( 52%) Producing: schemas/example/test/%/health.metapack
-( 58%) Producing: explorer/example/test/%/schema.metapack
-( 64%) Producing: schemas/example/test/%/blaze-exhaustive.metapack
-( 70%) Producing: schemas/example/test/%/blaze-fast.metapack
-( 76%) Producing: schemas/example/test/%/editor.metapack
-( 82%) Producing: explorer/example/%/directory.metapack
+( 11%) Producing: metadata.json
+( 16%) Producing: version.json
+( 22%) Producing: schemas/example/test/%/schema.metapack
+( 27%) Producing: schemas/example/test/%/dependencies.metapack
+( 33%) Producing: schemas/example/test/%/locations.metapack
+( 38%) Producing: schemas/example/test/%/positions.metapack
+( 44%) Producing: schemas/example/test/%/stats.metapack
+( 50%) Producing: schemas/example/test/%/bundle.metapack
+( 55%) Producing: schemas/example/test/%/health.metapack
+( 61%) Producing: explorer/example/test/%/schema.metapack
+( 66%) Producing: schemas/example/test/%/blaze-exhaustive.metapack
+( 72%) Producing: schemas/example/test/%/blaze-fast.metapack
+( 77%) Producing: schemas/example/test/%/editor.metapack
+( 83%) Producing: explorer/example/%/directory.metapack
 ( 88%) Producing: explorer/%/directory.metapack
 ( 94%) Producing: explorer/%/search.metapack
 (100%) Producing: routes.bin
@@ -85,6 +86,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/example/test
 ./explorer/example/test/%
 ./explorer/example/test/%/schema.metapack
+./metadata.json
 ./routes.bin
 ./schemas
 ./schemas/example

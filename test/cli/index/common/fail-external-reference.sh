@@ -97,31 +97,32 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 95%) Resolving: self/v1/schemas/mcp/request.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
+(  0%) Producing: metadata.json
 (  0%) Producing: version.json
-(  0%) Producing: explorer/%/404.metapack
+(  1%) Producing: explorer/%/404.metapack
 (  1%) Producing: schemas/example/schemas/test/%/schema.metapack
 (  1%) Producing: schemas/self/v1/schemas/api/error/%/schema.metapack
-(  1%) Producing: schemas/self/v1/schemas/api/list/response/%/schema.metapack
+(  2%) Producing: schemas/self/v1/schemas/api/list/response/%/schema.metapack
 (  2%) Producing: schemas/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
 (  2%) Producing: schemas/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
-(  2%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
+(  3%) Producing: schemas/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/api/schemas/health/response/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/api/schemas/locations/response/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/api/schemas/metadata/response/%/schema.metapack
-(  3%) Producing: schemas/self/v1/schemas/api/schemas/position/%/schema.metapack
+(  4%) Producing: schemas/self/v1/schemas/api/schemas/position/%/schema.metapack
 (  4%) Producing: schemas/self/v1/schemas/api/schemas/positions/response/%/schema.metapack
 (  4%) Producing: schemas/self/v1/schemas/api/schemas/search/response/%/schema.metapack
-(  4%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
+(  5%) Producing: schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
 (  5%) Producing: schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
 (  5%) Producing: schemas/self/v1/schemas/mcp/error/%/schema.metapack
-(  5%) Producing: schemas/self/v1/schemas/mcp/initialize/request/%/schema.metapack
+(  6%) Producing: schemas/self/v1/schemas/mcp/initialize/request/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/mcp/initialize/response/%/schema.metapack
 (  6%) Producing: schemas/self/v1/schemas/mcp/notifications/cancelled/%/schema.metapack
-(  6%) Producing: schemas/self/v1/schemas/mcp/notifications/initialized/%/schema.metapack
+(  7%) Producing: schemas/self/v1/schemas/mcp/notifications/initialized/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/mcp/ping/request/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/schema.metapack
 (  7%) Producing: schemas/self/v1/schemas/mcp/request/%/schema.metapack
-(  7%) Producing: schemas/self/v1/schemas/mcp/response/%/schema.metapack
+(  8%) Producing: schemas/self/v1/schemas/mcp/response/%/schema.metapack
 (  8%) Producing: schemas/example/schemas/test/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
   at identifier https://sourcemeta.com/external
