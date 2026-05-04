@@ -68,5 +68,5 @@ public/jsonschema-draft6 https://github.com/json-schema-org/json-schema-spec 59e
 public/jsonschema-draft4 https://github.com/json-schema-org/json-schema-spec 955d185db846cfca84269d9d711b10f4f3353d38
 public/hca-metadata-5-0-0 https://github.com/HumanCellAtlas/metadata-schema 5.0.0
 public/ninjs https://github.com/iptc/newsinjson v3.2
-public/apis-json https://github.com/apis-json/api-json 0f64ef6a17a01f54d6bf8e67e001aec9d4bd6b27
+public/apis-json https://github.com/apis-json/api-json 02b173c4af7122c1b6382a867992c64226b2b7f9
 public/sony-x590/v1.0.0 https://github.com/sony/x590schema v1.0.0
