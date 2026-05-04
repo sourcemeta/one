@@ -23,8 +23,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1
 jsonpath "$.result.protocolVersion" == "2025-11-25"
-jsonpath "$.result.capabilities" isObject
-jsonpath "$.result.capabilities" isEmpty
+jsonpath "$.result.capabilities.resources" isObject
+jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
 jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
 jsonpath "$.result.serverInfo.version" matches "^.+$"

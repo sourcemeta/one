@@ -27,4 +27,4 @@ jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[0].health" == 100
-jsonpath "$.entries[0].schemas" == 22
+jsonpath "$.entries[0].schemas" == 28

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Resources List Response",
+  "description": "Sourcemeta One's list of MCP resources",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "result": {
+        "resources": []
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "type": "object",
+      "required": [ "resources" ],
+      "properties": {
+        "resources": {
+          "const": []
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

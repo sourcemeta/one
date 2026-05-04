@@ -24,6 +24,24 @@
       "jsonrpc": "2.0",
       "id": 2,
       "method": "ping"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "method": "resources/list"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 12,
+      "method": "resources/templates/list"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "method": "resources/read",
+      "params": {
+        "uri": "https://example.com/v1/foo/v1/example"
+      }
     }
   ],
   "anyOf": [
@@ -38,6 +56,15 @@
     },
     {
       "$ref": "./ping/request.json"
+    },
+    {
+      "$ref": "./resources/list/request.json"
+    },
+    {
+      "$ref": "./resources/templates/list/request.json"
+    },
+    {
+      "$ref": "./resources/read/request.json"
     }
   ]
 }

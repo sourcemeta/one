@@ -8,7 +8,9 @@
       "id": 1,
       "result": {
         "protocolVersion": "2025-11-25",
-        "capabilities": {},
+        "capabilities": {
+          "resources": {}
+        },
         "serverInfo": {
           "name": "sourcemeta-one-enterprise",
           "title": "Sourcemeta One Enterprise",
@@ -35,6 +37,13 @@
         },
         "capabilities": {
           "type": "object",
+          "required": [ "resources" ],
+          "properties": {
+            "resources": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
           "additionalProperties": false
         },
         "serverInfo": {
