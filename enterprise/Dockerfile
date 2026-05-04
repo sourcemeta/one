@@ -137,7 +137,7 @@ COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
 
 ENV SOURCEMETA_ONE_PORT=8000
-HEALTHCHECK CMD grep -qE \
+HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \
   "^\s*[0-9]+:\s+[0-9A-F]+:$(printf '%04X' $SOURCEMETA_ONE_PORT)\s+[0-9A-F:]+\s+0A\s" \
   /proc/net/tcp /proc/net/tcp6
 ENTRYPOINT [ "/usr/bin/sourcemeta-server" ]
