@@ -95,7 +95,9 @@ auto handle_initialize(const sourcemeta::core::JSON &request_json)
   auto result{sourcemeta::core::JSON::make_object()};
   result.assign("protocolVersion",
                 sourcemeta::core::JSON{std::string{MCP_PROTOCOL_VERSION}});
-  result.assign("capabilities", sourcemeta::core::JSON::make_object());
+  auto capabilities{sourcemeta::core::JSON::make_object()};
+  capabilities.assign("resources", sourcemeta::core::JSON::make_object());
+  result.assign("capabilities", std::move(capabilities));
   auto server_info{sourcemeta::core::JSON::make_object()};
   server_info.assign("name",
                      sourcemeta::core::JSON{std::string{MCP_SERVER_NAME}});
