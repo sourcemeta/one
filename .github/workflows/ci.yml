@@ -75,6 +75,12 @@ jobs:
           path: enterprise/e2e/html
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
+      - name: E2E (enterprise-path)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/path
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
 
       # Public instance
       - run: docker build .  --file public/Dockerfile --progress plain
