@@ -273,7 +273,7 @@ EnterpriseMCP::EnterpriseMCP(
   }
 
   const auto template_path{base / "schemas" / request_schema_path / "%" /
-                           "blaze-exhaustive.metapack"};
+                           "blaze-fast.metapack"};
   const auto template_json{sourcemeta::one::metapack_read_json(template_path)};
   assert(template_json.has_value());
   auto compiled{sourcemeta::blaze::from_json(template_json.value())};
