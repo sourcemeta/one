@@ -182,7 +182,10 @@ documentation portals, what gets handed to a new developer on day one. *But
 OpenAPI is a wrapper format*. It makes schemas usable in the context of APIs,
 describing which schemas appear at which endpoints and under which HTTP
 methods. *The actual interfaces, the data contracts themselves, are the schemas
-underneath.*
+underneath.* And the AI ecosystem has already arrived at the same conclusion:
+*[every major LLM provider, the Model Context Protocol, and the leading agent
+frameworks have independently converged on JSON Schema as their contract
+layer](https://www.sourcemeta.com/blog/ai-only-speaks-json-schema/).*
 
 An AI agent consuming a well-defined, rich shared schema behaves consistently
 and predictably. An AI agent consuming five slightly different inline schemas
