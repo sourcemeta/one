@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Resources List Request",
+  "description": "Request from a client to list MCP resources",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "method": "resources/list"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 11,
+      "method": "resources/list",
+      "params": {
+        "cursor": "page-2"
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "method" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "method": {
+      "const": "resources/list"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "type": "string"
+        },
+        "_meta": {
+          "type": "object",
+          "properties": {
+            "progressToken": {
+              "type": [ "string", "integer" ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

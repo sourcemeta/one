@@ -47,6 +47,15 @@
         "code": 4,
         "message": "Method not allowed"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "error": {
+        "code": -32002,
+        "message": "Resource not found",
+        "data": "https://example.com/v1/foo/v1/example"
+      }
     }
   ],
   "type": "object",
@@ -63,6 +72,22 @@
       "anyOf": [
         {
           "$ref": "#/$defs/reserved"
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32002
+            },
+            "message": {
+              "const": "Resource not found"
+            },
+            "data": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         },
         {
           "type": "object",

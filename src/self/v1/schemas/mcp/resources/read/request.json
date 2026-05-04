@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Resources Read Request",
+  "description": "Request from a client to read an MCP resource",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "method": "resources/read",
+      "params": {
+        "uri": "https://example.com/v1/foo/v1/example"
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 21,
+      "method": "resources/read",
+      "params": {
+        "uri": "https://example.com/v1/foo/v1/example?bundle=1"
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "method", "params" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "method": {
+      "const": "resources/read"
+    },
+    "params": {
+      "type": "object",
+      "required": [ "uri" ],
+      "properties": {
+        "uri": {
+          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "type": "string",
+          "format": "uri"
+        },
+        "_meta": {
+          "type": "object",
+          "properties": {
+            "progressToken": {
+              "type": [ "string", "integer" ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

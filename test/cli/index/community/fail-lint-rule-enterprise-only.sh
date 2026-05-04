@@ -261,4 +261,5 @@ error: Custom linter rules are only available on the enterprise edition
   at path $(realpath "$TMP")/one.json
 EOF
 
+cp "$TMP/output.txt" /tmp/CAPTURED-fail-lint-rule-enterprise-only-1.txt
 diff "$TMP/output.txt" "$TMP/expected.txt"

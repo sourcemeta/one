@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Resources Read Response",
+  "description": "Sourcemeta One's response containing an MCP resource",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "result": {
+        "contents": [
+          {
+            "uri": "https://example.com/v1/foo/v1/example",
+            "mimeType": "application/schema+json",
+            "text": "{\n  \"$id\": \"https://example.com/v1/foo/v1/example\",\n  \"type\": \"object\"\n}"
+          }
+        ]
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "type": "object",
+      "required": [ "contents" ],
+      "properties": {
+        "contents": {
+          "type": "array",
+          "maxItems": 1,
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [ "uri", "mimeType", "text" ],
+            "properties": {
+              "uri": {
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri"
+              },
+              "mimeType": {
+                "const": "application/schema+json"
+              },
+              "text": {
+                "type": "string",
+                "contentEncoding": "identity",
+                "contentMediaType": "application/schema+json"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

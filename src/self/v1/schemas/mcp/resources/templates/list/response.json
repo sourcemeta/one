@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Resources Templates List Response",
+  "description": "Sourcemeta One's list of MCP resource templates",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 12,
+      "result": {
+        "resourceTemplates": [
+          {
+            "uriTemplate": "https://example.com/v1/{+path}{?bundle}",
+            "name": "JSON Schema",
+            "description": "A JSON Schema in this catalog (optionally bundled)",
+            "mimeType": "application/schema+json"
+          }
+        ]
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "type": "object",
+      "required": [ "resourceTemplates" ],
+      "properties": {
+        "resourceTemplates": {
+          "type": "array",
+          "maxItems": 1,
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [ "uriTemplate", "name", "description", "mimeType" ],
+            "properties": {
+              "uriTemplate": {
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri-template"
+              },
+              "name": {
+                "const": "JSON Schema"
+              },
+              "description": {
+                "const": "A JSON Schema in this catalog (optionally bundled)"
+              },
+              "mimeType": {
+                "const": "application/schema+json"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

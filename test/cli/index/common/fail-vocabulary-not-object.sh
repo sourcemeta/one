@@ -80,35 +80,47 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/in
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#21)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#22)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#23)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#24)
-(  4%) Resolving: example/schemas/custom-meta.json
-(  8%) Resolving: example/schemas/test.json
-( 12%) Resolving: self/v1/schemas/api/error.json
-( 16%) Resolving: self/v1/schemas/api/list/response.json
-( 20%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 25%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 29%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 33%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 37%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 41%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 45%) Resolving: self/v1/schemas/api/schemas/position.json
-( 50%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 54%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 58%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 62%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 66%) Resolving: self/v1/schemas/mcp/error.json
-( 70%) Resolving: self/v1/schemas/mcp/initialize/request.json
-( 75%) Resolving: self/v1/schemas/mcp/initialize/response.json
-( 79%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
-( 83%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
-( 87%) Resolving: self/v1/schemas/mcp/ping/request.json
-( 91%) Resolving: self/v1/schemas/mcp/ping/response.json
-( 95%) Resolving: self/v1/schemas/mcp/request.json
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#24)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#25)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#28)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#30)
+(  3%) Resolving: example/schemas/custom-meta.json
+(  6%) Resolving: example/schemas/test.json
+( 10%) Resolving: self/v1/schemas/api/error.json
+( 13%) Resolving: self/v1/schemas/api/list/response.json
+( 16%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 20%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 23%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 26%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 30%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 33%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 36%) Resolving: self/v1/schemas/api/schemas/position.json
+( 40%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 43%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 46%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 53%) Resolving: self/v1/schemas/mcp/error.json
+( 56%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 60%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 63%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 66%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 70%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 73%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 76%) Resolving: self/v1/schemas/mcp/request.json
+( 80%) Resolving: self/v1/schemas/mcp/resources/list/request.json
+( 83%) Resolving: self/v1/schemas/mcp/resources/list/response.json
+( 86%) Resolving: self/v1/schemas/mcp/resources/read/request.json
+( 90%) Resolving: self/v1/schemas/mcp/resources/read/response.json
+( 93%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
+( 96%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
 (  0%) Producing: metadata.json
 (  0%) Producing: version.json
-(  1%) Producing: explorer/%/404.metapack
+(  0%) Producing: explorer/%/404.metapack
 (  1%) Producing: schemas/example/schemas/custom-meta/%/schema.metapack
 error: The schema does not adhere to its metaschema
 The value was expected to be of type object but it was of type string

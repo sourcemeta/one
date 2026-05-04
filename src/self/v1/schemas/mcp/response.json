@@ -8,7 +8,9 @@
       "id": 1,
       "result": {
         "protocolVersion": "2025-11-25",
-        "capabilities": {},
+        "capabilities": {
+          "resources": {}
+        },
         "serverInfo": {
           "name": "sourcemeta-one-enterprise",
           "title": "Sourcemeta One Enterprise",
@@ -27,6 +29,40 @@
         "code": -32700,
         "message": "Parse error"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 10,
+      "result": {
+        "resources": []
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 12,
+      "result": {
+        "resourceTemplates": [
+          {
+            "uriTemplate": "https://example.com/v1/{+path}{?bundle}",
+            "name": "JSON Schema",
+            "description": "A JSON Schema in this catalog (optionally bundled)",
+            "mimeType": "application/schema+json"
+          }
+        ]
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 20,
+      "result": {
+        "contents": [
+          {
+            "uri": "https://example.com/v1/foo/v1/example",
+            "mimeType": "application/schema+json",
+            "text": "{\n  \"$id\": \"https://example.com/v1/foo/v1/example\",\n  \"type\": \"object\"\n}"
+          }
+        ]
+      }
     }
   ],
   "anyOf": [
@@ -38,6 +74,15 @@
     },
     {
       "$ref": "./error.json"
+    },
+    {
+      "$ref": "./resources/list/response.json"
+    },
+    {
+      "$ref": "./resources/templates/list/response.json"
+    },
+    {
+      "$ref": "./resources/read/response.json"
     }
   ]
 }
