@@ -56,6 +56,13 @@
         "message": "Resource not found",
         "data": "https://example.com/v1/foo/v1/example"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": 5,
+        "message": "Request too large"
+      }
     }
   ],
   "type": "object",
@@ -140,6 +147,19 @@
             },
             "message": {
               "const": "Method not allowed"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": 5
+            },
+            "message": {
+              "const": "Request too large"
             }
           },
           "additionalProperties": false

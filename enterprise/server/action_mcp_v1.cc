@@ -149,6 +149,18 @@ auto unsupported_protocol_version() -> sourcemeta::core::JSON {
   return envelope;
 }
 
+auto request_too_large() -> sourcemeta::core::JSON {
+  auto envelope{envelope_without_id()};
+  envelope.assign("error", error_object(5, "Request too large"));
+  return envelope;
+}
+
+auto internal_error() -> sourcemeta::core::JSON {
+  auto envelope{envelope_without_id()};
+  envelope.assign("error", error_object(-32603, "Internal error"));
+  return envelope;
+}
+
 auto request_id(const sourcemeta::core::JSON &request_json)
     -> const sourcemeta::core::JSON * {
   if (!request_json.is_object() || !request_json.defines("id")) {
@@ -330,8 +342,9 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
           bool too_big) {
         if (too_big) {
           write_envelope(callback_request, callback_response, allowed_origin,
-                         response_schema, sourcemeta::one::STATUS_BAD_REQUEST,
-                         parse_error());
+                         response_schema,
+                         sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
+                         request_too_large());
           return;
         }
         handle_jsonrpc_message(callback_request, callback_response,
@@ -347,8 +360,9 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
           std::rethrow_exception(error);
         } catch (const std::exception &) {
           write_envelope(callback_request, callback_response, allowed_origin,
-                         response_schema, sourcemeta::one::STATUS_BAD_REQUEST,
-                         parse_error());
+                         response_schema,
+                         sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                         internal_error());
         }
       });
 }
