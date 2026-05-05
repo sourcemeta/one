@@ -28,7 +28,9 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void;
 
 private:
+  std::filesystem::path base_;
   std::string allowed_origin_;
+  std::string registry_url_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;
 };
