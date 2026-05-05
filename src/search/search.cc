@@ -252,11 +252,10 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
   this->ensure_open();
   assert(this->payload_ != nullptr);
   assert(this->payload_size_ >= sizeof(SearchIndexHeader));
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *header{
-      reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
-  assert(index < header->entry_count);
+  assert(
+      index <
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const SearchIndexHeader *>(this->payload_)->entry_count);
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
