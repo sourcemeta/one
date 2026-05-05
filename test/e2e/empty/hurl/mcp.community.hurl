@@ -70,9 +70,9 @@ Content-Type: application/json
 ```
 this is not even json
 ```
-HTTP 200
+HTTP 400
 Content-Type: application/json
-Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -80,9 +80,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" not exists
-jsonpath "$.error.code" == 1
-jsonpath "$.error.message" == "Enterprise edition required"
-jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+jsonpath "$.error.code" == -32700
+jsonpath "$.error.message" == "Parse error"
+jsonpath "$.error.data" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -99,7 +99,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -107,9 +107,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" not exists
-jsonpath "$.error.code" == 1
-jsonpath "$.error.message" == "Enterprise edition required"
-jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+jsonpath "$.error.code" == -32600
+jsonpath "$.error.message" == "Invalid Request"
+jsonpath "$.error.data" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

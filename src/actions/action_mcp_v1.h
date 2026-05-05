@@ -77,7 +77,7 @@ inline auto mcp_query_parameter(const std::string_view query,
 // enterprise.
 inline auto mcp_request_id(const sourcemeta::core::JSON &request_json)
     -> const sourcemeta::core::JSON * {
-  if (!request_json.defines("id")) {
+  if (!request_json.is_object() || !request_json.defines("id")) {
     return nullptr;
   }
   const auto &id{request_json.at("id")};
@@ -162,8 +162,8 @@ public:
           if (too_big) {
             ActionMCP_v1::write_envelope(
                 callback_request, callback_response, allowed_origin,
-                response_schema, sourcemeta::one::STATUS_OK,
-                ActionMCP_v1::enterprise_required(nullptr));
+                response_schema, sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
+                ActionMCP_v1::request_too_large());
             return;
           }
           ActionMCP_v1::handle_message(callback_request, callback_response,
@@ -180,8 +180,8 @@ public:
           } catch (const std::exception &) {
             ActionMCP_v1::write_envelope(
                 callback_request, callback_response, allowed_origin,
-                response_schema, sourcemeta::one::STATUS_OK,
-                ActionMCP_v1::enterprise_required(nullptr));
+                response_schema, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                ActionMCP_v1::internal_error());
           }
         });
   }
@@ -221,6 +221,31 @@ private:
   static auto method_not_allowed() -> sourcemeta::core::JSON {
     auto envelope{mcp_make_envelope(nullptr)};
     envelope.assign("error", mcp_make_error(4, "Method not allowed"));
+    return envelope;
+  }
+
+  static auto parse_error() -> sourcemeta::core::JSON {
+    auto envelope{mcp_make_envelope(nullptr)};
+    envelope.assign("error", mcp_make_error(-32700, "Parse error"));
+    return envelope;
+  }
+
+  static auto invalid_request(const sourcemeta::core::JSON *id)
+      -> sourcemeta::core::JSON {
+    auto envelope{mcp_make_envelope(id)};
+    envelope.assign("error", mcp_make_error(-32600, "Invalid Request"));
+    return envelope;
+  }
+
+  static auto request_too_large() -> sourcemeta::core::JSON {
+    auto envelope{mcp_make_envelope(nullptr)};
+    envelope.assign("error", mcp_make_error(5, "Request too large"));
+    return envelope;
+  }
+
+  static auto internal_error() -> sourcemeta::core::JSON {
+    auto envelope{mcp_make_envelope(nullptr)};
+    envelope.assign("error", mcp_make_error(-32603, "Internal error"));
     return envelope;
   }
 
@@ -346,14 +371,15 @@ private:
       request_json = sourcemeta::core::parse_json(body);
     } catch (const std::exception &) {
       write_envelope(request, response, allowed_origin, response_schema,
-                     sourcemeta::one::STATUS_OK, enterprise_required(nullptr));
+                     sourcemeta::one::STATUS_BAD_REQUEST, parse_error());
       return;
     }
 
     if (!request_json.is_object() || !request_json.defines("method") ||
         !request_json.at("method").is_string()) {
       write_envelope(request, response, allowed_origin, response_schema,
-                     sourcemeta::one::STATUS_OK, enterprise_required(nullptr));
+                     sourcemeta::one::STATUS_OK,
+                     invalid_request(mcp_request_id(request_json)));
       return;
     }
 
