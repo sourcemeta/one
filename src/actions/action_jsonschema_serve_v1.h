@@ -30,17 +30,28 @@ public:
     });
   }
 
-  static auto serve(const std::filesystem::path &base,
-                    std::string_view schema_path,
-                    sourcemeta::one::HTTPRequest &request,
-                    sourcemeta::one::HTTPResponse &response,
-                    std::string_view error_schema) -> void {
+  static auto resolve(const std::filesystem::path &base,
+                      const std::string_view schema_path, const bool bundle)
+      -> std::filesystem::path {
     // Otherwise we may get unexpected results in case-sensitive file-systems
     std::string lowercase_path{schema_path};
     std::ranges::transform(
         lowercase_path, lowercase_path.begin(),
         [](const unsigned char character) { return std::tolower(character); });
+    auto absolute_path{base / "schemas" / lowercase_path / "%"};
+    if (bundle) {
+      absolute_path /= "bundle.metapack";
+    } else {
+      absolute_path /= "schema.metapack";
+    }
+    return absolute_path;
+  }
 
+  static auto serve(const std::filesystem::path &base,
+                    std::string_view schema_path,
+                    sourcemeta::one::HTTPRequest &request,
+                    sourcemeta::one::HTTPResponse &response,
+                    std::string_view error_schema) -> void {
     // Because Visual Studio Code famously does not support `$id` or `id`
     // See
     // https://github.com/microsoft/vscode-json-languageservice/issues/224
@@ -49,13 +60,17 @@ public:
                          user_agent.starts_with("VSCodium")};
     const auto is_deno{user_agent.starts_with("Deno/")};
     const auto bundle{!request.query("bundle").empty()};
-    auto absolute_path{base / "schemas" / lowercase_path / "%"};
+    std::filesystem::path absolute_path;
     if (is_vscode) {
-      absolute_path /= "editor.metapack";
-    } else if (bundle || is_deno) {
-      absolute_path /= "bundle.metapack";
+      std::string lowercase_path{schema_path};
+      std::ranges::transform(lowercase_path, lowercase_path.begin(),
+                             [](const unsigned char character) {
+                               return std::tolower(character);
+                             });
+      absolute_path =
+          base / "schemas" / lowercase_path / "%" / "editor.metapack";
     } else {
-      absolute_path /= "schema.metapack";
+      absolute_path = resolve(base, schema_path, bundle || is_deno);
     }
 
     if (request.method() != "get" && request.method() != "head" &&

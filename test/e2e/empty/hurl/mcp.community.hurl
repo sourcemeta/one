@@ -21,10 +21,14 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
-jsonpath "$.error.code" == 1
-jsonpath "$.error.message" == "Enterprise edition required"
-jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+jsonpath "$.id" == 1
+jsonpath "$.result.protocolVersion" == "2025-11-25"
+jsonpath "$.result.capabilities" isObject
+jsonpath "$.result.capabilities.resources" isObject
+jsonpath "$.result.capabilities.resources" isEmpty
+jsonpath "$.result.serverInfo.name" == "sourcemeta-one"
+jsonpath "$.result.serverInfo.title" == "Sourcemeta One"
+jsonpath "$.result.serverInfo.version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
