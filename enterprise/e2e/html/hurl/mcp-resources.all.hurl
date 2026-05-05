@@ -138,8 +138,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read of a real catalog schema URI returns the schema body
-# byte-for-byte equal to what the HTTP serve endpoint returns
+# resources/read of a real catalog schema URI
 
 GET {{base}}/test/object
 HTTP 200
@@ -223,10 +222,9 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read with ?bundle=1 returns the bundled variant byte-for-byte
-# equal to the HTTP serve endpoint's bundled response
+# resources/read with ?bundle=1 of a $ref-bearing schema
 
-GET {{base}}/test/object?bundle=1
+GET {{base}}/self/v1/schemas/mcp/response?bundle=1
 HTTP 200
 [Captures]
 bundled_schema_text: body
@@ -239,7 +237,7 @@ Content-Type: application/json
   "id": 32,
   "method": "resources/read",
   "params": {
-    "uri": "{{base}}/test/object?bundle=1"
+    "uri": "{{base}}/self/v1/schemas/mcp/response?bundle=1"
   }
 }
 ```
@@ -254,7 +252,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 32
 jsonpath "$.result.contents" count == 1
-jsonpath "$.result.contents[0].uri" == "{{base}}/test/object?bundle=1"
+jsonpath "$.result.contents[0].uri" == "{{base}}/self/v1/schemas/mcp/response?bundle=1"
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
 jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
 

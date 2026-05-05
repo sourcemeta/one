@@ -66,8 +66,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read of a self-served schema URI returns the schema body
-# byte-for-byte equal to what the HTTP serve endpoint returns
+# resources/read of a self-served schema URI
 
 GET {{base}}/v1/catalog/self/v1/schemas/mcp/error
 HTTP 200
@@ -151,10 +150,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read with ?bundle=1 returns the bundled variant byte-for-byte
-# equal to the HTTP serve endpoint's bundled response. The MCP response
-# schema is composed via $ref so the bundled variant differs meaningfully
-# from the raw form.
+# resources/read with ?bundle=1 of a $ref-bearing schema
 
 GET {{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle=1
 HTTP 200
