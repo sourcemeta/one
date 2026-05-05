@@ -48,6 +48,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 357
+jsonpath "$.bytesBundled" == 357
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0

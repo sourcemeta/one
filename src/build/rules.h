@@ -164,8 +164,10 @@ static constexpr std::array<PerSchemaRule, 13> PER_SCHEMA_RULES{{
                        {.source = DependencySource::SchemaBase,
                         .filename = "health.metapack"},
                        {.source = DependencySource::SchemaBase,
-                        .filename = "dependencies.metapack"}}},
-     .dependency_count = 3},
+                        .filename = "dependencies.metapack"},
+                       {.source = DependencySource::SchemaBase,
+                        .filename = "bundle.metapack"}}},
+     .dependency_count = 4},
 
     {.action = BuildPlan::Action::Type::Dependents,
      .base = TargetBase::Schema,

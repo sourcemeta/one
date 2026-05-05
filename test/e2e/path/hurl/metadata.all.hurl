@@ -10,6 +10,7 @@ last_response: body
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 143
+jsonpath "$.bytesBundled" == 143
 jsonpath "$.identifier" == "{{base}}/v1/catalog/example/string"
 jsonpath "$.path" == "/v1/catalog/example/string"
 jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
@@ -45,6 +46,7 @@ last_response: body
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 145
+jsonpath "$.bytesBundled" == 145
 jsonpath "$.identifier" == "{{base}}/v1/catalog/rebased/with-id"
 jsonpath "$.path" == "/v1/catalog/rebased/with-id"
 jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"

@@ -15,7 +15,7 @@ TEST(Search_build, empty) {
 
 TEST(Search_build, single_entry) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "My Title", "A description", 80}};
+      {"/foo/bar", "My Title", "A description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
   EXPECT_GE(payload.size(), sizeof(sourcemeta::one::SearchIndexHeader));
@@ -23,7 +23,7 @@ TEST(Search_build, single_entry) {
 
 TEST(Search_build, header_single_entry) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "Title", "Desc", 80}};
+      {"/foo", "Title", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -35,9 +35,10 @@ TEST(Search_build, header_single_entry) {
 }
 
 TEST(Search_build, header_multiple_entries) {
-  std::vector<sourcemeta::one::SearchEntry> entries{{"/a", "A", "Desc A", 80},
-                                                    {"/b", "B", "Desc B", 80},
-                                                    {"/c", "C", "Desc C", 80}};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/a", "A", "Desc A", 80, 0, 0},
+      {"/b", "B", "Desc B", 80, 0, 0},
+      {"/c", "C", "Desc C", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -49,8 +50,8 @@ TEST(Search_build, header_multiple_entries) {
 }
 
 TEST(Search_build, offset_table) {
-  std::vector<sourcemeta::one::SearchEntry> entries{{"/a", "A", "D", 80},
-                                                    {"/b", "BB", "DD", 80}};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/a", "A", "D", 80, 0, 0}, {"/b", "BB", "DD", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -75,7 +76,7 @@ TEST(Search_build, offset_table) {
 
 TEST(Search_build, record_fields) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/test/path", "My Title", "My Description", 80}};
+      {"/test/path", "My Title", "My Description", 80, 4096, 8192}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -88,6 +89,8 @@ TEST(Search_build, record_fields) {
   EXPECT_EQ(record_header.path_length, 10);
   EXPECT_EQ(record_header.title_length, 8);
   EXPECT_EQ(record_header.description_length, 14);
+  EXPECT_EQ(record_header.bytes_raw, 4096);
+  EXPECT_EQ(record_header.bytes_bundled, 8192);
 
   const auto *field_data{payload.data() + header.records_offset +
                          sizeof(sourcemeta::one::SearchRecordHeader)};
@@ -109,8 +112,8 @@ TEST(Search_build, record_fields) {
 }
 
 TEST(Search_build, total_size) {
-  std::vector<sourcemeta::one::SearchEntry> entries{{"/a", "T", "D", 80},
-                                                    {"/bb", "TT", "DD", 80}};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/a", "T", "D", 80, 0, 0}, {"/bb", "TT", "DD", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   const auto expected_size{
@@ -123,7 +126,8 @@ TEST(Search_build, total_size) {
 TEST(Search_build, skips_entry_with_oversized_path) {
   const std::string oversized_path(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {oversized_path, "Title", "Desc", 80}, {"/normal", "Normal", "Desc", 80}};
+      {oversized_path, "Title", "Desc", 80, 0, 0},
+      {"/normal", "Normal", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -135,7 +139,8 @@ TEST(Search_build, skips_entry_with_oversized_path) {
 TEST(Search_build, skips_entry_with_oversized_title) {
   const std::string oversized_title(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", oversized_title, "Desc", 80}, {"/normal", "Normal", "Desc", 80}};
+      {"/foo", oversized_title, "Desc", 80, 0, 0},
+      {"/normal", "Normal", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -147,8 +152,8 @@ TEST(Search_build, skips_entry_with_oversized_title) {
 TEST(Search_build, skips_entry_with_oversized_description) {
   const std::string oversized_description(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "Title", oversized_description, 80},
-      {"/normal", "Normal", "Desc", 80}};
+      {"/foo", "Title", oversized_description, 80, 0, 0},
+      {"/normal", "Normal", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -160,14 +165,15 @@ TEST(Search_build, skips_entry_with_oversized_description) {
 TEST(Search_build, all_entries_oversized_returns_empty) {
   const std::string oversized(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {oversized, "Title", "Desc", 80}};
+      {oversized, "Title", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }
 
 TEST(Search_build, entry_at_exact_uint16_max_is_kept) {
   const std::string max_path(65535, 'a');
-  std::vector<sourcemeta::one::SearchEntry> entries{{max_path, "", "", 80}};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {max_path, "", "", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
 
@@ -180,7 +186,7 @@ TEST(Search_build, entry_at_exact_uint16_max_is_kept) {
 TEST(Search_build, entry_at_uint16_max_plus_one_is_skipped) {
   const std::string too_long_path(65536, 'a');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {too_long_path, "", "", 80}};
+      {too_long_path, "", "", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }

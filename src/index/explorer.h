@@ -108,6 +108,7 @@ struct MetapackVersionInfo {
 struct MetapackExplorerSchemaExtension {
   std::int64_t health;
   std::int64_t bytes;
+  std::int64_t bytes_bundled;
   std::int64_t dependencies;
   MetapackVersionInfo version;
   std::uint16_t path_length;
@@ -284,11 +285,12 @@ explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
 
 static auto make_explorer_schema_extension(
     const std::int64_t health, const std::int64_t bytes,
-    const std::int64_t dependencies, const MetapackVersionInfo &version,
-    const std::string_view path, const std::string_view identifier,
-    const std::string_view base_dialect, const std::string_view dialect,
-    const std::string_view title, const std::string_view description,
-    const std::string_view alert) -> std::vector<std::uint8_t> {
+    const std::int64_t bytes_bundled, const std::int64_t dependencies,
+    const MetapackVersionInfo &version, const std::string_view path,
+    const std::string_view identifier, const std::string_view base_dialect,
+    const std::string_view dialect, const std::string_view title,
+    const std::string_view description, const std::string_view alert)
+    -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -306,6 +308,7 @@ static auto make_explorer_schema_extension(
   MetapackExplorerSchemaExtension header{};
   header.health = health;
   header.bytes = bytes;
+  header.bytes_bundled = bytes_bundled;
   header.dependencies = dependencies;
   header.version = version;
   header.path_length = static_cast<std::uint16_t>(path.size());
@@ -350,6 +353,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto schema_info_option{sourcemeta::one::metapack_info(schema_view)};
     assert(schema_info_option.has_value());
     const auto &schema_info{schema_info_option.value()};
+    sourcemeta::core::FileView bundle_view{action.dependencies.at(3)};
+    const auto bundle_info_option{sourcemeta::one::metapack_info(bundle_view)};
+    assert(bundle_info_option.has_value());
+    const auto &bundle_info{bundle_info_option.value()};
     const auto schema_data_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_data_option.has_value());
@@ -363,6 +370,9 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     result.assign("bytes", sourcemeta::core::JSON{static_cast<std::size_t>(
                                schema_info.content_bytes)});
+    result.assign("bytesBundled",
+                  sourcemeta::core::JSON{
+                      static_cast<std::size_t>(bundle_info.content_bytes)});
     result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
     result.assign(
         "path", sourcemeta::core::JSON{configuration.base_path + "/" +
@@ -449,6 +459,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     const auto extension_bytes{make_explorer_schema_extension(
         result.at("health").to_integer(),
         static_cast<std::int64_t>(schema_info.content_bytes),
+        static_cast<std::int64_t>(bundle_info.content_bytes),
         result.at("dependencies").to_integer(), parse_version_info(schema_name),
         result.at("path").to_string(), result.at("identifier").to_string(),
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
@@ -490,17 +501,26 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
           continue;
         }
 
-        entries.push_back({directory_entry.at("path").to_string(),
-                           directory_entry.defines("title")
-                               ? directory_entry.at("title").to_string()
-                               : "",
-                           directory_entry.defines("description")
-                               ? directory_entry.at("description").to_string()
-                               : "",
-                           directory_entry.defines("health")
-                               ? static_cast<std::uint8_t>(
-                                     directory_entry.at("health").to_integer())
-                               : static_cast<std::uint8_t>(0)});
+        entries.push_back(
+            {directory_entry.at("path").to_string(),
+             directory_entry.defines("title")
+                 ? directory_entry.at("title").to_string()
+                 : "",
+             directory_entry.defines("description")
+                 ? directory_entry.at("description").to_string()
+                 : "",
+             directory_entry.defines("health")
+                 ? static_cast<std::uint8_t>(
+                       directory_entry.at("health").to_integer())
+                 : static_cast<std::uint8_t>(0),
+             directory_entry.defines("bytes")
+                 ? static_cast<std::uint64_t>(
+                       directory_entry.at("bytes").to_integer())
+                 : static_cast<std::uint64_t>(0),
+             directory_entry.defines("bytesBundled")
+                 ? static_cast<std::uint64_t>(
+                       directory_entry.at("bytesBundled").to_integer())
+                 : static_cast<std::uint64_t>(0)});
       }
     }
 
@@ -763,6 +783,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
             sourcemeta::core::JSON{std::string{
                 explorer_extension_identifier(extension, extension_base)}});
         entry_json.assign("bytes", sourcemeta::core::JSON{extension->bytes});
+        entry_json.assign("bytesBundled",
+                          sourcemeta::core::JSON{extension->bytes_bundled});
         entry_json.assign(
             "baseDialect",
             sourcemeta::core::JSON{std::string{
