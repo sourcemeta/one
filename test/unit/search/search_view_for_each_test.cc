@@ -4,8 +4,10 @@
 #include <gtest/gtest.h>
 
 #include <chrono>      // std::chrono
-#include <cstdint>     // std::uint64_t
+#include <cstdint>     // std::uint32_t, std::uint64_t
+#include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
+#include <limits>      // std::numeric_limits
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -28,6 +30,21 @@ static auto write_search_file(const std::filesystem::path &path,
                               std::vector<sourcemeta::one::SearchEntry> entries)
     -> void {
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const std::string_view payload_view{
+      payload.empty()
+          ? std::string_view{}
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          : std::string_view{reinterpret_cast<const char *>(payload.data()),
+                             payload.size()}};
+  sourcemeta::one::metapack_write_text(
+      path, payload_view, "application/octet-stream",
+      sourcemeta::one::MetapackEncoding::Identity, {},
+      std::chrono::milliseconds{0});
+}
+
+static auto write_raw_search_file(const std::filesystem::path &path,
+                                  const std::vector<std::uint8_t> &payload)
+    -> void {
   const std::string_view payload_view{
       payload.empty()
           ? std::string_view{}
@@ -165,4 +182,89 @@ TEST(Search_view_for_each, empty_strings_for_empty_metadata) {
                                         .description = "",
                                         .bytes_raw = 7,
                                         .bytes_bundled = 8}}));
+}
+
+TEST(Search_view_for_each, count_size_max_does_not_overflow) {
+  const auto path{test_path("for_each_count_max.metapack")};
+  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
+                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 0, std::numeric_limits<std::size_t>::max()),
+            (std::vector<VisitedEntry>{{.path = "/a",
+                                        .title = "A Title",
+                                        .description = "A Desc",
+                                        .bytes_raw = 1,
+                                        .bytes_bundled = 2},
+                                       {.path = "/b",
+                                        .title = "B Title",
+                                        .description = "B Desc",
+                                        .bytes_raw = 3,
+                                        .bytes_bundled = 4}}));
+}
+
+TEST(Search_view_for_each, count_size_max_with_offset_does_not_overflow) {
+  const auto path{test_path("for_each_count_max_offset.metapack")};
+  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
+                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 1, std::numeric_limits<std::size_t>::max()),
+            (std::vector<VisitedEntry>{{.path = "/b",
+                                        .title = "B Title",
+                                        .description = "B Desc",
+                                        .bytes_raw = 3,
+                                        .bytes_bundled = 4}}));
+}
+
+TEST(Search_view_for_each, malformed_offset_table_too_large_returns_nothing) {
+  const auto path{test_path("for_each_malformed_offset_table.metapack")};
+  sourcemeta::one::SearchIndexHeader header{};
+  header.entry_count = 1000;
+  header.records_offset =
+      static_cast<std::uint32_t>(sizeof(sourcemeta::one::SearchIndexHeader) +
+                                 1000 * sizeof(std::uint32_t));
+  std::vector<std::uint8_t> payload(sizeof(sourcemeta::one::SearchIndexHeader));
+  std::memcpy(payload.data(), &header,
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  write_raw_search_file(path, payload);
+
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
+}
+
+TEST(Search_view_for_each, malformed_record_offset_out_of_bounds_stops) {
+  const auto path{test_path("for_each_malformed_record_offset.metapack")};
+  sourcemeta::one::SearchIndexHeader header{};
+  header.entry_count = 1;
+  header.records_offset = static_cast<std::uint32_t>(
+      sizeof(sourcemeta::one::SearchIndexHeader) + sizeof(std::uint32_t));
+  std::vector<std::uint8_t> payload(sizeof(sourcemeta::one::SearchIndexHeader) +
+                                    sizeof(std::uint32_t));
+  std::memcpy(payload.data(), &header,
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  const std::uint32_t bad_record_offset{99999};
+  std::memcpy(payload.data() + sizeof(sourcemeta::one::SearchIndexHeader),
+              &bad_record_offset, sizeof(std::uint32_t));
+  write_raw_search_file(path, payload);
+
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
+}
+
+TEST(Search_view_for_each, malformed_record_field_lengths_stops) {
+  const auto path{test_path("for_each_malformed_record_field.metapack")};
+  auto payload{
+      sourcemeta::one::make_search({{"/foo", "Title", "Desc", 80, 1, 2}})};
+  sourcemeta::one::SearchIndexHeader header{};
+  std::memcpy(&header, payload.data(),
+              sizeof(sourcemeta::one::SearchIndexHeader));
+  sourcemeta::one::SearchRecordHeader bad_record{};
+  bad_record.path_length = 60000;
+  bad_record.title_length = 60000;
+  bad_record.description_length = 60000;
+  std::memcpy(payload.data() + header.records_offset, &bad_record,
+              sizeof(sourcemeta::one::SearchRecordHeader));
+  write_raw_search_file(path, payload);
+
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
 }

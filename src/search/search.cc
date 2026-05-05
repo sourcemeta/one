@@ -306,7 +306,15 @@ auto SearchView::for_each(
     return;
   }
 
-  const auto last{std::min(total, offset + count)};
+  const auto offset_table_end{sizeof(SearchIndexHeader) +
+                              total * sizeof(std::uint32_t)};
+  if (offset_table_end > this->payload_size_) {
+    return;
+  }
+
+  const auto remaining{total - offset};
+  const auto effective_count{std::min(count, remaining)};
+  const auto last{offset + effective_count};
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
@@ -314,10 +322,21 @@ auto SearchView::for_each(
 
   for (std::size_t index{offset}; index < last; ++index) {
     const auto record_offset{offset_table[index]};
+    if (record_offset + sizeof(SearchRecordHeader) > this->payload_size_) {
+      break;
+    }
+
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const auto *record_header{reinterpret_cast<const SearchRecordHeader *>(
         this->payload_ + record_offset)};
     const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
+    const auto total_field_length{
+        static_cast<std::size_t>(record_header->path_length) +
+        record_header->title_length + record_header->description_length};
+    if (field_data_offset + total_field_length > this->payload_size_) {
+      break;
+    }
+
     const auto *field_data{this->payload_ + field_data_offset};
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
