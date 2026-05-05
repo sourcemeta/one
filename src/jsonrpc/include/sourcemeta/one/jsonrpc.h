@@ -43,6 +43,8 @@ inline const auto JSONRPC_HASH_MESSAGE{
     sourcemeta::core::JSON::make_object().as_object().hash("message")};
 inline const auto JSONRPC_HASH_DATA{
     sourcemeta::core::JSON::make_object().as_object().hash("data")};
+inline const auto JSONRPC_HASH_PARAMS{
+    sourcemeta::core::JSON::make_object().as_object().hash("params")};
 
 inline auto jsonrpc_request_id(const sourcemeta::core::JSON &request)
     -> const sourcemeta::core::JSON * {
@@ -69,6 +71,30 @@ inline auto jsonrpc_is_request(const sourcemeta::core::JSON &request) -> bool {
   }
   const auto *method_field{request.try_at("method", JSONRPC_HASH_METHOD)};
   return method_field != nullptr && method_field->is_string();
+}
+
+inline auto jsonrpc_method(const sourcemeta::core::JSON &request)
+    -> std::string_view {
+  if (!request.is_object()) {
+    return {};
+  }
+  const auto *method_field{request.try_at("method", JSONRPC_HASH_METHOD)};
+  if (method_field == nullptr || !method_field->is_string()) {
+    return {};
+  }
+  return method_field->to_string();
+}
+
+inline auto jsonrpc_params(const sourcemeta::core::JSON &request)
+    -> const sourcemeta::core::JSON * {
+  if (!request.is_object()) {
+    return nullptr;
+  }
+  const auto *params{request.try_at("params", JSONRPC_HASH_PARAMS)};
+  if (params == nullptr || (!params->is_object() && !params->is_array())) {
+    return nullptr;
+  }
+  return params;
 }
 
 inline auto jsonrpc_is_notification(const sourcemeta::core::JSON &request)
@@ -98,6 +124,11 @@ inline auto jsonrpc_make_success(const sourcemeta::core::JSON &id,
   envelope.assign_assume_new(std::string{"result"}, std::move(result),
                              JSONRPC_HASH_RESULT);
   return envelope;
+}
+
+inline auto jsonrpc_make_success_empty(const sourcemeta::core::JSON &id)
+    -> sourcemeta::core::JSON {
+  return jsonrpc_make_success(id, sourcemeta::core::JSON::make_object());
 }
 
 inline auto

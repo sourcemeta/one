@@ -246,13 +246,12 @@ private:
                                     const std::string_view registry_url,
                                     const std::filesystem::path &base)
       -> sourcemeta::core::JSON {
-    if (!request_json.defines("params") ||
-        !request_json.at("params").is_object() ||
-        !request_json.at("params").defines("uri") ||
-        !request_json.at("params").at("uri").is_string()) {
+    const auto *params{sourcemeta::one::jsonrpc_params(request_json)};
+    if (params == nullptr || !params->is_object() || !params->defines("uri") ||
+        !params->at("uri").is_string()) {
       return enterprise_required(&id);
     }
-    const auto uri{request_json.at("params").at("uri").to_string()};
+    const auto uri{params->at("uri").to_string()};
     try {
       const auto resolved{resolve_request_uri(uri, registry_url, base)};
       if (!resolved.has_value()) {
@@ -281,8 +280,8 @@ private:
       return;
     }
 
-    if (!request_json.is_object() || !request_json.defines("method") ||
-        !request_json.at("method").is_string()) {
+    const auto method{sourcemeta::one::jsonrpc_method(request_json)};
+    if (method.empty()) {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_OK,
                      sourcemeta::one::jsonrpc_make_error_invalid_request(
@@ -291,7 +290,6 @@ private:
     }
 
     const auto *id{sourcemeta::one::jsonrpc_request_id(request_json)};
-    const auto method{request_json.at("method").to_string()};
 
     if (id != nullptr && method == "initialize") {
       write_envelope(request, response, allowed_origin, response_schema,

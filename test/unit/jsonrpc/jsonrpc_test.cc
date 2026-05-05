@@ -206,6 +206,89 @@ TEST(JSONRPC, is_notification_array) {
   EXPECT_FALSE(sourcemeta::one::jsonrpc_is_notification(request));
 }
 
+TEST(JSONRPC, method_present) {
+  const auto request{sourcemeta::core::parse_json(
+      R"({ "jsonrpc": "2.0", "id": 1, "method": "ping" })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_method(request), "ping");
+}
+
+TEST(JSONRPC, method_missing) {
+  const auto request{
+      sourcemeta::core::parse_json(R"({ "jsonrpc": "2.0", "id": 1 })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_method(request), "");
+}
+
+TEST(JSONRPC, method_non_string) {
+  const auto request{sourcemeta::core::parse_json(
+      R"({ "jsonrpc": "2.0", "id": 1, "method": 5 })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_method(request), "");
+}
+
+TEST(JSONRPC, method_on_non_object) {
+  const auto request{sourcemeta::core::parse_json(R"([ 1, 2 ])")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_method(request), "");
+}
+
+TEST(JSONRPC, params_object) {
+  const auto request{sourcemeta::core::parse_json(R"JSON({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "ping",
+    "params": { "uri": "http://example.com" }
+  })JSON")};
+  const auto *params{sourcemeta::one::jsonrpc_params(request)};
+  ASSERT_NE(params, nullptr);
+  EXPECT_TRUE(params->is_object());
+  EXPECT_EQ(params->at("uri").to_string(), "http://example.com");
+}
+
+TEST(JSONRPC, params_array) {
+  const auto request{sourcemeta::core::parse_json(R"JSON({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "subtract",
+    "params": [ 42, 23 ]
+  })JSON")};
+  const auto *params{sourcemeta::one::jsonrpc_params(request)};
+  ASSERT_NE(params, nullptr);
+  EXPECT_TRUE(params->is_array());
+  EXPECT_EQ(params->size(), 2);
+}
+
+TEST(JSONRPC, params_missing) {
+  const auto request{sourcemeta::core::parse_json(
+      R"({ "jsonrpc": "2.0", "id": 1, "method": "ping" })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_params(request), nullptr);
+}
+
+TEST(JSONRPC, params_primitive) {
+  const auto request{sourcemeta::core::parse_json(
+      R"({ "jsonrpc": "2.0", "id": 1, "method": "ping", "params": "x" })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_params(request), nullptr);
+}
+
+TEST(JSONRPC, params_null) {
+  const auto request{sourcemeta::core::parse_json(
+      R"({ "jsonrpc": "2.0", "id": 1, "method": "ping", "params": null })")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_params(request), nullptr);
+}
+
+TEST(JSONRPC, params_on_non_object) {
+  const auto request{sourcemeta::core::parse_json(R"([ 1, 2 ])")};
+  EXPECT_EQ(sourcemeta::one::jsonrpc_params(request), nullptr);
+}
+
+TEST(JSONRPC, make_success_empty) {
+  const auto identifier{sourcemeta::core::JSON{1}};
+  const auto envelope{sourcemeta::one::jsonrpc_make_success_empty(identifier)};
+  const auto expected{sourcemeta::core::parse_json(R"JSON({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {}
+  })JSON")};
+  EXPECT_EQ(envelope, expected);
+}
+
 TEST(JSONRPC, make_success_empty_object_result) {
   const auto identifier{sourcemeta::core::JSON{1}};
   const auto envelope{sourcemeta::one::jsonrpc_make_success(

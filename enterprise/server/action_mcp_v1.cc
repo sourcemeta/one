@@ -101,8 +101,7 @@ auto handle_initialize(const sourcemeta::core::JSON &request_json)
 
 auto handle_ping(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_success(
-      request_json.at("id"), sourcemeta::core::JSON::make_object());
+  return sourcemeta::one::jsonrpc_make_success_empty(request_json.at("id"));
 }
 
 auto matches_request_schema(const sourcemeta::blaze::Template &schema_template,
@@ -139,7 +138,7 @@ auto handle_jsonrpc_message(
     return;
   }
 
-  const auto method{request_json.at("method").to_string()};
+  const auto method{sourcemeta::one::jsonrpc_method(request_json)};
   if (method != "initialize" && method != "ping") {
     write_json_envelope(request, response, allowed_origin, response_schema,
                         sourcemeta::one::jsonrpc_make_error_method_not_found(
