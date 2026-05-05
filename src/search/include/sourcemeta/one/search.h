@@ -11,6 +11,7 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::function
 #include <memory>      // std::unique_ptr
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -83,6 +84,9 @@ public:
 
   auto count() -> std::size_t;
   auto at(std::size_t index) -> SearchListEntry;
+  auto for_each(std::size_t offset, std::size_t count,
+                const std::function<void(const SearchListEntry &)> &callback)
+      -> void;
 
 private:
   std::filesystem::path path_;

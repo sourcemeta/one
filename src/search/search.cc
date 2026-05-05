@@ -2,12 +2,13 @@
 
 #include <sourcemeta/one/metapack.h>
 
-#include <algorithm> // std::ranges::search
-#include <cassert>   // assert
-#include <cctype>    // std::tolower
-#include <cstring>   // std::memcpy
-#include <limits>    // std::numeric_limits
-#include <utility>   // std::move
+#include <algorithm>  // std::min, std::ranges::search
+#include <cassert>    // assert
+#include <cctype>     // std::tolower
+#include <cstring>    // std::memcpy
+#include <functional> // std::function
+#include <limits>     // std::numeric_limits
+#include <utility>    // std::move
 
 namespace sourcemeta::one {
 
@@ -286,6 +287,58 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
           .description = description,
           .bytes_raw = record_header->bytes_raw,
           .bytes_bundled = record_header->bytes_bundled};
+}
+
+auto SearchView::for_each(
+    const std::size_t offset, const std::size_t count,
+    const std::function<void(const SearchListEntry &)> &callback) -> void {
+  this->ensure_open();
+  if (this->payload_ == nullptr ||
+      this->payload_size_ < sizeof(SearchIndexHeader)) {
+    return;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *header{
+      reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
+  const auto total{static_cast<std::size_t>(header->entry_count)};
+  if (offset >= total || count == 0) {
+    return;
+  }
+
+  const auto last{std::min(total, offset + count)};
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
+      this->payload_ + sizeof(SearchIndexHeader))};
+
+  for (std::size_t index{offset}; index < last; ++index) {
+    const auto record_offset{offset_table[index]};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const auto *record_header{reinterpret_cast<const SearchRecordHeader *>(
+        this->payload_ + record_offset)};
+    const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
+    const auto *field_data{this->payload_ + field_data_offset};
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view path{reinterpret_cast<const char *>(field_data),
+                                record_header->path_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view title{
+        reinterpret_cast<const char *>(field_data + record_header->path_length),
+        record_header->title_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view description{
+        reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->title_length),
+        record_header->description_length};
+
+    callback({.path = path,
+              .title = title,
+              .description = description,
+              .bytes_raw = record_header->bytes_raw,
+              .bytes_bundled = record_header->bytes_bundled});
+  }
 }
 
 } // namespace sourcemeta::one

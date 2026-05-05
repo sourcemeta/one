@@ -88,3 +88,104 @@ TEST(Search_view, at_returns_empty_strings_for_empty_metadata) {
   EXPECT_EQ(entry.bytes_raw, 7);
   EXPECT_EQ(entry.bytes_bundled, 8);
 }
+
+TEST(Search_view, for_each_visits_full_range) {
+  const auto path{test_path("for_each_full.metapack")};
+  write_search_file(path, {{"/zebra", "Title", "Desc", 80, 11, 22},
+                           {"/apple", "Title", "Desc", 80, 33, 44},
+                           {"/mango", "Title", "Desc", 80, 55, 66}});
+  sourcemeta::one::SearchView view{path};
+  std::vector<std::string> visited_paths;
+  std::vector<std::uint64_t> visited_bytes_raw;
+  std::vector<std::uint64_t> visited_bytes_bundled;
+  view.for_each(0, 3,
+                [&](const sourcemeta::one::SearchListEntry &entry) -> void {
+                  visited_paths.emplace_back(entry.path);
+                  visited_bytes_raw.push_back(entry.bytes_raw);
+                  visited_bytes_bundled.push_back(entry.bytes_bundled);
+                });
+  EXPECT_EQ(visited_paths,
+            (std::vector<std::string>{"/apple", "/mango", "/zebra"}));
+  EXPECT_EQ(visited_bytes_raw, (std::vector<std::uint64_t>{33, 55, 11}));
+  EXPECT_EQ(visited_bytes_bundled, (std::vector<std::uint64_t>{44, 66, 22}));
+}
+
+TEST(Search_view, for_each_visits_subset_with_offset) {
+  const auto path{test_path("for_each_offset.metapack")};
+  write_search_file(path, {{"/a", "Title", "Desc", 80, 1, 2},
+                           {"/b", "Title", "Desc", 80, 3, 4},
+                           {"/c", "Title", "Desc", 80, 5, 6},
+                           {"/d", "Title", "Desc", 80, 7, 8}});
+  sourcemeta::one::SearchView view{path};
+  std::vector<std::string> visited;
+  view.for_each(1, 2,
+                [&](const sourcemeta::one::SearchListEntry &entry) -> void {
+                  visited.emplace_back(entry.path);
+                });
+  EXPECT_EQ(visited, (std::vector<std::string>{"/b", "/c"}));
+}
+
+TEST(Search_view, for_each_clamps_count_to_total) {
+  const auto path{test_path("for_each_clamp.metapack")};
+  write_search_file(path, {{"/a", "Title", "Desc", 80, 1, 2},
+                           {"/b", "Title", "Desc", 80, 3, 4}});
+  sourcemeta::one::SearchView view{path};
+  std::vector<std::string> visited;
+  view.for_each(1, 100,
+                [&](const sourcemeta::one::SearchListEntry &entry) -> void {
+                  visited.emplace_back(entry.path);
+                });
+  EXPECT_EQ(visited, (std::vector<std::string>{"/b"}));
+}
+
+TEST(Search_view, for_each_skips_when_offset_at_end) {
+  const auto path{test_path("for_each_end.metapack")};
+  write_search_file(path, {{"/a", "Title", "Desc", 80, 1, 2},
+                           {"/b", "Title", "Desc", 80, 3, 4}});
+  sourcemeta::one::SearchView view{path};
+  std::size_t calls{0};
+  view.for_each(2, 10, [&](const sourcemeta::one::SearchListEntry &) -> void {
+    ++calls;
+  });
+  EXPECT_EQ(calls, 0);
+}
+
+TEST(Search_view, for_each_skips_when_offset_past_end) {
+  const auto path{test_path("for_each_past_end.metapack")};
+  write_search_file(path, {{"/a", "Title", "Desc", 80, 1, 2}});
+  sourcemeta::one::SearchView view{path};
+  std::size_t calls{0};
+  view.for_each(99, 10, [&](const sourcemeta::one::SearchListEntry &) -> void {
+    ++calls;
+  });
+  EXPECT_EQ(calls, 0);
+}
+
+TEST(Search_view, for_each_skips_when_count_zero) {
+  const auto path{test_path("for_each_zero.metapack")};
+  write_search_file(path, {{"/a", "Title", "Desc", 80, 1, 2},
+                           {"/b", "Title", "Desc", 80, 3, 4}});
+  sourcemeta::one::SearchView view{path};
+  std::size_t calls{0};
+  view.for_each(
+      0, 0, [&](const sourcemeta::one::SearchListEntry &) -> void { ++calls; });
+  EXPECT_EQ(calls, 0);
+}
+
+TEST(Search_view, for_each_visit_order_matches_at) {
+  const auto path{test_path("for_each_matches_at.metapack")};
+  write_search_file(path, {{"/zebra", "", "", 80, 11, 22},
+                           {"/apple", "", "", 80, 33, 44},
+                           {"/mango", "", "", 80, 55, 66}});
+  sourcemeta::one::SearchView view{path};
+  std::vector<std::string> from_for_each;
+  view.for_each(0, view.count(),
+                [&](const sourcemeta::one::SearchListEntry &entry) -> void {
+                  from_for_each.emplace_back(entry.path);
+                });
+  std::vector<std::string> from_at;
+  for (std::size_t index{0}; index < view.count(); ++index) {
+    from_at.emplace_back(view.at(index).path);
+  }
+  EXPECT_EQ(from_for_each, from_at);
+}
