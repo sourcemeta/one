@@ -36,7 +36,7 @@ test-hurl:
 test-playwright:
 ifneq ($(wildcard playwright/),)
 	$(MAKE) -C $(ROOT) node_modules
-	$(NPX) playwright install --with-deps
+	$(NPX) playwright install chromium
 	env PLAYWRIGHT_BASE_URL=$(BASE):$(PORT) \
 		$(NPX) playwright test --config playwright/playwright.config.js
 endif
