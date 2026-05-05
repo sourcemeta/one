@@ -15,6 +15,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::json)
+target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::one::jsonrpc)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::time)

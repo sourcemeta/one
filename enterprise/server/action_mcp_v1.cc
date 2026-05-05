@@ -6,6 +6,7 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared_version.h>
 
@@ -23,28 +24,6 @@ constexpr std::string_view MCP_PROTOCOL_VERSION{"2025-11-25"};
 constexpr std::string_view MCP_LEGACY_PROTOCOL_VERSION{"2025-03-26"};
 constexpr std::string_view MCP_SERVER_NAME{"sourcemeta-one-enterprise"};
 constexpr std::string_view MCP_SERVER_TITLE{"Sourcemeta One Enterprise"};
-
-auto envelope_with_id(const sourcemeta::core::JSON &id)
-    -> sourcemeta::core::JSON {
-  auto envelope{sourcemeta::core::JSON::make_object()};
-  envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
-  envelope.assign("id", id);
-  return envelope;
-}
-
-auto envelope_without_id() -> sourcemeta::core::JSON {
-  auto envelope{sourcemeta::core::JSON::make_object()};
-  envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
-  return envelope;
-}
-
-auto error_object(const std::int64_t code, const std::string_view message)
-    -> sourcemeta::core::JSON {
-  auto error{sourcemeta::core::JSON::make_object()};
-  error.assign("code", sourcemeta::core::JSON{code});
-  error.assign("message", sourcemeta::core::JSON{std::string{message}});
-  return error;
-}
 
 auto write_envelope(sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
@@ -84,14 +63,24 @@ auto write_accepted(sourcemeta::one::HTTPRequest &request,
 }
 
 auto method_not_allowed() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(4, "Method not allowed"));
-  return envelope;
+  return sourcemeta::one::jsonrpc_make_error(nullptr, 4, "Method not allowed");
+}
+
+auto forbidden_origin() -> sourcemeta::core::JSON {
+  return sourcemeta::one::jsonrpc_make_error(nullptr, 2, "Forbidden origin");
+}
+
+auto unsupported_protocol_version() -> sourcemeta::core::JSON {
+  return sourcemeta::one::jsonrpc_make_error(nullptr, 3,
+                                             "Unsupported protocol version");
+}
+
+auto request_too_large() -> sourcemeta::core::JSON {
+  return sourcemeta::one::jsonrpc_make_error(nullptr, 5, "Request too large");
 }
 
 auto handle_initialize(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
-  auto envelope{envelope_with_id(request_json.at("id"))};
   auto result{sourcemeta::core::JSON::make_object()};
   result.assign("protocolVersion",
                 sourcemeta::core::JSON{std::string{MCP_PROTOCOL_VERSION}});
@@ -106,84 +95,13 @@ auto handle_initialize(const sourcemeta::core::JSON &request_json)
   server_info.assign("version", sourcemeta::core::JSON{
                                     std::string{sourcemeta::one::version()}});
   result.assign("serverInfo", std::move(server_info));
-  envelope.assign("result", std::move(result));
-  return envelope;
+  return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
+                                               std::move(result));
 }
 
 auto handle_ping(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
-  auto envelope{envelope_with_id(request_json.at("id"))};
-  envelope.assign("result", sourcemeta::core::JSON::make_object());
-  return envelope;
-}
-
-auto invalid_request(const sourcemeta::core::JSON *id)
-    -> sourcemeta::core::JSON {
-  auto envelope{id == nullptr ? envelope_without_id() : envelope_with_id(*id)};
-  envelope.assign("error", error_object(-32600, "Invalid Request"));
-  return envelope;
-}
-
-auto method_not_found(const sourcemeta::core::JSON &id)
-    -> sourcemeta::core::JSON {
-  auto envelope{envelope_with_id(id)};
-  envelope.assign("error", error_object(-32601, "Method not found"));
-  return envelope;
-}
-
-auto parse_error() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(-32700, "Parse error"));
-  return envelope;
-}
-
-auto forbidden_origin() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(2, "Forbidden origin"));
-  return envelope;
-}
-
-auto unsupported_protocol_version() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(3, "Unsupported protocol version"));
-  return envelope;
-}
-
-auto request_too_large() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(5, "Request too large"));
-  return envelope;
-}
-
-auto internal_error() -> sourcemeta::core::JSON {
-  auto envelope{envelope_without_id()};
-  envelope.assign("error", error_object(-32603, "Internal error"));
-  return envelope;
-}
-
-auto request_id(const sourcemeta::core::JSON &request_json)
-    -> const sourcemeta::core::JSON * {
-  if (!request_json.is_object() || !request_json.defines("id")) {
-    return nullptr;
-  }
-  const auto &id{request_json.at("id")};
-  if (!id.is_string() && !id.is_integer()) {
-    return nullptr;
-  }
-  return &id;
-}
-
-auto looks_like_notification(const sourcemeta::core::JSON &request_json)
-    -> bool {
-  return request_json.is_object() && !request_json.defines("id") &&
-         request_json.defines("method") &&
-         request_json.at("method").is_string();
-}
-
-auto looks_like_request(const sourcemeta::core::JSON &request_json) -> bool {
-  return request_id(request_json) != nullptr &&
-         request_json.defines("method") &&
-         request_json.at("method").is_string();
+  return sourcemeta::one::jsonrpc_make_success_empty(request_json.at("id"));
 }
 
 auto matches_request_schema(const sourcemeta::blaze::Template &schema_template,
@@ -204,45 +122,34 @@ auto handle_jsonrpc_message(
     request_json = sourcemeta::core::parse_json(body);
   } catch (const std::exception &) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        parse_error());
+                        sourcemeta::one::jsonrpc_make_error_parse());
     return;
   }
 
-  if (!request_json.is_object()) {
-    write_json_envelope(request, response, allowed_origin, response_schema,
-                        invalid_request(nullptr));
-    return;
-  }
-
-  if (looks_like_notification(request_json)) {
+  if (sourcemeta::one::jsonrpc_is_notification(request_json)) {
     write_accepted(request, response, allowed_origin);
     return;
   }
 
-  if (!looks_like_request(request_json)) {
+  if (!sourcemeta::one::jsonrpc_is_request(request_json)) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        invalid_request(nullptr));
+                        sourcemeta::one::jsonrpc_make_error_invalid_request(
+                            sourcemeta::one::jsonrpc_request_id(request_json)));
     return;
   }
 
-  if (!request_json.defines("jsonrpc") ||
-      !request_json.at("jsonrpc").is_string() ||
-      request_json.at("jsonrpc").to_string() != "2.0") {
-    write_json_envelope(request, response, allowed_origin, response_schema,
-                        invalid_request(&request_json.at("id")));
-    return;
-  }
-
-  const auto method{request_json.at("method").to_string()};
+  const auto method{sourcemeta::one::jsonrpc_method(request_json)};
   if (method != "initialize" && method != "ping") {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        method_not_found(request_json.at("id")));
+                        sourcemeta::one::jsonrpc_make_error_method_not_found(
+                            request_json.at("id")));
     return;
   }
 
   if (!matches_request_schema(request_schema_template, request_json)) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        invalid_request(&request_json.at("id")));
+                        sourcemeta::one::jsonrpc_make_error_invalid_request(
+                            &request_json.at("id")));
     return;
   }
 
@@ -362,7 +269,7 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
           write_envelope(callback_request, callback_response, allowed_origin,
                          response_schema,
                          sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                         internal_error());
+                         sourcemeta::one::jsonrpc_make_error_internal());
         }
       });
 }
