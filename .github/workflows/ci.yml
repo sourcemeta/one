@@ -38,6 +38,17 @@ jobs:
             vendor/spdx/schemas/spdx-schema.json /tmp/sbom.spdx.json --verbose
         if: matrix.edition.name == 'enterprise'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: E2E (empty)
         uses: ./.github/actions/e2e
         with:
