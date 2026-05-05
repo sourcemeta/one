@@ -38,7 +38,7 @@ TEST(Search_query, empty_payload_zero_size) {
 
 TEST(Search_query, no_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "Desc", 80}};
+      {"/foo/bar", "Title", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "zzzzz", 10,
@@ -50,7 +50,7 @@ TEST(Search_query, no_match) {
 
 TEST(Search_query, match_in_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "Desc", 80}};
+      {"/foo/bar", "Title", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "foo", 10,
@@ -62,7 +62,7 @@ TEST(Search_query, match_in_path) {
 
 TEST(Search_query, match_in_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Special Title", "Desc", 80}};
+      {"/foo/bar", "Special Title", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Special", 10,
@@ -74,7 +74,7 @@ TEST(Search_query, match_in_title) {
 
 TEST(Search_query, match_in_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "Unique description here", 80}};
+      {"/foo/bar", "Title", "Unique description here", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Unique", 10,
@@ -87,7 +87,7 @@ TEST(Search_query, match_in_description) {
 
 TEST(Search_query, case_insensitive) {
   std::vector<sourcemeta::one::SearchEntry> entries_lower{
-      {"/foo/bar", "Hello World", "desc", 80}};
+      {"/foo/bar", "Hello World", "desc", 80, 0, 0}};
   const auto payload_lower{
       sourcemeta::one::make_search(std::move(entries_lower))};
   const auto result_lower{sourcemeta::one::search(
@@ -98,7 +98,7 @@ TEST(Search_query, case_insensitive) {
   EXPECT_SEARCH_RESULT(result_lower, 0, "/foo/bar", "Hello World", "desc");
 
   std::vector<sourcemeta::one::SearchEntry> entries_upper{
-      {"/foo/bar", "Hello World", "desc", 80}};
+      {"/foo/bar", "Hello World", "desc", 80, 0, 0}};
   const auto payload_upper{
       sourcemeta::one::make_search(std::move(entries_upper))};
   const auto result_upper{sourcemeta::one::search(
@@ -109,7 +109,7 @@ TEST(Search_query, case_insensitive) {
   EXPECT_SEARCH_RESULT(result_upper, 0, "/foo/bar", "Hello World", "desc");
 
   std::vector<sourcemeta::one::SearchEntry> entries_mixed{
-      {"/foo/bar", "Hello World", "desc", 80}};
+      {"/foo/bar", "Hello World", "desc", 80, 0, 0}};
   const auto payload_mixed{
       sourcemeta::one::make_search(std::move(entries_mixed))};
   const auto result_mixed{sourcemeta::one::search(
@@ -122,9 +122,9 @@ TEST(Search_query, case_insensitive) {
 
 TEST(Search_query, multiple_matches) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/address", "Address Schema", "For addresses", 80},
-      {"/schemas/person", "Person Schema", "For people", 80},
-      {"/schemas/email", "Email Schema", "For emails", 80}};
+      {"/schemas/address", "Address Schema", "For addresses", 80, 0, 0},
+      {"/schemas/person", "Person Schema", "For people", 80, 0, 0},
+      {"/schemas/email", "Email Schema", "For emails", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schema", 10,
@@ -141,21 +141,21 @@ TEST(Search_query, multiple_matches) {
 
 TEST(Search_query, limit_10) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test0", "Test 0", "", 80},
-      {"/schemas/test1", "Test 1", "", 80},
-      {"/schemas/test2", "Test 2", "", 80},
-      {"/schemas/test3", "Test 3", "", 80},
-      {"/schemas/test4", "Test 4", "", 80},
-      {"/schemas/test5", "Test 5", "", 80},
-      {"/schemas/test6", "Test 6", "", 80},
-      {"/schemas/test7", "Test 7", "", 80},
-      {"/schemas/test8", "Test 8", "", 80},
-      {"/schemas/test9", "Test 9", "", 80},
-      {"/schemas/test10", "Test 10", "", 80},
-      {"/schemas/test11", "Test 11", "", 80},
-      {"/schemas/test12", "Test 12", "", 80},
-      {"/schemas/test13", "Test 13", "", 80},
-      {"/schemas/test14", "Test 14", "", 80}};
+      {"/schemas/test0", "Test 0", "", 80, 0, 0},
+      {"/schemas/test1", "Test 1", "", 80, 0, 0},
+      {"/schemas/test2", "Test 2", "", 80, 0, 0},
+      {"/schemas/test3", "Test 3", "", 80, 0, 0},
+      {"/schemas/test4", "Test 4", "", 80, 0, 0},
+      {"/schemas/test5", "Test 5", "", 80, 0, 0},
+      {"/schemas/test6", "Test 6", "", 80, 0, 0},
+      {"/schemas/test7", "Test 7", "", 80, 0, 0},
+      {"/schemas/test8", "Test 8", "", 80, 0, 0},
+      {"/schemas/test9", "Test 9", "", 80, 0, 0},
+      {"/schemas/test10", "Test 10", "", 80, 0, 0},
+      {"/schemas/test11", "Test 11", "", 80, 0, 0},
+      {"/schemas/test12", "Test 12", "", 80, 0, 0},
+      {"/schemas/test13", "Test 13", "", 80, 0, 0},
+      {"/schemas/test14", "Test 14", "", 80, 0, 0}};
 
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
@@ -177,9 +177,9 @@ TEST(Search_query, limit_10) {
 
 TEST(Search_query, round_trip_data_fidelity) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/a/b/c", "My Title", "My Description", 80},
-      {"/x/y/z", "", "Only description", 80},
-      {"/p/q", "Only title", "", 80}};
+      {"/a/b/c", "My Title", "My Description", 80, 0, 0},
+      {"/x/y/z", "", "Only description", 80, 0, 0},
+      {"/p/q", "Only title", "", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "/", 10,
@@ -193,7 +193,7 @@ TEST(Search_query, round_trip_data_fidelity) {
 
 TEST(Search_query, single_entry_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/only", "One", "Entry", 80}};
+      {"/only", "One", "Entry", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "One", 10,
@@ -205,7 +205,7 @@ TEST(Search_query, single_entry_match) {
 
 TEST(Search_query, single_entry_no_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/only", "One", "Entry", 80}};
+      {"/only", "One", "Entry", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "nope", 10,
@@ -215,7 +215,8 @@ TEST(Search_query, single_entry_no_match) {
 }
 
 TEST(Search_query, empty_title_and_description) {
-  std::vector<sourcemeta::one::SearchEntry> entries{{"/path/only", "", "", 80}};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/path/only", "", "", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "path", 10,
@@ -227,9 +228,9 @@ TEST(Search_query, empty_title_and_description) {
 
 TEST(Search_query, health_higher_scores_first) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/low", "Low Health", "Desc", 20},
-      {"/schemas/high", "High Health", "Desc", 100},
-      {"/schemas/mid", "Mid Health", "Desc", 60}};
+      {"/schemas/low", "Low Health", "Desc", 20, 0, 0},
+      {"/schemas/high", "High Health", "Desc", 100, 0, 0},
+      {"/schemas/mid", "Mid Health", "Desc", 60, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Health", 10,
@@ -243,8 +244,8 @@ TEST(Search_query, health_higher_scores_first) {
 
 TEST(Search_query, health_100_before_50) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/beta", "Beta", "Desc", 50},
-      {"/schemas/alpha", "Alpha", "Desc", 100}};
+      {"/schemas/beta", "Beta", "Desc", 50, 0, 0},
+      {"/schemas/alpha", "Alpha", "Desc", 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -257,9 +258,9 @@ TEST(Search_query, health_100_before_50) {
 
 TEST(Search_query, health_0_ranks_last) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/zero", "Zero", "Desc", 0},
-      {"/schemas/perfect", "Perfect", "Desc", 100},
-      {"/schemas/okay", "Okay", "Desc", 50}};
+      {"/schemas/zero", "Zero", "Desc", 0, 0, 0},
+      {"/schemas/perfect", "Perfect", "Desc", 100, 0, 0},
+      {"/schemas/okay", "Okay", "Desc", 50, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -273,9 +274,9 @@ TEST(Search_query, health_0_ranks_last) {
 
 TEST(Search_query, health_same_score_sorts_by_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/zebra", "Zebra", "Desc", 75},
-      {"/schemas/apple", "Apple", "Desc", 75},
-      {"/schemas/mango", "Mango", "Desc", 75}};
+      {"/schemas/zebra", "Zebra", "Desc", 75, 0, 0},
+      {"/schemas/apple", "Apple", "Desc", 75, 0, 0},
+      {"/schemas/mango", "Mango", "Desc", 75, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -289,8 +290,8 @@ TEST(Search_query, health_same_score_sorts_by_path) {
 
 TEST(Search_query, metadata_score_beats_health) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/healthy", "", "", 100},
-      {"/schemas/complete", "Title", "Description", 30}};
+      {"/schemas/healthy", "", "", 100, 0, 0},
+      {"/schemas/complete", "Title", "Description", 30, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -303,8 +304,8 @@ TEST(Search_query, metadata_score_beats_health) {
 
 TEST(Search_query, metadata_score_beats_health_title_only) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/no-meta", "", "", 100},
-      {"/schemas/has-title", "A Title", "", 10}};
+      {"/schemas/no-meta", "", "", 100, 0, 0},
+      {"/schemas/has-title", "A Title", "", 10, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -317,9 +318,9 @@ TEST(Search_query, metadata_score_beats_health_title_only) {
 
 TEST(Search_query, health_tiebreaker_within_same_metadata) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/low-health", "Title", "", 25},
-      {"/schemas/high-health", "Title", "", 90},
-      {"/schemas/mid-health", "Title", "", 50}};
+      {"/schemas/low-health", "Title", "", 25, 0, 0},
+      {"/schemas/high-health", "Title", "", 90, 0, 0},
+      {"/schemas/mid-health", "Title", "", 50, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -333,11 +334,11 @@ TEST(Search_query, health_tiebreaker_within_same_metadata) {
 
 TEST(Search_query, health_fine_grained_ordering) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/d", "Title", "Desc", 70},
-      {"/schemas/a", "Title", "Desc", 100},
-      {"/schemas/c", "Title", "Desc", 85},
-      {"/schemas/e", "Title", "Desc", 55},
-      {"/schemas/b", "Title", "Desc", 95}};
+      {"/schemas/d", "Title", "Desc", 70, 0, 0},
+      {"/schemas/a", "Title", "Desc", 100, 0, 0},
+      {"/schemas/c", "Title", "Desc", 85, 0, 0},
+      {"/schemas/e", "Title", "Desc", 55, 0, 0},
+      {"/schemas/b", "Title", "Desc", 95, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -353,11 +354,11 @@ TEST(Search_query, health_fine_grained_ordering) {
 
 TEST(Search_query, health_mixed_metadata_and_health) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/full-low", "Title", "Desc", 30},
-      {"/schemas/title-high", "Title", "", 95},
-      {"/schemas/full-high", "Title", "Desc", 90},
-      {"/schemas/none-perfect", "", "", 100},
-      {"/schemas/title-low", "Title", "", 40}};
+      {"/schemas/full-low", "Title", "Desc", 30, 0, 0},
+      {"/schemas/title-high", "Title", "", 95, 0, 0},
+      {"/schemas/full-high", "Title", "Desc", 90, 0, 0},
+      {"/schemas/none-perfect", "", "", 100, 0, 0},
+      {"/schemas/title-low", "Title", "", 40, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
@@ -419,7 +420,7 @@ TEST(Search_query, invalid_payload_offset_points_beyond_payload) {
 
 TEST(Search_query, invalid_payload_record_field_lengths_exceed_payload) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "Title", "Desc", 80}};
+      {"/foo", "Title", "Desc", 80, 0, 0}};
   auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -480,7 +481,7 @@ TEST(Search_query, invalid_payload_random_garbage) {
 
 TEST(Search_query, invalid_payload_truncated_after_header) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "Title", "Desc", 80}};
+      {"/foo", "Title", "Desc", 80, 0, 0}};
   const auto full_payload{sourcemeta::one::make_search(std::move(entries))};
   const auto truncated_size{sizeof(sourcemeta::one::SearchIndexHeader)};
   const auto result{sourcemeta::one::search(
@@ -493,7 +494,7 @@ TEST(Search_query, invalid_payload_truncated_after_header) {
 
 TEST(Search_query, invalid_payload_truncated_mid_record) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "Title", "Desc", 80}};
+      {"/foo", "Title", "Desc", 80, 0, 0}};
   const auto full_payload{sourcemeta::one::make_search(std::move(entries))};
   const auto truncated_size{sizeof(sourcemeta::one::SearchIndexHeader) +
                             sizeof(std::uint32_t) +
@@ -508,9 +509,9 @@ TEST(Search_query, invalid_payload_truncated_mid_record) {
 
 TEST(Search_query, limit_1_returns_single_result) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/a", "Alpha", "Desc", 100},
-      {"/schemas/b", "Beta", "Desc", 90},
-      {"/schemas/c", "Gamma", "Desc", 80}};
+      {"/schemas/a", "Alpha", "Desc", 100, 0, 0},
+      {"/schemas/b", "Beta", "Desc", 90, 0, 0},
+      {"/schemas/c", "Gamma", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 1,
@@ -522,9 +523,9 @@ TEST(Search_query, limit_1_returns_single_result) {
 
 TEST(Search_query, limit_2_returns_two_results) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/a", "Alpha", "Desc", 100},
-      {"/schemas/b", "Beta", "Desc", 90},
-      {"/schemas/c", "Gamma", "Desc", 80}};
+      {"/schemas/a", "Alpha", "Desc", 100, 0, 0},
+      {"/schemas/b", "Beta", "Desc", 90, 0, 0},
+      {"/schemas/c", "Gamma", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 2,
@@ -537,7 +538,8 @@ TEST(Search_query, limit_2_returns_two_results) {
 
 TEST(Search_query, limit_larger_than_matches_returns_all) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/a", "Alpha", "Desc", 100}, {"/schemas/b", "Beta", "Desc", 90}};
+      {"/schemas/a", "Alpha", "Desc", 100, 0, 0},
+      {"/schemas/b", "Beta", "Desc", 90, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 100,
@@ -550,7 +552,7 @@ TEST(Search_query, limit_larger_than_matches_returns_all) {
 
 TEST(Search_query, limit_0_returns_empty) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/a", "Alpha", "Desc", 100}};
+      {"/schemas/a", "Alpha", "Desc", 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 0,
@@ -561,9 +563,9 @@ TEST(Search_query, limit_0_returns_empty) {
 
 TEST(Search_query, limit_exact_match_count) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/a", "Alpha", "Desc", 100},
-      {"/schemas/b", "Beta", "Desc", 90},
-      {"/schemas/c", "Gamma", "Desc", 80}};
+      {"/schemas/a", "Alpha", "Desc", 100, 0, 0},
+      {"/schemas/b", "Beta", "Desc", 90, 0, 0},
+      {"/schemas/c", "Gamma", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 3,
@@ -577,9 +579,9 @@ TEST(Search_query, limit_exact_match_count) {
 
 TEST(Search_query, limit_respects_health_ordering) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/low", "Low", "Desc", 20},
-      {"/schemas/high", "High", "Desc", 100},
-      {"/schemas/mid", "Mid", "Desc", 60}};
+      {"/schemas/low", "Low", "Desc", 20, 0, 0},
+      {"/schemas/high", "High", "Desc", 100, 0, 0},
+      {"/schemas/mid", "Mid", "Desc", 60, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 2,
@@ -592,7 +594,7 @@ TEST(Search_query, limit_respects_health_ordering) {
 
 TEST(Search_query, scope_path_only_matches_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/unique/path", "Title", "Description", 80}};
+      {"/unique/path", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "unique", 10,
@@ -603,7 +605,7 @@ TEST(Search_query, scope_path_only_matches_path) {
 
 TEST(Search_query, scope_path_only_misses_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "UniqueTitle", "Description", 80}};
+      {"/foo/bar", "UniqueTitle", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "UniqueTitle", 10,
@@ -613,7 +615,7 @@ TEST(Search_query, scope_path_only_misses_title) {
 
 TEST(Search_query, scope_path_only_misses_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "UniqueDesc", 80}};
+      {"/foo/bar", "Title", "UniqueDesc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "UniqueDesc", 10,
@@ -623,7 +625,7 @@ TEST(Search_query, scope_path_only_misses_description) {
 
 TEST(Search_query, scope_title_only_matches_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "UniqueTitle", "Description", 80}};
+      {"/foo/bar", "UniqueTitle", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "UniqueTitle", 10,
@@ -634,7 +636,7 @@ TEST(Search_query, scope_title_only_matches_title) {
 
 TEST(Search_query, scope_title_only_misses_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/unique/path", "Title", "Description", 80}};
+      {"/unique/path", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "unique", 10,
@@ -644,7 +646,7 @@ TEST(Search_query, scope_title_only_misses_path) {
 
 TEST(Search_query, scope_description_only_matches_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "UniqueDesc", 80}};
+      {"/foo/bar", "Title", "UniqueDesc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "UniqueDesc", 10,
@@ -655,7 +657,7 @@ TEST(Search_query, scope_description_only_matches_description) {
 
 TEST(Search_query, scope_description_only_misses_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/unique/path", "Title", "Description", 80}};
+      {"/unique/path", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "unique", 10,
@@ -665,9 +667,9 @@ TEST(Search_query, scope_description_only_misses_path) {
 
 TEST(Search_query, scope_path_and_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/xyz/path", "Needle In Title", "Other", 80},
-      {"/needle/path", "Other", "Other", 80},
-      {"/abc/path", "Other", "Needle In Desc", 80}};
+      {"/xyz/path", "Needle In Title", "Other", 80, 0, 0},
+      {"/needle/path", "Other", "Other", 80, 0, 0},
+      {"/abc/path", "Other", "Needle In Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Needle", 10,
@@ -679,9 +681,9 @@ TEST(Search_query, scope_path_and_title) {
 
 TEST(Search_query, scope_title_and_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/abc/path", "Needle In Title", "Other", 80},
-      {"/def/path", "Other", "Needle In Desc", 80},
-      {"/needle/path", "Other", "Other", 80}};
+      {"/abc/path", "Needle In Title", "Other", 80, 0, 0},
+      {"/def/path", "Other", "Needle In Desc", 80, 0, 0},
+      {"/needle/path", "Other", "Other", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Needle", 10,
@@ -694,9 +696,9 @@ TEST(Search_query, scope_title_and_description) {
 
 TEST(Search_query, scope_path_and_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/needle/path", "Other", "Other", 80},
-      {"/abc/path", "Needle In Title", "Other", 80},
-      {"/def/path", "Other", "Needle In Desc", 80}};
+      {"/needle/path", "Other", "Other", 80, 0, 0},
+      {"/abc/path", "Needle In Title", "Other", 80, 0, 0},
+      {"/def/path", "Other", "Needle In Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Needle", 10,
@@ -709,7 +711,7 @@ TEST(Search_query, scope_path_and_description) {
 
 TEST(Search_query, scope_0_matches_nothing) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "Title", "Description", 80}};
+      {"/foo/bar", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "foo", 10, 0)};
@@ -718,9 +720,9 @@ TEST(Search_query, scope_0_matches_nothing) {
 
 TEST(Search_query, scope_all_matches_any_field) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/unique/path", "NormalTitle", "NormalDesc", 80},
-      {"/normal/path", "UniqueTitle", "NormalDesc", 80},
-      {"/normal/path2", "NormalTitle", "UniqueDesc", 80}};
+      {"/unique/path", "NormalTitle", "NormalDesc", 80, 0, 0},
+      {"/normal/path", "UniqueTitle", "NormalDesc", 80, 0, 0},
+      {"/normal/path2", "NormalTitle", "UniqueDesc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Unique", 10,
@@ -734,9 +736,9 @@ TEST(Search_query, scope_all_matches_any_field) {
 
 TEST(Search_query, scope_combined_with_limit) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/a", "Match A", "Desc", 100},
-      {"/b", "Match B", "Desc", 90},
-      {"/c", "Match C", "Desc", 80}};
+      {"/a", "Match A", "Desc", 100, 0, 0},
+      {"/b", "Match B", "Desc", 90, 0, 0},
+      {"/c", "Match C", "Desc", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "Match", 2,
@@ -749,7 +751,7 @@ TEST(Search_query, scope_combined_with_limit) {
 TEST(Search_query, query_with_embedded_null_does_not_match) {
   using namespace std::string_view_literals;
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test", "Title", "Description", 80}};
+      {"/schemas/test", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "sche\0mas"sv, 10,
@@ -760,7 +762,7 @@ TEST(Search_query, query_with_embedded_null_does_not_match) {
 
 TEST(Search_query, query_with_tab_does_not_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test", "Title", "Description", 80}};
+      {"/schemas/test", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas\ttest", 10,
@@ -771,7 +773,7 @@ TEST(Search_query, query_with_tab_does_not_match) {
 
 TEST(Search_query, query_with_newline_does_not_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test", "Title", "Description", 80}};
+      {"/schemas/test", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas\ntest", 10,
@@ -783,7 +785,7 @@ TEST(Search_query, query_with_newline_does_not_match) {
 TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
   using namespace std::string_view_literals;
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {std::string("before\0after", 12), "Title", "Description", 80}};
+      {std::string("before\0after", 12), "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "after", 10,
@@ -793,7 +795,7 @@ TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
 
 TEST(Search_query, entry_with_null_in_title_found_by_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test", std::string("Foo\0Bar", 7), "Description", 80}};
+      {"/schemas/test", std::string("Foo\0Bar", 7), "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(payload.data(), payload.size(),
                                             "schemas", 10,
@@ -804,7 +806,7 @@ TEST(Search_query, entry_with_null_in_title_found_by_path) {
 TEST(Search_query, query_only_null_bytes_matches_nothing) {
   using namespace std::string_view_literals;
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/schemas/test", "Title", "Description", 80}};
+      {"/schemas/test", "Title", "Description", 80, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "\0\0\0"sv, 10,

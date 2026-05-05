@@ -77,7 +77,9 @@ auto make_search(std::vector<SearchEntry> &&entries)
         .path_length = static_cast<std::uint16_t>(entry.path.size()),
         .title_length = static_cast<std::uint16_t>(entry.title.size()),
         .description_length =
-            static_cast<std::uint16_t>(entry.description.size())};
+            static_cast<std::uint16_t>(entry.description.size()),
+        .bytes_raw = entry.bytes_raw,
+        .bytes_bundled = entry.bytes_bundled};
     std::memcpy(payload.data() + record_position, &record_header,
                 sizeof(SearchRecordHeader));
     record_position += sizeof(SearchRecordHeader);
@@ -231,6 +233,59 @@ auto SearchView::search(const std::string_view query, const std::size_t limit,
   this->ensure_open();
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
                                  limit, scope);
+}
+
+auto SearchView::count() -> std::size_t {
+  this->ensure_open();
+  if (this->payload_ == nullptr ||
+      this->payload_size_ < sizeof(SearchIndexHeader)) {
+    return 0;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *header{
+      reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
+  return header->entry_count;
+}
+
+auto SearchView::at(const std::size_t index) -> SearchListEntry {
+  this->ensure_open();
+  assert(this->payload_ != nullptr);
+  assert(this->payload_size_ >= sizeof(SearchIndexHeader));
+  assert(
+      index <
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const SearchIndexHeader *>(this->payload_)->entry_count);
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
+      this->payload_ + sizeof(SearchIndexHeader))};
+  const auto record_offset{offset_table[index]};
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *record_header{reinterpret_cast<const SearchRecordHeader *>(
+      this->payload_ + record_offset)};
+  const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
+  const auto *field_data{this->payload_ + field_data_offset};
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string_view path{reinterpret_cast<const char *>(field_data),
+                              record_header->path_length};
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string_view title{
+      reinterpret_cast<const char *>(field_data + record_header->path_length),
+      record_header->title_length};
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string_view description{
+      reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                     record_header->title_length),
+      record_header->description_length};
+
+  return {.path = path,
+          .title = title,
+          .description = description,
+          .bytes_raw = record_header->bytes_raw,
+          .bytes_bundled = record_header->bytes_bundled};
 }
 
 } // namespace sourcemeta::one

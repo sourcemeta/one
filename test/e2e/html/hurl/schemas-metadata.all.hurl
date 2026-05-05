@@ -11,6 +11,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 130
+jsonpath "$.bytesBundled" == 130
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
@@ -49,6 +50,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 357
+jsonpath "$.bytesBundled" == 357
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
@@ -175,6 +177,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 269
+jsonpath "$.bytesBundled" == 6411
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 67
 jsonpath "$.dependencies" == 3

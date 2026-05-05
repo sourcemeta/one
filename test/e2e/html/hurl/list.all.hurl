@@ -150,6 +150,7 @@ jsonpath "$.breadcrumb[1].name" == "v2.0"
 jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].bytes" == 130
+jsonpath "$.entries[0].bytesBundled" == 130
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/v2.0/schema"
@@ -215,6 +216,7 @@ jsonpath "$.breadcrumb[2].name" == "versions"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/versions/"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].bytes" == 141
+jsonpath "$.entries[0].bytesBundled" == 141
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/versions/v1.2.3"
@@ -260,6 +262,7 @@ jsonpath "$.breadcrumb[3].name" == "foo"
 jsonpath "$.breadcrumb[3].path" == "/test/schemas/clash/foo/"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].bytes" == 124
+jsonpath "$.entries[0].bytesBundled" == 124
 jsonpath "$.entries[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[0].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/clash/foo/bar"
@@ -310,6 +313,7 @@ jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/"
 jsonpath "$.entries[1].name" == "foo"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].bytes" == 120
+jsonpath "$.entries[1].bytesBundled" == 120
 jsonpath "$.entries[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[1].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[1].identifier" == "{{base}}/test/schemas/clash/foo"
@@ -349,6 +353,7 @@ jsonpath "$.breadcrumb[1].name" == "extension"
 jsonpath "$.breadcrumb[1].path" == "/test/extension/"
 jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].bytes" == 172
+jsonpath "$.entries[0].bytesBundled" == 400
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/extension/to-without"
@@ -359,6 +364,7 @@ jsonpath "$.entries[0].path" == "/test/extension/to-without"
 jsonpath "$.entries[0].health" == 50
 jsonpath "$.entries[0].dependencies" == 1
 jsonpath "$.entries[1].bytes" == 132
+jsonpath "$.entries[1].bytesBundled" == 132
 jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].identifier" == "{{base}}/test/extension/with"
@@ -369,6 +375,7 @@ jsonpath "$.entries[1].path" == "/test/extension/with"
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
 jsonpath "$.entries[2].bytes" == 135
+jsonpath "$.entries[2].bytesBundled" == 135
 jsonpath "$.entries[2].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].identifier" == "{{base}}/test/extension/without"

@@ -23,6 +23,16 @@ struct SearchEntry {
   std::string title;
   std::string description;
   std::uint8_t health;
+  std::uint64_t bytes_raw;
+  std::uint64_t bytes_bundled;
+};
+
+struct SearchListEntry {
+  std::string_view path;
+  std::string_view title;
+  std::string_view description;
+  std::uint64_t bytes_raw;
+  std::uint64_t bytes_bundled;
 };
 
 #pragma pack(push, 1)
@@ -35,6 +45,8 @@ struct SearchRecordHeader {
   std::uint16_t path_length;
   std::uint16_t title_length;
   std::uint16_t description_length;
+  std::uint64_t bytes_raw;
+  std::uint64_t bytes_bundled;
 };
 #pragma pack(pop)
 
@@ -68,6 +80,9 @@ public:
 
   auto search(std::string_view query, std::size_t limit, std::uint8_t scope)
       -> sourcemeta::core::JSON;
+
+  auto count() -> std::size_t;
+  auto at(std::size_t index) -> SearchListEntry;
 
 private:
   std::filesystem::path path_;

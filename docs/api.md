@@ -93,6 +93,7 @@ navigation and discovery purposes.
     | `/entries/*/website` | String | No | For `directory` entries, the website URL associated with the entry |
     | `/entries/*/dependencies` | Integer | Yes | For `schema` entries, the number of direct and indirect dependencies of the schema |
     | `/entries/*/bytes` | Integer | No | For `schema` entries, the bytes that the entry occupies |
+    | `/entries/*/bytesBundled` | Integer | No | For `schema` entries, the bytes that the entry occupies when bundled |
     | `/entries/*/baseDialect` | String | No | For `schema` entries, the base dialect URI of the entry |
     | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
     | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
@@ -256,6 +257,7 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/health` | Integer | Yes | The health score of the schema |
     | `/dependencies` | Integer | Yes | The number of direct and indirect dependencies of the schema |
     | `/bytes` | Integer | Yes | The bytes that the schema occupies |
+    | `/bytesBundled` | Integer | Yes | The bytes that the schema occupies when bundled |
     | `/alert` | String / Null | No | The human readable alert message for the schema collection, if any. The web explorer renders this as Markdown |
     | `/title` | String | No | The title of the schema, if any |
     | `/description` | String | No | The description of the schema, if any. The web explorer renders this as Markdown |

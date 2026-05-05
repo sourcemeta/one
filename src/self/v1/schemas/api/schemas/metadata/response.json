@@ -5,6 +5,7 @@
   "examples": [
     {
       "bytes": 512,
+      "bytesBundled": 1024,
       "identifier": "https://example.com/schemas/user.json",
       "path": "/schemas/user.json",
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
@@ -52,6 +53,7 @@
       "type": "object",
       "required": [
         "bytes",
+        "bytesBundled",
         "identifier",
         "path",
         "baseDialect",
@@ -78,6 +80,10 @@
           "format": "uri"
         },
         "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytesBundled": {
           "type": "integer",
           "minimum": 0
         },
