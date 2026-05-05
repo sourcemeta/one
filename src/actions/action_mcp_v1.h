@@ -35,11 +35,11 @@ public:
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
 #include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_serve_v1.h"
 
-#include <cstdint>   // std::int64_t
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem
 #include <optional>    // std::optional
@@ -48,43 +48,6 @@ public:
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
-
-// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
-// enterprise.
-inline auto mcp_request_id(const sourcemeta::core::JSON &request_json)
-    -> const sourcemeta::core::JSON * {
-  if (!request_json.is_object() || !request_json.defines("id")) {
-    return nullptr;
-  }
-  const auto &id{request_json.at("id")};
-  if (!id.is_string() && !id.is_integer()) {
-    return nullptr;
-  }
-  return &id;
-}
-
-// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
-// enterprise.
-inline auto mcp_make_envelope(const sourcemeta::core::JSON *id)
-    -> sourcemeta::core::JSON {
-  auto envelope{sourcemeta::core::JSON::make_object()};
-  envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
-  if (id != nullptr) {
-    envelope.assign("id", *id);
-  }
-  return envelope;
-}
-
-// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
-// enterprise.
-inline auto mcp_make_error(const std::int64_t code,
-                           const std::string_view message)
-    -> sourcemeta::core::JSON {
-  auto error{sourcemeta::core::JSON::make_object()};
-  error.assign("code", sourcemeta::core::JSON{code});
-  error.assign("message", sourcemeta::core::JSON{std::string{message}});
-  return error;
-}
 
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
@@ -157,7 +120,7 @@ public:
             ActionMCP_v1::write_envelope(
                 callback_request, callback_response, allowed_origin,
                 response_schema, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                ActionMCP_v1::internal_error());
+                sourcemeta::one::jsonrpc_make_error_internal());
           }
         });
   }
@@ -176,58 +139,30 @@ private:
 
   static auto enterprise_required(const sourcemeta::core::JSON *id)
       -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(id)};
-    auto error{mcp_make_error(1, "Enterprise edition required")};
-    error.assign("data", sourcemeta::core::JSON{
-                             std::string{MCP_ENTERPRISE_REQUIRED_DATA}});
-    envelope.assign("error", std::move(error));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_error(
+        id, 1, "Enterprise edition required",
+        sourcemeta::core::JSON{std::string{MCP_ENTERPRISE_REQUIRED_DATA}});
   }
 
   static auto resource_not_found(const sourcemeta::core::JSON &id,
                                  const std::string_view uri)
       -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(&id)};
-    auto error{mcp_make_error(-32002, "Resource not found")};
-    error.assign("data", sourcemeta::core::JSON{std::string{uri}});
-    envelope.assign("error", std::move(error));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_error(
+        &id, -32002, "Resource not found",
+        sourcemeta::core::JSON{std::string{uri}});
   }
 
   static auto method_not_allowed() -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(nullptr)};
-    envelope.assign("error", mcp_make_error(4, "Method not allowed"));
-    return envelope;
-  }
-
-  static auto parse_error() -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(nullptr)};
-    envelope.assign("error", mcp_make_error(-32700, "Parse error"));
-    return envelope;
-  }
-
-  static auto invalid_request(const sourcemeta::core::JSON *id)
-      -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(id)};
-    envelope.assign("error", mcp_make_error(-32600, "Invalid Request"));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_error(nullptr, 4,
+                                               "Method not allowed");
   }
 
   static auto request_too_large() -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(nullptr)};
-    envelope.assign("error", mcp_make_error(5, "Request too large"));
-    return envelope;
-  }
-
-  static auto internal_error() -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(nullptr)};
-    envelope.assign("error", mcp_make_error(-32603, "Internal error"));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_error(nullptr, 5, "Request too large");
   }
 
   static auto handle_initialize(const sourcemeta::core::JSON &id)
       -> sourcemeta::core::JSON {
-    auto envelope{mcp_make_envelope(&id)};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("protocolVersion",
                   sourcemeta::core::JSON{std::string{MCP_PROTOCOL_VERSION}});
@@ -242,18 +177,15 @@ private:
     server_info.assign("version", sourcemeta::core::JSON{
                                       std::string{sourcemeta::one::version()}});
     result.assign("serverInfo", std::move(server_info));
-    envelope.assign("result", std::move(result));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
   }
 
   static auto handle_resources_list(const sourcemeta::core::JSON &id)
       -> sourcemeta::core::JSON {
     // TODO: support paginated enumeration of catalog schemas
-    auto envelope{mcp_make_envelope(&id)};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("resources", sourcemeta::core::JSON::make_array());
-    envelope.assign("result", std::move(result));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
   }
 
   static auto
@@ -278,9 +210,7 @@ private:
     templates.push_back(std::move(entry));
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("resourceTemplates", std::move(templates));
-    auto envelope{mcp_make_envelope(&id)};
-    envelope.assign("result", std::move(result));
-    return envelope;
+    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
   }
 
   static auto resolve_request_uri(const std::string_view uri,
@@ -346,7 +276,8 @@ private:
       request_json = sourcemeta::core::parse_json(body);
     } catch (const std::exception &) {
       write_envelope(request, response, allowed_origin, response_schema,
-                     sourcemeta::one::STATUS_BAD_REQUEST, parse_error());
+                     sourcemeta::one::STATUS_BAD_REQUEST,
+                     sourcemeta::one::jsonrpc_make_error_parse());
       return;
     }
 
@@ -354,11 +285,12 @@ private:
         !request_json.at("method").is_string()) {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_OK,
-                     invalid_request(mcp_request_id(request_json)));
+                     sourcemeta::one::jsonrpc_make_error_invalid_request(
+                         sourcemeta::one::jsonrpc_request_id(request_json)));
       return;
     }
 
-    const auto *id{mcp_request_id(request_json)};
+    const auto *id{sourcemeta::one::jsonrpc_request_id(request_json)};
     const auto method{request_json.at("method").to_string()};
 
     if (id != nullptr && method == "initialize") {
