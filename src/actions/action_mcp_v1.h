@@ -49,30 +49,6 @@ public:
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-// TODO: Elevate to `sourcemeta::core::URI` as a per-key query parameter
-// accessor (mirroring `HTTPRequest::query`).
-inline auto mcp_query_parameter(const std::string_view query,
-                                const std::string_view key)
-    -> std::optional<std::string_view> {
-  std::string prefix{key};
-  prefix.push_back('=');
-  std::size_t cursor{0};
-  while (cursor < query.size()) {
-    const auto separator{query.find('&', cursor)};
-    const auto end{separator == std::string_view::npos ? query.size()
-                                                       : separator};
-    const auto pair{query.substr(cursor, end - cursor)};
-    if (pair.starts_with(prefix)) {
-      return pair.substr(prefix.size());
-    }
-    if (separator == std::string_view::npos) {
-      break;
-    }
-    cursor = separator + 1;
-  }
-  return std::nullopt;
-}
-
 // TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
 // enterprise.
 inline auto mcp_request_id(const sourcemeta::core::JSON &request_json)
@@ -325,10 +301,9 @@ private:
     if (schema_path.empty()) {
       return std::nullopt;
     }
-    const auto bundle{
-        !mcp_query_parameter(request.query().value_or(""), "bundle")
-             .value_or("")
-             .empty()};
+    const auto query{request.query()};
+    const auto bundle{query.has_value() &&
+                      !query->at("bundle").value_or("").empty()};
     auto resolved{ActionJSONSchemaServe_v1::resolve(base, schema_path, bundle)};
     if (!std::filesystem::exists(resolved)) {
       return std::nullopt;
