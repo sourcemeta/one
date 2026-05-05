@@ -35,7 +35,7 @@ public:
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/shared_version.h>
+#include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_serve_v1.h"
 
@@ -48,6 +48,67 @@ public:
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+
+// TODO: Elevate to `sourcemeta::core::URI` as a per-key query parameter
+// accessor (mirroring `HTTPRequest::query`).
+inline auto mcp_query_parameter(const std::string_view query,
+                                const std::string_view key)
+    -> std::optional<std::string_view> {
+  std::string prefix{key};
+  prefix.push_back('=');
+  std::size_t cursor{0};
+  while (cursor < query.size()) {
+    const auto separator{query.find('&', cursor)};
+    const auto end{separator == std::string_view::npos ? query.size()
+                                                       : separator};
+    const auto pair{query.substr(cursor, end - cursor)};
+    if (pair.starts_with(prefix)) {
+      return pair.substr(prefix.size());
+    }
+    if (separator == std::string_view::npos) {
+      break;
+    }
+    cursor = separator + 1;
+  }
+  return std::nullopt;
+}
+
+// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
+// enterprise.
+inline auto mcp_request_id(const sourcemeta::core::JSON &request_json)
+    -> const sourcemeta::core::JSON * {
+  if (!request_json.defines("id")) {
+    return nullptr;
+  }
+  const auto &id{request_json.at("id")};
+  if (!id.is_string() && !id.is_integer()) {
+    return nullptr;
+  }
+  return &id;
+}
+
+// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
+// enterprise.
+inline auto mcp_make_envelope(const sourcemeta::core::JSON *id)
+    -> sourcemeta::core::JSON {
+  auto envelope{sourcemeta::core::JSON::make_object()};
+  envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
+  if (id != nullptr) {
+    envelope.assign("id", *id);
+  }
+  return envelope;
+}
+
+// TODO: Elevate to a JSON-RPC 2.0 utility module shared by community and
+// enterprise.
+inline auto mcp_make_error(const std::int64_t code,
+                           const std::string_view message)
+    -> sourcemeta::core::JSON {
+  auto error{sourcemeta::core::JSON::make_object()};
+  error.assign("code", sourcemeta::core::JSON{code});
+  error.assign("message", sourcemeta::core::JSON{std::string{message}});
+  return error;
+}
 
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
@@ -137,34 +198,10 @@ private:
       "MCP support is only available in the Enterprise edition of "
       "Sourcemeta One"};
 
-  static auto envelope_with_id(const sourcemeta::core::JSON &id)
-      -> sourcemeta::core::JSON {
-    auto envelope{sourcemeta::core::JSON::make_object()};
-    envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
-    envelope.assign("id", id);
-    return envelope;
-  }
-
-  static auto envelope_without_id() -> sourcemeta::core::JSON {
-    auto envelope{sourcemeta::core::JSON::make_object()};
-    envelope.assign("jsonrpc", sourcemeta::core::JSON{"2.0"});
-    return envelope;
-  }
-
-  static auto error_object(const std::int64_t code,
-                           const std::string_view message)
-      -> sourcemeta::core::JSON {
-    auto error{sourcemeta::core::JSON::make_object()};
-    error.assign("code", sourcemeta::core::JSON{code});
-    error.assign("message", sourcemeta::core::JSON{std::string{message}});
-    return error;
-  }
-
   static auto enterprise_required(const sourcemeta::core::JSON *id)
       -> sourcemeta::core::JSON {
-    auto envelope{id == nullptr ? envelope_without_id()
-                                : envelope_with_id(*id)};
-    auto error{error_object(1, "Enterprise edition required")};
+    auto envelope{mcp_make_envelope(id)};
+    auto error{mcp_make_error(1, "Enterprise edition required")};
     error.assign("data", sourcemeta::core::JSON{
                              std::string{MCP_ENTERPRISE_REQUIRED_DATA}});
     envelope.assign("error", std::move(error));
@@ -174,22 +211,22 @@ private:
   static auto resource_not_found(const sourcemeta::core::JSON &id,
                                  const std::string_view uri)
       -> sourcemeta::core::JSON {
-    auto envelope{envelope_with_id(id)};
-    auto error{error_object(-32002, "Resource not found")};
+    auto envelope{mcp_make_envelope(&id)};
+    auto error{mcp_make_error(-32002, "Resource not found")};
     error.assign("data", sourcemeta::core::JSON{std::string{uri}});
     envelope.assign("error", std::move(error));
     return envelope;
   }
 
   static auto method_not_allowed() -> sourcemeta::core::JSON {
-    auto envelope{envelope_without_id()};
-    envelope.assign("error", error_object(4, "Method not allowed"));
+    auto envelope{mcp_make_envelope(nullptr)};
+    envelope.assign("error", mcp_make_error(4, "Method not allowed"));
     return envelope;
   }
 
   static auto handle_initialize(const sourcemeta::core::JSON &id)
       -> sourcemeta::core::JSON {
-    auto envelope{envelope_with_id(id)};
+    auto envelope{mcp_make_envelope(&id)};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("protocolVersion",
                   sourcemeta::core::JSON{std::string{MCP_PROTOCOL_VERSION}});
@@ -211,7 +248,7 @@ private:
   static auto handle_resources_list(const sourcemeta::core::JSON &id)
       -> sourcemeta::core::JSON {
     // TODO: support paginated enumeration of catalog schemas
-    auto envelope{envelope_with_id(id)};
+    auto envelope{mcp_make_envelope(&id)};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("resources", sourcemeta::core::JSON::make_array());
     envelope.assign("result", std::move(result));
@@ -224,86 +261,50 @@ private:
       -> sourcemeta::core::JSON {
     // TODO: implement completion/complete to suggest schema paths for the
     // {+path} variable
-    auto envelope{envelope_with_id(id)};
-    auto result{sourcemeta::core::JSON::make_object()};
-    auto templates{sourcemeta::core::JSON::make_array()};
-    auto entry{sourcemeta::core::JSON::make_object()};
     std::string template_uri{registry_url};
-    while (!template_uri.empty() && template_uri.back() == '/') {
+    if (!template_uri.empty() && template_uri.back() == '/') {
       template_uri.pop_back();
     }
     template_uri.append("/{+path}{?bundle}");
+    auto entry{sourcemeta::core::JSON::make_object()};
     entry.assign("uriTemplate", sourcemeta::core::JSON{template_uri});
     entry.assign("name", sourcemeta::core::JSON{std::string{"JSON Schema"}});
     entry.assign("description",
                  sourcemeta::core::JSON{std::string{MCP_TEMPLATE_DESCRIPTION}});
     entry.assign("mimeType",
                  sourcemeta::core::JSON{std::string{MCP_TEMPLATE_MIME_TYPE}});
+    auto templates{sourcemeta::core::JSON::make_array()};
     templates.push_back(std::move(entry));
+    auto result{sourcemeta::core::JSON::make_object()};
     result.assign("resourceTemplates", std::move(templates));
+    auto envelope{mcp_make_envelope(&id)};
     envelope.assign("result", std::move(result));
     return envelope;
-  }
-
-  static auto query_has_non_empty_value(const std::string_view query,
-                                        const std::string_view key) -> bool {
-    std::string prefix{key};
-    prefix.push_back('=');
-    for (std::size_t pos{0}; pos < query.size();) {
-      const auto next{query.find('&', pos)};
-      const auto end{next == std::string_view::npos ? query.size() : next};
-      const auto segment{query.substr(pos, end - pos)};
-      if (segment.starts_with(prefix) && segment.size() > prefix.size()) {
-        return true;
-      }
-      if (next == std::string_view::npos) {
-        break;
-      }
-      pos = next + 1;
-    }
-    return false;
   }
 
   static auto resolve_request_uri(const std::string_view uri,
                                   const std::string_view registry_url,
                                   const std::filesystem::path &base)
       -> std::optional<std::filesystem::path> {
-    sourcemeta::core::URI request_uri{std::string{uri}};
-    sourcemeta::core::URI registry{std::string{registry_url}};
-    if (request_uri.scheme() != registry.scheme() ||
-        request_uri.host() != registry.host() ||
-        request_uri.port() != registry.port()) {
+    sourcemeta::core::URI request{std::string{uri}};
+    const sourcemeta::core::URI registry{std::string{registry_url}};
+    request.relative_to(registry);
+    if (request.is_absolute()) {
       return std::nullopt;
     }
-
-    const auto registry_path{registry.path().value_or("")};
-    const auto request_path{request_uri.path().value_or("")};
-    auto trim_trailing_slash = [](std::string_view value) {
-      while (!value.empty() && value.back() == '/') {
-        value.remove_suffix(1);
-      }
-      return value;
-    };
-    const auto registry_prefix{trim_trailing_slash(registry_path)};
-    const auto request_trimmed{trim_trailing_slash(request_path)};
-    if (!request_trimmed.starts_with(registry_prefix)) {
+    const auto path{request.path().value_or("")};
+    std::string_view schema_path{path};
+    if (schema_path.ends_with(".json")) {
+      schema_path.remove_suffix(5);
+    }
+    if (schema_path.empty()) {
       return std::nullopt;
     }
-    auto remaining{request_trimmed.substr(registry_prefix.size())};
-    if (remaining.empty() || remaining.front() != '/') {
-      return std::nullopt;
-    }
-    remaining.remove_prefix(1);
-    if (remaining.ends_with(".json")) {
-      remaining.remove_suffix(5);
-    }
-    if (remaining.empty()) {
-      return std::nullopt;
-    }
-
     const auto bundle{
-        query_has_non_empty_value(request_uri.query().value_or(""), "bundle")};
-    auto resolved{ActionJSONSchemaServe_v1::resolve(base, remaining, bundle)};
+        !mcp_query_parameter(request.query().value_or(""), "bundle")
+             .value_or("")
+             .empty()};
+    auto resolved{ActionJSONSchemaServe_v1::resolve(base, schema_path, bundle)};
     if (!std::filesystem::exists(resolved)) {
       return std::nullopt;
     }
@@ -356,41 +357,33 @@ private:
       return;
     }
 
-    const sourcemeta::core::JSON *id_ptr{nullptr};
-    if (request_json.defines("id")) {
-      const auto &id_json{request_json.at("id")};
-      if (id_json.is_string() || id_json.is_integer()) {
-        id_ptr = &id_json;
-      }
-    }
-
+    const auto *id{mcp_request_id(request_json)};
     const auto method{request_json.at("method").to_string()};
 
-    if (id_ptr != nullptr && method == "initialize") {
+    if (id != nullptr && method == "initialize") {
       write_envelope(request, response, allowed_origin, response_schema,
-                     sourcemeta::one::STATUS_OK, handle_initialize(*id_ptr));
+                     sourcemeta::one::STATUS_OK, handle_initialize(*id));
       return;
     }
 
-    if (id_ptr != nullptr && method == "resources/list") {
+    if (id != nullptr && method == "resources/list") {
+      write_envelope(request, response, allowed_origin, response_schema,
+                     sourcemeta::one::STATUS_OK, handle_resources_list(*id));
+      return;
+    }
+
+    if (id != nullptr && method == "resources/templates/list") {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_OK,
-                     handle_resources_list(*id_ptr));
+                     handle_resources_templates_list(*id, registry_url));
       return;
     }
 
-    if (id_ptr != nullptr && method == "resources/templates/list") {
-      write_envelope(request, response, allowed_origin, response_schema,
-                     sourcemeta::one::STATUS_OK,
-                     handle_resources_templates_list(*id_ptr, registry_url));
-      return;
-    }
-
-    if (id_ptr != nullptr && method == "resources/read") {
+    if (id != nullptr && method == "resources/read") {
       write_envelope(
           request, response, allowed_origin, response_schema,
           sourcemeta::one::STATUS_OK,
-          handle_resources_read(*id_ptr, request_json, registry_url, base));
+          handle_resources_read(*id, request_json, registry_url, base));
       return;
     }
 
