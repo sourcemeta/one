@@ -186,6 +186,15 @@ auto resolve_request_uri(const std::string_view uri,
   if (schema_path.empty()) {
     return std::nullopt;
   }
+  const std::filesystem::path schema_filesystem_path{schema_path};
+  if (schema_filesystem_path.is_absolute()) {
+    return std::nullopt;
+  }
+  for (const auto &part : schema_filesystem_path) {
+    if (part == ".." || part == ".") {
+      return std::nullopt;
+    }
+  }
   const auto query{request.query()};
   const auto bundle{query.has_value() &&
                     !query->at("bundle").value_or("").empty()};

@@ -11,7 +11,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -44,7 +44,7 @@ Content-Type: application/json
 ```
 HTTP 200
 Content-Type: application/json
-Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -129,6 +129,78 @@ jsonpath "$.id" == 21
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
 jsonpath "$.error.data" == "https://elsewhere.example.com/foo"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# resources/read rejects URIs containing dot-segment traversal
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/../../etc/passwd"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 100
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" == "{{base}}/../../etc/passwd"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# resources/read rejects relative URIs with absolute-path references
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 102,
+  "method": "resources/read",
+  "params": {
+    "uri": "/etc/passwd"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 102
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" == "/etc/passwd"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -174,6 +174,114 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+# resources/read rejects URIs containing dot-segment traversal
+
+POST {{base}}/v1/catalog/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/../../etc/passwd"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 100
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" == "{{base}}/v1/catalog/../../etc/passwd"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# resources/read rejects URIs on the same host but outside the catalog space
+
+POST {{base}}/v1/catalog/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 101,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/spec/example/string"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 101
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" == "{{base}}/spec/example/string"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# resources/read rejects relative URIs with absolute-path references
+
+POST {{base}}/v1/catalog/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 102,
+  "method": "resources/read",
+  "params": {
+    "uri": "/etc/passwd"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 102
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" == "/etc/passwd"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 # resources/read with a URI in our space but pointing at no schema returns -32002
 
 POST {{base}}/v1/catalog/self/v1/mcp
