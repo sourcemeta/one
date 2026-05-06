@@ -1,36 +1,3 @@
-# resources/list always returns an empty array
-
-POST {{base}}/v1/catalog/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 10,
-  "method": "resources/list"
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "</v1/catalog([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 10
-jsonpath "$.result" isObject
-jsonpath "$.result.resources" isCollection
-jsonpath "$.result.resources" count == 0
-
-POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
 # resources/templates/list publishes the single registry URI template
 
 POST {{base}}/v1/catalog/self/v1/mcp

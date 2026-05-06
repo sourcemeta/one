@@ -179,9 +179,12 @@ jsonrpc_make_error_method_not_found(const sourcemeta::core::JSON &id)
                             "Method not found");
 }
 
-inline auto jsonrpc_make_error_invalid_params(const sourcemeta::core::JSON &id)
+inline auto jsonrpc_make_error_invalid_params(
+    const sourcemeta::core::JSON &id,
+    std::optional<sourcemeta::core::JSON> data = std::nullopt)
     -> sourcemeta::core::JSON {
-  return jsonrpc_make_error(&id, JSONRPC_CODE_INVALID_PARAMS, "Invalid params");
+  return jsonrpc_make_error(&id, JSONRPC_CODE_INVALID_PARAMS, "Invalid params",
+                            std::move(data));
 }
 
 inline auto

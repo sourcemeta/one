@@ -7,6 +7,35 @@
       "jsonrpc": "2.0",
       "id": 10,
       "result": {
+        "resources": [
+          {
+            "uri": "https://example.com/v1/example/string",
+            "name": "string",
+            "description": "An example string schema",
+            "mimeType": "application/schema+json",
+            "size": 143
+          },
+          {
+            "uri": "https://example.com/v1/example/string?bundle=1",
+            "name": "string",
+            "description": "An example string schema",
+            "mimeType": "application/schema+json",
+            "size": 143
+          },
+          {
+            "uri": "https://example.com/v1/no-description",
+            "name": "no-description",
+            "mimeType": "application/schema+json",
+            "size": 64
+          }
+        ],
+        "nextCursor": "100"
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 11,
+      "result": {
         "resources": []
       }
     }
@@ -25,7 +54,37 @@
       "required": [ "resources" ],
       "properties": {
         "resources": {
-          "const": []
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": [ "uri", "name", "mimeType", "size" ],
+            "properties": {
+              "uri": {
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "mimeType": {
+                "const": "application/schema+json"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "nextCursor": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
         }
       },
       "additionalProperties": false
