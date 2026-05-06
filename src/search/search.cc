@@ -208,18 +208,10 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
   return result;
 }
 
-SearchView::SearchView(std::filesystem::path path) : path_{std::move(path)} {}
-
-SearchView::~SearchView() = default;
-
-auto SearchView::ensure_open() -> void {
-  if (this->view_) {
-    return;
-  }
-
-  assert(std::filesystem::exists(this->path_));
-  assert(this->path_.is_absolute());
-  this->view_ = std::make_unique<sourcemeta::core::FileView>(this->path_);
+SearchView::SearchView(const std::filesystem::path &path) {
+  assert(std::filesystem::exists(path));
+  assert(path.is_absolute());
+  this->view_ = std::make_unique<sourcemeta::core::FileView>(path);
   const auto payload_start_option{metapack_payload_offset(*this->view_)};
   assert(payload_start_option.has_value());
   const auto &payload_start{payload_start_option.value()};
@@ -229,15 +221,15 @@ auto SearchView::ensure_open() -> void {
   }
 }
 
+SearchView::~SearchView() = default;
+
 auto SearchView::search(const std::string_view query, const std::size_t limit,
                         const std::uint8_t scope) -> sourcemeta::core::JSON {
-  this->ensure_open();
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
                                  limit, scope);
 }
 
 auto SearchView::count() -> std::size_t {
-  this->ensure_open();
   if (this->payload_ == nullptr ||
       this->payload_size_ < sizeof(SearchIndexHeader)) {
     return 0;
@@ -250,7 +242,6 @@ auto SearchView::count() -> std::size_t {
 }
 
 auto SearchView::at(const std::size_t index) -> SearchListEntry {
-  this->ensure_open();
   assert(this->payload_ != nullptr);
   assert(this->payload_size_ >= sizeof(SearchIndexHeader));
   assert(
@@ -292,7 +283,6 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
 auto SearchView::for_each(
     const std::size_t offset, const std::size_t count,
     const std::function<void(const SearchListEntry &)> &callback) -> void {
-  this->ensure_open();
   if (this->payload_ == nullptr ||
       this->payload_size_ < sizeof(SearchIndexHeader)) {
     return;
