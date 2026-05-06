@@ -71,7 +71,7 @@ auto search(const std::uint8_t *payload, std::size_t payload_size,
 
 class SOURCEMETA_ONE_SEARCH_EXPORT SearchView {
 public:
-  explicit SearchView(std::filesystem::path path);
+  explicit SearchView(const std::filesystem::path &path);
   ~SearchView();
 
   SearchView(const SearchView &) = delete;
@@ -89,11 +89,9 @@ public:
       -> void;
 
 private:
-  std::filesystem::path path_;
   std::unique_ptr<sourcemeta::core::FileView> view_;
   const std::uint8_t *payload_{nullptr};
   std::size_t payload_size_{0};
-  auto ensure_open() -> void;
 };
 
 } // namespace sourcemeta::one
