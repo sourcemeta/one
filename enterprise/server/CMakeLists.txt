@@ -5,6 +5,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_server
 target_compile_definitions(sourcemeta_one_enterprise_server PUBLIC SOURCEMETA_ONE_ENTERPRISE)
 
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::one::http)
+target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::json)

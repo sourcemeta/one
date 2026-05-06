@@ -182,10 +182,7 @@ private:
 
   static auto handle_resources_list(const sourcemeta::core::JSON &id)
       -> sourcemeta::core::JSON {
-    // TODO: support paginated enumeration of catalog schemas
-    auto result{sourcemeta::core::JSON::make_object()};
-    result.assign("resources", sourcemeta::core::JSON::make_array());
-    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
+    return enterprise_required(&id);
   }
 
   static auto

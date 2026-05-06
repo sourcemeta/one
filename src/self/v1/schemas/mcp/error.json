@@ -15,7 +15,8 @@
       "id": 1,
       "error": {
         "code": -32602,
-        "message": "Invalid params"
+        "message": "Invalid params",
+        "data": "abc"
       }
     },
     {
@@ -219,6 +220,9 @@
             },
             "message": {
               "const": "Invalid params"
+            },
+            "data": {
+              "type": "string"
             }
           },
           "additionalProperties": false
