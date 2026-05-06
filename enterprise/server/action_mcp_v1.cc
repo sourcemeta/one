@@ -153,13 +153,8 @@ auto handle_resources_list(const sourcemeta::core::JSON &request_json,
 
   std::size_t schema_offset{0};
   const auto *params{sourcemeta::one::jsonrpc_params(request_json)};
-  if (params != nullptr && params->is_object() && params->defines("cursor")) {
-    const auto &cursor_value{params->at("cursor")};
-    if (!cursor_value.is_string()) {
-      return sourcemeta::one::jsonrpc_make_error_invalid_params(id,
-                                                                cursor_value);
-    }
-    const auto &cursor_string{cursor_value.to_string()};
+  if (params != nullptr && params->defines("cursor")) {
+    const auto &cursor_string{params->at("cursor").to_string()};
     if (!cursor_string.empty()) {
       const auto parsed{parse_cursor(cursor_string)};
       if (!parsed.has_value()) {
