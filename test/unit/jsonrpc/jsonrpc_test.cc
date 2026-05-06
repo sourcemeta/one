@@ -463,6 +463,22 @@ TEST(JSONRPC, make_error_invalid_params) {
   EXPECT_EQ(envelope, expected);
 }
 
+TEST(JSONRPC, make_error_invalid_params_with_data) {
+  const auto identifier{sourcemeta::core::JSON{"req-8"}};
+  const auto envelope{sourcemeta::one::jsonrpc_make_error_invalid_params(
+      identifier, sourcemeta::core::JSON{"abc"})};
+  const auto expected{sourcemeta::core::parse_json(R"JSON({
+    "jsonrpc": "2.0",
+    "id": "req-8",
+    "error": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": "abc"
+    }
+  })JSON")};
+  EXPECT_EQ(envelope, expected);
+}
+
 TEST(JSONRPC, make_error_internal_with_id) {
   const auto identifier{sourcemeta::core::JSON{3}};
   const auto envelope{
