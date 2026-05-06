@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Example With Both",
+  "description": "A schema that has both a title and a description",
+  "type": "string"
+}

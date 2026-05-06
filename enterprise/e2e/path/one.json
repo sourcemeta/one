@@ -1,3 +1,8 @@
 {
-  "url": "http://localhost:8000/v1/catalog"
+  "url": "http://localhost:8000/v1/catalog",
+  "contents": {
+    "example": {
+      "path": "./schemas/example"
+    }
+  }
 }
