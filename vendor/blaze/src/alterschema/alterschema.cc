@@ -3,6 +3,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/regex.h>
+#include <sourcemeta/core/uri.h>
 
 // For built-in rules
 #include <algorithm>     // std::sort, std::unique, std::ranges::none_of
@@ -118,6 +119,8 @@ auto WALK_UP_IN_PLACE_APPLICATORS(const JSON &root, const SchemaFrame &frame,
 #include "canonicalizer/deprecated_false_drop.h"
 #include "canonicalizer/disallow_to_array_of_schemas.h"
 #include "canonicalizer/divisible_by_implicit.h"
+#include "canonicalizer/draft3_drop_extends_empty_schemas.h"
+#include "canonicalizer/draft3_type_any.h"
 #include "canonicalizer/empty_definitions_drop.h"
 #include "canonicalizer/empty_defs_drop.h"
 #include "canonicalizer/empty_dependencies_drop.h"
@@ -242,6 +245,7 @@ auto WALK_UP_IN_PLACE_APPLICATORS(const JSON &root, const SchemaFrame &frame,
 #include "linter/items_schema_default.h"
 #include "linter/multiple_of_default.h"
 #include "linter/pattern_properties_default.h"
+#include "linter/portable_anchor_names.h"
 #include "linter/properties_default.h"
 #include "linter/property_names_default.h"
 #include "linter/property_names_type_default.h"
@@ -259,12 +263,70 @@ auto WALK_UP_IN_PLACE_APPLICATORS(const JSON &root, const SchemaFrame &frame,
 #include "linter/valid_default.h"
 #include "linter/valid_examples.h"
 
+// Upgrade
+#include "upgrade/helpers.h"
+#include "upgrade/prefix_promoted_2020_12_keywords.h"
+#include "upgrade/prefix_promoted_draft_2019_09_keywords.h"
+#include "upgrade/prefix_promoted_draft_4_keywords.h"
+#include "upgrade/prefix_promoted_draft_6_keywords.h"
+#include "upgrade/prefix_promoted_draft_7_keywords.h"
+#include "upgrade/upgrade_2019_09_to_2020_12.h"
+#include "upgrade/upgrade_dialect_override_cleanup.h"
+#include "upgrade/upgrade_draft_3_to_draft_4.h"
+#include "upgrade/upgrade_draft_4_to_draft_6.h"
+#include "upgrade/upgrade_draft_6_to_draft_7.h"
+#include "upgrade/upgrade_draft_7_to_draft_2019_09.h"
+
 #undef ONLY_CONTINUE_IF
 } // namespace sourcemeta::blaze
 
 namespace sourcemeta::blaze {
 
 auto add(SchemaTransformer &bundle, const AlterSchemaMode mode) -> void {
+  if (mode == AlterSchemaMode::UpgradeDraft4 ||
+      mode == AlterSchemaMode::UpgradeDraft6 ||
+      mode == AlterSchemaMode::UpgradeDraft7 ||
+      mode == AlterSchemaMode::Upgrade201909 ||
+      mode == AlterSchemaMode::Upgrade202012) {
+    bundle.add<DraftOfficialDialectWithHttps>();
+    bundle.add<DraftOfficialDialectWithoutEmptyFragment>();
+    bundle.add<PrefixPromotedDraft4Keywords>();
+    bundle.add<UpgradeDraft3ToDraft4>();
+
+    if (mode == AlterSchemaMode::UpgradeDraft6 ||
+        mode == AlterSchemaMode::UpgradeDraft7 ||
+        mode == AlterSchemaMode::Upgrade201909 ||
+        mode == AlterSchemaMode::Upgrade202012) {
+      bundle.add<PrefixPromotedDraft6Keywords>();
+      bundle.add<UpgradeDraft4ToDraft6>();
+      bundle.add<EmptyObjectAsTrue>();
+    }
+
+    if (mode == AlterSchemaMode::UpgradeDraft7 ||
+        mode == AlterSchemaMode::Upgrade201909 ||
+        mode == AlterSchemaMode::Upgrade202012) {
+      bundle.add<PrefixPromotedDraft7Keywords>();
+      bundle.add<UpgradeDraft6ToDraft7>();
+      bundle.add<EnumToConst>();
+    }
+
+    if (mode == AlterSchemaMode::Upgrade201909 ||
+        mode == AlterSchemaMode::Upgrade202012) {
+      bundle.add<PrefixPromoted201909Keywords>();
+      bundle.add<UpgradeDraft7To201909>();
+      bundle.add<DefinitionsToDefs>();
+    }
+
+    if (mode == AlterSchemaMode::Upgrade202012) {
+      bundle.add<PrefixPromoted202012Keywords>();
+      bundle.add<Upgrade201909To202012>();
+    }
+
+    bundle.add<UpgradeDialectOverrideCleanup>();
+
+    return;
+  }
+
   if (mode == AlterSchemaMode::Canonicalizer) {
     bundle.add<ExclusiveMinimumBooleanIntegerFold>();
     bundle.add<ExclusiveMaximumBooleanIntegerFold>();
@@ -310,6 +372,9 @@ auto add(SchemaTransformer &bundle, const AlterSchemaMode mode) -> void {
   bundle.add<DuplicateAnyOfBranches>();
   bundle.add<FlattenNestedAllOf>();
   bundle.add<FlattenNestedAnyOf>();
+  if (mode == AlterSchemaMode::Canonicalizer) {
+    bundle.add<Draft3TypeAny>();
+  }
   bundle.add<UnsatisfiableInPlaceApplicatorType>();
   bundle.add<AllOfFalseSimplify>();
   bundle.add<AnyOfFalseSimplify>();
@@ -400,6 +465,7 @@ auto add(SchemaTransformer &bundle, const AlterSchemaMode mode) -> void {
     bundle.add<CommentTrim>();
     bundle.add<DuplicateExamples>();
     bundle.add<SimplePropertiesIdentifiers>();
+    bundle.add<PortableAnchorNames>();
     bundle.add<InvalidExternalRef>();
     bundle.add<ValidDefault>();
     bundle.add<ValidExamples>();
@@ -415,6 +481,9 @@ auto add(SchemaTransformer &bundle, const AlterSchemaMode mode) -> void {
   }
 
   bundle.add<DropAllOfEmptySchemas>();
+  if (mode == AlterSchemaMode::Canonicalizer) {
+    bundle.add<Draft3DropExtendsEmptySchemas>();
+  }
   bundle.add<EmptyObjectAsTrue>();
 
   if (mode == AlterSchemaMode::Canonicalizer) {
