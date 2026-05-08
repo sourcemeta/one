@@ -67,8 +67,7 @@ struct GENERATE_VERSION {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
-    sourcemeta::core::stringify(
-        sourcemeta::core::JSON{std::string{action.data}}, stream);
+    sourcemeta::core::stringify(sourcemeta::core::JSON{action.data}, stream);
   }
 };
 
@@ -82,8 +81,7 @@ struct GENERATE_COMMENT {
     std::filesystem::create_directories(action.destination.parent_path());
     std::ofstream stream{action.destination};
     assert(!stream.fail());
-    sourcemeta::core::stringify(
-        sourcemeta::core::JSON{std::string{action.data}}, stream);
+    sourcemeta::core::stringify(sourcemeta::core::JSON{action.data}, stream);
   }
 };
 
@@ -305,10 +303,10 @@ private:
   static auto without_json_extension(const std::string_view uri)
       -> sourcemeta::core::JSON {
     if (uri.ends_with(".json")) {
-      return sourcemeta::core::JSON{std::string{uri.substr(0, uri.size() - 5)}};
+      return sourcemeta::core::JSON{uri.substr(0, uri.size() - 5)};
     }
 
-    return sourcemeta::core::JSON{std::string{uri}};
+    return sourcemeta::core::JSON{uri};
   }
 };
 

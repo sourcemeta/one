@@ -86,7 +86,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
                           const std::filesystem::path &default_base_path)
     -> Configuration {
   const auto compiled_schema{sourcemeta::blaze::from_json(
-      sourcemeta::core::parse_json(std::string{CONFIGURATION}))};
+      sourcemeta::core::parse_json(CONFIGURATION))};
   assert(compiled_schema.has_value());
   sourcemeta::blaze::Evaluator evaluator;
   sourcemeta::blaze::SimpleOutput output{data};

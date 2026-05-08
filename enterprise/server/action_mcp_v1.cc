@@ -43,8 +43,7 @@ auto write_envelope(sourcemeta::one::HTTPRequest &request,
                     const sourcemeta::core::JSON &envelope) -> void {
   response.write_status(status);
   response.write_header("Content-Type", "application/json");
-  response.write_header("Access-Control-Allow-Origin",
-                        std::string{allowed_origin});
+  response.write_header("Access-Control-Allow-Origin", allowed_origin);
   if (!response_schema.empty()) {
     sourcemeta::one::write_link_header(response, response_schema);
   }
@@ -67,8 +66,7 @@ auto write_accepted(sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
                     const std::string_view allowed_origin) -> void {
   response.write_status(sourcemeta::one::STATUS_ACCEPTED);
-  response.write_header("Access-Control-Allow-Origin",
-                        std::string{allowed_origin});
+  response.write_header("Access-Control-Allow-Origin", allowed_origin);
   sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
                                  response);
 }
@@ -222,9 +220,8 @@ auto handle_resources_templates_list(const sourcemeta::core::JSON &request_json,
   auto entry{sourcemeta::core::JSON::make_object()};
   entry.assign_assume_new(std::string{"uriTemplate"},
                           sourcemeta::core::JSON{template_uri});
-  entry.assign_assume_new(
-      std::string{"name"},
-      sourcemeta::core::JSON{std::string_view{"JSON Schema"}});
+  entry.assign_assume_new(std::string{"name"},
+                          sourcemeta::core::JSON{"JSON Schema"});
   entry.assign_assume_new(std::string{"description"},
                           sourcemeta::core::JSON{MCP_TEMPLATE_DESCRIPTION});
   entry.assign_assume_new(std::string{"mimeType"},
@@ -260,8 +257,8 @@ auto resolve_request_uri(const std::string_view uri,
                          const std::string_view registry_url,
                          const std::filesystem::path &base)
     -> std::optional<std::filesystem::path> {
-  sourcemeta::core::URI request{std::string{uri}};
-  const sourcemeta::core::URI registry{std::string{registry_url}};
+  sourcemeta::core::URI request{uri};
+  const sourcemeta::core::URI registry{registry_url};
   request.relative_to(registry);
   if (request.is_absolute()) {
     return std::nullopt;
@@ -464,8 +461,7 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
 
   if (request.method() == "options") {
     response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
-    response.write_header("Access-Control-Allow-Origin",
-                          std::string{this->allowed_origin_});
+    response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
     response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
     response.write_header("Access-Control-Allow-Headers",
                           "Content-Type, MCP-Protocol-Version");

@@ -79,7 +79,7 @@ public:
 
     if (request.method() == "get" || request.method() == "head") {
       if (request.prefers_html()) {
-        auto explorer_path{this->base() / "explorer" / std::string{path} / "%"};
+        auto explorer_path{this->base() / "explorer" / path / "%"};
         if (std::filesystem::exists(explorer_path / "schema-html.metapack") &&
             !path.ends_with("/")) {
           ActionServeMetapackFile_v1::serve(
