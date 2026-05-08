@@ -1,5 +1,7 @@
 # Sourcemeta One
 
+[![DOI](https://zenodo.org/badge/883889232.svg)](https://doi.org/10.5281/zenodo.20086369)
+
 A high-performance, self-hosted JSON Schema registry that transforms your
 existing Git repositories of schemas into searchable, discoverable schema
 catalogs with enterprise-grade governance capabilities.
