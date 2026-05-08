@@ -37,3 +37,75 @@ HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+# Draft 3 schema with an external $ref to another Draft 3 schema (raw)
+GET {{base}}/test/draft3/with-ref.json
+HTTP 200
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "{{base}}/test/draft3/with-ref",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "$ref": "string"
+    }
+  }
+}
+
+# Bundling a Draft 3 schema must inline the referenced Draft 3 schema under `definitions`
+GET {{base}}/test/draft3/with-ref.json?bundle=1
+HTTP 200
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "{{base}}/test/draft3/with-ref",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "$ref": "string"
+    }
+  },
+  "definitions": {
+    "{{base}}/test/draft3/string": {
+      "$schema": "http://json-schema.org/draft-03/schema#",
+      "id": "{{base}}/test/draft3/string",
+      "type": "string"
+    }
+  }
+}
+
+# Evaluating a value through the Draft 3 cross-schema $ref resolves the inner string schema
+POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/with-ref
+Content-Type: application/json
+{ "tag": "beta" }
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Captures]
+last_response: body
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/response
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/with-ref
+Content-Type: application/json
+{ "tag": 99 }
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == false

@@ -12,7 +12,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 95
+jsonpath "$.schemas" == 96
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].title" == "Self"
@@ -23,8 +23,8 @@ jsonpath "$.entries[0].schemas" == 28
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 11
-jsonpath "$.entries[1].schemas" == 67
+jsonpath "$.entries[1].health" == 15
+jsonpath "$.entries[1].schemas" == 68
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

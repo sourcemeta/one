@@ -15,7 +15,7 @@ test.describe('Navigation with base path', () => {
     const rows = page.locator('table tbody tr');
     const count = await rows.count();
     expect(count).toBeGreaterThanOrEqual(2);
-    await expect(rows.first()).toContainText('example');
+    await expect(rows.first()).toContainText('draft3');
   });
 
   test('clicking a directory navigates within the base path', async ({ page }) => {

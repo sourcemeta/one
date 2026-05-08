@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "https://example.com/draft3/with-ref.json",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "$ref": "string.json"
+    }
+  }
+}
