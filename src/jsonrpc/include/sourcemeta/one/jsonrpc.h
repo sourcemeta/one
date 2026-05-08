@@ -148,7 +148,7 @@ jsonrpc_make_error(const sourcemeta::core::JSON *id, const std::int64_t code,
   error.assign_assume_new(std::string{"code"}, sourcemeta::core::JSON{code},
                           JSONRPC_HASH_CODE);
   error.assign_assume_new(std::string{"message"},
-                          sourcemeta::core::JSON{std::string{message}},
+                          sourcemeta::core::JSON{message},
                           JSONRPC_HASH_MESSAGE);
   if (data.has_value()) {
     error.assign_assume_new(std::string{"data"}, std::move(data.value()),

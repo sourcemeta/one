@@ -166,8 +166,8 @@ private:
     const auto &walker_result{sourcemeta::core::schema_walker(
         evaluate_path.back().to_property(), vocabularies)};
     if (walker_result.vocabulary.has_value()) {
-      return sourcemeta::core::to_json(std::string{
-          sourcemeta::core::to_string(walker_result.vocabulary.value())});
+      return sourcemeta::core::to_json(
+          sourcemeta::core::to_string(walker_result.vocabulary.value()));
     }
 
     return sourcemeta::core::JSON{nullptr};

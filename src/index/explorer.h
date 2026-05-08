@@ -373,7 +373,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("bytesBundled",
                   sourcemeta::core::JSON{
                       static_cast<std::size_t>(bundle_info.content_bytes)});
-    result.assign("identifier", sourcemeta::core::JSON{std::string{id}});
+    result.assign("identifier", sourcemeta::core::JSON{id});
     result.assign(
         "path", sourcemeta::core::JSON{configuration.base_path + "/" +
                                        resolver_entry.relative_path.string()});
@@ -383,11 +383,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         })};
     assert(base_dialect.has_value());
     result.assign("baseDialect",
-                  sourcemeta::core::JSON{std::string{
-                      sourcemeta::core::to_string(base_dialect.value())}});
+                  sourcemeta::core::JSON{
+                      sourcemeta::core::to_string(base_dialect.value())});
     const auto dialect{sourcemeta::core::dialect(schema_data)};
     assert(!dialect.empty());
-    result.assign("dialect", sourcemeta::core::JSON{std::string{dialect}});
+    result.assign("dialect", sourcemeta::core::JSON{dialect});
 
     if (schema_data.is_object()) {
       const auto title{schema_data.try_at("title")};
@@ -658,8 +658,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               directory_extension, directory_base, title_offset,
               directory_extension->title_length)};
           if (!directory_title.empty()) {
-            entry_json.assign(
-                "title", sourcemeta::core::JSON{std::string{directory_title}});
+            entry_json.assign("title", sourcemeta::core::JSON{directory_title});
           }
 
           const std::size_t description_offset{
@@ -668,8 +667,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               directory_extension, directory_base, description_offset,
               directory_extension->description_length)};
           if (!directory_description.empty()) {
-            entry_json.assign("description", sourcemeta::core::JSON{std::string{
-                                                 directory_description}});
+            entry_json.assign("description",
+                              sourcemeta::core::JSON{directory_description});
           }
 
           const std::size_t email_offset{
@@ -678,8 +677,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               directory_extension, directory_base, email_offset,
               directory_extension->email_length)};
           if (!directory_email.empty()) {
-            entry_json.assign(
-                "email", sourcemeta::core::JSON{std::string{directory_email}});
+            entry_json.assign("email", sourcemeta::core::JSON{directory_email});
           }
 
           const std::size_t github_offset{email_offset +
@@ -688,8 +686,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               directory_extension, directory_base, github_offset,
               directory_extension->github_length)};
           if (!directory_github.empty()) {
-            entry_json.assign("github", sourcemeta::core::JSON{
-                                            std::string{directory_github}});
+            entry_json.assign("github",
+                              sourcemeta::core::JSON{directory_github});
           }
 
           const std::size_t website_offset{github_offset +
@@ -698,8 +696,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               directory_extension, directory_base, website_offset,
               directory_extension->website_length)};
           if (!directory_website.empty()) {
-            entry_json.assign("website", sourcemeta::core::JSON{
-                                             std::string{directory_website}});
+            entry_json.assign("website",
+                              sourcemeta::core::JSON{directory_website});
           }
         } else {
           directory_version = parse_version_info(child_name);
@@ -776,43 +774,38 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
         const auto schema_path{
             explorer_extension_path(extension, extension_base)};
-        entry_json.assign("path", sourcemeta::core::JSON{std::filesystem::path{
-                                      std::string{schema_path}}});
         entry_json.assign(
-            "identifier",
-            sourcemeta::core::JSON{std::string{
-                explorer_extension_identifier(extension, extension_base)}});
+            "path", sourcemeta::core::JSON{std::filesystem::path{schema_path}});
+        entry_json.assign("identifier",
+                          sourcemeta::core::JSON{explorer_extension_identifier(
+                              extension, extension_base)});
         entry_json.assign("bytes", sourcemeta::core::JSON{extension->bytes});
         entry_json.assign("bytesBundled",
                           sourcemeta::core::JSON{extension->bytes_bundled});
-        entry_json.assign(
-            "baseDialect",
-            sourcemeta::core::JSON{std::string{
-                explorer_extension_base_dialect(extension, extension_base)}});
-        entry_json.assign("dialect", sourcemeta::core::JSON{
-                                         std::string{explorer_extension_dialect(
-                                             extension, extension_base)}});
+        entry_json.assign("baseDialect", sourcemeta::core::JSON{
+                                             explorer_extension_base_dialect(
+                                                 extension, extension_base)});
+        entry_json.assign("dialect",
+                          sourcemeta::core::JSON{explorer_extension_dialect(
+                              extension, extension_base)});
         entry_json.assign("health", sourcemeta::core::JSON{extension->health});
         entry_json.assign("dependencies",
                           sourcemeta::core::JSON{extension->dependencies});
 
         const auto title{explorer_extension_title(extension, extension_base)};
         if (!title.empty()) {
-          entry_json.assign("title",
-                            sourcemeta::core::JSON{std::string{title}});
+          entry_json.assign("title", sourcemeta::core::JSON{title});
         }
 
         const auto description{
             explorer_extension_description(extension, extension_base)};
         if (!description.empty()) {
-          entry_json.assign("description",
-                            sourcemeta::core::JSON{std::string{description}});
+          entry_json.assign("description", sourcemeta::core::JSON{description});
         }
 
         const auto alert{explorer_extension_alert(extension, extension_base)};
         if (!alert.empty()) {
-          entry_json.assign("alert",
-                            sourcemeta::core::JSON{std::string{alert}});
+          entry_json.assign("alert", sourcemeta::core::JSON{alert});
         } else {
           entry_json.assign("alert", sourcemeta::core::JSON{nullptr});
         }

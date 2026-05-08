@@ -310,7 +310,7 @@ static auto index_main(const std::string_view &program,
     const auto &resolve_schema_value{app.at("resolve-schema").front()};
     sourcemeta::core::URI input_uri{""};
     try {
-      input_uri = sourcemeta::core::URI{std::string{resolve_schema_value}};
+      input_uri = sourcemeta::core::URI{resolve_schema_value};
     } catch (const sourcemeta::core::URIParseError &) {
       throw sourcemeta::one::OptionInvalidURIValueError(
           "resolve-schema", std::string{resolve_schema_value});

@@ -141,7 +141,7 @@ public:
                                  dialect_ext->dialect_length}
               : std::string_view{};
       if (!dialect.empty()) {
-        sourcemeta::one::write_link_header(response, std::string{dialect});
+        sourcemeta::one::write_link_header(response, dialect);
       }
     }
 

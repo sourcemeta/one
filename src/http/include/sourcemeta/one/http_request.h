@@ -90,7 +90,7 @@ public:
     }
 
     try {
-      return sourcemeta::core::from_gmt(std::string{value});
+      return sourcemeta::core::from_gmt(value);
     } catch (const std::invalid_argument &) {
       return std::nullopt;
     }

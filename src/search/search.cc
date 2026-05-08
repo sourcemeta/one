@@ -194,10 +194,9 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     }
 
     auto entry{sourcemeta::core::JSON::make_object()};
-    entry.assign("path", sourcemeta::core::JSON{std::string{path}});
-    entry.assign("title", sourcemeta::core::JSON{std::string{title}});
-    entry.assign("description",
-                 sourcemeta::core::JSON{std::string{description}});
+    entry.assign("path", sourcemeta::core::JSON{path});
+    entry.assign("title", sourcemeta::core::JSON{title});
+    entry.assign("description", sourcemeta::core::JSON{description});
     result.push_back(std::move(entry));
 
     if (result.array_size() >= limit) {

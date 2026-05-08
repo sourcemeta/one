@@ -141,15 +141,14 @@ private:
       -> sourcemeta::core::JSON {
     return sourcemeta::one::jsonrpc_make_error(
         id, 1, "Enterprise edition required",
-        sourcemeta::core::JSON{std::string{MCP_ENTERPRISE_REQUIRED_DATA}});
+        sourcemeta::core::JSON{MCP_ENTERPRISE_REQUIRED_DATA});
   }
 
   static auto resource_not_found(const sourcemeta::core::JSON &id,
                                  const std::string_view uri)
       -> sourcemeta::core::JSON {
     return sourcemeta::one::jsonrpc_make_error(
-        &id, -32002, "Resource not found",
-        sourcemeta::core::JSON{std::string{uri}});
+        &id, -32002, "Resource not found", sourcemeta::core::JSON{uri});
   }
 
   static auto method_not_allowed() -> sourcemeta::core::JSON {
@@ -165,17 +164,15 @@ private:
       -> sourcemeta::core::JSON {
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("protocolVersion",
-                  sourcemeta::core::JSON{std::string{MCP_PROTOCOL_VERSION}});
+                  sourcemeta::core::JSON{MCP_PROTOCOL_VERSION});
     auto capabilities{sourcemeta::core::JSON::make_object()};
     capabilities.assign("resources", sourcemeta::core::JSON::make_object());
     result.assign("capabilities", std::move(capabilities));
     auto server_info{sourcemeta::core::JSON::make_object()};
-    server_info.assign("name",
-                       sourcemeta::core::JSON{std::string{MCP_SERVER_NAME}});
-    server_info.assign("title",
-                       sourcemeta::core::JSON{std::string{MCP_SERVER_TITLE}});
-    server_info.assign("version", sourcemeta::core::JSON{
-                                      std::string{sourcemeta::one::version()}});
+    server_info.assign("name", sourcemeta::core::JSON{MCP_SERVER_NAME});
+    server_info.assign("title", sourcemeta::core::JSON{MCP_SERVER_TITLE});
+    server_info.assign("version",
+                       sourcemeta::core::JSON{sourcemeta::one::version()});
     result.assign("serverInfo", std::move(server_info));
     return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
   }
@@ -198,11 +195,10 @@ private:
     template_uri.append("/{+path}{?bundle}");
     auto entry{sourcemeta::core::JSON::make_object()};
     entry.assign("uriTemplate", sourcemeta::core::JSON{template_uri});
-    entry.assign("name", sourcemeta::core::JSON{std::string{"JSON Schema"}});
+    entry.assign("name", sourcemeta::core::JSON{"JSON Schema"});
     entry.assign("description",
-                 sourcemeta::core::JSON{std::string{MCP_TEMPLATE_DESCRIPTION}});
-    entry.assign("mimeType",
-                 sourcemeta::core::JSON{std::string{MCP_TEMPLATE_MIME_TYPE}});
+                 sourcemeta::core::JSON{MCP_TEMPLATE_DESCRIPTION});
+    entry.assign("mimeType", sourcemeta::core::JSON{MCP_TEMPLATE_MIME_TYPE});
     auto templates{sourcemeta::core::JSON::make_array()};
     templates.push_back(std::move(entry));
     auto result{sourcemeta::core::JSON::make_object()};
@@ -214,8 +210,8 @@ private:
                                   const std::string_view registry_url,
                                   const std::filesystem::path &base)
       -> std::optional<std::filesystem::path> {
-    sourcemeta::core::URI request{std::string{uri}};
-    const sourcemeta::core::URI registry{std::string{registry_url}};
+    sourcemeta::core::URI request{uri};
+    const sourcemeta::core::URI registry{registry_url};
     request.relative_to(registry);
     if (request.is_absolute()) {
       return std::nullopt;
@@ -336,8 +332,7 @@ private:
                              const sourcemeta::core::JSON &envelope) -> void {
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
-    response.write_header("Access-Control-Allow-Origin",
-                          std::string{allowed_origin});
+    response.write_header("Access-Control-Allow-Origin", allowed_origin);
     if (!response_schema.empty()) {
       sourcemeta::one::write_link_header(response, response_schema);
     }
