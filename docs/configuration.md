@@ -108,8 +108,8 @@ A schema collection functions as a curated set of schemas that the instance
 ingests and serves at a specified location. Unlike pages, schema collections
 contain the actual schema definitions that power your instance.
 
-*Sourcemeta One supports JSON Schema Draft 4, Draft 6, Draft 7, 2019-09, and
-2020-12; and custom meta-schemas based on those dialects.*
+*Sourcemeta One supports JSON Schema Draft 3, Draft 4, Draft 6, Draft 7,
+2019-09, and 2020-12, and custom meta-schemas based on those dialects.*
 
 !!! warning
 

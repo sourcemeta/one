@@ -279,7 +279,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/list page 2 follows the cursor and emits the remaining 44 entries
+# resources/list page 2 follows the cursor and emits the remaining 45 entries
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -303,7 +303,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 11
-jsonpath "$.result.resources" count == 44
+jsonpath "$.result.resources" count == 45
 jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/07"
 jsonpath "$.result.resources[0].name" == "07"
 jsonpath "$.result.resources[0].description" not exists
@@ -524,6 +524,11 @@ jsonpath "$.result.resources[43].name" == "50"
 jsonpath "$.result.resources[43].description" not exists
 jsonpath "$.result.resources[43].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[43].size" == 130
+jsonpath "$.result.resources[44].uri" == "{{base}}/test/draft3/string"
+jsonpath "$.result.resources[44].name" == "string"
+jsonpath "$.result.resources[44].description" not exists
+jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[44].size" == 130
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

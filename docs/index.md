@@ -83,7 +83,7 @@ without building complex JSON Schema infrastructure from scratch.
   CI/CD pipelines, tooling integration, and custom workflows. Check out the
   [documentation](api.md) to learn more
 - :octicons-versions-16: __JSON Schema Compatibility__ Full support for JSON
-  Schema Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, plus custom
+  Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, plus custom
   meta-schemas, [Standard Output
   Formats](https://json-schema.org/draft/2020-12/json-schema-core#name-output-formatting),
   annotation collection, JSON Schema

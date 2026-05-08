@@ -419,6 +419,10 @@
         "draft4": {
           "baseUri": "http://json-schema.org/draft-04",
           "path": "../vendor/public/jsonschema-draft4"
+        },
+        "draft3": {
+          "baseUri": "http://json-schema.org/draft-03",
+          "path": "../vendor/public/jsonschema-draft3"
         }
       }
     },

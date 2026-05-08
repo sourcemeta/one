@@ -7,6 +7,9 @@
     "rebased": {
       "baseUri": "https://other.example.com",
       "path": "./schemas/rebased"
+    },
+    "draft3": {
+      "path": "./schemas/draft3"
     }
   }
 }

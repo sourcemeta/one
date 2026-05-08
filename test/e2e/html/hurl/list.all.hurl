@@ -12,7 +12,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 72
+jsonpath "$.schemas" == 73
 jsonpath "$.entries" count >= 2
 jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].title" == "Self"
@@ -25,8 +25,8 @@ jsonpath "$.entries[1].name" == "test"
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 12
-jsonpath "$.entries[1].schemas" == 44
+jsonpath "$.entries[1].health" == 11
+jsonpath "$.entries[1].schemas" == 45
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -56,8 +56,8 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.schemas" == 44
-jsonpath "$.entries" count == 12
+jsonpath "$.schemas" == 45
+jsonpath "$.entries" count == 13
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
@@ -81,44 +81,49 @@ jsonpath "$.entries[3].path" == "/test/doc/"
 jsonpath "$.entries[3].title" == "A sample schema folder"
 jsonpath "$.entries[3].description" == "For **testing** purposes with a [link](https://example.com)"
 jsonpath "$.entries[3].github" == "sourcemeta/one"
-jsonpath "$.entries[4].name" == "extension"
+jsonpath "$.entries[4].name" == "draft3"
 jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].health" == 17
-jsonpath "$.entries[4].schemas" == 3
-jsonpath "$.entries[4].path" == "/test/extension/"
-jsonpath "$.entries[5].name" == "hyper"
+jsonpath "$.entries[4].health" == 0
+jsonpath "$.entries[4].schemas" == 1
+jsonpath "$.entries[4].path" == "/test/draft3/"
+jsonpath "$.entries[5].name" == "extension"
 jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.entries[5].health" == 34
-jsonpath "$.entries[5].schemas" == 1
-jsonpath "$.entries[5].path" == "/test/hyper/"
-jsonpath "$.entries[6].name" == "markdown-alert"
+jsonpath "$.entries[5].health" == 17
+jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.entries[5].path" == "/test/extension/"
+jsonpath "$.entries[6].name" == "hyper"
 jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.entries[6].health" == 34
 jsonpath "$.entries[6].schemas" == 1
-jsonpath "$.entries[6].path" == "/test/markdown-alert/"
-jsonpath "$.entries[7].name" == "no-base"
+jsonpath "$.entries[6].path" == "/test/hyper/"
+jsonpath "$.entries[7].name" == "markdown-alert"
 jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].health" == 0
-jsonpath "$.entries[7].schemas" == 2
-jsonpath "$.entries[7].path" == "/test/no-base/"
-jsonpath "$.entries[8].name" == "no-blaze"
+jsonpath "$.entries[7].schemas" == 1
+jsonpath "$.entries[7].path" == "/test/markdown-alert/"
+jsonpath "$.entries[8].name" == "no-base"
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 0
-jsonpath "$.entries[8].schemas" == 1
-jsonpath "$.entries[8].path" == "/test/no-blaze/"
-jsonpath "$.entries[9].name" == "same"
+jsonpath "$.entries[8].schemas" == 2
+jsonpath "$.entries[8].path" == "/test/no-base/"
+jsonpath "$.entries[9].name" == "no-blaze"
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].health" == 0
 jsonpath "$.entries[9].schemas" == 1
-jsonpath "$.entries[9].path" == "/test/same/"
-jsonpath "$.entries[10].name" == "schemas"
+jsonpath "$.entries[9].path" == "/test/no-blaze/"
+jsonpath "$.entries[10].name" == "same"
 jsonpath "$.entries[10].type" == "directory"
-jsonpath "$.entries[10].health" == 7
-jsonpath "$.entries[10].schemas" == 25
-jsonpath "$.entries[10].path" == "/test/schemas/"
-jsonpath "$.entries[11].name" == "unsafe-alert"
+jsonpath "$.entries[10].health" == 0
+jsonpath "$.entries[10].schemas" == 1
+jsonpath "$.entries[10].path" == "/test/same/"
+jsonpath "$.entries[11].name" == "schemas"
 jsonpath "$.entries[11].type" == "directory"
-jsonpath "$.entries[11].schemas" == 1
-jsonpath "$.entries[11].path" == "/test/unsafe-alert/"
+jsonpath "$.entries[11].health" == 7
+jsonpath "$.entries[11].schemas" == 25
+jsonpath "$.entries[11].path" == "/test/schemas/"
+jsonpath "$.entries[12].name" == "unsafe-alert"
+jsonpath "$.entries[12].type" == "directory"
+jsonpath "$.entries[12].schemas" == 1
+jsonpath "$.entries[12].path" == "/test/unsafe-alert/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
