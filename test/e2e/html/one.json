@@ -73,6 +73,10 @@
           "baseUri": "https://example.com/unsafe-alert",
           "path": "./schemas/test/unsafe-alert",
           "x-sourcemeta-one:alert": "Safe text <script>alert('xss')</script> end <iframe src='evil'></iframe>"
+        },
+        "draft3": {
+          "baseUri": "https://example.com/draft3",
+          "path": "./schemas/test/draft3"
         }
       }
     }

@@ -3,6 +3,9 @@
   "contents": {
     "example": {
       "path": "./schemas/example"
+    },
+    "draft3": {
+      "path": "./schemas/draft3"
     }
   }
 }

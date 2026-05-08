@@ -6,10 +6,13 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedb
 [Captures]
 last_response: body
 [Asserts]
-jsonpath "$" count == 1
-jsonpath "$[0].path" == "/v1/catalog/example/string"
+jsonpath "$" count == 2
+jsonpath "$[0].path" == "/v1/catalog/draft3/string"
 jsonpath "$[0].title" == ""
 jsonpath "$[0].description" == ""
+jsonpath "$[1].path" == "/v1/catalog/example/string"
+jsonpath "$[1].title" == ""
+jsonpath "$[1].description" == ""
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/search/response
 ```

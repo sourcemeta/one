@@ -97,17 +97,31 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
     -> void {
   const auto [short_name, is_current] =
       [&base_dialect_uri]() -> std::pair<std::string, bool> {
-    if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema") {
+    if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema" ||
+        base_dialect_uri ==
+            "https://json-schema.org/draft/2020-12/hyper-schema") {
       return {"2020-12", true};
     } else if (base_dialect_uri ==
-               "https://json-schema.org/draft/2019-09/schema") {
+                   "https://json-schema.org/draft/2019-09/schema" ||
+               base_dialect_uri ==
+                   "https://json-schema.org/draft/2019-09/hyper-schema") {
       return {"2019-09", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-07/schema#") {
+    } else if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
+               base_dialect_uri ==
+                   "http://json-schema.org/draft-07/hyper-schema#") {
       return {"draft7", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-06/schema#") {
+    } else if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
+               base_dialect_uri ==
+                   "http://json-schema.org/draft-06/hyper-schema#") {
       return {"draft6", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-04/schema#") {
+    } else if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
+               base_dialect_uri ==
+                   "http://json-schema.org/draft-04/hyper-schema#") {
       return {"draft4", false};
+    } else if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
+               base_dialect_uri ==
+                   "http://json-schema.org/draft-03/hyper-schema#") {
+      return {"draft3", false};
     } else {
       return {"unknown", false};
     }

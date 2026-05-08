@@ -19,7 +19,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 10
-jsonpath "$.result.resources" count == 32
+jsonpath "$.result.resources" count == 34
 jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
 jsonpath "$.result.resources[0].name" == "error"
 jsonpath "$.result.resources[0].description" == "The error response format returned by the Sourcemeta One API endpoints"
@@ -175,11 +175,21 @@ jsonpath "$.result.resources[30].name" == "title-only"
 jsonpath "$.result.resources[30].description" not exists
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[30].size" == 185
-jsonpath "$.result.resources[31].uri" == "{{base}}/v1/catalog/example/bare"
-jsonpath "$.result.resources[31].name" == "bare"
+jsonpath "$.result.resources[31].uri" == "{{base}}/v1/catalog/draft3/object"
+jsonpath "$.result.resources[31].name" == "object"
 jsonpath "$.result.resources[31].description" not exists
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[31].size" == 141
+jsonpath "$.result.resources[31].size" == 270
+jsonpath "$.result.resources[32].uri" == "{{base}}/v1/catalog/draft3/string"
+jsonpath "$.result.resources[32].name" == "string"
+jsonpath "$.result.resources[32].description" not exists
+jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[32].size" == 136
+jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/example/bare"
+jsonpath "$.result.resources[33].name" == "bare"
+jsonpath "$.result.resources[33].description" not exists
+jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[33].size" == 141
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
