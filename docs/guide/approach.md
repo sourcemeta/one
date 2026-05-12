@@ -49,6 +49,12 @@ alert schemas, and the [Human Cell
 Atlas](https://github.com/HumanCellAtlas/metadata-schema/tree/master/json_schema)
 for biological metadata.
 
+At the public-sector level, the schema layer is already load-bearing
+infrastructure. [JSON Schema underpins G7
+governments](https://www.sourcemeta.com/blog/g7-runs-on-json-schema/) across
+digital identity (the EU's mandatory EUDI Wallet), national health records,
+scientific data exchange, and compliance frameworks like NIST.
+
 Ikenna Nwaiwu's [Automating API Delivery: APIOps with
 OpenAPI](https://www.amazon.com/Automating-API-Delivery-APIOps-OpenAPI/dp/1633438783)
 (Manning, 2024) formalises the same approach for API definitions. This guide

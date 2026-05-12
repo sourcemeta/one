@@ -127,6 +127,9 @@ structural boilerplate. The substance is the definitions. What a `Customer`
 looks like. What an `Invoice` contains. What an `Address` requires. In fact,
 *[in 76% of modern OpenAPI specs, JSON Schema dominates the
 specification](https://www.sourcemeta.com/blog/json-schema-dominates-openapi/)*.
+The implication runs all the way up to public policy: [national OpenAPI
+mandates are, implicitly, JSON Schema
+mandates](https://www.sourcemeta.com/blog/g7-runs-on-json-schema/).
 
 And nobody talked about sharing that layer.
 
