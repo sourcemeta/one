@@ -13,6 +13,10 @@
 
 #include <sourcemeta/one/build.h>
 
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/one/enterprise_index.h>
+#endif
+
 #include <algorithm>   // std::ranges::sort
 #include <cassert>     // assert
 #include <chrono>      // std::chrono
@@ -541,6 +545,80 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
+};
+
+struct GENERATE_MCP {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+
+    auto initialize_result{sourcemeta::core::JSON::make_object()};
+    initialize_result.assign("protocolVersion",
+                             sourcemeta::core::JSON{MCP_PROTOCOL_VERSION});
+
+    auto capabilities{sourcemeta::core::JSON::make_object()};
+    capabilities.assign("resources", sourcemeta::core::JSON::make_object());
+    initialize_result.assign("capabilities", std::move(capabilities));
+
+    auto server_info{sourcemeta::core::JSON::make_object()};
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    server_info.assign("name",
+                       sourcemeta::core::JSON{"sourcemeta-one-enterprise"});
+    server_info.assign("title",
+                       sourcemeta::core::JSON{"Sourcemeta One Enterprise"});
+#else
+    server_info.assign("name", sourcemeta::core::JSON{"sourcemeta-one"});
+    server_info.assign("title", sourcemeta::core::JSON{"Sourcemeta One"});
+#endif
+    server_info.assign("version",
+                       sourcemeta::core::JSON{sourcemeta::one::version()});
+    initialize_result.assign("serverInfo", std::move(server_info));
+
+    auto template_entry{sourcemeta::core::JSON::make_object()};
+    std::string template_uri{configuration.url};
+    if (!template_uri.empty() && template_uri.back() == '/') {
+      template_uri.pop_back();
+    }
+    template_uri.append("/{+path}{?bundle}");
+    template_entry.assign("uriTemplate", sourcemeta::core::JSON{template_uri});
+    template_entry.assign("name", sourcemeta::core::JSON{"JSON Schema"});
+    template_entry.assign(
+        "description",
+        sourcemeta::core::JSON{
+            "A JSON Schema in this catalog (optionally bundled)"});
+    template_entry.assign("mimeType",
+                          sourcemeta::core::JSON{"application/schema+json"});
+
+    auto resource_templates{sourcemeta::core::JSON::make_array()};
+    resource_templates.push_back(std::move(template_entry));
+
+    auto resources{sourcemeta::core::JSON::make_object()};
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    sourcemeta::one::generate_mcp_resources(
+        action.dependencies.front(), configuration, MCP_PAGE_SIZE, resources);
+#endif
+
+    auto document{sourcemeta::core::JSON::make_object()};
+    document.assign("initialize", std::move(initialize_result));
+    document.assign("resourceTemplates", std::move(resource_templates));
+    document.assign("resources", std::move(resources));
+
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+    sourcemeta::one::metapack_write_pretty_json(
+        action.destination, document, "application/json",
+        sourcemeta::one::MetapackEncoding::GZIP, {},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+
+private:
+  static constexpr std::string_view MCP_PROTOCOL_VERSION{"2025-11-25"};
+  static constexpr std::size_t MCP_PAGE_SIZE{50};
 };
 
 struct GENERATE_EXPLORER_DIRECTORY_LIST {

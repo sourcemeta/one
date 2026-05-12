@@ -102,22 +102,23 @@ cat << 'EOF' > "$TMP/expected.txt"
 (  5%) Producing: schemas/left/left-a/s5/%/schema.metapack
 ( 10%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
 ( 15%) Producing: schemas/left/left-a/s5/%/locations.metapack
-( 21%) Producing: schemas/left/left-a/s5/%/positions.metapack
-( 26%) Producing: schemas/left/left-a/s5/%/stats.metapack
-( 31%) Producing: schemas/left/left-a/s5/%/bundle.metapack
-( 36%) Producing: schemas/left/left-a/s5/%/health.metapack
-( 42%) Producing: explorer/left/left-a/s5/%/schema.metapack
-( 47%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
-( 52%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
-( 57%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 63%) Producing: explorer/left/left-a/%/directory.metapack
-( 68%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 73%) Producing: explorer/left/%/directory.metapack
-( 78%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 84%) Producing: explorer/%/directory.metapack
-( 89%) Producing: explorer/left/%/directory-html.metapack
-( 94%) Producing: explorer/%/directory-html.metapack
-(100%) Producing: explorer/%/search.metapack
+( 20%) Producing: schemas/left/left-a/s5/%/positions.metapack
+( 25%) Producing: schemas/left/left-a/s5/%/stats.metapack
+( 30%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+( 35%) Producing: schemas/left/left-a/s5/%/health.metapack
+( 40%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 45%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+( 50%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+( 55%) Producing: schemas/left/left-a/s5/%/editor.metapack
+( 60%) Producing: explorer/left/left-a/%/directory.metapack
+( 65%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
+( 70%) Producing: explorer/left/%/directory.metapack
+( 75%) Producing: explorer/left/left-a/%/directory-html.metapack
+( 80%) Producing: explorer/%/directory.metapack
+( 85%) Producing: explorer/left/%/directory-html.metapack
+( 90%) Producing: explorer/%/directory-html.metapack
+( 95%) Producing: explorer/%/search.metapack
+(100%) Producing: explorer/%/mcp.metapack
 (100%) Combining: schemas/left/left-a/s5/%/dependents.metapack
 EOF
 

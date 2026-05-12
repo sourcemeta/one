@@ -20,7 +20,7 @@ TEST(Build_delta, full_empty_registry) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 8);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -40,12 +40,17 @@ TEST(Build_delta, full_empty_registry) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 3, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
                      output / "metadata.json", output / "version.json",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -63,7 +68,7 @@ TEST(Build_delta, full_single_schema) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 20);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -143,7 +148,11 @@ TEST(Build_delta, full_single_schema) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -162,6 +171,7 @@ TEST(Build_delta, full_single_schema) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -238,7 +248,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "bar" / "%" / "schema.metapack",
@@ -310,7 +320,11 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -328,6 +342,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
       output / "explorer" / "bar" / "%" / "schema.metapack",
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -388,7 +403,7 @@ TEST(Build_delta, incremental_one_schema_added) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -462,6 +477,10 @@ TEST(Build_delta, incremental_one_schema_added) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "bar" / "%" / "schema.metapack",
@@ -491,6 +510,7 @@ TEST(Build_delta, incremental_one_schema_added) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -509,7 +529,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 10, 22);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -589,10 +609,14 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 8, 0, 1, Remove, output / "schemas" / "ghost", "");
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 9, 0, 1, Remove, output / "schemas" / "ghost", "");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "configuration.json", output / "metadata.json",
@@ -610,6 +634,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -628,7 +653,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 21);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 10, 22);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -708,10 +733,14 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 8, 0, 1, Remove, output / "schemas" / "ghost", "");
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 9, 0, 1, Remove, output / "schemas" / "ghost", "");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "configuration.json", output / "metadata.json",
@@ -729,6 +758,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -743,7 +773,7 @@ TEST(Build_delta, full_with_comment) {
                                          entries, output, schemas, "1.0.0",
                                          false, "Hello world", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 10);
 
   EXPECT_ACTION(plan, 0, 0, 4, Comment, output / "comment.json", "Hello world");
   EXPECT_ACTION(plan, 0, 1, 4, Configuration, output / "configuration.json",
@@ -764,13 +794,18 @@ TEST(Build_delta, full_with_comment) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 3, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "comment.json",
                      output / "configuration.json", output / "metadata.json",
                      output / "version.json",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -789,7 +824,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 10);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -809,14 +844,19 @@ TEST(Build_delta, full_without_comment_removes_existing) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 3, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 4, 0, 1, Remove, output / "comment.json", "");
+  EXPECT_ACTION(plan, 4, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 5, 0, 1, Remove, output / "comment.json", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
                      output / "metadata.json", output / "version.json",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
@@ -837,7 +877,7 @@ TEST(Build_delta, incremental_with_comment) {
                                          entries, output, schemas, "1.0.0",
                                          true, "Hello world", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Comment, output / "comment.json", "Hello world");
 
@@ -911,7 +951,11 @@ TEST(Build_delta, incremental_with_comment) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
@@ -930,6 +974,7 @@ TEST(Build_delta, incremental_with_comment) {
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
                      output / "routes.bin");
@@ -952,7 +997,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 18);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1024,10 +1069,14 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Remove, output / "comment.json", "");
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Remove, output / "comment.json", "");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1044,6 +1093,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -1149,7 +1199,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 6);
 
   EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
@@ -1161,12 +1211,17 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
-  EXPECT_ACTION(plan, 2, 1, 2, Remove, output / "schemas", "");
+  EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 3, 0, 2, Remove, output / "explorer" / "foo", "");
+  EXPECT_ACTION(plan, 3, 1, 2, Remove, output / "schemas", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack");
@@ -1197,7 +1252,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 6);
 
   EXPECT_ACTION(plan, 0, 0, 1, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "");
@@ -1209,12 +1264,17 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 2, 0, 2, Remove, output / "explorer" / "foo", "");
-  EXPECT_ACTION(plan, 2, 1, 2, Remove, output / "schemas", "");
+  EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 3, 0, 2, Remove, output / "explorer" / "foo", "");
+  EXPECT_ACTION(plan, 3, 1, 2, Remove, output / "schemas", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "routes.bin",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack");
@@ -1245,7 +1305,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 10);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 11);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -1265,16 +1325,21 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 3, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 4, 0, 2, Remove, output / "explorer" / "foo", "");
-  EXPECT_ACTION(plan, 4, 1, 2, Remove, output / "schemas", "");
+  EXPECT_ACTION(plan, 4, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 5, 0, 2, Remove, output / "explorer" / "foo", "");
+  EXPECT_ACTION(plan, 5, 1, 2, Remove, output / "schemas", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
                      output / "configuration.json", output / "metadata.json",
                      output / "routes.bin",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "404.metapack",
                      output / "explorer" / "%" / "directory-html.metapack");
@@ -1291,7 +1356,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 19);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -1363,7 +1428,11 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
@@ -1379,6 +1448,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1401,7 +1471,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                                          entries, output, schemas, "1.0.0",
                                          false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 10, 21);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -1473,13 +1543,17 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 8, 0, 2, Remove,
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 9, 0, 2, Remove,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "");
-  EXPECT_ACTION(plan, 8, 1, 2, Remove,
+  EXPECT_ACTION(plan, 9, 1, 2, Remove,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
@@ -1495,6 +1569,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
                      output / "explorer" / "%" / "404.metapack",
@@ -1516,7 +1591,7 @@ TEST(Build_delta, incremental_evaluate_false) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 14);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 15);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1580,7 +1655,11 @@ TEST(Build_delta, incremental_evaluate_false) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
@@ -1596,6 +1675,7 @@ TEST(Build_delta, incremental_evaluate_false) {
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
                      output / "routes.bin");
@@ -1632,7 +1712,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
   EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
@@ -1648,6 +1728,10 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
   EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1666,6 +1750,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -1701,7 +1786,7 @@ TEST(Build_delta, incremental_missing_bundle) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 4, 9);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 5, 10);
 
   EXPECT_ACTION(plan, 0, 0, 1, Bundle,
                 output / "schemas" / "foo" / "%" / "bundle.metapack",
@@ -1745,6 +1830,10 @@ TEST(Build_delta, incremental_missing_bundle) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -1762,6 +1851,7 @@ TEST(Build_delta, incremental_missing_bundle) {
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -1797,7 +1887,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 2, 4);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 3, 5);
 
   EXPECT_ACTION(plan, 0, 0, 2, DirectoryList,
                 output / "explorer" / "%" / "directory.metapack", "",
@@ -1814,6 +1904,10 @@ TEST(Build_delta, incremental_missing_web_schema) {
   EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
+
+  EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1832,6 +1926,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -1960,7 +2055,7 @@ TEST(Build_delta, mtime_source_newer) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2034,6 +2129,10 @@ TEST(Build_delta, mtime_source_newer) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2063,6 +2162,7 @@ TEST(Build_delta, mtime_source_newer) {
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
       output / "explorer" / "bar" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -2095,7 +2195,7 @@ TEST(Build_delta, mtime_no_entry) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2169,6 +2269,10 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2197,6 +2301,7 @@ TEST(Build_delta, mtime_no_entry) {
       output / "explorer" / "bar" / "%" / "schema-html.metapack",
       output / "explorer" / "bar" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -2231,7 +2336,7 @@ TEST(Build_delta, mtime_no_file_mark) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2303,6 +2408,10 @@ TEST(Build_delta, mtime_no_file_mark) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -2319,6 +2428,7 @@ TEST(Build_delta, mtime_no_file_mark) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack", output / "routes.bin");
@@ -2348,7 +2458,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 28);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 29);
 
   EXPECT_ACTION(plan, 0, 0, 2, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2476,7 +2586,11 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -2506,6 +2620,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
       output / "explorer" / "b" / "%" / "schema.metapack",
       output / "explorer" / "b" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -2542,7 +2657,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 40);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 41);
 
   EXPECT_ACTION(plan, 0, 0, 3, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2726,7 +2841,11 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -2768,6 +2887,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
       output / "explorer" / "c" / "%" / "schema.metapack",
       output / "explorer" / "c" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -2801,7 +2921,7 @@ TEST(Build_delta, mtime_reverse_dep) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 27);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 28);
 
   EXPECT_ACTION(plan, 0, 0, 5, Materialise,
                 output / "schemas" / "a" / "%" / "schema.metapack",
@@ -2924,7 +3044,11 @@ TEST(Build_delta, mtime_reverse_dep) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -2954,6 +3078,7 @@ TEST(Build_delta, mtime_reverse_dep) {
       output / "explorer" / "b" / "%" / "schema.metapack",
       output / "explorer" / "b" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -2979,7 +3104,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3043,13 +3168,17 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 7, 0, 2, Remove,
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 2, Remove,
                 output / "schemas" / "foo" / "%" / "blaze-exhaustive.metapack",
                 "");
-  EXPECT_ACTION(plan, 7, 1, 2, Remove,
+  EXPECT_ACTION(plan, 8, 1, 2, Remove,
                 output / "schemas" / "foo" / "%" / "blaze-fast.metapack", "");
 
   EXPECT_TOTAL_FILES(plan, entries, output / "version.json",
@@ -3065,6 +3194,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                      output / "explorer" / "foo" / "%" / "schema.metapack",
                      output / "explorer" / "foo" / "%" / "schema-html.metapack",
                      output / "explorer" / "%" / "search.metapack",
+                     output / "explorer" / "%" / "mcp.metapack",
                      output / "explorer" / "%" / "directory.metapack",
                      output / "explorer" / "%" / "directory-html.metapack",
                      output / "routes.bin");
@@ -3079,7 +3209,7 @@ TEST(Build_delta, headless_full_empty_registry) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "1.0.0", false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 4, 6);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 5, 7);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -3093,12 +3223,17 @@ TEST(Build_delta, headless_full_empty_registry) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 3, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 3, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "configuration.json", output / "metadata.json",
       output / "version.json", output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
@@ -3112,7 +3247,7 @@ TEST(Build_delta, headless_full_single_schema) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "1.0.0", false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 17);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 18);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -3181,7 +3316,11 @@ TEST(Build_delta, headless_full_single_schema) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3199,6 +3338,7 @@ TEST(Build_delta, headless_full_single_schema) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
@@ -3216,7 +3356,7 @@ TEST(Build_delta, headless_incremental) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "1.0.0", true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 6, 13);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 7, 14);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3280,6 +3420,10 @@ TEST(Build_delta, headless_incremental) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3294,6 +3438,7 @@ TEST(Build_delta, headless_incremental) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack");
 }
 
@@ -3323,7 +3468,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "1.0.0", true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 8, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 19);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3387,17 +3532,21 @@ TEST(Build_delta, full_to_headless_removes_web) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 7, 0, 4, Remove,
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 8, 0, 4, Remove,
                 output / "explorer" / "%" / "404.metapack", "");
-  EXPECT_ACTION(plan, 7, 1, 4, Remove,
+  EXPECT_ACTION(plan, 8, 1, 4, Remove,
                 output / "explorer" / "%" / "directory-html.metapack", "");
-  EXPECT_ACTION(plan, 7, 2, 4, Remove,
+  EXPECT_ACTION(plan, 8, 2, 4, Remove,
                 output / "explorer" / "foo" / "%" / "directory-html.metapack",
                 "");
-  EXPECT_ACTION(plan, 7, 3, 4, Remove,
+  EXPECT_ACTION(plan, 8, 3, 4, Remove,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack", "");
 
   EXPECT_TOTAL_FILES(
@@ -3414,6 +3563,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
@@ -3492,7 +3642,7 @@ TEST(Build_delta, headless_to_full_incremental) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3564,7 +3714,11 @@ TEST(Build_delta, headless_to_full_incremental) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3582,6 +3736,7 @@ TEST(Build_delta, headless_to_full_incremental) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -3633,7 +3788,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 17);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -3705,7 +3860,11 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, Routes, output / "routes.bin", "Full",
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3724,6 +3883,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
       output / "explorer" / "foo" / "%" / "schema-html.metapack",
       output / "explorer" / "foo" / "%" / "directory.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "routes.bin");
@@ -3749,7 +3909,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "2.0.0", false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 20);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 10, 21);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -3818,14 +3978,18 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 7, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 8, 0, 3, Remove,
+  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Headless",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 9, 0, 3, Remove,
                 output / "explorer" / "%" / "404.metapack", "");
-  EXPECT_ACTION(plan, 8, 1, 3, Remove,
+  EXPECT_ACTION(plan, 9, 1, 3, Remove,
                 output / "explorer" / "%" / "directory-html.metapack", "");
-  EXPECT_ACTION(plan, 8, 2, 3, Remove,
+  EXPECT_ACTION(plan, 9, 2, 3, Remove,
                 output / "explorer" / "foo" / "%" / "schema-html.metapack", "");
 
   EXPECT_TOTAL_FILES(
@@ -3843,6 +4007,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
       output / "schemas" / "foo" / "%" / "editor.metapack",
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
@@ -3857,7 +4022,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                              sourcemeta::one::BuildPlan::Type::Headless,
                              entries, output, schemas, "1.0.0", false, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 9, 18);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Headless, 10, 19);
 
   EXPECT_ACTION(plan, 0, 0, 3, Configuration, output / "configuration.json",
                 "");
@@ -3944,7 +4109,11 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                 output / "explorer" / "example" / "%" / "directory.metapack",
                 output / "explorer" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 8, 0, 1, Routes, output / "routes.bin", "Headless",
+  EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 9, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
 
   EXPECT_TOTAL_FILES(
@@ -3963,6 +4132,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
       output / "schemas" / "example" / "test" / "%" / "editor.metapack",
       output / "explorer" / "example" / "test" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "example" / "%" / "directory.metapack",
       output / "routes.bin");
@@ -4015,7 +4185,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 8, 19);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 9, 20);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "example" / "schemas" / "c" / "%" /
@@ -4146,9 +4316,14 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "explorer" / "example" / "%" / "directory.metapack",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "routes.bin", output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "404.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
@@ -4262,7 +4437,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "foo" / "%" / "schema.metapack",
@@ -4337,9 +4512,14 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "routes.bin", output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack",
@@ -4402,7 +4582,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                                          entries, output, schemas, "1.0.0",
                                          true, "", {})};
 
-  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 6, 15);
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, Full, 7, 16);
 
   EXPECT_ACTION(plan, 0, 0, 1, Materialise,
                 output / "schemas" / "c" / "%" / "schema.metapack",
@@ -4477,9 +4657,14 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 output / "explorer" / "%" / "search.metapack", "",
                 output / "explorer" / "%" / "directory.metapack");
 
+  EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
+                "", output / "explorer" / "%" / "search.metapack",
+                output / "configuration.json");
+
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
       output / "routes.bin", output / "explorer" / "%" / "search.metapack",
+      output / "explorer" / "%" / "mcp.metapack",
       output / "explorer" / "%" / "directory.metapack",
       output / "explorer" / "%" / "directory-html.metapack",
       output / "explorer" / "%" / "404.metapack",

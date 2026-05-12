@@ -48,22 +48,23 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/test.json (#1)
 (100%) Resolving: example/test.json
 (  5%) Producing: configuration.json
-( 11%) Producing: metadata.json
-( 16%) Producing: version.json
-( 22%) Producing: schemas/example/test/%/schema.metapack
-( 27%) Producing: schemas/example/test/%/dependencies.metapack
-( 33%) Producing: schemas/example/test/%/locations.metapack
-( 38%) Producing: schemas/example/test/%/positions.metapack
-( 44%) Producing: schemas/example/test/%/stats.metapack
-( 50%) Producing: schemas/example/test/%/bundle.metapack
-( 55%) Producing: schemas/example/test/%/health.metapack
-( 61%) Producing: explorer/example/test/%/schema.metapack
-( 66%) Producing: schemas/example/test/%/blaze-exhaustive.metapack
-( 72%) Producing: schemas/example/test/%/blaze-fast.metapack
-( 77%) Producing: schemas/example/test/%/editor.metapack
-( 83%) Producing: explorer/example/%/directory.metapack
-( 88%) Producing: explorer/%/directory.metapack
-( 94%) Producing: explorer/%/search.metapack
+( 10%) Producing: metadata.json
+( 15%) Producing: version.json
+( 21%) Producing: schemas/example/test/%/schema.metapack
+( 26%) Producing: schemas/example/test/%/dependencies.metapack
+( 31%) Producing: schemas/example/test/%/locations.metapack
+( 36%) Producing: schemas/example/test/%/positions.metapack
+( 42%) Producing: schemas/example/test/%/stats.metapack
+( 47%) Producing: schemas/example/test/%/bundle.metapack
+( 52%) Producing: schemas/example/test/%/health.metapack
+( 57%) Producing: explorer/example/test/%/schema.metapack
+( 63%) Producing: schemas/example/test/%/blaze-exhaustive.metapack
+( 68%) Producing: schemas/example/test/%/blaze-fast.metapack
+( 73%) Producing: schemas/example/test/%/editor.metapack
+( 78%) Producing: explorer/example/%/directory.metapack
+( 84%) Producing: explorer/%/directory.metapack
+( 89%) Producing: explorer/%/search.metapack
+( 94%) Producing: explorer/%/mcp.metapack
 (100%) Producing: routes.bin
 (100%) Combining: schemas/example/test/%/dependents.metapack
 EOF
@@ -79,6 +80,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer
 ./explorer/%
 ./explorer/%/directory.metapack
+./explorer/%/mcp.metapack
 ./explorer/%/search.metapack
 ./explorer/example
 ./explorer/example/%

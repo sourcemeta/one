@@ -104,6 +104,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/%/404.metapack
 ./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack
+./explorer/%/mcp.metapack
 ./explorer/%/search.metapack
 ./explorer/example
 ./explorer/example/%

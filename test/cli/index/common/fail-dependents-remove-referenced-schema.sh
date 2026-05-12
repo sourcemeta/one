@@ -98,7 +98,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templa
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#29)
 (  7%) Producing: explorer/%/directory.metapack
-( 15%) Producing: schemas/example/schemas/b/%/dependencies.metapack
+( 14%) Producing: schemas/example/schemas/b/%/dependencies.metapack
 error: Could not resolve the reference to an external schema
   at identifier https://sourcemeta.com/example/schemas/a
   at path $(realpath "$TMP")/schemas/b.json

@@ -219,7 +219,7 @@ struct DirectoryRule {
   std::uint8_t dependency_count;
 };
 
-static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
+static constexpr std::array<DirectoryRule, 6> DIRECTORY_RULES{{
     {.action = BuildPlan::Action::Type::DirectoryList,
      .filename = "directory.metapack",
      .gate = TargetGate::Always,
@@ -239,6 +239,17 @@ static constexpr std::array<DirectoryRule, 5> DIRECTORY_RULES{{
      .dependencies = {{{.kind = DirectoryDependencyKind::AllDirectoryListings,
                         .filename = nullptr}}},
      .dependency_count = 1},
+
+    {.action = BuildPlan::Action::Type::Mcp,
+     .filename = "mcp.metapack",
+     .gate = TargetGate::Always,
+     .scope = DirectoryScope::RootOnly,
+     .only_full_rebuild = false,
+     .dependencies = {{{.kind = DirectoryDependencyKind::SameDirectoryTarget,
+                        .filename = "search.metapack"},
+                       {.kind = DirectoryDependencyKind::ExternalConfig,
+                        .filename = nullptr}}},
+     .dependency_count = 2},
 
     {.action = BuildPlan::Action::Type::WebIndex,
      .filename = "directory-html.metapack",

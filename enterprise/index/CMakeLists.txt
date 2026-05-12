@@ -10,4 +10,7 @@ target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze:
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::alterschema)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::build)
+target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::configuration)
+target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::json)
+target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::jsonschema)

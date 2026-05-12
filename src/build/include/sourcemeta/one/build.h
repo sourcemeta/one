@@ -37,6 +37,7 @@ struct BuildPlan {
       SchemaMetadata,
       Dependents,
       SearchIndex,
+      Mcp,
       DirectoryList,
       WebIndex,
       WebNotFound,
@@ -100,6 +101,7 @@ struct BuildLimits {
 // Aggregates:
 //
 // - SearchIndex: explorer/%/search <- ALL E/schema
+// - Mcp: explorer/%/mcp <- explorer/%/search, configuration.json
 enum class BuildPhase : std::uint8_t { Produce, Combine };
 
 SOURCEMETA_ONE_BUILD_EXPORT

@@ -7,7 +7,12 @@
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <string> // std::string
+#include <sourcemeta/one/search.h>
+
+#include <cstddef>     // std::size_t
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace sourcemeta::one {
 
@@ -44,6 +49,57 @@ auto load_custom_lint_rules(
       throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
     }
+  }
+}
+
+auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
+                            const sourcemeta::one::Configuration &configuration,
+                            const std::size_t page_size,
+                            sourcemeta::core::JSON &resources) -> void {
+  sourcemeta::one::SearchView search_view{search_metapack_path};
+  const auto total{search_view.count()};
+  const auto page_count{total == 0 ? std::size_t{1}
+                                   : (total + page_size - 1) / page_size};
+
+  for (std::size_t page_index{0}; page_index < page_count; ++page_index) {
+    const auto offset{page_index * page_size};
+    auto page{sourcemeta::core::JSON::make_object()};
+    auto entries{sourcemeta::core::JSON::make_array()};
+
+    search_view.for_each(
+        offset, page_size,
+        [&entries, &configuration](
+            const sourcemeta::one::SearchListEntry &entry) -> void {
+          std::string_view name{entry.path};
+          const auto last_slash{name.rfind('/')};
+          if (last_slash != std::string_view::npos) {
+            name.remove_prefix(last_slash + 1);
+          }
+
+          std::string uri{configuration.origin};
+          uri.append(entry.path);
+
+          auto resource{sourcemeta::core::JSON::make_object()};
+          resource.assign("uri", sourcemeta::core::JSON{uri});
+          resource.assign("name", sourcemeta::core::JSON{name});
+          if (!entry.description.empty()) {
+            resource.assign("description",
+                            sourcemeta::core::JSON{entry.description});
+          }
+          resource.assign("mimeType",
+                          sourcemeta::core::JSON{"application/schema+json"});
+          resource.assign("size",
+                          sourcemeta::core::JSON{
+                              static_cast<std::size_t>(entry.bytes_raw)});
+          entries.push_back(std::move(resource));
+        });
+
+    page.assign("resources", std::move(entries));
+    if (page_index + 1 < page_count) {
+      page.assign("nextCursor",
+                  sourcemeta::core::JSON{std::to_string(offset + page_size)});
+    }
+    resources.assign(std::to_string(offset), std::move(page));
   }
 }
 
