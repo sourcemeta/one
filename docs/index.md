@@ -4,7 +4,7 @@ hide:
   - navigation
 ---
 
-# Welcome to the Sourcemeta One
+# Welcome to Sourcemeta One
 
 A high-performance, self-hosted [JSON Schema](https://json-schema.org)
 micro-service that transforms your **existing Git repositories of schemas**
