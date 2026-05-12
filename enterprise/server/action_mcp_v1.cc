@@ -30,10 +30,6 @@ namespace {
 
 constexpr std::string_view MCP_PROTOCOL_VERSION{"2025-11-25"};
 constexpr std::string_view MCP_LEGACY_PROTOCOL_VERSION{"2025-03-26"};
-constexpr std::string_view MCP_SERVER_NAME{"sourcemeta-one-enterprise"};
-constexpr std::string_view MCP_SERVER_TITLE{"Sourcemeta One Enterprise"};
-constexpr std::string_view MCP_TEMPLATE_DESCRIPTION{
-    "A JSON Schema in this catalog (optionally bundled)"};
 constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{"application/schema+json"};
 
 auto write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -94,37 +90,17 @@ auto resource_not_found(const sourcemeta::core::JSON &id,
                                              sourcemeta::core::JSON{uri});
 }
 
-auto handle_initialize(const sourcemeta::core::JSON &request_json)
+auto handle_initialize(const sourcemeta::core::JSON &request_json,
+                       const sourcemeta::core::JSON &mcp_metadata)
     -> sourcemeta::core::JSON {
-  auto capabilities{sourcemeta::core::JSON::make_object()};
-  capabilities.assign_assume_new(std::string{"resources"},
-                                 sourcemeta::core::JSON::make_object());
-
-  auto server_info{sourcemeta::core::JSON::make_object()};
-  server_info.assign_assume_new(std::string{"name"},
-                                sourcemeta::core::JSON{MCP_SERVER_NAME});
-  server_info.assign_assume_new(std::string{"title"},
-                                sourcemeta::core::JSON{MCP_SERVER_TITLE});
-  server_info.assign_assume_new(
-      std::string{"version"},
-      sourcemeta::core::JSON{sourcemeta::one::version()});
-
-  auto result{sourcemeta::core::JSON::make_object()};
-  result.assign_assume_new(std::string{"protocolVersion"},
-                           sourcemeta::core::JSON{MCP_PROTOCOL_VERSION});
-  result.assign_assume_new(std::string{"capabilities"},
-                           std::move(capabilities));
-  result.assign_assume_new(std::string{"serverInfo"}, std::move(server_info));
   return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
-                                               std::move(result));
+                                               mcp_metadata.at("initialize"));
 }
 
 auto handle_ping(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
   return sourcemeta::one::jsonrpc_make_success_empty(request_json.at("id"));
 }
-
-constexpr std::size_t MCP_PAGE_SCHEMAS{50};
 
 auto parse_cursor(const std::string_view cursor) -> std::optional<std::size_t> {
   if (cursor.empty()) {
@@ -143,13 +119,11 @@ auto parse_cursor(const std::string_view cursor) -> std::optional<std::size_t> {
 }
 
 auto handle_resources_list(const sourcemeta::core::JSON &request_json,
-                           const std::string_view origin,
-                           sourcemeta::one::SearchView &search_view)
+                           const sourcemeta::core::JSON &mcp_metadata)
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
-  const auto total_schemas{search_view.count()};
 
-  std::size_t schema_offset{0};
+  std::string cursor_key{"0"};
   const auto *params{sourcemeta::one::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
     const auto &cursor_string{params->at("cursor").to_string()};
@@ -159,80 +133,28 @@ auto handle_resources_list(const sourcemeta::core::JSON &request_json,
         return sourcemeta::one::jsonrpc_make_error_invalid_params(
             id, sourcemeta::core::JSON{cursor_string});
       }
-      schema_offset = parsed.value();
+      cursor_key = cursor_string;
     }
   }
 
-  auto resources{sourcemeta::core::JSON::make_array()};
-
-  search_view.for_each(
-      schema_offset, MCP_PAGE_SCHEMAS,
-      [&](const sourcemeta::one::SearchListEntry &entry) -> void {
-        std::string_view name{entry.path};
-        const auto last_slash{name.rfind('/')};
-        if (last_slash != std::string_view::npos) {
-          name.remove_prefix(last_slash + 1);
-        }
-
-        std::string uri{origin};
-        uri.append(entry.path);
-
-        auto resource{sourcemeta::core::JSON::make_object()};
-        resource.assign_assume_new(std::string{"uri"},
-                                   sourcemeta::core::JSON{uri});
-        resource.assign_assume_new(std::string{"name"},
-                                   sourcemeta::core::JSON{name});
-        if (!entry.description.empty()) {
-          resource.assign_assume_new(std::string{"description"},
-                                     sourcemeta::core::JSON{entry.description});
-        }
-        resource.assign_assume_new(
-            std::string{"mimeType"},
-            sourcemeta::core::JSON{MCP_TEMPLATE_MIME_TYPE});
-        resource.assign_assume_new(
-            std::string{"size"},
-            sourcemeta::core::JSON{static_cast<std::size_t>(entry.bytes_raw)});
-        resources.push_back(std::move(resource));
-      });
-
-  auto result{sourcemeta::core::JSON::make_object()};
-  result.assign_assume_new(std::string{"resources"}, std::move(resources));
-  const auto next_schema_offset{schema_offset + MCP_PAGE_SCHEMAS};
-  if (next_schema_offset < total_schemas) {
-    result.assign_assume_new(
-        std::string{"nextCursor"},
-        sourcemeta::core::JSON{std::to_string(next_schema_offset)});
+  const auto &resources{mcp_metadata.at("resources")};
+  if (!resources.defines(cursor_key)) {
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign_assume_new(std::string{"resources"},
+                             sourcemeta::core::JSON::make_array());
+    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
   }
-  return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
+
+  return sourcemeta::one::jsonrpc_make_success(id, resources.at(cursor_key));
 }
 
 auto handle_resources_templates_list(const sourcemeta::core::JSON &request_json,
-                                     const std::string_view registry_url)
+                                     const sourcemeta::core::JSON &mcp_metadata)
     -> sourcemeta::core::JSON {
-  // TODO: implement completion/complete to suggest schema paths for the
-  // {+path} variable
-  std::string template_uri{registry_url};
-  if (!template_uri.empty() && template_uri.back() == '/') {
-    template_uri.pop_back();
-  }
-  template_uri.append("/{+path}{?bundle}");
-
-  auto entry{sourcemeta::core::JSON::make_object()};
-  entry.assign_assume_new(std::string{"uriTemplate"},
-                          sourcemeta::core::JSON{template_uri});
-  entry.assign_assume_new(std::string{"name"},
-                          sourcemeta::core::JSON{"JSON Schema"});
-  entry.assign_assume_new(std::string{"description"},
-                          sourcemeta::core::JSON{MCP_TEMPLATE_DESCRIPTION});
-  entry.assign_assume_new(std::string{"mimeType"},
-                          sourcemeta::core::JSON{MCP_TEMPLATE_MIME_TYPE});
-
-  auto templates{sourcemeta::core::JSON::make_array()};
-  templates.push_back(std::move(entry));
-
   auto result{sourcemeta::core::JSON::make_object()};
-  result.assign_assume_new(std::string{"resourceTemplates"},
-                           std::move(templates));
+  result.assign_assume_new(
+      std::string{"resourceTemplates"},
+      sourcemeta::core::JSON{mcp_metadata.at("resourceTemplates")});
   return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
                                                std::move(result));
 }
@@ -340,7 +262,7 @@ auto handle_jsonrpc_message(
     const std::string_view response_schema,
     const sourcemeta::blaze::Template &request_schema_template,
     const std::string_view registry_url, const std::filesystem::path &base,
-    sourcemeta::one::SearchView &search_view, std::string &&body) -> void {
+    const sourcemeta::core::JSON &mcp_metadata, std::string &&body) -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -381,21 +303,20 @@ auto handle_jsonrpc_message(
 
   if (method == "initialize") {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        handle_initialize(request_json));
+                        handle_initialize(request_json, mcp_metadata));
     return;
   }
 
   if (method == "resources/list") {
-    write_json_envelope(
-        request, response, allowed_origin, response_schema,
-        handle_resources_list(request_json, allowed_origin, search_view));
+    write_json_envelope(request, response, allowed_origin, response_schema,
+                        handle_resources_list(request_json, mcp_metadata));
     return;
   }
 
   if (method == "resources/templates/list") {
     write_json_envelope(
         request, response, allowed_origin, response_schema,
-        handle_resources_templates_list(request_json, registry_url));
+        handle_resources_templates_list(request_json, mcp_metadata));
     return;
   }
 
@@ -416,7 +337,7 @@ EnterpriseMCP::EnterpriseMCP(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : base_{base}, search_view_{base / "explorer" / "%" / "search.metapack"} {
+    : base_{base} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -447,6 +368,12 @@ EnterpriseMCP::EnterpriseMCP(
   auto compiled{sourcemeta::blaze::from_json(template_json.value())};
   assert(compiled.has_value());
   this->request_schema_template_ = std::move(compiled.value());
+
+  const auto mcp_metadata_path{base / "explorer" / "%" / "mcp.metapack"};
+  auto mcp_metadata_option{
+      sourcemeta::one::metapack_read_json(mcp_metadata_path)};
+  assert(mcp_metadata_option.has_value());
+  this->mcp_metadata_ = std::move(mcp_metadata_option.value());
 }
 
 auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
@@ -494,10 +421,10 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
        registry_url = std::string_view{this->registry_url_},
        &base = this->base_,
        &request_schema_template = this->request_schema_template_,
-       &search_view =
-           this->search_view_](sourcemeta::one::HTTPRequest &callback_request,
-                               sourcemeta::one::HTTPResponse &callback_response,
-                               std::string &&body, bool too_big) {
+       &mcp_metadata = this->mcp_metadata_](
+          sourcemeta::one::HTTPRequest &callback_request,
+          sourcemeta::one::HTTPResponse &callback_response, std::string &&body,
+          bool too_big) {
         if (too_big) {
           write_envelope(callback_request, callback_response, allowed_origin,
                          response_schema,
@@ -508,7 +435,7 @@ auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
         handle_jsonrpc_message(callback_request, callback_response,
                                allowed_origin, response_schema,
                                request_schema_template, registry_url, base,
-                               search_view, std::move(body));
+                               mcp_metadata, std::move(body));
       },
       [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_](

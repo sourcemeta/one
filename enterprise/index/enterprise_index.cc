@@ -7,7 +7,12 @@
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <string> // std::string
+#include <sourcemeta/one/search.h>
+
+#include <cstddef>     // std::size_t
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace sourcemeta::one {
 
@@ -44,6 +49,61 @@ auto load_custom_lint_rules(
       throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
     }
+  }
+}
+
+auto enterprise_generate_mcp_resources(
+    const std::filesystem::path &search_metapack_path,
+    const sourcemeta::one::Configuration &configuration,
+    const std::size_t page_size, sourcemeta::core::JSON &resources) -> void {
+  sourcemeta::one::SearchView search_view{search_metapack_path};
+  const auto total{search_view.count()};
+
+  std::size_t offset{0};
+  while (true) {
+    auto page{sourcemeta::core::JSON::make_object()};
+    auto entries{sourcemeta::core::JSON::make_array()};
+
+    search_view.for_each(
+        offset, page_size,
+        [&entries, &configuration](
+            const sourcemeta::one::SearchListEntry &entry) -> void {
+          std::string_view name{entry.path};
+          const auto last_slash{name.rfind('/')};
+          if (last_slash != std::string_view::npos) {
+            name.remove_prefix(last_slash + 1);
+          }
+
+          std::string uri{configuration.origin};
+          uri.append(entry.path);
+
+          auto resource{sourcemeta::core::JSON::make_object()};
+          resource.assign("uri", sourcemeta::core::JSON{uri});
+          resource.assign("name", sourcemeta::core::JSON{name});
+          if (!entry.description.empty()) {
+            resource.assign("description",
+                            sourcemeta::core::JSON{entry.description});
+          }
+          resource.assign("mimeType",
+                          sourcemeta::core::JSON{"application/schema+json"});
+          resource.assign("size",
+                          sourcemeta::core::JSON{
+                              static_cast<std::size_t>(entry.bytes_raw)});
+          entries.push_back(std::move(resource));
+        });
+
+    page.assign("resources", std::move(entries));
+    const auto next_offset{offset + page_size};
+    if (next_offset < total) {
+      page.assign("nextCursor",
+                  sourcemeta::core::JSON{std::to_string(next_offset)});
+    }
+    resources.assign(std::to_string(offset), std::move(page));
+
+    if (next_offset >= total) {
+      break;
+    }
+    offset = next_offset;
   }
 }
 

@@ -98,10 +98,11 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/r
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#27)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#29)
-( 20%) Producing: explorer/%/directory.metapack
-( 40%) Producing: explorer/%/directory-html.metapack
-( 60%) Producing: explorer/%/search.metapack
-( 80%) Disposing: explorer/example/schemas/b
+( 16%) Producing: explorer/%/directory.metapack
+( 33%) Producing: explorer/%/directory-html.metapack
+( 50%) Producing: explorer/%/search.metapack
+( 66%) Producing: explorer/%/mcp.metapack
+( 83%) Disposing: explorer/example/schemas/b
 (100%) Disposing: schemas/example/schemas/b
 (100%) Combining: schemas/example/schemas/a/%/dependents.metapack
 EOF
@@ -119,6 +120,7 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/%/404.metapack
 ./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack
+./explorer/%/mcp.metapack
 ./explorer/%/search.metapack
 ./explorer/example
 ./explorer/example/%
