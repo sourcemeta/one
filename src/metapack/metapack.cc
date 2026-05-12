@@ -6,15 +6,22 @@
 
 #include <cassert>     // assert
 #include <cstring>     // std::memcpy
-#include <fstream>     // std::ofstream
 #include <optional>    // std::optional, std::nullopt
-#include <sstream>     // std::ostringstream, std::stringstream
+#include <ostream>     // std::ostream
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
 namespace sourcemeta::one {
 
-static auto write_binary_header(std::ostream &output,
+static auto read_extension_size(const sourcemeta::core::FileView &view,
+                                const std::size_t offset) -> std::uint32_t {
+  sourcemeta::core::BinaryReader reader{view};
+  reader.seek(offset);
+  return reader.get_dword();
+}
+
+static auto write_binary_header(sourcemeta::core::BinaryWriter &writer,
                                 const std::string_view mime,
                                 const MetapackEncoding encoding,
                                 const std::span<const std::uint8_t> extension,
@@ -46,17 +53,17 @@ static auto write_binary_header(std::ostream &output,
   header.mime_length = static_cast<std::uint16_t>(mime.size());
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  output.write(reinterpret_cast<const char *>(&header), sizeof(MetapackHeader));
-  output.write(mime.data(), static_cast<std::streamsize>(mime.size()));
-
-  const auto extension_size{static_cast<std::uint32_t>(extension.size())};
+  writer.put_bytes(reinterpret_cast<const std::byte *>(&header),
+                   sizeof(MetapackHeader));
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  output.write(reinterpret_cast<const char *>(&extension_size),
-               sizeof(extension_size));
+  writer.put_bytes(reinterpret_cast<const std::byte *>(mime.data()),
+                   mime.size());
+
+  writer.put_dword(static_cast<std::uint32_t>(extension.size()));
   if (!extension.empty()) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    output.write(reinterpret_cast<const char *>(extension.data()),
-                 static_cast<std::streamsize>(extension.size()));
+    writer.put_bytes(reinterpret_cast<const std::byte *>(extension.data()),
+                     extension.size());
   }
 }
 
@@ -66,23 +73,24 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const std::span<const std::uint8_t> extension,
                            const std::chrono::milliseconds duration,
                            const std::string &content) -> void {
-  std::ofstream output{destination, std::ios::binary};
-  assert(!output.fail());
+  sourcemeta::core::atomic_write_file(destination, [&](std::ostream &output) {
+    sourcemeta::core::BinaryWriter writer{output};
+    write_binary_header(writer, mime, encoding, extension, duration, content,
+                        content.size());
 
-  write_binary_header(output, mime, encoding, extension, duration, content,
-                      content.size());
-
-  if (encoding == MetapackEncoding::GZIP) {
-    const auto compressed{sourcemeta::core::gzip(
-        reinterpret_cast<const std::uint8_t *>(content.data()),
-        content.size())};
-    output.write(compressed.data(),
-                 static_cast<std::streamsize>(compressed.size()));
-  } else {
-    output.write(content.data(), static_cast<std::streamsize>(content.size()));
-  }
-
-  output.flush();
+    if (encoding == MetapackEncoding::GZIP) {
+      const auto compressed{sourcemeta::core::gzip(
+          reinterpret_cast<const std::uint8_t *>(content.data()),
+          content.size())};
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      writer.put_bytes(reinterpret_cast<const std::byte *>(compressed.data()),
+                       compressed.size());
+    } else {
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      writer.put_bytes(reinterpret_cast<const std::byte *>(content.data()),
+                       content.size());
+    }
+  });
 }
 
 auto metapack_write_json(const std::filesystem::path &destination,
@@ -93,7 +101,6 @@ auto metapack_write_json(const std::filesystem::path &destination,
                          const std::chrono::milliseconds duration) -> void {
   std::ostringstream buffer;
   sourcemeta::core::stringify(document, buffer);
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
                  buffer.str());
 }
@@ -107,7 +114,6 @@ auto metapack_write_pretty_json(const std::filesystem::path &destination,
     -> void {
   std::ostringstream buffer;
   sourcemeta::core::prettify(document, buffer);
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
                  buffer.str());
 }
@@ -120,7 +126,6 @@ auto metapack_write_text(const std::filesystem::path &destination,
                          const std::chrono::milliseconds duration) -> void {
   std::string content{contents};
   content += '\n';
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration, content);
 }
 
@@ -130,12 +135,8 @@ auto metapack_write_file(const std::filesystem::path &destination,
                          const MetapackEncoding encoding,
                          const std::span<const std::uint8_t> extension,
                          const std::chrono::milliseconds duration) -> void {
-  auto stream{sourcemeta::core::read_file(source)};
-  std::ostringstream buffer;
-  buffer << stream.rdbuf();
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
-                 buffer.str());
+                 sourcemeta::core::read_file_to_string(source));
 }
 
 auto metapack_extension_offset(const sourcemeta::core::FileView &view)
@@ -156,7 +157,8 @@ auto metapack_extension_offset(const sourcemeta::core::FileView &view)
     return 0;
   }
 
-  const auto extension_size{*view.as<std::uint32_t>(offset_of_extension_size)};
+  const auto extension_size{
+      read_extension_size(view, offset_of_extension_size)};
   if (extension_size == 0) {
     return 0;
   }
@@ -188,7 +190,7 @@ auto metapack_extension_size(const sourcemeta::core::FileView &view)
     return 0;
   }
 
-  return *view.as<std::uint32_t>(offset_of_extension_size);
+  return read_extension_size(view, offset_of_extension_size);
 }
 
 auto metapack_read_json(const std::filesystem::path &path)
@@ -209,12 +211,12 @@ auto metapack_read_json(const std::filesystem::path &path)
     return std::nullopt;
   }
 
-  const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
+  const auto extension_size{read_extension_size(view, payload_offset)};
   payload_offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - payload_offset) {
+  if (extension_size > view.size() - payload_offset) {
     return std::nullopt;
   }
-  payload_offset += *extension_size;
+  payload_offset += extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
   if (payload_data_size == 0) {
@@ -262,12 +264,12 @@ auto metapack_read_text(const std::filesystem::path &path)
     return std::nullopt;
   }
 
-  const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
+  const auto extension_size{read_extension_size(view, payload_offset)};
   payload_offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - payload_offset) {
+  if (extension_size > view.size() - payload_offset) {
     return std::nullopt;
   }
-  payload_offset += *extension_size;
+  payload_offset += extension_size;
 
   const auto payload_data_size{view.size() - payload_offset};
   if (payload_data_size == 0) {
@@ -351,12 +353,12 @@ auto metapack_payload_offset(const sourcemeta::core::FileView &view)
     return std::nullopt;
   }
 
-  const auto *extension_size{view.as<std::uint32_t>(offset)};
+  const auto extension_size{read_extension_size(view, offset)};
   offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - offset) {
+  if (extension_size > view.size() - offset) {
     return std::nullopt;
   }
-  offset += *extension_size;
+  offset += extension_size;
 
   return offset;
 }
