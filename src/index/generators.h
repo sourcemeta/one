@@ -784,19 +784,17 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  metadata_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =
-          {{"mode", static_cast<std::int64_t>(0)},
-           {"responseSchema", std::string_view{evaluate_response_schema}},
+          {{"responseSchema", std::string_view{evaluate_response_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/evaluate/{+schema}", next_id++,
                  sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
                  evaluate_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
-          {"mode", static_cast<std::int64_t>(1)},
           {"responseSchema", std::string_view{trace_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/trace/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
+                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1,
                  trace_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument search_arguments[] = {

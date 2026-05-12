@@ -23,6 +23,7 @@ namespace sourcemeta::one {
   X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1)                          \
   X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
+  X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTrace_v1)                             \
   X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \
   X(SERVE_STATIC_V1, ActionServeStatic_v1)                                     \
   X(MCP_V1, ActionMCP_v1)
