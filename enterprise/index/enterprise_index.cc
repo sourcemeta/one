@@ -52,15 +52,17 @@ auto load_custom_lint_rules(
   }
 }
 
-auto enterprise_generate_mcp_resources(
-    const std::filesystem::path &search_metapack_path,
-    const sourcemeta::one::Configuration &configuration,
-    const std::size_t page_size, sourcemeta::core::JSON &resources) -> void {
+auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
+                            const sourcemeta::one::Configuration &configuration,
+                            const std::size_t page_size,
+                            sourcemeta::core::JSON &resources) -> void {
   sourcemeta::one::SearchView search_view{search_metapack_path};
   const auto total{search_view.count()};
+  const auto page_count{total == 0 ? std::size_t{1}
+                                   : (total + page_size - 1) / page_size};
 
-  std::size_t offset{0};
-  while (true) {
+  for (std::size_t page_index{0}; page_index < page_count; ++page_index) {
+    const auto offset{page_index * page_size};
     auto page{sourcemeta::core::JSON::make_object()};
     auto entries{sourcemeta::core::JSON::make_array()};
 
@@ -93,17 +95,11 @@ auto enterprise_generate_mcp_resources(
         });
 
     page.assign("resources", std::move(entries));
-    const auto next_offset{offset + page_size};
-    if (next_offset < total) {
+    if (page_index + 1 < page_count) {
       page.assign("nextCursor",
-                  sourcemeta::core::JSON{std::to_string(next_offset)});
+                  sourcemeta::core::JSON{std::to_string(offset + page_size)});
     }
     resources.assign(std::to_string(offset), std::move(page));
-
-    if (next_offset >= total) {
-      break;
-    }
-    offset = next_offset;
   }
 }
 

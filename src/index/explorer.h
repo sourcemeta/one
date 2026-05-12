@@ -599,7 +599,7 @@ struct GENERATE_MCP {
     auto resources{sourcemeta::core::JSON::make_object()};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-    sourcemeta::one::enterprise_generate_mcp_resources(
+    sourcemeta::one::generate_mcp_resources(
         action.dependencies.front(), configuration, MCP_PAGE_SIZE, resources);
 #endif
 

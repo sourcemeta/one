@@ -24,10 +24,10 @@ auto load_custom_lint_rules(
     const sourcemeta::one::Resolver &resolver,
     const sourcemeta::one::BuildDynamicCallback &callback) -> void;
 
-auto enterprise_generate_mcp_resources(
-    const std::filesystem::path &search_metapack_path,
-    const sourcemeta::one::Configuration &configuration,
-    const std::size_t page_size, sourcemeta::core::JSON &resources) -> void;
+auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
+                            const sourcemeta::one::Configuration &configuration,
+                            const std::size_t page_size,
+                            sourcemeta::core::JSON &resources) -> void;
 
 } // namespace sourcemeta::one
 
