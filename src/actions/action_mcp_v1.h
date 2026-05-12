@@ -70,7 +70,7 @@ public:
 
     const auto mcp_metadata_path{this->base() / "explorer" / "%" /
                                  "mcp.metapack"};
-    const auto mcp_metadata_option{
+    auto mcp_metadata_option{
         sourcemeta::one::metapack_read_json(mcp_metadata_path)};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
