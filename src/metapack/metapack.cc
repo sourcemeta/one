@@ -6,7 +6,6 @@
 
 #include <cassert>     // assert
 #include <cstring>     // std::memcpy
-#include <fstream>     // std::ofstream
 #include <optional>    // std::optional, std::nullopt
 #include <ostream>     // std::ostream
 #include <sstream>     // std::ostringstream
@@ -61,32 +60,27 @@ static auto write_binary_header(std::ostream &output,
   }
 }
 
-// TODO: Switch to a sourcemeta::core::io atomic-write helper once one exists
-// that does not fsync per file. The per-schema generators call this in a tight
-// loop and the durable variant regresses fresh-index throughput by ~75%.
 static auto write_metapack(const std::filesystem::path &destination,
                            const std::string_view mime,
                            const MetapackEncoding encoding,
                            const std::span<const std::uint8_t> extension,
                            const std::chrono::milliseconds duration,
                            const std::string &content) -> void {
-  std::ofstream output{destination, std::ios::binary};
-  assert(!output.fail());
+  sourcemeta::core::write_file(destination, [&](std::ostream &output) {
+    write_binary_header(output, mime, encoding, extension, duration, content,
+                        content.size());
 
-  write_binary_header(output, mime, encoding, extension, duration, content,
-                      content.size());
-
-  if (encoding == MetapackEncoding::GZIP) {
-    const auto compressed{sourcemeta::core::gzip(
-        reinterpret_cast<const std::uint8_t *>(content.data()),
-        content.size())};
-    output.write(compressed.data(),
-                 static_cast<std::streamsize>(compressed.size()));
-  } else {
-    output.write(content.data(), static_cast<std::streamsize>(content.size()));
-  }
-
-  output.flush();
+    if (encoding == MetapackEncoding::GZIP) {
+      const auto compressed{sourcemeta::core::gzip(
+          reinterpret_cast<const std::uint8_t *>(content.data()),
+          content.size())};
+      output.write(compressed.data(),
+                   static_cast<std::streamsize>(compressed.size()));
+    } else {
+      output.write(content.data(),
+                   static_cast<std::streamsize>(content.size()));
+    }
+  });
 }
 
 auto metapack_write_json(const std::filesystem::path &destination,
@@ -97,7 +91,6 @@ auto metapack_write_json(const std::filesystem::path &destination,
                          const std::chrono::milliseconds duration) -> void {
   std::ostringstream buffer;
   sourcemeta::core::stringify(document, buffer);
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
                  buffer.str());
 }
@@ -111,7 +104,6 @@ auto metapack_write_pretty_json(const std::filesystem::path &destination,
     -> void {
   std::ostringstream buffer;
   sourcemeta::core::prettify(document, buffer);
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
                  buffer.str());
 }
@@ -124,7 +116,6 @@ auto metapack_write_text(const std::filesystem::path &destination,
                          const std::chrono::milliseconds duration) -> void {
   std::string content{contents};
   content += '\n';
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration, content);
 }
 
@@ -134,7 +125,6 @@ auto metapack_write_file(const std::filesystem::path &destination,
                          const MetapackEncoding encoding,
                          const std::span<const std::uint8_t> extension,
                          const std::chrono::milliseconds duration) -> void {
-  std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
                  sourcemeta::core::read_file_to_string(source));
 }
