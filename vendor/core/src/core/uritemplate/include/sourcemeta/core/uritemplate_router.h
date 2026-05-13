@@ -30,8 +30,18 @@ namespace sourcemeta::core {
 
 /// @ingroup uritemplate
 /// A URI Template path router. Keep in mind that the URI Template specification
-/// DOES NOT define expansion. So this is an opinionated non-standard adaptation
-/// of URI Template for path routing purposes
+/// DOES NOT define matching, only expansion. So this is an opinionated
+/// non-standard adaptation of URI Template for path routing purposes. The
+/// supported operators are:
+///
+/// - `{var}` for a single path segment (RFC 6570 Level 1 simple expansion)
+/// - `{+var}` for greedy capture to the end of the path, requiring at least
+///   one trailing segment (RFC 6570 Level 2 reserved expansion)
+/// - `{/var*}` for optional greedy capture to the end of the path, where
+///   zero trailing segments are also allowed (RFC 6570 Level 3 path-segment
+///   operator with Level 4 explode modifier). Must be the last component of
+///   the template. The captured value is empty when no trailing segments
+///   are present
 class SOURCEMETA_CORE_URITEMPLATE_EXPORT URITemplateRouter {
   friend class URITemplateRouterView;
 
@@ -56,7 +66,8 @@ public:
     Root = 0,
     Literal = 1,
     Variable = 2,
-    Expansion = 3
+    Expansion = 3,
+    OptionalExpansion = 4
   };
 
   /// A node in the router trie
