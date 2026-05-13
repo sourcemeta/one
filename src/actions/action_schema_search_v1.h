@@ -34,9 +34,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view>,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view>,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
 
     if (request.method() != "get") {
       sourcemeta::one::json_error(

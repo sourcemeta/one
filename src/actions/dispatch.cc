@@ -88,5 +88,5 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
         CONSTRUCTORS[context](this->base_, this->router_, identifier);
   });
 
-  slot.instance->run(matches, request, response);
+  slot.instance->rest(matches, request, response);
 }

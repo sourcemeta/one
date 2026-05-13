@@ -47,9 +47,9 @@ public:
         this->base(), router.base_path(), request_schema);
   }
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
         matches, request, response, this->base(), this->response_schema_,
         this->error_schema_, this->request_schema_template_,

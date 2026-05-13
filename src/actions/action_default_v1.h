@@ -28,9 +28,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view>,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view>,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     auto path{request.path()};
     if (!this->base_path().empty()) {
       if (!path.starts_with(this->base_path()) ||

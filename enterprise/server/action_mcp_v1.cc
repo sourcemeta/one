@@ -376,8 +376,8 @@ EnterpriseMCP::EnterpriseMCP(
   this->mcp_metadata_ = std::move(mcp_metadata_option.value());
 }
 
-auto EnterpriseMCP::run(sourcemeta::one::HTTPRequest &request,
-                        sourcemeta::one::HTTPResponse &response) -> void {
+auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
+                         sourcemeta::one::HTTPResponse &response) -> void {
   const auto origin_header{request.header("origin")};
   if (!origin_header.empty() && origin_header != this->allowed_origin_) {
     write_envelope(request, response, this->allowed_origin_,

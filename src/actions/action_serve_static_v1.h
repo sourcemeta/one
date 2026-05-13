@@ -29,9 +29,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     if (this->file_root_.empty()) {
       if (request.method() != "get" && request.method() != "head") {
         sourcemeta::one::json_error(

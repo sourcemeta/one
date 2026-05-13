@@ -31,9 +31,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     auto absolute_path{this->base() / "explorer"};
     if (!matches.empty() && !matches.front().empty()) {
       absolute_path /= matches.front();

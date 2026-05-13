@@ -20,10 +20,10 @@ public:
       : sourcemeta::one::Action{base, router.base_path()},
         EnterpriseMCP{base, router, identifier} {}
 
-  auto run(const std::span<std::string_view>,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
-    EnterpriseMCP::run(request, response);
+  auto rest(const std::span<std::string_view>,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
+    EnterpriseMCP::rest(request, response);
   }
 };
 
@@ -76,9 +76,9 @@ public:
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
   }
 
-  auto run(const std::span<std::string_view>,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view>,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin",
