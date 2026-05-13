@@ -11,7 +11,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/v1/catalog/"
 jsonpath "$.url" == "{{base}}/v1/catalog"
 jsonpath "$.health" == 44
-jsonpath "$.schemas" == 42
+jsonpath "$.schemas" == 44
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.entries" count == 4
 jsonpath "$.entries[0].name" == "draft3"
