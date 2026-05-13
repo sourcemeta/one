@@ -719,10 +719,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
           {"artifact", std::string_view{"directory"}},
           {"responseSchema", std::string_view{list_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/list", "list_directory_root", next_id++,
-                 sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
-                 list_arguments);
-      router.add("/self/v1/api/list/{+path}", "list_directory", next_id++,
+      router.add("/self/v1/api/list{/path*}", "list_directory", next_id++,
                  sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
                  list_arguments);
 

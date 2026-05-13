@@ -19,7 +19,7 @@ namespace sourcemeta::core {
 namespace {
 
 constexpr std::uint32_t ROUTER_MAGIC = 0x52544552; // "RTER"
-constexpr std::uint32_t ROUTER_VERSION = 6;
+constexpr std::uint32_t ROUTER_VERSION = 7;
 constexpr std::uint32_t NO_CHILD = std::numeric_limits<std::uint32_t>::max();
 
 // Type tags for argument value serialization
@@ -81,6 +81,12 @@ finalize_match(const URITemplateRouter::Identifier otherwise_context,
   }
 
   return {identifier, context};
+}
+
+inline auto is_expansion_type(const URITemplateRouter::NodeType type) noexcept
+    -> bool {
+  return type == URITemplateRouter::NodeType::Expansion ||
+         type == URITemplateRouter::NodeType::OptionalExpansion;
 }
 
 // Binary search for a literal child matching the given segment
@@ -518,8 +524,9 @@ auto URITemplateRouterView::match(
         return finalize_match(otherwise_context, 0, 0);
       }
 
-      // Check if this is an expansion (catch-all)
-      if (variable_node.type == URITemplateRouter::NodeType::Expansion) {
+      // Both Expansion and OptionalExpansion consume the rest of the path
+      // verbatim
+      if (is_expansion_type(variable_node.type)) {
         const auto remaining_length =
             static_cast<std::uint32_t>(path_end - segment_start);
         callback(static_cast<URITemplateRouter::Index>(variable_index),
@@ -548,8 +555,27 @@ auto URITemplateRouterView::match(
     return finalize_match(otherwise_context, 0, 0);
   }
 
-  return finalize_match(otherwise_context, nodes[current_node].identifier,
-                        nodes[current_node].context);
+  const auto &final_node = nodes[current_node];
+  if (final_node.identifier == 0 && final_node.variable_child != NO_CHILD &&
+      final_node.variable_child < header->node_count) {
+    const auto &variable_node = nodes[final_node.variable_child];
+    if (variable_node.type == URITemplateRouter::NodeType::OptionalExpansion) {
+      if (variable_node.string_offset > string_table_size ||
+          variable_node.string_length >
+              string_table_size - variable_node.string_offset) {
+        return finalize_match(otherwise_context, 0, 0);
+      }
+      callback(static_cast<URITemplateRouter::Index>(variable_index),
+               {string_table + variable_node.string_offset,
+                variable_node.string_length},
+               std::string_view{});
+      return finalize_match(otherwise_context, variable_node.identifier,
+                            variable_node.context);
+    }
+  }
+
+  return finalize_match(otherwise_context, final_node.identifier,
+                        final_node.context);
 }
 
 auto URITemplateRouterView::arguments(

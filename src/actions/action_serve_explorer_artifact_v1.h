@@ -35,7 +35,7 @@ public:
            sourcemeta::one::HTTPRequest &request,
            sourcemeta::one::HTTPResponse &response) -> void override {
     auto absolute_path{this->base() / "explorer"};
-    if (!matches.empty()) {
+    if (!matches.empty() && !matches.front().empty()) {
       absolute_path /= matches.front();
     }
     absolute_path /= "%";
