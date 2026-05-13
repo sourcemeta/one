@@ -31,9 +31,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     if (matches.empty()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,

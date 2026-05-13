@@ -25,9 +25,9 @@ public:
     });
   }
 
-  auto run(const std::span<std::string_view>,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view>,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
         "There is nothing at this URL", this->error_schema_);

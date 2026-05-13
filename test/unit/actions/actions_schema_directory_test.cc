@@ -10,8 +10,8 @@ public:
              const std::string_view base_path)
       : sourcemeta::one::Action{base, base_path} {}
 
-  auto run(const std::span<std::string_view>, sourcemeta::one::HTTPRequest &,
-           sourcemeta::one::HTTPResponse &) -> void override {}
+  auto rest(const std::span<std::string_view>, sourcemeta::one::HTTPRequest &,
+            sourcemeta::one::HTTPResponse &) -> void override {}
 };
 
 } // namespace

@@ -25,8 +25,8 @@ public:
   auto operator=(EnterpriseMCP &&) -> EnterpriseMCP & = delete;
   ~EnterpriseMCP() = default;
 
-  auto run(sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void;
+  auto rest(sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void;
 
 private:
   std::filesystem::path base_;

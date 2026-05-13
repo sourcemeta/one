@@ -93,9 +93,9 @@ public:
     }
   }
 
-  auto run(const std::span<std::string_view> matches,
-           sourcemeta::one::HTTPRequest &request,
-           sourcemeta::one::HTTPResponse &response) -> void override {
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override {
     serve(this->base(), matches.front(), request, response,
           this->error_schema_);
   }

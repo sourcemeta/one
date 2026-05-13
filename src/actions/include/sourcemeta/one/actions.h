@@ -49,8 +49,8 @@ public:
   auto operator=(const Action &) -> Action & = delete;
   auto operator=(Action &&) -> Action & = delete;
 
-  virtual auto run(const std::span<std::string_view> matches,
-                   HTTPRequest &request, HTTPResponse &response) -> void = 0;
+  virtual auto rest(const std::span<std::string_view> matches,
+                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
     return this->base_;
