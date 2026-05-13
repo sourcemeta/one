@@ -114,6 +114,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/evaluate/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/evaluate/request
+./explorer/self/v1/schemas/api/schemas/evaluate/request/%
+./explorer/self/v1/schemas/api/schemas/evaluate/request/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/evaluate/request/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/response
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema-html.metapack
@@ -174,6 +178,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/trace/%
 ./explorer/self/v1/schemas/api/schemas/trace/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/trace/request
+./explorer/self/v1/schemas/api/schemas/trace/request/%
+./explorer/self/v1/schemas/api/schemas/trace/request/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/trace/request/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response
 ./explorer/self/v1/schemas/api/schemas/trace/response/%
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
@@ -352,6 +360,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate
+./schemas/self/v1/schemas/api/schemas/evaluate/request
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-exhaustive.metapack
@@ -463,6 +484,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/trace
+./schemas/self/v1/schemas/api/schemas/trace/request
+./schemas/self/v1/schemas/api/schemas/trace/request/%
+./schemas/self/v1/schemas/api/schemas/trace/request/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response
 ./schemas/self/v1/schemas/api/schemas/trace/response/%
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-exhaustive.metapack
@@ -697,30 +731,32 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#22)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#23)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#24)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#26)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#27)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#28)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#22)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#23)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#24)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#25)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#28)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#30)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#31)
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

@@ -29,13 +29,20 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
       : sourcemeta::one::Action{base, router.base_path()} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
+    std::string_view request_schema;
+    router.arguments(identifier, [this, &request_schema](const auto &key,
+                                                         const auto &value) {
+      if (key == "requestSchema") {
+        request_schema = std::get<std::string_view>(value);
+      } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
     });
+
+    this->request_schema_template_ = ActionJSONSchemaEvaluate_v1::load_template(
+        this->base(), router.base_path(), request_schema);
   }
 
   auto run(const std::span<std::string_view> matches,
@@ -43,21 +50,44 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
         matches, request, response, this->base(), this->response_schema_,
-        this->error_schema_,
+        this->error_schema_, this->request_schema_template_,
         [this](const std::filesystem::path &template_path,
                const std::string &body) -> sourcemeta::core::JSON {
           return this->evaluate(template_path, body);
         });
   }
 
+  static auto load_template(const std::filesystem::path &base,
+                            const std::string_view base_path,
+                            std::string_view request_schema)
+      -> sourcemeta::blaze::Template {
+    if (!base_path.empty() && request_schema.starts_with(base_path)) {
+      request_schema.remove_prefix(base_path.size());
+    }
+    if (request_schema.starts_with('/')) {
+      request_schema.remove_prefix(1);
+    }
+
+    const auto template_path{base / "schemas" / request_schema / "%" /
+                             "blaze-fast.metapack"};
+    const auto template_json{
+        sourcemeta::one::metapack_read_json(template_path)};
+    assert(template_json.has_value());
+    auto compiled{sourcemeta::blaze::from_json(template_json.value())};
+    assert(compiled.has_value());
+    return std::move(compiled.value());
+  }
+
   template <typename Perform>
-  static auto serve_post(const std::span<std::string_view> matches,
-                         sourcemeta::one::HTTPRequest &request,
-                         sourcemeta::one::HTTPResponse &response,
-                         const std::filesystem::path &base,
-                         const std::string_view response_schema,
-                         const std::string_view error_schema, Perform perform)
-      -> void {
+  static auto
+  serve_post(const std::span<std::string_view> matches,
+             sourcemeta::one::HTTPRequest &request,
+             sourcemeta::one::HTTPResponse &response,
+             const std::filesystem::path &base,
+             const std::string_view response_schema,
+             const std::string_view error_schema,
+             const sourcemeta::blaze::Template &request_schema_template,
+             Perform perform) -> void {
     const auto &path{matches.front()};
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
@@ -100,7 +130,7 @@ public:
 
     request.body(
         [response_schema, error_schema,
-         template_path = std::move(template_path),
+         template_path = std::move(template_path), &request_schema_template,
          perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -118,6 +148,27 @@ public:
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_BAD_REQUEST, "no-instance",
                 "You must pass an instance to validate against", error_schema);
+            return;
+          }
+
+          sourcemeta::core::JSON instance{nullptr};
+          try {
+            instance = sourcemeta::core::parse_json(body);
+          } catch (const std::exception &) {
+            sourcemeta::one::json_error(
+                callback_request, callback_response,
+                sourcemeta::one::STATUS_BAD_REQUEST, "invalid-json",
+                "The request body is not valid JSON", error_schema);
+            return;
+          }
+
+          sourcemeta::blaze::Evaluator request_evaluator;
+          if (!request_evaluator.validate(request_schema_template, instance)) {
+            sourcemeta::one::json_error(
+                callback_request, callback_response,
+                sourcemeta::one::STATUS_BAD_REQUEST, "invalid-request",
+                "The request body does not match the expected schema",
+                error_schema);
             return;
           }
 
@@ -182,6 +233,7 @@ private:
 
   std::string_view response_schema_;
   std::string_view error_schema_;
+  sourcemeta::blaze::Template request_schema_template_;
 };
 
 #endif

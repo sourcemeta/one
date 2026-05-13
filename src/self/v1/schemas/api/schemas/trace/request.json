@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Trace API Request",
+  "description": "The JSON instance to trace evaluation against a schema in the catalog",
+  "examples": [
+    {
+      "name": "Alice",
+      "age": 30
+    },
+    "hello world",
+    42,
+    true,
+    null,
+    [ 1, 2, 3 ]
+  ]
+}
