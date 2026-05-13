@@ -32,7 +32,7 @@ jsonpath "$.entries[2].path" == "/v1/catalog/rebased/"
 jsonpath "$.entries[3].name" == "self"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 100
-jsonpath "$.entries[3].schemas" == 28
+jsonpath "$.entries[3].schemas" == 30
 jsonpath "$.entries[3].path" == "/v1/catalog/self/"
 jsonpath "$.entries[3].title" == "Self"
 jsonpath "$.entries[3].description" == "The schemas that define the current version of this instance"
