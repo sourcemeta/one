@@ -55,8 +55,8 @@ test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 error: Too many entries in a single directory
-  at path $(realpath "$TMP")/output/schemas/self/v1/schemas/api/schemas
-  with count 11
+  at path $(realpath "$TMP")/output/schemas/self/v1/schemas/api/schemas/evaluate
+  with count 3
 EOF
 
 tail -n 3 "$TMP/output.txt" > "$TMP/actual.txt"

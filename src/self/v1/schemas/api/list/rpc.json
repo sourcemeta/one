@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Directory Listing RPC Input",
+  "description": "List the contents of a directory in the catalog",
+  "examples": [
+    {},
+    {
+      "path": "example"
+    }
+  ],
+  "type": "object",
+  "properties": {
+    "path": {
+      "description": "Path within the catalog to list. Empty or omitted lists the root",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

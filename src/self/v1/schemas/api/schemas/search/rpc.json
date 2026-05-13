@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Search RPC Input",
+  "description": "Search for schemas in the catalog by query term",
+  "examples": [
+    {
+      "q": "string"
+    },
+    {
+      "q": "user",
+      "limit": 5
+    },
+    {
+      "q": "address",
+      "scope": [ "title", "description" ]
+    }
+  ],
+  "type": "object",
+  "required": [ "q" ],
+  "properties": {
+    "q": {
+      "description": "Case-insensitive substring to search for",
+      "type": "string",
+      "maxLength": 256
+    },
+    "limit": {
+      "description": "Maximum number of results to return",
+      "default": 10,
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 1
+    },
+    "scope": {
+      "description": "Schema fields to match the query against",
+      "default": [ "path", "title", "description" ],
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [ "path", "title", "description" ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
