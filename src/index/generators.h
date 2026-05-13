@@ -11,6 +11,7 @@
 
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/core/editorschema.h>
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
@@ -27,10 +28,10 @@
 #include <cassert>       // assert
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
-#include <fstream>       // std::ofstream
 #include <limits>        // std::numeric_limits
 #include <memory>        // std::unique_ptr
 #include <mutex>         // std::mutex, std::lock_guard
+#include <ostream>       // std::ostream
 #include <queue>         // std::queue
 #include <set>           // std::set
 #include <sstream>       // std::ostringstream
@@ -64,10 +65,11 @@ struct GENERATE_VERSION {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    std::filesystem::create_directories(action.destination.parent_path());
-    std::ofstream stream{action.destination};
-    assert(!stream.fail());
-    sourcemeta::core::stringify(sourcemeta::core::JSON{action.data}, stream);
+    sourcemeta::core::atomic_write_file(
+        action.destination, [&](std::ostream &stream) {
+          sourcemeta::core::stringify(sourcemeta::core::JSON{action.data},
+                                      stream);
+        });
   }
 };
 
@@ -78,10 +80,11 @@ struct GENERATE_COMMENT {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    std::filesystem::create_directories(action.destination.parent_path());
-    std::ofstream stream{action.destination};
-    assert(!stream.fail());
-    sourcemeta::core::stringify(sourcemeta::core::JSON{action.data}, stream);
+    sourcemeta::core::atomic_write_file(
+        action.destination, [&](std::ostream &stream) {
+          sourcemeta::core::stringify(sourcemeta::core::JSON{action.data},
+                                      stream);
+        });
   }
 };
 
@@ -92,10 +95,10 @@ struct GENERATE_CONFIGURATION {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &raw_configuration) -> void {
-    std::filesystem::create_directories(action.destination.parent_path());
-    std::ofstream stream{action.destination};
-    assert(!stream.fail());
-    sourcemeta::core::stringify(raw_configuration, stream);
+    sourcemeta::core::atomic_write_file(
+        action.destination, [&](std::ostream &stream) {
+          sourcemeta::core::stringify(raw_configuration, stream);
+        });
   }
 };
 
@@ -106,13 +109,13 @@ struct GENERATE_METADATA {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    std::filesystem::create_directories(action.destination.parent_path());
-    std::ofstream stream{action.destination};
-    assert(!stream.fail());
     auto metadata{sourcemeta::core::JSON::make_object()};
     metadata.assign("url", sourcemeta::core::JSON{configuration.url});
     metadata.assign("origin", sourcemeta::core::JSON{configuration.origin});
-    sourcemeta::core::stringify(metadata, stream);
+    sourcemeta::core::atomic_write_file(
+        action.destination, [&](std::ostream &stream) {
+          sourcemeta::core::stringify(metadata, stream);
+        });
   }
 };
 
@@ -716,10 +719,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
           {"artifact", std::string_view{"directory"}},
           {"responseSchema", std::string_view{list_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/list", next_id++,
+      router.add("/self/v1/api/list", "list", next_id++,
                  sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
                  list_arguments);
-      router.add("/self/v1/api/list/{+path}", next_id++,
+      router.add("/self/v1/api/list/{+path}", "listPath", next_id++,
                  sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
                  list_arguments);
 
@@ -728,7 +731,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
               {"artifact", std::string_view{"dependencies"}},
               {"responseSchema", std::string_view{dependencies_schema}},
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/dependencies/{+schema}", next_id++,
+      router.add("/self/v1/api/schemas/dependencies/{+schema}",
+                 "schemaDependencies", next_id++,
                  sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  dependencies_arguments);
 
@@ -737,7 +741,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
               {"artifact", std::string_view{"dependents"}},
               {"responseSchema", std::string_view{dependents_schema}},
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/dependents/{+schema}", next_id++,
+      router.add("/self/v1/api/schemas/dependents/{+schema}",
+                 "schemaDependents", next_id++,
                  sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  dependents_arguments);
 
@@ -745,8 +750,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
           {"artifact", std::string_view{"health"}},
           {"responseSchema", std::string_view{health_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/health/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+      router.add("/self/v1/api/schemas/health/{+schema}", "schemaHealth",
+                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  health_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
@@ -754,8 +759,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
               {"artifact", std::string_view{"locations"}},
               {"responseSchema", std::string_view{locations_schema}},
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/locations/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+      router.add("/self/v1/api/schemas/locations/{+schema}", "schemaLocations",
+                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  locations_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
@@ -763,64 +768,64 @@ struct GENERATE_URITEMPLATE_ROUTES {
               {"artifact", std::string_view{"positions"}},
               {"responseSchema", std::string_view{positions_schema}},
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/positions/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+      router.add("/self/v1/api/schemas/positions/{+schema}", "schemaPositions",
+                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  positions_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
           {"artifact", std::string_view{"stats"}},
           {"responseSchema", std::string_view{stats_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/stats/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+      router.add("/self/v1/api/schemas/stats/{+schema}", "schemaStats",
+                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
                  stats_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] =
           {{"artifact", std::string_view{"schema"}},
            {"responseSchema", std::string_view{metadata_schema}},
            {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/metadata/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
+      router.add("/self/v1/api/schemas/metadata/{+schema}", "schemaMetadata",
+                 next_id++, sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
                  metadata_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =
           {{"responseSchema", std::string_view{evaluate_response_schema}},
            {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/evaluate/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
+      router.add("/self/v1/api/schemas/evaluate/{+schema}", "schemaEvaluate",
+                 next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
                  evaluate_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
           {"responseSchema", std::string_view{trace_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/trace/{+schema}", next_id++,
-                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1,
+      router.add("/self/v1/api/schemas/trace/{+schema}", "schemaTrace",
+                 next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1,
                  trace_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument search_arguments[] = {
           {"responseSchema", std::string_view{search_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/schemas/search", next_id++,
+      router.add("/self/v1/api/schemas/search", "schemaSearch", next_id++,
                  sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
                  search_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           health_check_arguments[] = {
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/health", next_id++,
+      router.add("/self/v1/health", "health", next_id++,
                  sourcemeta::one::ACTION_TYPE_HEALTH_CHECK_V1,
                  health_check_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
           {"responseSchema", std::string_view{mcp_response_schema}}};
-      router.add("/self/v1/mcp", next_id++, sourcemeta::one::ACTION_TYPE_MCP_V1,
-                 mcp_arguments);
+      router.add("/self/v1/mcp", "mcp", next_id++,
+                 sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           not_found_arguments[] = {
               {"errorSchema", std::string_view{error_schema}}};
-      router.add("/self/v1/api/{+any}", next_id++,
+      router.add("/self/v1/api/{+any}", "notFound", next_id++,
                  sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1,
                  not_found_arguments);
 
@@ -828,13 +833,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
              {"errorSchema", std::string_view{error_schema}}};
-        router.add("/self/v1/static/{+path}", next_id++,
+        router.add("/self/v1/static/{+path}", "static", next_id++,
                    sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
       } else {
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"errorSchema", std::string_view{error_schema}}};
-        router.add("/self/v1/static/{+path}", next_id++,
+        router.add("/self/v1/static/{+path}", "static", next_id++,
                    sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
       }

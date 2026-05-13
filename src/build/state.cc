@@ -8,7 +8,7 @@
 #include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint> // std::int64_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <cstring> // std::memcpy, std::memcmp
-#include <fstream> // std::ofstream
+#include <ostream> // std::ostream
 #include <string>  // std::string
 #include <vector>  // std::vector
 
@@ -124,8 +124,10 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
       return;
     }
 
-    if (read_field<std::uint32_t>(this->view_data, 0) != STATE_MAGIC ||
-        read_field<std::uint32_t>(this->view_data, 4) != STATE_VERSION) {
+    sourcemeta::core::BinaryReader header_reader{*this->view};
+    const auto magic{header_reader.get_dword()};
+    const auto version{header_reader.get_dword()};
+    if (magic != STATE_MAGIC || version != STATE_VERSION) {
       this->table_capacity = 0;
       this->table_slots = nullptr;
       this->string_pool = nullptr;
@@ -136,11 +138,11 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
       return;
     }
 
-    this->table_capacity = read_field<std::uint32_t>(this->view_data, 8);
-    this->entry_count = read_field<std::uint32_t>(this->view_data, 12);
-    this->resolver_entry_count = read_field<std::uint32_t>(this->view_data, 20);
+    this->table_capacity = header_reader.get_dword();
+    this->entry_count = header_reader.get_dword();
+    const auto pool_size_value{header_reader.get_dword()};
+    this->resolver_entry_count = header_reader.get_dword();
     this->table_slots = this->view_data + HEADER_SIZE;
-    const auto pool_size_value{read_field<std::uint32_t>(this->view_data, 16)};
     this->string_pool =
         this->table_slots +
         static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE;
@@ -704,7 +706,9 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     slots.resize(old_slots_size);
     std::memcpy(slots.data(), this->table_slots, old_slots_size);
 
-    old_pool_size = read_field<std::uint32_t>(this->view_data, 16);
+    sourcemeta::core::BinaryReader pool_size_reader{*this->view};
+    pool_size_reader.seek(16);
+    old_pool_size = pool_size_reader.get_dword();
 
     auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
       const auto hash{fnv1a(entry_key.data(), entry_key.size())};
@@ -1213,37 +1217,31 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       schema_index_buffer.append(relative_path);
     }
 
-    const auto temp_path{path.native() + ".tmp"};
-    std::ofstream stream{temp_path, std::ios::binary};
-    assert(!stream.fail());
+    sourcemeta::core::atomic_write_file(path, [&](std::ostream &stream) {
+      sourcemeta::core::BinaryWriter writer{stream};
+      writer.put_dword(STATE_MAGIC);
+      writer.put_dword(STATE_VERSION);
+      writer.put_dword(capacity);
+      writer.put_dword(output_count);
+      writer.put_dword(total_pool_size);
+      writer.put_dword(resolver_count);
 
-    stream.write(reinterpret_cast<const char *>(&STATE_MAGIC),
-                 sizeof(STATE_MAGIC));
-    stream.write(reinterpret_cast<const char *>(&STATE_VERSION),
-                 sizeof(STATE_VERSION));
-    stream.write(reinterpret_cast<const char *>(&capacity), sizeof(capacity));
-    stream.write(reinterpret_cast<const char *>(&output_count),
-                 sizeof(output_count));
-    stream.write(reinterpret_cast<const char *>(&total_pool_size),
-                 sizeof(total_pool_size));
-    stream.write(reinterpret_cast<const char *>(&resolver_count),
-                 sizeof(resolver_count));
+      writer.put_bytes(reinterpret_cast<const std::byte *>(slots.data()),
+                       slots.size());
 
-    stream.write(reinterpret_cast<const char *>(slots.data()),
-                 static_cast<std::streamsize>(slots.size()));
+      if (can_patch && old_pool_size > 0) {
+        writer.put_bytes(reinterpret_cast<const std::byte *>(this->string_pool),
+                         old_pool_size);
+      }
+      if (!pool.empty()) {
+        writer.put_bytes(reinterpret_cast<const std::byte *>(pool.data()),
+                         pool.size());
+      }
 
-    if (can_patch && old_pool_size > 0) {
-      stream.write(reinterpret_cast<const char *>(this->string_pool),
-                   static_cast<std::streamsize>(old_pool_size));
-    }
-    if (!pool.empty()) {
-      stream.write(pool.data(), static_cast<std::streamsize>(pool.size()));
-    }
-
-    stream.write(schema_index_buffer.data(),
-                 static_cast<std::streamsize>(schema_index_buffer.size()));
-    stream.close();
-    std::filesystem::rename(temp_path, path);
+      writer.put_bytes(
+          reinterpret_cast<const std::byte *>(schema_index_buffer.data()),
+          schema_index_buffer.size());
+    });
   }
 }
 

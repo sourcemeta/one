@@ -1,6 +1,7 @@
 #include <sourcemeta/blaze/alterschema.h>
 
 #include <sourcemeta/core/error.h>
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
@@ -271,13 +272,11 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   const auto output_path{
-      std::filesystem::weakly_canonical(app.positional().at(1))};
+      sourcemeta::core::weakly_canonical(app.positional().at(1))};
 
   if (std::filesystem::exists(output_path) &&
       !std::filesystem::is_directory(output_path)) {
-    throw std::filesystem::filesystem_error{
-        "file already exists", output_path,
-        std::make_error_code(std::errc::file_exists)};
+    throw sourcemeta::core::IOFileAlreadyExistsError{output_path};
   }
 
   std::println(stderr, "Writing output to: {}", output_path.string());
@@ -287,7 +286,7 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   const auto configuration_path{
-      std::filesystem::canonical(app.positional().at(0))};
+      sourcemeta::core::canonical(app.positional().at(0))};
   std::println(stderr, "Using configuration: {}", configuration_path.string());
   std::unordered_set<std::string> configuration_files;
   const auto raw_configuration{sourcemeta::one::Configuration::read(
@@ -800,21 +799,25 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::core::IOFileAlreadyExistsError &error) {
+    std::print(stderr,
+               "error: File already exists and is not a directory\n"
+               "  at path {}\n",
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::IONotADirectoryError &error) {
+    std::print(stderr,
+               "error: File already exists and is not a directory\n"
+               "  at path {}\n",
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::IOFileNotFoundError &error) {
+    std::print(stderr,
+               "error: Could not locate the requested file\n  at path {}\n",
+               error.path().string());
+    return EXIT_FAILURE;
   } catch (const std::filesystem::filesystem_error &error) {
-    if (error.code() == std::make_error_condition(std::errc::file_exists) ||
-        error.code() == std::make_error_condition(std::errc::not_a_directory)) {
-      std::print(stderr,
-                 "error: File already exists and is not a directory\n"
-                 "  at path {}\n",
-                 error.path1().string());
-    } else if (error.code() == std::errc::no_such_file_or_directory) {
-      std::print(stderr,
-                 "error: Could not locate the requested file\n  at path {}\n",
-                 error.path1().string());
-    } else {
-      std::println(stderr, "{}", error.what());
-    }
-
+    std::println(stderr, "{}", error.what());
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
     std::println(stderr, "unexpected error: {}", error.what());

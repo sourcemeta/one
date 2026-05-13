@@ -8,7 +8,8 @@
 #include <cstring>     // std::memcpy
 #include <fstream>     // std::ofstream
 #include <optional>    // std::optional, std::nullopt
-#include <sstream>     // std::ostringstream, std::stringstream
+#include <ostream>     // std::ostream
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
@@ -60,6 +61,9 @@ static auto write_binary_header(std::ostream &output,
   }
 }
 
+// TODO: Switch to a sourcemeta::core::io atomic-write helper once one exists
+// that does not fsync per file. The per-schema generators call this in a tight
+// loop and the durable variant regresses fresh-index throughput by ~75%.
 static auto write_metapack(const std::filesystem::path &destination,
                            const std::string_view mime,
                            const MetapackEncoding encoding,
@@ -130,12 +134,9 @@ auto metapack_write_file(const std::filesystem::path &destination,
                          const MetapackEncoding encoding,
                          const std::span<const std::uint8_t> extension,
                          const std::chrono::milliseconds duration) -> void {
-  auto stream{sourcemeta::core::read_file(source)};
-  std::ostringstream buffer;
-  buffer << stream.rdbuf();
   std::filesystem::create_directories(destination.parent_path());
   write_metapack(destination, mime, encoding, extension, duration,
-                 buffer.str());
+                 sourcemeta::core::read_file_to_string(source));
 }
 
 auto metapack_extension_offset(const sourcemeta::core::FileView &view)

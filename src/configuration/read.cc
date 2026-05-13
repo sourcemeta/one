@@ -1,5 +1,7 @@
 #include <sourcemeta/one/configuration.h>
 
+#include <sourcemeta/core/io.h>
+
 #include <algorithm>     // std::ranges
 #include <cassert>       // assert
 #include <iterator>      // std::back_inserter
@@ -15,6 +17,12 @@ auto read_file(const std::filesystem::path &current,
                const std::filesystem::path &path) -> sourcemeta::core::JSON {
   try {
     return sourcemeta::core::read_json(path);
+  } catch (const sourcemeta::core::IOFileNotFoundError &) {
+    throw sourcemeta::one::ConfigurationReadError(current, location, path);
+  } catch (const sourcemeta::core::IOIsADirectoryError &) {
+    throw sourcemeta::one::ConfigurationReadError(current, location, path);
+  } catch (const sourcemeta::core::IOFilePermissionError &) {
+    throw sourcemeta::one::ConfigurationReadError(current, location, path);
   } catch (const std::filesystem::filesystem_error &) {
     throw sourcemeta::one::ConfigurationReadError(current, location, path);
   }
