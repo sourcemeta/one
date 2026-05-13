@@ -90,6 +90,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/list/response/%
 ./explorer/self/v1/schemas/api/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/list/response/%/schema.metapack
+./explorer/self/v1/schemas/api/list/rpc
+./explorer/self/v1/schemas/api/list/rpc/%
+./explorer/self/v1/schemas/api/list/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/list/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas
 ./explorer/self/v1/schemas/api/schemas/%
 ./explorer/self/v1/schemas/api/schemas/%/directory-html.metapack
@@ -102,6 +106,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/dependencies/rpc
+./explorer/self/v1/schemas/api/schemas/dependencies/rpc/%
+./explorer/self/v1/schemas/api/schemas/dependencies/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/dependencies/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents
 ./explorer/self/v1/schemas/api/schemas/dependents/%
 ./explorer/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack
@@ -110,6 +118,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/rpc
+./explorer/self/v1/schemas/api/schemas/dependents/rpc/%
+./explorer/self/v1/schemas/api/schemas/dependents/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate
 ./explorer/self/v1/schemas/api/schemas/evaluate/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
@@ -122,6 +134,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/evaluate/rpc
+./explorer/self/v1/schemas/api/schemas/evaluate/rpc/%
+./explorer/self/v1/schemas/api/schemas/evaluate/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/evaluate/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/health
 ./explorer/self/v1/schemas/api/schemas/health/%
 ./explorer/self/v1/schemas/api/schemas/health/%/directory-html.metapack
@@ -130,6 +146,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/health/response/%
 ./explorer/self/v1/schemas/api/schemas/health/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/health/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/health/rpc
+./explorer/self/v1/schemas/api/schemas/health/rpc/%
+./explorer/self/v1/schemas/api/schemas/health/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/health/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/locations
 ./explorer/self/v1/schemas/api/schemas/locations/%
 ./explorer/self/v1/schemas/api/schemas/locations/%/directory-html.metapack
@@ -138,6 +158,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/locations/response/%
 ./explorer/self/v1/schemas/api/schemas/locations/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/locations/rpc
+./explorer/self/v1/schemas/api/schemas/locations/rpc/%
+./explorer/self/v1/schemas/api/schemas/locations/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/locations/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata
 ./explorer/self/v1/schemas/api/schemas/metadata/%
 ./explorer/self/v1/schemas/api/schemas/metadata/%/directory-html.metapack
@@ -146,6 +170,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/metadata/rpc
+./explorer/self/v1/schemas/api/schemas/metadata/rpc/%
+./explorer/self/v1/schemas/api/schemas/metadata/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/metadata/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/position
 ./explorer/self/v1/schemas/api/schemas/position/%
 ./explorer/self/v1/schemas/api/schemas/position/%/schema-html.metapack
@@ -158,6 +186,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/positions/response/%
 ./explorer/self/v1/schemas/api/schemas/positions/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/positions/rpc
+./explorer/self/v1/schemas/api/schemas/positions/rpc/%
+./explorer/self/v1/schemas/api/schemas/positions/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/positions/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/search
 ./explorer/self/v1/schemas/api/schemas/search/%
 ./explorer/self/v1/schemas/api/schemas/search/%/directory-html.metapack
@@ -166,6 +198,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/search/response/%
 ./explorer/self/v1/schemas/api/schemas/search/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/search/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/search/rpc
+./explorer/self/v1/schemas/api/schemas/search/rpc/%
+./explorer/self/v1/schemas/api/schemas/search/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/search/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/stats
 ./explorer/self/v1/schemas/api/schemas/stats/%
 ./explorer/self/v1/schemas/api/schemas/stats/%/directory-html.metapack
@@ -174,6 +210,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/stats/response/%
 ./explorer/self/v1/schemas/api/schemas/stats/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/stats/rpc
+./explorer/self/v1/schemas/api/schemas/stats/rpc/%
+./explorer/self/v1/schemas/api/schemas/stats/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/stats/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/trace
 ./explorer/self/v1/schemas/api/schemas/trace/%
 ./explorer/self/v1/schemas/api/schemas/trace/%/directory-html.metapack
@@ -186,6 +226,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/api/schemas/trace/response/%
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
+./explorer/self/v1/schemas/api/schemas/trace/rpc
+./explorer/self/v1/schemas/api/schemas/trace/rpc/%
+./explorer/self/v1/schemas/api/schemas/trace/rpc/%/schema-html.metapack
+./explorer/self/v1/schemas/api/schemas/trace/rpc/%/schema.metapack
 ./explorer/self/v1/schemas/mcp
 ./explorer/self/v1/schemas/mcp/%
 ./explorer/self/v1/schemas/mcp/%/directory-html.metapack
@@ -330,6 +374,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/list/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/list/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/list/response/%/stats.metapack
+./schemas/self/v1/schemas/api/list/rpc
+./schemas/self/v1/schemas/api/list/rpc/%
+./schemas/self/v1/schemas/api/list/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/list/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas
 ./schemas/self/v1/schemas/api/schemas/dependencies
 ./schemas/self/v1/schemas/api/schemas/dependencies/response
@@ -345,6 +402,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents
 ./schemas/self/v1/schemas/api/schemas/dependents/response
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%
@@ -359,6 +429,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate
 ./schemas/self/v1/schemas/api/schemas/evaluate/request
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%
@@ -386,6 +469,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/health
 ./schemas/self/v1/schemas/api/schemas/health/response
 ./schemas/self/v1/schemas/api/schemas/health/response/%
@@ -400,6 +496,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/health/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc
+./schemas/self/v1/schemas/api/schemas/health/rpc/%
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/health/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/locations
 ./schemas/self/v1/schemas/api/schemas/locations/response
 ./schemas/self/v1/schemas/api/schemas/locations/response/%
@@ -414,6 +523,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/locations/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata
 ./schemas/self/v1/schemas/api/schemas/metadata/response
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%
@@ -428,6 +550,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/position
 ./schemas/self/v1/schemas/api/schemas/position/%
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-exhaustive.metapack
@@ -455,6 +590,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/positions/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/search
 ./schemas/self/v1/schemas/api/schemas/search/response
 ./schemas/self/v1/schemas/api/schemas/search/response/%
@@ -469,6 +617,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/search/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc
+./schemas/self/v1/schemas/api/schemas/search/rpc/%
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/search/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/stats
 ./schemas/self/v1/schemas/api/schemas/stats/response
 ./schemas/self/v1/schemas/api/schemas/stats/response/%
@@ -483,6 +644,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/stats/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/api/schemas/trace
 ./schemas/self/v1/schemas/api/schemas/trace/request
 ./schemas/self/v1/schemas/api/schemas/trace/request/%
@@ -510,6 +684,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/stats.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/bundle.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/dependencies.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/dependents.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/editor.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/health.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/locations.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/positions.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/schema.metapack
+./schemas/self/v1/schemas/api/schemas/trace/rpc/%/stats.metapack
 ./schemas/self/v1/schemas/mcp
 ./schemas/self/v1/schemas/mcp/error
 ./schemas/self/v1/schemas/mcp/error/%
@@ -729,34 +916,45 @@ Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/foo.json (#1)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#22)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#23)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#24)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#26)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#27)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#28)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#29)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#30)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#31)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/rpc.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/rpc.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/rpc.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/rpc.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/rpc.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/rpc.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/rpc.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/rpc.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/rpc.json (#22)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#23)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/rpc.json (#24)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#25)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/rpc.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#28)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#30)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#31)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#32)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#33)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#34)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#35)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#36)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#37)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#38)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#39)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#40)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#41)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#42)
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

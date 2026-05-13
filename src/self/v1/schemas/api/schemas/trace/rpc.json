@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Trace RPC Input",
+  "description": "Trace step-by-step evaluation of a JSON instance against a schema in the catalog, exposing each step, rule application, and decision point",
+  "examples": [
+    {
+      "schema": "https://example.com/foo",
+      "instance": "hello"
+    },
+    {
+      "schema": "https://example.com/foo",
+      "instance": {
+        "name": "Alice",
+        "age": 30
+      }
+    },
+    {
+      "schema": "https://example.com/foo",
+      "instance": 42
+    }
+  ],
+  "type": "object",
+  "required": [ "schema", "instance" ],
+  "properties": {
+    "schema": {
+      "description": "Absolute URI of a JSON Schema in this catalog",
+      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "type": "string",
+      "format": "uri"
+    },
+    "instance": {
+      "description": "The JSON value to trace evaluation against",
+      "$ref": "./request.json"
+    }
+  },
+  "additionalProperties": false
+}
