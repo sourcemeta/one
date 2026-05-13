@@ -31,13 +31,20 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
       : sourcemeta::one::Action{base, router.base_path()} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
+    std::string_view request_schema;
+    router.arguments(identifier, [this, &request_schema](const auto &key,
+                                                         const auto &value) {
+      if (key == "requestSchema") {
+        request_schema = std::get<std::string_view>(value);
+      } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
     });
+
+    this->request_schema_template_ = ActionJSONSchemaEvaluate_v1::load_template(
+        this->base(), router.base_path(), request_schema);
   }
 
   auto run(const std::span<std::string_view> matches,
@@ -45,7 +52,7 @@ public:
            sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
         matches, request, response, this->base(), this->response_schema_,
-        this->error_schema_,
+        this->error_schema_, this->request_schema_template_,
         [this](const std::filesystem::path &template_path,
                const std::string &body) -> sourcemeta::core::JSON {
           return this->evaluate(template_path, body);
@@ -240,6 +247,7 @@ private:
 
   std::string_view response_schema_;
   std::string_view error_schema_;
+  sourcemeta::blaze::Template request_schema_template_;
 };
 
 #endif

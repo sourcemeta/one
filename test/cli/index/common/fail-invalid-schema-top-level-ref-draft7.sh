@@ -56,56 +56,60 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#22)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#23)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#24)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#26)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#27)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#28)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#22)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#23)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#24)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#25)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#28)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#30)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#31)
 (  3%) Resolving: example/schemas/test.json
 (  6%) Resolving: self/v1/schemas/api/error.json
-( 10%) Resolving: self/v1/schemas/api/list/response.json
-( 13%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 17%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 20%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 24%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 27%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 31%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 34%) Resolving: self/v1/schemas/api/schemas/position.json
-( 37%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+(  9%) Resolving: self/v1/schemas/api/list/response.json
+( 12%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
+( 16%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 19%) Resolving: self/v1/schemas/api/schemas/evaluate/request.json
+( 22%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 25%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 29%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 32%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 35%) Resolving: self/v1/schemas/api/schemas/position.json
+( 38%) Resolving: self/v1/schemas/api/schemas/positions/response.json
 ( 41%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 44%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 48%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 51%) Resolving: self/v1/schemas/mcp/error.json
-( 55%) Resolving: self/v1/schemas/mcp/initialize/request.json
-( 58%) Resolving: self/v1/schemas/mcp/initialize/response.json
-( 62%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
-( 65%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
-( 68%) Resolving: self/v1/schemas/mcp/ping/request.json
-( 72%) Resolving: self/v1/schemas/mcp/ping/response.json
-( 75%) Resolving: self/v1/schemas/mcp/request.json
-( 79%) Resolving: self/v1/schemas/mcp/resources/list/request.json
-( 82%) Resolving: self/v1/schemas/mcp/resources/list/response.json
-( 86%) Resolving: self/v1/schemas/mcp/resources/read/request.json
-( 89%) Resolving: self/v1/schemas/mcp/resources/read/response.json
+( 45%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 48%) Resolving: self/v1/schemas/api/schemas/trace/request.json
+( 51%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 54%) Resolving: self/v1/schemas/mcp/error.json
+( 58%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 61%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 64%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 67%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 70%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 74%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 77%) Resolving: self/v1/schemas/mcp/request.json
+( 80%) Resolving: self/v1/schemas/mcp/resources/list/request.json
+( 83%) Resolving: self/v1/schemas/mcp/resources/list/response.json
+( 87%) Resolving: self/v1/schemas/mcp/resources/read/request.json
+( 90%) Resolving: self/v1/schemas/mcp/resources/read/response.json
 ( 93%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
 ( 96%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
