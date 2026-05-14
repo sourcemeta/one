@@ -1,9 +1,11 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_H
 #define SOURCEMETA_ONE_ACTIONS_H
 
+#include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
@@ -53,6 +55,13 @@ public:
   virtual auto rest(const std::span<std::string_view> matches,
                     HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
+  virtual auto mcp(const sourcemeta::core::JSON &envelope)
+      -> sourcemeta::core::JSON {
+    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    return sourcemeta::one::jsonrpc_make_error_method_not_found(
+        id ? *id : sourcemeta::core::JSON{nullptr});
+  }
+
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
     return this->base_;
   }
@@ -66,6 +75,9 @@ public:
   }
 
   [[nodiscard]] auto schema_directory(const std::string_view uri) const
+      -> std::optional<std::filesystem::path>;
+
+  [[nodiscard]] auto uri_to_relative_path(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
 private:

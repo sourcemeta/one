@@ -6,9 +6,12 @@
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/search.h>
 
 #include <charconv>     // std::from_chars
+#include <cstddef>      // std::size_t
 #include <cstdint>      // std::uint8_t
 #include <filesystem>   // std::filesystem
 #include <span>         // std::span
@@ -16,6 +19,7 @@
 #include <string>       // std::string
 #include <string_view>  // std::string_view
 #include <system_error> // std::errc
+#include <utility>      // std::move
 
 class ActionSchemaSearch_v1 : public sourcemeta::one::Action {
 public:
@@ -146,6 +150,69 @@ public:
     sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
                                    response, output.str(),
                                    sourcemeta::one::Encoding::Identity);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &envelope)
+      -> sourcemeta::core::JSON override {
+    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    const sourcemeta::core::JSON request_id{
+        id ? *id : sourcemeta::core::JSON{nullptr}};
+
+    const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
+    if (params == nullptr || !params->is_object() ||
+        !params->defines("arguments") || !params->at("arguments").is_object()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto &arguments{params->at("arguments")};
+    if (!arguments.defines("q") || !arguments.at("q").is_string()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    constexpr std::size_t DEFAULT_LIMIT{10};
+    constexpr std::size_t MAXIMUM_LIMIT{100};
+    std::size_t limit{DEFAULT_LIMIT};
+    if (arguments.defines("limit")) {
+      if (!arguments.at("limit").is_integer()) {
+        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      }
+      const auto raw_limit{arguments.at("limit").to_integer()};
+      if (std::cmp_less(raw_limit, 1) ||
+          std::cmp_greater(raw_limit, MAXIMUM_LIMIT)) {
+        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      }
+      limit = static_cast<std::size_t>(raw_limit);
+    }
+
+    std::uint8_t scope{sourcemeta::one::SearchScopePath |
+                       sourcemeta::one::SearchScopeTitle |
+                       sourcemeta::one::SearchScopeDescription};
+    if (arguments.defines("scope")) {
+      if (!arguments.at("scope").is_array()) {
+        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      }
+      scope = 0;
+      for (const auto &item : arguments.at("scope").as_array()) {
+        if (!item.is_string()) {
+          return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+        }
+        const auto &token{item.to_string()};
+        if (token == "path") {
+          scope |= sourcemeta::one::SearchScopePath;
+        } else if (token == "title") {
+          scope |= sourcemeta::one::SearchScopeTitle;
+        } else if (token == "description") {
+          scope |= sourcemeta::one::SearchScopeDescription;
+        } else {
+          return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+        }
+      }
+    }
+
+    auto result{
+        this->search_view_.search(arguments.at("q").to_string(), limit, scope)};
+    return sourcemeta::one::mcp_make_tool_success(request_id,
+                                                  std::move(result));
   }
 
 private:

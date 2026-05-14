@@ -10,19 +10,22 @@
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_evaluate_v1.h"
 
 #include <cassert>       // assert
+#include <exception>     // std::exception
 #include <filesystem>    // std::filesystem::path
 #include <span>          // std::span
 #include <stdexcept>     // std::runtime_error
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
-#include <utility>       // std::to_underlying
+#include <utility>       // std::move, std::to_underlying
 
 class ActionJSONSchemaTrace_v1 : public sourcemeta::one::Action {
 public:
@@ -57,6 +60,55 @@ public:
                const std::string &body) -> sourcemeta::core::JSON {
           return this->evaluate(template_path, body);
         });
+  }
+
+  auto mcp(const sourcemeta::core::JSON &envelope)
+      -> sourcemeta::core::JSON override {
+    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    const sourcemeta::core::JSON request_id{
+        id ? *id : sourcemeta::core::JSON{nullptr}};
+
+    const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
+    if (params == nullptr || !params->is_object() ||
+        !params->defines("arguments") || !params->at("arguments").is_object()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto &arguments{params->at("arguments")};
+    if (!arguments.defines("schema") || !arguments.at("schema").is_string() ||
+        !arguments.defines("instance")) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto directory{
+        this->schema_directory(arguments.at("schema").to_string())};
+    if (!directory.has_value()) {
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    const auto template_path{directory.value() / "blaze-exhaustive.metapack"};
+    if (!std::filesystem::exists(template_path)) {
+      const auto schema_path{directory.value() / "schema.metapack"};
+      if (std::filesystem::exists(schema_path)) {
+        return sourcemeta::one::mcp_make_tool_error(
+            request_id,
+            "This schema was not precompiled for schema evaluation");
+      }
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    try {
+      // TODO: Wire instance source positions through the MCP path so trace
+      // steps can carry `instancePositions`. The model can't see the wire
+      // bytes today, so positions are omitted for now.
+      auto result{this->evaluate(template_path, arguments.at("instance"))};
+      return sourcemeta::one::mcp_make_tool_success(request_id,
+                                                    std::move(result));
+    } catch (const std::exception &exception) {
+      return sourcemeta::one::mcp_make_tool_error(request_id, exception.what());
+    }
   }
 
 private:
@@ -126,8 +178,9 @@ private:
 
   auto trace(sourcemeta::blaze::Evaluator &evaluator,
              const sourcemeta::blaze::Template &schema_template,
-             const std::string &instance,
-             const std::filesystem::path &template_path)
+             const sourcemeta::core::JSON &instance_json,
+             const std::filesystem::path &template_path,
+             const sourcemeta::core::PointerPositionTracker *tracker)
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
@@ -151,12 +204,9 @@ private:
     std::unordered_map<std::string, sourcemeta::core::JSON>
         referenced_locations;
 
-    sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::core::JSON instance_json{nullptr};
-    sourcemeta::core::parse_json(instance, instance_json, std::ref(tracker));
     const auto result{evaluator.validate(
         schema_template, instance_json,
-        [this, &steps, &tracker, &static_locations, &instance_json,
+        [this, &steps, tracker, &static_locations, &instance_json,
          &referenced_locations](
             const sourcemeta::blaze::EvaluationType type, const bool valid,
             const sourcemeta::blaze::Instruction &instruction,
@@ -185,16 +235,18 @@ private:
           step.assign("instanceLocation",
                       sourcemeta::core::JSON{
                           sourcemeta::core::to_string(instance_location)});
-          auto instance_positions{tracker.get(
-              // TODO: Can we avoid converting the weak pointer into a pointer
-              // here?
-              sourcemeta::core::to_pointer(instance_location))};
-          if (!instance_positions.has_value()) {
-            throw std::runtime_error{"Failed to resolve instance positions"};
+          if (tracker != nullptr) {
+            auto instance_positions{tracker->get(
+                // TODO: Can we avoid converting the weak pointer into a pointer
+                // here?
+                sourcemeta::core::to_pointer(instance_location))};
+            if (!instance_positions.has_value()) {
+              throw std::runtime_error{"Failed to resolve instance positions"};
+            }
+            step.assign("instancePositions",
+                        sourcemeta::core::to_json(
+                            std::move(instance_positions).value()));
           }
-          step.assign(
-              "instancePositions",
-              sourcemeta::core::to_json(std::move(instance_positions).value()));
           step.assign("keywordLocation",
                       sourcemeta::core::JSON{
                           sourcemeta::core::to_string(extra.keyword_location)});
@@ -226,6 +278,28 @@ private:
 
   auto evaluate(const std::filesystem::path &template_path,
                 const std::string &instance) -> sourcemeta::core::JSON {
+    const auto schema_template{
+        ActionJSONSchemaTrace_v1::compile_template(template_path)};
+    sourcemeta::core::PointerPositionTracker tracker;
+    sourcemeta::core::JSON instance_json{nullptr};
+    sourcemeta::core::parse_json(instance, instance_json, std::ref(tracker));
+    sourcemeta::blaze::Evaluator evaluator;
+    return this->trace(evaluator, schema_template, instance_json, template_path,
+                       &tracker);
+  }
+
+  auto evaluate(const std::filesystem::path &template_path,
+                const sourcemeta::core::JSON &instance)
+      -> sourcemeta::core::JSON {
+    const auto schema_template{
+        ActionJSONSchemaTrace_v1::compile_template(template_path)};
+    sourcemeta::blaze::Evaluator evaluator;
+    return this->trace(evaluator, schema_template, instance, template_path,
+                       nullptr);
+  }
+
+  static auto compile_template(const std::filesystem::path &template_path)
+      -> sourcemeta::blaze::Template {
     if (!std::filesystem::exists(template_path)) {
       throw std::runtime_error{"Schema template not found"};
     }
@@ -237,14 +311,11 @@ private:
         sourcemeta::one::metapack_read_json(template_path)};
     assert(template_json_option.has_value());
     const auto &template_json{template_json_option.value()};
-    const auto schema_template{sourcemeta::blaze::from_json(template_json)};
+    auto schema_template{sourcemeta::blaze::from_json(template_json)};
     if (!schema_template.has_value()) {
       throw std::runtime_error{"Failed to parse schema template"};
     }
-
-    sourcemeta::blaze::Evaluator evaluator;
-    return this->trace(evaluator, schema_template.value(), instance,
-                       template_path);
+    return std::move(schema_template).value();
   }
 
   std::string_view response_schema_;
