@@ -21,10 +21,9 @@ class ActionSchemaSearch_v1 : public sourcemeta::one::Action {
 public:
   ActionSchemaSearch_v1(
       const std::filesystem::path &base, const std::string_view server_uri,
-      const std::string_view origin,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri, origin},
+      : sourcemeta::one::Action{base, router.base_path(), server_uri},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {

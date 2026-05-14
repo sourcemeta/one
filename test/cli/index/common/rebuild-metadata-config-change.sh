@@ -26,12 +26,12 @@ remove_threads_information() {
   fi
 }
 
-# Run 1: initial build emits metadata.json with the URL and origin
+# Run 1: initial build emits metadata.json with the URL
 "$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
 
 test -f "$TMP/output/metadata.json"
 
-printf '%s' '{"url":"https://example.com/v1","origin":"https://example.com"}' \
+printf '%s' '{"url":"https://example.com/v1"}' \
   > "$TMP/expected_metadata_v1.txt"
 diff "$TMP/output/metadata.json" "$TMP/expected_metadata_v1.txt"
 
@@ -48,7 +48,7 @@ grep -q "Producing:" "$TMP/output.txt" && exit 1
 # And the file must be byte-identical to the Run 1 version
 diff "$TMP/output/metadata.json" "$TMP/metadata-after-run1.txt"
 
-# Run 3: change the configured URL so origin changes too
+# Run 3: change the configured URL
 cat << EOF > "$TMP/one.json"
 {
   "url": "https://other.example.com/v2"
@@ -61,7 +61,7 @@ remove_threads_information "$TMP/output.txt"
 # A configuration change forces a full rebuild that includes metadata.json
 grep -q "Producing: metadata.json" "$TMP/output.txt"
 
-# The file must now reflect the new URL and origin
-printf '%s' '{"url":"https://other.example.com/v2","origin":"https://other.example.com"}' \
+# The file must now reflect the new URL
+printf '%s' '{"url":"https://other.example.com/v2"}' \
   > "$TMP/expected_metadata_v2.txt"
 diff "$TMP/output/metadata.json" "$TMP/expected_metadata_v2.txt"

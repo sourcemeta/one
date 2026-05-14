@@ -335,10 +335,9 @@ auto handle_jsonrpc_message(
 
 EnterpriseMCP::EnterpriseMCP(
     const std::filesystem::path &base, const std::string_view server_uri,
-    const std::string_view origin,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : base_{base}, allowed_origin_{origin}, registry_url_{server_uri} {
+    : base_{base}, registry_url_{server_uri} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -371,6 +370,7 @@ EnterpriseMCP::EnterpriseMCP(
       sourcemeta::one::metapack_read_json(mcp_metadata_path)};
   assert(mcp_metadata_option.has_value());
   this->mcp_metadata_ = std::move(mcp_metadata_option.value());
+  this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
 }
 
 auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,

@@ -604,6 +604,7 @@ struct GENERATE_MCP {
 #endif
 
     auto document{sourcemeta::core::JSON::make_object()};
+    document.assign("origin", sourcemeta::core::JSON{configuration.origin});
     document.assign("initialize", std::move(initialize_result));
     document.assign("resourceTemplates", std::move(resource_templates));
     document.assign("resources", std::move(resources));

@@ -15,7 +15,6 @@
 class EnterpriseMCP {
 public:
   EnterpriseMCP(const std::filesystem::path &base, std::string_view server_uri,
-                std::string_view origin,
                 const sourcemeta::core::URITemplateRouterView &router,
                 sourcemeta::core::URITemplateRouter::Identifier identifier);
 

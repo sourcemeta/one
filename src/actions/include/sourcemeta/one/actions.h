@@ -40,9 +40,8 @@ enum : std::uint8_t {
 class Action {
 public:
   Action(const std::filesystem::path &base, const std::string_view base_path,
-         const std::string_view server_uri, const std::string_view origin)
-      : base_{base}, base_path_{base_path}, server_uri_{server_uri},
-        origin_{origin} {}
+         const std::string_view server_uri)
+      : base_{base}, base_path_{base_path}, server_uri_{server_uri} {}
   virtual ~Action() = default;
 
   // To avoid mistakes
@@ -66,10 +65,6 @@ public:
     return this->server_uri_;
   }
 
-  [[nodiscard]] auto origin() const noexcept -> std::string_view {
-    return this->origin_;
-  }
-
   [[nodiscard]] auto schema_directory(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
@@ -78,14 +73,13 @@ private:
   const std::filesystem::path &base_;
   std::string_view base_path_;
   std::string_view server_uri_;
-  std::string_view origin_;
 };
 
 class ActionDispatcher {
 public:
   ActionDispatcher(const std::filesystem::path &base,
                    const core::URITemplateRouterView &router,
-                   std::string_view server_uri, std::string_view origin);
+                   std::string_view server_uri);
   ~ActionDispatcher() = default;
 
   // To avoid mistakes
@@ -118,7 +112,6 @@ private:
   std::size_t slots_size_;
   std::string_view default_error_schema_;
   std::string_view server_uri_;
-  std::string_view origin_;
 };
 
 } // namespace sourcemeta::one

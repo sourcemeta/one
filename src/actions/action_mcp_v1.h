@@ -15,11 +15,11 @@
 class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
-               const std::string_view server_uri, const std::string_view origin,
+               const std::string_view server_uri,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri, origin},
-        EnterpriseMCP{base, server_uri, origin, router, identifier} {}
+      : sourcemeta::one::Action{base, router.base_path(), server_uri},
+        EnterpriseMCP{base, server_uri, router, identifier} {}
 
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
@@ -55,10 +55,10 @@ public:
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
-               const std::string_view server_uri, const std::string_view origin,
+               const std::string_view server_uri,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri, origin} {
+      : sourcemeta::one::Action{base, router.base_path(), server_uri} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
@@ -71,6 +71,7 @@ public:
         sourcemeta::one::metapack_read_json(mcp_metadata_path)};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
+    this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
   }
 
   auto rest(const std::span<std::string_view>,
@@ -78,7 +79,8 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
-      response.write_header("Access-Control-Allow-Origin", this->origin());
+      response.write_header("Access-Control-Allow-Origin",
+                            this->allowed_origin_);
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
@@ -89,7 +91,7 @@ public:
     }
 
     if (request.method() != "post") {
-      ActionMCP_v1::write_envelope(request, response, this->origin(),
+      ActionMCP_v1::write_envelope(request, response, this->allowed_origin_,
                                    this->response_schema_,
                                    sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                                    ActionMCP_v1::method_not_allowed());
@@ -97,7 +99,7 @@ public:
     }
 
     request.body(
-        [allowed_origin = this->origin(),
+        [allowed_origin = this->allowed_origin_,
          response_schema = this->response_schema_,
          registry_url = this->server_uri(), &base = this->base(),
          &mcp_metadata = this->mcp_metadata_](
@@ -116,7 +118,7 @@ public:
                                        registry_url, base, mcp_metadata,
                                        std::move(body));
         },
-        [allowed_origin = this->origin(),
+        [allowed_origin = this->allowed_origin_,
          response_schema = this->response_schema_](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -320,6 +322,7 @@ private:
   }
 
   std::string_view response_schema_;
+  std::string_view allowed_origin_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
 };
 
