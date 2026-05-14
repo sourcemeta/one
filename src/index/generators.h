@@ -111,7 +111,6 @@ struct GENERATE_METADATA {
                       const sourcemeta::core::JSON &) -> void {
     auto metadata{sourcemeta::core::JSON::make_object()};
     metadata.assign("url", sourcemeta::core::JSON{configuration.url});
-    metadata.assign("origin", sourcemeta::core::JSON{configuration.origin});
     sourcemeta::core::atomic_write_file(
         action.destination, [&](std::ostream &stream) {
           sourcemeta::core::stringify(metadata, stream);

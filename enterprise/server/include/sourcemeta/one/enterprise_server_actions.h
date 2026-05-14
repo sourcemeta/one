@@ -15,7 +15,6 @@
 class EnterpriseMCP {
 public:
   EnterpriseMCP(const std::filesystem::path &base, std::string_view server_uri,
-                std::string_view origin,
                 const sourcemeta::core::URITemplateRouterView &router,
                 sourcemeta::core::URITemplateRouter::Identifier identifier);
 
@@ -31,7 +30,7 @@ public:
 
 private:
   std::filesystem::path base_;
-  std::string_view allowed_origin_;
+  std::string allowed_origin_;
   std::string_view registry_url_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;

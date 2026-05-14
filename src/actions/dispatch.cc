@@ -19,15 +19,15 @@
 template <typename T>
 static auto
 make_action(const std::filesystem::path &base,
-            const std::string_view server_uri, const std::string_view origin,
+            const std::string_view server_uri,
             const sourcemeta::core::URITemplateRouterView &router,
             const sourcemeta::core::URITemplateRouter::Identifier identifier)
     -> std::unique_ptr<sourcemeta::one::Action> {
-  return std::make_unique<T>(base, server_uri, origin, router, identifier);
+  return std::make_unique<T>(base, server_uri, router, identifier);
 }
 
 using ActionConstructFunction =
-    auto (*)(const std::filesystem::path &, std::string_view, std::string_view,
+    auto (*)(const std::filesystem::path &, std::string_view,
              const sourcemeta::core::URITemplateRouterView &,
              sourcemeta::core::URITemplateRouter::Identifier)
         -> std::unique_ptr<sourcemeta::one::Action>;
@@ -49,11 +49,11 @@ static constexpr std::array<ActionConstructFunction,
 sourcemeta::one::ActionDispatcher::ActionDispatcher(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
-    const std::string_view server_uri, const std::string_view origin)
+    const std::string_view server_uri)
     : base_{base}, router_{router},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
-      slots_size_{router.size() + 1}, server_uri_{server_uri}, origin_{origin} {
+      slots_size_{router.size() + 1}, server_uri_{server_uri} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -86,9 +86,8 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
 
   auto &slot{this->slots_[identifier]};
   std::call_once(slot.flag, [this, &slot, context, identifier] {
-    slot.instance =
-        CONSTRUCTORS[context](this->base_, this->server_uri_, this->origin_,
-                              this->router_, identifier);
+    slot.instance = CONSTRUCTORS[context](this->base_, this->server_uri_,
+                                          this->router_, identifier);
   });
 
   slot.instance->rest(matches, request, response);
