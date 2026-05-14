@@ -322,7 +322,7 @@ private:
   }
 
   std::string_view response_schema_;
-  std::string allowed_origin_;
+  std::string_view allowed_origin_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
 };
 
