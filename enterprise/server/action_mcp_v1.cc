@@ -334,10 +334,10 @@ auto handle_jsonrpc_message(
 } // namespace
 
 EnterpriseMCP::EnterpriseMCP(
-    const std::filesystem::path &base, const std::string_view server_uri,
+    const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : base_{base}, registry_url_{server_uri} {
+    : base_{base}, registry_url_{router.base_url()} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {

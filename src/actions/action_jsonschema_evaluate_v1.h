@@ -25,10 +25,10 @@
 class ActionJSONSchemaEvaluate_v1 : public sourcemeta::one::Action {
 public:
   ActionJSONSchemaEvaluate_v1(
-      const std::filesystem::path &base, const std::string_view server_uri,
+      const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri} {
+      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
     std::string_view request_schema;
     router.arguments(identifier, [this, &request_schema](const auto &key,
                                                          const auto &value) {

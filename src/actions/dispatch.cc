@@ -19,15 +19,14 @@
 template <typename T>
 static auto
 make_action(const std::filesystem::path &base,
-            const std::string_view server_uri,
             const sourcemeta::core::URITemplateRouterView &router,
             const sourcemeta::core::URITemplateRouter::Identifier identifier)
     -> std::unique_ptr<sourcemeta::one::Action> {
-  return std::make_unique<T>(base, server_uri, router, identifier);
+  return std::make_unique<T>(base, router, identifier);
 }
 
 using ActionConstructFunction =
-    auto (*)(const std::filesystem::path &, std::string_view,
+    auto (*)(const std::filesystem::path &,
              const sourcemeta::core::URITemplateRouterView &,
              sourcemeta::core::URITemplateRouter::Identifier)
         -> std::unique_ptr<sourcemeta::one::Action>;
@@ -85,8 +84,8 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
 
   auto &slot{this->slots_[identifier]};
   std::call_once(slot.flag, [this, &slot, context, identifier] {
-    slot.instance = CONSTRUCTORS[context](this->base_, this->router_.base_url(),
-                                          this->router_, identifier);
+    slot.instance =
+        CONSTRUCTORS[context](this->base_, this->router_, identifier);
   });
 
   slot.instance->rest(matches, request, response);
