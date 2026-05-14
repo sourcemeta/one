@@ -9,7 +9,7 @@
 
 namespace sourcemeta::one {
 
-auto Action::uri_to_path(const std::string_view uri) const
+auto Action::uri_to_relative_path(const std::string_view uri) const
     -> std::optional<std::filesystem::path> {
   std::optional<sourcemeta::core::URI> parsed;
   try {
@@ -36,7 +36,7 @@ auto Action::uri_to_path(const std::string_view uri) const
 
 auto Action::schema_directory(const std::string_view uri) const
     -> std::optional<std::filesystem::path> {
-  auto path{this->uri_to_path(uri)};
+  auto path{this->uri_to_relative_path(uri)};
   if (!path.has_value()) {
     return std::nullopt;
   }

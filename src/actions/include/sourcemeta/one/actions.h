@@ -77,7 +77,7 @@ public:
   [[nodiscard]] auto schema_directory(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
-  [[nodiscard]] auto uri_to_path(const std::string_view uri) const
+  [[nodiscard]] auto uri_to_relative_path(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
 private:

@@ -80,7 +80,7 @@ public:
         return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
       }
       const auto schema_path{
-          this->uri_to_path(arguments.at("schema").to_string())};
+          this->uri_to_relative_path(arguments.at("schema").to_string())};
       if (!schema_path.has_value()) {
         return sourcemeta::one::mcp_make_tool_error(request_id,
                                                     "Schema not found");
