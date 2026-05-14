@@ -78,8 +78,7 @@ private:
 class ActionDispatcher {
 public:
   ActionDispatcher(const std::filesystem::path &base,
-                   const core::URITemplateRouterView &router,
-                   std::string_view server_uri);
+                   const core::URITemplateRouterView &router);
   ~ActionDispatcher() = default;
 
   // To avoid mistakes
@@ -111,7 +110,6 @@ private:
   std::unique_ptr<Slot[]> slots_;
   std::size_t slots_size_;
   std::string_view default_error_schema_;
-  std::string_view server_uri_;
 };
 
 } // namespace sourcemeta::one

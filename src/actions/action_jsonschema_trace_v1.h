@@ -27,10 +27,10 @@
 class ActionJSONSchemaTrace_v1 : public sourcemeta::one::Action {
 public:
   ActionJSONSchemaTrace_v1(
-      const std::filesystem::path &base, const std::string_view server_uri,
+      const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri} {
+      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
     std::string_view request_schema;
     router.arguments(identifier, [this, &request_schema](const auto &key,
                                                          const auto &value) {
@@ -135,7 +135,9 @@ private:
     // TODO: Cache loaded locations across trace requests for performance
     const auto locations_option{
         sourcemeta::one::metapack_read_json(locations_path)};
-    assert(locations_option.has_value());
+    if (!locations_option.has_value()) {
+      throw std::runtime_error{"Failed to read schema locations metadata"};
+    }
     const auto &locations{locations_option.value()};
     if (!locations.is_object() || !locations.defines("static")) {
       throw std::runtime_error{"Failed to read schema locations metadata"};

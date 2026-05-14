@@ -6,8 +6,6 @@ set_target_properties(sourcemeta_one_server PROPERTIES OUTPUT_NAME sourcemeta-on
 
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::one::actions)
 target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::uritemplate)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::io)
-target_link_libraries(sourcemeta_one_server PRIVATE sourcemeta::core::json)
 
 install(TARGETS sourcemeta_one_server
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

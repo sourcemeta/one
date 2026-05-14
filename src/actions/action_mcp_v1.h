@@ -15,11 +15,10 @@
 class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
-               const std::string_view server_uri,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri},
-        EnterpriseMCP{base, server_uri, router, identifier} {}
+      : sourcemeta::one::Action{base, router.base_path(), router.base_url()},
+        EnterpriseMCP{base, router, identifier} {}
 
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
@@ -55,10 +54,9 @@ public:
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
-               const std::string_view server_uri,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), server_uri} {
+      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
