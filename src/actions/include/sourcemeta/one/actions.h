@@ -110,7 +110,6 @@ private:
   std::unique_ptr<Slot[]> slots_;
   std::size_t slots_size_;
   std::string_view default_error_schema_;
-  std::string_view server_uri_;
 };
 
 } // namespace sourcemeta::one

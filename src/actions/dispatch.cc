@@ -52,7 +52,7 @@ sourcemeta::one::ActionDispatcher::ActionDispatcher(
     : base_{base}, router_{router},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
-      slots_size_{router.size() + 1}, server_uri_{router.base_url()} {
+      slots_size_{router.size() + 1} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -85,7 +85,7 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
 
   auto &slot{this->slots_[identifier]};
   std::call_once(slot.flag, [this, &slot, context, identifier] {
-    slot.instance = CONSTRUCTORS[context](this->base_, this->server_uri_,
+    slot.instance = CONSTRUCTORS[context](this->base_, this->router_.base_url(),
                                           this->router_, identifier);
   });
 
