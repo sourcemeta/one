@@ -9,6 +9,8 @@
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
@@ -53,8 +55,55 @@ public:
         this->error_schema_, this->request_schema_template_,
         [this](const std::filesystem::path &template_path,
                const std::string &body) -> sourcemeta::core::JSON {
-          return this->evaluate(template_path, body);
+          return this->evaluate(template_path,
+                                sourcemeta::core::parse_json(body));
         });
+  }
+
+  auto mcp(const sourcemeta::core::JSON &envelope)
+      -> sourcemeta::core::JSON override {
+    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    const sourcemeta::core::JSON request_id{
+        id ? *id : sourcemeta::core::JSON{nullptr}};
+
+    const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
+    if (params == nullptr || !params->is_object() ||
+        !params->defines("arguments") || !params->at("arguments").is_object()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto &arguments{params->at("arguments")};
+    if (!arguments.defines("schema") || !arguments.at("schema").is_string() ||
+        !arguments.defines("instance")) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto directory{
+        this->schema_directory(arguments.at("schema").to_string())};
+    if (!directory.has_value()) {
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    const auto template_path{directory.value() / "blaze-exhaustive.metapack"};
+    if (!std::filesystem::exists(template_path)) {
+      const auto schema_path{directory.value() / "schema.metapack"};
+      if (std::filesystem::exists(schema_path)) {
+        return sourcemeta::one::mcp_make_tool_error(
+            request_id,
+            "This schema was not precompiled for schema evaluation");
+      }
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    try {
+      auto result{this->evaluate(template_path, arguments.at("instance"))};
+      return sourcemeta::one::mcp_make_tool_success(request_id,
+                                                    std::move(result));
+    } catch (const std::exception &exception) {
+      return sourcemeta::one::mcp_make_tool_error(request_id, exception.what());
+    }
   }
 
   static auto load_template(const std::filesystem::path &base,
@@ -207,7 +256,8 @@ public:
 
 private:
   auto evaluate(const std::filesystem::path &template_path,
-                const std::string &instance) -> sourcemeta::core::JSON {
+                const sourcemeta::core::JSON &instance)
+      -> sourcemeta::core::JSON {
     if (!std::filesystem::exists(template_path)) {
       throw std::runtime_error{"Schema template not found"};
     }
@@ -226,8 +276,7 @@ private:
 
     sourcemeta::blaze::Evaluator evaluator;
     return sourcemeta::blaze::standard(
-        evaluator, schema_template.value(),
-        sourcemeta::core::parse_json(instance),
+        evaluator, schema_template.value(), instance,
         sourcemeta::blaze::StandardOutput::Basic);
   }
 

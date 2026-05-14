@@ -1,10 +1,14 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_SERVE_SCHEMA_ARTIFACT_V1_H
 #define SOURCEMETA_ONE_ACTIONS_SERVE_SCHEMA_ARTIFACT_V1_H
 
+#include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/jsonrpc.h>
+#include <sourcemeta/one/mcp.h>
+#include <sourcemeta/one/metapack.h>
 
 #include "action_serve_metapack_file_v1.h"
 
@@ -12,6 +16,7 @@
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 
 class ActionServeSchemaArtifact_v1 : public sourcemeta::one::Action {
 public:
@@ -47,6 +52,41 @@ public:
     ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                       true, {}, this->response_schema_, request,
                                       response, this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &envelope)
+      -> sourcemeta::core::JSON override {
+    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    const sourcemeta::core::JSON request_id{
+        id ? *id : sourcemeta::core::JSON{nullptr}};
+
+    const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
+    if (params == nullptr || !params->is_object() ||
+        !params->defines("arguments") || !params->at("arguments").is_object()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto &arguments{params->at("arguments")};
+    if (!arguments.defines("schema") || !arguments.at("schema").is_string()) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    const auto directory{
+        this->schema_directory(arguments.at("schema").to_string())};
+    if (!directory.has_value()) {
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    auto contents{sourcemeta::one::metapack_read_json(
+        directory.value() / (std::string{this->artifact_} + ".metapack"))};
+    if (!contents.has_value()) {
+      return sourcemeta::one::mcp_make_tool_error(request_id,
+                                                  "Schema not found");
+    }
+
+    return sourcemeta::one::mcp_make_tool_success(request_id,
+                                                  std::move(contents).value());
   }
 
 private:
