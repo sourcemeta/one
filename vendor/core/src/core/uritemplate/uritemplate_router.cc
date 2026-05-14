@@ -120,19 +120,31 @@ inline auto finalize_match(const Node &otherwise,
 
 } // namespace
 
-URITemplateRouter::URITemplateRouter(const std::string_view base_path)
-    : base_path_{base_path} {
+URITemplateRouter::URITemplateRouter(const std::string_view base_path,
+                                     const std::string_view base_url)
+    : base_path_{base_path}, base_url_{base_url} {
   assert(this->base_path_.empty() || this->base_path_.front() == '/');
-  const auto last = this->base_path_.find_last_not_of('/');
-  if (last == std::string::npos) {
+  const auto base_path_last = this->base_path_.find_last_not_of('/');
+  if (base_path_last == std::string::npos) {
     this->base_path_.clear();
   } else {
-    this->base_path_.erase(last + 1);
+    this->base_path_.erase(base_path_last + 1);
+  }
+
+  const auto base_url_last = this->base_url_.find_last_not_of('/');
+  if (base_url_last == std::string::npos) {
+    this->base_url_.clear();
+  } else {
+    this->base_url_.erase(base_url_last + 1);
   }
 }
 
 auto URITemplateRouter::base_path() const noexcept -> std::string_view {
   return this->base_path_;
+}
+
+auto URITemplateRouter::base_url() const noexcept -> std::string_view {
+  return this->base_url_;
 }
 
 auto URITemplateRouter::size() const noexcept -> std::size_t {

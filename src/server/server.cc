@@ -1,5 +1,3 @@
-#include <sourcemeta/core/io.h>
-#include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
@@ -96,9 +94,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
-    const auto metadata{sourcemeta::core::read_json(base / "metadata.json")};
-    sourcemeta::one::ActionDispatcher actions{base, router,
-                                              metadata.at("url").to_string()};
+    sourcemeta::one::ActionDispatcher actions{base, router};
 
     sourcemeta::one::HTTPServer(
         port,

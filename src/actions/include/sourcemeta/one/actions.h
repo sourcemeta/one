@@ -78,8 +78,7 @@ private:
 class ActionDispatcher {
 public:
   ActionDispatcher(const std::filesystem::path &base,
-                   const core::URITemplateRouterView &router,
-                   std::string_view server_uri);
+                   const core::URITemplateRouterView &router);
   ~ActionDispatcher() = default;
 
   // To avoid mistakes

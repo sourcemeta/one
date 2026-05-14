@@ -666,7 +666,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    sourcemeta::core::URITemplateRouter router{configuration.base_path};
+    sourcemeta::core::URITemplateRouter router{configuration.base_path,
+                                               configuration.url};
 
     const auto list_schema{configuration.base_path +
                            "/self/v1/schemas/api/list/response"};

@@ -88,8 +88,11 @@ public:
   URITemplateRouter() = default;
 
   /// Construct a router with a base path prefix. During matching, the base
-  /// path is stripped from incoming request paths before matching
-  explicit URITemplateRouter(std::string_view base_path);
+  /// path is stripped from incoming request paths before matching. An optional
+  /// base URL can be associated with the router as opaque metadata, never used
+  /// for matching
+  explicit URITemplateRouter(std::string_view base_path,
+                             std::string_view base_url = {});
 
   // To avoid mistakes
   URITemplateRouter(const URITemplateRouter &) = delete;
@@ -131,6 +134,9 @@ public:
   /// Access the base path prefix
   [[nodiscard]] auto base_path() const noexcept -> std::string_view;
 
+  /// Access the base URL associated with the router
+  [[nodiscard]] auto base_url() const noexcept -> std::string_view;
+
   /// Get the number of registered routes
   [[nodiscard]] auto size() const noexcept -> std::size_t;
 
@@ -155,6 +161,7 @@ private:
   Node root_;
   Node otherwise_;
   std::string base_path_;
+  std::string base_url_;
   std::vector<std::pair<Identifier, std::vector<Argument>>> arguments_;
   std::vector<std::tuple<Identifier, Identifier, std::string_view>> entries_;
   std::unordered_map<std::string_view, std::pair<Identifier, Identifier>>
@@ -198,6 +205,9 @@ public:
 
   /// Access the base path prefix
   [[nodiscard]] auto base_path() const noexcept -> std::string_view;
+
+  /// Access the base URL associated with the router
+  [[nodiscard]] auto base_url() const noexcept -> std::string_view;
 
   /// Get the number of registered routes
   [[nodiscard]] auto size() const noexcept -> std::size_t;

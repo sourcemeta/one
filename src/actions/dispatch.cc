@@ -48,12 +48,11 @@ static constexpr std::array<ActionConstructFunction,
 
 sourcemeta::one::ActionDispatcher::ActionDispatcher(
     const std::filesystem::path &base,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::string_view server_uri)
+    const sourcemeta::core::URITemplateRouterView &router)
     : base_{base}, router_{router},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
-      slots_size_{router.size() + 1}, server_uri_{server_uri} {
+      slots_size_{router.size() + 1}, server_uri_{router.base_url()} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
