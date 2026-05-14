@@ -45,7 +45,6 @@ struct BuildPlan {
       WebSchema,
       Comment,
       Configuration,
-      Metadata,
       Version,
       Routes,
       Remove

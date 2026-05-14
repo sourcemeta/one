@@ -143,7 +143,6 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#
 ( 97%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
 (100%) Resolving: self/v1/schemas/mcp/response.json
 (  0%) Producing: configuration.json
-(  0%) Producing: metadata.json
 (  0%) Producing: version.json
 (  0%) Producing: explorer/%/404.metapack
 (  0%) Producing: schemas/example/schemas/my-metaschema/%/schema.metapack

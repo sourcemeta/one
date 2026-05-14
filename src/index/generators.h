@@ -102,22 +102,6 @@ struct GENERATE_CONFIGURATION {
   }
 };
 
-struct GENERATE_METADATA {
-  static auto handler(const sourcemeta::one::BuildState &,
-                      const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &,
-                      sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> void {
-    auto metadata{sourcemeta::core::JSON::make_object()};
-    metadata.assign("url", sourcemeta::core::JSON{configuration.url});
-    sourcemeta::core::atomic_write_file(
-        action.destination, [&](std::ostream &stream) {
-          sourcemeta::core::stringify(metadata, stream);
-        });
-  }
-};
-
 struct GENERATE_MATERIALISED_SCHEMA {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
