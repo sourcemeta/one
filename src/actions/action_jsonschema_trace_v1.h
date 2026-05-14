@@ -135,7 +135,9 @@ private:
     // TODO: Cache loaded locations across trace requests for performance
     const auto locations_option{
         sourcemeta::one::metapack_read_json(locations_path)};
-    assert(locations_option.has_value());
+    if (!locations_option.has_value()) {
+      throw std::runtime_error{"Failed to read schema locations metadata"};
+    }
     const auto &locations{locations_option.value()};
     if (!locations.is_object() || !locations.defines("static")) {
       throw std::runtime_error{"Failed to read schema locations metadata"};

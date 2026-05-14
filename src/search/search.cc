@@ -208,11 +208,15 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
 }
 
 SearchView::SearchView(const std::filesystem::path &path) {
-  assert(std::filesystem::exists(path));
   assert(path.is_absolute());
+  if (!std::filesystem::exists(path)) {
+    return;
+  }
   this->view_ = std::make_unique<sourcemeta::core::FileView>(path);
   const auto payload_start_option{metapack_payload_offset(*this->view_)};
-  assert(payload_start_option.has_value());
+  if (!payload_start_option.has_value()) {
+    return;
+  }
   const auto &payload_start{payload_start_option.value()};
   this->payload_size_ = this->view_->size() - payload_start;
   if (this->payload_size_ > 0) {
