@@ -170,12 +170,18 @@ public:
     }
 
     constexpr std::size_t DEFAULT_LIMIT{10};
+    constexpr std::size_t MAXIMUM_LIMIT{100};
     std::size_t limit{DEFAULT_LIMIT};
     if (arguments.defines("limit")) {
       if (!arguments.at("limit").is_integer()) {
         return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
       }
-      limit = static_cast<std::size_t>(arguments.at("limit").to_integer());
+      const auto raw_limit{arguments.at("limit").to_integer()};
+      if (std::cmp_less(raw_limit, 1) ||
+          std::cmp_greater(raw_limit, MAXIMUM_LIMIT)) {
+        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      }
+      limit = static_cast<std::size_t>(raw_limit);
     }
 
     std::uint8_t scope{sourcemeta::one::SearchScopePath |

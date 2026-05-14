@@ -70,9 +70,20 @@ public:
         if (!arguments.at("path").is_string()) {
           return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
         }
-        const auto path{arguments.at("path").to_string()};
+        const auto &path{arguments.at("path").to_string()};
         if (!path.empty()) {
-          absolute_path /= path;
+          const std::filesystem::path relative_path{path};
+          if (relative_path.is_absolute()) {
+            return sourcemeta::one::jsonrpc_make_error_invalid_params(
+                request_id);
+          }
+          for (const auto &component : relative_path) {
+            if (component == ".." || component == ".") {
+              return sourcemeta::one::jsonrpc_make_error_invalid_params(
+                  request_id);
+            }
+          }
+          absolute_path /= relative_path;
         }
       }
     } else {
