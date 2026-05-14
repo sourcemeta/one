@@ -334,10 +334,11 @@ auto handle_jsonrpc_message(
 } // namespace
 
 EnterpriseMCP::EnterpriseMCP(
-    const std::filesystem::path &base,
+    const std::filesystem::path &base, const std::string_view server_uri,
+    const std::string_view origin,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : base_{base} {
+    : base_{base}, allowed_origin_{origin}, registry_url_{server_uri} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -347,10 +348,6 @@ EnterpriseMCP::EnterpriseMCP(
           request_schema = std::get<std::string_view>(value);
         }
       });
-
-  const auto metadata{sourcemeta::core::read_json(base / "metadata.json")};
-  this->allowed_origin_ = metadata.at("origin").to_string();
-  this->registry_url_ = metadata.at("url").to_string();
 
   const auto base_path{router.base_path()};
   std::string_view request_schema_path{request_schema};

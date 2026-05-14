@@ -8,7 +8,8 @@ class TestAction final : public sourcemeta::one::Action {
 public:
   TestAction(const std::filesystem::path &base,
              const std::string_view base_path)
-      : sourcemeta::one::Action{base, base_path} {}
+      : sourcemeta::one::Action{base, base_path, "http://localhost:8000",
+                                "http://localhost:8000"} {}
 
   auto rest(const std::span<std::string_view>, sourcemeta::one::HTTPRequest &,
             sourcemeta::one::HTTPResponse &) -> void override {}

@@ -15,10 +15,11 @@
 class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
+               const std::string_view server_uri, const std::string_view origin,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path()},
-        EnterpriseMCP{base, router, identifier} {}
+      : sourcemeta::one::Action{base, router.base_path(), server_uri, origin},
+        EnterpriseMCP{base, server_uri, origin, router, identifier} {}
 
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
@@ -54,19 +55,15 @@ public:
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
   ActionMCP_v1(const std::filesystem::path &base,
+               const std::string_view server_uri, const std::string_view origin,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path()} {
+      : sourcemeta::one::Action{base, router.base_path(), server_uri, origin} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
       }
     });
-
-    const auto metadata{
-        sourcemeta::core::read_json(this->base() / "metadata.json")};
-    this->allowed_origin_ = metadata.at("origin").to_string();
-    this->registry_url_ = metadata.at("url").to_string();
 
     const auto mcp_metadata_path{this->base() / "explorer" / "%" /
                                  "mcp.metapack"};
@@ -81,8 +78,7 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
-      response.write_header("Access-Control-Allow-Origin",
-                            this->allowed_origin_);
+      response.write_header("Access-Control-Allow-Origin", this->origin());
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
@@ -93,7 +89,7 @@ public:
     }
 
     if (request.method() != "post") {
-      ActionMCP_v1::write_envelope(request, response, this->allowed_origin_,
+      ActionMCP_v1::write_envelope(request, response, this->origin(),
                                    this->response_schema_,
                                    sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                                    ActionMCP_v1::method_not_allowed());
@@ -101,10 +97,10 @@ public:
     }
 
     request.body(
-        [allowed_origin = std::string_view{this->allowed_origin_},
+        [allowed_origin = this->origin(),
          response_schema = this->response_schema_,
-         registry_url = std::string_view{this->registry_url_},
-         &base = this->base(), &mcp_metadata = this->mcp_metadata_](
+         registry_url = this->server_uri(), &base = this->base(),
+         &mcp_metadata = this->mcp_metadata_](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) {
@@ -120,7 +116,7 @@ public:
                                        registry_url, base, mcp_metadata,
                                        std::move(body));
         },
-        [allowed_origin = std::string_view{this->allowed_origin_},
+        [allowed_origin = this->origin(),
          response_schema = this->response_schema_](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -323,8 +319,6 @@ private:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  std::string allowed_origin_;
-  std::string registry_url_;
   std::string_view response_schema_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
 };
