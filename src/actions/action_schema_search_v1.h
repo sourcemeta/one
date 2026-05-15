@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
 #define SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
 
+#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -32,6 +33,8 @@ public:
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
@@ -160,42 +163,31 @@ public:
 
     const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments") || !params->at("arguments").is_object()) {
+        !params->defines("arguments")) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
-    if (!arguments.defines("q") || !arguments.at("q").is_string()) {
+    // TODO: Cache the compiled template across invocations
+    const auto rpc_schema_template{this->blaze_template(
+        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
+    sourcemeta::blaze::Evaluator evaluator;
+    if (!evaluator.validate(rpc_schema_template, arguments)) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     constexpr std::size_t DEFAULT_LIMIT{10};
-    constexpr std::size_t MAXIMUM_LIMIT{100};
     std::size_t limit{DEFAULT_LIMIT};
     if (arguments.defines("limit")) {
-      if (!arguments.at("limit").is_integer()) {
-        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-      }
-      const auto raw_limit{arguments.at("limit").to_integer()};
-      if (std::cmp_less(raw_limit, 1) ||
-          std::cmp_greater(raw_limit, MAXIMUM_LIMIT)) {
-        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-      }
-      limit = static_cast<std::size_t>(raw_limit);
+      limit = static_cast<std::size_t>(arguments.at("limit").to_integer());
     }
 
     std::uint8_t scope{sourcemeta::one::SearchScopePath |
                        sourcemeta::one::SearchScopeTitle |
                        sourcemeta::one::SearchScopeDescription};
     if (arguments.defines("scope")) {
-      if (!arguments.at("scope").is_array()) {
-        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-      }
       scope = 0;
       for (const auto &item : arguments.at("scope").as_array()) {
-        if (!item.is_string()) {
-          return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-        }
         const auto &token{item.to_string()};
         if (token == "path") {
           scope |= sourcemeta::one::SearchScopePath;
@@ -203,8 +195,6 @@ public:
           scope |= sourcemeta::one::SearchScopeTitle;
         } else if (token == "description") {
           scope |= sourcemeta::one::SearchScopeDescription;
-        } else {
-          return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
         }
       }
     }
@@ -218,6 +208,7 @@ public:
 private:
   sourcemeta::one::SearchView search_view_;
   std::string_view response_schema_;
+  std::string_view rpc_schema_;
   std::string_view error_schema_;
 };
 

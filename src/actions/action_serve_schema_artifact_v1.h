@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_SERVE_SCHEMA_ARTIFACT_V1_H
 #define SOURCEMETA_ONE_ACTIONS_SERVE_SCHEMA_ARTIFACT_V1_H
 
+#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -30,6 +31,8 @@ public:
         this->artifact_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
@@ -62,12 +65,16 @@ public:
 
     const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments") || !params->at("arguments").is_object()) {
+        !params->defines("arguments")) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
-    if (!arguments.defines("schema") || !arguments.at("schema").is_string()) {
+    // TODO: Cache the compiled template across invocations
+    const auto rpc_schema_template{this->blaze_template(
+        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
+    sourcemeta::blaze::Evaluator evaluator;
+    if (!evaluator.validate(rpc_schema_template, arguments)) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -92,6 +99,7 @@ public:
 private:
   std::string_view artifact_;
   std::string_view response_schema_;
+  std::string_view rpc_schema_;
   std::string_view error_schema_;
 };
 

@@ -41,13 +41,15 @@ public:
         request_schema = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
     });
 
-    this->request_schema_template_ = ActionJSONSchemaEvaluate_v1::load_template(
-        this->base(), router.base_path(), request_schema);
+    this->request_schema_template_ = this->blaze_template(
+        request_schema, sourcemeta::blaze::Mode::FastValidation);
   }
 
   auto rest(const std::span<std::string_view> matches,
@@ -70,13 +72,16 @@ public:
 
     const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments") || !params->at("arguments").is_object()) {
+        !params->defines("arguments")) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
-    if (!arguments.defines("schema") || !arguments.at("schema").is_string() ||
-        !arguments.defines("instance")) {
+    // TODO: Cache the compiled template across invocations
+    const auto rpc_schema_template{this->blaze_template(
+        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
+    sourcemeta::blaze::Evaluator rpc_evaluator;
+    if (!rpc_evaluator.validate(rpc_schema_template, arguments)) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -319,6 +324,7 @@ private:
   }
 
   std::string_view response_schema_;
+  std::string_view rpc_schema_;
   std::string_view error_schema_;
   sourcemeta::blaze::Template request_schema_template_;
 };

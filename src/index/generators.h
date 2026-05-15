@@ -688,6 +688,30 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto search_response_schema{
         configuration.base_path +
         "/self/v1/schemas/api/schemas/search/response"};
+    const auto list_rpc_schema{configuration.base_path +
+                               "/self/v1/schemas/api/list/rpc"};
+    const auto dependencies_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/dependencies/rpc"};
+    const auto dependents_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/dependents/rpc"};
+    const auto health_rpc_schema{configuration.base_path +
+                                 "/self/v1/schemas/api/schemas/health/rpc"};
+    const auto locations_rpc_schema{
+        configuration.base_path + "/self/v1/schemas/api/schemas/locations/rpc"};
+    const auto positions_rpc_schema{
+        configuration.base_path + "/self/v1/schemas/api/schemas/positions/rpc"};
+    const auto stats_rpc_schema{configuration.base_path +
+                                "/self/v1/schemas/api/schemas/stats/rpc"};
+    const auto metadata_rpc_schema{configuration.base_path +
+                                   "/self/v1/schemas/api/schemas/metadata/rpc"};
+    const auto evaluate_rpc_schema{configuration.base_path +
+                                   "/self/v1/schemas/api/schemas/evaluate/rpc"};
+    const auto trace_rpc_schema{configuration.base_path +
+                                "/self/v1/schemas/api/schemas/trace/rpc"};
+    const auto search_rpc_schema{configuration.base_path +
+                                 "/self/v1/schemas/api/schemas/search/rpc"};
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
     const auto mcp_request_schema{configuration.base_path +
@@ -707,6 +731,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
           {"artifact", std::string_view{"directory"}},
           {"responseSchema", std::string_view{list_schema}},
+          {"rpcSchema", std::string_view{list_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/list{/path*}", "list_directory", next_id++,
                  sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
@@ -716,6 +741,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
           dependencies_arguments[] = {
               {"artifact", std::string_view{"dependencies"}},
               {"responseSchema", std::string_view{dependencies_schema}},
+              {"rpcSchema", std::string_view{dependencies_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependencies/{+schema}",
                  "get_schema_dependencies", next_id++,
@@ -726,6 +752,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
           dependents_arguments[] = {
               {"artifact", std::string_view{"dependents"}},
               {"responseSchema", std::string_view{dependents_schema}},
+              {"rpcSchema", std::string_view{dependents_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependents/{+schema}",
                  "get_schema_dependents", next_id++,
@@ -735,6 +762,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {
           {"artifact", std::string_view{"health"}},
           {"responseSchema", std::string_view{health_schema}},
+          {"rpcSchema", std::string_view{health_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/health/{+schema}", "get_schema_health",
                  next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
@@ -744,6 +772,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
           locations_arguments[] = {
               {"artifact", std::string_view{"locations"}},
               {"responseSchema", std::string_view{locations_schema}},
+              {"rpcSchema", std::string_view{locations_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/locations/{+schema}",
                  "get_schema_locations", next_id++,
@@ -754,6 +783,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
           positions_arguments[] = {
               {"artifact", std::string_view{"positions"}},
               {"responseSchema", std::string_view{positions_schema}},
+              {"rpcSchema", std::string_view{positions_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/positions/{+schema}",
                  "get_schema_positions", next_id++,
@@ -763,6 +793,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
           {"artifact", std::string_view{"stats"}},
           {"responseSchema", std::string_view{stats_schema}},
+          {"rpcSchema", std::string_view{stats_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/stats/{+schema}", "get_schema_stats",
                  next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
@@ -771,6 +802,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] =
           {{"artifact", std::string_view{"schema"}},
            {"responseSchema", std::string_view{metadata_schema}},
+           {"rpcSchema", std::string_view{metadata_rpc_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/metadata/{+schema}",
                  "get_schema_metadata", next_id++,
@@ -780,6 +812,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =
           {{"requestSchema", std::string_view{evaluate_request_schema}},
            {"responseSchema", std::string_view{evaluate_response_schema}},
+           {"rpcSchema", std::string_view{evaluate_rpc_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/evaluate/{+schema}", "evaluate_schema",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
@@ -788,6 +821,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
           {"requestSchema", std::string_view{trace_request_schema}},
           {"responseSchema", std::string_view{trace_response_schema}},
+          {"rpcSchema", std::string_view{trace_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/trace/{+schema}",
                  "trace_schema_evaluation", next_id++,
@@ -796,6 +830,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument search_arguments[] = {
           {"responseSchema", std::string_view{search_response_schema}},
+          {"rpcSchema", std::string_view{search_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/search", "search_schemas", next_id++,
                  sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
