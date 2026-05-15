@@ -38,13 +38,15 @@ public:
         request_schema = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
     });
 
-    this->request_schema_template_ = ActionJSONSchemaEvaluate_v1::load_template(
-        this->base(), router.base_path(), request_schema);
+    this->request_schema_template_ = this->blaze_template(
+        request_schema, sourcemeta::blaze::Mode::FastValidation);
   }
 
   auto rest(const std::span<std::string_view> matches,
@@ -68,13 +70,16 @@ public:
 
     const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments") || !params->at("arguments").is_object()) {
+        !params->defines("arguments")) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
-    if (!arguments.defines("schema") || !arguments.at("schema").is_string() ||
-        !arguments.defines("instance")) {
+    // TODO: Cache the compiled template across invocations
+    const auto rpc_schema_template{this->blaze_template(
+        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
+    sourcemeta::blaze::Evaluator rpc_evaluator;
+    if (!rpc_evaluator.validate(rpc_schema_template, arguments)) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -104,27 +109,6 @@ public:
     } catch (const std::exception &exception) {
       return sourcemeta::one::mcp_make_tool_error(request_id, exception.what());
     }
-  }
-
-  static auto load_template(const std::filesystem::path &base,
-                            const std::string_view base_path,
-                            std::string_view request_schema)
-      -> sourcemeta::blaze::Template {
-    if (!base_path.empty() && request_schema.starts_with(base_path)) {
-      request_schema.remove_prefix(base_path.size());
-    }
-    if (request_schema.starts_with('/')) {
-      request_schema.remove_prefix(1);
-    }
-
-    const auto template_path{base / "schemas" / request_schema / "%" /
-                             "blaze-fast.metapack"};
-    const auto template_json{
-        sourcemeta::one::metapack_read_json(template_path)};
-    assert(template_json.has_value());
-    auto compiled{sourcemeta::blaze::from_json(template_json.value())};
-    assert(compiled.has_value());
-    return std::move(compiled.value());
   }
 
   template <typename Perform>
@@ -281,6 +265,7 @@ private:
   }
 
   std::string_view response_schema_;
+  std::string_view rpc_schema_;
   std::string_view error_schema_;
   sourcemeta::blaze::Template request_schema_template_;
 };

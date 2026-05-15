@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_SERVE_EXPLORER_ARTIFACT_V1_H
 #define SOURCEMETA_ONE_ACTIONS_SERVE_EXPLORER_ARTIFACT_V1_H
 
+#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -30,6 +31,8 @@ public:
         this->artifact_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
@@ -58,20 +61,27 @@ public:
 
     const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments") || !params->at("arguments").is_object()) {
+        !params->defines("arguments")) {
       return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
+    // TODO: Cache the compiled template across invocations
+    const auto rpc_schema_template{this->blaze_template(
+        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
+    sourcemeta::blaze::Evaluator evaluator;
+    if (!evaluator.validate(rpc_schema_template, arguments)) {
+      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+    }
+
     auto absolute_path{this->base() / "explorer"};
 
     if (this->artifact_ == "list") {
       if (arguments.defines("path")) {
-        if (!arguments.at("path").is_string()) {
-          return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-        }
         const auto &path{arguments.at("path").to_string()};
         if (!path.empty()) {
+          // Defense in depth: rpc.json's `path` is just `type: string`,
+          // so still reject filesystem-traversal attempts before joining.
           const std::filesystem::path relative_path{path};
           if (relative_path.is_absolute()) {
             return sourcemeta::one::jsonrpc_make_error_invalid_params(
@@ -87,9 +97,6 @@ public:
         }
       }
     } else {
-      if (!arguments.defines("schema") || !arguments.at("schema").is_string()) {
-        return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
-      }
       const auto schema_path{
           this->uri_to_relative_path(arguments.at("schema").to_string())};
       if (!schema_path.has_value()) {
@@ -116,6 +123,7 @@ public:
 private:
   std::string_view artifact_;
   std::string_view response_schema_;
+  std::string_view rpc_schema_;
   std::string_view error_schema_;
 };
 

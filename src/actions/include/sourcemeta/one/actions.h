@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_H
 #define SOURCEMETA_ONE_ACTIONS_H
 
+#include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -79,6 +81,14 @@ public:
 
   [[nodiscard]] auto uri_to_relative_path(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
+
+  // Loads a precompiled Blaze template from disk for the given
+  // self-served schema URL (e.g. an `rpcSchema` route argument). The
+  // mode picks `blaze-fast.metapack` (FastValidation) or
+  // `blaze-exhaustive.metapack` (Exhaustive). Asserts the file exists.
+  [[nodiscard]] auto blaze_template(std::string_view schema_uri,
+                                    sourcemeta::blaze::Mode mode) const
+      -> sourcemeta::blaze::Template;
 
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
