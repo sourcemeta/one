@@ -1,5 +1,6 @@
 sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME actions
   SOURCES
+    actions_descriptions_test.cc
     actions_mcp_default_test.cc
     actions_schema_directory_test.cc
     actions_uri_to_relative_path_test.cc)

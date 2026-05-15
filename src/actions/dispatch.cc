@@ -45,6 +45,24 @@ static constexpr std::array<ActionConstructFunction,
 
 #undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
 
+#define SOURCEMETA_ONE_DEFINE_DESCRIPTION(Name, Class) Class::DESCRIPTION,
+
+static constexpr std::array<std::string_view,
+                            sourcemeta::one::ACTION_TYPE_COUNT>
+    DESCRIPTIONS{
+        {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_DESCRIPTION)}};
+
+#undef SOURCEMETA_ONE_DEFINE_DESCRIPTION
+
+auto sourcemeta::one::ActionDispatcher::description(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> std::string_view {
+  if (context >= DESCRIPTIONS.size()) {
+    return {};
+  }
+  return DESCRIPTIONS[context];
+}
+
 sourcemeta::one::ActionDispatcher::ActionDispatcher(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router)

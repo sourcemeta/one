@@ -118,6 +118,10 @@ public:
              const char *const code, std::string &&identifier,
              std::string &&message) const -> void;
 
+  [[nodiscard]] static auto
+  description(core::URITemplateRouter::Identifier context) noexcept
+      -> std::string_view;
+
 private:
   struct Slot {
     std::unique_ptr<Action> instance;

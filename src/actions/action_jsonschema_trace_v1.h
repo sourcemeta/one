@@ -29,6 +29,10 @@
 
 class ActionJSONSchemaTrace_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Validate a JSON instance against a schema and return detailed "
+      "information about every step of the evaluation process"};
+
   ActionJSONSchemaTrace_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,

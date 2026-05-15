@@ -21,6 +21,9 @@
 
 class ActionServeExplorerArtifact_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Read a navigation artifact for browsing schemas"};
+
   ActionServeExplorerArtifact_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
