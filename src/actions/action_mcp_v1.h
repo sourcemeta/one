@@ -14,6 +14,9 @@
 
 class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Handle Model Context Protocol JSON-RPC requests"};
+
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)
@@ -53,6 +56,9 @@ public:
 
 class ActionMCP_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Handle Model Context Protocol JSON-RPC requests"};
+
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier)

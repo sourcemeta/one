@@ -16,6 +16,9 @@
 
 class ActionDefault_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Default fallback action for unmatched URIs"};
+
   ActionDefault_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,

@@ -13,6 +13,9 @@
 
 class ActionHealthCheck_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Report the server's health status"};
+
   ActionHealthCheck_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,

@@ -13,6 +13,9 @@
 
 class ActionNotFound_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Return a 404 Not Found response"};
+
   ActionNotFound_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,

@@ -26,6 +26,10 @@
 
 class ActionJSONSchemaEvaluate_v1 : public sourcemeta::one::Action {
 public:
+  static constexpr std::string_view DESCRIPTION{
+      "Validate a JSON instance against a schema and return whether it "
+      "is valid plus any errors"};
+
   ActionJSONSchemaEvaluate_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
