@@ -1006,6 +1006,10 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
             case DirectoryDependencyKind::ExternalConfig:
               rule_dependencies.push_back(configuration_string);
               break;
+            case DirectoryDependencyKind::GlobalRoutes:
+              rule_dependencies.push_back(
+                  (output / "routes.bin").lexically_normal().string());
+              break;
           }
         }
 
@@ -1271,12 +1275,6 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
         {BuildPlan::Action::Type::Remove, comment_path, {}, {}});
   }
 
-  for (auto &wave : dag_waves) {
-    if (!wave.empty()) {
-      plan.waves.push_back(std::move(wave));
-    }
-  }
-
   if (is_full || web_added || web_removed) {
     std::vector<BuildPlan::Action> global_wave;
     for (const auto &rule : GLOBAL_RULES) {
@@ -1293,6 +1291,12 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
 
     if (!global_wave.empty()) {
       plan.waves.push_back(std::move(global_wave));
+    }
+  }
+
+  for (auto &wave : dag_waves) {
+    if (!wave.empty()) {
+      plan.waves.push_back(std::move(wave));
     }
   }
 

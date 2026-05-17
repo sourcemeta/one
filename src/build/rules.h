@@ -199,7 +199,8 @@ enum class DirectoryDependencyKind : std::uint8_t {
   ChildDirectories,
   AllDirectoryListings,
   SameDirectoryTarget,
-  ExternalConfig
+  ExternalConfig,
+  GlobalRoutes
 };
 
 struct DirectoryDependency {
@@ -207,7 +208,7 @@ struct DirectoryDependency {
   const char *filename;
 };
 
-static constexpr std::size_t MAX_DIRECTORY_DEPENDENCIES = 2;
+static constexpr std::size_t MAX_DIRECTORY_DEPENDENCIES = 3;
 
 struct DirectoryRule {
   BuildPlan::Action::Type action;
@@ -248,8 +249,10 @@ static constexpr std::array<DirectoryRule, 6> DIRECTORY_RULES{{
      .dependencies = {{{.kind = DirectoryDependencyKind::SameDirectoryTarget,
                         .filename = "search.metapack"},
                        {.kind = DirectoryDependencyKind::ExternalConfig,
+                        .filename = nullptr},
+                       {.kind = DirectoryDependencyKind::GlobalRoutes,
                         .filename = nullptr}}},
-     .dependency_count = 2},
+     .dependency_count = 3},
 
     {.action = BuildPlan::Action::Type::WebIndex,
      .filename = "directory-html.metapack",
