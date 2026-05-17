@@ -41,8 +41,7 @@ TEST(Build_delta, full_empty_registry) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -149,8 +148,7 @@ TEST(Build_delta, full_single_schema) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -321,8 +319,7 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -479,8 +476,7 @@ TEST(Build_delta, incremental_one_schema_added) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -611,8 +607,7 @@ TEST(Build_delta, full_stale_file_in_entries) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -734,8 +729,7 @@ TEST(Build_delta, full_stale_directory_in_entries) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -794,8 +788,7 @@ TEST(Build_delta, full_with_comment) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -843,8 +836,7 @@ TEST(Build_delta, full_without_comment_removes_existing) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -951,8 +943,7 @@ TEST(Build_delta, incremental_with_comment) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1070,8 +1061,7 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1213,8 +1203,7 @@ TEST(Build_delta, incremental_schema_removed_cleans_stale_entries) {
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 3, 0, 2, Remove, output / "explorer" / "foo", "");
   EXPECT_ACTION(plan, 3, 1, 2, Remove, output / "schemas", "");
@@ -1267,8 +1256,7 @@ TEST(Build_delta, remove_wave_deduplicates_children_of_removed_directories) {
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 3, 0, 2, Remove, output / "explorer" / "foo", "");
   EXPECT_ACTION(plan, 3, 1, 2, Remove, output / "schemas", "");
@@ -1328,8 +1316,7 @@ TEST(Build_delta, full_config_change_to_empty_schemas) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1430,8 +1417,7 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1544,8 +1530,7 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1656,8 +1641,7 @@ TEST(Build_delta, incremental_evaluate_false) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -1731,8 +1715,7 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1833,8 +1816,7 @@ TEST(Build_delta, incremental_missing_bundle) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -1909,8 +1891,7 @@ TEST(Build_delta, incremental_missing_web_schema) {
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -2134,8 +2115,7 @@ TEST(Build_delta, mtime_source_newer) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -2275,8 +2255,7 @@ TEST(Build_delta, mtime_no_entry) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -2415,8 +2394,7 @@ TEST(Build_delta, mtime_no_file_mark) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -2594,8 +2572,7 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -2850,8 +2827,7 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -3054,8 +3030,7 @@ TEST(Build_delta, mtime_reverse_dep) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -3179,8 +3154,7 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -3234,8 +3208,7 @@ TEST(Build_delta, headless_full_empty_registry) {
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
@@ -3327,8 +3300,7 @@ TEST(Build_delta, headless_full_single_schema) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
@@ -3433,8 +3405,7 @@ TEST(Build_delta, headless_incremental) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -3451,8 +3422,7 @@ TEST(Build_delta, headless_incremental) {
       output / "explorer" / "foo" / "%" / "schema.metapack",
       output / "explorer" / "%" / "search.metapack",
       output / "explorer" / "%" / "mcp.metapack",
-      output / "explorer" / "%" / "directory.metapack",
-      output / "routes.bin");
+      output / "explorer" / "%" / "directory.metapack", output / "routes.bin");
 }
 
 TEST(Build_delta, full_to_headless_removes_web) {
@@ -3547,8 +3517,7 @@ TEST(Build_delta, full_to_headless_removes_web) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
@@ -3730,8 +3699,7 @@ TEST(Build_delta, headless_to_full_incremental) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -3877,8 +3845,7 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 0, 0, 1, Routes, output / "routes.bin", "Full",
                 output / "configuration.json");
@@ -3995,8 +3962,7 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
@@ -4050,35 +4016,42 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                 std::filesystem::path{"/"} / "src" / "test.json",
                 output / "configuration.json");
 
-  EXPECT_ACTION(plan, 3, 0, 4, Dependencies,
+  EXPECT_ACTION(
+      plan, 3, 0, 4, Dependencies,
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 3, 1, 4, Locations,
+  EXPECT_ACTION(
+      plan, 3, 1, 4, Locations,
       output / "schemas" / "example" / "test" / "%" / "locations.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 3, 2, 4, Positions,
+  EXPECT_ACTION(
+      plan, 3, 2, 4, Positions,
       output / "schemas" / "example" / "test" / "%" / "positions.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack");
-  EXPECT_ACTION(plan, 3, 3, 4, Stats,
+  EXPECT_ACTION(
+      plan, 3, 3, 4, Stats,
       output / "schemas" / "example" / "test" / "%" / "stats.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack");
 
-  EXPECT_ACTION(plan, 4, 0, 2, Bundle,
+  EXPECT_ACTION(
+      plan, 4, 0, 2, Bundle,
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack",
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
-  EXPECT_ACTION(plan, 4, 1, 2, Health,
+  EXPECT_ACTION(
+      plan, 4, 1, 2, Health,
       output / "schemas" / "example" / "test" / "%" / "health.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack",
       output / "schemas" / "example" / "test" / "%" / "dependencies.metapack");
 
-  EXPECT_ACTION(plan, 5, 0, 4, SchemaMetadata,
+  EXPECT_ACTION(
+      plan, 5, 0, 4, SchemaMetadata,
       output / "explorer" / "example" / "test" / "%" / "schema.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "schema.metapack",
@@ -4091,16 +4064,19 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                 "https://example.com/test",
                 output / "schemas" / "example" / "test" / "%" /
                     "bundle.metapack");
-  EXPECT_ACTION(plan, 5, 2, 4, BlazeFast,
+  EXPECT_ACTION(
+      plan, 5, 2, 4, BlazeFast,
       output / "schemas" / "example" / "test" / "%" / "blaze-fast.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack");
-  EXPECT_ACTION(plan, 5, 3, 4, Editor,
+  EXPECT_ACTION(
+      plan, 5, 3, 4, Editor,
       output / "schemas" / "example" / "test" / "%" / "editor.metapack",
       "https://example.com/test",
       output / "schemas" / "example" / "test" / "%" / "bundle.metapack");
 
-  EXPECT_ACTION(plan, 6, 0, 1, DirectoryList,
+  EXPECT_ACTION(
+      plan, 6, 0, 1, DirectoryList,
       output / "explorer" / "example" / "%" / "directory.metapack", "",
       output / "explorer" / "example" / "test" / "%" / "schema.metapack");
 
@@ -4115,8 +4091,7 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
 
   EXPECT_ACTION(plan, 9, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_ACTION(plan, 1, 0, 1, Routes, output / "routes.bin", "Headless",
                 output / "configuration.json");
@@ -4322,8 +4297,7 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -4519,8 +4493,7 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
@@ -4665,8 +4638,7 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
-                output / "configuration.json",
-                output / "routes.bin");
+                output / "configuration.json", output / "routes.bin");
 
   EXPECT_TOTAL_FILES(
       plan, entries, output / "version.json", output / "configuration.json",
