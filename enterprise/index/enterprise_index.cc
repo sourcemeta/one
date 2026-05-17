@@ -111,6 +111,14 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
                         sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void {
   const auto base_url{router.base_url()};
+  const auto base_path{router.base_path()};
+  const auto strip_base_path =
+      [base_path](std::string_view path) -> std::string_view {
+    if (!base_path.empty() && path.starts_with(base_path)) {
+      path.remove_prefix(base_path.size());
+    }
+    return path;
+  };
   for (std::size_t index{0}; index < router.size(); index++) {
     const auto identifier{router.at(index)};
     const auto context{router.context(identifier)};
@@ -148,16 +156,18 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     entry.assign("description", sourcemeta::core::JSON{description});
 
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
-    input_schema_ref.assign("$ref",
-                            sourcemeta::core::JSON{std::string{base_url} +
-                                                   std::string{rpc_schema}});
+    input_schema_ref.assign(
+        "$ref",
+        sourcemeta::core::JSON{std::string{base_url} +
+                               std::string{strip_base_path(rpc_schema)}});
     entry.assign("inputSchema", std::move(input_schema_ref));
 
     if (!response_schema.empty()) {
       auto output_schema_ref{sourcemeta::core::JSON::make_object()};
       output_schema_ref.assign(
-          "$ref", sourcemeta::core::JSON{std::string{base_url} +
-                                         std::string{response_schema}});
+          "$ref", sourcemeta::core::JSON{
+                      std::string{base_url} +
+                      std::string{strip_base_path(response_schema)}});
       entry.assign("outputSchema", std::move(output_schema_ref));
     }
 
