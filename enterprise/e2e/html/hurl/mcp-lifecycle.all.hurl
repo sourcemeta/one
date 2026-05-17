@@ -107,32 +107,6 @@ header "Link" not exists
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
-{ "jsonrpc": "2.0", "id": 5, "method": "tools/list" }
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: http://localhost:8000
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 5
-jsonpath "$.error.code" == -32601
-jsonpath "$.error.message" == "Method not found"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
 { "jsonrpc": "2.0", "id": 7, "method": "notifications/initialized" }
 ```
 HTTP 200

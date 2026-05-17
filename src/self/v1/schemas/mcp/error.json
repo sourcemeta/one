@@ -64,6 +64,14 @@
         "code": 5,
         "message": "Request too large"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 51,
+      "error": {
+        "code": 6,
+        "message": "Tool calls are not yet supported"
+      }
     }
   ],
   "type": "object",
@@ -161,6 +169,19 @@
             },
             "message": {
               "const": "Request too large"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": 6
+            },
+            "message": {
+              "const": "Tool calls are not yet supported"
             }
           },
           "additionalProperties": false

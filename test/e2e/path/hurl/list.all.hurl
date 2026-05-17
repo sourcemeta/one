@@ -11,7 +11,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/v1/catalog/"
 jsonpath "$.url" == "{{base}}/v1/catalog"
 jsonpath "$.health" == 44
-jsonpath "$.schemas" == 55
+jsonpath "$.schemas" == 58
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.entries" count == 4
 jsonpath "$.entries[0].name" == "draft3"
@@ -32,7 +32,7 @@ jsonpath "$.entries[2].path" == "/v1/catalog/rebased/"
 jsonpath "$.entries[3].name" == "self"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 100
-jsonpath "$.entries[3].schemas" == 41
+jsonpath "$.entries[3].schemas" == 44
 jsonpath "$.entries[3].path" == "/v1/catalog/self/"
 jsonpath "$.entries[3].title" == "Self"
 jsonpath "$.entries[3].description" == "The schemas that define the current version of this instance"

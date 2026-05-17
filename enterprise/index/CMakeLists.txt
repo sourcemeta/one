@@ -13,4 +13,6 @@ target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::bu
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::configuration)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::search)
+target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::actions)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::jsonschema)
+target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::uritemplate)

@@ -7,12 +7,16 @@
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/yaml.h>
 
+#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/search.h>
 
+#include <cassert>     // assert
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::int64_t
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+#include <variant>     // std::get
 
 namespace sourcemeta::one {
 
@@ -100,6 +104,67 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
                   sourcemeta::core::JSON{std::to_string(offset + page_size)});
     }
     resources.assign(std::to_string(offset), std::move(page));
+  }
+}
+
+auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
+                        sourcemeta::core::JSON &tools,
+                        sourcemeta::core::JSON &tool_routes) -> void {
+  const auto base_url{router.base_url()};
+  for (std::size_t index{0}; index < router.size(); index++) {
+    const auto identifier{router.at(index)};
+    const auto context{router.context(identifier)};
+
+    std::string_view rpc_schema;
+    std::string_view response_schema;
+    router.arguments(identifier, [&rpc_schema, &response_schema](
+                                     const auto &key, const auto &value) {
+      if (key == "rpcSchema") {
+        rpc_schema = std::get<std::string_view>(value);
+      } else if (key == "responseSchema") {
+        response_schema = std::get<std::string_view>(value);
+      }
+    });
+
+    // TODO: Don't infer tool-eligibility from the presence of an
+    // `rpcSchema` argument. The action system itself should expose
+    // whether a given context is tool-eligible (e.g. an
+    // `ActionDispatcher::is_tool(context)` predicate driven by the
+    // X-macro that already lists every action class), so the
+    // indexer doesn't have to reach into router argument bags
+    if (rpc_schema.empty()) {
+      continue;
+    }
+
+    const auto operation_id{router.operation_id(identifier)};
+    assert(!operation_id.empty());
+
+    const auto description{
+        sourcemeta::one::ActionDispatcher::description(context)};
+    assert(!description.empty());
+
+    auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("name", sourcemeta::core::JSON{operation_id});
+    entry.assign("description", sourcemeta::core::JSON{description});
+
+    auto input_schema_ref{sourcemeta::core::JSON::make_object()};
+    input_schema_ref.assign("$ref",
+                            sourcemeta::core::JSON{std::string{base_url} +
+                                                   std::string{rpc_schema}});
+    entry.assign("inputSchema", std::move(input_schema_ref));
+
+    if (!response_schema.empty()) {
+      auto output_schema_ref{sourcemeta::core::JSON::make_object()};
+      output_schema_ref.assign(
+          "$ref", sourcemeta::core::JSON{std::string{base_url} +
+                                         std::string{response_schema}});
+      entry.assign("outputSchema", std::move(output_schema_ref));
+    }
+
+    tool_routes.assign(
+        std::string{operation_id},
+        sourcemeta::core::JSON{static_cast<std::int64_t>(identifier)});
+    tools.push_back(std::move(entry));
   }
 }
 

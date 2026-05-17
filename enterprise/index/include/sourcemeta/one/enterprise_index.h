@@ -9,6 +9,7 @@
 #include <sourcemeta/blaze/configuration.h>
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>       // std::size_t
 #include <filesystem>    // std::filesystem::path
@@ -28,6 +29,10 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
                             const sourcemeta::one::Configuration &configuration,
                             const std::size_t page_size,
                             sourcemeta::core::JSON &resources) -> void;
+
+auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
+                        sourcemeta::core::JSON &tools,
+                        sourcemeta::core::JSON &tool_routes) -> void;
 
 } // namespace sourcemeta::one
 

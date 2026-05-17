@@ -63,6 +63,24 @@
           }
         ]
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 50,
+      "result": {
+        "tools": [
+          {
+            "name": "list_directory",
+            "description": "Read a navigation artifact for browsing schemas",
+            "inputSchema": {
+              "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
+            },
+            "outputSchema": {
+              "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
+            }
+          }
+        ]
+      }
     }
   ],
   "anyOf": [
@@ -83,6 +101,9 @@
     },
     {
       "$ref": "./resources/read/response.json"
+    },
+    {
+      "$ref": "./tools/list/response.json"
     }
   ]
 }

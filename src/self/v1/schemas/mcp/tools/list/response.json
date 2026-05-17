@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Tools List Response",
+  "description": "Sourcemeta One's list of MCP tools",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 50,
+      "result": {
+        "tools": [
+          {
+            "name": "list_directory",
+            "description": "Read a navigation artifact for browsing schemas",
+            "inputSchema": {
+              "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
+            },
+            "outputSchema": {
+              "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "type": "object",
+      "required": [ "tools" ],
+      "properties": {
+        "tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": [ "name", "description", "inputSchema" ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "inputSchema": {
+                "x-lint-exclude": [ "simple_properties_identifiers" ],
+                "type": "object",
+                "required": [ "$ref" ],
+                "properties": {
+                  "$ref": {
+                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "outputSchema": {
+                "x-lint-exclude": [ "simple_properties_identifiers" ],
+                "type": "object",
+                "required": [ "$ref" ],
+                "properties": {
+                  "$ref": {
+                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
