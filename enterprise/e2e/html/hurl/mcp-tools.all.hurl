@@ -99,7 +99,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 51
 jsonpath "$.error.code" == 6
-jsonpath "$.error.message" == "Tool calls are not yet supported"
+jsonpath "$.error.message" == "Unsupported operation"
+jsonpath "$.error.data" == "Tool calls are not yet supported"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

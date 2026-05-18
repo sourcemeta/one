@@ -70,7 +70,8 @@
       "id": 51,
       "error": {
         "code": 6,
-        "message": "Tool calls are not yet supported"
+        "message": "Unsupported operation",
+        "data": "Tool calls are not yet supported"
       }
     }
   ],
@@ -175,13 +176,16 @@
         },
         {
           "type": "object",
-          "required": [ "code", "message" ],
+          "required": [ "code", "message", "data" ],
           "properties": {
             "code": {
               "const": 6
             },
             "message": {
-              "const": "Tool calls are not yet supported"
+              "const": "Unsupported operation"
+            },
+            "data": {
+              "type": "string"
             }
           },
           "additionalProperties": false

@@ -172,7 +172,8 @@ auto handle_tools_list(const sourcemeta::core::JSON &request_json,
 auto handle_tools_call(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
   return sourcemeta::one::jsonrpc_make_error(
-      &request_json.at("id"), 6, "Tool calls are not yet supported");
+      &request_json.at("id"), 6, "Unsupported operation",
+      sourcemeta::core::JSON{"Tool calls are not yet supported"});
 }
 
 auto resolve_metapack_path(const std::filesystem::path &base,
