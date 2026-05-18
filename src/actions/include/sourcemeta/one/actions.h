@@ -20,6 +20,8 @@
 
 namespace sourcemeta::one {
 
+class ActionDispatcher;
+
 #define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
   X(DEFAULT_V1, ActionDefault_v1)                                              \
   X(HEALTH_CHECK_V1, ActionHealthCheck_v1)                                     \
@@ -62,6 +64,14 @@ public:
     const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
     return sourcemeta::core::jsonrpc_make_error_method_not_found(
         id ? *id : sourcemeta::core::JSON{nullptr});
+  }
+
+  // Called once by ActionDispatcher after construction, before any
+  // dispatch. Default no-op. Actions that need to reach back into the
+  // dispatcher (e.g. to forward MCP `tools/call` to a sibling action's
+  // `mcp()` method) override this to store the reference
+  virtual auto set_dispatcher(ActionDispatcher &dispatcher) -> void {
+    (void)dispatcher;
   }
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
@@ -113,6 +123,13 @@ public:
                 const core::URITemplateRouter::Identifier context,
                 const std::span<std::string_view> matches, HTTPRequest &request,
                 HTTPResponse &response) -> void;
+
+  [[nodiscard]] auto
+  action(const core::URITemplateRouter::Identifier identifier,
+         const core::URITemplateRouter::Identifier context) -> Action *;
+
+  [[nodiscard]] auto
+  action(const core::URITemplateRouter::Identifier identifier) -> Action *;
 
   auto error(const HTTPRequest &request, HTTPResponse &response,
              const char *const code, std::string &&identifier,

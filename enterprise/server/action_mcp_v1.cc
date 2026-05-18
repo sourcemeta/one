@@ -169,11 +169,16 @@ auto handle_tools_list(const sourcemeta::core::JSON &request_json,
                                                 std::move(result));
 }
 
-auto handle_tools_call(const sourcemeta::core::JSON &request_json)
+auto handle_tools_call(const sourcemeta::core::JSON &request_json,
+                       const sourcemeta::core::JSON &mcp_metadata,
+                       const EnterpriseMCP::ToolCallHandler &handler)
     -> sourcemeta::core::JSON {
-  return sourcemeta::core::jsonrpc_make_error(
-      &request_json.at("id"), 6, "Unsupported operation",
-      sourcemeta::core::JSON{"Tool calls are not yet supported"});
+  if (!handler) {
+    return sourcemeta::core::jsonrpc_make_error(
+        &request_json.at("id"), 6, "Unsupported operation",
+        sourcemeta::core::JSON{"Tool calls are not yet supported"});
+  }
+  return handler(request_json, mcp_metadata);
 }
 
 auto resolve_metapack_path(const std::filesystem::path &base,
@@ -279,7 +284,9 @@ auto handle_jsonrpc_message(
     const std::string_view response_schema,
     const sourcemeta::blaze::Template &request_schema_template,
     const std::string_view registry_url, const std::filesystem::path &base,
-    const sourcemeta::core::JSON &mcp_metadata, std::string &&body) -> void {
+    const sourcemeta::core::JSON &mcp_metadata,
+    const EnterpriseMCP::ToolCallHandler &tool_call_handler, std::string &&body)
+    -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -353,8 +360,9 @@ auto handle_jsonrpc_message(
   }
 
   if (method == "tools/call") {
-    write_json_envelope(request, response, allowed_origin, response_schema,
-                        handle_tools_call(request_json));
+    write_json_envelope(
+        request, response, allowed_origin, response_schema,
+        handle_tools_call(request_json, mcp_metadata, tool_call_handler));
     return;
   }
 
@@ -363,6 +371,11 @@ auto handle_jsonrpc_message(
 }
 
 } // namespace
+
+auto EnterpriseMCP::set_tool_call_handler(
+    EnterpriseMCP::ToolCallHandler handler) -> void {
+  this->tool_call_handler_ = std::move(handler);
+}
 
 EnterpriseMCP::EnterpriseMCP(
     const std::filesystem::path &base,
@@ -444,7 +457,8 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
        registry_url = std::string_view{this->registry_url_},
        &base = this->base_,
        &request_schema_template = this->request_schema_template_,
-       &mcp_metadata = this->mcp_metadata_](
+       &mcp_metadata = this->mcp_metadata_,
+       &tool_call_handler = this->tool_call_handler_](
           sourcemeta::one::HTTPRequest &callback_request,
           sourcemeta::one::HTTPResponse &callback_response, std::string &&body,
           bool too_big) {
@@ -455,10 +469,10 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
                          request_too_large());
           return;
         }
-        handle_jsonrpc_message(callback_request, callback_response,
-                               allowed_origin, response_schema,
-                               request_schema_template, registry_url, base,
-                               mcp_metadata, std::move(body));
+        handle_jsonrpc_message(
+            callback_request, callback_response, allowed_origin,
+            response_schema, request_schema_template, registry_url, base,
+            mcp_metadata, tool_call_handler, std::move(body));
       },
       [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_](

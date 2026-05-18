@@ -7,7 +7,9 @@
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/enterprise_server.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/mcp.h>
 
+#include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string_view> // std::string_view
@@ -27,6 +29,32 @@ public:
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     EnterpriseMCP::rest(request, response);
+  }
+
+  auto set_dispatcher(sourcemeta::one::ActionDispatcher &dispatcher)
+      -> void override {
+    EnterpriseMCP::set_tool_call_handler(
+        [&dispatcher](const sourcemeta::core::JSON &envelope,
+                      const sourcemeta::core::JSON &mcp_metadata)
+            -> sourcemeta::core::JSON {
+          const auto &id{envelope.at("id")};
+          const auto &name{envelope.at("params").at("name").to_string()};
+          const auto &tool_routes{mcp_metadata.at("toolRoutes")};
+          if (!tool_routes.defines(name)) {
+            return sourcemeta::core::jsonrpc_make_error_invalid_params(
+                id, sourcemeta::core::JSON{name});
+          }
+          const auto identifier{
+              static_cast<sourcemeta::core::URITemplateRouter::Identifier>(
+                  tool_routes.at(name).to_integer())};
+          auto *instance{dispatcher.action(identifier)};
+          assert(instance != nullptr);
+          try {
+            return instance->mcp(envelope);
+          } catch (const std::exception &error) {
+            return sourcemeta::one::mcp_make_tool_error(id, error.what());
+          }
+        });
   }
 };
 

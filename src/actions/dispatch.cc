@@ -85,14 +85,42 @@ auto sourcemeta::one::ActionDispatcher::error(
                               std::move(message), this->default_error_schema_);
 }
 
+auto sourcemeta::one::ActionDispatcher::action(
+    const sourcemeta::core::URITemplateRouter::Identifier identifier,
+    const sourcemeta::core::URITemplateRouter::Identifier context)
+    -> sourcemeta::one::Action * {
+  if (identifier >= this->slots_size_ || context >= CONSTRUCTORS.size())
+      [[unlikely]] {
+    return nullptr;
+  }
+
+  auto &slot{this->slots_[identifier]};
+  std::call_once(slot.flag, [this, &slot, context, identifier] {
+    slot.instance =
+        CONSTRUCTORS[context](this->base_, this->router_, identifier);
+    slot.instance->set_dispatcher(*this);
+  });
+
+  return slot.instance.get();
+}
+
+auto sourcemeta::one::ActionDispatcher::action(
+    const sourcemeta::core::URITemplateRouter::Identifier identifier)
+    -> sourcemeta::one::Action * {
+  if (identifier >= this->slots_size_) [[unlikely]] {
+    return nullptr;
+  }
+  return this->action(identifier, this->router_.context(identifier));
+}
+
 auto sourcemeta::one::ActionDispatcher::dispatch(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
     const sourcemeta::core::URITemplateRouter::Identifier context,
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  if (identifier >= this->slots_size_ || context >= CONSTRUCTORS.size())
-      [[unlikely]] {
+  auto *instance{this->action(identifier, context)};
+  if (instance == nullptr) [[unlikely]] {
     this->error(request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
                 "unknown-handler-code",
                 "This server version does not implement the handler for "
@@ -100,11 +128,5 @@ auto sourcemeta::one::ActionDispatcher::dispatch(
     return;
   }
 
-  auto &slot{this->slots_[identifier]};
-  std::call_once(slot.flag, [this, &slot, context, identifier] {
-    slot.instance =
-        CONSTRUCTORS[context](this->base_, this->router_, identifier);
-  });
-
-  slot.instance->rest(matches, request, response);
+  instance->rest(matches, request, response);
 }
