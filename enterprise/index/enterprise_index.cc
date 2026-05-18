@@ -4,7 +4,6 @@
 #include <sourcemeta/blaze/compiler.h>
 
 #include <sourcemeta/core/error.h>
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -14,7 +13,6 @@
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t
-#include <filesystem>  // std::filesystem::path
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -24,11 +22,10 @@ namespace {
 
 auto strip_base_path(const std::string_view path,
                      const std::string_view base_path) -> std::string_view {
-  if (base_path.empty()) {
+  if (base_path.empty() || !path.starts_with(base_path)) {
     return path;
   }
-  if (!sourcemeta::core::starts_with(std::filesystem::path{path},
-                                     std::filesystem::path{base_path})) {
+  if (path.size() > base_path.size() && path[base_path.size()] != '/') {
     return path;
   }
   auto trimmed{path};
