@@ -42,6 +42,20 @@
       "params": {
         "uri": "https://example.com/v1/foo/v1/example"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 50,
+      "method": "tools/list"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 51,
+      "method": "tools/call",
+      "params": {
+        "name": "list_directory",
+        "arguments": {}
+      }
     }
   ],
   "anyOf": [
@@ -65,6 +79,12 @@
     },
     {
       "$ref": "./resources/read/request.json"
+    },
+    {
+      "$ref": "./tools/list/request.json"
+    },
+    {
+      "$ref": "./tools/call/request.json"
     }
   ]
 }

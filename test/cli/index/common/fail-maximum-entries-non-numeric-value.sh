@@ -91,48 +91,54 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/r
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#40)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#41)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#42)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#43)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#44)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#45)
 (  2%) Resolving: example/schemas/test.json
 (  4%) Resolving: self/v1/schemas/api/error.json
-(  7%) Resolving: self/v1/schemas/api/list/response.json
-(  9%) Resolving: self/v1/schemas/api/list/rpc.json
+(  6%) Resolving: self/v1/schemas/api/list/response.json
+(  8%) Resolving: self/v1/schemas/api/list/rpc.json
 ( 11%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 14%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc.json
-( 16%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 19%) Resolving: self/v1/schemas/api/schemas/dependents/rpc.json
-( 21%) Resolving: self/v1/schemas/api/schemas/evaluate/request.json
-( 23%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 26%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc.json
-( 28%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 30%) Resolving: self/v1/schemas/api/schemas/health/rpc.json
-( 33%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 35%) Resolving: self/v1/schemas/api/schemas/locations/rpc.json
-( 38%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 40%) Resolving: self/v1/schemas/api/schemas/metadata/rpc.json
-( 42%) Resolving: self/v1/schemas/api/schemas/position.json
-( 45%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 47%) Resolving: self/v1/schemas/api/schemas/positions/rpc.json
-( 50%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 52%) Resolving: self/v1/schemas/api/schemas/search/rpc.json
-( 54%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 57%) Resolving: self/v1/schemas/api/schemas/stats/rpc.json
-( 59%) Resolving: self/v1/schemas/api/schemas/trace/request.json
-( 61%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 64%) Resolving: self/v1/schemas/api/schemas/trace/rpc.json
-( 66%) Resolving: self/v1/schemas/mcp/error.json
-( 69%) Resolving: self/v1/schemas/mcp/initialize/request.json
-( 71%) Resolving: self/v1/schemas/mcp/initialize/response.json
-( 73%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
-( 76%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
-( 78%) Resolving: self/v1/schemas/mcp/ping/request.json
-( 80%) Resolving: self/v1/schemas/mcp/ping/response.json
-( 83%) Resolving: self/v1/schemas/mcp/request.json
-( 85%) Resolving: self/v1/schemas/mcp/resources/list/request.json
-( 88%) Resolving: self/v1/schemas/mcp/resources/list/response.json
-( 90%) Resolving: self/v1/schemas/mcp/resources/read/request.json
-( 92%) Resolving: self/v1/schemas/mcp/resources/read/response.json
-( 95%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
-( 97%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
-(100%) Resolving: self/v1/schemas/mcp/response.json
+( 13%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc.json
+( 15%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
+( 17%) Resolving: self/v1/schemas/api/schemas/dependents/rpc.json
+( 20%) Resolving: self/v1/schemas/api/schemas/evaluate/request.json
+( 22%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 24%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc.json
+( 26%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 28%) Resolving: self/v1/schemas/api/schemas/health/rpc.json
+( 31%) Resolving: self/v1/schemas/api/schemas/locations/response.json
+( 33%) Resolving: self/v1/schemas/api/schemas/locations/rpc.json
+( 35%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 37%) Resolving: self/v1/schemas/api/schemas/metadata/rpc.json
+( 40%) Resolving: self/v1/schemas/api/schemas/position.json
+( 42%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 44%) Resolving: self/v1/schemas/api/schemas/positions/rpc.json
+( 46%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 48%) Resolving: self/v1/schemas/api/schemas/search/rpc.json
+( 51%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 53%) Resolving: self/v1/schemas/api/schemas/stats/rpc.json
+( 55%) Resolving: self/v1/schemas/api/schemas/trace/request.json
+( 57%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 60%) Resolving: self/v1/schemas/api/schemas/trace/rpc.json
+( 62%) Resolving: self/v1/schemas/mcp/error.json
+( 64%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 66%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 68%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 71%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 73%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 75%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 77%) Resolving: self/v1/schemas/mcp/request.json
+( 80%) Resolving: self/v1/schemas/mcp/resources/list/request.json
+( 82%) Resolving: self/v1/schemas/mcp/resources/list/response.json
+( 84%) Resolving: self/v1/schemas/mcp/resources/read/request.json
+( 86%) Resolving: self/v1/schemas/mcp/resources/read/response.json
+( 88%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
+( 91%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
+( 93%) Resolving: self/v1/schemas/mcp/response.json
+( 95%) Resolving: self/v1/schemas/mcp/tools/call/request.json
+( 97%) Resolving: self/v1/schemas/mcp/tools/list/request.json
+(100%) Resolving: self/v1/schemas/mcp/tools/list/response.json
 error: Expected a valid numeric value for option
   at option maximum-direct-directory-entries
   with value abc

@@ -303,6 +303,12 @@ private:
       return;
     }
 
+    if (id != nullptr && (method == "tools/list" || method == "tools/call")) {
+      write_envelope(request, response, allowed_origin, response_schema,
+                     sourcemeta::one::STATUS_OK, enterprise_required(id));
+      return;
+    }
+
     write_envelope(request, response, allowed_origin, response_schema,
                    sourcemeta::one::STATUS_OK, enterprise_required(nullptr));
   }

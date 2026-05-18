@@ -159,6 +159,23 @@ auto handle_resources_templates_list(const sourcemeta::core::JSON &request_json,
                                                std::move(result));
 }
 
+auto handle_tools_list(const sourcemeta::core::JSON &request_json,
+                       const sourcemeta::core::JSON &mcp_metadata)
+    -> sourcemeta::core::JSON {
+  auto result{sourcemeta::core::JSON::make_object()};
+  result.assign_assume_new(std::string{"tools"},
+                           sourcemeta::core::JSON{mcp_metadata.at("tools")});
+  return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
+                                               std::move(result));
+}
+
+auto handle_tools_call(const sourcemeta::core::JSON &request_json)
+    -> sourcemeta::core::JSON {
+  return sourcemeta::one::jsonrpc_make_error(
+      &request_json.at("id"), 6, "Unsupported operation",
+      sourcemeta::core::JSON{"Tool calls are not yet supported"});
+}
+
 auto resolve_metapack_path(const std::filesystem::path &base,
                            const std::string_view schema_path,
                            const bool bundle) -> std::filesystem::path {
@@ -287,7 +304,8 @@ auto handle_jsonrpc_message(
   const auto method{sourcemeta::one::jsonrpc_method(request_json)};
   if (method != "initialize" && method != "ping" &&
       method != "resources/list" && method != "resources/templates/list" &&
-      method != "resources/read") {
+      method != "resources/read" && method != "tools/list" &&
+      method != "tools/call") {
     write_json_envelope(request, response, allowed_origin, response_schema,
                         sourcemeta::one::jsonrpc_make_error_method_not_found(
                             request_json.at("id")));
@@ -324,6 +342,18 @@ auto handle_jsonrpc_message(
     write_json_envelope(
         request, response, allowed_origin, response_schema,
         handle_resources_read(request_json, registry_url, base));
+    return;
+  }
+
+  if (method == "tools/list") {
+    write_json_envelope(request, response, allowed_origin, response_schema,
+                        handle_tools_list(request_json, mcp_metadata));
+    return;
+  }
+
+  if (method == "tools/call") {
+    write_json_envelope(request, response, allowed_origin, response_schema,
+                        handle_tools_call(request_json));
     return;
   }
 

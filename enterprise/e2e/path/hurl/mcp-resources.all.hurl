@@ -19,7 +19,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 10
-jsonpath "$.result.resources" count == 47
+jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
 jsonpath "$.result.resources[0].name" == "error"
 jsonpath "$.result.resources[0].description" == "The error response format returned by the Sourcemeta One API endpoints"
@@ -154,7 +154,7 @@ jsonpath "$.result.resources[26].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[26].name" == "error"
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 5813
+jsonpath "$.result.resources[26].size" == 6402
 jsonpath "$.result.resources[27].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[27].name" == "request"
 jsonpath "$.result.resources[27].description" == "Connection handshake from a client"
@@ -164,7 +164,7 @@ jsonpath "$.result.resources[28].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[28].name" == "response"
 jsonpath "$.result.resources[28].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 1858
+jsonpath "$.result.resources[28].size" == 1972
 jsonpath "$.result.resources[29].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/notifications/cancelled"
 jsonpath "$.result.resources[29].name" == "cancelled"
 jsonpath "$.result.resources[29].description" == "Cancellation hint from a client for an in-flight request. Sourcemeta One accepts and discards these"
@@ -189,7 +189,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "request"
 jsonpath "$.result.resources[33].description" == "Any incoming MCP request the server accepts"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 1435
+jsonpath "$.result.resources[33].size" == 1784
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/resources/list/request"
 jsonpath "$.result.resources[34].name" == "request"
 jsonpath "$.result.resources[34].description" == "Request from a client to list MCP resources"
@@ -224,37 +224,52 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[40].name" == "response"
 jsonpath "$.result.resources[40].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 1954
-jsonpath "$.result.resources[41].uri" == "{{base}}/v1/catalog/example/full"
-jsonpath "$.result.resources[41].name" == "full"
-jsonpath "$.result.resources[41].description" == "A schema that has both a title and a description"
+jsonpath "$.result.resources[40].size" == 2498
+jsonpath "$.result.resources[41].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
+jsonpath "$.result.resources[41].name" == "request"
+jsonpath "$.result.resources[41].description" == "Request from a client to invoke an MCP tool by name"
 jsonpath "$.result.resources[41].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[41].size" == 242
-jsonpath "$.result.resources[42].uri" == "{{base}}/v1/catalog/example/description-only"
-jsonpath "$.result.resources[42].name" == "description-only"
-jsonpath "$.result.resources[42].description" == "A schema with only a description and no title"
+jsonpath "$.result.resources[41].size" == 1172
+jsonpath "$.result.resources[42].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/list/request"
+jsonpath "$.result.resources[42].name" == "request"
+jsonpath "$.result.resources[42].description" == "Request from a client to list MCP tools"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 219
-jsonpath "$.result.resources[43].uri" == "{{base}}/v1/catalog/example/title-only"
-jsonpath "$.result.resources[43].name" == "title-only"
-jsonpath "$.result.resources[43].description" not exists
+jsonpath "$.result.resources[42].size" == 864
+jsonpath "$.result.resources[43].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.resources[43].name" == "response"
+jsonpath "$.result.resources[43].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[43].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[43].size" == 185
-jsonpath "$.result.resources[44].uri" == "{{base}}/v1/catalog/draft3/object"
-jsonpath "$.result.resources[44].name" == "object"
-jsonpath "$.result.resources[44].description" not exists
+jsonpath "$.result.resources[43].size" == 2680
+jsonpath "$.result.resources[44].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.resources[44].name" == "full"
+jsonpath "$.result.resources[44].description" == "A schema that has both a title and a description"
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[44].size" == 270
-jsonpath "$.result.resources[45].uri" == "{{base}}/v1/catalog/draft3/string"
-jsonpath "$.result.resources[45].name" == "string"
-jsonpath "$.result.resources[45].description" not exists
+jsonpath "$.result.resources[44].size" == 242
+jsonpath "$.result.resources[45].uri" == "{{base}}/v1/catalog/example/description-only"
+jsonpath "$.result.resources[45].name" == "description-only"
+jsonpath "$.result.resources[45].description" == "A schema with only a description and no title"
 jsonpath "$.result.resources[45].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[45].size" == 136
-jsonpath "$.result.resources[46].uri" == "{{base}}/v1/catalog/example/bare"
-jsonpath "$.result.resources[46].name" == "bare"
+jsonpath "$.result.resources[45].size" == 219
+jsonpath "$.result.resources[46].uri" == "{{base}}/v1/catalog/example/title-only"
+jsonpath "$.result.resources[46].name" == "title-only"
 jsonpath "$.result.resources[46].description" not exists
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 141
+jsonpath "$.result.resources[46].size" == 185
+jsonpath "$.result.resources[47].uri" == "{{base}}/v1/catalog/draft3/object"
+jsonpath "$.result.resources[47].name" == "object"
+jsonpath "$.result.resources[47].description" not exists
+jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[47].size" == 270
+jsonpath "$.result.resources[48].uri" == "{{base}}/v1/catalog/draft3/string"
+jsonpath "$.result.resources[48].name" == "string"
+jsonpath "$.result.resources[48].description" not exists
+jsonpath "$.result.resources[48].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[48].size" == 136
+jsonpath "$.result.resources[49].uri" == "{{base}}/v1/catalog/example/bare"
+jsonpath "$.result.resources[49].name" == "bare"
+jsonpath "$.result.resources[49].description" not exists
+jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[49].size" == 141
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}

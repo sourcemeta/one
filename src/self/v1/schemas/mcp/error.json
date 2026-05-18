@@ -64,6 +64,15 @@
         "code": 5,
         "message": "Request too large"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 51,
+      "error": {
+        "code": 6,
+        "message": "Unsupported operation",
+        "data": "Tool calls are not yet supported"
+      }
     }
   ],
   "type": "object",
@@ -161,6 +170,22 @@
             },
             "message": {
               "const": "Request too large"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": 6
+            },
+            "message": {
+              "const": "Unsupported operation"
+            },
+            "data": {
+              "type": "string"
             }
           },
           "additionalProperties": false

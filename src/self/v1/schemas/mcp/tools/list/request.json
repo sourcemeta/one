@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Tools List Request",
+  "description": "Request from a client to list MCP tools",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 50,
+      "method": "tools/list"
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "method" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "method": {
+      "const": "tools/list"
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "_meta": {
+          "type": "object",
+          "properties": {
+            "progressToken": {
+              "type": [ "string", "integer" ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

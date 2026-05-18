@@ -562,7 +562,6 @@ struct GENERATE_MCP {
 
     auto capabilities{sourcemeta::core::JSON::make_object()};
     capabilities.assign("resources", sourcemeta::core::JSON::make_object());
-    initialize_result.assign("capabilities", std::move(capabilities));
 
     auto server_info{sourcemeta::core::JSON::make_object()};
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
@@ -597,17 +596,31 @@ struct GENERATE_MCP {
     resource_templates.push_back(std::move(template_entry));
 
     auto resources{sourcemeta::core::JSON::make_object()};
+    auto tools{sourcemeta::core::JSON::make_array()};
+    auto tool_routes{sourcemeta::core::JSON::make_object()};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     sourcemeta::one::generate_mcp_resources(
         action.dependencies.front(), configuration, MCP_PAGE_SIZE, resources);
+    {
+      const sourcemeta::core::URITemplateRouterView router_view{
+          action.dependencies.back()};
+      sourcemeta::one::generate_mcp_tools(router_view, tools, tool_routes);
+    }
 #endif
+
+    if (!tools.empty()) {
+      capabilities.assign("tools", sourcemeta::core::JSON::make_object());
+    }
+    initialize_result.assign("capabilities", std::move(capabilities));
 
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
     document.assign("initialize", std::move(initialize_result));
     document.assign("resourceTemplates", std::move(resource_templates));
     document.assign("resources", std::move(resources));
+    document.assign("tools", std::move(tools));
+    document.assign("toolRoutes", std::move(tool_routes));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(

@@ -42,6 +42,10 @@
             "resources": {
               "type": "object",
               "additionalProperties": false
+            },
+            "tools": {
+              "type": "object",
+              "additionalProperties": false
             }
           },
           "additionalProperties": false
