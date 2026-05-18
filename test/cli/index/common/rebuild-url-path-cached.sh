@@ -338,6 +338,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/request/%/schema.metapack
+./explorer/self/v1/schemas/mcp/tools/call/response
+./explorer/self/v1/schemas/mcp/tools/call/response/%
+./explorer/self/v1/schemas/mcp/tools/call/response/%/schema-html.metapack
+./explorer/self/v1/schemas/mcp/tools/call/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/list
 ./explorer/self/v1/schemas/mcp/tools/list/%
 ./explorer/self/v1/schemas/mcp/tools/list/%/directory-html.metapack
@@ -939,6 +943,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/positions.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/schema.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/stats.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response
+./schemas/self/v1/schemas/mcp/tools/call/response/%
+./schemas/self/v1/schemas/mcp/tools/call/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/dependents.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/editor.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/health.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/locations.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/positions.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/schema.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/stats.metapack
 ./schemas/self/v1/schemas/mcp/tools/list
 ./schemas/self/v1/schemas/mcp/tools/list/request
 ./schemas/self/v1/schemas/mcp/tools/list/request/%
@@ -1021,8 +1038,9 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templa
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#41)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#42)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#43)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#44)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#45)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#44)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#45)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#46)
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"
 

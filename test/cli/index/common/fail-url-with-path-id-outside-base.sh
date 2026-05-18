@@ -86,51 +86,53 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templa
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#40)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#41)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#42)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#43)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#44)
-Detecting: $(realpath "$TMP")/schemas/foo.json (#45)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#43)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#44)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#45)
+Detecting: $(realpath "$TMP")/schemas/foo.json (#46)
 (  2%) Resolving: self/v1/schemas/api/error.json
 (  4%) Resolving: self/v1/schemas/api/list/response.json
 (  6%) Resolving: self/v1/schemas/api/list/rpc.json
 (  8%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 11%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc.json
+( 10%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc.json
 ( 13%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
 ( 15%) Resolving: self/v1/schemas/api/schemas/dependents/rpc.json
 ( 17%) Resolving: self/v1/schemas/api/schemas/evaluate/request.json
-( 20%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 22%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc.json
-( 24%) Resolving: self/v1/schemas/api/schemas/health/response.json
+( 19%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
+( 21%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc.json
+( 23%) Resolving: self/v1/schemas/api/schemas/health/response.json
 ( 26%) Resolving: self/v1/schemas/api/schemas/health/rpc.json
 ( 28%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 31%) Resolving: self/v1/schemas/api/schemas/locations/rpc.json
-( 33%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 35%) Resolving: self/v1/schemas/api/schemas/metadata/rpc.json
-( 37%) Resolving: self/v1/schemas/api/schemas/position.json
-( 40%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 42%) Resolving: self/v1/schemas/api/schemas/positions/rpc.json
-( 44%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 46%) Resolving: self/v1/schemas/api/schemas/search/rpc.json
-( 48%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 51%) Resolving: self/v1/schemas/api/schemas/stats/rpc.json
-( 53%) Resolving: self/v1/schemas/api/schemas/trace/request.json
-( 55%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 57%) Resolving: self/v1/schemas/api/schemas/trace/rpc.json
-( 60%) Resolving: self/v1/schemas/mcp/error.json
-( 62%) Resolving: self/v1/schemas/mcp/initialize/request.json
-( 64%) Resolving: self/v1/schemas/mcp/initialize/response.json
-( 66%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
-( 68%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
-( 71%) Resolving: self/v1/schemas/mcp/ping/request.json
-( 73%) Resolving: self/v1/schemas/mcp/ping/response.json
-( 75%) Resolving: self/v1/schemas/mcp/request.json
-( 77%) Resolving: self/v1/schemas/mcp/resources/list/request.json
-( 80%) Resolving: self/v1/schemas/mcp/resources/list/response.json
-( 82%) Resolving: self/v1/schemas/mcp/resources/read/request.json
-( 84%) Resolving: self/v1/schemas/mcp/resources/read/response.json
-( 86%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
-( 88%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
-( 91%) Resolving: self/v1/schemas/mcp/response.json
-( 93%) Resolving: self/v1/schemas/mcp/tools/call/request.json
+( 30%) Resolving: self/v1/schemas/api/schemas/locations/rpc.json
+( 32%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
+( 34%) Resolving: self/v1/schemas/api/schemas/metadata/rpc.json
+( 36%) Resolving: self/v1/schemas/api/schemas/position.json
+( 39%) Resolving: self/v1/schemas/api/schemas/positions/response.json
+( 41%) Resolving: self/v1/schemas/api/schemas/positions/rpc.json
+( 43%) Resolving: self/v1/schemas/api/schemas/search/response.json
+( 45%) Resolving: self/v1/schemas/api/schemas/search/rpc.json
+( 47%) Resolving: self/v1/schemas/api/schemas/stats/response.json
+( 50%) Resolving: self/v1/schemas/api/schemas/stats/rpc.json
+( 52%) Resolving: self/v1/schemas/api/schemas/trace/request.json
+( 54%) Resolving: self/v1/schemas/api/schemas/trace/response.json
+( 56%) Resolving: self/v1/schemas/api/schemas/trace/rpc.json
+( 58%) Resolving: self/v1/schemas/mcp/error.json
+( 60%) Resolving: self/v1/schemas/mcp/initialize/request.json
+( 63%) Resolving: self/v1/schemas/mcp/initialize/response.json
+( 65%) Resolving: self/v1/schemas/mcp/notifications/cancelled.json
+( 67%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
+( 69%) Resolving: self/v1/schemas/mcp/ping/request.json
+( 71%) Resolving: self/v1/schemas/mcp/ping/response.json
+( 73%) Resolving: self/v1/schemas/mcp/request.json
+( 76%) Resolving: self/v1/schemas/mcp/resources/list/request.json
+( 78%) Resolving: self/v1/schemas/mcp/resources/list/response.json
+( 80%) Resolving: self/v1/schemas/mcp/resources/read/request.json
+( 82%) Resolving: self/v1/schemas/mcp/resources/read/response.json
+( 84%) Resolving: self/v1/schemas/mcp/resources/templates/list/request.json
+( 86%) Resolving: self/v1/schemas/mcp/resources/templates/list/response.json
+( 89%) Resolving: self/v1/schemas/mcp/response.json
+( 91%) Resolving: self/v1/schemas/mcp/tools/call/request.json
+( 93%) Resolving: self/v1/schemas/mcp/tools/call/response.json
 ( 95%) Resolving: self/v1/schemas/mcp/tools/list/request.json
 ( 97%) Resolving: self/v1/schemas/mcp/tools/list/response.json
 (100%) Resolving: test/foo.json

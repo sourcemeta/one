@@ -81,6 +81,22 @@
           }
         ]
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 51,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"valid\": true\n}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true
+        },
+        "isError": false
+      }
     }
   ],
   "anyOf": [
@@ -104,6 +120,9 @@
     },
     {
       "$ref": "./tools/list/response.json"
+    },
+    {
+      "$ref": "./tools/call/response.json"
     }
   ]
 }
