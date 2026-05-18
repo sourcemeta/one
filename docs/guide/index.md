@@ -1,7 +1,9 @@
 # The Problem With API Governance Today
 
 APIs are the connective tissue of modern software. Most organisations know
-this. Most have also, at some point, decided to "govern their APIs."
+this. Most have also, at some point, decided to "govern their APIs", to the
+point that [83 of the Fortune 100 already operate a developer or API
+portal](https://apievangelist.com/blog/2026/05/11/83-of-the-fortune-100-have-a-developer-or-api-portal).
 
 And yet the same problems keep coming back.
 
