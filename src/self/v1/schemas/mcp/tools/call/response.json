@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Tools Call Response",
+  "description": "Sourcemeta One's response to a tool invocation",
+  "examples": [
+    {
+      "jsonrpc": "2.0",
+      "id": 51,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"valid\": true\n}"
+          }
+        ],
+        "structuredContent": {
+          "valid": true
+        },
+        "isError": false
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 52,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Schema not found"
+          }
+        ],
+        "isError": true
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "jsonrpc", "id", "result" ],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": [ "string", "integer" ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [ "content", "structuredContent", "isError" ],
+          "properties": {
+            "content": {
+              "$ref": "#/$defs/content"
+            },
+            "structuredContent": true,
+            "isError": {
+              "const": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [ "content", "isError" ],
+          "properties": {
+            "content": {
+              "$ref": "#/$defs/content"
+            },
+            "isError": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "content": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [ "type", "text" ],
+        "properties": {
+          "type": {
+            "const": "text"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
