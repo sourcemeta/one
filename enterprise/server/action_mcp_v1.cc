@@ -378,17 +378,12 @@ EnterpriseMCP::EnterpriseMCP(
         }
       });
 
-  const auto base_path{router.base_path()};
-  std::string_view request_schema_path{request_schema};
-  if (!base_path.empty() && request_schema_path.starts_with(base_path)) {
-    request_schema_path.remove_prefix(base_path.size());
-  }
-  if (request_schema_path.starts_with('/')) {
-    request_schema_path.remove_prefix(1);
-  }
+  const auto request_schema_suffix{sourcemeta::core::URI::strip_path_prefix(
+      request_schema, router.base_path())};
+  assert(request_schema_suffix.has_value());
 
-  const auto template_path{base / "schemas" / request_schema_path / "%" /
-                           "blaze-fast.metapack"};
+  const auto template_path{base / "schemas" / request_schema_suffix.value() /
+                           "%" / "blaze-fast.metapack"};
   const auto template_json{sourcemeta::one::metapack_read_json(template_path)};
   assert(template_json.has_value());
   auto compiled{sourcemeta::blaze::from_json(template_json.value())};

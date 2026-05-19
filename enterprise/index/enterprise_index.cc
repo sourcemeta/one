@@ -5,6 +5,7 @@
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/actions.h>
@@ -17,23 +18,6 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <variant>     // std::get
-
-namespace {
-
-auto strip_base_path(const std::string_view path,
-                     const std::string_view base_path) -> std::string_view {
-  if (base_path.empty() || !path.starts_with(base_path)) {
-    return path;
-  }
-  if (path.size() > base_path.size() && path[base_path.size()] != '/') {
-    return path;
-  }
-  auto trimmed{path};
-  trimmed.remove_prefix(base_path.size());
-  return trimmed;
-}
-
-} // namespace
 
 namespace sourcemeta::one {
 
@@ -163,19 +147,23 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     entry.assign("name", sourcemeta::core::JSON{operation_id});
     entry.assign("description", sourcemeta::core::JSON{description});
 
+    auto input_schema_url{
+        sourcemeta::core::URI::rebase_path(rpc_schema, base_path, base_url)};
+    assert(input_schema_url.has_value());
+
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
     input_schema_ref.assign(
-        "$ref", sourcemeta::core::JSON{
-                    std::string{base_url} +
-                    std::string{strip_base_path(rpc_schema, base_path)}});
+        "$ref", sourcemeta::core::JSON{std::move(input_schema_url).value()});
     entry.assign("inputSchema", std::move(input_schema_ref));
 
     if (!response_schema.empty()) {
+      auto output_schema_url{sourcemeta::core::URI::rebase_path(
+          response_schema, base_path, base_url)};
+      assert(output_schema_url.has_value());
+
       auto output_schema_ref{sourcemeta::core::JSON::make_object()};
       output_schema_ref.assign(
-          "$ref", sourcemeta::core::JSON{std::string{base_url} +
-                                         std::string{strip_base_path(
-                                             response_schema, base_path)}});
+          "$ref", sourcemeta::core::JSON{std::move(output_schema_url).value()});
       entry.assign("outputSchema", std::move(output_schema_ref));
     }
 
