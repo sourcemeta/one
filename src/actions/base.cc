@@ -45,20 +45,17 @@ auto Action::schema_directory(const std::string_view uri) const
   return this->base_ / "schemas" / std::move(path).value() / "%";
 }
 
-auto Action::blaze_template(std::string_view schema_uri,
+auto Action::blaze_template(const std::string_view schema_uri,
                             const sourcemeta::blaze::Mode mode) const
     -> sourcemeta::blaze::Template {
-  if (!this->base_path_.empty() && schema_uri.starts_with(this->base_path_)) {
-    schema_uri.remove_prefix(this->base_path_.size());
-  }
-  if (schema_uri.starts_with('/')) {
-    schema_uri.remove_prefix(1);
-  }
+  const auto stripped{
+      sourcemeta::core::URI::strip_path_prefix(schema_uri, this->base_path_)};
+  assert(stripped.has_value());
 
   const auto *filename{mode == sourcemeta::blaze::Mode::FastValidation
                            ? "blaze-fast.metapack"
                            : "blaze-exhaustive.metapack"};
-  const auto template_path{this->base_ / "schemas" / schema_uri / "%" /
+  const auto template_path{this->base_ / "schemas" / stripped.value() / "%" /
                            filename};
   const auto template_json{sourcemeta::one::metapack_read_json(template_path)};
   assert(template_json.has_value());

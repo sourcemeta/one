@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_DEFAULT_V1_H
 #define SOURCEMETA_ONE_ACTIONS_DEFAULT_V1_H
 
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
@@ -34,23 +35,16 @@ public:
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    auto path{request.path()};
-    if (!this->base_path().empty()) {
-      if (!path.starts_with(this->base_path()) ||
-          (path.size() > this->base_path().size() &&
-           path[this->base_path().size()] != '/')) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", this->error_schema_);
-        return;
-      }
-
-      path = path.substr(this->base_path().size());
+    const auto stripped{sourcemeta::core::URI::strip_path_prefix(
+        request.path(), this->base_path())};
+    if (!stripped.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", this->error_schema_);
+      return;
     }
 
-    if (path.starts_with('/')) {
-      path = path.substr(1);
-    }
+    const auto &path{stripped.value()};
 
     if (path.empty()) {
       if (request.prefers_html()) {
