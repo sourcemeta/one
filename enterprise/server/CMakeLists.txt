@@ -11,7 +11,6 @@ target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::blaze:
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::jsonrpc)
-target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::mcp)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::metapack)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::blaze::output)

@@ -8,7 +8,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 4
 jsonpath "$.error.message" == "Method not allowed"
 
@@ -30,7 +30,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 4
 jsonpath "$.error.message" == "Method not allowed"
 
@@ -52,7 +52,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 4
 jsonpath "$.error.message" == "Method not allowed"
 

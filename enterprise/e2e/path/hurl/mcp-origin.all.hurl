@@ -40,7 +40,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 2
 jsonpath "$.error.message" == "Forbidden origin"
 
@@ -67,7 +67,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 2
 jsonpath "$.error.message" == "Forbidden origin"
 

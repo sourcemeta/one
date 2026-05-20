@@ -11,16 +11,6 @@
 
 namespace sourcemeta::one {
 
-// MCP's base schema is stricter than JSON-RPC 2.0: it forbids a null
-// `id` member and instead treats the field as optional.
-inline auto mcp_strip_null_id(sourcemeta::core::JSON envelope)
-    -> sourcemeta::core::JSON {
-  if (envelope.defines("id") && envelope.at("id").is_null()) {
-    envelope.erase("id");
-  }
-  return envelope;
-}
-
 inline auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
                                   sourcemeta::core::JSON result)
     -> sourcemeta::core::JSON {

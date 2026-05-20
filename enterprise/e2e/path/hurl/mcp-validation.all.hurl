@@ -12,7 +12,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32700
 jsonpath "$.error.message" == "Parse error"
 
@@ -38,7 +38,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 
@@ -64,7 +64,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 
@@ -90,7 +90,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 
@@ -116,7 +116,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 
@@ -142,7 +142,7 @@ last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 

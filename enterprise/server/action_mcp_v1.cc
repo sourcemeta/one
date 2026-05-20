@@ -8,7 +8,6 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared_version.h>
@@ -69,24 +68,20 @@ auto write_accepted(sourcemeta::one::HTTPRequest &request,
 }
 
 auto method_not_allowed() -> sourcemeta::core::JSON {
-  return sourcemeta::one::mcp_strip_null_id(
-      sourcemeta::core::jsonrpc_make_error(nullptr, 4, "Method not allowed"));
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 4, "Method not allowed");
 }
 
 auto forbidden_origin() -> sourcemeta::core::JSON {
-  return sourcemeta::one::mcp_strip_null_id(
-      sourcemeta::core::jsonrpc_make_error(nullptr, 2, "Forbidden origin"));
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 2, "Forbidden origin");
 }
 
 auto unsupported_protocol_version() -> sourcemeta::core::JSON {
-  return sourcemeta::one::mcp_strip_null_id(
-      sourcemeta::core::jsonrpc_make_error(nullptr, 3,
-                                           "Unsupported protocol version"));
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 3,
+                                              "Unsupported protocol version");
 }
 
 auto request_too_large() -> sourcemeta::core::JSON {
-  return sourcemeta::one::mcp_strip_null_id(
-      sourcemeta::core::jsonrpc_make_error(nullptr, 5, "Request too large"));
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 5, "Request too large");
 }
 
 auto resource_not_found(const sourcemeta::core::JSON &id,
@@ -290,8 +285,7 @@ auto handle_jsonrpc_message(
     request_json = sourcemeta::core::parse_json(body);
   } catch (const std::exception &) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        sourcemeta::one::mcp_strip_null_id(
-                            sourcemeta::core::jsonrpc_make_error_parse()));
+                        sourcemeta::core::jsonrpc_make_error_parse());
     return;
   }
 
@@ -303,9 +297,8 @@ auto handle_jsonrpc_message(
   if (!sourcemeta::core::jsonrpc_is_request(request_json)) {
     write_json_envelope(
         request, response, allowed_origin, response_schema,
-        sourcemeta::one::mcp_strip_null_id(
-            sourcemeta::core::jsonrpc_make_error_invalid_request(
-                sourcemeta::core::jsonrpc_request_id(request_json))));
+        sourcemeta::core::jsonrpc_make_error_invalid_request(
+            sourcemeta::core::jsonrpc_request_id(request_json)));
     return;
   }
 
@@ -314,20 +307,16 @@ auto handle_jsonrpc_message(
       method != "resources/list" && method != "resources/templates/list" &&
       method != "resources/read" && method != "tools/list" &&
       method != "tools/call") {
-    write_json_envelope(
-        request, response, allowed_origin, response_schema,
-        sourcemeta::one::mcp_strip_null_id(
-            sourcemeta::core::jsonrpc_make_error_method_not_found(
-                request_json.at("id"))));
+    write_json_envelope(request, response, allowed_origin, response_schema,
+                        sourcemeta::core::jsonrpc_make_error_method_not_found(
+                            request_json.at("id")));
     return;
   }
 
   if (!matches_request_schema(request_schema_template, request_json)) {
-    write_json_envelope(
-        request, response, allowed_origin, response_schema,
-        sourcemeta::one::mcp_strip_null_id(
-            sourcemeta::core::jsonrpc_make_error_invalid_request(
-                &request_json.at("id"))));
+    write_json_envelope(request, response, allowed_origin, response_schema,
+                        sourcemeta::core::jsonrpc_make_error_invalid_request(
+                            &request_json.at("id")));
     return;
   }
 
@@ -482,8 +471,7 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
           write_envelope(callback_request, callback_response, allowed_origin,
                          response_schema,
                          sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                         sourcemeta::one::mcp_strip_null_id(
-                             sourcemeta::core::jsonrpc_make_error_internal()));
+                         sourcemeta::core::jsonrpc_make_error_internal());
         }
       });
 }

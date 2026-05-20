@@ -39,7 +39,6 @@ public:
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
@@ -134,8 +133,7 @@ public:
             ActionMCP_v1::write_envelope(
                 callback_request, callback_response, allowed_origin,
                 response_schema, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                sourcemeta::one::mcp_strip_null_id(
-                    sourcemeta::core::jsonrpc_make_error_internal()));
+                sourcemeta::core::jsonrpc_make_error_internal());
           }
         });
   }
@@ -160,13 +158,13 @@ private:
   }
 
   static auto method_not_allowed() -> sourcemeta::core::JSON {
-    return sourcemeta::one::mcp_strip_null_id(
-        sourcemeta::core::jsonrpc_make_error(nullptr, 4, "Method not allowed"));
+    return sourcemeta::core::jsonrpc_make_error(nullptr, 4,
+                                                "Method not allowed");
   }
 
   static auto request_too_large() -> sourcemeta::core::JSON {
-    return sourcemeta::one::mcp_strip_null_id(
-        sourcemeta::core::jsonrpc_make_error(nullptr, 5, "Request too large"));
+    return sourcemeta::core::jsonrpc_make_error(nullptr, 5,
+                                                "Request too large");
   }
 
   static auto handle_initialize(const sourcemeta::core::JSON &id,
@@ -263,19 +261,16 @@ private:
     } catch (const std::exception &) {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_BAD_REQUEST,
-                     sourcemeta::one::mcp_strip_null_id(
-                         sourcemeta::core::jsonrpc_make_error_parse()));
+                     sourcemeta::core::jsonrpc_make_error_parse());
       return;
     }
 
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
     if (method.empty()) {
-      write_envelope(
-          request, response, allowed_origin, response_schema,
-          sourcemeta::one::STATUS_OK,
-          sourcemeta::one::mcp_strip_null_id(
-              sourcemeta::core::jsonrpc_make_error_invalid_request(
-                  sourcemeta::core::jsonrpc_request_id(request_json))));
+      write_envelope(request, response, allowed_origin, response_schema,
+                     sourcemeta::one::STATUS_OK,
+                     sourcemeta::core::jsonrpc_make_error_invalid_request(
+                         sourcemeta::core::jsonrpc_request_id(request_json)));
       return;
     }
 
