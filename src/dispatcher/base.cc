@@ -1,6 +1,6 @@
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/metapack.h>
 
 #include <cassert>     // assert

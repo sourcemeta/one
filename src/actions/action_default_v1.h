@@ -4,7 +4,7 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 
 #include "action_jsonschema_serve_v1.h"

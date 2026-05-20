@@ -7,7 +7,9 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared_version.h>
@@ -171,14 +173,25 @@ auto handle_tools_list(const sourcemeta::core::JSON &request_json,
 
 auto handle_tools_call(const sourcemeta::core::JSON &request_json,
                        const sourcemeta::core::JSON &mcp_metadata,
-                       const EnterpriseMCP::ToolCallHandler &handler)
+                       sourcemeta::one::ActionDispatcher &dispatcher)
     -> sourcemeta::core::JSON {
-  if (!handler) {
-    return sourcemeta::core::jsonrpc_make_error(
-        &request_json.at("id"), 6, "Unsupported operation",
-        sourcemeta::core::JSON{"Tool calls are not yet supported"});
+  const auto &id{request_json.at("id")};
+  const auto &name{request_json.at("params").at("name").to_string()};
+  const auto &tool_routes{mcp_metadata.at("toolRoutes")};
+  if (!tool_routes.defines(name)) {
+    return sourcemeta::core::jsonrpc_make_error_invalid_params(
+        id, sourcemeta::core::JSON{name});
   }
-  return handler(request_json, mcp_metadata);
+  const auto identifier{
+      static_cast<sourcemeta::core::URITemplateRouter::Identifier>(
+          tool_routes.at(name).to_integer())};
+  auto *instance{dispatcher.action(identifier)};
+  assert(instance != nullptr);
+  try {
+    return instance->mcp(request_json);
+  } catch (const std::exception &error) {
+    return sourcemeta::one::mcp_make_tool_error(id, error.what());
+  }
 }
 
 auto resolve_metapack_path(const std::filesystem::path &base,
@@ -285,8 +298,7 @@ auto handle_jsonrpc_message(
     const sourcemeta::blaze::Template &request_schema_template,
     const std::string_view registry_url, const std::filesystem::path &base,
     const sourcemeta::core::JSON &mcp_metadata,
-    const EnterpriseMCP::ToolCallHandler &tool_call_handler, std::string &&body)
-    -> void {
+    sourcemeta::one::ActionDispatcher &dispatcher, std::string &&body) -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -362,7 +374,7 @@ auto handle_jsonrpc_message(
   if (method == "tools/call") {
     write_json_envelope(
         request, response, allowed_origin, response_schema,
-        handle_tools_call(request_json, mcp_metadata, tool_call_handler));
+        handle_tools_call(request_json, mcp_metadata, dispatcher));
     return;
   }
 
@@ -372,16 +384,13 @@ auto handle_jsonrpc_message(
 
 } // namespace
 
-auto EnterpriseMCP::set_tool_call_handler(
-    EnterpriseMCP::ToolCallHandler handler) -> void {
-  this->tool_call_handler_ = std::move(handler);
-}
+namespace sourcemeta::one::enterprise {
 
-EnterpriseMCP::EnterpriseMCP(
+ActionMCP_v1::ActionMCP_v1(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : base_{base}, registry_url_{router.base_url()} {
+    : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -392,19 +401,11 @@ EnterpriseMCP::EnterpriseMCP(
         }
       });
 
-  const auto request_schema_suffix{sourcemeta::core::URI::strip_path_prefix(
-      request_schema, router.base_path())};
-  assert(request_schema_suffix.has_value());
+  this->request_schema_template_ = this->blaze_template(
+      request_schema, sourcemeta::blaze::Mode::FastValidation);
 
-  const auto template_path{base / "schemas" / request_schema_suffix.value() /
-                           "%" / "blaze-fast.metapack"};
-  const auto template_json{sourcemeta::one::metapack_read_json(template_path)};
-  assert(template_json.has_value());
-  auto compiled{sourcemeta::blaze::from_json(template_json.value())};
-  assert(compiled.has_value());
-  this->request_schema_template_ = std::move(compiled.value());
-
-  const auto mcp_metadata_path{base / "explorer" / "%" / "mcp.metapack"};
+  const auto mcp_metadata_path{this->base() / "explorer" / "%" /
+                               "mcp.metapack"};
   auto mcp_metadata_option{
       sourcemeta::one::metapack_read_json(mcp_metadata_path)};
   assert(mcp_metadata_option.has_value());
@@ -412,8 +413,9 @@ EnterpriseMCP::EnterpriseMCP(
   this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
 }
 
-auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
-                         sourcemeta::one::HTTPResponse &response) -> void {
+auto ActionMCP_v1::rest(const std::span<std::string_view>,
+                        sourcemeta::one::HTTPRequest &request,
+                        sourcemeta::one::HTTPResponse &response) -> void {
   const auto origin_header{request.header("origin")};
   if (!origin_header.empty() && origin_header != this->allowed_origin_) {
     write_envelope(request, response, this->allowed_origin_,
@@ -451,14 +453,15 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
     return;
   }
 
+  auto *dispatcher_ptr{this->dispatcher()};
+  assert(dispatcher_ptr != nullptr);
+
   request.body(
       [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_,
-       registry_url = std::string_view{this->registry_url_},
-       &base = this->base_,
+       registry_url = this->server_uri(), &base = this->base(),
        &request_schema_template = this->request_schema_template_,
-       &mcp_metadata = this->mcp_metadata_,
-       &tool_call_handler = this->tool_call_handler_](
+       &mcp_metadata = this->mcp_metadata_, &dispatcher = *dispatcher_ptr](
           sourcemeta::one::HTTPRequest &callback_request,
           sourcemeta::one::HTTPResponse &callback_response, std::string &&body,
           bool too_big) {
@@ -469,10 +472,10 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
                          request_too_large());
           return;
         }
-        handle_jsonrpc_message(
-            callback_request, callback_response, allowed_origin,
-            response_schema, request_schema_template, registry_url, base,
-            mcp_metadata, tool_call_handler, std::move(body));
+        handle_jsonrpc_message(callback_request, callback_response,
+                               allowed_origin, response_schema,
+                               request_schema_template, registry_url, base,
+                               mcp_metadata, dispatcher, std::move(body));
       },
       [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_](
@@ -489,3 +492,5 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
         }
       });
 }
+
+} // namespace sourcemeta::one::enterprise

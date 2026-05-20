@@ -139,8 +139,7 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     const auto operation_id{router.operation_id(identifier)};
     assert(!operation_id.empty());
 
-    const auto description{
-        sourcemeta::one::ActionDispatcher::description(context)};
+    const auto description{sourcemeta::one::action_description(context)};
     assert(!description.empty());
 
     auto entry{sourcemeta::core::JSON::make_object()};

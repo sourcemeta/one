@@ -9,7 +9,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
-#include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>

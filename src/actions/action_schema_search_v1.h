@@ -6,7 +6,7 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/search.h>

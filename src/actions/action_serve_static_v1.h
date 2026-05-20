@@ -3,7 +3,7 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 
 #include "action_serve_metapack_file_v1.h"
