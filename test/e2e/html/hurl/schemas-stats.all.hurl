@@ -99,3 +99,27 @@ HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/api/schemas/stats/test/schemas/annotation
+Accept: application/json
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/stats/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$['https://json-schema.org/draft/2020-12/vocab/core']['$schema']" == 1
+jsonpath "$['https://json-schema.org/draft/2020-12/vocab/meta-data']['title']" == 1
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

@@ -129,7 +129,7 @@ jsonpath "$.result.resources[21].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[21].name" == "response"
 jsonpath "$.result.resources[21].description" == "The response format for the schema statistics API endpoint"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[21].size" == 923
+jsonpath "$.result.resources[21].size" == 2356
 jsonpath "$.result.resources[22].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/stats/rpc"
 jsonpath "$.result.resources[22].name" == "rpc"
 jsonpath "$.result.resources[22].description" == "Get keyword statistics by vocabulary about every URI associated with a schema in the catalog"
