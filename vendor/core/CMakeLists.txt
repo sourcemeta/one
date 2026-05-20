@@ -26,6 +26,7 @@ option(SOURCEMETA_CORE_JSONSCHEMA "Build the Sourcemeta Core JSON Schema library
 option(SOURCEMETA_CORE_JSONPOINTER "Build the Sourcemeta Core JSON Pointer library" ON)
 option(SOURCEMETA_CORE_JSONL "Build the Sourcemeta Core JSONL library" ON)
 option(SOURCEMETA_CORE_YAML "Build the Sourcemeta Core YAML library" ON)
+option(SOURCEMETA_CORE_JSONRPC "Build the Sourcemeta Core JSON-RPC library" ON)
 option(SOURCEMETA_CORE_SEMVER "Build the Sourcemeta Core SemVer library" ON)
 option(SOURCEMETA_CORE_GZIP "Build the Sourcemeta Core GZIP library" ON)
 option(SOURCEMETA_CORE_HTML "Build the Sourcemeta Core HTML library" ON)
@@ -164,6 +165,10 @@ if(SOURCEMETA_CORE_YAML)
   add_subdirectory(src/core/yaml)
 endif()
 
+if(SOURCEMETA_CORE_JSONRPC)
+  add_subdirectory(src/core/jsonrpc)
+endif()
+
 if(SOURCEMETA_CORE_SEMVER)
   add_subdirectory(src/core/semver)
 endif()
@@ -298,6 +303,10 @@ if(SOURCEMETA_CORE_TESTS)
 
   if(SOURCEMETA_CORE_YAML)
     add_subdirectory(test/yaml)
+  endif()
+
+  if(SOURCEMETA_CORE_JSONRPC)
+    add_subdirectory(test/jsonrpc)
   endif()
 
   if(SOURCEMETA_CORE_SEMVER)

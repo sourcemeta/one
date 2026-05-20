@@ -154,7 +154,7 @@ jsonpath "$.result.resources[26].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[26].name" == "error"
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 6402
+jsonpath "$.result.resources[26].size" == 6644
 jsonpath "$.result.resources[27].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[27].name" == "request"
 jsonpath "$.result.resources[27].description" == "Connection handshake from a client"

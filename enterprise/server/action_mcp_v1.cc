@@ -1,13 +1,13 @@
 #include <sourcemeta/one/enterprise_server.h>
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/jsonrpc.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared_version.h>
@@ -68,38 +68,38 @@ auto write_accepted(sourcemeta::one::HTTPRequest &request,
 }
 
 auto method_not_allowed() -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(nullptr, 4, "Method not allowed");
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 4, "Method not allowed");
 }
 
 auto forbidden_origin() -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(nullptr, 2, "Forbidden origin");
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 2, "Forbidden origin");
 }
 
 auto unsupported_protocol_version() -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(nullptr, 3,
-                                             "Unsupported protocol version");
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 3,
+                                              "Unsupported protocol version");
 }
 
 auto request_too_large() -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(nullptr, 5, "Request too large");
+  return sourcemeta::core::jsonrpc_make_error(nullptr, 5, "Request too large");
 }
 
 auto resource_not_found(const sourcemeta::core::JSON &id,
                         const std::string_view uri) -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(&id, -32002, "Resource not found",
-                                             sourcemeta::core::JSON{uri});
+  return sourcemeta::core::jsonrpc_make_error(&id, -32002, "Resource not found",
+                                              sourcemeta::core::JSON{uri});
 }
 
 auto handle_initialize(const sourcemeta::core::JSON &request_json,
                        const sourcemeta::core::JSON &mcp_metadata)
     -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
-                                               mcp_metadata.at("initialize"));
+  return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
+                                                mcp_metadata.at("initialize"));
 }
 
 auto handle_ping(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_success_empty(request_json.at("id"));
+  return sourcemeta::core::jsonrpc_make_success_empty(request_json.at("id"));
 }
 
 auto parse_cursor(const std::string_view cursor) -> std::optional<std::size_t> {
@@ -124,13 +124,13 @@ auto handle_resources_list(const sourcemeta::core::JSON &request_json,
   const auto &id{request_json.at("id")};
 
   std::string cursor_key{"0"};
-  const auto *params{sourcemeta::one::jsonrpc_params(request_json)};
+  const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
     const auto &cursor_string{params->at("cursor").to_string()};
     if (!cursor_string.empty()) {
       const auto parsed{parse_cursor(cursor_string)};
       if (!parsed.has_value()) {
-        return sourcemeta::one::jsonrpc_make_error_invalid_params(
+        return sourcemeta::core::jsonrpc_make_error_invalid_params(
             id, sourcemeta::core::JSON{cursor_string});
       }
       cursor_key = cursor_string;
@@ -142,10 +142,10 @@ auto handle_resources_list(const sourcemeta::core::JSON &request_json,
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign_assume_new(std::string{"resources"},
                              sourcemeta::core::JSON::make_array());
-    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
+    return sourcemeta::core::jsonrpc_make_success(id, std::move(result));
   }
 
-  return sourcemeta::one::jsonrpc_make_success(id, resources.at(cursor_key));
+  return sourcemeta::core::jsonrpc_make_success(id, resources.at(cursor_key));
 }
 
 auto handle_resources_templates_list(const sourcemeta::core::JSON &request_json,
@@ -155,8 +155,8 @@ auto handle_resources_templates_list(const sourcemeta::core::JSON &request_json,
   result.assign_assume_new(
       std::string{"resourceTemplates"},
       sourcemeta::core::JSON{mcp_metadata.at("resourceTemplates")});
-  return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
-                                               std::move(result));
+  return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
+                                                std::move(result));
 }
 
 auto handle_tools_list(const sourcemeta::core::JSON &request_json,
@@ -165,13 +165,13 @@ auto handle_tools_list(const sourcemeta::core::JSON &request_json,
   auto result{sourcemeta::core::JSON::make_object()};
   result.assign_assume_new(std::string{"tools"},
                            sourcemeta::core::JSON{mcp_metadata.at("tools")});
-  return sourcemeta::one::jsonrpc_make_success(request_json.at("id"),
-                                               std::move(result));
+  return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
+                                                std::move(result));
 }
 
 auto handle_tools_call(const sourcemeta::core::JSON &request_json)
     -> sourcemeta::core::JSON {
-  return sourcemeta::one::jsonrpc_make_error(
+  return sourcemeta::core::jsonrpc_make_error(
       &request_json.at("id"), 6, "Unsupported operation",
       sourcemeta::core::JSON{"Tool calls are not yet supported"});
 }
@@ -263,7 +263,7 @@ auto handle_resources_read(const sourcemeta::core::JSON &request_json,
 
   auto result{sourcemeta::core::JSON::make_object()};
   result.assign_assume_new(std::string{"contents"}, std::move(contents));
-  return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
+  return sourcemeta::core::jsonrpc_make_success(id, std::move(result));
 }
 
 auto matches_request_schema(const sourcemeta::blaze::Template &schema_template,
@@ -285,36 +285,37 @@ auto handle_jsonrpc_message(
     request_json = sourcemeta::core::parse_json(body);
   } catch (const std::exception &) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        sourcemeta::one::jsonrpc_make_error_parse());
+                        sourcemeta::core::jsonrpc_make_error_parse());
     return;
   }
 
-  if (sourcemeta::one::jsonrpc_is_notification(request_json)) {
+  if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
     write_accepted(request, response, allowed_origin);
     return;
   }
 
-  if (!sourcemeta::one::jsonrpc_is_request(request_json)) {
-    write_json_envelope(request, response, allowed_origin, response_schema,
-                        sourcemeta::one::jsonrpc_make_error_invalid_request(
-                            sourcemeta::one::jsonrpc_request_id(request_json)));
+  if (!sourcemeta::core::jsonrpc_is_request(request_json)) {
+    write_json_envelope(
+        request, response, allowed_origin, response_schema,
+        sourcemeta::core::jsonrpc_make_error_invalid_request(
+            sourcemeta::core::jsonrpc_request_id(request_json)));
     return;
   }
 
-  const auto method{sourcemeta::one::jsonrpc_method(request_json)};
+  const auto method{sourcemeta::core::jsonrpc_method(request_json)};
   if (method != "initialize" && method != "ping" &&
       method != "resources/list" && method != "resources/templates/list" &&
       method != "resources/read" && method != "tools/list" &&
       method != "tools/call") {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        sourcemeta::one::jsonrpc_make_error_method_not_found(
+                        sourcemeta::core::jsonrpc_make_error_method_not_found(
                             request_json.at("id")));
     return;
   }
 
   if (!matches_request_schema(request_schema_template, request_json)) {
     write_json_envelope(request, response, allowed_origin, response_schema,
-                        sourcemeta::one::jsonrpc_make_error_invalid_request(
+                        sourcemeta::core::jsonrpc_make_error_invalid_request(
                             &request_json.at("id")));
     return;
   }
@@ -470,7 +471,7 @@ auto EnterpriseMCP::rest(sourcemeta::one::HTTPRequest &request,
           write_envelope(callback_request, callback_response, allowed_origin,
                          response_schema,
                          sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                         sourcemeta::one::jsonrpc_make_error_internal());
+                         sourcemeta::core::jsonrpc_make_error_internal());
         }
       });
 }

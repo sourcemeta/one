@@ -5,6 +5,7 @@
   "examples": [
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": -32700,
         "message": "Parse error"
@@ -30,6 +31,7 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": 2,
         "message": "Forbidden origin"
@@ -37,6 +39,7 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": 3,
         "message": "Unsupported protocol version"
@@ -44,6 +47,7 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": 4,
         "message": "Method not allowed"
@@ -60,6 +64,7 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": null,
       "error": {
         "code": 5,
         "message": "Request too large"
@@ -82,8 +87,8 @@
       "const": "2.0"
     },
     "id": {
-      "$comment": "MCP overrides JSON-RPC 2.0 here. Pure JSON-RPC 2.0 mandates `id: null` when the server cannot read the request id, but MCP forbids null and instead makes id optional",
-      "type": [ "string", "integer" ]
+      "$comment": "The MCP schema types id as `string | number` with no null, but JSON-RPC 2.0 §5 mandates `id: null` when the server cannot read the request id (parse error, invalid request, etc.). MCP claims JSON-RPC 2.0 compliance but does not address this gap. We follow JSON-RPC 2.0 here and emit `id: null` in those cases",
+      "type": [ "string", "integer", "null" ]
     },
     "error": {
       "anyOf": [

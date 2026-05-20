@@ -52,7 +52,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == 1
 jsonpath "$.error.message" == "Enterprise edition required"
 jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
@@ -79,7 +79,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32700
 jsonpath "$.error.message" == "Parse error"
 jsonpath "$.error.data" not exists
@@ -106,7 +106,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" not exists
+jsonpath "$.id" == null
 jsonpath "$.error.code" == -32600
 jsonpath "$.error.message" == "Invalid Request"
 jsonpath "$.error.data" not exists
