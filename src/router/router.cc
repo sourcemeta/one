@@ -1,4 +1,4 @@
-#include <sourcemeta/one/dispatcher.h>
+#include <sourcemeta/one/router.h>
 
 #include <memory>  // std::make_unique
 #include <mutex>   // std::call_once
@@ -7,11 +7,10 @@
 
 namespace sourcemeta::one {
 
-ActionDispatcher::ActionDispatcher(
-    const std::filesystem::path &base,
-    const sourcemeta::core::URITemplateRouterView &router,
-    const std::span<const ActionConstructor> constructors,
-    const std::span<const std::string_view> descriptions)
+Router::Router(const std::filesystem::path &base,
+               const sourcemeta::core::URITemplateRouterView &router,
+               const std::span<const RouterActionConstructor> constructors,
+               const std::span<const std::string_view> descriptions)
     : base_{base}, router_{router}, constructors_{constructors},
       descriptions_{descriptions},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
@@ -24,26 +23,26 @@ ActionDispatcher::ActionDispatcher(
   });
 }
 
-auto ActionDispatcher::description(
-    const sourcemeta::core::URITemplateRouter::Identifier context)
-    const noexcept -> std::string_view {
+auto Router::description(const sourcemeta::core::URITemplateRouter::Identifier
+                             context) const noexcept -> std::string_view {
   if (context >= this->descriptions_.size()) {
     return {};
   }
   return this->descriptions_[context];
 }
 
-auto ActionDispatcher::error(const sourcemeta::one::HTTPRequest &request,
-                             sourcemeta::one::HTTPResponse &response,
-                             const char *const code, std::string &&identifier,
-                             std::string &&message) const -> void {
+auto Router::error(const sourcemeta::one::HTTPRequest &request,
+                   sourcemeta::one::HTTPResponse &response,
+                   const char *const code, std::string &&identifier,
+                   std::string &&message) const -> void {
   sourcemeta::one::json_error(request, response, code, std::move(identifier),
                               std::move(message), this->default_error_schema_);
 }
 
-auto ActionDispatcher::action(
+auto Router::action(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    const sourcemeta::core::URITemplateRouter::Identifier context) -> Action * {
+    const sourcemeta::core::URITemplateRouter::Identifier context)
+    -> RouterAction * {
   if (identifier >= this->slots_size_ || context >= this->constructors_.size())
       [[unlikely]] {
     return nullptr;
@@ -58,16 +57,16 @@ auto ActionDispatcher::action(
   return slot.instance.get();
 }
 
-auto ActionDispatcher::action(
+auto Router::action(
     const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    -> Action * {
+    -> RouterAction * {
   if (identifier >= this->slots_size_) [[unlikely]] {
     return nullptr;
   }
   return this->action(identifier, this->router_.context(identifier));
 }
 
-auto ActionDispatcher::dispatch(
+auto Router::dispatch(
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
     const sourcemeta::core::URITemplateRouter::Identifier context,
     const std::span<std::string_view> matches,

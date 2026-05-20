@@ -1,7 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_H
 #define SOURCEMETA_ONE_ACTIONS_H
 
-#include <sourcemeta/one/dispatcher.h>
+#include <sourcemeta/one/router.h>
 
 #include <array>       // std::array
 #include <cstdint>     // std::uint8_t
@@ -30,7 +30,8 @@ enum : std::uint8_t {
 
 #undef SOURCEMETA_ONE_DEFINE_ACTION_TYPE
 
-extern const std::array<ActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS;
+extern const std::array<RouterActionConstructor, ACTION_TYPE_COUNT>
+    CONSTRUCTORS;
 extern const std::array<std::string_view, ACTION_TYPE_COUNT> DESCRIPTIONS;
 
 [[nodiscard]] auto action_description(

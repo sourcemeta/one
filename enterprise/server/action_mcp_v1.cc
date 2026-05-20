@@ -7,10 +7,10 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
-#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
+#include <sourcemeta/one/router.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared_version.h>
 
@@ -173,7 +173,7 @@ auto handle_tools_list(const sourcemeta::core::JSON &request_json,
 
 auto handle_tools_call(const sourcemeta::core::JSON &request_json,
                        const sourcemeta::core::JSON &mcp_metadata,
-                       sourcemeta::one::ActionDispatcher &dispatcher)
+                       sourcemeta::one::Router &dispatcher)
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
   const auto &name{request_json.at("params").at("name").to_string()};
@@ -298,7 +298,7 @@ auto handle_jsonrpc_message(
     const sourcemeta::blaze::Template &request_schema_template,
     const std::string_view registry_url, const std::filesystem::path &base,
     const sourcemeta::core::JSON &mcp_metadata,
-    sourcemeta::one::ActionDispatcher &dispatcher, std::string &&body) -> void {
+    sourcemeta::one::Router &dispatcher, std::string &&body) -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -390,8 +390,9 @@ ActionMCP_v1::ActionMCP_v1(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    sourcemeta::one::ActionDispatcher &dispatcher)
-    : sourcemeta::one::Action{base, router.base_path(), router.base_url()},
+    sourcemeta::one::Router &dispatcher)
+    : sourcemeta::one::RouterAction{base, router.base_path(),
+                                    router.base_url()},
       dispatcher_{dispatcher} {
   std::string_view request_schema;
   router.arguments(

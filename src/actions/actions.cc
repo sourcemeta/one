@@ -14,10 +14,10 @@
 namespace sourcemeta::one {
 
 #define SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY(Name, Class)                     \
-  table[ACTION_TYPE_##Name] = &make_action<Class>;
+  table[ACTION_TYPE_##Name] = &make_router_action<Class>;
 
-const std::array<ActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{[] {
-  std::array<ActionConstructor, ACTION_TYPE_COUNT> table{};
+const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{[] {
+  std::array<RouterActionConstructor, ACTION_TYPE_COUNT> table{};
   SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY)
   return table;
 }()};

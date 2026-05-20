@@ -14,9 +14,9 @@ using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
+#include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_serve_v1.h"
@@ -31,7 +31,7 @@ using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionMCP_v1 : public sourcemeta::one::Action {
+class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
@@ -39,8 +39,9 @@ public:
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
-               sourcemeta::one::ActionDispatcher &)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
+               sourcemeta::one::Router &)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);

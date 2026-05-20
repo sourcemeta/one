@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_DISPATCHER_H
-#define SOURCEMETA_ONE_DISPATCHER_H
+#ifndef SOURCEMETA_ONE_ROUTER_H
+#define SOURCEMETA_ONE_ROUTER_H
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
@@ -20,20 +20,21 @@
 
 namespace sourcemeta::one {
 
-class ActionDispatcher;
+class Router;
 
-class Action {
+class RouterAction {
 public:
-  Action(const std::filesystem::path &base, const std::string_view base_path,
-         const std::string_view server_uri)
+  RouterAction(const std::filesystem::path &base,
+               const std::string_view base_path,
+               const std::string_view server_uri)
       : base_{base}, base_path_{base_path}, server_uri_{server_uri} {}
-  virtual ~Action() = default;
+  virtual ~RouterAction() = default;
 
   // To avoid mistakes
-  Action(const Action &) = delete;
-  Action(Action &&) = delete;
-  auto operator=(const Action &) -> Action & = delete;
-  auto operator=(Action &&) -> Action & = delete;
+  RouterAction(const RouterAction &) = delete;
+  RouterAction(RouterAction &&) = delete;
+  auto operator=(const RouterAction &) -> RouterAction & = delete;
+  auto operator=(RouterAction &&) -> RouterAction & = delete;
 
   virtual auto rest(const std::span<std::string_view> matches,
                     HTTPRequest &request, HTTPResponse &response) -> void = 0;
@@ -82,34 +83,34 @@ private:
 // whether to store it. Actions that never reach back into the dispatcher (the
 // majority) just ignore it; ones that do (e.g. MCP `tools/call`) keep a member
 // reference
-using ActionConstructor =
+using RouterActionConstructor =
     auto (*)(const std::filesystem::path &,
              const sourcemeta::core::URITemplateRouterView &,
-             sourcemeta::core::URITemplateRouter::Identifier,
-             ActionDispatcher &) -> std::unique_ptr<Action>;
+             sourcemeta::core::URITemplateRouter::Identifier, Router &)
+        -> std::unique_ptr<RouterAction>;
 
 template <typename T>
-auto make_action(
+auto make_router_action(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
     const sourcemeta::core::URITemplateRouter::Identifier identifier,
-    ActionDispatcher &dispatcher) -> std::unique_ptr<Action> {
+    Router &dispatcher) -> std::unique_ptr<RouterAction> {
   return std::make_unique<T>(base, router, identifier, dispatcher);
 }
 
-class ActionDispatcher {
+class Router {
 public:
-  ActionDispatcher(const std::filesystem::path &base,
-                   const core::URITemplateRouterView &router,
-                   std::span<const ActionConstructor> constructors,
-                   std::span<const std::string_view> descriptions);
-  ~ActionDispatcher() = default;
+  Router(const std::filesystem::path &base,
+         const core::URITemplateRouterView &router,
+         std::span<const RouterActionConstructor> constructors,
+         std::span<const std::string_view> descriptions);
+  ~Router() = default;
 
   // To avoid mistakes
-  ActionDispatcher(const ActionDispatcher &) = delete;
-  ActionDispatcher(ActionDispatcher &&) = delete;
-  auto operator=(const ActionDispatcher &) -> ActionDispatcher & = delete;
-  auto operator=(ActionDispatcher &&) -> ActionDispatcher & = delete;
+  Router(const Router &) = delete;
+  Router(Router &&) = delete;
+  auto operator=(const Router &) -> Router & = delete;
+  auto operator=(Router &&) -> Router & = delete;
 
   auto dispatch(const core::URITemplateRouter::Identifier identifier,
                 const core::URITemplateRouter::Identifier context,
@@ -118,10 +119,11 @@ public:
 
   [[nodiscard]] auto
   action(const core::URITemplateRouter::Identifier identifier,
-         const core::URITemplateRouter::Identifier context) -> Action *;
+         const core::URITemplateRouter::Identifier context) -> RouterAction *;
 
   [[nodiscard]] auto
-  action(const core::URITemplateRouter::Identifier identifier) -> Action *;
+  action(const core::URITemplateRouter::Identifier identifier)
+      -> RouterAction *;
 
   auto error(const HTTPRequest &request, HTTPResponse &response,
              const char *const code, std::string &&identifier,
@@ -133,7 +135,7 @@ public:
 
 private:
   struct Slot {
-    std::unique_ptr<Action> instance;
+    std::unique_ptr<RouterAction> instance;
     std::once_flag flag;
   };
 
@@ -141,7 +143,7 @@ private:
   const std::filesystem::path &base_;
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const core::URITemplateRouterView &router_;
-  std::span<const ActionConstructor> constructors_;
+  std::span<const RouterActionConstructor> constructors_;
   std::span<const std::string_view> descriptions_;
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   std::unique_ptr<Slot[]> slots_;

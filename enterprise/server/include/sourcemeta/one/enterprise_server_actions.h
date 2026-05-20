@@ -6,8 +6,8 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 
-#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
@@ -15,7 +15,7 @@
 
 namespace sourcemeta::one::enterprise {
 
-class ActionMCP_v1 : public sourcemeta::one::Action {
+class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
@@ -23,7 +23,7 @@ public:
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
                sourcemeta::core::URITemplateRouter::Identifier identifier,
-               sourcemeta::one::ActionDispatcher &dispatcher);
+               sourcemeta::one::Router &dispatcher);
 
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
@@ -31,7 +31,7 @@ public:
 
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  sourcemeta::one::ActionDispatcher &dispatcher_;
+  sourcemeta::one::Router &dispatcher_;
   std::string_view allowed_origin_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;

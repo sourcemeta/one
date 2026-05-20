@@ -13,7 +13,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_serve_static_v1.h
     action_mcp_v1.h)
 
-target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::dispatcher)
+target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::json)

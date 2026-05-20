@@ -6,9 +6,9 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/mcp.h>
+#include <sourcemeta/one/router.h>
 #include <sourcemeta/one/search.h>
 
 #include <charconv>     // std::from_chars
@@ -22,7 +22,7 @@
 #include <system_error> // std::errc
 #include <utility>      // std::move
 
-class ActionSchemaSearch_v1 : public sourcemeta::one::Action {
+class ActionSchemaSearch_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Search for schemas by query term"};
@@ -31,8 +31,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::ActionDispatcher &)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()},
+      sourcemeta::one::Router &)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {

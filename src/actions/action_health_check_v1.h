@@ -3,15 +3,15 @@
 
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/dispatcher.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionHealthCheck_v1 : public sourcemeta::one::Action {
+class ActionHealthCheck_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Report the server's health status"};
@@ -20,8 +20,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::ActionDispatcher &)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
+      sourcemeta::one::Router &)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
