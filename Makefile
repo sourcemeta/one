@@ -67,6 +67,19 @@ docker-build: $(DOCKERFILE)
 		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
 
 # Useful to run the entire main suite in a single command
+.PHONY: test-e2e
+test-e2e:
+	./contrib/e2e-native.sh test/e2e/empty $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/headless $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/html $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/no-api $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/chaos $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/path $(EDITION) $(SANDBOX_PORT)
+ifeq ($(ENTERPRISE),ON)
+	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh enterprise/e2e/path $(EDITION) $(SANDBOX_PORT)
+endif
+
 .PHONY: docker
 docker: docker-build
 	$(MAKE) -C test/e2e/empty EDITION=$(EDITION)
@@ -74,6 +87,7 @@ docker: docker-build
 	$(MAKE) -C test/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/no-api EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/chaos EDITION=$(EDITION)
+	$(MAKE) -C test/e2e/path EDITION=$(EDITION)
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/path EDITION=$(EDITION)
@@ -98,19 +112,6 @@ sandbox-index: compile
 sandbox: sandbox-index
 	$(PREFIX)/bin/sourcemeta-one-server \
 		$(realpath $(OUTPUT)/sandbox) $(SANDBOX_PORT)
-
-.PHONY: test-e2e
-test-e2e:
-	$(HURL) --test \
-		--variable base=http://localhost:$(SANDBOX_PORT) \
-		$(wildcard $(SANDBOX)/hurl/*.all.hurl) \
-		$(wildcard $(SANDBOX)/hurl/*.$(EDITION).hurl)
-
-.PHONY: test-ui
-test-ui: node_modules
-	$(NPX) playwright install --with-deps
-	env PLAYWRIGHT_BASE_URL=http://localhost:$(SANDBOX_PORT) \
-		$(NPX) playwright test --config $(SANDBOX)/playwright/playwright.config.js
 
 .PHONY: docs
 docs: mkdocs.yml
