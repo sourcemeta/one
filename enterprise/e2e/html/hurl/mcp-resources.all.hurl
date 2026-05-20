@@ -153,7 +153,7 @@ jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[26].name" == "error"
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 6391
+jsonpath "$.result.resources[26].size" == 6633
 jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[27].name" == "request"
 jsonpath "$.result.resources[27].description" == "Connection handshake from a client"
