@@ -79,7 +79,7 @@ public:
 
     auto absolute_path{this->base() / "explorer"};
 
-    if (this->artifact_ == "list") {
+    if (this->artifact_ == "directory") {
       if (arguments.defines("path")) {
         const auto &path{arguments.at("path").to_string()};
         if (!path.empty()) {
@@ -115,8 +115,8 @@ public:
     auto contents{sourcemeta::one::metapack_read_json(absolute_path)};
     if (!contents.has_value()) {
       return sourcemeta::one::mcp_make_tool_error(
-          request_id, this->artifact_ == "list" ? "Directory not found"
-                                                : "Schema not found");
+          request_id, this->artifact_ == "directory" ? "Directory not found"
+                                                     : "Schema not found");
     }
 
     return sourcemeta::one::mcp_make_tool_success(request_id,

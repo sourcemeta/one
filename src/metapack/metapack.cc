@@ -184,6 +184,10 @@ auto metapack_extension_size(const sourcemeta::core::FileView &view)
 
 auto metapack_read_json(const std::filesystem::path &path)
     -> std::optional<sourcemeta::core::JSON> {
+  if (!std::filesystem::is_regular_file(path)) {
+    return std::nullopt;
+  }
+
   sourcemeta::core::FileView view{path};
   if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
     return std::nullopt;
@@ -237,6 +241,9 @@ auto metapack_read_json(const std::filesystem::path &path)
 
 auto metapack_read_text(const std::filesystem::path &path)
     -> std::optional<std::string> {
+  if (!std::filesystem::is_regular_file(path)) {
+    return std::nullopt;
+  }
   sourcemeta::core::FileView view{path};
   if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
     return std::nullopt;
