@@ -186,7 +186,9 @@ auto handle_tools_call(const sourcemeta::core::JSON &request_json,
       static_cast<sourcemeta::core::URITemplateRouter::Identifier>(
           tool_routes.at(name).to_integer())};
   auto *instance{dispatcher.action(identifier)};
-  assert(instance != nullptr);
+  if (instance == nullptr) [[unlikely]] {
+    return sourcemeta::core::jsonrpc_make_error_internal(&id);
+  }
   try {
     return instance->mcp(request_json);
   } catch (const std::exception &error) {
