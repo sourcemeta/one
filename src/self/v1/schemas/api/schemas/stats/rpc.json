@@ -5,16 +5,19 @@
   "examples": [
     {
       "schema": "https://example.com/foo"
+    },
+    {
+      "schema": "foo"
     }
   ],
   "type": "object",
   "required": [ "schema" ],
   "properties": {
     "schema": {
-      "description": "Absolute URI of a JSON Schema in this catalog",
+      "description": "Absolute URI or relative path of a JSON Schema in this catalog",
       "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
-      "format": "uri"
+      "format": "uri-reference"
     }
   },
   "additionalProperties": false
