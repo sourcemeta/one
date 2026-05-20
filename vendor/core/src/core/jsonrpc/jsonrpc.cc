@@ -1,5 +1,4 @@
-#ifndef SOURCEMETA_ONE_JSONRPC_H
-#define SOURCEMETA_ONE_JSONRPC_H
+#include <sourcemeta/core/jsonrpc.h>
 
 #include <sourcemeta/core/json.h>
 
@@ -9,57 +8,53 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-// TODO: Eventually elevate to Core
+namespace {
 
-namespace sourcemeta::one {
+const auto JSONRPC_HASH_ID{
+    sourcemeta::core::JSON::make_object().as_object().hash("id")};
+const auto JSONRPC_HASH_JSONRPC{
+    sourcemeta::core::JSON::make_object().as_object().hash("jsonrpc")};
+const auto JSONRPC_HASH_METHOD{
+    sourcemeta::core::JSON::make_object().as_object().hash("method")};
+const auto JSONRPC_HASH_RESULT{
+    sourcemeta::core::JSON::make_object().as_object().hash("result")};
+const auto JSONRPC_HASH_ERROR{
+    sourcemeta::core::JSON::make_object().as_object().hash("error")};
+const auto JSONRPC_HASH_CODE{
+    sourcemeta::core::JSON::make_object().as_object().hash("code")};
+const auto JSONRPC_HASH_MESSAGE{
+    sourcemeta::core::JSON::make_object().as_object().hash("message")};
+const auto JSONRPC_HASH_DATA{
+    sourcemeta::core::JSON::make_object().as_object().hash("data")};
+const auto JSONRPC_HASH_PARAMS{
+    sourcemeta::core::JSON::make_object().as_object().hash("params")};
 
-// See https://www.jsonrpc.org/specification#error_object
-constexpr std::int64_t JSONRPC_CODE_PARSE = -32700;
-constexpr std::int64_t JSONRPC_CODE_INVALID_REQUEST = -32600;
-constexpr std::int64_t JSONRPC_CODE_METHOD_NOT_FOUND = -32601;
-constexpr std::int64_t JSONRPC_CODE_INVALID_PARAMS = -32602;
-constexpr std::int64_t JSONRPC_CODE_INTERNAL = -32603;
-constexpr std::int64_t JSONRPC_CODE_SERVER_ERROR_MIN = -32099;
-constexpr std::int64_t JSONRPC_CODE_SERVER_ERROR_MAX = -32000;
+} // namespace
 
-inline auto jsonrpc_is_server_error(const std::int64_t code) -> bool {
+namespace sourcemeta::core {
+
+auto jsonrpc_is_server_error(const std::int64_t code) -> bool {
   return code >= JSONRPC_CODE_SERVER_ERROR_MIN &&
          code <= JSONRPC_CODE_SERVER_ERROR_MAX;
 }
 
-inline const auto JSONRPC_HASH_ID{
-    sourcemeta::core::JSON::make_object().as_object().hash("id")};
-inline const auto JSONRPC_HASH_JSONRPC{
-    sourcemeta::core::JSON::make_object().as_object().hash("jsonrpc")};
-inline const auto JSONRPC_HASH_METHOD{
-    sourcemeta::core::JSON::make_object().as_object().hash("method")};
-inline const auto JSONRPC_HASH_RESULT{
-    sourcemeta::core::JSON::make_object().as_object().hash("result")};
-inline const auto JSONRPC_HASH_ERROR{
-    sourcemeta::core::JSON::make_object().as_object().hash("error")};
-inline const auto JSONRPC_HASH_CODE{
-    sourcemeta::core::JSON::make_object().as_object().hash("code")};
-inline const auto JSONRPC_HASH_MESSAGE{
-    sourcemeta::core::JSON::make_object().as_object().hash("message")};
-inline const auto JSONRPC_HASH_DATA{
-    sourcemeta::core::JSON::make_object().as_object().hash("data")};
-inline const auto JSONRPC_HASH_PARAMS{
-    sourcemeta::core::JSON::make_object().as_object().hash("params")};
-
-inline auto jsonrpc_request_id(const sourcemeta::core::JSON &request)
+auto jsonrpc_request_id(const sourcemeta::core::JSON &request)
     -> const sourcemeta::core::JSON * {
   if (!request.is_object()) {
     return nullptr;
   }
   const auto *identifier{request.try_at("id", JSONRPC_HASH_ID)};
-  if (identifier == nullptr ||
-      (!identifier->is_string() && !identifier->is_integer())) {
+  if (identifier == nullptr) {
+    return nullptr;
+  }
+  if (!identifier->is_string() && !identifier->is_number() &&
+      !identifier->is_null()) {
     return nullptr;
   }
   return identifier;
 }
 
-inline auto jsonrpc_is_request(const sourcemeta::core::JSON &request) -> bool {
+auto jsonrpc_is_request(const sourcemeta::core::JSON &request) -> bool {
   if (!request.is_object()) {
     return false;
   }
@@ -69,12 +64,16 @@ inline auto jsonrpc_is_request(const sourcemeta::core::JSON &request) -> bool {
       jsonrpc_request_id(request) == nullptr) {
     return false;
   }
+  const auto *parameters_field{request.try_at("params", JSONRPC_HASH_PARAMS)};
+  if (parameters_field != nullptr && !parameters_field->is_object() &&
+      !parameters_field->is_array()) {
+    return false;
+  }
   const auto *method_field{request.try_at("method", JSONRPC_HASH_METHOD)};
   return method_field != nullptr && method_field->is_string();
 }
 
-inline auto jsonrpc_method(const sourcemeta::core::JSON &request)
-    -> std::string_view {
+auto jsonrpc_method(const sourcemeta::core::JSON &request) -> std::string_view {
   if (!request.is_object()) {
     return {};
   }
@@ -85,20 +84,20 @@ inline auto jsonrpc_method(const sourcemeta::core::JSON &request)
   return method_field->to_string();
 }
 
-inline auto jsonrpc_params(const sourcemeta::core::JSON &request)
+auto jsonrpc_params(const sourcemeta::core::JSON &request)
     -> const sourcemeta::core::JSON * {
   if (!request.is_object()) {
     return nullptr;
   }
-  const auto *params{request.try_at("params", JSONRPC_HASH_PARAMS)};
-  if (params == nullptr || (!params->is_object() && !params->is_array())) {
+  const auto *parameters{request.try_at("params", JSONRPC_HASH_PARAMS)};
+  if (parameters == nullptr ||
+      (!parameters->is_object() && !parameters->is_array())) {
     return nullptr;
   }
-  return params;
+  return parameters;
 }
 
-inline auto jsonrpc_is_notification(const sourcemeta::core::JSON &request)
-    -> bool {
+auto jsonrpc_is_notification(const sourcemeta::core::JSON &request) -> bool {
   if (!request.is_object()) {
     return false;
   }
@@ -108,42 +107,48 @@ inline auto jsonrpc_is_notification(const sourcemeta::core::JSON &request)
       request.try_at("id", JSONRPC_HASH_ID) != nullptr) {
     return false;
   }
+  const auto *parameters_field{request.try_at("params", JSONRPC_HASH_PARAMS)};
+  if (parameters_field != nullptr && !parameters_field->is_object() &&
+      !parameters_field->is_array()) {
+    return false;
+  }
   const auto *method_field{request.try_at("method", JSONRPC_HASH_METHOD)};
   return method_field != nullptr && method_field->is_string();
 }
 
-inline auto jsonrpc_make_success(const sourcemeta::core::JSON &id,
-                                 sourcemeta::core::JSON result)
+auto jsonrpc_make_success(const sourcemeta::core::JSON &identifier,
+                          sourcemeta::core::JSON result)
     -> sourcemeta::core::JSON {
   auto envelope{sourcemeta::core::JSON::make_object()};
   envelope.assign_assume_new(std::string{"jsonrpc"},
                              sourcemeta::core::JSON{"2.0"},
                              JSONRPC_HASH_JSONRPC);
-  envelope.assign_assume_new(std::string{"id"}, sourcemeta::core::JSON{id},
-                             JSONRPC_HASH_ID);
+  envelope.assign_assume_new(
+      std::string{"id"}, sourcemeta::core::JSON{identifier}, JSONRPC_HASH_ID);
   envelope.assign_assume_new(std::string{"result"}, std::move(result),
                              JSONRPC_HASH_RESULT);
   return envelope;
 }
 
-inline auto jsonrpc_make_success_empty(const sourcemeta::core::JSON &id)
+auto jsonrpc_make_success_empty(const sourcemeta::core::JSON &identifier)
     -> sourcemeta::core::JSON {
-  return jsonrpc_make_success(id, sourcemeta::core::JSON::make_object());
+  return jsonrpc_make_success(identifier,
+                              sourcemeta::core::JSON::make_object());
 }
 
-inline auto
-jsonrpc_make_error(const sourcemeta::core::JSON *id, const std::int64_t code,
-                   const std::string_view message,
-                   std::optional<sourcemeta::core::JSON> data = std::nullopt)
+auto jsonrpc_make_error(const sourcemeta::core::JSON *identifier,
+                        const std::int64_t code, const std::string_view message,
+                        std::optional<sourcemeta::core::JSON> data)
     -> sourcemeta::core::JSON {
   auto envelope{sourcemeta::core::JSON::make_object()};
   envelope.assign_assume_new(std::string{"jsonrpc"},
                              sourcemeta::core::JSON{"2.0"},
                              JSONRPC_HASH_JSONRPC);
-  if (id != nullptr) {
-    envelope.assign_assume_new(std::string{"id"}, sourcemeta::core::JSON{*id},
-                               JSONRPC_HASH_ID);
-  }
+  envelope.assign_assume_new(std::string{"id"},
+                             identifier != nullptr
+                                 ? sourcemeta::core::JSON{*identifier}
+                                 : sourcemeta::core::JSON{nullptr},
+                             JSONRPC_HASH_ID);
   auto error{sourcemeta::core::JSON::make_object()};
   error.assign_assume_new(std::string{"code"}, sourcemeta::core::JSON{code},
                           JSONRPC_HASH_CODE);
@@ -159,40 +164,35 @@ jsonrpc_make_error(const sourcemeta::core::JSON *id, const std::int64_t code,
   return envelope;
 }
 
-inline auto jsonrpc_make_error_parse() -> const sourcemeta::core::JSON & {
+auto jsonrpc_make_error_parse() -> const sourcemeta::core::JSON & {
   static const auto envelope{
       jsonrpc_make_error(nullptr, JSONRPC_CODE_PARSE, "Parse error")};
   return envelope;
 }
 
-inline auto
-jsonrpc_make_error_invalid_request(const sourcemeta::core::JSON *id = nullptr)
-    -> sourcemeta::core::JSON {
-  return jsonrpc_make_error(id, JSONRPC_CODE_INVALID_REQUEST,
+auto jsonrpc_make_error_invalid_request(
+    const sourcemeta::core::JSON *identifier) -> sourcemeta::core::JSON {
+  return jsonrpc_make_error(identifier, JSONRPC_CODE_INVALID_REQUEST,
                             "Invalid Request");
 }
 
-inline auto
-jsonrpc_make_error_method_not_found(const sourcemeta::core::JSON &id)
-    -> sourcemeta::core::JSON {
-  return jsonrpc_make_error(&id, JSONRPC_CODE_METHOD_NOT_FOUND,
+auto jsonrpc_make_error_method_not_found(
+    const sourcemeta::core::JSON &identifier) -> sourcemeta::core::JSON {
+  return jsonrpc_make_error(&identifier, JSONRPC_CODE_METHOD_NOT_FOUND,
                             "Method not found");
 }
 
-inline auto jsonrpc_make_error_invalid_params(
-    const sourcemeta::core::JSON &id,
-    std::optional<sourcemeta::core::JSON> data = std::nullopt)
-    -> sourcemeta::core::JSON {
-  return jsonrpc_make_error(&id, JSONRPC_CODE_INVALID_PARAMS, "Invalid params",
-                            std::move(data));
+auto jsonrpc_make_error_invalid_params(
+    const sourcemeta::core::JSON &identifier,
+    std::optional<sourcemeta::core::JSON> data) -> sourcemeta::core::JSON {
+  return jsonrpc_make_error(&identifier, JSONRPC_CODE_INVALID_PARAMS,
+                            "Invalid params", std::move(data));
 }
 
-inline auto
-jsonrpc_make_error_internal(const sourcemeta::core::JSON *id = nullptr)
+auto jsonrpc_make_error_internal(const sourcemeta::core::JSON *identifier)
     -> sourcemeta::core::JSON {
-  return jsonrpc_make_error(id, JSONRPC_CODE_INTERNAL, "Internal error");
+  return jsonrpc_make_error(identifier, JSONRPC_CODE_INTERNAL,
+                            "Internal error");
 }
 
-} // namespace sourcemeta::one
-
-#endif
+} // namespace sourcemeta::core

@@ -6,8 +6,9 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/core/jsonrpc.h>
+
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/jsonrpc.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
@@ -59,8 +60,8 @@ public:
 
   virtual auto mcp(const sourcemeta::core::JSON &envelope)
       -> sourcemeta::core::JSON {
-    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
-    return sourcemeta::one::jsonrpc_make_error_method_not_found(
+    const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(
         id ? *id : sourcemeta::core::JSON{nullptr});
   }
 

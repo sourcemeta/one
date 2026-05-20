@@ -33,12 +33,12 @@ public:
 #else
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/jsonrpc.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
@@ -133,7 +133,7 @@ public:
             ActionMCP_v1::write_envelope(
                 callback_request, callback_response, allowed_origin,
                 response_schema, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                sourcemeta::one::jsonrpc_make_error_internal());
+                sourcemeta::core::jsonrpc_make_error_internal());
           }
         });
   }
@@ -145,7 +145,7 @@ private:
 
   static auto enterprise_required(const sourcemeta::core::JSON *id)
       -> sourcemeta::core::JSON {
-    return sourcemeta::one::jsonrpc_make_error(
+    return sourcemeta::core::jsonrpc_make_error(
         id, 1, "Enterprise edition required",
         sourcemeta::core::JSON{MCP_ENTERPRISE_REQUIRED_DATA});
   }
@@ -153,24 +153,25 @@ private:
   static auto resource_not_found(const sourcemeta::core::JSON &id,
                                  const std::string_view uri)
       -> sourcemeta::core::JSON {
-    return sourcemeta::one::jsonrpc_make_error(
+    return sourcemeta::core::jsonrpc_make_error(
         &id, -32002, "Resource not found", sourcemeta::core::JSON{uri});
   }
 
   static auto method_not_allowed() -> sourcemeta::core::JSON {
-    return sourcemeta::one::jsonrpc_make_error(nullptr, 4,
-                                               "Method not allowed");
+    return sourcemeta::core::jsonrpc_make_error(nullptr, 4,
+                                                "Method not allowed");
   }
 
   static auto request_too_large() -> sourcemeta::core::JSON {
-    return sourcemeta::one::jsonrpc_make_error(nullptr, 5, "Request too large");
+    return sourcemeta::core::jsonrpc_make_error(nullptr, 5,
+                                                "Request too large");
   }
 
   static auto handle_initialize(const sourcemeta::core::JSON &id,
                                 const sourcemeta::core::JSON &mcp_metadata)
       -> sourcemeta::core::JSON {
-    return sourcemeta::one::jsonrpc_make_success(id,
-                                                 mcp_metadata.at("initialize"));
+    return sourcemeta::core::jsonrpc_make_success(
+        id, mcp_metadata.at("initialize"));
   }
 
   static auto handle_resources_list(const sourcemeta::core::JSON &id)
@@ -184,7 +185,7 @@ private:
       -> sourcemeta::core::JSON {
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("resourceTemplates", mcp_metadata.at("resourceTemplates"));
-    return sourcemeta::one::jsonrpc_make_success(id, std::move(result));
+    return sourcemeta::core::jsonrpc_make_success(id, std::move(result));
   }
 
   static auto resolve_request_uri(const std::string_view uri,
@@ -229,7 +230,7 @@ private:
                                     const std::string_view registry_url,
                                     const std::filesystem::path &base)
       -> sourcemeta::core::JSON {
-    const auto *params{sourcemeta::one::jsonrpc_params(request_json)};
+    const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
     if (params == nullptr || !params->is_object() || !params->defines("uri") ||
         !params->at("uri").is_string()) {
       return enterprise_required(&id);
@@ -260,20 +261,20 @@ private:
     } catch (const std::exception &) {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_BAD_REQUEST,
-                     sourcemeta::one::jsonrpc_make_error_parse());
+                     sourcemeta::core::jsonrpc_make_error_parse());
       return;
     }
 
-    const auto method{sourcemeta::one::jsonrpc_method(request_json)};
+    const auto method{sourcemeta::core::jsonrpc_method(request_json)};
     if (method.empty()) {
       write_envelope(request, response, allowed_origin, response_schema,
                      sourcemeta::one::STATUS_OK,
-                     sourcemeta::one::jsonrpc_make_error_invalid_request(
-                         sourcemeta::one::jsonrpc_request_id(request_json)));
+                     sourcemeta::core::jsonrpc_make_error_invalid_request(
+                         sourcemeta::core::jsonrpc_request_id(request_json)));
       return;
     }
 
-    const auto *id{sourcemeta::one::jsonrpc_request_id(request_json)};
+    const auto *id{sourcemeta::core::jsonrpc_request_id(request_json)};
 
     if (id != nullptr && method == "initialize") {
       write_envelope(request, response, allowed_origin, response_schema,

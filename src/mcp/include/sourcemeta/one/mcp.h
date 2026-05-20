@@ -3,7 +3,7 @@
 
 #include <sourcemeta/core/json.h>
 
-#include <sourcemeta/one/jsonrpc.h>
+#include <sourcemeta/core/jsonrpc.h>
 
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -33,7 +33,7 @@ inline auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
                                     std::move(result));
   envelope_result.assign_assume_new(std::string{"isError"},
                                     sourcemeta::core::JSON{false});
-  return jsonrpc_make_success(id, std::move(envelope_result));
+  return sourcemeta::core::jsonrpc_make_success(id, std::move(envelope_result));
 }
 
 inline auto mcp_make_tool_error(const sourcemeta::core::JSON &id,
@@ -52,7 +52,7 @@ inline auto mcp_make_tool_error(const sourcemeta::core::JSON &id,
   envelope_result.assign_assume_new(std::string{"content"}, std::move(content));
   envelope_result.assign_assume_new(std::string{"isError"},
                                     sourcemeta::core::JSON{true});
-  return jsonrpc_make_success(id, std::move(envelope_result));
+  return sourcemeta::core::jsonrpc_make_success(id, std::move(envelope_result));
 }
 
 } // namespace sourcemeta::one

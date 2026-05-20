@@ -3,11 +3,11 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/jsonrpc.h>
 #include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/search.h>
 
@@ -160,14 +160,14 @@ public:
 
   auto mcp(const sourcemeta::core::JSON &envelope)
       -> sourcemeta::core::JSON override {
-    const auto *id{sourcemeta::one::jsonrpc_request_id(envelope)};
+    const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
     const sourcemeta::core::JSON request_id{
         id ? *id : sourcemeta::core::JSON{nullptr}};
 
-    const auto *params{sourcemeta::one::jsonrpc_params(envelope)};
+    const auto *params{sourcemeta::core::jsonrpc_params(envelope)};
     if (params == nullptr || !params->is_object() ||
         !params->defines("arguments")) {
-      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
     const auto &arguments{params->at("arguments")};
@@ -176,7 +176,7 @@ public:
         this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
     sourcemeta::blaze::Evaluator evaluator;
     if (!evaluator.validate(rpc_schema_template, arguments)) {
-      return sourcemeta::one::jsonrpc_make_error_invalid_params(request_id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
     constexpr std::size_t DEFAULT_LIMIT{10};
