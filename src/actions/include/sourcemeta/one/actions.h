@@ -4,9 +4,8 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/core/uritemplate.h>
-
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
 
