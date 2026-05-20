@@ -45,18 +45,6 @@ public:
         id ? *id : sourcemeta::core::JSON{nullptr});
   }
 
-  // Called once by ActionDispatcher after construction. Non-virtual: just
-  // captures a pointer so actions that need to reach back into the dispatcher
-  // (e.g. MCP `tools/call` routing to sibling actions) can call
-  // `this->dispatcher()->action(...)` directly
-  auto attach_dispatcher(ActionDispatcher &dispatcher) noexcept -> void {
-    this->dispatcher_ = &dispatcher;
-  }
-
-  [[nodiscard]] auto dispatcher() const noexcept -> ActionDispatcher * {
-    return this->dispatcher_;
-  }
-
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
     return this->base_;
   }
@@ -88,21 +76,25 @@ private:
   const std::filesystem::path &base_;
   std::string_view base_path_;
   std::string_view server_uri_;
-  ActionDispatcher *dispatcher_{nullptr};
 };
 
-using ActionConstructor = auto (*)(
-    const std::filesystem::path &,
-    const sourcemeta::core::URITemplateRouterView &,
-    sourcemeta::core::URITemplateRouter::Identifier) -> std::unique_ptr<Action>;
+// Concrete actions take this as their fourth constructor argument and decide
+// whether to store it. Actions that never reach back into the dispatcher (the
+// majority) just ignore it; ones that do (e.g. MCP `tools/call`) keep a member
+// reference
+using ActionConstructor =
+    auto (*)(const std::filesystem::path &,
+             const sourcemeta::core::URITemplateRouterView &,
+             sourcemeta::core::URITemplateRouter::Identifier,
+             ActionDispatcher &) -> std::unique_ptr<Action>;
 
 template <typename T>
 auto make_action(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
-    const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    -> std::unique_ptr<Action> {
-  return std::make_unique<T>(base, router, identifier);
+    const sourcemeta::core::URITemplateRouter::Identifier identifier,
+    ActionDispatcher &dispatcher) -> std::unique_ptr<Action> {
+  return std::make_unique<T>(base, router, identifier, dispatcher);
 }
 
 class ActionDispatcher {

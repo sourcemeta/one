@@ -389,8 +389,10 @@ namespace sourcemeta::one::enterprise {
 ActionMCP_v1::ActionMCP_v1(
     const std::filesystem::path &base,
     const sourcemeta::core::URITemplateRouterView &router,
-    const sourcemeta::core::URITemplateRouter::Identifier identifier)
-    : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
+    const sourcemeta::core::URITemplateRouter::Identifier identifier,
+    sourcemeta::one::ActionDispatcher &dispatcher)
+    : sourcemeta::one::Action{base, router.base_path(), router.base_url()},
+      dispatcher_{dispatcher} {
   std::string_view request_schema;
   router.arguments(
       identifier, [this, &request_schema](const auto &key, const auto &value) {
@@ -453,15 +455,12 @@ auto ActionMCP_v1::rest(const std::span<std::string_view>,
     return;
   }
 
-  auto *dispatcher_ptr{this->dispatcher()};
-  assert(dispatcher_ptr != nullptr);
-
   request.body(
       [allowed_origin = std::string_view{this->allowed_origin_},
        response_schema = this->response_schema_,
        registry_url = this->server_uri(), &base = this->base(),
        &request_schema_template = this->request_schema_template_,
-       &mcp_metadata = this->mcp_metadata_, &dispatcher = *dispatcher_ptr](
+       &mcp_metadata = this->mcp_metadata_, &dispatcher = this->dispatcher_](
           sourcemeta::one::HTTPRequest &callback_request,
           sourcemeta::one::HTTPResponse &callback_response, std::string &&body,
           bool too_big) {

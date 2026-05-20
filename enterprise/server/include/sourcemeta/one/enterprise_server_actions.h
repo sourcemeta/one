@@ -22,13 +22,16 @@ public:
 
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
-               sourcemeta::core::URITemplateRouter::Identifier identifier);
+               sourcemeta::core::URITemplateRouter::Identifier identifier,
+               sourcemeta::one::ActionDispatcher &dispatcher);
 
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override;
 
 private:
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  sourcemeta::one::ActionDispatcher &dispatcher_;
   std::string_view allowed_origin_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;

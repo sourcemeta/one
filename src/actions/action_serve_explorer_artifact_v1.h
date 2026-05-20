@@ -27,7 +27,8 @@ public:
   ActionServeExplorerArtifact_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
-      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      sourcemeta::one::ActionDispatcher &)
       : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "artifact") {

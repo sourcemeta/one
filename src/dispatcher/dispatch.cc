@@ -51,9 +51,8 @@ auto ActionDispatcher::action(
 
   auto &slot{this->slots_[identifier]};
   std::call_once(slot.flag, [this, &slot, context, identifier] {
-    slot.instance =
-        this->constructors_[context](this->base_, this->router_, identifier);
-    slot.instance->attach_dispatcher(*this);
+    slot.instance = this->constructors_[context](this->base_, this->router_,
+                                                 identifier, *this);
   });
 
   return slot.instance.get();

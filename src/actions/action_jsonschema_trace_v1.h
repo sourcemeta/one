@@ -36,7 +36,8 @@ public:
   ActionJSONSchemaTrace_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
-      const sourcemeta::core::URITemplateRouter::Identifier identifier)
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      sourcemeta::one::ActionDispatcher &)
       : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
     std::string_view request_schema;
     router.arguments(identifier, [this, &request_schema](const auto &key,
