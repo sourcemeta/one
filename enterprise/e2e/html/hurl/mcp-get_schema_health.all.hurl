@@ -79,8 +79,8 @@ jsonpath "$.id" == 401
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.score" == 0
 variable "text" jsonpath "$.score" == 0
-jsonpath "$.result.structuredContent.errors" count >= 0
-variable "text" jsonpath "$.errors" count >= 0
+jsonpath "$.result.structuredContent.errors" count == 3
+variable "text" jsonpath "$.errors" count == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
