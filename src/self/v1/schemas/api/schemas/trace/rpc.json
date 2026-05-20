@@ -8,7 +8,7 @@
       "instance": "hello"
     },
     {
-      "schema": "https://example.com/foo",
+      "schema": "foo",
       "instance": {
         "name": "Alice",
         "age": 30
@@ -23,10 +23,10 @@
   "required": [ "schema", "instance" ],
   "properties": {
     "schema": {
-      "description": "Absolute URI of a JSON Schema in this catalog",
+      "description": "Absolute URI or relative path of a JSON Schema in this catalog",
       "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
-      "format": "uri"
+      "format": "uri-reference"
     },
     "instance": {
       "description": "The JSON value to trace evaluation against",
