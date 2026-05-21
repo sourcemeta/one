@@ -15,7 +15,8 @@
           "name": "sourcemeta-one-enterprise",
           "title": "Sourcemeta One Enterprise",
           "version": "1.0.0"
-        }
+        },
+        "instructions": "Server instructions"
       }
     },
     {

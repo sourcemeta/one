@@ -164,7 +164,7 @@ jsonpath "$.result.resources[28].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[28].name" == "response"
 jsonpath "$.result.resources[28].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 1972
+jsonpath "$.result.resources[28].size" == 2163
 jsonpath "$.result.resources[29].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/notifications/cancelled"
 jsonpath "$.result.resources[29].name" == "cancelled"
 jsonpath "$.result.resources[29].description" == "Cancellation hint from a client for an in-flight request. Sourcemeta One accepts and discards these"
@@ -224,7 +224,7 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[40].name" == "response"
 jsonpath "$.result.resources[40].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 2849
+jsonpath "$.result.resources[40].size" == 2896
 jsonpath "$.result.resources[41].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[41].name" == "request"
 jsonpath "$.result.resources[41].description" == "Request from a client to invoke an MCP tool by name"

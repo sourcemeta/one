@@ -26,6 +26,7 @@
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -576,6 +577,27 @@ struct GENERATE_MCP {
     server_info.assign("version",
                        sourcemeta::core::JSON{sourcemeta::one::version()});
     initialize_result.assign("serverInfo", std::move(server_info));
+
+    constexpr std::string_view INSTRUCTIONS_BODY{
+        "Sourcemeta One is a JSON Schema registry. It serves a catalog of "
+        "JSON Schemas organized as a tree of directories. Every schema is "
+        "exposed as an MCP resource via the `JSON Schema` resource template "
+        "(see `resources/templates/list`) and is addressable either by its "
+        "canonical identifier or by its path relative to the catalog root. "
+        "Use `tools/list` to discover the operations this catalog exposes. "
+        "Learn more at https://one.sourcemeta.com"};
+
+    std::ostringstream instructions;
+    if (configuration.html.has_value()) {
+      instructions << "This is an instance of Sourcemeta One named \""
+                   << configuration.html->name << "\" ("
+                   << configuration.html->description << "). ";
+    } else {
+      instructions << "This is an instance of Sourcemeta One. ";
+    }
+    instructions << INSTRUCTIONS_BODY;
+    initialize_result.assign("instructions",
+                             sourcemeta::core::JSON{instructions.str()});
 
     auto template_entry{sourcemeta::core::JSON::make_object()};
     std::string template_uri{configuration.url};
