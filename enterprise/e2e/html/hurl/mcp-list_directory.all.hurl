@@ -1,5 +1,3 @@
-# Missing arguments object
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -32,8 +30,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Root listing
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -105,8 +101,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Explicit empty string path
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -176,8 +170,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Subdirectory listing
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -299,8 +291,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Deep subdirectory listing
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -1508,9 +1498,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Round-trip: capture a schema's resource_link URI from a directory listing
-# and read the schema back through MCP `resources/read`.
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1613,8 +1600,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Subdirectory listing with title and description
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1681,8 +1666,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Non-existent path
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1719,8 +1702,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Path points at a schema, not a directory
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1756,8 +1737,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Absolute path
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1791,8 +1770,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Bare ".." segment
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -1828,8 +1805,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Mid-path ".." segment
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1863,8 +1838,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Bare "." segment
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -1900,8 +1873,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Mid-path "." segment
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -1935,8 +1906,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Percent-encoded ".." treated as literal segment name
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -1973,8 +1942,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Backslash in path
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -2010,8 +1977,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Path is an integer
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -2045,8 +2010,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Path is an array
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -2082,8 +2045,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Extra property
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -2117,8 +2078,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Arguments is null
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -2154,8 +2113,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Arguments is a string
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -2189,8 +2146,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# String id
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json

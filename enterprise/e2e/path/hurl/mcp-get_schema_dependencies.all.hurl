@@ -1,9 +1,3 @@
-# get_schema_dependencies on a base-path-prefixed sandbox. The
-# mcp/response umbrella schema $refs eight other schemas, so the
-# response surfaces 9 unique in-catalog URIs (the 8 dependencies plus
-# the schema itself as the `from` of every entry). All URIs include
-# the /v1/catalog prefix.
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -116,9 +110,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Round-trip: capture a resource_link URI from a dependency entry and
-# read it back through resources/read.
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

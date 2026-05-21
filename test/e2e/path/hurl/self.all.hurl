@@ -1,5 +1,3 @@
-# The self/v1 API and schemas are always available
-
 GET {{base}}/v1/catalog/self/v1/health
 HTTP 200
 

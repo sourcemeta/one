@@ -28,7 +28,6 @@ HTTP 200
   "type": "string"
 }
 
-# Without extension
 GET {{base}}/test/schemas/string
 HTTP 200
 Content-Type: application/schema+json
@@ -75,7 +74,6 @@ HTTP 200
   "$ref": "/test/schemas/bundling-single.json"
 }
 
-# With random unknown query parameters
 GET {{base}}/test/schemas/string.json?foo=bar&baz=qux
 HTTP 200
 {
@@ -98,7 +96,6 @@ HTTP 200
   "type": "string"
 }
 
-# Identifier derived from file path
 GET {{base}}/test/schemas/no-id.json
 HTTP 200
 {
@@ -107,7 +104,6 @@ HTTP 200
   "type": "string"
 }
 
-# Applied default dialect
 GET {{base}}/test/schemas/no-schema.json
 HTTP 200
 {
@@ -116,7 +112,6 @@ HTTP 200
   "type": "string"
 }
 
-# With absolute references
 GET {{base}}/test/schemas/absolute-refs.json
 HTTP 200
 {
@@ -160,7 +155,6 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-# Invalid method on found
 DELETE {{base}}/test/schemas/string.json
 HTTP 405
 Content-Type: application/problem+json
@@ -170,7 +164,6 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-# Invalid method on not found
 PUT {{base}}/test/schemas/xxx.json
 HTTP 404
 Content-Type: application/problem+json

@@ -38,7 +38,6 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# Draft 3 per-property `required` enforced
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "name": "Ada" }
@@ -59,7 +58,6 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# Missing the Draft 3 required `name` property
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "age": 7 }

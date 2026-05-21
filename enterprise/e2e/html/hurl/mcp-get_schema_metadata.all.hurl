@@ -1,5 +1,3 @@
-# Bare schema
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -70,8 +68,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Object schema
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -136,8 +132,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Schema with non-zero dependencies count
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -177,8 +171,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Relative path
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -216,8 +208,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Schema URI not in catalog
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -252,8 +242,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# URI points at a directory
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -290,8 +278,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# URI with different host
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -325,8 +311,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# URI with ".." canonicalising into catalog
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -368,8 +352,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# URI with ".." escaping registry root
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -403,8 +385,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Missing schema argument
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -440,8 +420,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Empty schema string
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -475,8 +453,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Schema is an integer
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -512,8 +488,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Extra property
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -548,8 +522,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Missing arguments
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -582,8 +554,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Arguments is null
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -618,8 +588,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# String id
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json

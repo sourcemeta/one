@@ -1,5 +1,3 @@
-# resources/list enumerates the catalog with raw and bundled twin entries
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -280,8 +278,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/templates/list publishes the single registry URI template
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -314,8 +310,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read of a self-served schema URI
 
 GET {{base}}/v1/catalog/self/v1/schemas/mcp/error
 HTTP 200
@@ -357,8 +351,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read accepts the .json extension form of the URI
-
 GET {{base}}/v1/catalog/self/v1/schemas/mcp/error.json
 HTTP 200
 [Captures]
@@ -398,8 +390,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with ?bundle=1 of a $ref-bearing schema
 
 GET {{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle=1
 HTTP 200

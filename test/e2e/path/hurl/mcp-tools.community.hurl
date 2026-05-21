@@ -1,5 +1,3 @@
-# tools/list is gated behind enterprise on community
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -30,8 +28,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# tools/call is also gated behind enterprise on community
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

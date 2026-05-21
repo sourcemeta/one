@@ -1,8 +1,3 @@
-# Tools/call search_schemas with mixed title/description variants on a
-# base-path-prefixed sandbox. Verifies the resource_link content blocks
-# carry absolute URIs that include the catalog prefix, and that the
-# round-trip via resources/read returns the same schema content.
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -79,8 +74,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Round-trip: capture a resource_link URI from search and read it back
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

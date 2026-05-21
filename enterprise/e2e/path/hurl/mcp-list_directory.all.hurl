@@ -1,8 +1,3 @@
-# list_directory on a base-path-prefixed sandbox. The `example` directory
-# in this sandbox contains exactly the four metadata variants (bare,
-# description-only, full, title-only), so a single block exercises every
-# omit-when-empty branch of the resource_link emission.
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -130,9 +125,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Round-trip: capture a schema's resource_link URI from the directory
-# listing and read it back through resources/read.
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
