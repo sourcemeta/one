@@ -4,6 +4,7 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -104,6 +105,9 @@ public:
         }
       }
     } else {
+      if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
+        return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+      }
       const auto schema_path{
           this->uri_to_relative_path(arguments.at("schema").to_string())};
       if (!schema_path.has_value()) {

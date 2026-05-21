@@ -42,7 +42,7 @@ jsonpath "$.result.resources[4].uri" == "{{base}}/v1/catalog/self/v1/schemas/api
 jsonpath "$.result.resources[4].name" == "rpc"
 jsonpath "$.result.resources[4].description" == "Get all direct and indirect dependencies of a schema in the catalog"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 751
+jsonpath "$.result.resources[4].size" == 689
 jsonpath "$.result.resources[5].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[5].name" == "response"
 jsonpath "$.result.resources[5].description" == "The response format for the schema dependents API endpoint"
@@ -52,7 +52,7 @@ jsonpath "$.result.resources[6].uri" == "{{base}}/v1/catalog/self/v1/schemas/api
 jsonpath "$.result.resources[6].name" == "rpc"
 jsonpath "$.result.resources[6].description" == "Get all direct and transitive dependents of a schema in the catalog"
 jsonpath "$.result.resources[6].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[6].size" == 747
+jsonpath "$.result.resources[6].size" == 685
 jsonpath "$.result.resources[7].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[7].name" == "request"
 jsonpath "$.result.resources[7].description" == "The JSON instance to validate against a schema in the catalog"
@@ -67,7 +67,7 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/v1/catalog/self/v1/schemas/api
 jsonpath "$.result.resources[9].name" == "rpc"
 jsonpath "$.result.resources[9].description" == "Evaluate a JSON instance against a schema in the catalog and return whether it is valid plus any errors"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 1088
+jsonpath "$.result.resources[9].size" == 954
 jsonpath "$.result.resources[10].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[10].name" == "response"
 jsonpath "$.result.resources[10].description" == "The response format for the schema health API endpoint"
@@ -77,7 +77,7 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[11].name" == "rpc"
 jsonpath "$.result.resources[11].description" == "Get the health analysis and score of a schema in the catalog"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 732
+jsonpath "$.result.resources[11].size" == 670
 jsonpath "$.result.resources[12].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/locations/response"
 jsonpath "$.result.resources[12].name" == "response"
 jsonpath "$.result.resources[12].description" == "The response format for the schema frame locations API endpoint"
@@ -87,7 +87,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[13].name" == "rpc"
 jsonpath "$.result.resources[13].description" == "Get metadata about every URI associated with a schema, including schema resources, subschemas, and anchors"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 784
+jsonpath "$.result.resources[13].size" == 722
 jsonpath "$.result.resources[14].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[14].name" == "response"
 jsonpath "$.result.resources[14].description" == "The response format for the schema metadata API endpoint"
@@ -97,7 +97,7 @@ jsonpath "$.result.resources[15].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[15].name" == "rpc"
 jsonpath "$.result.resources[15].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[15].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[15].size" == 730
+jsonpath "$.result.resources[15].size" == 668
 jsonpath "$.result.resources[16].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/position"
 jsonpath "$.result.resources[16].name" == "position"
 jsonpath "$.result.resources[16].description" == "Represents a position in a JSON document as line start, column start, line end, and column end"
@@ -112,7 +112,7 @@ jsonpath "$.result.resources[18].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[18].name" == "rpc"
 jsonpath "$.result.resources[18].description" == "Get line and column position information for every token in a schema"
 jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[18].size" == 746
+jsonpath "$.result.resources[18].size" == 684
 jsonpath "$.result.resources[19].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/search/response"
 jsonpath "$.result.resources[19].name" == "response"
 jsonpath "$.result.resources[19].description" == "The response format for the schema search API endpoint"
@@ -132,7 +132,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[22].name" == "rpc"
 jsonpath "$.result.resources[22].description" == "Get keyword statistics by vocabulary about every URI associated with a schema in the catalog"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 767
+jsonpath "$.result.resources[22].size" == 705
 jsonpath "$.result.resources[23].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/trace/request"
 jsonpath "$.result.resources[23].name" == "request"
 jsonpath "$.result.resources[23].description" == "The JSON instance to trace evaluation against a schema in the catalog"
@@ -147,7 +147,7 @@ jsonpath "$.result.resources[25].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[25].name" == "rpc"
 jsonpath "$.result.resources[25].description" == "Trace step-by-step evaluation of a JSON instance against a schema in the catalog, exposing each step, rule application, and decision point"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 1114
+jsonpath "$.result.resources[25].size" == 980
 jsonpath "$.result.resources[26].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[26].name" == "error"
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails"

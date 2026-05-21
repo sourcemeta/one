@@ -158,15 +158,12 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1003
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.valid" == true
-jsonpath "$.result.structuredContent.steps" count == 2
-variable "text" jsonpath "$.valid" == true
-variable "text" jsonpath "$.steps" count == 2
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/evaluator.h>
@@ -88,6 +89,10 @@ public:
         this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
     sourcemeta::blaze::Evaluator rpc_evaluator;
     if (!rpc_evaluator.validate(rpc_schema_template, arguments)) {
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+    }
+
+    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
