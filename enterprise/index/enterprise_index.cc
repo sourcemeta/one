@@ -12,12 +12,38 @@
 #include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
+#include <cctype>      // std::toupper
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <variant>     // std::get
+
+namespace {
+
+// TODO: Upstream this to sourcemeta::core. Generic snake_case/kebab-case
+// to Title Case conversion has no enterprise-specific semantics
+auto to_prose(const std::string_view input) -> std::string {
+  std::string result;
+  result.reserve(input.size());
+  bool capitalize_next{true};
+  for (const char character : input) {
+    if (character == '_' || character == '-') {
+      result.push_back(' ');
+      capitalize_next = true;
+    } else if (capitalize_next) {
+      result.push_back(static_cast<char>(
+          std::toupper(static_cast<unsigned char>(character))));
+      capitalize_next = false;
+    } else {
+      result.push_back(character);
+    }
+  }
+  return result;
+}
+
+} // namespace
 
 namespace sourcemeta::one {
 
@@ -165,6 +191,10 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
           "$ref", sourcemeta::core::JSON{std::move(output_schema_url).value()});
       entry.assign("outputSchema", std::move(output_schema_ref));
     }
+
+    auto annotations{sourcemeta::core::JSON::make_object()};
+    annotations.assign("title", sourcemeta::core::JSON{to_prose(operation_id)});
+    entry.assign("annotations", std::move(annotations));
 
     tool_routes.assign(
         std::string{operation_id},
