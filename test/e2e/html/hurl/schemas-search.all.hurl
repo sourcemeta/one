@@ -97,9 +97,11 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].identifier" == "http://localhost:8000/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -124,9 +126,11 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].identifier" == "http://localhost:8000/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -151,6 +155,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/schemas/camelcase"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/camelcase"
 jsonpath "$[0].title" == ""
 jsonpath "$[0].description" == ""
 
@@ -196,6 +201,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 
@@ -220,6 +226,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 
@@ -244,9 +251,11 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].identifier" == "http://localhost:8000/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -271,6 +280,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 
@@ -295,6 +305,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 
@@ -480,9 +491,11 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[1].path" == "/test/bundling/double"
+jsonpath "$[1].identifier" == "http://localhost:8000/test/bundling/double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
@@ -530,6 +543,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/test/bundling/single"
+jsonpath "$[0].identifier" == "http://localhost:8000/test/bundling/single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 

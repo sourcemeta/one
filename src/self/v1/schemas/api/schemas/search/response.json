@@ -6,6 +6,7 @@
     [
       {
         "path": "/schemas/user.json",
+        "identifier": "https://example.com/schemas/user.json",
         "title": "User Schema",
         "description": "Defines a user object"
       }
@@ -14,7 +15,7 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "path", "title", "description" ],
+    "required": [ "path", "identifier", "title", "description" ],
     "properties": {
       "title": {
         "type": "string"
@@ -26,6 +27,11 @@
         "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri-reference"
+      },
+      "identifier": {
+        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "type": "string",
+        "format": "uri"
       }
     },
     "additionalProperties": false

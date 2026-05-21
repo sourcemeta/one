@@ -508,6 +508,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 
         entries.push_back(
             {directory_entry.at("path").to_string(),
+             directory_entry.at("identifier").to_string(),
              directory_entry.defines("title")
                  ? directory_entry.at("title").to_string()
                  : "",

@@ -32,27 +32,30 @@ static auto write_search_file(const std::filesystem::path &path,
 
 TEST(Search_view, count_single_entry) {
   const auto path{test_path("count_single.metapack")};
-  write_search_file(path, {{"/foo", "Title", "Desc", 80, 100, 200}});
+  write_search_file(path, {{"/foo", "http://example.com/foo", "Title", "Desc",
+                            80, 100, 200}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 1);
 }
 
 TEST(Search_view, count_multiple_entries) {
   const auto path{test_path("count_multiple.metapack")};
-  write_search_file(path, {{"/a", "A", "Da", 80, 1, 2},
-                           {"/b", "B", "Db", 80, 3, 4},
-                           {"/c", "C", "Dc", 80, 5, 6}});
+  write_search_file(path,
+                    {{"/a", "http://example.com/a", "A", "Da", 80, 1, 2},
+                     {"/b", "http://example.com/b", "B", "Db", 80, 3, 4},
+                     {"/c", "http://example.com/c", "C", "Dc", 80, 5, 6}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 3);
 }
 
 TEST(Search_view, at_returns_field_data) {
   const auto path{test_path("at_fields.metapack")};
-  write_search_file(path,
-                    {{"/foo/bar", "My Title", "My Description", 80, 100, 200}});
+  write_search_file(path, {{"/foo/bar", "http://example.com/foo/bar",
+                            "My Title", "My Description", 80, 100, 200}});
   sourcemeta::one::SearchView view{path};
   const auto entry{view.at(0)};
   EXPECT_EQ(entry.path, "/foo/bar");
+  EXPECT_EQ(entry.identifier, "http://example.com/foo/bar");
   EXPECT_EQ(entry.title, "My Title");
   EXPECT_EQ(entry.description, "My Description");
   EXPECT_EQ(entry.bytes_raw, 100);
@@ -61,28 +64,35 @@ TEST(Search_view, at_returns_field_data) {
 
 TEST(Search_view, at_walks_in_sorted_order) {
   const auto path{test_path("at_sorted.metapack")};
-  write_search_file(path, {{"/zebra", "Title", "Desc", 80, 11, 22},
-                           {"/apple", "Title", "Desc", 80, 33, 44},
-                           {"/mango", "Title", "Desc", 80, 55, 66}});
+  write_search_file(
+      path,
+      {{"/zebra", "http://example.com/zebra", "Title", "Desc", 80, 11, 22},
+       {"/apple", "http://example.com/apple", "Title", "Desc", 80, 33, 44},
+       {"/mango", "http://example.com/mango", "Title", "Desc", 80, 55, 66}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 3);
   EXPECT_EQ(view.at(0).path, "/apple");
+  EXPECT_EQ(view.at(0).identifier, "http://example.com/apple");
   EXPECT_EQ(view.at(0).bytes_raw, 33);
   EXPECT_EQ(view.at(0).bytes_bundled, 44);
   EXPECT_EQ(view.at(1).path, "/mango");
+  EXPECT_EQ(view.at(1).identifier, "http://example.com/mango");
   EXPECT_EQ(view.at(1).bytes_raw, 55);
   EXPECT_EQ(view.at(1).bytes_bundled, 66);
   EXPECT_EQ(view.at(2).path, "/zebra");
+  EXPECT_EQ(view.at(2).identifier, "http://example.com/zebra");
   EXPECT_EQ(view.at(2).bytes_raw, 11);
   EXPECT_EQ(view.at(2).bytes_bundled, 22);
 }
 
 TEST(Search_view, at_returns_empty_strings_for_empty_metadata) {
   const auto path{test_path("at_empty_meta.metapack")};
-  write_search_file(path, {{"/only/path", "", "", 80, 7, 8}});
+  write_search_file(
+      path, {{"/only/path", "http://example.com/only/path", "", "", 80, 7, 8}});
   sourcemeta::one::SearchView view{path};
   const auto entry{view.at(0)};
   EXPECT_EQ(entry.path, "/only/path");
+  EXPECT_EQ(entry.identifier, "http://example.com/only/path");
   EXPECT_EQ(entry.title, "");
   EXPECT_EQ(entry.description, "");
   EXPECT_EQ(entry.bytes_raw, 7);

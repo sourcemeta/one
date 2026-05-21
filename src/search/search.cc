@@ -35,6 +35,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
       static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
   std::erase_if(entries, [](const SearchEntry &entry) {
     return entry.path.size() > MAX_FIELD_LENGTH ||
+           entry.identifier.size() > MAX_FIELD_LENGTH ||
            entry.title.size() > MAX_FIELD_LENGTH ||
            entry.description.size() > MAX_FIELD_LENGTH;
   });
@@ -50,7 +51,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
                          entry_count * sizeof(std::uint32_t)};
   for (const auto &entry : entries) {
     total_size += sizeof(SearchRecordHeader) + entry.path.size() +
-                  entry.title.size() + entry.description.size();
+                  entry.identifier.size() + entry.title.size() +
+                  entry.description.size();
   }
 
   std::vector<std::uint8_t> payload(total_size);
@@ -76,6 +78,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
     // Write record header
     const SearchRecordHeader record_header{
         .path_length = static_cast<std::uint16_t>(entry.path.size()),
+        .identifier_length =
+            static_cast<std::uint16_t>(entry.identifier.size()),
         .title_length = static_cast<std::uint16_t>(entry.title.size()),
         .description_length =
             static_cast<std::uint16_t>(entry.description.size()),
@@ -89,6 +93,9 @@ auto make_search(std::vector<SearchEntry> &&entries)
     std::memcpy(payload.data() + record_position, entry.path.data(),
                 entry.path.size());
     record_position += entry.path.size();
+    std::memcpy(payload.data() + record_position, entry.identifier.data(),
+                entry.identifier.size());
+    record_position += entry.identifier.size();
     std::memcpy(payload.data() + record_position, entry.title.data(),
                 entry.title.size());
     record_position += entry.title.size();
@@ -155,7 +162,8 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
     const auto total_field_length{
         static_cast<std::size_t>(record_header->path_length) +
-        record_header->title_length + record_header->description_length};
+        record_header->identifier_length + record_header->title_length +
+        record_header->description_length};
     if (field_data_offset + total_field_length > payload_size) {
       break;
     }
@@ -166,12 +174,18 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     const std::string_view path{reinterpret_cast<const char *>(field_data),
                                 record_header->path_length};
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const std::string_view title{
+    const std::string_view identifier{
         reinterpret_cast<const char *>(field_data + record_header->path_length),
+        record_header->identifier_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view title{
+        reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->identifier_length),
         record_header->title_length};
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const std::string_view description{
         reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->identifier_length +
                                        record_header->title_length),
         record_header->description_length};
 
@@ -195,6 +209,7 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
 
     auto entry{sourcemeta::core::JSON::make_object()};
     entry.assign("path", sourcemeta::core::JSON{path});
+    entry.assign("identifier", sourcemeta::core::JSON{identifier});
     entry.assign("title", sourcemeta::core::JSON{title});
     entry.assign("description", sourcemeta::core::JSON{description});
     result.push_back(std::move(entry));
@@ -267,16 +282,23 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
   const std::string_view path{reinterpret_cast<const char *>(field_data),
                               record_header->path_length};
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const std::string_view title{
+  const std::string_view identifier{
       reinterpret_cast<const char *>(field_data + record_header->path_length),
+      record_header->identifier_length};
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const std::string_view title{
+      reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                     record_header->identifier_length),
       record_header->title_length};
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const std::string_view description{
       reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                     record_header->identifier_length +
                                      record_header->title_length),
       record_header->description_length};
 
   return {.path = path,
+          .identifier = identifier,
           .title = title,
           .description = description,
           .bytes_raw = record_header->bytes_raw,
@@ -325,7 +347,8 @@ auto SearchView::for_each(
     const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
     const auto total_field_length{
         static_cast<std::size_t>(record_header->path_length) +
-        record_header->title_length + record_header->description_length};
+        record_header->identifier_length + record_header->title_length +
+        record_header->description_length};
     if (field_data_offset + total_field_length > this->payload_size_) {
       break;
     }
@@ -336,16 +359,23 @@ auto SearchView::for_each(
     const std::string_view path{reinterpret_cast<const char *>(field_data),
                                 record_header->path_length};
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const std::string_view title{
+    const std::string_view identifier{
         reinterpret_cast<const char *>(field_data + record_header->path_length),
+        record_header->identifier_length};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view title{
+        reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->identifier_length),
         record_header->title_length};
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const std::string_view description{
         reinterpret_cast<const char *>(field_data + record_header->path_length +
+                                       record_header->identifier_length +
                                        record_header->title_length),
         record_header->description_length};
 
     callback({.path = path,
+              .identifier = identifier,
               .title = title,
               .description = description,
               .bytes_raw = record_header->bytes_raw,
