@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: make docker-build PRESET=Release ${{ matrix.edition.options }}
+      - run: make docker-build PRESET=Release PARALLEL=$(nproc) ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
         run: |

@@ -1,7 +1,7 @@
 FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  build-essential ca-certificates cmake sassc esbuild shellcheck nodejs npm \
+  build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck nodejs npm \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY package.json /source/package.json
@@ -22,7 +22,7 @@ RUN cd /source && npm ci
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
 
-RUN	cmake -S /source -B ./build \
+RUN	cmake -S /source -B ./build -G Ninja \
   -DCMAKE_BUILD_TYPE:STRING=${SOURCEMETA_ONE_BUILD_TYPE} \
   -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \
   -DONE_INDEX:BOOL=ON \
