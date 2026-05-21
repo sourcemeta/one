@@ -112,15 +112,12 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 602
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent['/title']" count == 4
-jsonpath "$.result.structuredContent['/properties/foo']" count == 4
-variable "text" jsonpath "$['/title']" count == 4
-variable "text" jsonpath "$['/properties/foo']" count == 4
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -361,8 +358,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 621
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -142,23 +142,12 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 303
-jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 3
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 1
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -490,8 +479,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 321
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
