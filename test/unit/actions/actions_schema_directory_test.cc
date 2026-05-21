@@ -4,12 +4,12 @@
 
 namespace {
 
-class TestAction final : public sourcemeta::one::Action {
+class TestAction final : public sourcemeta::one::RouterAction {
 public:
   TestAction(const std::filesystem::path &base,
              const std::string_view base_path,
              const std::string_view server_uri)
-      : sourcemeta::one::Action{base, base_path, server_uri} {}
+      : sourcemeta::one::RouterAction{base, base_path, server_uri} {}
 
   auto rest(const std::span<std::string_view>, sourcemeta::one::HTTPRequest &,
             sourcemeta::one::HTTPResponse &) -> void override {}

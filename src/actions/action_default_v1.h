@@ -4,8 +4,8 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/router.h>
 
 #include "action_jsonschema_serve_v1.h"
 #include "action_serve_metapack_file_v1.h"
@@ -15,7 +15,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionDefault_v1 : public sourcemeta::one::Action {
+class ActionDefault_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Default fallback action for unmatched URIs"};
@@ -23,8 +23,10 @@ public:
   ActionDefault_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
-      const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      sourcemeta::one::Router &)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);

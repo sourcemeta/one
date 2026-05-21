@@ -4,6 +4,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_server
 
 target_compile_definitions(sourcemeta_one_enterprise_server PUBLIC SOURCEMETA_ONE_ENTERPRISE)
 
+target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::core::uritemplate)
@@ -11,6 +12,8 @@ target_link_libraries(sourcemeta_one_enterprise_server PUBLIC sourcemeta::blaze:
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::jsonrpc)
+target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::shared)
+target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::mcp)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::metapack)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::blaze::output)

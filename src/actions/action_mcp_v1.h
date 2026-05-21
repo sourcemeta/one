@@ -2,33 +2,10 @@
 #define SOURCEMETA_ONE_ACTIONS_MCP_V1_H
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-#include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/enterprise_server.h>
-#include <sourcemeta/one/http.h>
 
-#include <filesystem>  // std::filesystem
-#include <span>        // std::span
-#include <string_view> // std::string_view
-
-class ActionMCP_v1 : public sourcemeta::one::Action, public EnterpriseMCP {
-public:
-  static constexpr std::string_view DESCRIPTION{
-      "Handle Model Context Protocol JSON-RPC requests"};
-
-  ActionMCP_v1(const std::filesystem::path &base,
-               const sourcemeta::core::URITemplateRouterView &router,
-               const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()},
-        EnterpriseMCP{base, router, identifier} {}
-
-  auto rest(const std::span<std::string_view>,
-            sourcemeta::one::HTTPRequest &request,
-            sourcemeta::one::HTTPResponse &response) -> void override {
-    EnterpriseMCP::rest(request, response);
-  }
-};
+using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
 
 #else
 
@@ -37,9 +14,9 @@ public:
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
+#include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_serve_v1.h"
@@ -54,15 +31,17 @@ public:
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionMCP_v1 : public sourcemeta::one::Action {
+class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
 
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
-               const sourcemeta::core::URITemplateRouter::Identifier identifier)
-      : sourcemeta::one::Action{base, router.base_path(), router.base_url()} {
+               const sourcemeta::core::URITemplateRouter::Identifier identifier,
+               sourcemeta::one::Router &)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);

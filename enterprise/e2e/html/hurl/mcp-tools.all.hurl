@@ -73,7 +73,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# tools/call is reserved but not yet dispatching
+# tools/call list_directory at the catalog root
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -98,9 +98,84 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 51
-jsonpath "$.error.code" == 6
-jsonpath "$.error.message" == "Unsupported operation"
-jsonpath "$.error.data" == "Tool calls are not yet supported"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.path" == "/"
+jsonpath "$.result.structuredContent.url" == "{{base}}"
+jsonpath "$.result.structuredContent.entries" count >= 1
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# tools/call with an unknown tool name
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 52,
+  "method": "tools/call",
+  "params": {
+    "name": "no_such_tool",
+    "arguments": {}
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 52
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "no_such_tool"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# tools/call with arguments that fail rpcSchema validation
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 53,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": {}
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 53
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -117,7 +192,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 52,
+  "id": 54,
   "method": "initialize",
   "params": {
     "protocolVersion": "2025-11-25",
@@ -135,7 +210,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 52
+jsonpath "$.id" == 54
 jsonpath "$.result.capabilities.resources" isObject
 jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.capabilities.tools" isObject

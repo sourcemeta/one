@@ -1,0 +1,596 @@
+# Bare schema
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 300,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/bare/01" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 300
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent" count == 0
+variable "text" jsonpath "$" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Object schema
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 301,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/object" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 301
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent" count == 0
+variable "text" jsonpath "$" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Schema with a dependent
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 302,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/error" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 302
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent" count == 1
+jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$" count == 1
+variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Relative path
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 303,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "self/v1/schemas/mcp/error" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 303
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent" count == 1
+jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$" count == 1
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Schema URI not in catalog
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 310,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/does-not-exist" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 310
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "Schema not found"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# URI points at a directory
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 311,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 311
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "Schema not found"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# URI with different host
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 312,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "https://example.com/test/object" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 312
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].text" == "Schema not found"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# URI with ".." canonicalising into catalog
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 313,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/foo/../object" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 313
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent" count == 0
+variable "text" jsonpath "$" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# URI with ".." escaping registry root
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 314,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/../etc/passwd" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 314
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].text" == "Schema not found"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Missing schema argument
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 320,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": {}
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 320
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Empty schema string
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 321,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 321
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].text" == "Schema not found"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Schema is an integer
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 322,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": 42 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 322
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Extra property
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 323,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/object", "extra": "foo" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 323
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Missing arguments
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 324,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 324
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Arguments is null
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 325,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": null
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 325
+jsonpath "$.error.code" == -32600
+jsonpath "$.error.message" == "Invalid Request"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# String id
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "dependents-call-string-id",
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/test/object" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "dependents-call-string-id"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent" count == 0
+variable "text" jsonpath "$" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

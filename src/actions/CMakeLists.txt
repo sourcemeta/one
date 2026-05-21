@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
-  SOURCES base.cc dispatch.cc
+  SOURCES actions.cc
     action_default_v1.h
     action_health_check_v1.h
     action_jsonschema_evaluate_v1.h
@@ -13,6 +13,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_serve_static_v1.h
     action_mcp_v1.h)
 
+target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::json)

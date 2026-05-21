@@ -14,8 +14,8 @@
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
 
-// TODO: Maybe we should merge this entire function into `ActionDispatcher`?
-static auto dispatch(sourcemeta::one::ActionDispatcher &actions,
+// TODO: Maybe we should merge this entire function into `Router`?
+static auto dispatch(sourcemeta::one::Router &actions,
                      const sourcemeta::core::URITemplateRouterView &router,
                      sourcemeta::one::HTTPRequest &request,
                      sourcemeta::one::HTTPResponse &response) noexcept -> void {
@@ -94,7 +94,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
-    sourcemeta::one::ActionDispatcher actions{base, router};
+    sourcemeta::one::Router actions{base, router, sourcemeta::one::CONSTRUCTORS,
+                                    sourcemeta::one::DESCRIPTIONS};
 
     sourcemeta::one::HTTPServer(
         port,

@@ -7,34 +7,37 @@
 #include <sourcemeta/blaze/evaluator.h>
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem::path
-#include <string>      // std::string
+#include <span>        // std::span
 #include <string_view> // std::string_view
 
-class EnterpriseMCP {
+namespace sourcemeta::one::enterprise {
+
+class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
-  EnterpriseMCP(const std::filesystem::path &base,
-                const sourcemeta::core::URITemplateRouterView &router,
-                sourcemeta::core::URITemplateRouter::Identifier identifier);
+  static constexpr std::string_view DESCRIPTION{
+      "Handle Model Context Protocol JSON-RPC requests"};
 
-  // To avoid mistakes
-  EnterpriseMCP(const EnterpriseMCP &) = delete;
-  EnterpriseMCP(EnterpriseMCP &&) = delete;
-  auto operator=(const EnterpriseMCP &) -> EnterpriseMCP & = delete;
-  auto operator=(EnterpriseMCP &&) -> EnterpriseMCP & = delete;
-  ~EnterpriseMCP() = default;
+  ActionMCP_v1(const std::filesystem::path &base,
+               const sourcemeta::core::URITemplateRouterView &router,
+               sourcemeta::core::URITemplateRouter::Identifier identifier,
+               sourcemeta::one::Router &dispatcher);
 
-  auto rest(sourcemeta::one::HTTPRequest &request,
-            sourcemeta::one::HTTPResponse &response) -> void;
+  auto rest(const std::span<std::string_view> matches,
+            sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override;
 
 private:
-  std::filesystem::path base_;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  sourcemeta::one::Router &dispatcher_;
   std::string_view allowed_origin_;
-  std::string_view registry_url_;
   std::string_view response_schema_;
   sourcemeta::blaze::Template request_schema_template_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
 };
+
+} // namespace sourcemeta::one::enterprise
 
 #endif

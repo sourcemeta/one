@@ -1,7 +1,7 @@
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/metapack.h>
+#include <sourcemeta/one/router.h>
 
 #include <cassert>     // assert
 #include <exception>   // std::exception
@@ -11,7 +11,7 @@
 
 namespace sourcemeta::one {
 
-auto Action::uri_to_relative_path(const std::string_view uri) const
+auto RouterAction::uri_to_relative_path(const std::string_view uri) const
     -> std::optional<std::filesystem::path> {
   std::optional<sourcemeta::core::URI> parsed;
   try {
@@ -36,7 +36,7 @@ auto Action::uri_to_relative_path(const std::string_view uri) const
   return std::filesystem::path{path_option.value()};
 }
 
-auto Action::schema_directory(const std::string_view uri) const
+auto RouterAction::schema_directory(const std::string_view uri) const
     -> std::optional<std::filesystem::path> {
   auto path{this->uri_to_relative_path(uri)};
   if (!path.has_value()) {
@@ -45,8 +45,8 @@ auto Action::schema_directory(const std::string_view uri) const
   return this->base_ / "schemas" / std::move(path).value() / "%";
 }
 
-auto Action::blaze_template(const std::string_view schema_uri,
-                            const sourcemeta::blaze::Mode mode) const
+auto RouterAction::blaze_template(const std::string_view schema_uri,
+                                  const sourcemeta::blaze::Mode mode) const
     -> sourcemeta::blaze::Template {
   const auto stripped{
       sourcemeta::core::URI::strip_path_prefix(schema_uri, this->base_path_)};
