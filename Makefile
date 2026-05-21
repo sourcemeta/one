@@ -45,7 +45,7 @@ configure: node_modules
 .PHONY: compile
 compile:
 	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --target clang_format
-	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --parallel $(PARALLEL)
+	$(CMAKE) --build $(OUTPUT) --config $(PRESET)
 	$(CMAKE) --install $(OUTPUT) --prefix $(PREFIX) --config $(PRESET) --verbose \
 		--component sourcemeta_one --component sourcemeta_one
 	$(CMAKE) --install $(OUTPUT) --prefix $(PREFIX) --config $(PRESET) --verbose \
