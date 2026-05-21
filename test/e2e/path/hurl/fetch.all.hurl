@@ -75,7 +75,6 @@ Access-Control-Allow-Origin: *
   }
 }
 
-# Schema with $ref to sibling (no baseUri, no $id)
 GET {{base}}/v1/catalog/example/with-ref.json
 HTTP 200
 Content-Type: application/schema+json
@@ -92,7 +91,6 @@ Access-Control-Allow-Origin: *
   }
 }
 
-# Nested subdirectory schema (no baseUri, no $id)
 GET {{base}}/v1/catalog/example/nested/deep.json
 HTTP 200
 Content-Type: application/schema+json
@@ -104,7 +102,6 @@ Access-Control-Allow-Origin: *
   "type": "number"
 }
 
-# Schema with $ref to sibling (with baseUri, with $id)
 GET {{base}}/v1/catalog/rebased/with-ref.json
 HTTP 200
 Content-Type: application/schema+json
@@ -121,7 +118,6 @@ Access-Control-Allow-Origin: *
   }
 }
 
-# Nested subdirectory schema (with baseUri, with $id)
 GET {{base}}/v1/catalog/rebased/nested/deep-with-id.json
 HTTP 200
 Content-Type: application/schema+json
@@ -133,7 +129,6 @@ Access-Control-Allow-Origin: *
   "type": "null"
 }
 
-# Nested subdirectory schema (with baseUri, no $id)
 GET {{base}}/v1/catalog/rebased/nested/deep-no-id.json
 HTTP 200
 Content-Type: application/schema+json

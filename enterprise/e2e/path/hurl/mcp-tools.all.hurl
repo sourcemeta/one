@@ -1,5 +1,3 @@
-# tools/list enumerates every tool-eligible route registered in routes.bin
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -84,8 +82,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# tools/call list_directory at the catalog root
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -123,8 +119,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# tools/call with an unknown tool name
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -160,8 +154,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# tools/call with arguments that fail rpcSchema validation
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -195,8 +187,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# initialize advertises capabilities.tools alongside capabilities.resources
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

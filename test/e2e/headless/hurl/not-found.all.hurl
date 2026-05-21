@@ -1,4 +1,3 @@
-# Old /self/api/ paths should return a proper JSON error response
 GET {{base}}/self/api/list
 HTTP 404
 Content-Type: application/problem+json

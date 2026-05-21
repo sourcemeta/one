@@ -38,7 +38,6 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Draft 3 schema with an external $ref to another Draft 3 schema (raw)
 GET {{base}}/test/draft3/with-ref.json
 HTTP 200
 Content-Type: application/schema+json
@@ -57,7 +56,6 @@ header "ETag" exists
   }
 }
 
-# Bundling a Draft 3 schema must inline the referenced Draft 3 schema under `definitions`
 GET {{base}}/test/draft3/with-ref.json?bundle=1
 HTTP 200
 Content-Type: application/schema+json
@@ -83,7 +81,6 @@ header "ETag" exists
   }
 }
 
-# Evaluating a value through the Draft 3 cross-schema $ref resolves the inner string schema
 POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/with-ref
 Content-Type: application/json
 { "tag": "beta" }

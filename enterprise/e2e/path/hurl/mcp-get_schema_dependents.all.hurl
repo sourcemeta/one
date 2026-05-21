@@ -1,8 +1,3 @@
-# get_schema_dependents on a base-path-prefixed sandbox. The
-# mcp/error schema is referenced by mcp/response, so the response
-# surfaces 2 unique in-catalog URIs (the dependent and the schema
-# itself). All URIs include the /v1/catalog prefix.
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -50,9 +45,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Round-trip: capture a resource_link URI from a dependent entry and
-# read it back through resources/read.
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

@@ -1,4 +1,3 @@
-# The /self collection is not mounted when API is disabled
 GET {{base}}/self/v1/schemas/configuration/configuration.json
 HTTP 404
 Content-Type: application/problem+json

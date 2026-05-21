@@ -75,7 +75,6 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Trace a schema that has a $ref to another schema
 POST {{base}}/self/v1/api/schemas/trace/test/bundling/single
 Content-Type: application/json
 { "foo": 42 }
@@ -176,7 +175,6 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Trace a schema that has a $ref chain (double -> single -> v2.0/schema)
 POST {{base}}/self/v1/api/schemas/trace/test/bundling/double
 Content-Type: application/json
 { "foo": 42 }
@@ -251,7 +249,6 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Trace a schema with $ref to an official meta-schema (vocabulary is null for external)
 POST {{base}}/self/v1/api/schemas/trace/test/bundling/double
 Content-Type: application/json
 { "bar": {} }

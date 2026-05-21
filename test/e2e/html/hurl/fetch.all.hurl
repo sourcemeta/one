@@ -28,7 +28,6 @@ HTTP 200
   "type": "string"
 }
 
-# Without extension
 GET {{base}}/test/schemas/string
 HTTP 200
 Content-Type: application/schema+json
@@ -83,7 +82,6 @@ HTTP 200
   "type": "string"
 }
 
-# With random unknown query parameters
 GET {{base}}/test/schemas/string.json?foo=bar&baz=qux
 HTTP 200
 {
@@ -106,7 +104,6 @@ HTTP 200
   "type": "string"
 }
 
-# Identifier derived from file path
 GET {{base}}/test/schemas/no-id.json
 HTTP 200
 {
@@ -115,7 +112,6 @@ HTTP 200
   "type": "string"
 }
 
-# Applied default dialect
 GET {{base}}/test/schemas/no-schema.json
 HTTP 200
 {
@@ -124,7 +120,6 @@ HTTP 200
   "type": "string"
 }
 
-# Applied default dialect and file identifier
 GET {{base}}/test/schemas/no-schema-nor-id.json
 HTTP 200
 {
@@ -133,7 +128,6 @@ HTTP 200
   "type": "string"
 }
 
-# With absolute references
 GET {{base}}/test/schemas/absolute-refs.json
 HTTP 200
 {
@@ -142,7 +136,6 @@ HTTP 200
   "$ref": "string"
 }
 
-# Folder with period
 GET {{base}}/test/v2.0/schema.json
 HTTP 200
 Content-Type: application/schema+json
@@ -154,7 +147,6 @@ Access-Control-Allow-Origin: *
   "type": "integer"
 }
 
-# .schema.json extension
 GET {{base}}/test/extension/with.json
 HTTP 200
 Content-Type: application/schema+json
@@ -166,7 +158,6 @@ Access-Control-Allow-Origin: *
   "type": "string"
 }
 
-# No extension
 GET {{base}}/test/extension/without.json
 HTTP 200
 Content-Type: application/schema+json
@@ -178,7 +169,6 @@ Access-Control-Allow-Origin: *
   "type": "string"
 }
 
-# With correct casing
 GET {{base}}/test/schemas/CamelCase.json
 HTTP 200
 Content-Type: application/schema+json
@@ -190,7 +180,6 @@ Access-Control-Allow-Origin: *
   "type": "string"
 }
 
-# With lower casing
 GET {{base}}/test/schemas/camelcase.json
 HTTP 200
 Content-Type: application/schema+json
@@ -274,7 +263,6 @@ jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-# Invalid method on found
 DELETE {{base}}/test/schemas/string.json
 HTTP 405
 Content-Type: application/problem+json
@@ -284,7 +272,6 @@ jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
-# Invalid method on not found
 PUT {{base}}/test/schemas/xxx.json
 HTTP 404
 Content-Type: application/problem+json

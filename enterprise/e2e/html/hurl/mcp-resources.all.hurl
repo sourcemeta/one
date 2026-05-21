@@ -1,4 +1,3 @@
-# resources/list page 1 enumerates the first 50 entries with nextCursor
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -278,8 +277,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/list page 2 follows the cursor and emits the next 50 entries
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -564,9 +561,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-
-# resources/list page 3 follows the cursor and emits the remaining 9 entries
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -665,9 +659,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-
-# resources/list rejects malformed cursors
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -701,8 +692,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/list rejects negative cursors
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -774,8 +763,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/list rejects cursors with leading zeros
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -810,8 +797,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/templates/list publishes the single registry URI template
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -844,8 +829,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with a malformed URI returns -32002
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -881,8 +864,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read with a URI in our space but pointing at no schema returns -32002
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -916,8 +897,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read of a real catalog schema URI
 
 GET {{base}}/test/object
 HTTP 200
@@ -959,8 +938,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read accepts the .json extension form of the URI
-
 GET {{base}}/test/object.json
 HTTP 200
 [Captures]
@@ -1000,8 +977,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with ?bundle=1 of a $ref-bearing schema
 
 GET {{base}}/self/v1/schemas/mcp/response?bundle=1
 HTTP 200

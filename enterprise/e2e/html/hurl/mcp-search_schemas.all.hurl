@@ -1,5 +1,3 @@
-# Single result
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -50,10 +48,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Round-trip: capture the resource_link URI from a search hit and read it back
-# through MCP `resources/read`. Verifies that the URI we advertise in
-# `content[k].uri` is actually a valid MCP resource.
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -147,8 +141,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Case insensitive query
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -195,8 +187,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Default limit
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -286,8 +276,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Explicit limit
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -331,8 +319,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# No matches
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -370,8 +356,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Schemas with empty title but a description: resource_link omits `name`
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -423,8 +407,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Schemas with a title but no description: resource_link omits `description`
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -474,8 +456,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Bare schemas (no title, no description): resource_link omits both fields
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -527,8 +507,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Explicit scope
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -576,8 +554,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Missing q argument
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -611,8 +587,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Limit below minimum
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -648,8 +622,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Limit above maximum
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -683,8 +655,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Limit is a float
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -720,8 +690,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Limit is a string
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -755,8 +723,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Empty scope
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -792,8 +758,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Duplicate scope entries
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -827,8 +791,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Invalid scope value
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -864,8 +826,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Extra property
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -900,8 +860,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Arguments is null
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -935,8 +893,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# String id
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json

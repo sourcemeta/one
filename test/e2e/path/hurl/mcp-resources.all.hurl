@@ -1,5 +1,3 @@
-# resources/templates/list publishes the single registry URI template
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -32,8 +30,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with a malformed URI returns -32002
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
@@ -69,8 +65,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read with a URI outside the registry's space returns -32002
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -104,8 +98,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with a URI in the host but missing the base path prefix returns -32002
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
@@ -141,8 +133,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read rejects URIs containing dot-segment traversal
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -176,8 +166,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read rejects URIs on the same host but outside the catalog space
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
@@ -213,8 +201,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read rejects relative URIs with absolute-path references
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -248,8 +234,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read with a URI in our space but pointing at no schema returns -32002
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

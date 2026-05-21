@@ -1,5 +1,3 @@
-# Discover then describe
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -39,8 +37,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Recurse into the discovered subdirectory
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
@@ -84,8 +80,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Fetch metadata for the discovered schema
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -125,8 +119,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Search then describe
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
@@ -206,8 +198,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Evaluate to failure, capture error location
-
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json
 ```
@@ -245,8 +235,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Trace the same evaluation, confirm step location matches
 
 POST {{base}}/v1/catalog/self/v1/mcp
 Content-Type: application/json

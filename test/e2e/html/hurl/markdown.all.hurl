@@ -1,4 +1,3 @@
-# Schema description renders markdown on the detail page
 GET {{base}}/test/doc/markdown
 Accept: text/html
 HTTP 200
@@ -17,7 +16,6 @@ Content-Type: text/html
 xpath "string(//h2[contains(@class, 'fw-bold')])" == "A **bold** title that must stay plain"
 xpath "boolean(//h2[contains(@class, 'fw-bold')]//strong)" == false
 
-# Directory description renders markdown
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
@@ -26,7 +24,6 @@ Content-Type: text/html
 xpath "boolean(//div[contains(@class, 'text-secondary')]//strong[text()='testing'])" == true
 xpath "boolean(//div[contains(@class, 'text-secondary')]//a[@href='https://example.com'][text()='link'])" == true
 
-# File manager table description column renders markdown
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
@@ -44,7 +41,6 @@ Content-Type: text/html
 xpath "boolean(//td//small[contains(text(), '**bold**')])" == true
 xpath "boolean(//td//small//strong)" == false
 
-# Alert renders markdown on schema page
 GET {{base}}/test/markdown-alert/example
 Accept: text/html
 HTTP 200
@@ -53,7 +49,6 @@ Content-Type: text/html
 xpath "boolean(//div[contains(@class, 'alert')]//strong[text()='important'])" == true
 xpath "boolean(//div[contains(@class, 'alert')]//a[@href='https://example.com'][text()='docs'])" == true
 
-# Health check messages are rendered through markdown (wrapped in <p> inside <div>)
 GET {{base}}/test/v2.0/schema
 Accept: text/html
 HTTP 200

@@ -1,5 +1,3 @@
-# resources/list is gated behind enterprise on community
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -30,8 +28,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# resources/read of a real catalog schema URI is gated behind enterprise on community
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
@@ -67,8 +63,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/read also accepts the `.json` extension form of the URI
-
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
@@ -102,8 +96,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
-
-# Same as above but with ?bundle=1 to exercise the bundled-variant resolution branch
 
 POST {{base}}/self/v1/mcp
 Content-Type: application/json

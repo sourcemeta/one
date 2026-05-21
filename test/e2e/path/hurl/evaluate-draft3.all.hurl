@@ -38,7 +38,6 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# Draft 3 per-property `required` enforced
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "name": "Ada" }
@@ -59,7 +58,6 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# Missing the Draft 3 required `name` property
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "age": 7 }
@@ -80,7 +78,6 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# Draft 3 `divisibleBy` keyword
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/divisible
 Content-Type: application/json
 9
@@ -95,7 +92,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == false
 
-# Cross-schema $ref under Draft 3 (with-ref -> string)
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/with-ref
 Content-Type: application/json
 { "tag": "alpha" }
@@ -123,7 +119,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == false
 
-# Trace coverage for a Draft 3 schema
 POST {{base}}/v1/catalog/self/v1/api/schemas/trace/draft3/string
 Content-Type: application/json
 "hello"

@@ -1,12 +1,211 @@
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
+{ "jsonrpc": "2.0", "id": "ping-identity", "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Content-Encoding" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "ping-identity"
+jsonpath "$.result" isObject
+jsonpath "$.result" isEmpty
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": "ping-gzip", "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Content-Encoding: gzip
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "ping-gzip"
+jsonpath "$.result" isObject
+jsonpath "$.result" isEmpty
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
 {
   "jsonrpc": "2.0",
-  "id": 700,
+  "id": "init-identity",
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": {},
+    "clientInfo": { "name": "hurl", "version": "1.0.0" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Content-Encoding" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "init-identity"
+jsonpath "$.result.protocolVersion" == "2025-11-25"
+jsonpath "$.result.capabilities.resources" isObject
+jsonpath "$.result.capabilities.resources" isEmpty
+jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
+jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
+jsonpath "$.result.serverInfo.version" matches "^.+$"
+jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "init-gzip",
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": {},
+    "clientInfo": { "name": "hurl", "version": "1.0.0" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Content-Encoding: gzip
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "init-gzip"
+jsonpath "$.result.protocolVersion" == "2025-11-25"
+jsonpath "$.result.capabilities.resources" isObject
+jsonpath "$.result.capabilities.resources" isEmpty
+jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
+jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
+jsonpath "$.result.serverInfo.version" matches "^.+$"
+jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": "tools-identity", "method": "tools/list" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Content-Encoding" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "tools-identity"
+jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools[0].name" == "list_directory"
+jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[10].name" == "search_schemas"
+jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": "tools-gzip", "method": "tools/list" }
+```
+HTTP 200
+Content-Type: application/json
+Content-Encoding: gzip
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "tools-gzip"
+jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools[0].name" == "list_directory"
+jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[10].name" == "search_schemas"
+jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "call-identity",
   "method": "tools/call",
   "params": {
-    "name": "get_schema_stats",
+    "name": "get_schema_health",
     "arguments": { "schema": "{{base}}/test/bare/01" }
   }
 }
@@ -20,17 +219,16 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 700
+jsonpath "$.id" == "call-identity"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/core']['$id']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/core']['$id']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/core']['$schema']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/core']['$schema']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 1
+jsonpath "$.result.structuredContent.score" == 0
+jsonpath "$.result.structuredContent.errors" count == 3
+variable "text" jsonpath "$.score" == 0
+variable "text" jsonpath "$.errors" count == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -41,20 +239,22 @@ HTTP 200
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
 Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 701,
+  "id": "call-gzip",
   "method": "tools/call",
   "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_schema_health",
+    "arguments": { "schema": "{{base}}/test/bare/01" }
   }
 }
 ```
 HTTP 200
 Content-Type: application/json
+Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
@@ -63,93 +263,14 @@ schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 701
+jsonpath "$.id" == "call-gzip"
 jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/applicator']['properties']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/applicator']['properties']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/core']['$id']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/core']['$id']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/core']['$schema']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/core']['$schema']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/meta-data']['description']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/meta-data']['description']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/meta-data']['examples']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/meta-data']['examples']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/meta-data']['title']" == 1
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/meta-data']['title']" == 1
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 2
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 2
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 702,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "test/object" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 702
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 2
-variable "text" jsonpath "$['https://json-schema.org/draft/2020-12/vocab/validation']['type']" == 2
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 710,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test/does-not-exist" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 710
-jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.structuredContent.score" == 0
+jsonpath "$.result.structuredContent.errors" count == 3
+variable "text" jsonpath "$.score" == 0
+variable "text" jsonpath "$.errors" count == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -164,12 +285,9 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 711,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test" }
-  }
+  "id": "rlist-identity",
+  "method": "resources/list",
+  "params": { "cursor": "100" }
 }
 ```
 HTTP 200
@@ -180,11 +298,124 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 711
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.id" == "rlist-identity"
+jsonpath "$.result.resources" count == 13
+jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/39"
+jsonpath "$.result.resources[0].name" == "39"
+jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
+jsonpath "$.result.nextCursor" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "rlist-gzip",
+  "method": "resources/list",
+  "params": { "cursor": "100" }
+}
+```
+HTTP 200
+Content-Type: application/json
+Content-Encoding: gzip
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "rlist-gzip"
+jsonpath "$.result.resources" count == 13
+jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/39"
+jsonpath "$.result.resources[0].name" == "39"
+jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
+jsonpath "$.result.nextCursor" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/test/object
+HTTP 200
+[Captures]
+schema_text: body
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "rread-identity",
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/test/object" }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Content-Encoding" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "rread-identity"
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/test/object"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{schema_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "rread-gzip",
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/test/object" }
+}
+```
+HTTP 200
+Content-Type: application/json
+Content-Encoding: gzip
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "rread-gzip"
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/test/object"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{schema_text}}"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -197,15 +428,7 @@ jsonpath "$.valid" == true
 POST {{base}}/self/v1/mcp
 Content-Type: application/json
 ```
-{
-  "jsonrpc": "2.0",
-  "id": 712,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "https://example.com/test/object" }
-  }
-}
+{ "jsonrpc": "2.0", "id": "tlist-identity", "method": "resources/templates/list" }
 ```
 HTTP 200
 Content-Type: application/json
@@ -215,10 +438,14 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 712
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.id" == "tlist-identity"
+jsonpath "$.result.resourceTemplates" count == 1
+jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
+jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog (optionally bundled)"
+jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -229,32 +456,27 @@ HTTP 200
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip
 Content-Type: application/json
 ```
-{
-  "jsonrpc": "2.0",
-  "id": 713,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test/foo/../object" }
-  }
-}
+{ "jsonrpc": "2.0", "id": "tlist-gzip", "method": "resources/templates/list" }
 ```
 HTTP 200
 Content-Type: application/json
+Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 713
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent" exists
-variable "text" jsonpath "$" exists
+jsonpath "$.id" == "tlist-gzip"
+jsonpath "$.result.resourceTemplates" count == 1
+jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
+jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog (optionally bundled)"
+jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -265,17 +487,10 @@ HTTP 200
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept-Encoding: gzip;q=0
 Content-Type: application/json
 ```
-{
-  "jsonrpc": "2.0",
-  "id": 714,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/../etc/passwd" }
-  }
-}
+{ "jsonrpc": "2.0", "id": "neg-gzip-q0", "method": "ping" }
 ```
 HTTP 200
 Content-Type: application/json
@@ -285,10 +500,11 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 714
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.id" == "neg-gzip-q0"
+jsonpath "$.result" isObject
+jsonpath "$.result" isEmpty
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -299,240 +515,13 @@ HTTP 200
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept-Encoding: identity;q=0
 Content-Type: application/json
 ```
-{
-  "jsonrpc": "2.0",
-  "id": 720,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": {}
-  }
-}
+{ "jsonrpc": "2.0", "id": "neg-identity-q0", "method": "ping" }
 ```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
+HTTP 406
+Content-Type: application/problem+json
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 720
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 721,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 721
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 722,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": 42 }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 722
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 723,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test/object", "extra": "foo" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 723
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 724,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats"
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 724
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 725,
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": null
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 725
-jsonpath "$.error.code" == -32600
-jsonpath "$.error.message" == "Invalid Request"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": "stats-call-string-id",
-  "method": "tools/call",
-  "params": {
-    "name": "get_schema_stats",
-    "arguments": { "schema": "{{base}}/test/object" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "stats-call-string-id"
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent" exists
-variable "text" jsonpath "$" exists
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
+jsonpath "$.status" == 406
+jsonpath "$.title" == "sourcemeta:one/cannot-satisfy-content-encoding"
