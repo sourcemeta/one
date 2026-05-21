@@ -13,8 +13,11 @@
 
 #include "action_serve_metapack_file_v1.h"
 
+#include <cstddef>     // std::size_t
 #include <filesystem>  // std::filesystem
+#include <set>         // std::set
 #include <span>        // std::span
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -98,11 +101,67 @@ public:
                                                   "Schema not found");
     }
 
+    if (this->artifact_ == "dependencies" || this->artifact_ == "dependents") {
+      return this->make_relation_envelope(request_id,
+                                          std::move(contents).value());
+    }
+
     return sourcemeta::one::mcp_make_tool_success(request_id,
                                                   std::move(contents).value());
   }
 
 private:
+  auto make_relation_envelope(const sourcemeta::core::JSON &request_id,
+                              sourcemeta::core::JSON &&result)
+      -> sourcemeta::core::JSON {
+    std::set<std::string> unique_uris;
+    for (std::size_t index{0}; index < result.array_size(); ++index) {
+      const auto &entry{result.at(index)};
+      for (const auto *const field : {"from", "to"}) {
+        if (!entry.defines(field)) {
+          continue;
+        }
+        const auto &uri{entry.at(field).to_string()};
+        if (uri.starts_with(this->server_uri())) {
+          unique_uris.emplace(uri);
+        }
+      }
+    }
+
+    auto content{sourcemeta::core::JSON::make_array()};
+
+    std::ostringstream payload;
+    sourcemeta::core::prettify(result, payload);
+    auto text_block{sourcemeta::core::JSON::make_object()};
+    text_block.assign_assume_new(std::string{"type"},
+                                 sourcemeta::core::JSON{"text"});
+    text_block.assign_assume_new(std::string{"text"},
+                                 sourcemeta::core::JSON{payload.str()});
+    content.push_back(std::move(text_block));
+
+    for (const auto &uri : unique_uris) {
+      auto resource_link{sourcemeta::core::JSON::make_object()};
+      resource_link.assign_assume_new(std::string{"type"},
+                                      sourcemeta::core::JSON{"resource_link"});
+      resource_link.assign_assume_new(std::string{"uri"},
+                                      sourcemeta::core::JSON{uri});
+      resource_link.assign_assume_new(
+          std::string{"mimeType"},
+          sourcemeta::core::JSON{"application/schema+json"});
+      content.push_back(std::move(resource_link));
+    }
+
+    auto envelope_result{sourcemeta::core::JSON::make_object()};
+    envelope_result.assign_assume_new(std::string{"content"},
+                                      std::move(content));
+    envelope_result.assign_assume_new(std::string{"structuredContent"},
+                                      std::move(result));
+    envelope_result.assign_assume_new(std::string{"isError"},
+                                      sourcemeta::core::JSON{false});
+    return sourcemeta::core::jsonrpc_make_success(request_id,
+                                                  std::move(envelope_result));
+  }
+
   std::string_view artifact_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;

@@ -65,6 +65,8 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 301
 jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.structuredContent" count == 0
 variable "text" jsonpath "$" count == 0
 
@@ -103,6 +105,14 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 302
 jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 3
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent" count == 1
 jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
@@ -145,10 +155,110 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 303
 jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 3
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent" count == 1
 jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$" count == 1
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Round-trip: capture a resource_link URI from a dependent entry, read it back
+# through MCP `resources/read` to verify the URI is a navigable resource.
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 304,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependents",
+    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/error" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+dependent_uri: jsonpath "$.result.content[2].uri"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 304
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 3
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent" count == 1
+jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$" count == 1
+variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/schemas/mcp/response
+HTTP 200
+[Captures]
+schema_text: body
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 305,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{dependent_uri}}"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 305
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{dependent_uri}}"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{schema_text}}"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -295,6 +405,8 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 313
 jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.structuredContent" count == 0
 variable "text" jsonpath "$" count == 0
 
@@ -584,6 +696,8 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "dependents-call-string-id"
 jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.structuredContent" count == 0
 variable "text" jsonpath "$" count == 0
 
