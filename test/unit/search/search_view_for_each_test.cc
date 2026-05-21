@@ -15,6 +15,7 @@
 
 struct VisitedEntry {
   std::string path;
+  std::string identifier;
   std::string title;
   std::string description;
   std::uint64_t bytes_raw;
@@ -64,6 +65,7 @@ static auto collect(sourcemeta::one::SearchView &view, std::size_t offset,
                 [&](const sourcemeta::one::SearchListEntry &entry) -> void {
                   visited.push_back(
                       {.path = std::string{entry.path},
+                       .identifier = std::string{entry.identifier},
                        .title = std::string{entry.title},
                        .description = std::string{entry.description},
                        .bytes_raw = entry.bytes_raw,
@@ -74,43 +76,51 @@ static auto collect(sourcemeta::one::SearchView &view, std::size_t offset,
 
 TEST(Search_view_for_each, visits_full_range) {
   const auto path{test_path("for_each_full.metapack")};
-  write_search_file(path,
-                    {{"/zebra", "Zebra Title", "Zebra Desc", 80, 11, 22},
-                     {"/apple", "Apple Title", "Apple Desc", 80, 33, 44},
-                     {"/mango", "Mango Title", "Mango Desc", 80, 55, 66}});
+  write_search_file(path, {{"/zebra", "http://example.com/zebra", "Zebra Title",
+                            "Zebra Desc", 80, 11, 22},
+                           {"/apple", "http://example.com/apple", "Apple Title",
+                            "Apple Desc", 80, 33, 44},
+                           {"/mango", "http://example.com/mango", "Mango Title",
+                            "Mango Desc", 80, 55, 66}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 0, 3),
-            (std::vector<VisitedEntry>{{.path = "/apple",
-                                        .title = "Apple Title",
-                                        .description = "Apple Desc",
-                                        .bytes_raw = 33,
-                                        .bytes_bundled = 44},
-                                       {.path = "/mango",
-                                        .title = "Mango Title",
-                                        .description = "Mango Desc",
-                                        .bytes_raw = 55,
-                                        .bytes_bundled = 66},
-                                       {.path = "/zebra",
-                                        .title = "Zebra Title",
-                                        .description = "Zebra Desc",
-                                        .bytes_raw = 11,
-                                        .bytes_bundled = 22}}));
+  EXPECT_EQ(collect(view, 0, 3), (std::vector<VisitedEntry>{
+                                     {.path = "/apple",
+                                      .identifier = "http://example.com/apple",
+                                      .title = "Apple Title",
+                                      .description = "Apple Desc",
+                                      .bytes_raw = 33,
+                                      .bytes_bundled = 44},
+                                     {.path = "/mango",
+                                      .identifier = "http://example.com/mango",
+                                      .title = "Mango Title",
+                                      .description = "Mango Desc",
+                                      .bytes_raw = 55,
+                                      .bytes_bundled = 66},
+                                     {.path = "/zebra",
+                                      .identifier = "http://example.com/zebra",
+                                      .title = "Zebra Title",
+                                      .description = "Zebra Desc",
+                                      .bytes_raw = 11,
+                                      .bytes_bundled = 22}}));
 }
 
 TEST(Search_view_for_each, visits_subset_with_offset) {
   const auto path{test_path("for_each_offset.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4},
-                           {"/c", "C Title", "C Desc", 80, 5, 6},
-                           {"/d", "D Title", "D Desc", 80, 7, 8}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4},
+             {"/c", "http://example.com/c", "C Title", "C Desc", 80, 5, 6},
+             {"/d", "http://example.com/d", "D Title", "D Desc", 80, 7, 8}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 1, 2),
             (std::vector<VisitedEntry>{{.path = "/b",
+                                        .identifier = "http://example.com/b",
                                         .title = "B Title",
                                         .description = "B Desc",
                                         .bytes_raw = 3,
                                         .bytes_bundled = 4},
                                        {.path = "/c",
+                                        .identifier = "http://example.com/c",
                                         .title = "C Title",
                                         .description = "C Desc",
                                         .bytes_raw = 5,
@@ -119,11 +129,13 @@ TEST(Search_view_for_each, visits_subset_with_offset) {
 
 TEST(Search_view_for_each, clamps_count_to_total) {
   const auto path{test_path("for_each_clamp.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 1, 100),
             (std::vector<VisitedEntry>{{.path = "/b",
+                                        .identifier = "http://example.com/b",
                                         .title = "B Title",
                                         .description = "B Desc",
                                         .bytes_raw = 3,
@@ -132,38 +144,43 @@ TEST(Search_view_for_each, clamps_count_to_total) {
 
 TEST(Search_view_for_each, skips_when_offset_at_end) {
   const auto path{test_path("for_each_end.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 2, 10), std::vector<VisitedEntry>{});
 }
 
 TEST(Search_view_for_each, skips_when_offset_past_end) {
   const auto path{test_path("for_each_past_end.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 99, 10), std::vector<VisitedEntry>{});
 }
 
 TEST(Search_view_for_each, skips_when_count_zero) {
   const auto path{test_path("for_each_zero.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 0, 0), std::vector<VisitedEntry>{});
 }
 
 TEST(Search_view_for_each, visit_order_matches_at) {
   const auto path{test_path("for_each_matches_at.metapack")};
-  write_search_file(path, {{"/zebra", "", "", 80, 11, 22},
-                           {"/apple", "", "", 80, 33, 44},
-                           {"/mango", "", "", 80, 55, 66}});
+  write_search_file(
+      path, {{"/zebra", "http://example.com/zebra", "", "", 80, 11, 22},
+             {"/apple", "http://example.com/apple", "", "", 80, 33, 44},
+             {"/mango", "http://example.com/mango", "", "", 80, 55, 66}});
   sourcemeta::one::SearchView view{path};
   const auto from_for_each{collect(view, 0, view.count())};
   std::vector<VisitedEntry> from_at;
   for (std::size_t index{0}; index < view.count(); ++index) {
     const auto entry{view.at(index)};
     from_at.push_back({.path = std::string{entry.path},
+                       .identifier = std::string{entry.identifier},
                        .title = std::string{entry.title},
                        .description = std::string{entry.description},
                        .bytes_raw = entry.bytes_raw,
@@ -174,28 +191,34 @@ TEST(Search_view_for_each, visit_order_matches_at) {
 
 TEST(Search_view_for_each, empty_strings_for_empty_metadata) {
   const auto path{test_path("for_each_empty_meta.metapack")};
-  write_search_file(path, {{"/only/path", "", "", 80, 7, 8}});
+  write_search_file(
+      path, {{"/only/path", "http://example.com/only/path", "", "", 80, 7, 8}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 0, 1),
-            (std::vector<VisitedEntry>{{.path = "/only/path",
-                                        .title = "",
-                                        .description = "",
-                                        .bytes_raw = 7,
-                                        .bytes_bundled = 8}}));
+  EXPECT_EQ(
+      collect(view, 0, 1),
+      (std::vector<VisitedEntry>{{.path = "/only/path",
+                                  .identifier = "http://example.com/only/path",
+                                  .title = "",
+                                  .description = "",
+                                  .bytes_raw = 7,
+                                  .bytes_bundled = 8}}));
 }
 
 TEST(Search_view_for_each, count_size_max_does_not_overflow) {
   const auto path{test_path("for_each_count_max.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 0, std::numeric_limits<std::size_t>::max()),
             (std::vector<VisitedEntry>{{.path = "/a",
+                                        .identifier = "http://example.com/a",
                                         .title = "A Title",
                                         .description = "A Desc",
                                         .bytes_raw = 1,
                                         .bytes_bundled = 2},
                                        {.path = "/b",
+                                        .identifier = "http://example.com/b",
                                         .title = "B Title",
                                         .description = "B Desc",
                                         .bytes_raw = 3,
@@ -204,11 +227,13 @@ TEST(Search_view_for_each, count_size_max_does_not_overflow) {
 
 TEST(Search_view_for_each, count_size_max_with_offset_does_not_overflow) {
   const auto path{test_path("for_each_count_max_offset.metapack")};
-  write_search_file(path, {{"/a", "A Title", "A Desc", 80, 1, 2},
-                           {"/b", "B Title", "B Desc", 80, 3, 4}});
+  write_search_file(
+      path, {{"/a", "http://example.com/a", "A Title", "A Desc", 80, 1, 2},
+             {"/b", "http://example.com/b", "B Title", "B Desc", 80, 3, 4}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 1, std::numeric_limits<std::size_t>::max()),
             (std::vector<VisitedEntry>{{.path = "/b",
+                                        .identifier = "http://example.com/b",
                                         .title = "B Title",
                                         .description = "B Desc",
                                         .bytes_raw = 3,
@@ -252,13 +277,14 @@ TEST(Search_view_for_each, malformed_record_offset_out_of_bounds_stops) {
 
 TEST(Search_view_for_each, malformed_record_field_lengths_stops) {
   const auto path{test_path("for_each_malformed_record_field.metapack")};
-  auto payload{
-      sourcemeta::one::make_search({{"/foo", "Title", "Desc", 80, 1, 2}})};
+  auto payload{sourcemeta::one::make_search(
+      {{"/foo", "http://example.com/foo", "Title", "Desc", 80, 1, 2}})};
   sourcemeta::one::SearchIndexHeader header{};
   std::memcpy(&header, payload.data(),
               sizeof(sourcemeta::one::SearchIndexHeader));
   sourcemeta::one::SearchRecordHeader bad_record{};
   bad_record.path_length = 60000;
+  bad_record.identifier_length = 60000;
   bad_record.title_length = 60000;
   bad_record.description_length = 60000;
   std::memcpy(payload.data() + header.records_offset, &bad_record,

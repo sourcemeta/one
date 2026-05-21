@@ -30,7 +30,9 @@ jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.structuredContent" count == 1
 variable "text" jsonpath "$" count == 1
 jsonpath "$.result.structuredContent[0].path" == "/test/object"
+jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$[0].path" == "/test/object"
+variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
 jsonpath "$.result.structuredContent[0].title" == "My Object"
 variable "text" jsonpath "$[0].title" == "My Object"
 jsonpath "$.result.structuredContent[0].description" == "An Object Example"
@@ -74,7 +76,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" count == 1
 variable "text" jsonpath "$" count == 1
 jsonpath "$.result.structuredContent[0].path" == "/test/object"
+jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$[0].path" == "/test/object"
+variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -228,7 +232,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" count == 1
 variable "text" jsonpath "$" count == 1
 jsonpath "$.result.structuredContent[0].path" == "/test/object"
+jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$[0].path" == "/test/object"
+variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -628,7 +634,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" count == 1
 variable "text" jsonpath "$" count == 1
 jsonpath "$.result.structuredContent[0].path" == "/test/object"
+jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$[0].path" == "/test/object"
+variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

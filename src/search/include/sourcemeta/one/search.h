@@ -21,6 +21,7 @@ namespace sourcemeta::one {
 
 struct SearchEntry {
   std::string path;
+  std::string identifier;
   std::string title;
   std::string description;
   std::uint8_t health;
@@ -30,6 +31,7 @@ struct SearchEntry {
 
 struct SearchListEntry {
   std::string_view path;
+  std::string_view identifier;
   std::string_view title;
   std::string_view description;
   std::uint64_t bytes_raw;
@@ -44,6 +46,7 @@ struct SearchIndexHeader {
 
 struct SearchRecordHeader {
   std::uint16_t path_length;
+  std::uint16_t identifier_length;
   std::uint16_t title_length;
   std::uint16_t description_length;
   std::uint64_t bytes_raw;

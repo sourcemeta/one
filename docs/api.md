@@ -292,6 +292,7 @@ be combined in any order (i.e. `scope=title,description`).
     | Property | Type | Required | Description |
     |----------|------|----------|-------------|
     | `/*/path` | String | Yes | The relative URL of the schema |
+    | `/*/identifier` | String | Yes | The absolute URL of the schema |
     | `/*/title` | String | No | The title of the schema (may be an empty string) |
     | `/*/description` | String | No | The description of the schema (may be an empty string). The web explorer renders this as Markdown |
 

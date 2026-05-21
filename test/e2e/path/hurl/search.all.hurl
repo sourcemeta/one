@@ -8,9 +8,11 @@ last_response: body
 [Asserts]
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/v1/catalog/draft3/string"
+jsonpath "$[0].identifier" == "http://localhost:8000/v1/catalog/draft3/string"
 jsonpath "$[0].title" == ""
 jsonpath "$[0].description" == ""
 jsonpath "$[1].path" == "/v1/catalog/example/string"
+jsonpath "$[1].identifier" == "http://localhost:8000/v1/catalog/example/string"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
 
