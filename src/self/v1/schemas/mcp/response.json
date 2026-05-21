@@ -78,6 +78,9 @@
             },
             "outputSchema": {
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
+            },
+            "annotations": {
+              "title": "Tool title"
             }
           }
         ]
