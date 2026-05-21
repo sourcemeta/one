@@ -73,15 +73,35 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
-search_response: body
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
 resource_uri: jsonpath "$.result.content[1].uri"
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1106
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 2
+jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].name" == "My Object"
+jsonpath "$.result.content[1].description" == "An Object Example"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent" count == 1
+jsonpath "$.result.structuredContent[0].path" == "/test/object"
+jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent[0].title" == "My Object"
+jsonpath "$.result.structuredContent[0].description" == "An Object Example"
+variable "text" jsonpath "$" count == 1
+variable "text" jsonpath "$[0].path" == "/test/object"
+variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$[0].title" == "My Object"
+variable "text" jsonpath "$[0].description" == "An Object Example"
 
-POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/mcp/response
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
-{{search_response}}
+{{last_response}}
 ```
 HTTP 200
 [Asserts]
