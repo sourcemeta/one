@@ -234,7 +234,7 @@ jsonpath "$.result.resources[42].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[42].name" == "response"
 jsonpath "$.result.resources[42].description" == "Sourcemeta One's response to a tool invocation"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 2161
+jsonpath "$.result.resources[42].size" == 3681
 jsonpath "$.result.resources[43].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/list/request"
 jsonpath "$.result.resources[43].name" == "request"
 jsonpath "$.result.resources[43].description" == "Request from a client to list MCP tools"

@@ -31,6 +31,34 @@
         ],
         "isError": true
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 53,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "[{\"path\":\"/test/object\",\"identifier\":\"https://example.com/test/object\",\"title\":\"My Object\",\"description\":\"An Object Example\"}]"
+          },
+          {
+            "type": "resource_link",
+            "uri": "https://example.com/test/object",
+            "name": "My Object",
+            "description": "An Object Example",
+            "mimeType": "application/schema+json"
+          }
+        ],
+        "structuredContent": [
+          {
+            "path": "/test/object",
+            "identifier": "https://example.com/test/object",
+            "title": "My Object",
+            "description": "An Object Example"
+          }
+        ],
+        "isError": false
+      }
     }
   ],
   "type": "object",
@@ -79,15 +107,41 @@
     "content": {
       "type": "array",
       "minItems": 1,
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [ "type", "text" ],
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
       "items": {
         "type": "object",
-        "required": [ "type", "text" ],
+        "required": [ "type", "uri", "mimeType" ],
         "properties": {
           "type": {
-            "const": "text"
+            "const": "resource_link"
           },
-          "text": {
+          "uri": {
+            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "type": "string",
+            "format": "uri"
+          },
+          "name": {
             "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "const": "application/schema+json"
           }
         },
         "additionalProperties": false

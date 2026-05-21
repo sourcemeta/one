@@ -206,8 +206,51 @@ public:
 
     auto result{
         this->search_view_.search(arguments.at("q").to_string(), limit, scope)};
-    return sourcemeta::one::mcp_make_tool_success(request_id,
-                                                  std::move(result));
+
+    auto content{sourcemeta::core::JSON::make_array()};
+
+    std::ostringstream payload;
+    sourcemeta::core::prettify(result, payload);
+    auto text_block{sourcemeta::core::JSON::make_object()};
+    text_block.assign_assume_new(std::string{"type"},
+                                 sourcemeta::core::JSON{"text"});
+    text_block.assign_assume_new(std::string{"text"},
+                                 sourcemeta::core::JSON{payload.str()});
+    content.push_back(std::move(text_block));
+
+    for (std::size_t index{0}; index < result.array_size(); ++index) {
+      const auto &entry{result.at(index)};
+      auto resource_link{sourcemeta::core::JSON::make_object()};
+      resource_link.assign_assume_new(std::string{"type"},
+                                      sourcemeta::core::JSON{"resource_link"});
+      resource_link.assign_assume_new(
+          std::string{"uri"},
+          sourcemeta::core::JSON{entry.at("identifier").to_string()});
+      const auto &name{entry.at("title").to_string()};
+      if (!name.empty()) {
+        resource_link.assign_assume_new(std::string{"name"},
+                                        sourcemeta::core::JSON{name});
+      }
+      const auto &description{entry.at("description").to_string()};
+      if (!description.empty()) {
+        resource_link.assign_assume_new(std::string{"description"},
+                                        sourcemeta::core::JSON{description});
+      }
+      resource_link.assign_assume_new(
+          std::string{"mimeType"},
+          sourcemeta::core::JSON{"application/schema+json"});
+      content.push_back(std::move(resource_link));
+    }
+
+    auto envelope_result{sourcemeta::core::JSON::make_object()};
+    envelope_result.assign_assume_new(std::string{"content"},
+                                      std::move(content));
+    envelope_result.assign_assume_new(std::string{"structuredContent"},
+                                      std::move(result));
+    envelope_result.assign_assume_new(std::string{"isError"},
+                                      sourcemeta::core::JSON{false});
+    return sourcemeta::core::jsonrpc_make_success(request_id,
+                                                  std::move(envelope_result));
   }
 
 private:
