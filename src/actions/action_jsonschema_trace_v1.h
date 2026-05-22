@@ -66,7 +66,8 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::JSON &request_id,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
            const std::string_view envelope) -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
@@ -103,7 +104,7 @@ public:
         ActionJSONSchemaTrace_v1::compile_template(template_path)};
     sourcemeta::blaze::Evaluator evaluator;
     return sourcemeta::one::mcp_make_tool_success(
-        request_id,
+        version, request_id,
         this->trace(
             evaluator, schema_template, arguments.at("instance"), template_path,
             &tracker,

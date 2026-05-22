@@ -63,7 +63,8 @@ public:
                                       response, this->error_schema_);
   }
 
-  auto mcp(const sourcemeta::core::JSON &request_id,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
@@ -88,7 +89,7 @@ public:
                                                   "Schema not found");
     }
 
-    return sourcemeta::one::mcp_make_tool_success(request_id,
+    return sourcemeta::one::mcp_make_tool_success(version, request_id,
                                                   std::move(contents).value());
   }
 

@@ -1,0 +1,171 @@
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1200,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "example", "limit": 3 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1200
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 4
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.content[1].name" == "Example With Both"
+jsonpath "$.result.content[1].description" == "A schema that has both a title and a description"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/example/description-only"
+jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].description" == "A schema with only a description and no title"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/v1/catalog/example/title-only"
+jsonpath "$.result.content[3].name" == "Example With Title Only"
+jsonpath "$.result.content[3].description" not exists
+jsonpath "$.result.content[3].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent" count == 3
+jsonpath "$.result.structuredContent[0].path" == "/v1/catalog/example/full"
+jsonpath "$.result.structuredContent[0].identifier" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.structuredContent[0].title" == "Example With Both"
+jsonpath "$.result.structuredContent[0].description" == "A schema that has both a title and a description"
+jsonpath "$.result.structuredContent[1].path" == "/v1/catalog/example/description-only"
+jsonpath "$.result.structuredContent[1].identifier" == "{{base}}/v1/catalog/example/description-only"
+jsonpath "$.result.structuredContent[1].title" == ""
+jsonpath "$.result.structuredContent[1].description" == "A schema with only a description and no title"
+jsonpath "$.result.structuredContent[2].path" == "/v1/catalog/example/title-only"
+jsonpath "$.result.structuredContent[2].identifier" == "{{base}}/v1/catalog/example/title-only"
+jsonpath "$.result.structuredContent[2].title" == "Example With Title Only"
+jsonpath "$.result.structuredContent[2].description" == ""
+variable "text" jsonpath "$" count == 3
+variable "text" jsonpath "$[0].path" == "/v1/catalog/example/full"
+variable "text" jsonpath "$[0].identifier" == "{{base}}/v1/catalog/example/full"
+variable "text" jsonpath "$[0].title" == "Example With Both"
+variable "text" jsonpath "$[0].description" == "A schema that has both a title and a description"
+variable "text" jsonpath "$[1].path" == "/v1/catalog/example/description-only"
+variable "text" jsonpath "$[1].identifier" == "{{base}}/v1/catalog/example/description-only"
+variable "text" jsonpath "$[1].title" == ""
+variable "text" jsonpath "$[1].description" == "A schema with only a description and no title"
+variable "text" jsonpath "$[2].path" == "/v1/catalog/example/title-only"
+variable "text" jsonpath "$[2].identifier" == "{{base}}/v1/catalog/example/title-only"
+variable "text" jsonpath "$[2].title" == "Example With Title Only"
+variable "text" jsonpath "$[2].description" == ""
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1201,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "Both", "limit": 1 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+resource_uri: jsonpath "$.result.content[1].uri"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1201
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 2
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.content[1].name" == "Example With Both"
+jsonpath "$.result.content[1].description" == "A schema that has both a title and a description"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent" count == 1
+jsonpath "$.result.structuredContent[0].path" == "/v1/catalog/example/full"
+jsonpath "$.result.structuredContent[0].identifier" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.structuredContent[0].title" == "Example With Both"
+jsonpath "$.result.structuredContent[0].description" == "A schema that has both a title and a description"
+variable "text" jsonpath "$" count == 1
+variable "text" jsonpath "$[0].path" == "/v1/catalog/example/full"
+variable "text" jsonpath "$[0].identifier" == "{{base}}/v1/catalog/example/full"
+variable "text" jsonpath "$[0].title" == "Example With Both"
+variable "text" jsonpath "$[0].description" == "A schema that has both a title and a description"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/v1/catalog/example/full
+HTTP 200
+[Captures]
+schema_text: body
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1202,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{resource_uri}}"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1202
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{resource_uri}}"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{schema_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

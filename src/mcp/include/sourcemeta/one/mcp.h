@@ -5,18 +5,32 @@
 #include <sourcemeta/core/jsonrpc.h>
 
 #include <cstddef>     // std::size_t
-#include <cstdint>     // std::int64_t
+#include <cstdint>     // std::int64_t, std::uint8_t
 #include <optional>    // std::optional
 #include <string_view> // std::string_view
+#include <utility>     // std::unreachable
 
 namespace sourcemeta::one {
 
-constexpr std::string_view MCP_PROTOCOL_VERSION{"2025-11-25"};
+enum class MCPProtocolVersion : std::uint8_t {
+  V_2025_03_26,
+  V_2025_06_18,
+  V_2025_11_25,
+};
 
-// Per the streamable-HTTP transport spec, the protocol revision that pre-dates
-// the `MCP-Protocol-Version` header is the assumed default when no header is
-// sent and must still be honored when sent explicitly.
-constexpr std::string_view MCP_LEGACY_PROTOCOL_VERSION{"2025-03-26"};
+constexpr auto
+mcp_protocol_version_string(const MCPProtocolVersion version) noexcept
+    -> std::string_view {
+  switch (version) {
+    case MCPProtocolVersion::V_2025_03_26:
+      return "2025-03-26";
+    case MCPProtocolVersion::V_2025_06_18:
+      return "2025-06-18";
+    case MCPProtocolVersion::V_2025_11_25:
+      return "2025-11-25";
+  }
+  std::unreachable();
+}
 
 constexpr std::string_view MCP_METHOD_INITIALIZE{"initialize"};
 constexpr std::string_view MCP_METHOD_PING{"ping"};
@@ -33,16 +47,19 @@ constexpr std::int64_t MCP_CODE_RESOURCE_NOT_FOUND{-32002};
 
 auto mcp_make_text_block(std::string_view text) -> sourcemeta::core::JSON;
 
-auto mcp_make_resource_link(std::string_view uri, std::string_view mime_type,
+auto mcp_make_resource_link(MCPProtocolVersion version, std::string_view uri,
+                            std::string_view mime_type,
                             std::string_view name = {},
                             std::string_view description = {})
     -> sourcemeta::core::JSON;
 
-auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
+auto mcp_make_tool_success(MCPProtocolVersion version,
+                           const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON result)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
+auto mcp_make_tool_success(MCPProtocolVersion version,
+                           const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON structured,
                            sourcemeta::core::JSON content_blocks)
     -> sourcemeta::core::JSON;
@@ -75,13 +92,13 @@ auto mcp_make_resource_template(std::string_view uri_template,
     -> sourcemeta::core::JSON;
 
 auto mcp_make_tool_descriptor(
-    std::string_view name, std::string_view description,
-    sourcemeta::core::JSON input_schema,
+    MCPProtocolVersion version, std::string_view name,
+    std::string_view description, sourcemeta::core::JSON input_schema,
     std::optional<sourcemeta::core::JSON> output_schema = std::nullopt,
     std::optional<sourcemeta::core::JSON> annotations = std::nullopt)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_initialize_result(std::string_view protocol_version,
+auto mcp_make_initialize_result(const sourcemeta::core::JSON &params,
                                 sourcemeta::core::JSON capabilities,
                                 sourcemeta::core::JSON server_info,
                                 std::string_view instructions = {})
@@ -103,10 +120,44 @@ constexpr auto mcp_is_request_method(const std::string_view method) noexcept
 }
 
 constexpr auto
-mcp_is_supported_protocol_version(const std::string_view version) noexcept
+mcp_resolve_protocol_version(const std::string_view header) noexcept
+    -> std::optional<MCPProtocolVersion> {
+  if (header.empty()) {
+    return MCPProtocolVersion::V_2025_03_26;
+  }
+  if (header == "2025-11-25") {
+    return MCPProtocolVersion::V_2025_11_25;
+  }
+  if (header == "2025-06-18") {
+    return MCPProtocolVersion::V_2025_06_18;
+  }
+  if (header == "2025-03-26") {
+    return MCPProtocolVersion::V_2025_03_26;
+  }
+  return std::nullopt;
+}
+
+constexpr auto
+mcp_supports_output_schema(const MCPProtocolVersion version) noexcept -> bool {
+  return version != MCPProtocolVersion::V_2025_03_26;
+}
+
+constexpr auto
+mcp_supports_structured_content(const MCPProtocolVersion version) noexcept
     -> bool {
-  return version == MCP_PROTOCOL_VERSION ||
-         version == MCP_LEGACY_PROTOCOL_VERSION;
+  return version != MCPProtocolVersion::V_2025_03_26;
+}
+
+constexpr auto
+mcp_supports_resource_link_content(const MCPProtocolVersion version) noexcept
+    -> bool {
+  return version != MCPProtocolVersion::V_2025_03_26;
+}
+
+constexpr auto
+mcp_supports_implementation_title(const MCPProtocolVersion version) noexcept
+    -> bool {
+  return version != MCPProtocolVersion::V_2025_03_26;
 }
 
 } // namespace sourcemeta::one

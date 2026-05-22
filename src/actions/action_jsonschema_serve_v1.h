@@ -85,7 +85,8 @@ public:
     serve(*this, matches.front(), request, response, this->error_schema_);
   }
 
-  auto mcp(const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }

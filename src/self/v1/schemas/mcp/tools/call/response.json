@@ -74,7 +74,7 @@
       "anyOf": [
         {
           "type": "object",
-          "required": [ "content", "structuredContent", "isError" ],
+          "required": [ "content", "isError" ],
           "properties": {
             "content": {
               "$ref": "#/$defs/content"
@@ -123,28 +123,45 @@
         }
       ],
       "items": {
-        "type": "object",
-        "required": [ "type", "uri", "mimeType" ],
-        "properties": {
-          "type": {
-            "const": "resource_link"
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [ "type", "text" ],
+            "properties": {
+              "type": {
+                "const": "text"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
           },
-          "uri": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
-            "type": "string",
-            "format": "uri"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "mimeType": {
-            "const": "application/schema+json"
+          {
+            "type": "object",
+            "required": [ "type", "uri", "mimeType" ],
+            "properties": {
+              "type": {
+                "const": "resource_link"
+              },
+              "uri": {
+                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "type": "string",
+                "format": "uri"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "mimeType": {
+                "const": "application/schema+json"
+              }
+            },
+            "additionalProperties": false
           }
-        },
-        "additionalProperties": false
+        ]
       }
     }
   }

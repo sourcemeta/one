@@ -8,8 +8,9 @@ TEST(MCP, tool_success_with_object_result) {
   const auto identifier{sourcemeta::core::JSON{1}};
   auto result{sourcemeta::core::JSON::make_object()};
   result.assign("foo", sourcemeta::core::JSON{42});
-  const auto envelope{
-      sourcemeta::one::mcp_make_tool_success(identifier, std::move(result))};
+  const auto envelope{sourcemeta::one::mcp_make_tool_success(
+      sourcemeta::one::MCPProtocolVersion::V_2025_11_25, identifier,
+      std::move(result))};
   const auto expected{sourcemeta::core::parse_json(R"JSON({
     "jsonrpc": "2.0",
     "id": 1,
@@ -27,7 +28,8 @@ TEST(MCP, tool_success_with_object_result) {
 TEST(MCP, tool_success_with_array_result) {
   const auto identifier{sourcemeta::core::JSON{"abc"}};
   const auto envelope{sourcemeta::one::mcp_make_tool_success(
-      identifier, sourcemeta::core::parse_json(R"([ 1, 2, 3 ])"))};
+      sourcemeta::one::MCPProtocolVersion::V_2025_11_25, identifier,
+      sourcemeta::core::parse_json(R"([ 1, 2, 3 ])"))};
   const auto expected{sourcemeta::core::parse_json(R"JSON({
     "jsonrpc": "2.0",
     "id": "abc",
@@ -44,6 +46,7 @@ TEST(MCP, tool_success_with_array_result) {
 
 TEST(MCP, tool_success_with_null_id) {
   const auto envelope{sourcemeta::one::mcp_make_tool_success(
+      sourcemeta::one::MCPProtocolVersion::V_2025_11_25,
       sourcemeta::core::JSON{nullptr}, sourcemeta::core::JSON::make_object())};
   const auto expected{sourcemeta::core::parse_json(R"JSON({
     "jsonrpc": "2.0",

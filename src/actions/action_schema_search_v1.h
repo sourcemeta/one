@@ -160,7 +160,8 @@ public:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto mcp(const sourcemeta::core::JSON &request_id,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
@@ -202,12 +203,13 @@ public:
     for (std::size_t index{0}; index < result.array_size(); ++index) {
       const auto &entry{result.at(index)};
       content.push_back(sourcemeta::one::mcp_make_resource_link(
-          entry.at("identifier").to_string(), "application/schema+json",
-          entry.at("title").to_string(), entry.at("description").to_string()));
+          version, entry.at("identifier").to_string(),
+          "application/schema+json", entry.at("title").to_string(),
+          entry.at("description").to_string()));
     }
 
-    return sourcemeta::one::mcp_make_tool_success(request_id, std::move(result),
-                                                  std::move(content));
+    return sourcemeta::one::mcp_make_tool_success(
+        version, request_id, std::move(result), std::move(content));
   }
 
 private:

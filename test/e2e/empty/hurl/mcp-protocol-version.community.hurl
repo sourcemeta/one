@@ -1,0 +1,110 @@
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1
+jsonpath "$.error.code" == 1
+jsonpath "$.error.message" == "Enterprise edition required"
+jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-06-18
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1
+jsonpath "$.error.code" == 1
+jsonpath "$.error.message" == "Enterprise edition required"
+jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-03-26
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1
+jsonpath "$.error.code" == 1
+jsonpath "$.error.message" == "Enterprise edition required"
+jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2024-11-05
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 400
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == null
+jsonpath "$.error.code" == 3
+jsonpath "$.error.message" == "Unsupported protocol version"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
