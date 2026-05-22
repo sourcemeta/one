@@ -243,7 +243,7 @@ jsonpath "$.result.resources[44].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[44].name" == "response"
 jsonpath "$.result.resources[44].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[44].size" == 3061
+jsonpath "$.result.resources[44].size" == 3117
 jsonpath "$.result.resources[45].uri" == "{{base}}/v1/catalog/example/full"
 jsonpath "$.result.resources[45].name" == "full"
 jsonpath "$.result.resources[45].description" == "A schema that has both a title and a description"

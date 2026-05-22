@@ -71,8 +71,7 @@ auto ActionMCP_v1::on_tools_list(
     -> sourcemeta::core::JSON {
   const auto &precomputed{
       this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_TOOLS_LIST)};
-  if (sourcemeta::one::mcp_supports_output_schema(version) &&
-      sourcemeta::one::mcp_supports_annotations_title(version)) {
+  if (sourcemeta::one::mcp_supports_output_schema(version)) {
     return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
                                                   precomputed);
   }

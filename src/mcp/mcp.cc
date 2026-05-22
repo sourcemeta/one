@@ -174,15 +174,8 @@ auto mcp_make_tool_descriptor(
                             std::move(output_schema).value());
   }
   if (annotations.has_value()) {
-    auto annotations_value{std::move(annotations).value()};
-    if (!mcp_supports_annotations_title(version) &&
-        annotations_value.is_object() && annotations_value.defines("title")) {
-      annotations_value.erase("title");
-    }
-    if (!annotations_value.is_object() || !annotations_value.empty()) {
-      entry.assign_assume_new(std::string{"annotations"},
-                              std::move(annotations_value));
-    }
+    entry.assign_assume_new(std::string{"annotations"},
+                            std::move(annotations).value());
   }
   return entry;
 }

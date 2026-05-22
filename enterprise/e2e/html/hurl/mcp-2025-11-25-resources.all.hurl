@@ -243,7 +243,7 @@ jsonpath "$.result.resources[44].uri" == "{{base}}/self/v1/schemas/mcp/tools/lis
 jsonpath "$.result.resources[44].name" == "response"
 jsonpath "$.result.resources[44].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[44].size" == 3050
+jsonpath "$.result.resources[44].size" == 3106
 jsonpath "$.result.resources[45].uri" == "{{base}}/test/object"
 jsonpath "$.result.resources[45].name" == "object"
 jsonpath "$.result.resources[45].description" == "An Object Example"

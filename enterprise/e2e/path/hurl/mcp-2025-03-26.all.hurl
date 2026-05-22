@@ -175,26 +175,46 @@ jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/rpc"
+jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
 jsonpath "$.result.tools[1].description" == "Look up the dependency graph of a specific schema (incoming or outgoing)"
 jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc"
+jsonpath "$.result.tools[1].annotations.title" == "Get Schema Dependencies"
 jsonpath "$.result.tools[2].name" == "get_schema_dependents"
+jsonpath "$.result.tools[2].annotations.title" == "Get Schema Dependents"
 jsonpath "$.result.tools[3].name" == "get_schema_health"
+jsonpath "$.result.tools[3].annotations.title" == "Get Schema Health"
 jsonpath "$.result.tools[4].name" == "get_schema_locations"
+jsonpath "$.result.tools[4].annotations.title" == "Get Schema Locations"
 jsonpath "$.result.tools[5].name" == "get_schema_positions"
+jsonpath "$.result.tools[5].annotations.title" == "Get Schema Positions"
 jsonpath "$.result.tools[6].name" == "get_schema_stats"
+jsonpath "$.result.tools[6].annotations.title" == "Get Schema Stats"
 jsonpath "$.result.tools[7].name" == "get_schema_metadata"
+jsonpath "$.result.tools[7].annotations.title" == "Get Schema Metadata"
 jsonpath "$.result.tools[8].name" == "evaluate_schema"
+jsonpath "$.result.tools[8].annotations.title" == "Evaluate Schema"
 jsonpath "$.result.tools[9].name" == "trace_schema_evaluation"
+jsonpath "$.result.tools[9].annotations.title" == "Trace Schema Evaluation"
 jsonpath "$.result.tools[10].name" == "search_schemas"
+jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
 # Added in 2025-06-18 ("outputSchema" on Tool)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$..outputSchema" not exists
-# Added in 2025-06-18 ("title" on Tool and on annotations)
+# Added in 2025-06-18 ("title" on Tool, distinct from `annotations.title`,
+# which was already present in 2025-03-26's ToolAnnotations)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
-jsonpath "$..title" not exists
-# Annotations object collapses to empty after stripping title, so we omit it.
-jsonpath "$..annotations" not exists
+jsonpath "$.result.tools[0].title" not exists
+jsonpath "$.result.tools[1].title" not exists
+jsonpath "$.result.tools[2].title" not exists
+jsonpath "$.result.tools[3].title" not exists
+jsonpath "$.result.tools[4].title" not exists
+jsonpath "$.result.tools[5].title" not exists
+jsonpath "$.result.tools[6].title" not exists
+jsonpath "$.result.tools[7].title" not exists
+jsonpath "$.result.tools[8].title" not exists
+jsonpath "$.result.tools[9].title" not exists
+jsonpath "$.result.tools[10].title" not exists
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

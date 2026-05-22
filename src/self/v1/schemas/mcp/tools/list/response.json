@@ -43,7 +43,7 @@
           "uniqueItems": true,
           "items": {
             "type": "object",
-            "required": [ "name", "description", "inputSchema" ],
+            "required": [ "name", "description", "inputSchema", "annotations" ],
             "properties": {
               "name": {
                 "type": "string",
@@ -81,6 +81,7 @@
               },
               "annotations": {
                 "type": "object",
+                "required": [ "title" ],
                 "properties": {
                   "title": {
                     "type": "string",

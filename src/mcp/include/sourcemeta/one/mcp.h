@@ -155,12 +155,6 @@ mcp_supports_resource_link_content(const MCPProtocolVersion version) noexcept
 }
 
 constexpr auto
-mcp_supports_annotations_title(const MCPProtocolVersion version) noexcept
-    -> bool {
-  return version != MCPProtocolVersion::V_2025_03_26;
-}
-
-constexpr auto
 mcp_supports_implementation_title(const MCPProtocolVersion version) noexcept
     -> bool {
   return version != MCPProtocolVersion::V_2025_03_26;
