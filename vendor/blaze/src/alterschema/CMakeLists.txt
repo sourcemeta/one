@@ -1,7 +1,7 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT blaze NAME alterschema
   FOLDER "Blaze/AlterSchema"
   PRIVATE_HEADERS error.h transformer.h
-  SOURCES alterschema.cc schema_rule.cc transformer.cc
+  SOURCES alterschema.cc schema_rule.cc transformer.cc wrap.cc
     # Canonicalizer
     canonicalizer/additional_items_implicit.h
     canonicalizer/comment_drop.h
@@ -121,6 +121,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT blaze NAME alterschema
 
     # Linter
     linter/comment_trim.h
+    linter/conflicting_readonly_writeonly.h
     linter/const_not_in_enum.h
     linter/content_schema_default.h
     linter/definitions_to_defs.h
@@ -168,7 +169,9 @@ if(BLAZE_INSTALL)
 endif()
 
 target_link_libraries(sourcemeta_blaze_alterschema PUBLIC
-  sourcemeta::core::jsonschema)
+  sourcemeta::blaze::foundation)
+target_link_libraries(sourcemeta_blaze_alterschema PUBLIC
+  sourcemeta::blaze::frame)
 target_link_libraries(sourcemeta_blaze_alterschema PUBLIC
   sourcemeta::blaze::compiler)
 target_link_libraries(sourcemeta_blaze_alterschema PRIVATE

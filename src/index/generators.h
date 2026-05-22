@@ -10,11 +10,15 @@
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/blaze/alterschema.h>
-#include <sourcemeta/core/editorschema.h>
+#include <sourcemeta/blaze/bundle.h>
+#include <sourcemeta/blaze/editor.h>
+#include <sourcemeta/blaze/format.h>
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/frame.h>
+#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
-#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
@@ -112,7 +116,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{resolver(action.data)};
     assert(schema.has_value());
-    const auto dialect_identifier{sourcemeta::core::dialect(schema.value())};
+    const auto dialect_identifier{sourcemeta::blaze::dialect(schema.value())};
     assert(!dialect_identifier.empty());
     const auto metaschema{resolver(dialect_identifier, callback)};
     assert(metaschema.has_value());
@@ -132,7 +136,7 @@ struct GENERATE_MATERIALISED_SCHEMA {
     // heuristic to avoid the cost of resolving the base dialect
     // on most of them
     if (schema->is_object() && schema->defines("$vocabulary")) {
-      const auto declared_vocabularies{sourcemeta::core::parse_vocabularies(
+      const auto declared_vocabularies{sourcemeta::blaze::parse_vocabularies(
           schema.value(),
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
@@ -144,8 +148,8 @@ struct GENERATE_MATERIALISED_SCHEMA {
       }
     }
 
-    sourcemeta::core::format(
-        schema.value(), sourcemeta::core::schema_walker,
+    sourcemeta::blaze::format(
+        schema.value(), sourcemeta::blaze::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -173,7 +177,7 @@ private:
     const auto match{cache.find(cache_key)};
     if (match == cache.cend()) {
       auto schema_template{sourcemeta::blaze::compile(
-          schema, sourcemeta::core::schema_walker,
+          schema, sourcemeta::blaze::schema_walker,
           [&resolver](const auto identifier) { return resolver(identifier); },
           sourcemeta::blaze::default_schema_compiler,
           // The point of this class is to show nice errors to the user
@@ -231,9 +235,9 @@ struct GENERATE_FRAME_LOCATIONS {
     sourcemeta::core::JSON parsed{nullptr};
     sourcemeta::core::parse_json(contents_stream.str(), parsed,
                                  std::ref(tracker));
-    sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::Locations};
-    frame.analyse(contents, sourcemeta::core::schema_walker,
+    sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Locations};
+    frame.analyse(contents, sourcemeta::blaze::schema_walker,
                   [&callback, &resolver](const auto identifier) {
                     return resolver(identifier, callback);
                   });
@@ -260,8 +264,8 @@ struct GENERATE_DEPENDENCIES {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
-    sourcemeta::core::dependencies(
-        contents, sourcemeta::core::schema_walker,
+    sourcemeta::blaze::dependencies(
+        contents, sourcemeta::blaze::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -388,7 +392,7 @@ struct GENERATE_HEALTH {
     auto &cache_entry{bundle_for(collection, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
     const auto result{cache_entry.bundle.check(
-        contents, sourcemeta::core::schema_walker,
+        contents, sourcemeta::blaze::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -482,14 +486,14 @@ struct GENERATE_BUNDLE {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
-    sourcemeta::core::bundle(schema, sourcemeta::core::schema_walker,
-                             [&callback, &resolver](const auto identifier) {
-                               return resolver(identifier, callback);
-                             });
-    const auto dialect_identifier{sourcemeta::core::dialect(schema)};
+    sourcemeta::blaze::bundle(schema, sourcemeta::blaze::schema_walker,
+                              [&callback, &resolver](const auto identifier) {
+                                return resolver(identifier, callback);
+                              });
+    const auto dialect_identifier{sourcemeta::blaze::dialect(schema)};
     assert(!dialect_identifier.empty());
-    sourcemeta::core::format(
-        schema, sourcemeta::core::schema_walker,
+    sourcemeta::blaze::format(
+        schema, sourcemeta::blaze::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -518,14 +522,15 @@ struct GENERATE_EDITOR {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
-    sourcemeta::core::for_editor(schema, sourcemeta::core::schema_walker,
-                                 [&callback, &resolver](const auto identifier) {
-                                   return resolver(identifier, callback);
-                                 });
-    const auto dialect_identifier{sourcemeta::core::dialect(schema)};
+    sourcemeta::blaze::for_editor(
+        schema, sourcemeta::blaze::schema_walker,
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        });
+    const auto dialect_identifier{sourcemeta::blaze::dialect(schema)};
     assert(!dialect_identifier.empty());
-    sourcemeta::core::format(
-        schema, sourcemeta::core::schema_walker,
+    sourcemeta::blaze::format(
+        schema, sourcemeta::blaze::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -553,14 +558,14 @@ static auto generate_blaze_template(
       sourcemeta::one::metapack_read_json(dependencies.front())};
   assert(contents_option.has_value());
   const auto &contents{contents_option.value()};
-  sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::References};
-  frame.analyse(contents, sourcemeta::core::schema_walker,
+  sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::References};
+  frame.analyse(contents, sourcemeta::blaze::schema_walker,
                 [&callback, &resolver](const auto identifier) {
                   return resolver(identifier, callback);
                 });
   const auto schema_template{sourcemeta::blaze::compile(
-      contents, sourcemeta::core::schema_walker,
+      contents, sourcemeta::blaze::schema_walker,
       [&callback, &resolver](const auto identifier) {
         return resolver(identifier, callback);
       },
@@ -613,8 +618,8 @@ struct GENERATE_STATS {
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
-    for (const auto &entry : sourcemeta::core::SchemaIterator{
-             schema, sourcemeta::core::schema_walker,
+    for (const auto &entry : sourcemeta::blaze::SchemaIterator{
+             schema, sourcemeta::blaze::schema_walker,
              [&callback, &resolver](const auto identifier) {
                return resolver(identifier, callback);
              }}) {
@@ -623,10 +628,10 @@ struct GENERATE_STATS {
       }
 
       for (const auto &property : entry.subschema.get().as_object()) {
-        const auto &walker_result{sourcemeta::core::schema_walker(
+        const auto &walker_result{sourcemeta::blaze::schema_walker(
             property.first, entry.vocabularies)};
         if (walker_result.vocabulary.has_value()) {
-          result[std::string{sourcemeta::core::to_string(
+          result[std::string{sourcemeta::blaze::to_string(
               walker_result.vocabulary.value())}][property.first] += 1;
         } else {
           result["unknown"][property.first] += 1;

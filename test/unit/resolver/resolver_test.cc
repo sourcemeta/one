@@ -3,6 +3,8 @@
 #include <memory> // std::shared_ptr
 #include <vector> // std::vector
 
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 
@@ -112,7 +114,7 @@ TEST_F(ResolverTest, duplicate_id) {
 
   EXPECT_THROW(RESOLVER_IMPORT(resolver, "example",
                                "2020-12-with-id-json-duplicate.json"),
-               sourcemeta::core::SchemaFrameError);
+               sourcemeta::blaze::SchemaFrameError);
 }
 
 TEST_F(ResolverTest, case_insensitive_lookup) {
@@ -149,7 +151,7 @@ TEST_F(ResolverTest, example_official_2020_12_meta) {
   EXPECT_TRUE(
       resolver("https://json-schema.org/draft/2020-12/schema").has_value());
   EXPECT_EQ(resolver("https://json-schema.org/draft/2020-12/schema"),
-            sourcemeta::core::schema_resolver(
+            sourcemeta::blaze::schema_resolver(
                 "https://json-schema.org/draft/2020-12/schema"));
 }
 
@@ -446,7 +448,7 @@ TEST_F(ResolverTest, example_2020_12_meta_schema) {
 
   // We can't resolve it yet until we first satisfy the metaschema
   EXPECT_THROW(resolver(schema_result.first.get()),
-               sourcemeta::core::SchemaResolutionError);
+               sourcemeta::blaze::SchemaResolutionError);
 
   // Note we add the metaschema AFTER the schema
   RESOLVER_IMPORT(resolver, "example", "2020-12-meta.json");
@@ -562,7 +564,7 @@ TEST_F(ResolverTest, non_schema_file) {
 TEST_F(ResolverTest, no_dialect) {
   sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   EXPECT_THROW(RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json"),
-               sourcemeta::core::SchemaUnknownDialectError);
+               sourcemeta::blaze::SchemaUnknownDialectError);
 }
 
 TEST_F(ResolverTest, non_string_ref_no_crash) {
@@ -570,7 +572,7 @@ TEST_F(ResolverTest, non_string_ref_no_crash) {
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "non-string-ref.json")};
   EXPECT_THROW(resolver(result.first.get()),
-               sourcemeta::core::SchemaReferenceObjectResourceError);
+               sourcemeta::blaze::SchemaReferenceObjectResourceError);
 }
 
 TEST_F(ResolverTest, no_base_anonymous) {

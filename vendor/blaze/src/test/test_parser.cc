@@ -10,6 +10,18 @@
 #include <utility>     // std::move
 
 namespace {
+inline auto wrap_identifier(const std::string_view identifier)
+    -> sourcemeta::core::JSON {
+  auto result{sourcemeta::core::JSON::make_object()};
+  // JSON Schema 2020-12 is the first dialect that truly supports cross-dialect
+  // references In practice, others do, but we can play it safe here
+  result.assign_assume_new(
+      "$schema",
+      sourcemeta::core::JSON{"https://json-schema.org/draft/2020-12/schema"});
+  result.assign_assume_new("$ref", sourcemeta::core::JSON{identifier});
+  return result;
+}
+
 inline auto TEST_ERROR_IF(
     bool condition, const sourcemeta::core::PointerPositionTracker &tracker,
     const sourcemeta::core::Pointer &pointer, const char *message) -> void {
@@ -89,8 +101,8 @@ auto TestCase::parse(
 auto TestSuite::parse(const sourcemeta::core::JSON &document,
                       const sourcemeta::core::PointerPositionTracker &tracker,
                       const std::filesystem::path &base_path,
-                      const sourcemeta::core::SchemaResolver &schema_resolver,
-                      const sourcemeta::core::SchemaWalker &walker,
+                      const sourcemeta::blaze::SchemaResolver &schema_resolver,
+                      const sourcemeta::blaze::SchemaWalker &walker,
                       const Compiler &compiler,
                       const std::string_view default_dialect,
                       const std::string_view default_id,
@@ -158,7 +170,7 @@ auto TestSuite::parse(const sourcemeta::core::JSON &document,
   test_suite.schemas_exhaustive.reserve(test_suite.targets.size());
 
   for (const auto &target : test_suite.targets) {
-    const auto target_schema{sourcemeta::core::wrap(target)};
+    const auto target_schema{wrap_identifier(target)};
 
     try {
       test_suite.schemas_fast.push_back(compile(
@@ -167,10 +179,10 @@ auto TestSuite::parse(const sourcemeta::core::JSON &document,
       test_suite.schemas_exhaustive.push_back(
           compile(target_schema, walker, schema_resolver, compiler,
                   Mode::Exhaustive, default_dialect, default_id, "", tweaks));
-    } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
       if (error.location() == sourcemeta::core::Pointer{"$ref"} &&
           error.identifier() == target) {
-        throw sourcemeta::core::SchemaResolutionError{
+        throw sourcemeta::blaze::SchemaResolutionError{
             target, "Could not resolve schema under test"};
       }
 

@@ -2,8 +2,10 @@
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/frame.h>
+#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/error.h>
-#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -137,7 +139,7 @@ auto Resolver::operator()(
   auto result{this->views.find(identifier)};
   // If we don't recognise the schema, try a fallback as a last resort
   if (result == this->views.cend()) {
-    return sourcemeta::core::schema_resolver(identifier);
+    return sourcemeta::blaze::schema_resolver(identifier);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -151,7 +153,7 @@ auto Resolver::operator()(
         sourcemeta::one::metapack_read_json(result->second.cache_path.value())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
-    assert(sourcemeta::core::is_schema(schema));
+    assert(sourcemeta::blaze::is_schema(schema));
     if (callback) {
       callback(result->second.cache_path.value());
     }
@@ -164,7 +166,7 @@ auto Resolver::operator()(
   /////////////////////////////////////////////////////////////////////////////
 
   auto schema{sourcemeta::core::read_yaml_or_json(result->second.path)};
-  assert(sourcemeta::core::is_schema(schema));
+  assert(sourcemeta::blaze::is_schema(schema));
   if (callback) {
     callback(result->second.path);
   }
@@ -186,9 +188,9 @@ auto Resolver::operator()(
   // (5) Normalise all references, if any, to match the new identifier
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::Locations};
-  const auto identifier_result{sourcemeta::core::identify(
+  sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::Locations};
+  const auto identifier_result{sourcemeta::blaze::identify(
       schema,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
@@ -196,7 +198,7 @@ auto Resolver::operator()(
       result->second.dialect)};
   const auto has_identifier{!identifier_result.empty()};
   frame.analyse(
-      schema, sourcemeta::core::schema_walker,
+      schema, sourcemeta::blaze::schema_walker,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
       },
@@ -208,9 +210,9 @@ auto Resolver::operator()(
   const auto dynamic_ref_hash{schema.as_object().hash("$dynamicRef")};
   for (const auto &entry : frame.locations()) {
     if (entry.second.type ==
-            sourcemeta::core::SchemaFrame::LocationType::Resource ||
+            sourcemeta::blaze::SchemaFrame::LocationType::Resource ||
         entry.second.type ==
-            sourcemeta::core::SchemaFrame::LocationType::Subschema) {
+            sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
       auto &subschema{sourcemeta::core::get(schema, entry.second.pointer)};
       if (subschema.is_object()) {
         const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
@@ -221,7 +223,7 @@ auto Resolver::operator()(
         }
 
         if (entry.second.base_dialect ==
-            sourcemeta::core::SchemaBaseDialect::JSON_Schema_2020_12) {
+            sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12) {
           const auto maybe_dynamic_ref{
               subschema.try_at("$dynamicRef", dynamic_ref_hash)};
           if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
@@ -238,7 +240,7 @@ auto Resolver::operator()(
   // (6) Assign the new final identifier to the schema
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::core::reidentify(
+  sourcemeta::blaze::reidentify(
       schema, result->first,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
@@ -258,7 +260,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
   assert(path.is_absolute());
   try {
     const auto schema{sourcemeta::core::read_yaml_or_json(path)};
-    if (!sourcemeta::core::is_schema(schema)) {
+    if (!sourcemeta::blaze::is_schema(schema)) {
       throw ResolverNotASchemaError(path);
     }
 
@@ -277,7 +279,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
             .canonicalize()
             .recompose()};
     sourcemeta::core::URI identifier_uri{
-        normalise_identifier(sourcemeta::core::identify(
+        normalise_identifier(sourcemeta::blaze::identify(
             schema,
             [this](const auto subidentifier) {
               return this->operator()(subidentifier);
@@ -320,12 +322,12 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     // we rebase according to the one base URI, etc
     /////////////////////////////////////////////////////////////////////////////
     const auto raw_dialect{
-        sourcemeta::core::dialect(schema, default_dialect_str)};
+        sourcemeta::blaze::dialect(schema, default_dialect_str)};
     if (raw_dialect.empty()) {
-      throw sourcemeta::core::SchemaUnknownDialectError();
+      throw sourcemeta::blaze::SchemaUnknownDialectError();
     }
     const auto is_official_dialect{
-        sourcemeta::core::is_known_schema(raw_dialect)};
+        sourcemeta::blaze::is_known_schema(raw_dialect)};
     auto current_dialect{
         is_official_dialect
             ? std::string{raw_dialect}
@@ -355,23 +357,23 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
               .collection = &collection})};
     lock.unlock();
     if (!result.second && result.first->second.path != path) {
-      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>(
           path, result.first->first,
           "Cannot register the same identifier twice");
     }
     return {result.first->first, result.first->second};
-  } catch (const sourcemeta::core::SchemaKeywordError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+  } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
         path, error.keyword(), error.value(), error.what());
-  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+  } catch (const sourcemeta::blaze::SchemaUnknownDialectError &) {
     throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaUnknownDialectError>(path);
+        sourcemeta::blaze::SchemaUnknownDialectError>(path);
   } catch (const sourcemeta::core::URIParseError &) {
     const auto reread{sourcemeta::core::read_yaml_or_json(path)};
     const auto &id_keyword{reread.defines("$id") ? "$id" : "id"};
     std::ostringstream value_stream;
     sourcemeta::core::stringify(reread.at(id_keyword), value_stream);
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
         path, id_keyword, value_stream.str(),
         "The schema identifier is not a valid URI");
   } catch (const sourcemeta::core::YAMLParseError &error) {
@@ -390,7 +392,7 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
   const auto path{entry.path};
   auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
   if (!result.second && result.first->second.path != path) {
-    throw sourcemeta::core::SchemaFrameError(
+    throw sourcemeta::blaze::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
 }
