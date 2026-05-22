@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_V1_H
 #define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_SERVE_V1_H
 
+#include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -31,24 +33,7 @@ public:
     });
   }
 
-  static auto resolve(const std::filesystem::path &base,
-                      const std::string_view schema_path, const bool bundle)
-      -> std::filesystem::path {
-    // Otherwise we may get unexpected results in case-sensitive file-systems
-    std::string lowercase_path{schema_path};
-    std::ranges::transform(
-        lowercase_path, lowercase_path.begin(),
-        [](const unsigned char character) { return std::tolower(character); });
-    auto absolute_path{base / "schemas" / lowercase_path / "%"};
-    if (bundle) {
-      absolute_path /= "bundle.metapack";
-    } else {
-      absolute_path /= "schema.metapack";
-    }
-    return absolute_path;
-  }
-
-  static auto serve(const std::filesystem::path &base,
+  static auto serve(const sourcemeta::one::RouterAction &self,
                     std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
@@ -69,9 +54,9 @@ public:
                                return std::tolower(character);
                              });
       absolute_path =
-          base / "schemas" / lowercase_path / "%" / "editor.metapack";
+          self.base() / "schemas" / lowercase_path / "%" / "editor.metapack";
     } else {
-      absolute_path = resolve(base, schema_path, bundle || is_deno);
+      absolute_path = self.resolve_schema_path(schema_path, bundle || is_deno);
     }
 
     if (request.method() != "get" && request.method() != "head" &&
@@ -97,8 +82,12 @@ public:
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    serve(this->base(), matches.front(), request, response,
-          this->error_schema_);
+    serve(*this, matches.front(), request, response, this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const std::string_view) -> sourcemeta::core::JSON override {
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
 private:

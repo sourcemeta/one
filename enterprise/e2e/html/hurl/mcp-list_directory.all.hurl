@@ -1825,11 +1825,47 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 114
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.path" == "/"
+variable "text" jsonpath "$.path" == "/"
+jsonpath "$.result.structuredContent.url" == "{{base}}"
+variable "text" jsonpath "$.url" == "{{base}}"
+jsonpath "$.result.structuredContent.breadcrumb" count == 0
+variable "text" jsonpath "$.breadcrumb" count == 0
+jsonpath "$.result.structuredContent.schemas" == 113
+variable "text" jsonpath "$.schemas" == 113
+jsonpath "$.result.structuredContent.entries" count == 2
+variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.entries[0].name" == "self"
+variable "text" jsonpath "$.entries[0].name" == "self"
+jsonpath "$.result.structuredContent.entries[0].type" == "directory"
+variable "text" jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.result.structuredContent.entries[0].health" == 100
+variable "text" jsonpath "$.entries[0].health" == 100
+jsonpath "$.result.structuredContent.entries[0].schemas" == 45
+variable "text" jsonpath "$.entries[0].schemas" == 45
+jsonpath "$.result.structuredContent.entries[0].path" == "/self/"
+variable "text" jsonpath "$.entries[0].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[0].title" == "Self"
+variable "text" jsonpath "$.entries[0].title" == "Self"
+jsonpath "$.result.structuredContent.entries[0].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].name" == "test"
+variable "text" jsonpath "$.entries[1].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].type" == "directory"
+variable "text" jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.result.structuredContent.entries[1].health" == 15
+variable "text" jsonpath "$.entries[1].health" == 15
+jsonpath "$.result.structuredContent.entries[1].schemas" == 68
+variable "text" jsonpath "$.entries[1].schemas" == 68
+jsonpath "$.result.structuredContent.entries[1].path" == "/test/"
+variable "text" jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1859,11 +1895,47 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 115
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.path" == "/"
+variable "text" jsonpath "$.path" == "/"
+jsonpath "$.result.structuredContent.url" == "{{base}}"
+variable "text" jsonpath "$.url" == "{{base}}"
+jsonpath "$.result.structuredContent.breadcrumb" count == 0
+variable "text" jsonpath "$.breadcrumb" count == 0
+jsonpath "$.result.structuredContent.schemas" == 113
+variable "text" jsonpath "$.schemas" == 113
+jsonpath "$.result.structuredContent.entries" count == 2
+variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.entries[0].name" == "self"
+variable "text" jsonpath "$.entries[0].name" == "self"
+jsonpath "$.result.structuredContent.entries[0].type" == "directory"
+variable "text" jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.result.structuredContent.entries[0].health" == 100
+variable "text" jsonpath "$.entries[0].health" == 100
+jsonpath "$.result.structuredContent.entries[0].schemas" == 45
+variable "text" jsonpath "$.entries[0].schemas" == 45
+jsonpath "$.result.structuredContent.entries[0].path" == "/self/"
+variable "text" jsonpath "$.entries[0].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[0].title" == "Self"
+variable "text" jsonpath "$.entries[0].title" == "Self"
+jsonpath "$.result.structuredContent.entries[0].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].name" == "test"
+variable "text" jsonpath "$.entries[1].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].type" == "directory"
+variable "text" jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.result.structuredContent.entries[1].health" == 15
+variable "text" jsonpath "$.entries[1].health" == 15
+jsonpath "$.result.structuredContent.entries[1].schemas" == 68
+variable "text" jsonpath "$.entries[1].schemas" == 68
+jsonpath "$.result.structuredContent.entries[1].path" == "/test/"
+variable "text" jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1893,11 +1965,98 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 116
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 2
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[1].name" == "My Object"
+jsonpath "$.result.content[1].description" == "An Object Example"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.path" == "/test"
+variable "text" jsonpath "$.path" == "/test"
+jsonpath "$.result.structuredContent.url" == "{{base}}/test"
+variable "text" jsonpath "$.url" == "{{base}}/test"
+jsonpath "$.result.structuredContent.breadcrumb" count == 1
+variable "text" jsonpath "$.breadcrumb" count == 1
+jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
+variable "text" jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
+variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.result.structuredContent.schemas" == 68
+variable "text" jsonpath "$.schemas" == 68
+jsonpath "$.result.structuredContent.health" == 15
+variable "text" jsonpath "$.health" == 15
+jsonpath "$.result.structuredContent.entries" count == 6
+variable "text" jsonpath "$.entries" count == 6
+jsonpath "$.result.structuredContent.entries[0].name" == "bare"
+variable "text" jsonpath "$.entries[0].name" == "bare"
+jsonpath "$.result.structuredContent.entries[0].type" == "directory"
+variable "text" jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.result.structuredContent.entries[0].health" == 0
+variable "text" jsonpath "$.entries[0].health" == 0
+jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
+variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
+jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
+variable "text" jsonpath "$.entries[1].name" == "description-only"
+jsonpath "$.result.structuredContent.entries[1].type" == "directory"
+variable "text" jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.result.structuredContent.entries[1].health" == 0
+variable "text" jsonpath "$.entries[1].health" == 0
+jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
+variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
+jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
+variable "text" jsonpath "$.entries[2].name" == "draft3"
+jsonpath "$.result.structuredContent.entries[2].type" == "directory"
+variable "text" jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.result.structuredContent.entries[2].health" == 25
+variable "text" jsonpath "$.entries[2].health" == 25
+jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
+variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
+jsonpath "$.result.structuredContent.entries[3].name" == "full"
+variable "text" jsonpath "$.entries[3].name" == "full"
+jsonpath "$.result.structuredContent.entries[3].type" == "directory"
+variable "text" jsonpath "$.entries[3].type" == "directory"
+jsonpath "$.result.structuredContent.entries[3].health" == 0
+variable "text" jsonpath "$.entries[3].health" == 0
+jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
+variable "text" jsonpath "$.entries[3].path" == "/test/full/"
+jsonpath "$.result.structuredContent.entries[4].name" == "title-only"
+variable "text" jsonpath "$.entries[4].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 0
+variable "text" jsonpath "$.entries[4].health" == 0
+jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[4].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[5].name" == "object"
+variable "text" jsonpath "$.entries[5].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].type" == "schema"
+variable "text" jsonpath "$.entries[5].type" == "schema"
+jsonpath "$.result.structuredContent.entries[5].health" == 67
+variable "text" jsonpath "$.entries[5].health" == 67
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/object"
+variable "text" jsonpath "$.entries[5].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[5].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
+variable "text" jsonpath "$.entries[5].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
+variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

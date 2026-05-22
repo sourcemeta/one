@@ -1,9 +1,9 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_SERVE_EXPLORER_ARTIFACT_V1_H
-#define SOURCEMETA_ONE_ACTIONS_SERVE_EXPLORER_ARTIFACT_V1_H
+#ifndef SOURCEMETA_ONE_ACTIONS_LIST_DIRECTORY_V1_H
+#define SOURCEMETA_ONE_ACTIONS_LIST_DIRECTORY_V1_H
 
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
-#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -15,16 +15,17 @@
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
+#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionServeExplorerArtifact_v1 : public sourcemeta::one::RouterAction {
+class ActionListDirectory_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
-      "Read a navigation artifact for browsing schemas"};
+      "List the contents of a directory in the catalog"};
 
-  ActionServeExplorerArtifact_v1(
+  ActionListDirectory_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -32,9 +33,7 @@ public:
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url()} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "artifact") {
-        this->artifact_ = std::get<std::string_view>(value);
-      } else if (key == "responseSchema") {
+      if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
       } else if (key == "rpcSchema") {
         this->rpc_schema_ = std::get<std::string_view>(value);
@@ -52,7 +51,7 @@ public:
       absolute_path /= matches.front();
     }
     absolute_path /= "%";
-    absolute_path /= std::string{this->artifact_} + ".metapack";
+    absolute_path /= "directory.metapack";
     ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
                                       true, {}, this->response_schema_, request,
                                       response, this->error_schema_);
@@ -65,32 +64,56 @@ public:
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
+    static const sourcemeta::core::JSON EMPTY_STRING{""};
+    const auto explorer_root{this->base() / "explorer"};
+
+    auto absolute_path{explorer_root};
+    const auto &path{arguments.at_or("path", EMPTY_STRING).to_string()};
+    if (!path.empty()) {
+      absolute_path /= path;
+    }
+    absolute_path /= "%";
+    absolute_path /= "directory.metapack";
+
+    const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
+    if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
-    const auto schema_path{
-        this->uri_to_relative_path(arguments.at("schema").to_string())};
-    if (!schema_path.has_value()) {
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
-    }
-
-    auto absolute_path{this->base() / "explorer" / schema_path.value() / "%"};
-    absolute_path /= std::string{this->artifact_} + ".metapack";
-
-    auto contents{sourcemeta::one::metapack_read_json(absolute_path)};
+    auto contents{sourcemeta::one::metapack_read_json(safe_path)};
     if (!contents.has_value()) {
       return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
+                                                  "Directory not found");
     }
 
-    return sourcemeta::one::mcp_make_tool_success(request_id,
-                                                  std::move(contents).value());
+    auto &result{contents.value()};
+    auto content{sourcemeta::core::JSON::make_array()};
+
+    std::ostringstream payload;
+    sourcemeta::core::prettify(result, payload);
+    content.push_back(sourcemeta::one::mcp_make_text_block(payload.str()));
+
+    if (const auto *entries{result.try_at("entries")};
+        entries != nullptr && entries->is_array()) {
+      for (const auto &entry : entries->as_array()) {
+        if (entry.at_or("type", EMPTY_STRING).to_string() != "schema") {
+          continue;
+        }
+        if (!entry.defines("identifier")) {
+          continue;
+        }
+        content.push_back(sourcemeta::one::mcp_make_resource_link(
+            entry.at("identifier").to_string(), "application/schema+json",
+            entry.at_or("title", EMPTY_STRING).to_string(),
+            entry.at_or("description", EMPTY_STRING).to_string()));
+      }
+    }
+
+    return sourcemeta::one::mcp_make_tool_success(request_id, std::move(result),
+                                                  std::move(content));
   }
 
 private:
-  std::string_view artifact_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;
   std::string_view error_schema_;

@@ -39,12 +39,10 @@ public:
   virtual auto rest(const std::span<std::string_view> matches,
                     HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
-  virtual auto mcp(const sourcemeta::core::JSON &envelope)
-      -> sourcemeta::core::JSON {
-    const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(
-        id ? *id : sourcemeta::core::JSON{nullptr});
-  }
+  virtual auto mcp(const sourcemeta::core::JSON &id,
+                   const sourcemeta::core::JSON &arguments,
+                   const std::string_view envelope)
+      -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
     return this->base_;
@@ -64,6 +62,10 @@ public:
   [[nodiscard]] auto uri_to_relative_path(const std::string_view uri) const
       -> std::optional<std::filesystem::path>;
 
+  [[nodiscard]] auto resolve_schema_path(std::string_view schema_relative_path,
+                                         bool bundle) const
+      -> std::filesystem::path;
+
   // Loads a precompiled Blaze template from disk for the given
   // self-served schema URL (e.g. an `rpcSchema` route argument). The
   // mode picks `blaze-fast.metapack` (FastValidation) or
@@ -72,6 +74,10 @@ public:
                                     sourcemeta::blaze::Mode mode) const
       -> sourcemeta::blaze::Template;
 
+  [[nodiscard]] auto validate(std::string_view schema_uri,
+                              const sourcemeta::core::JSON &instance) const
+      -> bool;
+
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;
@@ -79,10 +85,6 @@ private:
   std::string_view server_uri_;
 };
 
-// Concrete actions take this as their fourth constructor argument and decide
-// whether to store it. Actions that never reach back into the dispatcher (the
-// majority) just ignore it; ones that do (e.g. MCP `tools/call`) keep a member
-// reference
 using RouterActionConstructor =
     auto (*)(const std::filesystem::path &,
              const sourcemeta::core::URITemplateRouterView &,

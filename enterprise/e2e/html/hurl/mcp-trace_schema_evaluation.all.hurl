@@ -7,7 +7,10 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": "hello" }
+    "arguments": {
+      "schema": "{{base}}/test/bare/01",
+      "instance": "hello"
+    }
   }
 }
 ```
@@ -37,6 +40,16 @@ jsonpath "$.result.structuredContent.steps[0].evaluatePath" == "/type"
 variable "text" jsonpath "$.steps[0].evaluatePath" == "/type"
 jsonpath "$.result.structuredContent.steps[0].instanceLocation" == ""
 variable "text" jsonpath "$.steps[0].instanceLocation" == ""
+jsonpath "$.result.structuredContent.steps[0].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[0].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[0].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[3]" == 25
+variable "text" jsonpath "$.steps[0].instancePositions" count == 4
+variable "text" jsonpath "$.steps[0].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[0].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[3]" == 25
 jsonpath "$.result.structuredContent.steps[0].keywordLocation" == "{{base}}/test/bare/01#/type"
 variable "text" jsonpath "$.steps[0].keywordLocation" == "{{base}}/test/bare/01#/type"
 jsonpath "$.result.structuredContent.steps[0].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
@@ -45,6 +58,16 @@ jsonpath "$.result.structuredContent.steps[1].type" == "pass"
 variable "text" jsonpath "$.steps[1].type" == "pass"
 jsonpath "$.result.structuredContent.steps[1].name" == "AssertionTypeStrict"
 variable "text" jsonpath "$.steps[1].name" == "AssertionTypeStrict"
+jsonpath "$.result.structuredContent.steps[1].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[1].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[1].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[3]" == 25
+variable "text" jsonpath "$.steps[1].instancePositions" count == 4
+variable "text" jsonpath "$.steps[1].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[1].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[3]" == 25
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -63,7 +86,10 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": 42 }
+    "arguments": {
+      "schema": "{{base}}/test/bare/01",
+      "instance": 42
+    }
   }
 }
 ```
@@ -87,10 +113,30 @@ jsonpath "$.result.structuredContent.steps[0].type" == "push"
 variable "text" jsonpath "$.steps[0].type" == "push"
 jsonpath "$.result.structuredContent.steps[0].name" == "AssertionTypeStrict"
 variable "text" jsonpath "$.steps[0].name" == "AssertionTypeStrict"
+jsonpath "$.result.structuredContent.steps[0].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[0].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[0].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[3]" == 20
+variable "text" jsonpath "$.steps[0].instancePositions" count == 4
+variable "text" jsonpath "$.steps[0].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[0].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[3]" == 20
 jsonpath "$.result.structuredContent.steps[1].type" == "fail"
 variable "text" jsonpath "$.steps[1].type" == "fail"
 jsonpath "$.result.structuredContent.steps[1].name" == "AssertionTypeStrict"
 variable "text" jsonpath "$.steps[1].name" == "AssertionTypeStrict"
+jsonpath "$.result.structuredContent.steps[1].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[1].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[1].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[3]" == 20
+variable "text" jsonpath "$.steps[1].instancePositions" count == 4
+variable "text" jsonpath "$.steps[1].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[1].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[3]" == 20
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -109,7 +155,10 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/object", "instance": {} }
+    "arguments": {
+      "schema": "{{base}}/test/object",
+      "instance": {}
+    }
   }
 }
 ```
@@ -129,6 +178,16 @@ jsonpath "$.result.structuredContent.valid" == true
 variable "text" jsonpath "$.valid" == true
 jsonpath "$.result.structuredContent.steps" count >= 1
 variable "text" jsonpath "$.steps" count >= 1
+jsonpath "$.result.structuredContent.steps[0].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[0].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[0].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[3]" == 20
+variable "text" jsonpath "$.steps[0].instancePositions" count == 4
+variable "text" jsonpath "$.steps[0].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[0].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[3]" == 20
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -527,7 +586,10 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": "ok" }
+    "arguments": {
+      "schema": "{{base}}/test/bare/01",
+      "instance": "ok"
+    }
   }
 }
 ```
@@ -547,6 +609,26 @@ jsonpath "$.result.structuredContent.valid" == true
 variable "text" jsonpath "$.valid" == true
 jsonpath "$.result.structuredContent.steps" count == 2
 variable "text" jsonpath "$.steps" count == 2
+jsonpath "$.result.structuredContent.steps[0].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[0].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[0].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[0].instancePositions[3]" == 22
+variable "text" jsonpath "$.steps[0].instancePositions" count == 4
+variable "text" jsonpath "$.steps[0].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[0].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[0].instancePositions[3]" == 22
+jsonpath "$.result.structuredContent.steps[1].instancePositions" count == 4
+jsonpath "$.result.structuredContent.steps[1].instancePositions[0]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[1]" == 7
+jsonpath "$.result.structuredContent.steps[1].instancePositions[2]" == 9
+jsonpath "$.result.structuredContent.steps[1].instancePositions[3]" == 22
+variable "text" jsonpath "$.steps[1].instancePositions" count == 4
+variable "text" jsonpath "$.steps[1].instancePositions[0]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[1]" == 7
+variable "text" jsonpath "$.steps[1].instancePositions[2]" == 9
+variable "text" jsonpath "$.steps[1].instancePositions[3]" == 22
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

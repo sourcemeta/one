@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_NOT_FOUND_V1_H
 #define SOURCEMETA_ONE_ACTIONS_NOT_FOUND_V1_H
 
+#include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -36,6 +38,11 @@ public:
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
         "There is nothing at this URL", this->error_schema_);
+  }
+
+  auto mcp(const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const std::string_view) -> sourcemeta::core::JSON override {
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
 private:

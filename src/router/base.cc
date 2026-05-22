@@ -1,11 +1,16 @@
 #include <sourcemeta/core/uri.h>
 
+#include <sourcemeta/blaze/evaluator.h>
+
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
+#include <algorithm>   // std::ranges::transform
 #include <cassert>     // assert
+#include <cctype>      // std::tolower
 #include <exception>   // std::exception
 #include <optional>    // std::optional
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
@@ -43,6 +48,32 @@ auto RouterAction::schema_directory(const std::string_view uri) const
     return std::nullopt;
   }
   return this->base_ / "schemas" / std::move(path).value() / "%";
+}
+
+auto RouterAction::resolve_schema_path(
+    const std::string_view schema_relative_path, const bool bundle) const
+    -> std::filesystem::path {
+  std::string lowercase_path{schema_relative_path};
+  std::ranges::transform(
+      lowercase_path, lowercase_path.begin(),
+      [](const unsigned char character) { return std::tolower(character); });
+  auto absolute_path{this->base_ / "schemas" / lowercase_path / "%"};
+  if (bundle) {
+    absolute_path /= "bundle.metapack";
+  } else {
+    absolute_path /= "schema.metapack";
+  }
+  return absolute_path;
+}
+
+auto RouterAction::validate(const std::string_view schema_uri,
+                            const sourcemeta::core::JSON &instance) const
+    -> bool {
+  // TODO: Cache the compiled template across invocations, keyed by schema URI
+  const auto schema_template{this->blaze_template(
+      schema_uri, sourcemeta::blaze::Mode::FastValidation)};
+  sourcemeta::blaze::Evaluator evaluator;
+  return evaluator.validate(schema_template, instance);
 }
 
 auto RouterAction::blaze_template(const std::string_view schema_uri,

@@ -1,10 +1,12 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
   SOURCES actions.cc
     action_default_v1.h
+    action_dependency_tree_v1.h
     action_health_check_v1.h
     action_jsonschema_evaluate_v1.h
     action_jsonschema_serve_v1.h
     action_jsonschema_trace_v1.h
+    action_list_directory_v1.h
     action_not_found_v1.h
     action_schema_search_v1.h
     action_serve_explorer_artifact_v1.h

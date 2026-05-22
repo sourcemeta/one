@@ -119,3 +119,30 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 42, "method": "no/such/method" }
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 42
+jsonpath "$.error.code" == 1
+jsonpath "$.error.message" == "Enterprise edition required"
+jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

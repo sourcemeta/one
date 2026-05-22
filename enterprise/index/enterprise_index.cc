@@ -10,11 +10,13 @@
 #include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t
+#include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -85,19 +87,9 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
           std::string uri{configuration.origin};
           uri.append(entry.path);
 
-          auto resource{sourcemeta::core::JSON::make_object()};
-          resource.assign("uri", sourcemeta::core::JSON{uri});
-          resource.assign("name", sourcemeta::core::JSON{name});
-          if (!entry.description.empty()) {
-            resource.assign("description",
-                            sourcemeta::core::JSON{entry.description});
-          }
-          resource.assign("mimeType",
-                          sourcemeta::core::JSON{"application/schema+json"});
-          resource.assign("size",
-                          sourcemeta::core::JSON{
-                              static_cast<std::size_t>(entry.bytes_raw)});
-          entries.push_back(std::move(resource));
+          entries.push_back(sourcemeta::one::mcp_make_resource(
+              uri, name, "application/schema+json", entry.description,
+              static_cast<std::size_t>(entry.bytes_raw)));
         });
 
     page.assign("resources", std::move(entries));
@@ -143,10 +135,6 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     const auto description{sourcemeta::one::action_description(context)};
     assert(!description.empty());
 
-    auto entry{sourcemeta::core::JSON::make_object()};
-    entry.assign("name", sourcemeta::core::JSON{operation_id});
-    entry.assign("description", sourcemeta::core::JSON{description});
-
     auto input_schema_url{
         sourcemeta::core::URI::rebase_path(rpc_schema, base_path, base_url)};
     assert(input_schema_url.has_value());
@@ -154,29 +142,30 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
     input_schema_ref.assign(
         "$ref", sourcemeta::core::JSON{std::move(input_schema_url).value()});
-    entry.assign("inputSchema", std::move(input_schema_ref));
 
+    std::optional<sourcemeta::core::JSON> output_schema_ref;
     if (!response_schema.empty()) {
       auto output_schema_url{sourcemeta::core::URI::rebase_path(
           response_schema, base_path, base_url)};
       assert(output_schema_url.has_value());
 
-      auto output_schema_ref{sourcemeta::core::JSON::make_object()};
-      output_schema_ref.assign(
-          "$ref", sourcemeta::core::JSON{std::move(output_schema_url).value()});
-      entry.assign("outputSchema", std::move(output_schema_ref));
+      auto ref{sourcemeta::core::JSON::make_object()};
+      ref.assign("$ref",
+                 sourcemeta::core::JSON{std::move(output_schema_url).value()});
+      output_schema_ref.emplace(std::move(ref));
     }
 
     auto annotations{sourcemeta::core::JSON::make_object()};
     std::string title{operation_id};
     sourcemeta::core::to_title_case(title);
     annotations.assign("title", sourcemeta::core::JSON{title});
-    entry.assign("annotations", std::move(annotations));
 
     tool_routes.assign(
         std::string{operation_id},
         sourcemeta::core::JSON{static_cast<std::int64_t>(identifier)});
-    tools.push_back(std::move(entry));
+    tools.push_back(sourcemeta::one::mcp_make_tool_descriptor(
+        operation_id, description, std::move(input_schema_ref),
+        std::move(output_schema_ref), std::move(annotations)));
   }
 }
 

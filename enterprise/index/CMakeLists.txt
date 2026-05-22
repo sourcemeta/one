@@ -15,5 +15,6 @@ target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::j
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::text)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::actions)
+target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::one::mcp)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::blaze::foundation)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::uritemplate)
