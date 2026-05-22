@@ -40,7 +40,7 @@ explore the latest version at
     A great way to learn what's possible is to explore the configuration file
     of the [schemas.sourcemeta.com](https://schemas.sourcemeta.com) public
     example instance, which you can find [on
-    GitHub](https://github.com/sourcemeta/one/blob/main/public/one.json)
+    GitHub](https://github.com/sourcemeta/one/blob/main/enterprise/e2e/public/one.json)
 
 ## `one.json`
 

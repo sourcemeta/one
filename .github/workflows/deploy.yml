@@ -227,7 +227,7 @@ jobs:
         id: push
         with:
           context: .
-          file: public/Dockerfile
+          file: enterprise/e2e/public/Dockerfile
           build-args: "SOURCEMETA_ONE=ghcr.io/sourcemeta/one-enterprise:main"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -252,7 +252,7 @@ jobs:
             set -o nounset
             kraft cloud service create --name schemas --domain ${{ env.SERVICE_DOMAIN }} 443:8000 || true
             kraft cloud deploy --memory 4096 --rollout remove --image schemas --service schemas \
-              --kraftfile public/Kraftfile --restart on-failure --replicas 4 ./public
+              --kraftfile enterprise/e2e/public/Kraftfile --restart on-failure --replicas 4 ./enterprise/e2e/public
             kraft cloud service get schemas
             kraft cloud instance logs "$(kraft cloud service get schemas --output json | jq --raw-output '.[0].instances | split(" ") | .[0]')"
             curl --location --header "Accept: text/html" --retry 10 --retry-all-errors --fail https://${{ env.SERVICE_DOMAIN }}

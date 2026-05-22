@@ -80,21 +80,23 @@ jobs:
           path: test/e2e/path
           edition: ${{ matrix.edition.name }}
 
-      - name: E2E (enterprise)
+      - name: E2E (enterprise/html)
         uses: ./.github/actions/e2e
         with:
           path: enterprise/e2e/html
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
-      - name: E2E (enterprise-path)
+      - name: E2E (enterprise/path)
         uses: ./.github/actions/e2e
         with:
           path: enterprise/e2e/path
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
-
-      # Public instance
-      - run: docker build .  --file public/Dockerfile --progress plain
+      - name: E2E (enterprise/public)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/public
+          edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
 
       - name: Benchmark

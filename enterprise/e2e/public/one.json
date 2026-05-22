@@ -28,7 +28,7 @@
           "contents": {
             "v0": {
               "x-sourcemeta-one:alert": "By using this schema, you confirm you agree to its [license](https://github.com/sourcemeta/std/blob/main/LICENSE)",
-              "path": "../vendor/collections/sourcemeta/std/v0/schemas/2020-12"
+              "path": "../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12"
             }
           }
         }
@@ -41,16 +41,16 @@
       "website": "https://modelcontextprotocol.io",
       "contents": {
         "2025-11-25": {
-          "path": "../vendor/public/modelcontextprotocol/schema/2025-11-25"
+          "path": "../../../vendor/public/modelcontextprotocol/schema/2025-11-25"
         },
         "2025-06-18": {
-          "path": "../vendor/public/modelcontextprotocol/schema/2025-06-18"
+          "path": "../../../vendor/public/modelcontextprotocol/schema/2025-06-18"
         },
         "2025-03-26": {
-          "path": "../vendor/public/modelcontextprotocol/schema/2025-03-26"
+          "path": "../../../vendor/public/modelcontextprotocol/schema/2025-03-26"
         },
         "2024-11-05": {
-          "path": "../vendor/public/modelcontextprotocol/schema/2024-11-05"
+          "path": "../../../vendor/public/modelcontextprotocol/schema/2024-11-05"
         }
       }
     },
@@ -61,31 +61,31 @@
       "website": "https://a2a-protocol.org",
       "contents": {
         "v1.0.0": {
-          "path": "../vendor/public/a2a/v1.0.0/specification/json"
+          "path": "../../../vendor/public/a2a/v1.0.0/specification/json"
         },
         "v0.3.0": {
-          "path": "../vendor/public/a2a/v0.3.0/specification/json"
+          "path": "../../../vendor/public/a2a/v0.3.0/specification/json"
         },
         "v0.2.6": {
-          "path": "../vendor/public/a2a/v0.2.6/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.6/specification/json"
         },
         "v0.2.5": {
-          "path": "../vendor/public/a2a/v0.2.5/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.5/specification/json"
         },
         "v0.2.4": {
-          "path": "../vendor/public/a2a/v0.2.4/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.4/specification/json"
         },
         "v0.2.3": {
-          "path": "../vendor/public/a2a/v0.2.3/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.3/specification/json"
         },
         "v0.2.2": {
-          "path": "../vendor/public/a2a/v0.2.2/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.2/specification/json"
         },
         "v0.2.1": {
-          "path": "../vendor/public/a2a/v0.2.1/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.1/specification/json"
         },
         "v0.2.0": {
-          "path": "../vendor/public/a2a/v0.2.0/specification/json"
+          "path": "../../../vendor/public/a2a/v0.2.0/specification/json"
         }
       }
     },
@@ -96,7 +96,7 @@
       "website": "https://datatracker.ietf.org/doc/draft-ietf-asdf-sdf/",
       "contents": {
         "v1.0.0": {
-          "path": "../vendor/public/sdf/v1.0.0"
+          "path": "../../../vendor/public/sdf/v1.0.0"
         }
       }
     },
@@ -109,19 +109,19 @@
       "contents": {
         "v2.0": {
           "baseUri": "http://swagger.io/v2",
-          "path": "../vendor/public/openapi/oas/2.0"
+          "path": "../../../vendor/public/openapi/oas/2.0"
         },
         "v3.0": {
           "baseUri": "https://spec.openapis.org/oas/3.0/schema",
-          "path": "../vendor/public/openapi/oas/3.0"
+          "path": "../../../vendor/public/openapi/oas/3.0"
         },
         "v3.1": {
           "baseUri": "https://spec.openapis.org/oas/3.1",
-          "path": "../vendor/public/openapi/oas/3.1"
+          "path": "../../../vendor/public/openapi/oas/3.1"
         },
         "v3.2": {
           "baseUri": "https://spec.openapis.org/oas/3.2",
-          "path": "../vendor/public/openapi/oas/3.2"
+          "path": "../../../vendor/public/openapi/oas/3.2"
         }
       }
     },
@@ -138,10 +138,10 @@
           "website": "https://www.w3.org/WoT/",
           "contents": {
             "v1.0": {
-              "path": "../vendor/public/wot/td/v1/validation"
+              "path": "../../../vendor/public/wot/td/v1/validation"
             },
             "v1.1": {
-              "path": "../vendor/public/wot/td/v1.1/validation"
+              "path": "../../../vendor/public/wot/td/v1.1/validation"
             }
           }
         }
@@ -154,10 +154,10 @@
       "website": "https://json-ld.org",
       "contents": {
         "v1.0": {
-          "path": "../vendor/public/jsonld/v1.0/schemas"
+          "path": "../../../vendor/public/jsonld/v1.0/schemas"
         },
         "v1.1": {
-          "path": "../vendor/public/jsonld/v1.1/schemas"
+          "path": "../../../vendor/public/jsonld/v1.1/schemas"
         }
       }
     },
@@ -176,27 +176,27 @@
           "contents": {
             "v4.2.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v4.2.0/gcn",
-              "path": "../vendor/public/nasa-gcn-4-2-0"
+              "path": "../../../vendor/public/nasa-gcn-4-2-0"
             },
             "v4.1.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v4.1.0/gcn",
-              "path": "../vendor/public/nasa-gcn-4-1-0"
+              "path": "../../../vendor/public/nasa-gcn-4-1-0"
             },
             "v4.0.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v4.0.0/gcn",
-              "path": "../vendor/public/nasa-gcn-4-0-0"
+              "path": "../../../vendor/public/nasa-gcn-4-0-0"
             },
             "v3.0.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v3.0.0/gcn",
-              "path": "../vendor/public/nasa-gcn-3-0-0"
+              "path": "../../../vendor/public/nasa-gcn-3-0-0"
             },
             "v2.0.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v2.0.0/gcn",
-              "path": "../vendor/public/nasa-gcn-2-0-0"
+              "path": "../../../vendor/public/nasa-gcn-2-0-0"
             },
             "v1.0.0": {
               "baseUri": "https://gcn.nasa.gov/schema/v1.0.0/gcn",
-              "path": "../vendor/public/nasa-gcn-1-0-0"
+              "path": "../../../vendor/public/nasa-gcn-1-0-0"
             }
           }
         }
@@ -215,83 +215,83 @@
           "contents": {
             "v1.7.5": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-7-5"
+              "path": "../../../vendor/public/osv-schema-1-7-5"
             },
             "v1.7.4": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-7-4"
+              "path": "../../../vendor/public/osv-schema-1-7-4"
             },
             "v1.7.3": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-7-3"
+              "path": "../../../vendor/public/osv-schema-1-7-3"
             },
             "v1.7.2": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-7-2"
+              "path": "../../../vendor/public/osv-schema-1-7-2"
             },
             "v1.7.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-7-0"
+              "path": "../../../vendor/public/osv-schema-1-7-0"
             },
             "v1.6.7": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-7"
+              "path": "../../../vendor/public/osv-schema-1-6-7"
             },
             "v1.6.6": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-6"
+              "path": "../../../vendor/public/osv-schema-1-6-6"
             },
             "v1.6.5": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-5"
+              "path": "../../../vendor/public/osv-schema-1-6-5"
             },
             "v1.6.4": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-4"
+              "path": "../../../vendor/public/osv-schema-1-6-4"
             },
             "v1.6.3": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-3"
+              "path": "../../../vendor/public/osv-schema-1-6-3"
             },
             "v1.6.2": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-2"
+              "path": "../../../vendor/public/osv-schema-1-6-2"
             },
             "v1.6.1": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-1"
+              "path": "../../../vendor/public/osv-schema-1-6-1"
             },
             "v1.6.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-6-0"
+              "path": "../../../vendor/public/osv-schema-1-6-0"
             },
             "v1.5.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-5-0"
+              "path": "../../../vendor/public/osv-schema-1-5-0"
             },
             "v1.4.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-4-0/validation"
+              "path": "../../../vendor/public/osv-schema-1-4-0/validation"
             },
             "v1.3.1": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-3-1/validation"
+              "path": "../../../vendor/public/osv-schema-1-3-1/validation"
             },
             "v1.3.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-3-0/validation"
+              "path": "../../../vendor/public/osv-schema-1-3-0/validation"
             },
             "v1.2.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-2-0/validation"
+              "path": "../../../vendor/public/osv-schema-1-2-0/validation"
             },
             "v1.1.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-1-0/validation"
+              "path": "../../../vendor/public/osv-schema-1-1-0/validation"
             },
             "v1.0.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
-              "path": "../vendor/public/osv-schema-1-0-0/validation"
+              "path": "../../../vendor/public/osv-schema-1-0-0/validation"
             }
           }
         }
@@ -311,19 +311,19 @@
           "contents": {
             "v0.6": {
               "baseUri": "http://github.com/manfred/mac",
-              "path": "../vendor/public/manfred-mac-0-6"
+              "path": "../../../vendor/public/manfred-mac-0-6"
             },
             "v0.5": {
               "baseUri": "http://github.com/manfred/mac",
-              "path": "../vendor/public/manfred-mac-0-5"
+              "path": "../../../vendor/public/manfred-mac-0-5"
             },
             "v0.4": {
               "baseUri": "http://github.com/manfred/mac",
-              "path": "../vendor/public/manfred-mac-0-4"
+              "path": "../../../vendor/public/manfred-mac-0-4"
             },
             "v0.3": {
               "baseUri": "http://github.com/manfred/mac",
-              "path": "../vendor/public/manfred-mac-0-3"
+              "path": "../../../vendor/public/manfred-mac-0-3"
             }
           }
         }
@@ -339,7 +339,7 @@
           "title": "The MovieLabs Ontology for Media Creation",
           "github": "movielabs/omc",
           "baseUri": "https://movielabs.com/omc/json/schema",
-          "path": "../vendor/public/movielabs-omc-2-6"
+          "path": "../../../vendor/public/movielabs-omc-2-6"
         }
       }
     },
@@ -355,13 +355,13 @@
           "github": "octue/power-curve-schema",
           "contents": {
             "v1.0.0.alpha-1": {
-              "path": "../vendor/public/octue-power-curve/v1.0.0.alpha-1/power-curve-schema"
+              "path": "../../../vendor/public/octue-power-curve/v1.0.0.alpha-1/power-curve-schema"
             },
             "v1.0.0.alpha-2": {
-              "path": "../vendor/public/octue-power-curve/v1.0.0.alpha-2/power-curve-schema"
+              "path": "../../../vendor/public/octue-power-curve/v1.0.0.alpha-2/power-curve-schema"
             },
             "v1.0.0.alpha-3": {
-              "path": "../vendor/public/octue-power-curve/v1.0.0.alpha-3/power-curve-schema"
+              "path": "../../../vendor/public/octue-power-curve/v1.0.0.alpha-3/power-curve-schema"
             }
           }
         }
@@ -374,13 +374,13 @@
       "website": "https://cloudevents.io",
       "contents": {
         "v1.0.2": {
-          "path": "../vendor/public/cloudevents-1-0-2/cloudevents/formats"
+          "path": "../../../vendor/public/cloudevents-1-0-2/cloudevents/formats"
         },
         "v1.0.1": {
-          "path": "../vendor/public/cloudevents-1-0-1"
+          "path": "../../../vendor/public/cloudevents-1-0-1"
         },
         "v1.0.0": {
-          "path": "../vendor/public/cloudevents-1-0-0",
+          "path": "../../../vendor/public/cloudevents-1-0-0",
           "defaultDialect": "http://json-schema.org/draft-07/schema#"
         }
       }
@@ -392,7 +392,7 @@
       "github": "jsr-io",
       "website": "https://jsr.io",
       "baseUri": "https://jsr.io/schema",
-      "path": "../vendor/public/jsr"
+      "path": "../../../vendor/public/jsr"
     },
     "jsonschema": {
       "title": "JSON Schema",
@@ -402,27 +402,27 @@
       "contents": {
         "2020-12": {
           "baseUri": "https://json-schema.org/draft/2020-12",
-          "path": "../vendor/public/jsonschema-2020-12"
+          "path": "../../../vendor/public/jsonschema-2020-12"
         },
         "2019-09": {
           "baseUri": "https://json-schema.org/draft/2019-09",
-          "path": "../vendor/public/jsonschema-2019-09"
+          "path": "../../../vendor/public/jsonschema-2019-09"
         },
         "draft7": {
           "baseUri": "http://json-schema.org/draft-07",
-          "path": "../vendor/public/jsonschema-draft7"
+          "path": "../../../vendor/public/jsonschema-draft7"
         },
         "draft6": {
           "baseUri": "http://json-schema.org/draft-06",
-          "path": "../vendor/public/jsonschema-draft6"
+          "path": "../../../vendor/public/jsonschema-draft6"
         },
         "draft4": {
           "baseUri": "http://json-schema.org/draft-04",
-          "path": "../vendor/public/jsonschema-draft4"
+          "path": "../../../vendor/public/jsonschema-draft4"
         },
         "draft3": {
           "baseUri": "http://json-schema.org/draft-03",
-          "path": "../vendor/public/jsonschema-draft3"
+          "path": "../../../vendor/public/jsonschema-draft3"
         }
       }
     },
@@ -438,7 +438,7 @@
           "contents": {
             "v5.0.0": {
               "baseUri": "https://schema.humancellatlas.org",
-              "path": "../vendor/public/hca-metadata-5-0-0/json_schema"
+              "path": "../../../vendor/public/hca-metadata-5-0-0/json_schema"
             }
           }
         }
@@ -456,7 +456,7 @@
           "description": "A standard the representation of news in JSON",
           "github": "iptc/newsinjson",
           "baseUri": "http://www.iptc.org/std/ninjs",
-          "path": "../vendor/public/ninjs/specification",
+          "path": "../../../vendor/public/ninjs/specification",
           "resolve": {
             "https://geojson.org/schema/GeoJSON.json#": "/sourcemeta/std/v0/ietf/geojson/schema.json"
           }
@@ -470,7 +470,7 @@
       "github": "apis-json",
       "website": "http://apisjson.org",
       "baseUri": "https://github.com/apis-json/api-json/blob/develop/spec/",
-      "path": "../vendor/public/apis-json/spec"
+      "path": "../../../vendor/public/apis-json/spec"
     },
     "sony": {
       "title": "Sony",
@@ -485,7 +485,7 @@
           "contents": {
             "v1.0.0": {
               "baseUri": "https://www.sony.com",
-              "path": "../vendor/public/sony-x590/v1.0.0"
+              "path": "../../../vendor/public/sony-x590/v1.0.0"
             }
           }
         }
