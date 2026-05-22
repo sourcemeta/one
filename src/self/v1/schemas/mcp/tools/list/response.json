@@ -10,7 +10,7 @@
         "tools": [
           {
             "name": "list_directory",
-            "description": "Read a navigation artifact for browsing schemas",
+            "description": "List the contents of a directory in the catalog",
             "inputSchema": {
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
             },

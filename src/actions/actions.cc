@@ -1,9 +1,11 @@
 #include <sourcemeta/one/actions.h>
 
 #include "action_default_v1.h"
+#include "action_dependency_tree_v1.h"
 #include "action_health_check_v1.h"
 #include "action_jsonschema_evaluate_v1.h"
 #include "action_jsonschema_trace_v1.h"
+#include "action_list_directory_v1.h"
 #include "action_mcp_v1.h"
 #include "action_not_found_v1.h"
 #include "action_schema_search_v1.h"

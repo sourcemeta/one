@@ -38,11 +38,9 @@ public:
       sourcemeta::one::Router &)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url()} {
-    std::string_view request_schema;
-    router.arguments(identifier, [this, &request_schema](const auto &key,
-                                                         const auto &value) {
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "requestSchema") {
-        request_schema = std::get<std::string_view>(value);
+        this->request_schema_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
       } else if (key == "rpcSchema") {
@@ -51,17 +49,14 @@ public:
         this->error_schema_ = std::get<std::string_view>(value);
       }
     });
-
-    this->request_schema_template_ = this->blaze_template(
-        request_schema, sourcemeta::blaze::Mode::FastValidation);
   }
 
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, request, response, this->base(), this->response_schema_,
-        this->error_schema_, this->request_schema_template_,
+        matches, request, response, *this, this->response_schema_,
+        this->error_schema_, this->request_schema_,
         [this](const std::filesystem::path &template_path,
                const std::string &body) -> sourcemeta::core::JSON {
           return this->evaluate(template_path,
@@ -69,24 +64,10 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::JSON &envelope)
+  auto mcp(const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
-    const sourcemeta::core::JSON request_id{
-        id ? *id : sourcemeta::core::JSON{nullptr}};
-
-    const auto *params{sourcemeta::core::jsonrpc_params(envelope)};
-    if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments")) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
-    }
-
-    const auto &arguments{params->at("arguments")};
-    // TODO: Cache the compiled template across invocations
-    const auto rpc_schema_template{this->blaze_template(
-        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
-    sourcemeta::blaze::Evaluator rpc_evaluator;
-    if (!rpc_evaluator.validate(rpc_schema_template, arguments)) {
+    if (!this->validate(this->rpc_schema_, arguments)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -113,25 +94,19 @@ public:
                                                   "Schema not found");
     }
 
-    try {
-      auto result{this->evaluate(template_path, arguments.at("instance"))};
-      return sourcemeta::one::mcp_make_tool_success(request_id,
-                                                    std::move(result));
-    } catch (const std::exception &exception) {
-      return sourcemeta::one::mcp_make_tool_error(request_id, exception.what());
-    }
+    return sourcemeta::one::mcp_make_tool_success(
+        request_id, this->evaluate(template_path, arguments.at("instance")));
   }
 
   template <typename Perform>
-  static auto
-  serve_post(const std::span<std::string_view> matches,
-             sourcemeta::one::HTTPRequest &request,
-             sourcemeta::one::HTTPResponse &response,
-             const std::filesystem::path &base,
-             const std::string_view response_schema,
-             const std::string_view error_schema,
-             const sourcemeta::blaze::Template &request_schema_template,
-             Perform perform) -> void {
+  static auto serve_post(const std::span<std::string_view> matches,
+                         sourcemeta::one::HTTPRequest &request,
+                         sourcemeta::one::HTTPResponse &response,
+                         const sourcemeta::one::RouterAction &self,
+                         const std::string_view response_schema,
+                         const std::string_view error_schema,
+                         const std::string_view request_schema, Perform perform)
+      -> void {
     const auto &path{matches.front()};
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
@@ -152,7 +127,7 @@ public:
       return;
     }
 
-    auto template_path{base / "schemas"};
+    auto template_path{self.base() / "schemas"};
     template_path /= path;
     template_path /= "%";
     template_path /= "blaze-exhaustive.metapack";
@@ -174,7 +149,7 @@ public:
 
     request.body(
         [response_schema, error_schema,
-         template_path = std::move(template_path), &request_schema_template,
+         template_path = std::move(template_path), &self, request_schema,
          perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -206,8 +181,7 @@ public:
             return;
           }
 
-          sourcemeta::blaze::Evaluator request_evaluator;
-          if (!request_evaluator.validate(request_schema_template, instance)) {
+          if (!self.validate(request_schema, instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_BAD_REQUEST, "invalid-request",
@@ -275,10 +249,10 @@ private:
         sourcemeta::blaze::StandardOutput::Basic);
   }
 
+  std::string_view request_schema_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;
   std::string_view error_schema_;
-  sourcemeta::blaze::Template request_schema_template_;
 };
 
 #endif

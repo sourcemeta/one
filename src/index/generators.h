@@ -734,34 +734,33 @@ struct GENERATE_URITEMPLATE_ROUTES {
                        otherwise_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
-          {"artifact", std::string_view{"directory"}},
           {"responseSchema", std::string_view{list_schema}},
           {"rpcSchema", std::string_view{list_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/list{/path*}", "list_directory", next_id++,
-                 sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_LIST_DIRECTORY_V1,
                  list_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           dependencies_arguments[] = {
-              {"artifact", std::string_view{"dependencies"}},
+              {"direction", std::string_view{"out"}},
               {"responseSchema", std::string_view{dependencies_schema}},
               {"rpcSchema", std::string_view{dependencies_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependencies/{+schema}",
                  "get_schema_dependencies", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1,
                  dependencies_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           dependents_arguments[] = {
-              {"artifact", std::string_view{"dependents"}},
+              {"direction", std::string_view{"in"}},
               {"responseSchema", std::string_view{dependents_schema}},
               {"rpcSchema", std::string_view{dependents_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependents/{+schema}",
                  "get_schema_dependents", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1,
                  dependents_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {

@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/search.h>
@@ -558,13 +559,6 @@ struct GENERATE_MCP {
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
-    auto initialize_result{sourcemeta::core::JSON::make_object()};
-    initialize_result.assign("protocolVersion",
-                             sourcemeta::core::JSON{MCP_PROTOCOL_VERSION});
-
-    auto capabilities{sourcemeta::core::JSON::make_object()};
-    capabilities.assign("resources", sourcemeta::core::JSON::make_object());
-
     auto server_info{sourcemeta::core::JSON::make_object()};
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     server_info.assign("name",
@@ -577,7 +571,6 @@ struct GENERATE_MCP {
 #endif
     server_info.assign("version",
                        sourcemeta::core::JSON{sourcemeta::one::version()});
-    initialize_result.assign("serverInfo", std::move(server_info));
 
     constexpr std::string_view INSTRUCTIONS_BODY{
         "Sourcemeta One is a JSON Schema registry. It serves a catalog of "
@@ -596,26 +589,18 @@ struct GENERATE_MCP {
       instructions << "This is an instance of Sourcemeta One. ";
     }
     instructions << INSTRUCTIONS_BODY;
-    initialize_result.assign("instructions",
-                             sourcemeta::core::JSON{instructions.str()});
 
-    auto template_entry{sourcemeta::core::JSON::make_object()};
     std::string template_uri{configuration.url};
     if (!template_uri.empty() && template_uri.back() == '/') {
       template_uri.pop_back();
     }
     template_uri.append("/{+path}{?bundle}");
-    template_entry.assign("uriTemplate", sourcemeta::core::JSON{template_uri});
-    template_entry.assign("name", sourcemeta::core::JSON{"JSON Schema"});
-    template_entry.assign(
-        "description",
-        sourcemeta::core::JSON{
-            "A JSON Schema in this catalog (optionally bundled)"});
-    template_entry.assign("mimeType",
-                          sourcemeta::core::JSON{"application/schema+json"});
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
-    resource_templates.push_back(std::move(template_entry));
+    resource_templates.push_back(sourcemeta::one::mcp_make_resource_template(
+        template_uri, "JSON Schema",
+        "A JSON Schema in this catalog (optionally bundled)",
+        "application/schema+json"));
 
     auto resources{sourcemeta::core::JSON::make_object()};
     auto tools{sourcemeta::core::JSON::make_array()};
@@ -631,17 +616,33 @@ struct GENERATE_MCP {
     }
 #endif
 
+    auto capabilities{sourcemeta::core::JSON::make_object()};
+    capabilities.assign("resources", sourcemeta::core::JSON::make_object());
     if (!tools.empty()) {
       capabilities.assign("tools", sourcemeta::core::JSON::make_object());
     }
-    initialize_result.assign("capabilities", std::move(capabilities));
+
+    auto initialize_result{sourcemeta::one::mcp_make_initialize_result(
+        sourcemeta::one::MCP_PROTOCOL_VERSION, std::move(capabilities),
+        std::move(server_info), instructions.str())};
+
+    auto resource_templates_response{sourcemeta::core::JSON::make_object()};
+    resource_templates_response.assign("resourceTemplates",
+                                       std::move(resource_templates));
+
+    auto tools_response{sourcemeta::core::JSON::make_object()};
+    tools_response.assign("tools", std::move(tools));
 
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
-    document.assign("initialize", std::move(initialize_result));
-    document.assign("resourceTemplates", std::move(resource_templates));
+    document.assign(std::string{sourcemeta::one::MCP_METHOD_INITIALIZE},
+                    std::move(initialize_result));
+    document.assign(
+        std::string{sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
+        std::move(resource_templates_response));
     document.assign("resources", std::move(resources));
-    document.assign("tools", std::move(tools));
+    document.assign(std::string{sourcemeta::one::MCP_METHOD_TOOLS_LIST},
+                    std::move(tools_response));
     document.assign("toolRoutes", std::move(tool_routes));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
@@ -653,7 +654,6 @@ struct GENERATE_MCP {
   }
 
 private:
-  static constexpr std::string_view MCP_PROTOCOL_VERSION{"2025-11-25"};
   static constexpr std::size_t MCP_PAGE_SIZE{50};
 };
 

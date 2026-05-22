@@ -160,24 +160,10 @@ public:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto mcp(const sourcemeta::core::JSON &envelope)
+  auto mcp(const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    const auto *id{sourcemeta::core::jsonrpc_request_id(envelope)};
-    const sourcemeta::core::JSON request_id{
-        id ? *id : sourcemeta::core::JSON{nullptr}};
-
-    const auto *params{sourcemeta::core::jsonrpc_params(envelope)};
-    if (params == nullptr || !params->is_object() ||
-        !params->defines("arguments")) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
-    }
-
-    const auto &arguments{params->at("arguments")};
-    // TODO: Cache the compiled template across invocations
-    const auto rpc_schema_template{this->blaze_template(
-        this->rpc_schema_, sourcemeta::blaze::Mode::FastValidation)};
-    sourcemeta::blaze::Evaluator evaluator;
-    if (!evaluator.validate(rpc_schema_template, arguments)) {
+    if (!this->validate(this->rpc_schema_, arguments)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -211,46 +197,17 @@ public:
 
     std::ostringstream payload;
     sourcemeta::core::prettify(result, payload);
-    auto text_block{sourcemeta::core::JSON::make_object()};
-    text_block.assign_assume_new(std::string{"type"},
-                                 sourcemeta::core::JSON{"text"});
-    text_block.assign_assume_new(std::string{"text"},
-                                 sourcemeta::core::JSON{payload.str()});
-    content.push_back(std::move(text_block));
+    content.push_back(sourcemeta::one::mcp_make_text_block(payload.str()));
 
     for (std::size_t index{0}; index < result.array_size(); ++index) {
       const auto &entry{result.at(index)};
-      auto resource_link{sourcemeta::core::JSON::make_object()};
-      resource_link.assign_assume_new(std::string{"type"},
-                                      sourcemeta::core::JSON{"resource_link"});
-      resource_link.assign_assume_new(
-          std::string{"uri"},
-          sourcemeta::core::JSON{entry.at("identifier").to_string()});
-      const auto &name{entry.at("title").to_string()};
-      if (!name.empty()) {
-        resource_link.assign_assume_new(std::string{"name"},
-                                        sourcemeta::core::JSON{name});
-      }
-      const auto &description{entry.at("description").to_string()};
-      if (!description.empty()) {
-        resource_link.assign_assume_new(std::string{"description"},
-                                        sourcemeta::core::JSON{description});
-      }
-      resource_link.assign_assume_new(
-          std::string{"mimeType"},
-          sourcemeta::core::JSON{"application/schema+json"});
-      content.push_back(std::move(resource_link));
+      content.push_back(sourcemeta::one::mcp_make_resource_link(
+          entry.at("identifier").to_string(), "application/schema+json",
+          entry.at("title").to_string(), entry.at("description").to_string()));
     }
 
-    auto envelope_result{sourcemeta::core::JSON::make_object()};
-    envelope_result.assign_assume_new(std::string{"content"},
-                                      std::move(content));
-    envelope_result.assign_assume_new(std::string{"structuredContent"},
-                                      std::move(result));
-    envelope_result.assign_assume_new(std::string{"isError"},
-                                      sourcemeta::core::JSON{false});
-    return sourcemeta::core::jsonrpc_make_success(request_id,
-                                                  std::move(envelope_result));
+    return sourcemeta::one::mcp_make_tool_success(request_id, std::move(result),
+                                                  std::move(content));
   }
 
 private:

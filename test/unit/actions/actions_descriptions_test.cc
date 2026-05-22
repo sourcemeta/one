@@ -39,6 +39,20 @@ TEST(Actions_description, explorer_artifact_v1) {
       std::string_view{"Read a navigation artifact for browsing schemas"});
 }
 
+TEST(Actions_description, list_directory_v1) {
+  EXPECT_EQ(
+      sourcemeta::one::action_description(
+          sourcemeta::one::ACTION_TYPE_LIST_DIRECTORY_V1),
+      std::string_view{"List the contents of a directory in the catalog"});
+}
+
+TEST(Actions_description, dependency_tree_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1),
+            std::string_view{"Look up the dependency graph of a specific "
+                             "schema (incoming or outgoing)"});
+}
+
 TEST(Actions_description, jsonschema_evaluate_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1),
