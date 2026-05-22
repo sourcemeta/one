@@ -622,9 +622,11 @@ struct GENERATE_MCP {
       capabilities.assign("tools", sourcemeta::core::JSON::make_object());
     }
 
-    auto initialize_result{sourcemeta::one::mcp_make_initialize_result(
-        sourcemeta::one::MCP_PROTOCOL_VERSION, std::move(capabilities),
-        std::move(server_info), instructions.str())};
+    auto initialize_ingredients{sourcemeta::core::JSON::make_object()};
+    initialize_ingredients.assign("capabilities", std::move(capabilities));
+    initialize_ingredients.assign("serverInfo", std::move(server_info));
+    initialize_ingredients.assign("instructions",
+                                  sourcemeta::core::JSON{instructions.str()});
 
     auto resource_templates_response{sourcemeta::core::JSON::make_object()};
     resource_templates_response.assign("resourceTemplates",
@@ -636,7 +638,7 @@ struct GENERATE_MCP {
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
     document.assign(std::string{sourcemeta::one::MCP_METHOD_INITIALIZE},
-                    std::move(initialize_result));
+                    std::move(initialize_ingredients));
     document.assign(
         std::string{sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
         std::move(resource_templates_response));

@@ -64,7 +64,8 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::JSON &request_id,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
@@ -95,7 +96,8 @@ public:
     }
 
     return sourcemeta::one::mcp_make_tool_success(
-        request_id, this->evaluate(template_path, arguments.at("instance")));
+        version, request_id,
+        this->evaluate(template_path, arguments.at("instance")));
   }
 
   template <typename Perform>

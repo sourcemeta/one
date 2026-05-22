@@ -22,11 +22,30 @@ auto mcp_make_text_block(const std::string_view text)
   return block;
 }
 
-auto mcp_make_resource_link(const std::string_view uri,
+auto mcp_make_resource_link(const MCPProtocolVersion version,
+                            const std::string_view uri,
                             const std::string_view mime_type,
                             const std::string_view name,
                             const std::string_view description)
     -> sourcemeta::core::JSON {
+  if (!mcp_supports_resource_link_content(version)) {
+    std::string text;
+    if (!name.empty()) {
+      text.append(name);
+      if (!description.empty()) {
+        text.append(" (");
+        text.append(description);
+        text.append(")");
+      }
+      text.append(": ");
+    } else if (!description.empty()) {
+      text.append(description);
+      text.append(": ");
+    }
+    text.append(uri);
+    return mcp_make_text_block(text);
+  }
+
   auto block{sourcemeta::core::JSON::make_object()};
   block.assign_assume_new(std::string{"type"},
                           sourcemeta::core::JSON{"resource_link"});
@@ -43,7 +62,8 @@ auto mcp_make_resource_link(const std::string_view uri,
   return block;
 }
 
-auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
+auto mcp_make_tool_success(const MCPProtocolVersion version,
+                           const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON result)
     -> sourcemeta::core::JSON {
   std::ostringstream payload;
@@ -54,22 +74,27 @@ auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
 
   auto envelope_result{sourcemeta::core::JSON::make_object()};
   envelope_result.assign_assume_new(std::string{"content"}, std::move(content));
-  envelope_result.assign_assume_new(std::string{"structuredContent"},
-                                    std::move(result));
+  if (mcp_supports_structured_content(version)) {
+    envelope_result.assign_assume_new(std::string{"structuredContent"},
+                                      std::move(result));
+  }
   envelope_result.assign_assume_new(std::string{"isError"},
                                     sourcemeta::core::JSON{false});
   return sourcemeta::core::jsonrpc_make_success(id, std::move(envelope_result));
 }
 
-auto mcp_make_tool_success(const sourcemeta::core::JSON &id,
+auto mcp_make_tool_success(const MCPProtocolVersion version,
+                           const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON structured,
                            sourcemeta::core::JSON content_blocks)
     -> sourcemeta::core::JSON {
   auto envelope_result{sourcemeta::core::JSON::make_object()};
   envelope_result.assign_assume_new(std::string{"content"},
                                     std::move(content_blocks));
-  envelope_result.assign_assume_new(std::string{"structuredContent"},
-                                    std::move(structured));
+  if (mcp_supports_structured_content(version)) {
+    envelope_result.assign_assume_new(std::string{"structuredContent"},
+                                      std::move(structured));
+  }
   envelope_result.assign_assume_new(std::string{"isError"},
                                     sourcemeta::core::JSON{false});
   return sourcemeta::core::jsonrpc_make_success(id, std::move(envelope_result));
@@ -134,8 +159,8 @@ auto mcp_make_resource_template(const std::string_view uri_template,
 }
 
 auto mcp_make_tool_descriptor(
-    const std::string_view name, const std::string_view description,
-    sourcemeta::core::JSON input_schema,
+    const MCPProtocolVersion version, const std::string_view name,
+    const std::string_view description, sourcemeta::core::JSON input_schema,
     std::optional<sourcemeta::core::JSON> output_schema,
     std::optional<sourcemeta::core::JSON> annotations)
     -> sourcemeta::core::JSON {
@@ -144,25 +169,46 @@ auto mcp_make_tool_descriptor(
   entry.assign_assume_new(std::string{"description"},
                           sourcemeta::core::JSON{description});
   entry.assign_assume_new(std::string{"inputSchema"}, std::move(input_schema));
-  if (output_schema.has_value()) {
+  if (output_schema.has_value() && mcp_supports_output_schema(version)) {
     entry.assign_assume_new(std::string{"outputSchema"},
                             std::move(output_schema).value());
   }
   if (annotations.has_value()) {
-    entry.assign_assume_new(std::string{"annotations"},
-                            std::move(annotations).value());
+    auto annotations_value{std::move(annotations).value()};
+    if (!mcp_supports_annotations_title(version) &&
+        annotations_value.is_object() && annotations_value.defines("title")) {
+      annotations_value.erase("title");
+    }
+    if (!annotations_value.is_object() || !annotations_value.empty()) {
+      entry.assign_assume_new(std::string{"annotations"},
+                              std::move(annotations_value));
+    }
   }
   return entry;
 }
 
-auto mcp_make_initialize_result(const std::string_view protocol_version,
+auto mcp_make_initialize_result(const sourcemeta::core::JSON &params,
                                 sourcemeta::core::JSON capabilities,
                                 sourcemeta::core::JSON server_info,
                                 const std::string_view instructions)
     -> sourcemeta::core::JSON {
+  std::string_view requested_version{};
+  if (params.is_object() && params.defines("protocolVersion") &&
+      params.at("protocolVersion").is_string()) {
+    requested_version = params.at("protocolVersion").to_string();
+  }
+  const auto resolved{mcp_resolve_protocol_version(requested_version)};
+  const auto version{resolved.value_or(MCPProtocolVersion::V_2025_11_25)};
+
+  if (!mcp_supports_implementation_title(version) && server_info.is_object() &&
+      server_info.defines("title")) {
+    server_info.erase("title");
+  }
+
   auto result{sourcemeta::core::JSON::make_object()};
-  result.assign_assume_new(std::string{"protocolVersion"},
-                           sourcemeta::core::JSON{protocol_version});
+  result.assign_assume_new(
+      std::string{"protocolVersion"},
+      sourcemeta::core::JSON{mcp_protocol_version_string(version)});
   result.assign_assume_new(std::string{"capabilities"},
                            std::move(capabilities));
   result.assign_assume_new(std::string{"serverInfo"}, std::move(server_info));

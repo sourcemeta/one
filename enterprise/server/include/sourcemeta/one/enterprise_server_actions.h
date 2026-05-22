@@ -82,10 +82,9 @@ public:
       return;
     }
 
-    const auto protocol_version_header{request.header("mcp-protocol-version")};
-    if (!protocol_version_header.empty() &&
-        !sourcemeta::one::mcp_is_supported_protocol_version(
-            protocol_version_header)) {
+    const auto negotiated_version{sourcemeta::one::mcp_resolve_protocol_version(
+        request.header("mcp-protocol-version"))};
+    if (!negotiated_version.has_value()) {
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_BAD_REQUEST,
                            sourcemeta::core::jsonrpc_make_error(
@@ -94,9 +93,10 @@ public:
     }
 
     request.body(
-        [this](sourcemeta::one::HTTPRequest &callback_request,
-               sourcemeta::one::HTTPResponse &callback_response,
-               std::string &&body, bool too_big) {
+        [this, version = negotiated_version.value()](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            std::string &&body, bool too_big) {
           if (too_big) {
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
@@ -104,7 +104,7 @@ public:
                                      nullptr, 5, "Request too large"));
             return;
           }
-          this->on_message(callback_request, callback_response,
+          this->on_message(version, callback_request, callback_response,
                            std::move(body));
         },
         [this](sourcemeta::one::HTTPRequest &callback_request,
@@ -121,7 +121,8 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
@@ -146,13 +147,22 @@ private:
   auto on_resources_list(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
+  auto on_initialize(const sourcemeta::core::JSON &request_json) const
+      -> sourcemeta::core::JSON;
+
+  auto on_tools_list(sourcemeta::one::MCPProtocolVersion version,
+                     const sourcemeta::core::JSON &request_json) const
+      -> sourcemeta::core::JSON;
+
   auto on_resources_read(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
-  auto on_tools_call(const sourcemeta::core::JSON &request_json,
+  auto on_tools_call(sourcemeta::one::MCPProtocolVersion version,
+                     const sourcemeta::core::JSON &request_json,
                      std::string_view envelope) -> sourcemeta::core::JSON;
 
-  auto on_message(sourcemeta::one::HTTPRequest &request,
+  auto on_message(sourcemeta::one::MCPProtocolVersion version,
+                  sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response, std::string &&body)
       -> void;
 

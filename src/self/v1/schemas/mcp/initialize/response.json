@@ -39,7 +39,7 @@
       ],
       "properties": {
         "protocolVersion": {
-          "const": "2025-11-25"
+          "enum": [ "2025-11-25", "2025-06-18", "2025-03-26" ]
         },
         "capabilities": {
           "type": "object",
@@ -58,7 +58,7 @@
         },
         "serverInfo": {
           "type": "object",
-          "required": [ "name", "title", "version" ],
+          "required": [ "name", "version" ],
           "properties": {
             "name": {
               "enum": [ "sourcemeta-one", "sourcemeta-one-enterprise" ]

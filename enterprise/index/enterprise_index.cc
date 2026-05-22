@@ -164,8 +164,9 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
         std::string{operation_id},
         sourcemeta::core::JSON{static_cast<std::int64_t>(identifier)});
     tools.push_back(sourcemeta::one::mcp_make_tool_descriptor(
-        operation_id, description, std::move(input_schema_ref),
-        std::move(output_schema_ref), std::move(annotations)));
+        sourcemeta::one::MCPProtocolVersion::V_2025_11_25, operation_id,
+        description, std::move(input_schema_ref), std::move(output_schema_ref),
+        std::move(annotations)));
   }
 }
 

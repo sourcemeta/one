@@ -67,7 +67,8 @@ public:
                                       response, this->error_schema_);
   }
 
-  auto mcp(const sourcemeta::core::JSON &request_id,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
@@ -113,14 +114,15 @@ public:
           continue;
         }
         content.push_back(sourcemeta::one::mcp_make_resource_link(
-            entry.at("identifier").to_string(), "application/schema+json",
+            version, entry.at("identifier").to_string(),
+            "application/schema+json",
             entry.at_or("title", EMPTY_STRING).to_string(),
             entry.at_or("description", EMPTY_STRING).to_string()));
       }
     }
 
-    return sourcemeta::one::mcp_make_tool_success(request_id, std::move(result),
-                                                  std::move(content));
+    return sourcemeta::one::mcp_make_tool_success(
+        version, request_id, std::move(result), std::move(content));
   }
 
 private:

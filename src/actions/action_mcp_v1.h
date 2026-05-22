@@ -81,6 +81,16 @@ public:
       return;
     }
 
+    if (!sourcemeta::one::mcp_resolve_protocol_version(
+             request.header("mcp-protocol-version"))
+             .has_value()) {
+      this->write_envelope(request, response,
+                           sourcemeta::one::STATUS_BAD_REQUEST,
+                           sourcemeta::core::jsonrpc_make_error(
+                               nullptr, 3, "Unsupported protocol version"));
+      return;
+    }
+
     request.body(
         [this](sourcemeta::one::HTTPRequest &callback_request,
                sourcemeta::one::HTTPResponse &callback_response,
@@ -103,7 +113,7 @@ public:
           }
           this->write_envelope(callback_request, callback_response,
                                sourcemeta::one::STATUS_OK,
-                               this->handle_message(request_json));
+                               this->on_message(request_json));
         },
         [this](sourcemeta::one::HTTPRequest &callback_request,
                sourcemeta::one::HTTPResponse &callback_response,
@@ -119,7 +129,8 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
@@ -152,7 +163,7 @@ private:
   }
 
   [[nodiscard]] auto
-  handle_message(const sourcemeta::core::JSON &request_json) const
+  on_message(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON {
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
     if (method.empty()) {
@@ -166,8 +177,12 @@ private:
     }
 
     if (method == sourcemeta::one::MCP_METHOD_INITIALIZE) {
-      return sourcemeta::core::jsonrpc_make_success(
-          *id, this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE));
+      const auto &parts{
+          this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
+      auto result{sourcemeta::one::mcp_make_initialize_result(
+          request_json.at("params"), parts.at("capabilities"),
+          parts.at("serverInfo"), parts.at("instructions").to_string())};
+      return sourcemeta::core::jsonrpc_make_success(*id, std::move(result));
     }
 
     if (method == sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {

@@ -2,6 +2,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME router
   SOURCES base.cc router.cc)
 
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::one::http)
+target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::one::mcp)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::jsonrpc)
