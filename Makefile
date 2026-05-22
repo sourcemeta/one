@@ -15,7 +15,7 @@ SERVER ?= ON
 PRESET ?= Debug
 OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
-PUBLIC ?= ./public
+PUBLIC ?= ./enterprise/e2e/public
 PARALLEL ?= 4
 # Only for local development
 ENTERPRISE ?= ON
@@ -78,6 +78,7 @@ test-e2e:
 ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/path $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
 endif
 
 .PHONY: docker
@@ -91,6 +92,7 @@ docker: docker-build
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/path EDITION=$(EDITION)
+	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
 endif
 
 .PHONY: docker-benchmark

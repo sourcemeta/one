@@ -188,7 +188,7 @@ base, and the indexer would report an error.
     [schemas.sourcemeta.com](https://schemas.sourcemeta.com), which ingests
     schemas from many third-party sources using `baseUri`. [Find the
     configuration file
-    here](https://github.com/sourcemeta/one/blob/main/public/one.json)
+    here](https://github.com/sourcemeta/one/blob/main/enterprise/e2e/public/one.json)
 
 ### Next Steps
 
