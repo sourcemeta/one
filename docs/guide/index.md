@@ -91,6 +91,12 @@ is the top challenge cited by 51% of organisations*, ahead of security,
 tooling, and performance. It has held the top spot in every edition of the
 survey since 2016.
 
+[Salt Security's Q1 2025 State of API Security
+report](https://content.salt.security/state-api-report.html) found that *of
+the 13% of organisations managing more than 1,000 APIs, 53% are large
+enterprises with 10,000 or more employees*, demonstrating the scale at which
+large enterprises leverage APIs to deliver services and functionality.
+
 [Axway's 2024 State of Enterprise API Maturity
 report](https://resources.axway.com/build-api-marketplace/rpt-state-of-enterprise-api-maturity-in-2024-en),
 based on 600 senior IT and business decision-makers across nine countries,
