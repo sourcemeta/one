@@ -46,13 +46,23 @@ public:
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    auto absolute_path{this->base() / "explorer"};
+    const auto explorer_root{this->base() / "explorer"};
+    auto absolute_path{explorer_root};
     if (!matches.empty() && !matches.front().empty()) {
       absolute_path /= matches.front();
     }
     absolute_path /= "%";
     absolute_path /= "directory.metapack";
-    ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
+
+    const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
+    if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", this->error_schema_);
+      return;
+    }
+
+    ActionServeMetapackFile_v1::serve(safe_path, sourcemeta::one::STATUS_OK,
                                       true, {}, this->response_schema_, request,
                                       response, this->error_schema_);
   }
