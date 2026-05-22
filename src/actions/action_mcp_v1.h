@@ -179,10 +179,9 @@ private:
     if (method == sourcemeta::one::MCP_METHOD_INITIALIZE) {
       const auto &parts{
           this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
-      auto result{sourcemeta::one::mcp_make_initialize_result(
-          request_json.at("params"), parts.at("capabilities"),
-          parts.at("serverInfo"), parts.at("instructions").to_string())};
-      return sourcemeta::core::jsonrpc_make_success(*id, std::move(result));
+      return sourcemeta::one::mcp_make_initialize_result(
+          request_json, parts.at("capabilities"), parts.at("serverInfo"),
+          parts.at("instructions").to_string());
     }
 
     if (method == sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
