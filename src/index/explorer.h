@@ -7,8 +7,8 @@
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared.h>
 
+#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/semver.h>
 
 #include <sourcemeta/one/build.h>
@@ -366,7 +366,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
-    const auto id{sourcemeta::core::identify(
+    const auto id{sourcemeta::blaze::identify(
         schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         })};
@@ -382,15 +382,15 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign(
         "path", sourcemeta::core::JSON{configuration.base_path + "/" +
                                        resolver_entry.relative_path.string()});
-    const auto base_dialect{sourcemeta::core::base_dialect(
+    const auto base_dialect{sourcemeta::blaze::base_dialect(
         schema_data, [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         })};
     assert(base_dialect.has_value());
     result.assign("baseDialect",
                   sourcemeta::core::JSON{
-                      sourcemeta::core::to_string(base_dialect.value())});
-    const auto dialect{sourcemeta::core::dialect(schema_data)};
+                      sourcemeta::blaze::to_string(base_dialect.value())});
+    const auto dialect{sourcemeta::blaze::dialect(schema_data)};
     assert(!dialect.empty());
     result.assign("dialect", sourcemeta::core::JSON{dialect});
 
@@ -408,17 +408,17 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       auto examples_array{sourcemeta::core::JSON::make_array()};
       const auto *examples{schema_data.try_at("examples")};
       if (examples && examples->is_array() && !examples->empty()) {
-        const auto vocabularies{sourcemeta::core::vocabularies(
+        const auto vocabularies{sourcemeta::blaze::vocabularies(
             [&callback, &resolver](const auto identifier) {
               return resolver(identifier, callback);
             },
             base_dialect.value(), dialect)};
         const auto &walker_result{
-            sourcemeta::core::schema_walker("examples", vocabularies)};
+            sourcemeta::blaze::schema_walker("examples", vocabularies)};
         if (walker_result.type ==
-                sourcemeta::core::SchemaKeywordType::Annotation ||
+                sourcemeta::blaze::SchemaKeywordType::Annotation ||
             walker_result.type ==
-                sourcemeta::core::SchemaKeywordType::Comment) {
+                sourcemeta::blaze::SchemaKeywordType::Comment) {
           constexpr std::size_t EXAMPLES_MAXIMUM{10};
           for (std::size_t cursor = 0;
                cursor < std::min(EXAMPLES_MAXIMUM, examples->size());

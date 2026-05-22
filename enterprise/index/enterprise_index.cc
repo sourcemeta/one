@@ -2,9 +2,10 @@
 
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/foundation.h>
 
 #include <sourcemeta/core/error.h>
-#include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -12,38 +13,12 @@
 #include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
-#include <cctype>      // std::toupper
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <variant>     // std::get
-
-namespace {
-
-// TODO: Upstream this to sourcemeta::core. Generic snake_case/kebab-case
-// to Title Case conversion has no enterprise-specific semantics
-auto to_prose(const std::string_view input) -> std::string {
-  std::string result;
-  result.reserve(input.size());
-  bool capitalize_next{true};
-  for (const char character : input) {
-    if (character == '_' || character == '-') {
-      result.push_back(' ');
-      capitalize_next = true;
-    } else if (capitalize_next) {
-      result.push_back(static_cast<char>(
-          std::toupper(static_cast<unsigned char>(character))));
-      capitalize_next = false;
-    } else {
-      result.push_back(character);
-    }
-  }
-  return result;
-}
-
-} // namespace
 
 namespace sourcemeta::one {
 
@@ -59,7 +34,7 @@ auto load_custom_lint_rules(
     auto rule_schema{sourcemeta::core::read_yaml_or_json(rule_path)};
     try {
       custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
-          rule_schema, sourcemeta::core::schema_walker,
+          rule_schema, sourcemeta::blaze::schema_walker,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           },
@@ -76,9 +51,9 @@ auto load_custom_lint_rules(
     } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &) {
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaRuleMissingNameError>(rule_path);
-    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
+          sourcemeta::blaze::SchemaUnknownBaseDialectError>(rule_path);
     }
   }
 }
@@ -193,7 +168,9 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     }
 
     auto annotations{sourcemeta::core::JSON::make_object()};
-    annotations.assign("title", sourcemeta::core::JSON{to_prose(operation_id)});
+    std::string title{operation_id};
+    sourcemeta::core::to_title_case(title);
+    annotations.assign("title", sourcemeta::core::JSON{title});
     entry.assign("annotations", std::move(annotations));
 
     tool_routes.assign(

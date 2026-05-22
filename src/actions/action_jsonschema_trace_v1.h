@@ -8,6 +8,7 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
@@ -173,20 +174,20 @@ private:
       return sourcemeta::core::JSON{nullptr};
     }
 
-    const auto base_dialect{sourcemeta::core::to_base_dialect(
+    const auto base_dialect{sourcemeta::blaze::to_base_dialect(
         location->at("baseDialect").to_string())};
     if (!base_dialect.has_value()) {
       return sourcemeta::core::JSON{nullptr};
     }
 
-    const auto vocabularies{sourcemeta::core::vocabularies(
-        sourcemeta::core::schema_resolver, base_dialect.value(),
+    const auto vocabularies{sourcemeta::blaze::vocabularies(
+        sourcemeta::blaze::schema_resolver, base_dialect.value(),
         location->at("dialect").to_string())};
-    const auto &walker_result{sourcemeta::core::schema_walker(
+    const auto &walker_result{sourcemeta::blaze::schema_walker(
         evaluate_path.back().to_property(), vocabularies)};
     if (walker_result.vocabulary.has_value()) {
       return sourcemeta::core::to_json(
-          sourcemeta::core::to_string(walker_result.vocabulary.value()));
+          sourcemeta::blaze::to_string(walker_result.vocabulary.value()));
     }
 
     return sourcemeta::core::JSON{nullptr};
@@ -264,8 +265,7 @@ private:
                             std::move(instance_positions).value()));
           }
           step.assign("keywordLocation",
-                      sourcemeta::core::JSON{
-                          sourcemeta::core::to_string(extra.keyword_location)});
+                      sourcemeta::core::JSON{extra.keyword_location});
           step.assign("annotation", annotation);
 
           if (type == sourcemeta::blaze::EvaluationType::Pre) {
@@ -278,10 +278,9 @@ private:
           }
 
           step.assign("vocabulary",
-                      this->resolve_vocabulary(
-                          sourcemeta::core::to_string(extra.keyword_location),
-                          evaluate_path, static_locations,
-                          referenced_locations));
+                      this->resolve_vocabulary(extra.keyword_location,
+                                               evaluate_path, static_locations,
+                                               referenced_locations));
 
           steps.push_back(std::move(step));
         })};

@@ -1,6 +1,7 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/frame.h>
 #include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/regex.h>
 #include <sourcemeta/core/uri.h>
@@ -233,6 +234,7 @@ auto WALK_UP_IN_PLACE_APPLICATORS(const JSON &root, const SchemaFrame &frame,
 
 // Linter
 #include "linter/comment_trim.h"
+#include "linter/conflicting_readonly_writeonly.h"
 #include "linter/const_not_in_enum.h"
 #include "linter/content_schema_default.h"
 #include "linter/definitions_to_defs.h"
@@ -476,6 +478,7 @@ auto add(SchemaTransformer &bundle, const AlterSchemaMode mode) -> void {
     bundle.add<TitleTrim>();
     bundle.add<DescriptionTrim>();
     bundle.add<CommentTrim>();
+    bundle.add<ConflictingReadOnlyWriteOnly>();
     bundle.add<DuplicateExamples>();
     bundle.add<SimplePropertiesIdentifiers>();
     bundle.add<PortableAnchorNames>();

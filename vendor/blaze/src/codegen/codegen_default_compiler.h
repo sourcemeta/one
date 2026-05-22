@@ -3,7 +3,8 @@
 
 #include <sourcemeta/blaze/codegen.h>
 
-#include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/frame.h>
 #include <sourcemeta/core/regex.h>
 #include <sourcemeta/core/uri.h>
 
@@ -29,10 +30,10 @@
 namespace sourcemeta::blaze {
 
 auto handle_impossible(const sourcemeta::core::JSON &,
-                       const sourcemeta::core::SchemaFrame &frame,
-                       const sourcemeta::core::SchemaFrame::Location &location,
-                       const sourcemeta::core::Vocabularies &,
-                       const sourcemeta::core::SchemaResolver &,
+                       const sourcemeta::blaze::SchemaFrame &frame,
+                       const sourcemeta::blaze::SchemaFrame::Location &location,
+                       const sourcemeta::blaze::Vocabularies &,
+                       const sourcemeta::blaze::SchemaResolver &,
                        const sourcemeta::core::JSON &) -> CodegenIRImpossible {
   return CodegenIRImpossible{
       {.pointer = sourcemeta::core::to_pointer(location.pointer),
@@ -40,10 +41,10 @@ auto handle_impossible(const sourcemeta::core::JSON &,
 }
 
 auto handle_any(const sourcemeta::core::JSON &,
-                const sourcemeta::core::SchemaFrame &frame,
-                const sourcemeta::core::SchemaFrame::Location &location,
-                const sourcemeta::core::Vocabularies &,
-                const sourcemeta::core::SchemaResolver &,
+                const sourcemeta::blaze::SchemaFrame &frame,
+                const sourcemeta::blaze::SchemaFrame::Location &location,
+                const sourcemeta::blaze::Vocabularies &,
+                const sourcemeta::blaze::SchemaResolver &,
                 const sourcemeta::core::JSON &) -> CodegenIRAny {
   return CodegenIRAny{
       {.pointer = sourcemeta::core::to_pointer(location.pointer),
@@ -51,10 +52,10 @@ auto handle_any(const sourcemeta::core::JSON &,
 }
 
 auto handle_string(const sourcemeta::core::JSON &schema,
-                   const sourcemeta::core::SchemaFrame &frame,
-                   const sourcemeta::core::SchemaFrame::Location &location,
-                   const sourcemeta::core::Vocabularies &,
-                   const sourcemeta::core::SchemaResolver &,
+                   const sourcemeta::blaze::SchemaFrame &frame,
+                   const sourcemeta::blaze::SchemaFrame::Location &location,
+                   const sourcemeta::blaze::Vocabularies &,
+                   const sourcemeta::blaze::SchemaResolver &,
                    const sourcemeta::core::JSON &subschema) -> CodegenIRScalar {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema",
@@ -85,10 +86,10 @@ auto handle_string(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_object(const sourcemeta::core::JSON &schema,
-                   const sourcemeta::core::SchemaFrame &frame,
-                   const sourcemeta::core::SchemaFrame::Location &location,
-                   const sourcemeta::core::Vocabularies &,
-                   const sourcemeta::core::SchemaResolver &,
+                   const sourcemeta::blaze::SchemaFrame &frame,
+                   const sourcemeta::blaze::SchemaFrame::Location &location,
+                   const sourcemeta::blaze::Vocabularies &,
+                   const sourcemeta::blaze::SchemaResolver &,
                    const sourcemeta::core::JSON &subschema) -> CodegenIRObject {
   ONLY_WHITELIST_KEYWORDS(
       schema, subschema, location.pointer,
@@ -193,10 +194,10 @@ auto handle_object(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_integer(const sourcemeta::core::JSON &schema,
-                    const sourcemeta::core::SchemaFrame &frame,
-                    const sourcemeta::core::SchemaFrame::Location &location,
-                    const sourcemeta::core::Vocabularies &,
-                    const sourcemeta::core::SchemaResolver &,
+                    const sourcemeta::blaze::SchemaFrame &frame,
+                    const sourcemeta::blaze::SchemaFrame::Location &location,
+                    const sourcemeta::blaze::Vocabularies &,
+                    const sourcemeta::blaze::SchemaResolver &,
                     const sourcemeta::core::JSON &subschema)
     -> CodegenIRScalar {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
@@ -212,10 +213,10 @@ auto handle_integer(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_number(const sourcemeta::core::JSON &schema,
-                   const sourcemeta::core::SchemaFrame &frame,
-                   const sourcemeta::core::SchemaFrame::Location &location,
-                   const sourcemeta::core::Vocabularies &,
-                   const sourcemeta::core::SchemaResolver &,
+                   const sourcemeta::blaze::SchemaFrame &frame,
+                   const sourcemeta::blaze::SchemaFrame::Location &location,
+                   const sourcemeta::blaze::Vocabularies &,
+                   const sourcemeta::blaze::SchemaResolver &,
                    const sourcemeta::core::JSON &subschema) -> CodegenIRScalar {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema", "$id", "$anchor", "$dynamicAnchor",
@@ -230,10 +231,10 @@ auto handle_number(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_array(const sourcemeta::core::JSON &schema,
-                  const sourcemeta::core::SchemaFrame &frame,
-                  const sourcemeta::core::SchemaFrame::Location &location,
-                  const sourcemeta::core::Vocabularies &vocabularies,
-                  const sourcemeta::core::SchemaResolver &,
+                  const sourcemeta::blaze::SchemaFrame &frame,
+                  const sourcemeta::blaze::SchemaFrame::Location &location,
+                  const sourcemeta::blaze::Vocabularies &vocabularies,
+                  const sourcemeta::blaze::SchemaResolver &,
                   const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema",        "$id",         "$anchor",
@@ -244,8 +245,6 @@ auto handle_array(const sourcemeta::core::JSON &schema,
                            "prefixItems",    "title",       "description",
                            "default",        "deprecated",  "readOnly",
                            "writeOnly",      "examples"});
-
-  using Vocabularies = sourcemeta::core::Vocabularies;
 
   if (vocabularies.contains(
           Vocabularies::Known::JSON_Schema_2020_12_Applicator) &&
@@ -355,10 +354,10 @@ auto handle_array(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_enum(const sourcemeta::core::JSON &schema,
-                 const sourcemeta::core::SchemaFrame &frame,
-                 const sourcemeta::core::SchemaFrame::Location &location,
-                 const sourcemeta::core::Vocabularies &,
-                 const sourcemeta::core::SchemaResolver &,
+                 const sourcemeta::blaze::SchemaFrame &frame,
+                 const sourcemeta::blaze::SchemaFrame::Location &location,
+                 const sourcemeta::blaze::Vocabularies &,
+                 const sourcemeta::blaze::SchemaResolver &,
                  const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema", "$id", "$anchor", "$dynamicAnchor",
@@ -394,10 +393,10 @@ auto handle_enum(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_anyof(const sourcemeta::core::JSON &schema,
-                  const sourcemeta::core::SchemaFrame &frame,
-                  const sourcemeta::core::SchemaFrame::Location &location,
-                  const sourcemeta::core::Vocabularies &,
-                  const sourcemeta::core::SchemaResolver &,
+                  const sourcemeta::blaze::SchemaFrame &frame,
+                  const sourcemeta::blaze::SchemaFrame::Location &location,
+                  const sourcemeta::blaze::Vocabularies &,
+                  const sourcemeta::blaze::SchemaResolver &,
                   const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(
       schema, subschema, location.pointer,
@@ -431,10 +430,10 @@ auto handle_anyof(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_oneof(const sourcemeta::core::JSON &schema,
-                  const sourcemeta::core::SchemaFrame &frame,
-                  const sourcemeta::core::SchemaFrame::Location &location,
-                  const sourcemeta::core::Vocabularies &,
-                  const sourcemeta::core::SchemaResolver &,
+                  const sourcemeta::blaze::SchemaFrame &frame,
+                  const sourcemeta::blaze::SchemaFrame::Location &location,
+                  const sourcemeta::blaze::Vocabularies &,
+                  const sourcemeta::blaze::SchemaResolver &,
                   const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(
       schema, subschema, location.pointer,
@@ -468,10 +467,10 @@ auto handle_oneof(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_ref(const sourcemeta::core::JSON &schema,
-                const sourcemeta::core::SchemaFrame &frame,
-                const sourcemeta::core::SchemaFrame::Location &location,
-                const sourcemeta::core::Vocabularies &,
-                const sourcemeta::core::SchemaResolver &,
+                const sourcemeta::blaze::SchemaFrame &frame,
+                const sourcemeta::blaze::SchemaFrame::Location &location,
+                const sourcemeta::blaze::Vocabularies &,
+                const sourcemeta::blaze::SchemaResolver &,
                 const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema", "$id", "$anchor", "$dynamicAnchor",
@@ -485,7 +484,7 @@ auto handle_ref(const sourcemeta::core::JSON &schema,
 
   const auto &references{frame.references()};
   const auto reference{references.find(
-      {sourcemeta::core::SchemaReferenceType::Static, ref_weak_pointer})};
+      {sourcemeta::blaze::SchemaReferenceType::Static, ref_weak_pointer})};
   assert(reference != references.cend());
 
   const auto &destination{reference->second.destination};
@@ -504,13 +503,13 @@ auto handle_ref(const sourcemeta::core::JSON &schema,
        .symbol = symbol(frame, target_location)}};
 }
 
-auto handle_dynamic_ref(const sourcemeta::core::JSON &schema,
-                        const sourcemeta::core::SchemaFrame &frame,
-                        const sourcemeta::core::SchemaFrame::Location &location,
-                        const sourcemeta::core::Vocabularies &,
-                        const sourcemeta::core::SchemaResolver &,
-                        const sourcemeta::core::JSON &subschema)
-    -> CodegenIREntity {
+auto handle_dynamic_ref(
+    const sourcemeta::core::JSON &schema,
+    const sourcemeta::blaze::SchemaFrame &frame,
+    const sourcemeta::blaze::SchemaFrame::Location &location,
+    const sourcemeta::blaze::Vocabularies &,
+    const sourcemeta::blaze::SchemaResolver &,
+    const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema", "$id", "$anchor", "$dynamicAnchor",
                            "$defs", "$vocabulary", "$dynamicRef", "title",
@@ -526,7 +525,7 @@ auto handle_dynamic_ref(const sourcemeta::core::JSON &schema,
   // Note: The frame internally converts single-target dynamic references to
   // static reference
   const auto static_reference{references.find(
-      {sourcemeta::core::SchemaReferenceType::Static, ref_weak_pointer})};
+      {sourcemeta::blaze::SchemaReferenceType::Static, ref_weak_pointer})};
   if (static_reference != references.cend()) {
     const auto &destination{static_reference->second.destination};
     const auto target{frame.traverse(destination)};
@@ -547,15 +546,15 @@ auto handle_dynamic_ref(const sourcemeta::core::JSON &schema,
   // Multi-target dynamic reference: find all dynamic anchors with the matching
   // fragment and emit a union of all possible targets
   const auto dynamic_reference{references.find(
-      {sourcemeta::core::SchemaReferenceType::Dynamic, ref_weak_pointer})};
+      {sourcemeta::blaze::SchemaReferenceType::Dynamic, ref_weak_pointer})};
   assert(dynamic_reference != references.cend());
   assert(dynamic_reference->second.fragment.has_value());
   const auto &fragment{dynamic_reference->second.fragment.value()};
 
   std::vector<CodegenIRType> branches;
   for (const auto &[key, entry] : frame.locations()) {
-    if (key.first != sourcemeta::core::SchemaReferenceType::Dynamic ||
-        entry.type != sourcemeta::core::SchemaFrame::LocationType::Anchor) {
+    if (key.first != sourcemeta::blaze::SchemaReferenceType::Dynamic ||
+        entry.type != sourcemeta::blaze::SchemaFrame::LocationType::Anchor) {
       continue;
     }
 
@@ -577,10 +576,10 @@ auto handle_dynamic_ref(const sourcemeta::core::JSON &schema,
 }
 
 auto handle_allof(const sourcemeta::core::JSON &schema,
-                  const sourcemeta::core::SchemaFrame &frame,
-                  const sourcemeta::core::SchemaFrame::Location &location,
-                  const sourcemeta::core::Vocabularies &,
-                  const sourcemeta::core::SchemaResolver &,
+                  const sourcemeta::blaze::SchemaFrame &frame,
+                  const sourcemeta::blaze::SchemaFrame::Location &location,
+                  const sourcemeta::blaze::Vocabularies &,
+                  const sourcemeta::blaze::SchemaResolver &,
                   const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(
       schema, subschema, location.pointer,
@@ -630,10 +629,10 @@ auto handle_allof(const sourcemeta::core::JSON &schema,
 
 auto handle_if_then_else(
     const sourcemeta::core::JSON &schema,
-    const sourcemeta::core::SchemaFrame &frame,
-    const sourcemeta::core::SchemaFrame::Location &location,
-    const sourcemeta::core::Vocabularies &,
-    const sourcemeta::core::SchemaResolver &,
+    const sourcemeta::blaze::SchemaFrame &frame,
+    const sourcemeta::blaze::SchemaFrame::Location &location,
+    const sourcemeta::blaze::Vocabularies &,
+    const sourcemeta::blaze::SchemaResolver &,
     const sourcemeta::core::JSON &subschema) -> CodegenIREntity {
   ONLY_WHITELIST_KEYWORDS(schema, subschema, location.pointer,
                           {"$schema", "$id", "$anchor", "$dynamicAnchor",
@@ -676,16 +675,15 @@ auto handle_if_then_else(
 }
 
 auto default_compiler(const sourcemeta::core::JSON &schema,
-                      const sourcemeta::core::SchemaFrame &frame,
-                      const sourcemeta::core::SchemaFrame::Location &location,
-                      const sourcemeta::core::SchemaResolver &resolver,
+                      const sourcemeta::blaze::SchemaFrame &frame,
+                      const sourcemeta::blaze::SchemaFrame::Location &location,
+                      const sourcemeta::blaze::SchemaResolver &resolver,
                       const sourcemeta::core::JSON &subschema)
     -> CodegenIREntity {
   const auto vocabularies{frame.vocabularies(location, resolver)};
   assert(!vocabularies.empty());
 
   // Be strict with vocabulary support
-  using Vocabularies = sourcemeta::core::Vocabularies;
   static const std::unordered_set<Vocabularies::URI> supported{
       Vocabularies::Known::JSON_Schema_2020_12_Core,
       Vocabularies::Known::JSON_Schema_2020_12_Applicator,

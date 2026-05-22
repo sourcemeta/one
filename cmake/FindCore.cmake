@@ -13,6 +13,10 @@ if(NOT Core_FOUND)
 
   set(SOURCEMETA_CORE_CONTRIB_GOOGLEBENCHMARK OFF CACHE BOOL "GoogleBenchmark")
 
+  set(SOURCEMETA_CORE_LANG_PROCESS OFF CACHE BOOL "Process")
+  set(SOURCEMETA_CORE_JSONL OFF CACHE BOOL "JSONL")
+  set(SOURCEMETA_CORE_PUNYCODE OFF CACHE BOOL "Punycode")
+
   add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/core")
   include(Sourcemeta)
   set(Core_FOUND ON)
