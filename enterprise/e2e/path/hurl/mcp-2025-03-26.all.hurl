@@ -176,28 +176,72 @@ jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/rpc"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[0].annotations.destructiveHint" == false
+jsonpath "$.result.tools[0].annotations.idempotentHint" == true
+jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
 jsonpath "$.result.tools[1].description" == "Look up the dependency graph of a specific schema (incoming or outgoing)"
 jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc"
 jsonpath "$.result.tools[1].annotations.title" == "Get Schema Dependencies"
+jsonpath "$.result.tools[1].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[1].annotations.destructiveHint" == false
+jsonpath "$.result.tools[1].annotations.idempotentHint" == true
+jsonpath "$.result.tools[1].annotations.openWorldHint" == false
 jsonpath "$.result.tools[2].name" == "get_schema_dependents"
 jsonpath "$.result.tools[2].annotations.title" == "Get Schema Dependents"
+jsonpath "$.result.tools[2].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[2].annotations.destructiveHint" == false
+jsonpath "$.result.tools[2].annotations.idempotentHint" == true
+jsonpath "$.result.tools[2].annotations.openWorldHint" == false
 jsonpath "$.result.tools[3].name" == "get_schema_health"
 jsonpath "$.result.tools[3].annotations.title" == "Get Schema Health"
+jsonpath "$.result.tools[3].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[3].annotations.destructiveHint" == false
+jsonpath "$.result.tools[3].annotations.idempotentHint" == true
+jsonpath "$.result.tools[3].annotations.openWorldHint" == false
 jsonpath "$.result.tools[4].name" == "get_schema_locations"
 jsonpath "$.result.tools[4].annotations.title" == "Get Schema Locations"
+jsonpath "$.result.tools[4].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[4].annotations.destructiveHint" == false
+jsonpath "$.result.tools[4].annotations.idempotentHint" == true
+jsonpath "$.result.tools[4].annotations.openWorldHint" == false
 jsonpath "$.result.tools[5].name" == "get_schema_positions"
 jsonpath "$.result.tools[5].annotations.title" == "Get Schema Positions"
+jsonpath "$.result.tools[5].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[5].annotations.destructiveHint" == false
+jsonpath "$.result.tools[5].annotations.idempotentHint" == true
+jsonpath "$.result.tools[5].annotations.openWorldHint" == false
 jsonpath "$.result.tools[6].name" == "get_schema_stats"
 jsonpath "$.result.tools[6].annotations.title" == "Get Schema Stats"
+jsonpath "$.result.tools[6].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[6].annotations.destructiveHint" == false
+jsonpath "$.result.tools[6].annotations.idempotentHint" == true
+jsonpath "$.result.tools[6].annotations.openWorldHint" == false
 jsonpath "$.result.tools[7].name" == "get_schema_metadata"
 jsonpath "$.result.tools[7].annotations.title" == "Get Schema Metadata"
+jsonpath "$.result.tools[7].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[7].annotations.destructiveHint" == false
+jsonpath "$.result.tools[7].annotations.idempotentHint" == true
+jsonpath "$.result.tools[7].annotations.openWorldHint" == false
 jsonpath "$.result.tools[8].name" == "evaluate_schema"
 jsonpath "$.result.tools[8].annotations.title" == "Evaluate Schema"
+jsonpath "$.result.tools[8].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[8].annotations.destructiveHint" == false
+jsonpath "$.result.tools[8].annotations.idempotentHint" == true
+jsonpath "$.result.tools[8].annotations.openWorldHint" == false
 jsonpath "$.result.tools[9].name" == "trace_schema_evaluation"
 jsonpath "$.result.tools[9].annotations.title" == "Trace Schema Evaluation"
+jsonpath "$.result.tools[9].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[9].annotations.destructiveHint" == false
+jsonpath "$.result.tools[9].annotations.idempotentHint" == true
+jsonpath "$.result.tools[9].annotations.openWorldHint" == false
 jsonpath "$.result.tools[10].name" == "search_schemas"
 jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[10].annotations.destructiveHint" == false
+jsonpath "$.result.tools[10].annotations.idempotentHint" == true
+jsonpath "$.result.tools[10].annotations.openWorldHint" == false
 # Added in 2025-06-18 ("outputSchema" on Tool)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$..outputSchema" not exists

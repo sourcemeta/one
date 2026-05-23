@@ -17,6 +17,10 @@ class ActionNotFound_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Return a 404 Not Found response"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionNotFound_v1(
       const std::filesystem::path &base,

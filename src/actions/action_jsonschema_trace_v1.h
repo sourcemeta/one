@@ -33,6 +33,10 @@ public:
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema and return detailed "
       "information about every step of the evaluation process"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionJSONSchemaTrace_v1(
       const std::filesystem::path &base,

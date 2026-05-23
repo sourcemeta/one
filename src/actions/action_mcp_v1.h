@@ -35,6 +35,10 @@ class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionMCP_v1(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
@@ -195,8 +199,22 @@ private:
       const auto &parts{
           this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
       return sourcemeta::one::mcp_make_initialize_result(
-          request_json, parts.at("capabilities"), parts.at("serverInfo"),
-          parts.at("instructions").to_string());
+          request_json,
+          sourcemeta::one::MCPServerCapabilities{
+              .prompts = parts.at(0).to_boolean(),
+              .resources = parts.at(1).to_boolean(),
+              .tools = parts.at(2).to_boolean(),
+              .logging = parts.at(3).to_boolean(),
+              .completions = parts.at(4).to_boolean(),
+          },
+          sourcemeta::one::MCPImplementation{
+              .name = parts.at(5).to_string(),
+              .version = parts.at(6).to_string(),
+              .title = parts.at(7).to_string(),
+              .description = parts.at(8).to_string(),
+              .website_url = parts.at(9).to_string(),
+          },
+          parts.at(10).to_string());
     }
 
     if (method == sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {

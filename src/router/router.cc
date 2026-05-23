@@ -9,10 +9,8 @@ namespace sourcemeta::one {
 
 Router::Router(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
-               const std::span<const RouterActionConstructor> constructors,
-               const std::span<const std::string_view> descriptions)
+               const std::span<const RouterActionConstructor> constructors)
     : base_{base}, router_{router}, constructors_{constructors},
-      descriptions_{descriptions},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1} {
@@ -21,14 +19,6 @@ Router::Router(const std::filesystem::path &base,
       this->default_error_schema_ = std::get<std::string_view>(value);
     }
   });
-}
-
-auto Router::description(const sourcemeta::core::URITemplateRouter::Identifier
-                             context) const noexcept -> std::string_view {
-  if (context >= this->descriptions_.size()) {
-    return {};
-  }
-  return this->descriptions_[context];
 }
 
 auto Router::error(const sourcemeta::one::HTTPRequest &request,

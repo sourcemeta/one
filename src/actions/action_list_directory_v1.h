@@ -24,6 +24,10 @@ class ActionListDirectory_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "List the contents of a directory in the catalog"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionListDirectory_v1(
       const std::filesystem::path &base,

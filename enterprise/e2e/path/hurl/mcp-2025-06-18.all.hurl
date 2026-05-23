@@ -167,6 +167,10 @@ jsonpath "$.result.tools[0].description" == "List the contents of a directory in
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/rpc"
 jsonpath "$.result.tools[0].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/response"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[0].annotations.destructiveHint" == false
+jsonpath "$.result.tools[0].annotations.idempotentHint" == true
+jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

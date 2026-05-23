@@ -18,7 +18,11 @@
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
             },
             "annotations": {
-              "title": "Tool title"
+              "title": "Tool title",
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": false
             }
           }
         ]
@@ -81,11 +85,29 @@
               },
               "annotations": {
                 "type": "object",
-                "required": [ "title" ],
+                "required": [
+                  "title",
+                  "readOnlyHint",
+                  "destructiveHint",
+                  "idempotentHint",
+                  "openWorldHint"
+                ],
                 "properties": {
                   "title": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "readOnlyHint": {
+                    "type": "boolean"
+                  },
+                  "destructiveHint": {
+                    "type": "boolean"
+                  },
+                  "idempotentHint": {
+                    "type": "boolean"
+                  },
+                  "openWorldHint": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false

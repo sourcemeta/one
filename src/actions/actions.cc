@@ -1,5 +1,8 @@
 #include <sourcemeta/one/actions.h>
 
+#include <cassert>     // assert
+#include <string_view> // std::string_view
+
 #include "action_default_v1.h"
 #include "action_dependency_tree_v1.h"
 #include "action_health_check_v1.h"
@@ -12,6 +15,27 @@
 #include "action_serve_explorer_artifact_v1.h"
 #include "action_serve_schema_artifact_v1.h"
 #include "action_serve_static_v1.h"
+
+namespace {
+
+struct ActionMetadata {
+  std::string_view description;
+  bool read_only;
+  bool destructive;
+  bool idempotent;
+  bool open_world;
+};
+
+#define SOURCEMETA_ONE_DEFINE_METADATA(Name, Class)                            \
+  ActionMetadata{Class::DESCRIPTION, Class::READ_ONLY, Class::DESTRUCTIVE,     \
+                 Class::IDEMPOTENT, Class::OPEN_WORLD},
+
+const std::array<ActionMetadata, sourcemeta::one::ACTION_TYPE_COUNT> METADATA{
+    {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_METADATA)}};
+
+#undef SOURCEMETA_ONE_DEFINE_METADATA
+
+} // namespace
 
 namespace sourcemeta::one {
 
@@ -26,20 +50,41 @@ const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{[] {
 
 #undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
 
-#define SOURCEMETA_ONE_DEFINE_DESCRIPTION(Name, Class) Class::DESCRIPTION,
-
-const std::array<std::string_view, ACTION_TYPE_COUNT> DESCRIPTIONS{
-    {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_DESCRIPTION)}};
-
-#undef SOURCEMETA_ONE_DEFINE_DESCRIPTION
-
 auto action_description(
     const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
     -> std::string_view {
-  if (context >= DESCRIPTIONS.size()) {
+  if (context >= METADATA.size()) {
     return {};
   }
-  return DESCRIPTIONS[context];
+  return METADATA[context].description;
+}
+
+auto is_read_only(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool {
+  assert(context < METADATA.size());
+  return METADATA[context].read_only;
+}
+
+auto is_destructive(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool {
+  assert(context < METADATA.size());
+  return METADATA[context].destructive;
+}
+
+auto is_idempotent(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool {
+  assert(context < METADATA.size());
+  return METADATA[context].idempotent;
+}
+
+auto is_open_world(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool {
+  assert(context < METADATA.size());
+  return METADATA[context].open_world;
 }
 
 } // namespace sourcemeta::one

@@ -155,18 +155,32 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
       output_schema_ref.emplace(std::move(ref));
     }
 
-    auto annotations{sourcemeta::core::JSON::make_object()};
     std::string title{operation_id};
     sourcemeta::core::to_title_case(title);
-    annotations.assign("title", sourcemeta::core::JSON{title});
 
     tool_routes.assign(
         std::string{operation_id},
         sourcemeta::core::JSON{static_cast<std::int64_t>(identifier)});
-    tools.push_back(sourcemeta::one::mcp_make_tool_descriptor(
-        sourcemeta::one::MCPProtocolVersion::V_2025_11_25, operation_id,
-        description, std::move(input_schema_ref), std::move(output_schema_ref),
-        std::move(annotations)));
+
+    auto tool_entry{sourcemeta::core::JSON::make_array()};
+    tool_entry.push_back(sourcemeta::core::JSON{operation_id});
+    tool_entry.push_back(sourcemeta::core::JSON{description});
+    tool_entry.push_back(std::move(input_schema_ref));
+    if (output_schema_ref.has_value()) {
+      tool_entry.push_back(std::move(output_schema_ref).value());
+    } else {
+      tool_entry.push_back(sourcemeta::core::JSON{nullptr});
+    }
+    tool_entry.push_back(sourcemeta::core::JSON{title});
+    tool_entry.push_back(
+        sourcemeta::core::JSON{sourcemeta::one::is_read_only(context)});
+    tool_entry.push_back(
+        sourcemeta::core::JSON{sourcemeta::one::is_destructive(context)});
+    tool_entry.push_back(
+        sourcemeta::core::JSON{sourcemeta::one::is_idempotent(context)});
+    tool_entry.push_back(
+        sourcemeta::core::JSON{sourcemeta::one::is_open_world(context)});
+    tools.push_back(std::move(tool_entry));
   }
 }
 
