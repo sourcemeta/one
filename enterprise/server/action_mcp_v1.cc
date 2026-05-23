@@ -185,6 +185,24 @@ auto ActionMCP_v1::on_message(const sourcemeta::one::MCPProtocolVersion version,
     return;
   }
 
+  if (request_json.is_array()) {
+    if (version == sourcemeta::one::MCPProtocolVersion::V_2025_03_26) {
+      // TODO: Support batches for strict compliance to MCP 2025-03-26
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_OK,
+          sourcemeta::core::jsonrpc_make_error(
+              nullptr, 6, "Unsupported operation",
+              sourcemeta::core::JSON{
+                  "Batch operations are not supported in this protocol "
+                  "version yet"}));
+    } else {
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_OK,
+          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr));
+    }
+    return;
+  }
+
   if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
     response.write_status(sourcemeta::one::STATUS_ACCEPTED);
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
