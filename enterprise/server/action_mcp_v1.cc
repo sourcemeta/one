@@ -58,11 +58,9 @@ auto ActionMCP_v1::on_initialize(const sourcemeta::core::JSON &request_json)
     const -> sourcemeta::core::JSON {
   const auto &parts{
       this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
-  auto result{sourcemeta::one::mcp_make_initialize_result(
-      request_json.at("params"), parts.at("capabilities"),
-      parts.at("serverInfo"), parts.at("instructions").to_string())};
-  return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
-                                                std::move(result));
+  return sourcemeta::one::mcp_make_initialize_result(
+      request_json, parts.at("capabilities"), parts.at("serverInfo"),
+      parts.at("instructions").to_string());
 }
 
 auto ActionMCP_v1::on_tools_list(

@@ -180,15 +180,21 @@ auto mcp_make_tool_descriptor(
   return entry;
 }
 
-auto mcp_make_initialize_result(const sourcemeta::core::JSON &params,
+auto mcp_make_initialize_result(const sourcemeta::core::JSON &request,
                                 sourcemeta::core::JSON capabilities,
                                 sourcemeta::core::JSON server_info,
                                 const std::string_view instructions)
     -> sourcemeta::core::JSON {
+  const auto *id{sourcemeta::core::jsonrpc_request_id(request)};
+  const auto *params{sourcemeta::core::jsonrpc_params(request)};
+  if (id == nullptr || params == nullptr || !params->is_object()) {
+    return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
+  }
+
   std::string_view requested_version{};
-  if (params.is_object() && params.defines("protocolVersion") &&
-      params.at("protocolVersion").is_string()) {
-    requested_version = params.at("protocolVersion").to_string();
+  if (params->defines("protocolVersion") &&
+      params->at("protocolVersion").is_string()) {
+    requested_version = params->at("protocolVersion").to_string();
   }
   const auto resolved{mcp_resolve_protocol_version(requested_version)};
   const auto version{resolved.value_or(MCPProtocolVersion::V_2025_11_25)};
@@ -209,7 +215,7 @@ auto mcp_make_initialize_result(const sourcemeta::core::JSON &params,
     result.assign_assume_new(std::string{"instructions"},
                              sourcemeta::core::JSON{instructions});
   }
-  return result;
+  return sourcemeta::core::jsonrpc_make_success(*id, std::move(result));
 }
 
 auto mcp_make_resource_text_content(const std::string_view uri,

@@ -98,7 +98,7 @@ auto mcp_make_tool_descriptor(
     std::optional<sourcemeta::core::JSON> annotations = std::nullopt)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_initialize_result(const sourcemeta::core::JSON &params,
+auto mcp_make_initialize_result(const sourcemeta::core::JSON &request,
                                 sourcemeta::core::JSON capabilities,
                                 sourcemeta::core::JSON server_info,
                                 std::string_view instructions = {})
