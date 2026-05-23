@@ -81,9 +81,9 @@ public:
       return;
     }
 
-    if (!sourcemeta::one::mcp_resolve_protocol_version(
-             request.header("mcp-protocol-version"))
-             .has_value()) {
+    const auto negotiated_version{sourcemeta::one::mcp_resolve_protocol_version(
+        request.header("mcp-protocol-version"))};
+    if (!negotiated_version.has_value()) {
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_BAD_REQUEST,
                            sourcemeta::core::jsonrpc_make_error(
@@ -92,9 +92,10 @@ public:
     }
 
     request.body(
-        [this](sourcemeta::one::HTTPRequest &callback_request,
-               sourcemeta::one::HTTPResponse &callback_response,
-               std::string &&body, bool too_big) {
+        [this, version = negotiated_version.value()](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            std::string &&body, bool too_big) {
           if (too_big) {
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
@@ -109,6 +110,20 @@ public:
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_BAD_REQUEST,
                                  sourcemeta::core::jsonrpc_make_error_parse());
+            return;
+          }
+          if (request_json.is_array()) {
+            // TODO: Support batches for strict compliance to MCP 2025-03-26
+            this->write_envelope(
+                callback_request, callback_response, sourcemeta::one::STATUS_OK,
+                version == sourcemeta::one::MCPProtocolVersion::V_2025_03_26
+                    ? sourcemeta::core::jsonrpc_make_error(
+                          nullptr, 6, "Unsupported operation",
+                          sourcemeta::core::JSON{
+                              "Batch operations are not supported in this "
+                              "protocol version yet"})
+                    : sourcemeta::core::jsonrpc_make_error_invalid_request(
+                          nullptr));
             return;
           }
           this->write_envelope(callback_request, callback_response,

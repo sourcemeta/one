@@ -338,3 +338,31 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-03-26
+Content-Type: application/json
+```
+[ { "jsonrpc": "2.0", "id": 1, "method": "ping" } ]
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: http://localhost:8000
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == null
+jsonpath "$.error.code" == 6
+jsonpath "$.error.message" == "Unsupported operation"
+jsonpath "$.error.data" == "Batch operations are not supported in this protocol version yet"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
