@@ -30,6 +30,8 @@ jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.serverInfo.name" == "sourcemeta-one"
 jsonpath "$.result.serverInfo.title" == "Sourcemeta One"
 jsonpath "$.result.serverInfo.version" matches "^.+$"
+jsonpath "$.result.serverInfo.description" not exists
+jsonpath "$.result.serverInfo.websiteUrl" not exists
 jsonpath "$.result.instructions" == "This is an instance of Sourcemeta One. Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. Use `tools/list` to discover the operations this catalog exposes. Learn more at https://one.sourcemeta.com"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
