@@ -23,6 +23,10 @@ class ActionServeExplorerArtifact_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Read a navigation artifact for browsing schemas"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionServeExplorerArtifact_v1(
       const std::filesystem::path &base,

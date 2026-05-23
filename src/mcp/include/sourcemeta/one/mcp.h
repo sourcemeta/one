@@ -44,71 +44,94 @@ constexpr std::string_view MCP_METHOD_NOTIFICATIONS_INITIALIZED{
     "notifications/initialized"};
 
 constexpr std::int64_t MCP_CODE_RESOURCE_NOT_FOUND{-32002};
+constexpr std::int64_t MCP_CODE_URL_ELICITATION_REQUIRED{-32042};
 
-auto mcp_make_text_block(std::string_view text) -> sourcemeta::core::JSON;
+auto mcp_make_text_block(const std::string_view text) -> sourcemeta::core::JSON;
 
-auto mcp_make_resource_link(MCPProtocolVersion version, std::string_view uri,
-                            std::string_view mime_type,
-                            std::string_view name = {},
-                            std::string_view description = {})
+auto mcp_make_resource_link(const MCPProtocolVersion version,
+                            const std::string_view uri,
+                            const std::string_view mime_type,
+                            const std::string_view name = {},
+                            const std::string_view description = {})
     -> sourcemeta::core::JSON;
 
-auto mcp_make_tool_success(MCPProtocolVersion version,
+auto mcp_make_tool_success(const MCPProtocolVersion version,
                            const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON result)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_tool_success(MCPProtocolVersion version,
+auto mcp_make_tool_success(const MCPProtocolVersion version,
                            const sourcemeta::core::JSON &id,
                            sourcemeta::core::JSON structured,
                            sourcemeta::core::JSON content_blocks)
     -> sourcemeta::core::JSON;
 
 auto mcp_make_tool_error(const sourcemeta::core::JSON &id,
-                         std::string_view message) -> sourcemeta::core::JSON;
+                         const std::string_view message)
+    -> sourcemeta::core::JSON;
 
 auto mcp_make_error_resource_not_found(const sourcemeta::core::JSON &id,
-                                       std::string_view uri)
+                                       const std::string_view uri)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_resource(std::string_view uri, std::string_view name,
-                       std::string_view mime_type,
-                       std::string_view description = {},
-                       std::optional<std::size_t> size = std::nullopt)
+auto mcp_make_resource(const std::string_view uri, const std::string_view name,
+                       const std::string_view mime_type,
+                       const std::string_view description = {},
+                       const std::optional<std::size_t> size = std::nullopt)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_resource_text_content(std::string_view uri,
-                                    std::string_view mime_type,
-                                    std::string_view text)
+auto mcp_make_resource_text_content(const std::string_view uri,
+                                    const std::string_view mime_type,
+                                    const std::string_view text)
     -> sourcemeta::core::JSON;
 
 auto mcp_make_resources_read_result(sourcemeta::core::JSON contents)
     -> sourcemeta::core::JSON;
 
-auto mcp_make_resource_template(std::string_view uri_template,
-                                std::string_view name,
-                                std::string_view description,
-                                std::string_view mime_type)
+auto mcp_make_resource_template(const std::string_view uri_template,
+                                const std::string_view name,
+                                const std::string_view description,
+                                const std::string_view mime_type)
     -> sourcemeta::core::JSON;
+
+struct MCPToolAnnotations {
+  std::string_view title = {};
+  bool read_only = false;
+  bool destructive = true;
+  bool idempotent = false;
+  bool open_world = true;
+};
 
 auto mcp_make_tool_descriptor(
-    MCPProtocolVersion version, std::string_view name,
-    std::string_view description, sourcemeta::core::JSON input_schema,
+    const MCPProtocolVersion version, const std::string_view name,
+    const std::string_view description, sourcemeta::core::JSON input_schema,
     std::optional<sourcemeta::core::JSON> output_schema = std::nullopt,
-    std::optional<sourcemeta::core::JSON> annotations = std::nullopt)
-    -> sourcemeta::core::JSON;
+    const MCPToolAnnotations &annotations = {}) -> sourcemeta::core::JSON;
+
+struct MCPImplementation {
+  std::string_view name;
+  std::string_view version;
+  std::string_view title = {};
+  std::string_view description = {};
+  std::string_view website_url = {};
+};
+
+struct MCPServerCapabilities {
+  bool prompts = false;
+  bool resources = false;
+  bool tools = false;
+  bool logging = false;
+  bool completions = false;
+};
 
 auto mcp_make_initialize_result(const sourcemeta::core::JSON &request,
-                                sourcemeta::core::JSON capabilities,
-                                sourcemeta::core::JSON server_info,
-                                std::string_view instructions = {})
+                                const MCPServerCapabilities &capabilities,
+                                const MCPImplementation &server,
+                                const std::string_view instructions = {})
     -> sourcemeta::core::JSON;
 
 auto mcp_tool_call_arguments(const sourcemeta::core::JSON &envelope)
     -> const sourcemeta::core::JSON *;
-
-auto mcp_parse_cursor_as_unsigned_integer(std::string_view cursor)
-    -> std::optional<std::size_t>;
 
 constexpr auto mcp_is_request_method(const std::string_view method) noexcept
     -> bool {
@@ -158,6 +181,16 @@ constexpr auto
 mcp_supports_implementation_title(const MCPProtocolVersion version) noexcept
     -> bool {
   return version != MCPProtocolVersion::V_2025_03_26;
+}
+
+constexpr auto mcp_supports_implementation_description(
+    const MCPProtocolVersion version) noexcept -> bool {
+  return version == MCPProtocolVersion::V_2025_11_25;
+}
+
+constexpr auto mcp_supports_implementation_website_url(
+    const MCPProtocolVersion version) noexcept -> bool {
+  return version == MCPProtocolVersion::V_2025_11_25;
 }
 
 } // namespace sourcemeta::one

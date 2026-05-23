@@ -160,8 +160,16 @@ jsonpath "$.id" == "tools-identity"
 jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[0].annotations.destructiveHint" == false
+jsonpath "$.result.tools[0].annotations.idempotentHint" == true
+jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[10].name" == "search_schemas"
 jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[10].annotations.destructiveHint" == false
+jsonpath "$.result.tools[10].annotations.idempotentHint" == true
+jsonpath "$.result.tools[10].annotations.openWorldHint" == false
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -192,8 +200,16 @@ jsonpath "$.id" == "tools-gzip"
 jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
+jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[0].annotations.destructiveHint" == false
+jsonpath "$.result.tools[0].annotations.idempotentHint" == true
+jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[10].name" == "search_schemas"
 jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[10].annotations.destructiveHint" == false
+jsonpath "$.result.tools[10].annotations.idempotentHint" == true
+jsonpath "$.result.tools[10].annotations.openWorldHint" == false
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

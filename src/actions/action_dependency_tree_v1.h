@@ -26,6 +26,10 @@ public:
   static constexpr std::string_view DESCRIPTION{
       "Look up the dependency graph of a specific schema (incoming or "
       "outgoing)"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionDependencyTree_v1(
       const std::filesystem::path &base,

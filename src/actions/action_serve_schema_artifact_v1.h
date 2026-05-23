@@ -24,6 +24,10 @@ public:
   static constexpr std::string_view DESCRIPTION{
       "Look up a precomputed artifact about a specific schema by its "
       "absolute URI"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
 
   ActionServeSchemaArtifact_v1(
       const std::filesystem::path &base,

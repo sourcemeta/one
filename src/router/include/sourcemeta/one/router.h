@@ -105,8 +105,7 @@ class Router {
 public:
   Router(const std::filesystem::path &base,
          const core::URITemplateRouterView &router,
-         std::span<const RouterActionConstructor> constructors,
-         std::span<const std::string_view> descriptions);
+         std::span<const RouterActionConstructor> constructors);
   ~Router() = default;
 
   // To avoid mistakes
@@ -132,10 +131,6 @@ public:
              const char *const code, std::string &&identifier,
              std::string &&message) const -> void;
 
-  [[nodiscard]] auto
-  description(core::URITemplateRouter::Identifier context) const noexcept
-      -> std::string_view;
-
 private:
   struct Slot {
     std::unique_ptr<RouterAction> instance;
@@ -147,7 +142,6 @@ private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const core::URITemplateRouterView &router_;
   std::span<const RouterActionConstructor> constructors_;
-  std::span<const std::string_view> descriptions_;
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   std::unique_ptr<Slot[]> slots_;
   std::size_t slots_size_;

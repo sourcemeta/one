@@ -94,8 +94,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
-    sourcemeta::one::Router actions{base, router, sourcemeta::one::CONSTRUCTORS,
-                                    sourcemeta::one::DESCRIPTIONS};
+    sourcemeta::one::Router actions{base, router,
+                                    sourcemeta::one::CONSTRUCTORS};
 
     sourcemeta::one::HTTPServer(
         port,

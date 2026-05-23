@@ -34,11 +34,26 @@ enum : std::uint8_t {
 
 extern const std::array<RouterActionConstructor, ACTION_TYPE_COUNT>
     CONSTRUCTORS;
-extern const std::array<std::string_view, ACTION_TYPE_COUNT> DESCRIPTIONS;
 
 [[nodiscard]] auto action_description(
     sourcemeta::core::URITemplateRouter::Identifier context) noexcept
     -> std::string_view;
+
+[[nodiscard]] auto
+is_read_only(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool;
+
+[[nodiscard]] auto
+is_destructive(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool;
+
+[[nodiscard]] auto
+is_idempotent(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool;
+
+[[nodiscard]] auto
+is_open_world(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> bool;
 
 } // namespace sourcemeta::one
 
