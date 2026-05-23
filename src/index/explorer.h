@@ -621,8 +621,13 @@ struct GENERATE_MCP {
     initialize_ingredients.push_back(
         sourcemeta::core::JSON{sourcemeta::one::version()});
     initialize_ingredients.push_back(sourcemeta::core::JSON{SERVER_TITLE});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{""});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{""});
+    initialize_ingredients.push_back(sourcemeta::core::JSON{
+        configuration.html.has_value()
+            ? std::string_view{configuration.html->description}
+            : std::string_view{}});
+    initialize_ingredients.push_back(sourcemeta::core::JSON{
+        configuration.html.has_value() ? std::string_view{configuration.url}
+                                       : std::string_view{}});
     initialize_ingredients.push_back(
         sourcemeta::core::JSON{instructions.str()});
 

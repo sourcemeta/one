@@ -35,6 +35,7 @@ jsonpath "$.result.instructions" matches "^.+$"
 # Added in 2025-11-25
 # https://modelcontextprotocol.io/specification/2025-11-25/changelog
 jsonpath "$.result.serverInfo.description" not exists
+jsonpath "$.result.serverInfo.websiteUrl" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

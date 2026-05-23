@@ -87,6 +87,8 @@ jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
 jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
 jsonpath "$.result.serverInfo.version" matches "^.+$"
+jsonpath "$.result.serverInfo.description" == "The next-generation JSON Schema platform"
+jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}"
 jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -130,6 +132,8 @@ jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
 jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
 jsonpath "$.result.serverInfo.version" matches "^.+$"
+jsonpath "$.result.serverInfo.description" == "The next-generation JSON Schema platform"
+jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}"
 jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

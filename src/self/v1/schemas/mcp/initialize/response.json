@@ -14,7 +14,9 @@
         "serverInfo": {
           "name": "sourcemeta-one-enterprise",
           "title": "Sourcemeta One Enterprise",
-          "version": "1.0.0"
+          "version": "1.0.0",
+          "description": "A JSON Schema registry",
+          "websiteUrl": "https://example.com"
         },
         "instructions": "Server instructions"
       }
@@ -68,6 +70,14 @@
             },
             "version": {
               "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "websiteUrl": {
+              "type": "string",
+              "format": "uri"
             }
           },
           "additionalProperties": false
