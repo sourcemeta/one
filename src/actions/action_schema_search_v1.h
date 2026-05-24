@@ -4,10 +4,10 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/search.h>
 
@@ -164,7 +164,7 @@ public:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
@@ -202,17 +202,17 @@ public:
 
     std::ostringstream payload;
     sourcemeta::core::prettify(result, payload);
-    content.push_back(sourcemeta::one::mcp_make_text_block(payload.str()));
+    content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
 
     for (std::size_t index{0}; index < result.array_size(); ++index) {
       const auto &entry{result.at(index)};
-      content.push_back(sourcemeta::one::mcp_make_resource_link(
+      content.push_back(sourcemeta::core::mcp_make_resource_link(
           version, entry.at("identifier").to_string(),
           "application/schema+json", entry.at("title").to_string(),
           entry.at("description").to_string()));
     }
 
-    return sourcemeta::one::mcp_make_tool_success(
+    return sourcemeta::core::mcp_make_tool_success(
         version, request_id, std::move(result), std::move(content));
   }
 

@@ -3,10 +3,10 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
@@ -86,8 +86,9 @@ public:
       return;
     }
 
-    const auto negotiated_version{sourcemeta::one::mcp_resolve_protocol_version(
-        request.header("mcp-protocol-version"))};
+    const auto negotiated_version{
+        sourcemeta::core::mcp_resolve_protocol_version(
+            request.header("mcp-protocol-version"))};
     if (!negotiated_version.has_value()) {
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_BAD_REQUEST,
@@ -125,7 +126,7 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
@@ -154,18 +155,18 @@ private:
   auto on_initialize(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
-  auto on_tools_list(sourcemeta::one::MCPProtocolVersion version,
+  auto on_tools_list(sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
   auto on_resources_read(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
-  auto on_tools_call(sourcemeta::one::MCPProtocolVersion version,
+  auto on_tools_call(sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
                      std::string_view envelope) -> sourcemeta::core::JSON;
 
-  auto on_message(sourcemeta::one::MCPProtocolVersion version,
+  auto on_message(sourcemeta::core::MCPProtocolVersion version,
                   sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response, std::string &&body)
       -> void;

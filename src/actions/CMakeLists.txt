@@ -21,7 +21,7 @@ target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::uritemplat
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_actions PUBLIC sourcemeta::core::jsonrpc)
-target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::one::mcp)
+target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::mcp)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::jsonpointer)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_actions PRIVATE sourcemeta::core::time)

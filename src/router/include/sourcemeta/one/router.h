@@ -5,10 +5,10 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 
 #include <cstddef>     // std::size_t
 #include <filesystem>  // std::filesystem::path
@@ -40,9 +40,10 @@ public:
   virtual auto rest(const std::span<std::string_view> matches,
                     HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
-  virtual auto
-  mcp(const MCPProtocolVersion version, const sourcemeta::core::JSON &id,
-      const sourcemeta::core::JSON &arguments, const std::string_view envelope)
+  virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
+                   const sourcemeta::core::JSON &id,
+                   const sourcemeta::core::JSON &arguments,
+                   const std::string_view envelope)
       -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {

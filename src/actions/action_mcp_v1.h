@@ -11,11 +11,11 @@ using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
@@ -85,8 +85,9 @@ public:
       return;
     }
 
-    const auto negotiated_version{sourcemeta::one::mcp_resolve_protocol_version(
-        request.header("mcp-protocol-version"))};
+    const auto negotiated_version{
+        sourcemeta::core::mcp_resolve_protocol_version(
+            request.header("mcp-protocol-version"))};
     if (!negotiated_version.has_value()) {
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_BAD_REQUEST,
@@ -120,7 +121,7 @@ public:
             // TODO: Support batches for strict compliance to MCP 2025-03-26
             this->write_envelope(
                 callback_request, callback_response, sourcemeta::one::STATUS_OK,
-                version == sourcemeta::one::MCPProtocolVersion::V_2025_03_26
+                version == sourcemeta::core::MCPProtocolVersion::V_2025_03_26
                     ? sourcemeta::core::jsonrpc_make_error(
                           nullptr, 6, "Unsupported operation",
                           sourcemeta::core::JSON{
@@ -148,7 +149,7 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
@@ -195,19 +196,19 @@ private:
       return this->enterprise_required(nullptr);
     }
 
-    if (method == sourcemeta::one::MCP_METHOD_INITIALIZE) {
+    if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
       const auto &parts{
-          this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
-      return sourcemeta::one::mcp_make_initialize_result(
+          this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+      return sourcemeta::core::mcp_make_initialize_result(
           request_json,
-          sourcemeta::one::MCPServerCapabilities{
+          sourcemeta::core::MCPServerCapabilities{
               .prompts = parts.at(0).to_boolean(),
               .resources = parts.at(1).to_boolean(),
               .tools = parts.at(2).to_boolean(),
               .logging = parts.at(3).to_boolean(),
               .completions = parts.at(4).to_boolean(),
           },
-          sourcemeta::one::MCPImplementation{
+          sourcemeta::core::MCPImplementation{
               .name = parts.at(5).to_string(),
               .version = parts.at(6).to_string(),
               .title = parts.at(7).to_string(),
@@ -217,10 +218,10 @@ private:
           parts.at(10).to_string());
     }
 
-    if (method == sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
+    if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
       return sourcemeta::core::jsonrpc_make_success(
           *id, this->mcp_metadata_.at(
-                   sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
+                   sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
     }
 
     return this->enterprise_required(id);
