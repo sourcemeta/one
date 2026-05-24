@@ -76,9 +76,11 @@
             "name": "list_directory",
             "description": "List the contents of a directory in the catalog",
             "inputSchema": {
+              "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
             },
             "outputSchema": {
+              "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
             },
             "annotations": {

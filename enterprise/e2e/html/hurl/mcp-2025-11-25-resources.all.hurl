@@ -223,7 +223,7 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[40].name" == "response"
 jsonpath "$.result.resources[40].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 3215
+jsonpath "$.result.resources[40].size" == 3279
 jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[41].name" == "request"
 jsonpath "$.result.resources[41].description" == "Request from a client to invoke an MCP tool by name"
@@ -243,7 +243,7 @@ jsonpath "$.result.resources[44].uri" == "{{base}}/self/v1/schemas/mcp/tools/lis
 jsonpath "$.result.resources[44].name" == "response"
 jsonpath "$.result.resources[44].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[44].size" == 3820
+jsonpath "$.result.resources[44].size" == 4074
 jsonpath "$.result.resources[45].uri" == "{{base}}/test/object"
 jsonpath "$.result.resources[45].name" == "object"
 jsonpath "$.result.resources[45].description" == "An Object Example"

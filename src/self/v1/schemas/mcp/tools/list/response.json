@@ -12,9 +12,11 @@
             "name": "list_directory",
             "description": "List the contents of a directory in the catalog",
             "inputSchema": {
+              "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
             },
             "outputSchema": {
+              "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/api/list/response"
             },
             "annotations": {
@@ -60,8 +62,11 @@
               "inputSchema": {
                 "x-lint-exclude": [ "simple_properties_identifiers" ],
                 "type": "object",
-                "required": [ "$ref" ],
+                "required": [ "type", "$ref" ],
                 "properties": {
+                  "type": {
+                    "const": "object"
+                  },
                   "$ref": {
                     "$comment": "TODO: Use Format Assertion when supported on Blaze",
                     "type": "string",
@@ -73,8 +78,11 @@
               "outputSchema": {
                 "x-lint-exclude": [ "simple_properties_identifiers" ],
                 "type": "object",
-                "required": [ "$ref" ],
+                "required": [ "type", "$ref" ],
                 "properties": {
+                  "type": {
+                    "const": "object"
+                  },
                   "$ref": {
                     "$comment": "TODO: Use Format Assertion when supported on Blaze",
                     "type": "string",
