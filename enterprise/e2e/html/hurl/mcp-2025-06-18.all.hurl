@@ -166,7 +166,9 @@ jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/self/v1/schemas/api/list/rpc"
+jsonpath "$.result.tools[0].inputSchema.type" == "object"
 jsonpath "$.result.tools[0].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/list/response"
+jsonpath "$.result.tools[0].outputSchema.type" == "object"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[0].annotations.destructiveHint" == false

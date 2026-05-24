@@ -140,6 +140,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     assert(input_schema_url.has_value());
 
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
+    // The MCP schema requires `type: "object"` on tool input schemas
+    input_schema_ref.assign("type", sourcemeta::core::JSON{"object"});
     input_schema_ref.assign(
         "$ref", sourcemeta::core::JSON{std::move(input_schema_url).value()});
 
@@ -150,6 +152,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
       assert(output_schema_url.has_value());
 
       auto ref{sourcemeta::core::JSON::make_object()};
+      // The MCP schema requires `type: "object"` on tool output schemas
+      ref.assign("type", sourcemeta::core::JSON{"object"});
       ref.assign("$ref",
                  sourcemeta::core::JSON{std::move(output_schema_url).value()});
       output_schema_ref.emplace(std::move(ref));
