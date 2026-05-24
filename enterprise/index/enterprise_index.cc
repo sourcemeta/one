@@ -5,12 +5,12 @@
 #include <sourcemeta/blaze/foundation.h>
 
 #include <sourcemeta/core/error.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/actions.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
@@ -87,7 +87,7 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
           std::string uri{configuration.origin};
           uri.append(entry.path);
 
-          entries.push_back(sourcemeta::one::mcp_make_resource(
+          entries.push_back(sourcemeta::core::mcp_make_resource(
               uri, name, "application/schema+json", entry.description,
               static_cast<std::size_t>(entry.bytes_raw)));
         });

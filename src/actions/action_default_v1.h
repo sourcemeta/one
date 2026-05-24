@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -114,7 +115,7 @@ public:
     }
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
            const std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);

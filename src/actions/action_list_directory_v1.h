@@ -4,10 +4,10 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
@@ -71,7 +71,7 @@ public:
                                       response, this->error_schema_);
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
@@ -97,8 +97,8 @@ public:
 
     auto contents{sourcemeta::one::metapack_read_json(safe_path)};
     if (!contents.has_value()) {
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Directory not found");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Directory not found");
     }
 
     auto &result{contents.value()};
@@ -106,7 +106,7 @@ public:
 
     std::ostringstream payload;
     sourcemeta::core::prettify(result, payload);
-    content.push_back(sourcemeta::one::mcp_make_text_block(payload.str()));
+    content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
 
     if (const auto *entries{result.try_at("entries")};
         entries != nullptr && entries->is_array()) {
@@ -117,7 +117,7 @@ public:
         if (!entry.defines("identifier")) {
           continue;
         }
-        content.push_back(sourcemeta::one::mcp_make_resource_link(
+        content.push_back(sourcemeta::core::mcp_make_resource_link(
             version, entry.at("identifier").to_string(),
             "application/schema+json",
             entry.at_or("title", EMPTY_STRING).to_string(),
@@ -125,7 +125,7 @@ public:
       }
     }
 
-    return sourcemeta::one::mcp_make_tool_success(
+    return sourcemeta::core::mcp_make_tool_success(
         version, request_id, std::move(result), std::move(content));
   }
 

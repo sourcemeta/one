@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -12,7 +13,6 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
@@ -70,7 +70,7 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
            const std::string_view envelope) -> sourcemeta::core::JSON override {
@@ -85,20 +85,20 @@ public:
     const auto directory{
         this->schema_directory(arguments.at("schema").to_string())};
     if (!directory.has_value()) {
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Schema not found");
     }
 
     const auto template_path{directory.value() / "blaze-exhaustive.metapack"};
     if (!std::filesystem::exists(template_path)) {
       const auto schema_path{directory.value() / "schema.metapack"};
       if (std::filesystem::exists(schema_path)) {
-        return sourcemeta::one::mcp_make_tool_error(
+        return sourcemeta::core::mcp_make_tool_error(
             request_id,
             "This schema was not precompiled for schema evaluation");
       }
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Schema not found");
     }
 
     sourcemeta::core::PointerPositionTracker tracker;
@@ -107,7 +107,7 @@ public:
     const auto schema_template{
         ActionJSONSchemaTrace_v1::compile_template(template_path)};
     sourcemeta::blaze::Evaluator evaluator;
-    return sourcemeta::one::mcp_make_tool_success(
+    return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
         this->trace(
             evaluator, schema_template, arguments.at("instance"), template_path,

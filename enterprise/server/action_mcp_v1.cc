@@ -3,10 +3,10 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 
 #include <cassert>      // assert
@@ -78,17 +78,17 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
 auto ActionMCP_v1::on_initialize(const sourcemeta::core::JSON &request_json)
     const -> sourcemeta::core::JSON {
   const auto &parts{
-      this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_INITIALIZE)};
-  return sourcemeta::one::mcp_make_initialize_result(
+      this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+  return sourcemeta::core::mcp_make_initialize_result(
       request_json,
-      sourcemeta::one::MCPServerCapabilities{
+      sourcemeta::core::MCPServerCapabilities{
           .prompts = parts.at(0).to_boolean(),
           .resources = parts.at(1).to_boolean(),
           .tools = parts.at(2).to_boolean(),
           .logging = parts.at(3).to_boolean(),
           .completions = parts.at(4).to_boolean(),
       },
-      sourcemeta::one::MCPImplementation{
+      sourcemeta::core::MCPImplementation{
           .name = parts.at(5).to_string(),
           .version = parts.at(6).to_string(),
           .title = parts.at(7).to_string(),
@@ -99,11 +99,11 @@ auto ActionMCP_v1::on_initialize(const sourcemeta::core::JSON &request_json)
 }
 
 auto ActionMCP_v1::on_tools_list(
-    const sourcemeta::one::MCPProtocolVersion version,
+    const sourcemeta::core::MCPProtocolVersion version,
     const sourcemeta::core::JSON &request_json) const
     -> sourcemeta::core::JSON {
   const auto &precomputed{
-      this->mcp_metadata_.at(sourcemeta::one::MCP_METHOD_TOOLS_LIST)};
+      this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
 
   auto tools{sourcemeta::core::JSON::make_array()};
   for (const auto &tool : precomputed.as_array()) {
@@ -111,10 +111,10 @@ auto ActionMCP_v1::on_tools_list(
     if (!tool.at(3).is_null()) {
       output_schema = tool.at(3);
     }
-    tools.push_back(sourcemeta::one::mcp_make_tool_descriptor(
+    tools.push_back(sourcemeta::core::mcp_make_tool_descriptor(
         version, tool.at(0).to_string(), tool.at(1).to_string(), tool.at(2),
         std::move(output_schema),
-        sourcemeta::one::MCPToolAnnotations{
+        sourcemeta::core::MCPToolAnnotations{
             .title = tool.at(4).to_string(),
             .read_only = tool.at(5).to_boolean(),
             .destructive = tool.at(6).to_boolean(),
@@ -138,7 +138,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
     sourcemeta::core::URI request{uri};
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
-      return sourcemeta::one::mcp_make_error_resource_not_found(id, uri);
+      return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
     }
     const auto path{request.path().value_or("")};
     std::string_view schema_path{path};
@@ -146,7 +146,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       schema_path.remove_suffix(5);
     }
     if (schema_path.empty()) {
-      return sourcemeta::one::mcp_make_error_resource_not_found(id, uri);
+      return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
     }
     const auto query{request.query()};
     const auto bundle{query.has_value() &&
@@ -154,30 +154,31 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
     resolved = sourcemeta::core::weakly_canonical(
         this->resolve_schema_path(schema_path, bundle));
   } catch (const std::exception &) {
-    return sourcemeta::one::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
   }
 
   if (!sourcemeta::core::is_under_path(resolved, this->base() / "schemas")) {
-    return sourcemeta::one::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
   }
 
   const auto schema{sourcemeta::one::metapack_read_json(resolved)};
   if (!schema.has_value()) {
-    return sourcemeta::one::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
   }
 
   std::ostringstream payload;
   sourcemeta::core::prettify(schema.value(), payload);
 
   auto contents{sourcemeta::core::JSON::make_array()};
-  contents.push_back(sourcemeta::one::mcp_make_resource_text_content(
+  contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
       uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
   return sourcemeta::core::jsonrpc_make_success(
-      id, sourcemeta::one::mcp_make_resources_read_result(std::move(contents)));
+      id,
+      sourcemeta::core::mcp_make_resources_read_result(std::move(contents)));
 }
 
 auto ActionMCP_v1::on_tools_call(
-    const sourcemeta::one::MCPProtocolVersion version,
+    const sourcemeta::core::MCPProtocolVersion version,
     const sourcemeta::core::JSON &request_json, const std::string_view envelope)
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
@@ -194,21 +195,22 @@ auto ActionMCP_v1::on_tools_call(
   if (instance == nullptr) [[unlikely]] {
     return sourcemeta::core::jsonrpc_make_error_internal(&id);
   }
-  const auto *arguments{sourcemeta::one::mcp_tool_call_arguments(request_json)};
+  const auto *arguments{
+      sourcemeta::core::mcp_tool_call_arguments(request_json)};
   if (arguments == nullptr) {
     return sourcemeta::core::jsonrpc_make_error_invalid_params(id);
   }
   try {
     return instance->mcp(version, id, *arguments, envelope);
   } catch (const std::exception &error) {
-    return sourcemeta::one::mcp_make_tool_error(id, error.what());
+    return sourcemeta::core::mcp_make_tool_error(id, error.what());
   }
 }
 
-auto ActionMCP_v1::on_message(const sourcemeta::one::MCPProtocolVersion version,
-                              sourcemeta::one::HTTPRequest &request,
-                              sourcemeta::one::HTTPResponse &response,
-                              std::string &&body) -> void {
+auto ActionMCP_v1::on_message(
+    const sourcemeta::core::MCPProtocolVersion version,
+    sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response, std::string &&body) -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -219,7 +221,7 @@ auto ActionMCP_v1::on_message(const sourcemeta::one::MCPProtocolVersion version,
   }
 
   if (request_json.is_array()) {
-    if (version == sourcemeta::one::MCPProtocolVersion::V_2025_03_26) {
+    if (version == sourcemeta::core::MCPProtocolVersion::V_2025_03_26) {
       // TODO: Support batches for strict compliance to MCP 2025-03-26
       this->write_envelope(
           request, response, sourcemeta::one::STATUS_OK,
@@ -256,19 +258,19 @@ auto ActionMCP_v1::on_message(const sourcemeta::one::MCPProtocolVersion version,
   assert(id != nullptr);
   const auto method{sourcemeta::core::jsonrpc_method(request_json)};
   sourcemeta::core::JSON envelope{nullptr};
-  if (!sourcemeta::one::mcp_is_request_method(method)) {
+  if (!sourcemeta::core::mcp_is_request_method(method)) {
     envelope = sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
   } else if (!this->validate(this->request_schema_, request_json)) {
     envelope = sourcemeta::core::jsonrpc_make_error_invalid_request(id);
-  } else if (method == sourcemeta::one::MCP_METHOD_INITIALIZE) {
+  } else if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
     envelope = this->on_initialize(request_json);
-  } else if (method == sourcemeta::one::MCP_METHOD_TOOLS_LIST) {
+  } else if (method == sourcemeta::core::MCP_METHOD_TOOLS_LIST) {
     envelope = this->on_tools_list(version, request_json);
-  } else if (method == sourcemeta::one::MCP_METHOD_RESOURCES_LIST) {
+  } else if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
     envelope = this->on_resources_list(request_json);
-  } else if (method == sourcemeta::one::MCP_METHOD_RESOURCES_READ) {
+  } else if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
     envelope = this->on_resources_read(request_json);
-  } else if (method == sourcemeta::one::MCP_METHOD_TOOLS_CALL) {
+  } else if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
     envelope = this->on_tools_call(version, request_json, body);
   } else if (this->mcp_metadata_.defines(method)) {
     envelope = sourcemeta::core::jsonrpc_make_success(

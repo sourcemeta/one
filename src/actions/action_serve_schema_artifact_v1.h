@@ -3,11 +3,11 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
@@ -67,7 +67,7 @@ public:
                                       response, this->error_schema_);
   }
 
-  auto mcp(const sourcemeta::one::MCPProtocolVersion version,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
@@ -82,19 +82,19 @@ public:
     const auto directory{
         this->schema_directory(arguments.at("schema").to_string())};
     if (!directory.has_value()) {
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Schema not found");
     }
 
     auto contents{sourcemeta::one::metapack_read_json(
         directory.value() / (std::string{this->artifact_} + ".metapack"))};
     if (!contents.has_value()) {
-      return sourcemeta::one::mcp_make_tool_error(request_id,
-                                                  "Schema not found");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Schema not found");
     }
 
-    return sourcemeta::one::mcp_make_tool_success(version, request_id,
-                                                  std::move(contents).value());
+    return sourcemeta::core::mcp_make_tool_success(version, request_id,
+                                                   std::move(contents).value());
   }
 
 private:

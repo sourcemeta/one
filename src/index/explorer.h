@@ -2,7 +2,6 @@
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
 #include <sourcemeta/one/configuration.h>
-#include <sourcemeta/one/mcp.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/search.h>
@@ -10,6 +9,7 @@
 
 #include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
 
 #include <sourcemeta/one/build.h>
@@ -592,7 +592,7 @@ struct GENERATE_MCP {
     template_uri.append("/{+path}{?bundle}");
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
-    resource_templates.push_back(sourcemeta::one::mcp_make_resource_template(
+    resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
         template_uri, "JSON Schema",
         "A JSON Schema in this catalog (optionally bundled)",
         "application/schema+json"));
@@ -637,13 +637,13 @@ struct GENERATE_MCP {
 
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
-    document.assign(std::string{sourcemeta::one::MCP_METHOD_INITIALIZE},
+    document.assign(std::string{sourcemeta::core::MCP_METHOD_INITIALIZE},
                     std::move(initialize_ingredients));
     document.assign(
-        std::string{sourcemeta::one::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
+        std::string{sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
         std::move(resource_templates_response));
     document.assign("resources", std::move(resources));
-    document.assign(std::string{sourcemeta::one::MCP_METHOD_TOOLS_LIST},
+    document.assign(std::string{sourcemeta::core::MCP_METHOD_TOOLS_LIST},
                     std::move(tools));
     document.assign("toolRoutes", std::move(tool_routes));
 
