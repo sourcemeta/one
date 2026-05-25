@@ -26,8 +26,8 @@ jsonpath "$.id" == 300
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -65,8 +65,8 @@ jsonpath "$.id" == 301
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -110,12 +110,12 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 1
-variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -196,12 +196,12 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 1
-variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -387,8 +387,8 @@ jsonpath "$.id" == 313
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -671,8 +671,8 @@ jsonpath "$.id" == "dependents-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -32,12 +32,12 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 1
-variable "text" jsonpath "$[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -82,12 +82,12 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 1
-variable "text" jsonpath "$[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

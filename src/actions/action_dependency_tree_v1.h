@@ -107,9 +107,11 @@ public:
                                                    "Schema not found");
     }
 
-    auto &result{contents.value()};
+    auto envelope{sourcemeta::core::JSON::make_object()};
+    envelope.assign("results", std::move(contents.value()));
+
     std::set<std::string_view> unique_uris;
-    for (const auto &entry : result.as_array()) {
+    for (const auto &entry : envelope.at("results").as_array()) {
       for (const auto *const field : {"from", "to"}) {
         if (!entry.defines(field)) {
           continue;
@@ -123,7 +125,7 @@ public:
 
     auto content{sourcemeta::core::JSON::make_array()};
     std::ostringstream payload;
-    sourcemeta::core::prettify(result, payload);
+    sourcemeta::core::prettify(envelope, payload);
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
       content.push_back(sourcemeta::core::mcp_make_resource_link(
@@ -131,7 +133,7 @@ public:
     }
 
     return sourcemeta::core::mcp_make_tool_success(
-        version, request_id, std::move(result), std::move(content));
+        version, request_id, std::move(envelope), std::move(content));
   }
 
 private:

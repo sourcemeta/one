@@ -39,7 +39,7 @@
         "content": [
           {
             "type": "text",
-            "text": "[{\"path\":\"/test/object\",\"identifier\":\"https://example.com/test/object\",\"title\":\"My Object\",\"description\":\"An Object Example\"}]"
+            "text": "{\"results\":[{\"path\":\"/test/object\",\"identifier\":\"https://example.com/test/object\",\"title\":\"My Object\",\"description\":\"An Object Example\"}]}"
           },
           {
             "type": "resource_link",
@@ -49,14 +49,16 @@
             "mimeType": "application/schema+json"
           }
         ],
-        "structuredContent": [
-          {
-            "path": "/test/object",
-            "identifier": "https://example.com/test/object",
-            "title": "My Object",
-            "description": "An Object Example"
-          }
-        ],
+        "structuredContent": {
+          "results": [
+            {
+              "path": "/test/object",
+              "identifier": "https://example.com/test/object",
+              "title": "My Object",
+              "description": "An Object Example"
+            }
+          ]
+        },
         "isError": false
       }
     }
@@ -79,7 +81,10 @@
             "content": {
               "$ref": "#/$defs/content"
             },
-            "structuredContent": true,
+            "structuredContent": {
+              "$comment": "Per the Model Context Protocol specification, structuredContent is 'An optional JSON object that represents the structured result of the tool call' (https://modelcontextprotocol.io/specification/2025-06-18/server/tools#structured-content)",
+              "type": "object"
+            },
             "isError": {
               "const": false
             }

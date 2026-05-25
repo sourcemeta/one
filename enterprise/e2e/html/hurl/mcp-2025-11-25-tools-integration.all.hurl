@@ -144,14 +144,14 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-hit_path: jsonpath "$.result.structuredContent[0].path"
+hit_path: jsonpath "$.result.structuredContent.results[0].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1210
 jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
 variable "hit_path" == "/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
