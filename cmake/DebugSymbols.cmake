@@ -1,6 +1,10 @@
 macro(sourcemeta_debug_symbols_enable)
   message(STATUS "Enabling debug symbols globally")
-  add_compile_options(-g)
+  # `-g1` emits line-number info only (no variable/type/macro info),
+  # which is all we need for crash backtraces (function names plus
+  # file:line). Cuts LTO link time and sidecar size significantly
+  # compared to default `-g` (== `-g2`)
+  add_compile_options(-g1)
   # GCC's `-Wmaybe-uninitialized` produces false positives in
   # template code (`std::tuple`, `std::optional`) when `-g`
   # changes inlining decisions under `-O3 -flto`
