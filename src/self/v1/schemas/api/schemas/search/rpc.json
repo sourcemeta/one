@@ -21,7 +21,8 @@
     "q": {
       "description": "Case-insensitive substring to search for",
       "type": "string",
-      "maxLength": 256
+      "maxLength": 256,
+      "minLength": 1
     },
     "limit": {
       "description": "Maximum number of results to return",
