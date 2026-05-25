@@ -71,6 +71,15 @@ public:
       return;
     }
 
+    if (query.find_first_not_of(" \t\n\r\f\v") == std::string_view::npos) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-search-query",
+          "The search query must contain at least one non-whitespace character",
+          this->error_schema_);
+      return;
+    }
+
     constexpr std::size_t MAXIMUM_QUERY_LENGTH{256};
     if (query.size() > MAXIMUM_QUERY_LENGTH) {
       sourcemeta::one::json_error(

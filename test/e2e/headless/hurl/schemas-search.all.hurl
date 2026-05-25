@@ -42,6 +42,50 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+GET {{base}}/self/v1/api/schemas/search?q=%20%20%20
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.status" == 400
+jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/api/schemas/search?q=%09%0A%0D
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.status" == 400
+jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/api/schemas/search?q=foo
 HTTP 405
 Content-Type: application/problem+json
