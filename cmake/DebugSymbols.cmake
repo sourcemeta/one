@@ -1,4 +1,5 @@
 macro(sourcemeta_debug_symbols_enable)
+  message(STATUS "Enabling debug symbols globally")
   add_compile_options(-g)
   # GCC's `-Wmaybe-uninitialized` produces false positives in
   # template code (`std::tuple`, `std::optional`) when `-g`
@@ -14,25 +15,34 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
     message(FATAL_ERROR "The COMPONENT argument is required")
   endif()
 
+  set(BINARY_INPUT "$<TARGET_FILE:${TARGET_NAME}>")
   get_target_property(BINARY_OUTPUT_NAME "${TARGET_NAME}" OUTPUT_NAME)
   if(NOT BINARY_OUTPUT_NAME)
     set(BINARY_OUTPUT_NAME "${TARGET_NAME}")
   endif()
-  get_target_property(BINARY_OUTPUT_DIR "${TARGET_NAME}" BINARY_DIR)
-  set(BINARY_PATH "${BINARY_OUTPUT_DIR}/${BINARY_OUTPUT_NAME}")
+  get_target_property(BINARY_OUTPUT_DIR "${TARGET_NAME}" RUNTIME_OUTPUT_DIRECTORY)
+  if(NOT BINARY_OUTPUT_DIR)
+    get_target_property(BINARY_OUTPUT_DIR "${TARGET_NAME}" BINARY_DIR)
+  endif()
+  get_target_property(BINARY_OUTPUT_SUFFIX "${TARGET_NAME}" SUFFIX)
+  if(NOT BINARY_OUTPUT_SUFFIX)
+    set(BINARY_OUTPUT_SUFFIX "${CMAKE_EXECUTABLE_SUFFIX}")
+  endif()
+  set(BINARY_PATH "${BINARY_OUTPUT_DIR}/${BINARY_OUTPUT_NAME}${BINARY_OUTPUT_SUFFIX}")
 
   if(APPLE)
+    message(STATUS "Extracting debug symbols (.dSYM) for: ${TARGET_NAME}")
     # With `-flto=full`, the post-LTO object normally lives in
     # `/tmp/lto.o` and is removed immediately after the link, which
     # makes `dsymutil` silently produce a near-empty bundle. Pin
     # the LTO temp under the binary's build dir so it persists long
     # enough for `dsymutil` to consume it
     target_link_options("${TARGET_NAME}" PRIVATE
-      "LINKER:-object_path_lto,${BINARY_PATH}.lto.o")
+      "LINKER:-object_path_lto,${BINARY_INPUT}.lto.o")
 
     find_program(DSYMUTIL_EXECUTABLE dsymutil REQUIRED)
     add_custom_command(OUTPUT "${BINARY_PATH}.dSYM"
-      COMMAND "${DSYMUTIL_EXECUTABLE}" "${BINARY_PATH}"
+      COMMAND "${DSYMUTIL_EXECUTABLE}" "${BINARY_INPUT}"
               -o "${BINARY_PATH}.dSYM"
       DEPENDS "${TARGET_NAME}"
       VERBATIM)
@@ -43,12 +53,13 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
       DESTINATION "${CMAKE_INSTALL_BINDIR}"
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
   elseif(UNIX)
+    message(STATUS "Extracting debug symbols (.debug) for: ${TARGET_NAME}")
     add_custom_command(OUTPUT "${BINARY_PATH}.debug"
       COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug
-              "${BINARY_PATH}" "${BINARY_PATH}.debug"
-      COMMAND "${CMAKE_OBJCOPY}" --strip-debug "${BINARY_PATH}"
+              "${BINARY_INPUT}" "${BINARY_PATH}.debug"
+      COMMAND "${CMAKE_OBJCOPY}" --strip-debug "${BINARY_INPUT}"
       COMMAND "${CMAKE_OBJCOPY}"
-              "--add-gnu-debuglink=${BINARY_PATH}.debug" "${BINARY_PATH}"
+              "--add-gnu-debuglink=${BINARY_PATH}.debug" "${BINARY_INPUT}"
       DEPENDS "${TARGET_NAME}"
       VERBATIM)
     add_custom_target("${TARGET_NAME}_debug_symbols" ALL
@@ -57,5 +68,7 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
     install(FILES "${BINARY_PATH}.debug"
       DESTINATION "${CMAKE_INSTALL_BINDIR}"
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
+  else()
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
   endif()
 endfunction()

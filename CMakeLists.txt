@@ -4,12 +4,11 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(DebugSymbols)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(ONE_DEBUG_SYMBOLS OFF)
+  set(ONE_DEBUG_SYMBOLS_DEFAULT OFF)
 else()
-  set(ONE_DEBUG_SYMBOLS ON)
+  set(ONE_DEBUG_SYMBOLS_DEFAULT ON)
 endif()
-
-# Must be the first thing we include.
+option(ONE_DEBUG_SYMBOLS "Compile and extract debug symbols" ${ONE_DEBUG_SYMBOLS_DEFAULT})
 if(ONE_DEBUG_SYMBOLS)
   sourcemeta_debug_symbols_enable()
 endif()
