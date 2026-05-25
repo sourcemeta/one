@@ -88,3 +88,110 @@ HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+# A path that escapes the catalog root after canonicalisation is rejected.
+GET {{base}}/self/v1/api/list/..
+[Options]
+path-as-is: true
+HTTP 404
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.status" == 404
+jsonpath "$.title" == "sourcemeta:one/not-found"
+jsonpath "$.detail" == "There is nothing at this URL"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# A mid-path `..` that canonicalises back inside the catalog root is served.
+GET {{base}}/self/v1/api/list/test/../test
+[Options]
+path-as-is: true
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.path" == "/test"
+jsonpath "$.url" == "{{base}}/test"
+jsonpath "$.breadcrumb" count == 1
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.description" == "A directory full of testing schemas"
+jsonpath "$.title" == "Test"
+jsonpath "$.schemas" == 14
+jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "no-base"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/test/no-base/"
+jsonpath "$.entries[1].name" == "no-blaze"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/test/no-blaze/"
+jsonpath "$.entries[2].name" == "schemas"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].path" == "/test/schemas/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# A trailing slash on the URL path is accepted and serves the same listing.
+GET {{base}}/self/v1/api/list/test/
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.path" == "/test"
+jsonpath "$.url" == "{{base}}/test"
+jsonpath "$.breadcrumb" count == 1
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.description" == "A directory full of testing schemas"
+jsonpath "$.title" == "Test"
+jsonpath "$.schemas" == 14
+jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "no-base"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/test/no-base/"
+jsonpath "$.entries[1].name" == "no-blaze"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/test/no-blaze/"
+jsonpath "$.entries[2].name" == "schemas"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].path" == "/test/schemas/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

@@ -6,6 +6,11 @@
       "lint": {
         "rules": [ "./rules/camelcase.json" ]
       }
+    },
+    "twins": {
+      "title": "Twins",
+      "description": "Schemas whose base name collides with a sibling directory",
+      "path": "./schemas/twins"
     }
   }
 }
