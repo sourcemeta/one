@@ -60,6 +60,14 @@ public:
       return;
     }
 
+    if (matches.front().find('#') != std::string_view::npos ||
+        matches.front().find("%23") != std::string_view::npos) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
+          "The schema URI must not contain a fragment", this->error_schema_);
+      return;
+    }
+
     auto absolute_path{this->base() / "schemas" / matches.front() / "%"};
     absolute_path /= std::string{this->artifact_} + ".metapack";
     ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
@@ -75,7 +83,8 @@ public:
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
+    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
+        arguments.at("schema").to_string().find('#') != std::string::npos) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
