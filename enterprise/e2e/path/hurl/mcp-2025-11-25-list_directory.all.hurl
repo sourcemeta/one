@@ -28,12 +28,12 @@ jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
-jsonpath "$.result.content[1].name" not exists
+jsonpath "$.result.content[1].name" == "/v1/catalog/example/bare"
 jsonpath "$.result.content[1].description" not exists
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/example/description-only"
-jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].name" == "/v1/catalog/example/description-only"
 jsonpath "$.result.content[2].description" == "A schema with only a description and no title"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
@@ -158,12 +158,12 @@ jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
-jsonpath "$.result.content[1].name" not exists
+jsonpath "$.result.content[1].name" == "/v1/catalog/example/bare"
 jsonpath "$.result.content[1].description" not exists
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/example/description-only"
-jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].name" == "/v1/catalog/example/description-only"
 jsonpath "$.result.content[2].description" == "A schema with only a description and no title"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"

@@ -129,7 +129,8 @@ public:
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
       content.push_back(sourcemeta::core::mcp_make_resource_link(
-          version, uri, "application/schema+json"));
+          version, uri, "application/schema+json",
+          uri.substr(this->server_uri().size())));
     }
 
     return sourcemeta::core::mcp_make_tool_success(

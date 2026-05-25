@@ -252,22 +252,22 @@ jsonpath "$.result.content[6].description" == "A schema with both a title and a 
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
 jsonpath "$.result.content[7].uri" == "http://localhost:8000/test/description-only/01"
-jsonpath "$.result.content[7].name" not exists
+jsonpath "$.result.content[7].name" == "/test/description-only/01"
 jsonpath "$.result.content[7].description" == "A schema with only a description (01)"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
 jsonpath "$.result.content[8].uri" == "http://localhost:8000/test/description-only/02"
-jsonpath "$.result.content[8].name" not exists
+jsonpath "$.result.content[8].name" == "/test/description-only/02"
 jsonpath "$.result.content[8].description" == "A schema with only a description (02)"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
 jsonpath "$.result.content[9].uri" == "http://localhost:8000/test/description-only/03"
-jsonpath "$.result.content[9].name" not exists
+jsonpath "$.result.content[9].name" == "/test/description-only/03"
 jsonpath "$.result.content[9].description" == "A schema with only a description (03)"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
 jsonpath "$.result.content[10].type" == "resource_link"
 jsonpath "$.result.content[10].uri" == "http://localhost:8000/test/description-only/04"
-jsonpath "$.result.content[10].name" not exists
+jsonpath "$.result.content[10].name" == "/test/description-only/04"
 jsonpath "$.result.content[10].description" == "A schema with only a description (04)"
 jsonpath "$.result.content[10].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 10
@@ -396,12 +396,12 @@ jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/description-only/01"
-jsonpath "$.result.content[1].name" not exists
+jsonpath "$.result.content[1].name" == "/test/description-only/01"
 jsonpath "$.result.content[1].description" == "A schema with only a description (01)"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/description-only/02"
-jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].name" == "/test/description-only/02"
 jsonpath "$.result.content[2].description" == "A schema with only a description (02)"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 2
@@ -498,12 +498,12 @@ jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/bare/01"
-jsonpath "$.result.content[1].name" not exists
+jsonpath "$.result.content[1].name" == "/test/bare/01"
 jsonpath "$.result.content[1].description" not exists
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/bare/02"
-jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].name" == "/test/bare/02"
 jsonpath "$.result.content[2].description" not exists
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 2
