@@ -143,8 +143,9 @@
             "additionalProperties": false
           },
           {
+            "$comment": "Per the Model Context Protocol specification, the ResourceLink content block requires a name (https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links)",
             "type": "object",
-            "required": [ "type", "uri", "mimeType" ],
+            "required": [ "type", "uri", "name", "mimeType" ],
             "properties": {
               "type": {
                 "const": "resource_link"

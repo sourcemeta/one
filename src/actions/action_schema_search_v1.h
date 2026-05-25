@@ -207,9 +207,11 @@ public:
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
 
     for (const auto &entry : envelope.at("results").as_array()) {
+      const auto &title{entry.at("title").to_string()};
       content.push_back(sourcemeta::core::mcp_make_resource_link(
           version, entry.at("identifier").to_string(),
-          "application/schema+json", entry.at("title").to_string(),
+          "application/schema+json",
+          title.empty() ? entry.at("path").to_string() : title,
           entry.at("description").to_string()));
     }
 

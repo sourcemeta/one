@@ -33,7 +33,7 @@ jsonpath "$.result.content[1].description" == "A schema that has both a title an
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/v1/catalog/example/description-only"
-jsonpath "$.result.content[2].name" not exists
+jsonpath "$.result.content[2].name" == "/v1/catalog/example/description-only"
 jsonpath "$.result.content[2].description" == "A schema with only a description and no title"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"

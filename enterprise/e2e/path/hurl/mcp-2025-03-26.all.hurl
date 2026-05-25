@@ -349,9 +349,9 @@ jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" isString
 jsonpath "$.result.content[1].type" == "text"
-jsonpath "$.result.content[1].text" == "{{base}}/v1/catalog/example/bare"
+jsonpath "$.result.content[1].text" == "/v1/catalog/example/bare: {{base}}/v1/catalog/example/bare"
 jsonpath "$.result.content[2].type" == "text"
-jsonpath "$.result.content[2].text" == "A schema with only a description and no title: {{base}}/v1/catalog/example/description-only"
+jsonpath "$.result.content[2].text" == "/v1/catalog/example/description-only (A schema with only a description and no title): {{base}}/v1/catalog/example/description-only"
 jsonpath "$.result.content[3].type" == "text"
 jsonpath "$.result.content[3].text" == "Example With Both (A schema that has both a title and a description): {{base}}/v1/catalog/example/full"
 jsonpath "$.result.content[4].type" == "text"
