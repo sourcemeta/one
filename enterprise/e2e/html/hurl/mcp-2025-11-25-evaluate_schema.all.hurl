@@ -376,7 +376,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 922,
+  "id": 920,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
@@ -393,7 +393,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 922
+jsonpath "$.id" == 920
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
 
@@ -411,7 +411,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 923,
+  "id": 921,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
@@ -428,7 +428,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 923
+jsonpath "$.id" == 921
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
 
@@ -547,85 +547,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# stringifiedInstance must be valid JSON. A malformed value is reported as a
-# tool error rather than a JSON-RPC error.
-POST {{base}}/self/v1/mcp
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 920,
-  "method": "tools/call",
-  "params": {
-    "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "{not valid json" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 920
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content" count == 1
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "The stringifiedInstance value is not valid JSON"
-jsonpath "$.result.structuredContent" not exists
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
-# An empty string is not valid JSON either.
-POST {{base}}/self/v1/mcp
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 921,
-  "method": "tools/call",
-  "params": {
-    "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "" }
-  }
-}
-```
-HTTP 200
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 921
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content" count == 1
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "The stringifiedInstance value is not valid JSON"
-jsonpath "$.result.structuredContent" not exists
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
-
 # A malformed stringified instance is reported as a tool error rather than a
 # JSON-RPC error.
 POST {{base}}/self/v1/mcp
@@ -634,7 +555,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 920,
+  "id": 990,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
@@ -651,7 +572,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 920
+jsonpath "$.id" == 990
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
@@ -673,7 +594,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 921,
+  "id": 991,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
@@ -690,7 +611,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 921
+jsonpath "$.id" == 991
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
