@@ -26,7 +26,9 @@ jsonpath "$.id" == 200
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -65,7 +67,9 @@ jsonpath "$.id" == 201
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -497,7 +501,9 @@ jsonpath "$.id" == 213
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -781,7 +787,9 @@ jsonpath "$.id" == "dependencies-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
