@@ -123,7 +123,7 @@ jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[20].name" == "rpc"
 jsonpath "$.result.resources[20].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 1142
+jsonpath "$.result.resources[20].size" == 1166
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[21].name" == "response"
 jsonpath "$.result.resources[21].description" == "The response format for the schema statistics API endpoint"

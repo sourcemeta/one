@@ -21,6 +21,7 @@
     "q": {
       "description": "Case-insensitive substring to search for",
       "type": "string",
+      "pattern": "\\S",
       "maxLength": 256,
       "minLength": 1
     },

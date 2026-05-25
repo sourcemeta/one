@@ -38,3 +38,12 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 400
+
+GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=%20%20%20
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+[Asserts]
+jsonpath "$.status" == 400
+jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
