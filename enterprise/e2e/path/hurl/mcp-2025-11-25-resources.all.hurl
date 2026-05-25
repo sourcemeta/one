@@ -68,7 +68,7 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/v1/catalog/self/v1/schemas/api
 jsonpath "$.result.resources[9].name" == "rpc"
 jsonpath "$.result.resources[9].description" == "Evaluate a JSON instance against a schema in the catalog and return whether it is valid plus any errors"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 954
+jsonpath "$.result.resources[9].size" == 1572
 jsonpath "$.result.resources[10].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[10].name" == "response"
 jsonpath "$.result.resources[10].description" == "The response format for the schema health API endpoint"
@@ -148,7 +148,7 @@ jsonpath "$.result.resources[25].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[25].name" == "rpc"
 jsonpath "$.result.resources[25].description" == "Trace step-by-step evaluation of a JSON instance against a schema in the catalog, exposing each step, rule application, and decision point"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 980
+jsonpath "$.result.resources[25].size" == 1730
 jsonpath "$.result.resources[26].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[26].name" == "error"
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails"

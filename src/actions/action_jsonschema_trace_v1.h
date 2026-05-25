@@ -72,8 +72,8 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments,
-           const std::string_view envelope) -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &arguments, const std::string_view)
+      -> sourcemeta::core::JSON override {
     if (!this->validate(this->rpc_schema_, arguments)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
@@ -102,17 +102,26 @@ public:
     }
 
     sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::core::JSON envelope_json{nullptr};
-    sourcemeta::core::parse_json(envelope, envelope_json, std::ref(tracker));
+    sourcemeta::core::JSON parsed_instance{nullptr};
+    try {
+      sourcemeta::core::parse_json(
+          arguments.at("stringifiedInstance").to_string(), parsed_instance,
+          std::ref(tracker));
+    } catch (const std::exception &) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    } catch (...) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    }
+
     const auto schema_template{
         ActionJSONSchemaTrace_v1::compile_template(template_path)};
     sourcemeta::blaze::Evaluator evaluator;
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->trace(
-            evaluator, schema_template, arguments.at("instance"), template_path,
-            &tracker,
-            sourcemeta::core::Pointer{"params", "arguments", "instance"}));
+        this->trace(evaluator, schema_template, parsed_instance, template_path,
+                    &tracker, sourcemeta::core::Pointer{}));
   }
 
 private:

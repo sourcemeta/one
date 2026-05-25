@@ -213,7 +213,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/v1/catalog/example/bare", "instance": 42 }
+    "arguments": { "schema": "{{base}}/v1/catalog/example/bare", "stringifiedInstance": "42" }
   }
 }
 ```
@@ -252,7 +252,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/v1/catalog/example/bare", "instance": 42 }
+    "arguments": { "schema": "{{base}}/v1/catalog/example/bare", "stringifiedInstance": "42" }
   }
 }
 ```
