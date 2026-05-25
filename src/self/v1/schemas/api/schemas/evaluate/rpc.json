@@ -22,8 +22,8 @@
       "format": "uri"
     },
     "stringifiedInstance": {
-      "$comment": "Accepting the instance as a JSON-encoded string is a workaround for MCP clients that stringify non-string tool arguments before sending them. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
       "description": "The JSON value to validate against the schema, encoded as a string of valid JSON. The server parses this string before validation, so non-string MCP clients can still send objects, numbers, booleans, null, or arrays without losing the JSON type",
+      "$comment": "Accepting the instance as a JSON-encoded string is a workaround for MCP clients that stringify non-string tool arguments before sending them. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
       "type": "string",
       "contentEncoding": "identity",
       "contentMediaType": "application/json"
