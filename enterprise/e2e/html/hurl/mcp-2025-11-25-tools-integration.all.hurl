@@ -213,7 +213,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": 42 }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "42" }
   }
 }
 ```
@@ -252,7 +252,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": 42 }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "42" }
   }
 }
 ```

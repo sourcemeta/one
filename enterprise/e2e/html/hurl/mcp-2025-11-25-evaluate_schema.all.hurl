@@ -8,7 +8,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": "hello" }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "\"hello\"" }
   }
 }
 ```
@@ -47,7 +47,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": 42 }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "42" }
   }
 }
 ```
@@ -94,7 +94,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/object", "instance": {} }
+    "arguments": { "schema": "{{base}}/test/object", "stringifiedInstance": "{}" }
   }
 }
 ```
@@ -131,7 +131,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "test/bare/01", "instance": "hello" }
+    "arguments": { "schema": "test/bare/01", "stringifiedInstance": "\"hello\"" }
   }
 }
 ```
@@ -167,7 +167,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/does-not-exist", "instance": "hi" }
+    "arguments": { "schema": "{{base}}/test/does-not-exist", "stringifiedInstance": "\"hi\"" }
   }
 }
 ```
@@ -203,7 +203,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test", "instance": "x" }
+    "arguments": { "schema": "{{base}}/test", "stringifiedInstance": "\"x\"" }
   }
 }
 ```
@@ -238,7 +238,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "https://example.com/test/bare/01", "instance": "hi" }
+    "arguments": { "schema": "https://example.com/test/bare/01", "stringifiedInstance": "\"hi\"" }
   }
 }
 ```
@@ -273,7 +273,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/foo/../bare/01", "instance": "hi" }
+    "arguments": { "schema": "{{base}}/test/foo/../bare/01", "stringifiedInstance": "\"hi\"" }
   }
 }
 ```
@@ -310,7 +310,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "instance": "hello" }
+    "arguments": { "stringifiedInstance": "\"hello\"" }
   }
 }
 ```
@@ -376,7 +376,7 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 922,
+  "id": 920,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
@@ -393,7 +393,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 922
+jsonpath "$.id" == 920
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
 
@@ -411,11 +411,11 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 923,
+  "id": 921,
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": "x", "extra": "foo" }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "\"x\"", "extra": "foo" }
   }
 }
 ```
@@ -428,7 +428,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 923
+jsonpath "$.id" == 921
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
 
@@ -450,7 +450,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": 42, "instance": "x" }
+    "arguments": { "schema": 42, "stringifiedInstance": "\"x\"" }
   }
 }
 ```
@@ -520,7 +520,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "instance": "ok" }
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "\"ok\"" }
   }
 }
 ```
@@ -538,6 +538,85 @@ jsonpath "$.id" == "evaluate-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.valid" == true
 variable "text" jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A malformed stringified instance is reported as a tool error rather than a
+# JSON-RPC error.
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 990,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "{not valid json" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 990
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The instance is not valid JSON"
+jsonpath "$.result.structuredContent" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# An empty string is not valid JSON either.
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 991,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 991
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The instance is not valid JSON"
+jsonpath "$.result.structuredContent" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

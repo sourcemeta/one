@@ -99,9 +99,20 @@ public:
                                                    "Schema not found");
     }
 
+    sourcemeta::core::JSON parsed_instance{nullptr};
+    try {
+      parsed_instance = sourcemeta::core::parse_json(
+          arguments.at("stringifiedInstance").to_string());
+    } catch (const std::exception &) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    } catch (...) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    }
+
     return sourcemeta::core::mcp_make_tool_success(
-        version, request_id,
-        this->evaluate(template_path, arguments.at("instance")));
+        version, request_id, this->evaluate(template_path, parsed_instance));
   }
 
   template <typename Perform>
