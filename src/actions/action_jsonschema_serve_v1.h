@@ -39,6 +39,14 @@ public:
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
                     std::string_view error_schema) -> void {
+    if (schema_path.find('#') != std::string_view::npos ||
+        schema_path.find("%23") != std::string_view::npos) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
+          "The schema URI must not contain a fragment", error_schema);
+      return;
+    }
+
     // Because Visual Studio Code famously does not support `$id` or `id`
     // See
     // https://github.com/microsoft/vscode-json-languageservice/issues/224

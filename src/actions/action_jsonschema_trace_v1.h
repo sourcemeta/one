@@ -78,7 +78,8 @@ public:
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
+    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
+        arguments.at("schema").to_string().find('#') != std::string::npos) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 

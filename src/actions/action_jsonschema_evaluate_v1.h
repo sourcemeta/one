@@ -76,7 +76,8 @@ public:
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string())) {
+    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
+        arguments.at("schema").to_string().find('#') != std::string::npos) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
     }
 
@@ -133,6 +134,14 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
+      return;
+    }
+
+    if (path.find('#') != std::string_view::npos ||
+        path.find("%23") != std::string_view::npos) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
+          "The schema URI must not contain a fragment", error_schema);
       return;
     }
 
