@@ -2,9 +2,17 @@ cmake_minimum_required(VERSION 3.16)
 project(one VERSION 6.1.0 LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-# Must be the first thing we include
 include(DebugSymbols)
-sourcemeta_debug_symbols_enable()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(ONE_DEBUG_SYMBOLS OFF)
+else()
+  set(ONE_DEBUG_SYMBOLS ON)
+endif()
+
+# Must be the first thing we include.
+if(ONE_DEBUG_SYMBOLS)
+  sourcemeta_debug_symbols_enable()
+endif()
 
 # Options
 option(ONE_TESTS "Build the One unit tests" ON)
@@ -91,14 +99,18 @@ if(ONE_INDEX)
     add_subdirectory(enterprise/index)
   endif()
 
-  sourcemeta_debug_symbols_extract(sourcemeta_one_index
-    COMPONENT sourcemeta_one)
+  if(ONE_DEBUG_SYMBOLS)
+    sourcemeta_debug_symbols_extract(sourcemeta_one_index
+      COMPONENT sourcemeta_one)
+  endif()
 endif()
 
 if(ONE_SERVER)
   add_subdirectory(src/server)
-  sourcemeta_debug_symbols_extract(sourcemeta_one_server
-    COMPONENT sourcemeta_one)
+  if(ONE_DEBUG_SYMBOLS)
+    sourcemeta_debug_symbols_extract(sourcemeta_one_server
+      COMPONENT sourcemeta_one)
+  endif()
 endif()
 
 sourcemeta_target_clang_format(SOURCES
