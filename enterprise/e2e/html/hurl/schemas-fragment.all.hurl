@@ -107,3 +107,19 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 jsonpath "$.title" == "sourcemeta:one/invalid-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
+
+# A CORS preflight to a fragment-bearing path still returns the full set of
+# preflight headers, so the browser does not see this as a CORS failure.
+OPTIONS {{base}}/self/v1/api/schemas/evaluate/test/object%23meta
+HTTP 204
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Max-Age: 3600
+
+OPTIONS {{base}}/self/v1/api/schemas/trace/test/object%23meta
+HTTP 204
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Max-Age: 3600

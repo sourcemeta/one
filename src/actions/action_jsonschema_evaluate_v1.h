@@ -126,14 +126,6 @@ public:
                          const std::string_view request_schema, Perform perform)
       -> void {
     const auto &path{matches.front()};
-    if (path.find('#') != std::string_view::npos ||
-        path.find("%23") != std::string_view::npos) {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
-          "The schema URI must not contain a fragment", error_schema);
-      return;
-    }
-
     if (request.method() == "options") {
       response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin", "*");
@@ -142,6 +134,14 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
+      return;
+    }
+
+    if (path.find('#') != std::string_view::npos ||
+        path.find("%23") != std::string_view::npos) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
+          "The schema URI must not contain a fragment", error_schema);
       return;
     }
 
