@@ -31,16 +31,16 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
-jsonpath "$.result.structuredContent[0].path" == "/test/object"
-jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
-variable "text" jsonpath "$[0].path" == "/test/object"
-variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
-jsonpath "$.result.structuredContent[0].title" == "My Object"
-variable "text" jsonpath "$[0].title" == "My Object"
-jsonpath "$.result.structuredContent[0].description" == "An Object Example"
-variable "text" jsonpath "$[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -84,16 +84,16 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-jsonpath "$.result.structuredContent[0].path" == "/test/object"
-jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
-jsonpath "$.result.structuredContent[0].title" == "My Object"
-jsonpath "$.result.structuredContent[0].description" == "An Object Example"
-variable "text" jsonpath "$" count == 1
-variable "text" jsonpath "$[0].path" == "/test/object"
-variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
-variable "text" jsonpath "$[0].title" == "My Object"
-variable "text" jsonpath "$[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -177,12 +177,12 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
-jsonpath "$.result.structuredContent[0].path" == "/test/object"
-jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
-variable "text" jsonpath "$[0].path" == "/test/object"
-variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -270,8 +270,8 @@ jsonpath "$.result.content[10].uri" == "http://localhost:8000/test/description-o
 jsonpath "$.result.content[10].name" not exists
 jsonpath "$.result.content[10].description" == "A schema with only a description (04)"
 jsonpath "$.result.content[10].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 10
-variable "text" jsonpath "$" count == 10
+jsonpath "$.result.structuredContent.results" count == 10
+variable "text" jsonpath "$.results" count == 10
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -314,8 +314,8 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -353,8 +353,10 @@ jsonpath "$.id" == 1104
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" exists
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -402,10 +404,10 @@ jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/description-on
 jsonpath "$.result.content[2].name" not exists
 jsonpath "$.result.content[2].description" == "A schema with only a description (02)"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 2
-variable "text" jsonpath "$" count == 2
-jsonpath "$.result.structuredContent[0].title" == ""
-jsonpath "$.result.structuredContent[0].description" == "A schema with only a description (01)"
+jsonpath "$.result.structuredContent.results" count == 2
+variable "text" jsonpath "$.results" count == 2
+jsonpath "$.result.structuredContent.results[0].title" == ""
+jsonpath "$.result.structuredContent.results[0].description" == "A schema with only a description (01)"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -453,10 +455,10 @@ jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/title-only/02"
 jsonpath "$.result.content[2].name" == "Title Only 02"
 jsonpath "$.result.content[2].description" not exists
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 2
-variable "text" jsonpath "$" count == 2
-jsonpath "$.result.structuredContent[0].title" == "Title Only 01"
-jsonpath "$.result.structuredContent[0].description" == ""
+jsonpath "$.result.structuredContent.results" count == 2
+variable "text" jsonpath "$.results" count == 2
+jsonpath "$.result.structuredContent.results[0].title" == "Title Only 01"
+jsonpath "$.result.structuredContent.results[0].description" == ""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -504,10 +506,10 @@ jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/bare/02"
 jsonpath "$.result.content[2].name" not exists
 jsonpath "$.result.content[2].description" not exists
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 2
-variable "text" jsonpath "$" count == 2
-jsonpath "$.result.structuredContent[0].title" == ""
-jsonpath "$.result.structuredContent[0].description" == ""
+jsonpath "$.result.structuredContent.results" count == 2
+variable "text" jsonpath "$.results" count == 2
+jsonpath "$.result.structuredContent.results[0].title" == ""
+jsonpath "$.result.structuredContent.results[0].description" == ""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -550,12 +552,12 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
-jsonpath "$.result.structuredContent[0].path" == "/test/object"
-jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
-variable "text" jsonpath "$[0].path" == "/test/object"
-variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -948,12 +950,12 @@ jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 1
-variable "text" jsonpath "$" count == 1
-jsonpath "$.result.structuredContent[0].path" == "/test/object"
-jsonpath "$.result.structuredContent[0].identifier" == "http://localhost:8000/test/object"
-variable "text" jsonpath "$[0].path" == "/test/object"
-variable "text" jsonpath "$[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

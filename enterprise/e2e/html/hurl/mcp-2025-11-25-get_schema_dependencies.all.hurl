@@ -26,8 +26,10 @@ jsonpath "$.id" == 200
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" exists
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -65,8 +67,10 @@ jsonpath "$.id" == 201
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" exists
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -131,56 +135,56 @@ jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
 jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 8
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-jsonpath "$.result.structuredContent[0].at" == "/anyOf/0/$ref"
-jsonpath "$.result.structuredContent[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-jsonpath "$.result.structuredContent[1].at" == "/anyOf/1/$ref"
-jsonpath "$.result.structuredContent[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.structuredContent[2].at" == "/anyOf/2/$ref"
-jsonpath "$.result.structuredContent[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-jsonpath "$.result.structuredContent[3].at" == "/anyOf/3/$ref"
-jsonpath "$.result.structuredContent[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-jsonpath "$.result.structuredContent[4].at" == "/anyOf/4/$ref"
-jsonpath "$.result.structuredContent[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-jsonpath "$.result.structuredContent[5].at" == "/anyOf/5/$ref"
-jsonpath "$.result.structuredContent[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-jsonpath "$.result.structuredContent[6].at" == "/anyOf/6/$ref"
-jsonpath "$.result.structuredContent[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-jsonpath "$.result.structuredContent[7].at" == "/anyOf/7/$ref"
-variable "text" jsonpath "$" count == 8
-variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-variable "text" jsonpath "$[0].at" == "/anyOf/0/$ref"
-variable "text" jsonpath "$[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-variable "text" jsonpath "$[1].at" == "/anyOf/1/$ref"
-variable "text" jsonpath "$[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$[2].at" == "/anyOf/2/$ref"
-variable "text" jsonpath "$[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-variable "text" jsonpath "$[3].at" == "/anyOf/3/$ref"
-variable "text" jsonpath "$[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-variable "text" jsonpath "$[4].at" == "/anyOf/4/$ref"
-variable "text" jsonpath "$[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-variable "text" jsonpath "$[5].at" == "/anyOf/5/$ref"
-variable "text" jsonpath "$[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-variable "text" jsonpath "$[6].at" == "/anyOf/6/$ref"
-variable "text" jsonpath "$[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-variable "text" jsonpath "$[7].at" == "/anyOf/7/$ref"
+jsonpath "$.result.structuredContent.results" count == 8
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.structuredContent.results[0].at" == "/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
+jsonpath "$.result.structuredContent.results[1].at" == "/anyOf/1/$ref"
+jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[2].at" == "/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+jsonpath "$.result.structuredContent.results[3].at" == "/anyOf/3/$ref"
+jsonpath "$.result.structuredContent.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+jsonpath "$.result.structuredContent.results[4].at" == "/anyOf/4/$ref"
+jsonpath "$.result.structuredContent.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+jsonpath "$.result.structuredContent.results[5].at" == "/anyOf/5/$ref"
+jsonpath "$.result.structuredContent.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.structuredContent.results[6].at" == "/anyOf/6/$ref"
+jsonpath "$.result.structuredContent.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+jsonpath "$.result.structuredContent.results[7].at" == "/anyOf/7/$ref"
+variable "text" jsonpath "$.results" count == 8
+variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+variable "text" jsonpath "$.results[0].at" == "/anyOf/0/$ref"
+variable "text" jsonpath "$.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
+variable "text" jsonpath "$.results[1].at" == "/anyOf/1/$ref"
+variable "text" jsonpath "$.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[2].at" == "/anyOf/2/$ref"
+variable "text" jsonpath "$.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+variable "text" jsonpath "$.results[3].at" == "/anyOf/3/$ref"
+variable "text" jsonpath "$.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+variable "text" jsonpath "$.results[4].at" == "/anyOf/4/$ref"
+variable "text" jsonpath "$.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+variable "text" jsonpath "$.results[5].at" == "/anyOf/5/$ref"
+variable "text" jsonpath "$.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+variable "text" jsonpath "$.results[6].at" == "/anyOf/6/$ref"
+variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -282,36 +286,36 @@ jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
 jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent" count == 8
-jsonpath "$.result.structuredContent[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-jsonpath "$.result.structuredContent[0].at" == "/anyOf/0/$ref"
-jsonpath "$.result.structuredContent[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$" count == 8
-variable "text" jsonpath "$[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-variable "text" jsonpath "$[0].at" == "/anyOf/0/$ref"
-variable "text" jsonpath "$[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-variable "text" jsonpath "$[1].at" == "/anyOf/1/$ref"
-variable "text" jsonpath "$[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$[2].at" == "/anyOf/2/$ref"
-variable "text" jsonpath "$[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-variable "text" jsonpath "$[3].at" == "/anyOf/3/$ref"
-variable "text" jsonpath "$[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-variable "text" jsonpath "$[4].at" == "/anyOf/4/$ref"
-variable "text" jsonpath "$[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-variable "text" jsonpath "$[5].at" == "/anyOf/5/$ref"
-variable "text" jsonpath "$[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-variable "text" jsonpath "$[6].at" == "/anyOf/6/$ref"
-variable "text" jsonpath "$[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-variable "text" jsonpath "$[7].at" == "/anyOf/7/$ref"
+jsonpath "$.result.structuredContent.results" count == 8
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.structuredContent.results[0].at" == "/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results" count == 8
+variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+variable "text" jsonpath "$.results[0].at" == "/anyOf/0/$ref"
+variable "text" jsonpath "$.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
+variable "text" jsonpath "$.results[1].at" == "/anyOf/1/$ref"
+variable "text" jsonpath "$.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[2].at" == "/anyOf/2/$ref"
+variable "text" jsonpath "$.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+variable "text" jsonpath "$.results[3].at" == "/anyOf/3/$ref"
+variable "text" jsonpath "$.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+variable "text" jsonpath "$.results[4].at" == "/anyOf/4/$ref"
+variable "text" jsonpath "$.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+variable "text" jsonpath "$.results[5].at" == "/anyOf/5/$ref"
+variable "text" jsonpath "$.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+variable "text" jsonpath "$.results[6].at" == "/anyOf/6/$ref"
+variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -497,8 +501,10 @@ jsonpath "$.id" == 213
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" exists
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -781,8 +787,10 @@ jsonpath "$.id" == "dependencies-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent" count == 0
-variable "text" jsonpath "$" count == 0
+jsonpath "$.result.structuredContent.results" exists
+jsonpath "$.result.structuredContent.results" count == 0
+variable "text" jsonpath "$.results" exists
+variable "text" jsonpath "$.results" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
