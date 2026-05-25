@@ -137,6 +137,15 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 14
 jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "no-base"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/test/no-base/"
+jsonpath "$.entries[1].name" == "no-blaze"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/test/no-blaze/"
+jsonpath "$.entries[2].name" == "schemas"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].path" == "/test/schemas/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -168,6 +177,15 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 14
 jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "no-base"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/test/no-base/"
+jsonpath "$.entries[1].name" == "no-blaze"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/test/no-blaze/"
+jsonpath "$.entries[2].name" == "schemas"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].path" == "/test/schemas/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
