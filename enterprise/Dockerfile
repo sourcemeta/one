@@ -47,7 +47,8 @@ RUN	cmake -S /source -B ./build -G Ninja \
   -DONE_SERVER:BOOL=ON \
   -DONE_TESTS:BOOL=ON \
   -DONE_ENTERPRISE:BOOL=ON \
-  -DBUILD_SHARED_LIBS:BOOL=OFF
+  -DBUILD_SHARED_LIBS:BOOL=OFF \
+  -DONE_DEBUG_SYMBOLS:BOOL=ON
 
 RUN cmake --build /build \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
@@ -94,8 +95,12 @@ LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
 COPY --from=builder /usr/bin/sourcemeta-one-index \
   /usr/bin/sourcemeta-one-index
+COPY --from=builder /usr/bin/sourcemeta-one-index.debug \
+  /usr/bin/sourcemeta-one-index.debug
 COPY --from=builder /usr/bin/sourcemeta-one-server \
   /usr/bin/sourcemeta-one-server
+COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
+  /usr/bin/sourcemeta-one-server.debug
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
