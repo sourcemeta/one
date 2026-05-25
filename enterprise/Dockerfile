@@ -94,8 +94,12 @@ LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
 
 COPY --from=builder /usr/bin/sourcemeta-one-index \
   /usr/bin/sourcemeta-one-index
+COPY --from=builder /usr/bin/sourcemeta-one-index.debug \
+  /usr/bin/sourcemeta-one-index.debug
 COPY --from=builder /usr/bin/sourcemeta-one-server \
   /usr/bin/sourcemeta-one-server
+COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
+  /usr/bin/sourcemeta-one-server.debug
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
