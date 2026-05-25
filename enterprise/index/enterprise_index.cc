@@ -87,9 +87,15 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
           std::string uri{configuration.origin};
           uri.append(entry.path);
 
-          entries.push_back(sourcemeta::core::mcp_make_resource(
+          auto resource{sourcemeta::core::mcp_make_resource(
               uri, name, "application/schema+json", entry.description,
-              static_cast<std::size_t>(entry.bytes_raw)));
+              static_cast<std::size_t>(entry.bytes_raw))};
+          auto annotations{sourcemeta::core::JSON::make_object()};
+          annotations.assign("priority",
+                             sourcemeta::core::JSON{
+                                 static_cast<double>(entry.weight) / 100.0});
+          resource.assign("annotations", std::move(annotations));
+          entries.push_back(std::move(resource));
         });
 
     page.assign("resources", std::move(entries));

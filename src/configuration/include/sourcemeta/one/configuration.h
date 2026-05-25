@@ -26,8 +26,8 @@ struct Configuration {
       -> sourcemeta::core::JSON;
   static auto parse(const sourcemeta::core::JSON &data,
                     const std::filesystem::path &configuration_path,
-                    const std::filesystem::path &default_base_path)
-      -> Configuration;
+                    const std::filesystem::path &default_base_path,
+                    const std::filesystem::path &self_path) -> Configuration;
 
   sourcemeta::core::JSON::String url;
   sourcemeta::core::JSON::String base_path;
@@ -60,6 +60,12 @@ struct Configuration {
   };
 
   using Collection = sourcemeta::blaze::Configuration;
+
+  [[nodiscard]] static auto is_self_collection(const Collection &collection)
+      -> bool {
+    const auto *value{collection.extra.try_at("x-sourcemeta-one:is-self")};
+    return value != nullptr && value->is_boolean() && value->to_boolean();
+  }
 
   [[nodiscard]] auto resolve_schema(const sourcemeta::core::URI &input) const
       -> std::optional<std::filesystem::path>;

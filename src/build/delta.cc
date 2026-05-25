@@ -961,6 +961,14 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
                 }
               }
               break;
+            case DirectoryDependencyKind::AllSchemaMetadata:
+              for (const auto &schema_relative : all_relative_paths) {
+                rule_dependencies.push_back(append_filename(
+                    make_base_string(output_string, EXPLORER_DIRECTORY,
+                                     schema_relative.native()),
+                    SCHEMA_METADATA_RULE.filename));
+              }
+              break;
             case DirectoryDependencyKind::ChildDirectories:
               for (const auto &other_directory : affected_directories) {
                 auto other_relative{

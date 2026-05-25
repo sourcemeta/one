@@ -84,7 +84,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
         .description_length =
             static_cast<std::uint16_t>(entry.description.size()),
         .bytes_raw = entry.bytes_raw,
-        .bytes_bundled = entry.bytes_bundled};
+        .bytes_bundled = entry.bytes_bundled,
+        .weight = entry.weight};
     std::memcpy(payload.data() + record_position, &record_header,
                 sizeof(SearchRecordHeader));
     record_position += sizeof(SearchRecordHeader);
@@ -302,7 +303,8 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
           .title = title,
           .description = description,
           .bytes_raw = record_header->bytes_raw,
-          .bytes_bundled = record_header->bytes_bundled};
+          .bytes_bundled = record_header->bytes_bundled,
+          .weight = record_header->weight};
 }
 
 auto SearchView::for_each(
@@ -379,7 +381,8 @@ auto SearchView::for_each(
               .title = title,
               .description = description,
               .bytes_raw = record_header->bytes_raw,
-              .bytes_bundled = record_header->bytes_bundled});
+              .bytes_bundled = record_header->bytes_bundled,
+              .weight = record_header->weight});
   }
 }
 

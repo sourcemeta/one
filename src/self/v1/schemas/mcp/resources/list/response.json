@@ -13,14 +13,20 @@
             "name": "string",
             "description": "An example string schema",
             "mimeType": "application/schema+json",
-            "size": 143
+            "size": 143,
+            "annotations": {
+              "priority": 1
+            }
           },
           {
             "uri": "https://example.com/v1/example/string?bundle=1",
             "name": "string",
             "description": "An example string schema",
             "mimeType": "application/schema+json",
-            "size": 143
+            "size": 143,
+            "annotations": {
+              "priority": 1
+            }
           },
           {
             "uri": "https://example.com/v1/no-description",
@@ -77,6 +83,17 @@
               "size": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "annotations": {
+                "type": "object",
+                "properties": {
+                  "priority": {
+                    "type": "number",
+                    "maximum": 1,
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": true
               }
             },
             "additionalProperties": false

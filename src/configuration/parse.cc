@@ -2,6 +2,7 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/uri.h>
 
 #include "template.h"
@@ -32,13 +33,14 @@ auto page_from_json(const sourcemeta::core::JSON &input)
 template <typename T>
 auto entries_from_json(T &result, const std::filesystem::path &location,
                        const sourcemeta::core::JSON &input,
-                       const std::filesystem::path &default_base_path) -> void {
+                       const std::filesystem::path &default_base_path,
+                       const std::filesystem::path &self_path) -> void {
   // A heuristic to check if we are at the root or not
   if (input.defines("url")) {
     if (input.defines("contents")) {
       for (const auto &entry : input.at("contents").as_object()) {
         entries_from_json<T>(result, location / entry.first, entry.second,
-                             default_base_path);
+                             default_base_path, self_path);
       }
     }
   } else {
@@ -63,6 +65,14 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
       // This URI is guaranteed to be canonicalised by the collection parser
       assert(collection.base ==
              sourcemeta::core::URI::canonicalize(collection.base));
+      if (collection_input.defines("x-sourcemeta-one:path") &&
+          sourcemeta::core::is_under_path(
+              std::filesystem::path{
+                  collection_input.at("x-sourcemeta-one:path").to_string()},
+              self_path)) {
+        collection.extra.assign("x-sourcemeta-one:is-self",
+                                sourcemeta::core::JSON{true});
+      }
       result.emplace(location, std::move(collection));
     } else {
       result.emplace(location, page_from_json(input));
@@ -70,7 +80,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
       if (input.defines("contents")) {
         for (const auto &entry : input.at("contents").as_object()) {
           entries_from_json<T>(result, location / entry.first, entry.second,
-                               default_base_path);
+                               default_base_path, self_path);
         }
       }
     }
@@ -83,7 +93,8 @@ namespace sourcemeta::one {
 
 auto Configuration::parse(const sourcemeta::core::JSON &data,
                           const std::filesystem::path &configuration_path,
-                          const std::filesystem::path &default_base_path)
+                          const std::filesystem::path &default_base_path,
+                          const std::filesystem::path &self_path)
     -> Configuration {
   const auto compiled_schema{sourcemeta::blaze::from_json(
       sourcemeta::core::parse_json(CONFIGURATION))};
@@ -140,7 +151,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
-  entries_from_json(result.entries, "", data, default_base_path);
+  entries_from_json(result.entries, "", data, default_base_path, self_path);
 
   return result;
 }

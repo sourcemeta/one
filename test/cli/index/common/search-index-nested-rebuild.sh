@@ -54,9 +54,9 @@ EOF
 SEARCH="$TMP/output/explorer/%/search.metapack"
 
 extract_search_paths() {
-  strings "$1" | grep -E '^/(left|right)/' \
+  strings "$1" | grep -oE '/(left|right)/[^[:space:]]*' \
     | sed 's|https*://.*$||' \
-    | LC_ALL=C sort
+    | LC_ALL=C sort -u
 }
 
 # Run 1: full build with two schemas in separate directories

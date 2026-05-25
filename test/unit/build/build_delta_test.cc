@@ -144,7 +144,8 @@ TEST(Build_delta, full_single_schema) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -315,7 +316,8 @@ TEST(Build_delta, incremental_missing_schema_metapack) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "bar" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -472,7 +474,9 @@ TEST(Build_delta, incremental_one_schema_added) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -603,7 +607,8 @@ TEST(Build_delta, full_stale_file_in_entries) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -725,7 +730,8 @@ TEST(Build_delta, full_stale_directory_in_entries) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -939,7 +945,8 @@ TEST(Build_delta, incremental_with_comment) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1057,7 +1064,8 @@ TEST(Build_delta, incremental_empty_comment_removes_existing) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1413,7 +1421,8 @@ TEST(Build_delta, full_single_schema_evaluate_false) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1526,7 +1535,8 @@ TEST(Build_delta, full_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 7, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1637,7 +1647,8 @@ TEST(Build_delta, incremental_evaluate_false) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1711,7 +1722,8 @@ TEST(Build_delta, incremental_missing_blaze_exhaustive) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1812,7 +1824,8 @@ TEST(Build_delta, incremental_missing_bundle) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 3, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 4, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -1887,7 +1900,8 @@ TEST(Build_delta, incremental_missing_web_schema) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 1, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 2, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -2111,7 +2125,9 @@ TEST(Build_delta, mtime_source_newer) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -2251,7 +2267,9 @@ TEST(Build_delta, mtime_no_entry) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -2390,7 +2408,8 @@ TEST(Build_delta, mtime_no_file_mark) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -2568,7 +2587,9 @@ TEST(Build_delta, incremental_reverse_dep_direct) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "b" / "%" / "schema.metapack",
+                output / "explorer" / "a" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -2823,7 +2844,10 @@ TEST(Build_delta, incremental_reverse_dep_transitive) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "c" / "%" / "schema.metapack",
+                output / "explorer" / "b" / "%" / "schema.metapack",
+                output / "explorer" / "a" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3026,7 +3050,9 @@ TEST(Build_delta, mtime_reverse_dep) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "b" / "%" / "schema.metapack",
+                output / "explorer" / "a" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3150,7 +3176,8 @@ TEST(Build_delta, incremental_evaluate_false_removes_existing_blaze) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3296,7 +3323,8 @@ TEST(Build_delta, headless_full_single_schema) {
 
   EXPECT_ACTION(plan, 7, 0, 1, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3401,7 +3429,8 @@ TEST(Build_delta, headless_incremental) {
 
   EXPECT_ACTION(plan, 5, 0, 1, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3513,7 +3542,8 @@ TEST(Build_delta, full_to_headless_removes_web) {
 
   EXPECT_ACTION(plan, 6, 0, 1, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3695,7 +3725,8 @@ TEST(Build_delta, headless_to_full_incremental) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3841,7 +3872,8 @@ TEST(Build_delta, headless_to_full_full_rebuild) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 6, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 7, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -3958,7 +3990,8 @@ TEST(Build_delta, full_to_headless_full_rebuild) {
 
   EXPECT_ACTION(plan, 7, 0, 1, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -4084,10 +4117,11 @@ TEST(Build_delta, full_single_schema_nested_path_headless) {
                 output / "explorer" / "%" / "directory.metapack", "",
                 output / "explorer" / "example" / "%" / "directory.metapack");
 
-  EXPECT_ACTION(plan, 8, 0, 1, SearchIndex,
-                output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "example" / "%" / "directory.metapack",
-                output / "explorer" / "%" / "directory.metapack");
+  EXPECT_ACTION(
+      plan, 8, 0, 1, SearchIndex, output / "explorer" / "%" / "search.metapack",
+      "", output / "explorer" / "example" / "%" / "directory.metapack",
+      output / "explorer" / "%" / "directory.metapack",
+      output / "explorer" / "example" / "test" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 9, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -4293,7 +4327,13 @@ TEST(Build_delta, incremental_add_schema_preserves_intermediate_dirs) {
                 output / "explorer" / "example" / "schemas" / "%" /
                     "directory.metapack",
                 output / "explorer" / "example" / "%" / "directory.metapack",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "example" / "schemas" / "c" / "%" /
+                    "schema.metapack",
+                output / "explorer" / "example" / "schemas" / "b" / "%" /
+                    "schema.metapack",
+                output / "explorer" / "example" / "schemas" / "a" / "%" /
+                    "schema.metapack");
 
   EXPECT_ACTION(plan, 8, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -4489,7 +4529,9 @@ TEST(Build_delta, incremental_directory_listing_includes_unchanged_siblings) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "bar" / "%" / "schema.metapack",
+                output / "explorer" / "foo" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",
@@ -4634,7 +4676,10 @@ TEST(Build_delta, incremental_add_schema_rebuilds_all_dependents) {
                 output / "explorer" / "%" / "directory.metapack");
   EXPECT_ACTION(plan, 5, 1, 2, SearchIndex,
                 output / "explorer" / "%" / "search.metapack", "",
-                output / "explorer" / "%" / "directory.metapack");
+                output / "explorer" / "%" / "directory.metapack",
+                output / "explorer" / "c" / "%" / "schema.metapack",
+                output / "explorer" / "b" / "%" / "schema.metapack",
+                output / "explorer" / "a" / "%" / "schema.metapack");
 
   EXPECT_ACTION(plan, 6, 0, 1, Mcp, output / "explorer" / "%" / "mcp.metapack",
                 "", output / "explorer" / "%" / "search.metapack",

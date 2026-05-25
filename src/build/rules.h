@@ -196,6 +196,7 @@ enum class DirectoryScope : std::uint8_t { AllDirectories, NonRoot, RootOnly };
 
 enum class DirectoryDependencyKind : std::uint8_t {
   SchemaMetadata,
+  AllSchemaMetadata,
   ChildDirectories,
   AllDirectoryListings,
   SameDirectoryTarget,
@@ -238,8 +239,10 @@ static constexpr std::array<DirectoryRule, 6> DIRECTORY_RULES{{
      .scope = DirectoryScope::RootOnly,
      .only_full_rebuild = false,
      .dependencies = {{{.kind = DirectoryDependencyKind::AllDirectoryListings,
+                        .filename = nullptr},
+                       {.kind = DirectoryDependencyKind::AllSchemaMetadata,
                         .filename = nullptr}}},
-     .dependency_count = 1},
+     .dependency_count = 2},
 
     {.action = BuildPlan::Action::Type::Mcp,
      .filename = "mcp.metapack",
