@@ -12,8 +12,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 113
-jsonpath "$.entries" count == 2
+jsonpath "$.schemas" == 115
+jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
@@ -26,6 +26,12 @@ jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 15
 jsonpath "$.entries[1].schemas" == 68
 jsonpath "$.entries[1].path" == "/test/"
+jsonpath "$.entries[2].name" == "twins"
+jsonpath "$.entries[2].title" == "Twins"
+jsonpath "$.entries[2].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].schemas" == 2
+jsonpath "$.entries[2].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Twin Foo Inner",
+  "description": "A schema inside the foo directory whose name collides with a sibling schema",
+  "examples": [ 0 ],
+  "type": "integer"
+}

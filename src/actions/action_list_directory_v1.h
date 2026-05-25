@@ -83,9 +83,11 @@ public:
     const auto explorer_root{this->base() / "explorer"};
 
     auto absolute_path{explorer_root};
-    const auto &path{arguments.at_or("path", EMPTY_STRING).to_string()};
-    if (!path.empty()) {
-      absolute_path /= path;
+    const auto relative_path{
+        std::filesystem::path{arguments.at_or("path", EMPTY_STRING).to_string()}
+            .relative_path()};
+    if (!relative_path.empty()) {
+      absolute_path /= relative_path;
     }
     absolute_path /= "%";
     absolute_path /= "directory.metapack";

@@ -66,10 +66,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 113
-variable "text" jsonpath "$.schemas" == 113
-jsonpath "$.result.structuredContent.entries" count == 2
-variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.schemas" == 115
+variable "text" jsonpath "$.schemas" == 115
+jsonpath "$.result.structuredContent.entries" count == 3
+variable "text" jsonpath "$.entries" count == 3
 jsonpath "$.result.structuredContent.entries[0].name" == "self"
 variable "text" jsonpath "$.entries[0].name" == "self"
 jsonpath "$.result.structuredContent.entries[0].title" == "Self"
@@ -137,10 +137,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 113
-variable "text" jsonpath "$.schemas" == 113
-jsonpath "$.result.structuredContent.entries" count == 2
-variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.schemas" == 115
+variable "text" jsonpath "$.schemas" == 115
+jsonpath "$.result.structuredContent.entries" count == 3
+variable "text" jsonpath "$.entries" count == 3
 jsonpath "$.result.structuredContent.entries[0].name" == "self"
 variable "text" jsonpath "$.entries[0].name" == "self"
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
@@ -1771,8 +1771,172 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 112
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.path" == "/test"
+jsonpath "$.result.structuredContent.url" == "{{base}}/test"
+jsonpath "$.result.structuredContent.breadcrumb" count == 1
+jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
+jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
+jsonpath "$.result.structuredContent.entries" count == 6
+jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1121,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "test/" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1121
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.path" == "/test"
+jsonpath "$.result.structuredContent.url" == "{{base}}/test"
+jsonpath "$.result.structuredContent.breadcrumb" count == 1
+jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
+jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
+jsonpath "$.result.structuredContent.entries" count == 6
+jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1122,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "/test/" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1122
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.path" == "/test"
+jsonpath "$.result.structuredContent.url" == "{{base}}/test"
+jsonpath "$.result.structuredContent.breadcrumb" count == 1
+jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
+jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
+jsonpath "$.result.structuredContent.entries" count == 6
+jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1123,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "/" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1123
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.path" == "/"
+jsonpath "$.result.structuredContent.url" == "{{base}}"
+jsonpath "$.result.structuredContent.breadcrumb" count == 0
+jsonpath "$.result.structuredContent.entries" count == 3
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1124,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "/test/.." }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1124
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.path" == "/"
+jsonpath "$.result.structuredContent.url" == "{{base}}"
+jsonpath "$.result.structuredContent.breadcrumb" count == 0
+jsonpath "$.result.structuredContent.entries" count == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1851,10 +2015,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 113
-variable "text" jsonpath "$.schemas" == 113
-jsonpath "$.result.structuredContent.entries" count == 2
-variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.schemas" == 115
+variable "text" jsonpath "$.schemas" == 115
+jsonpath "$.result.structuredContent.entries" count == 3
+variable "text" jsonpath "$.entries" count == 3
 jsonpath "$.result.structuredContent.entries[0].name" == "self"
 variable "text" jsonpath "$.entries[0].name" == "self"
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
@@ -1922,10 +2086,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 113
-variable "text" jsonpath "$.schemas" == 113
-jsonpath "$.result.structuredContent.entries" count == 2
-variable "text" jsonpath "$.entries" count == 2
+jsonpath "$.result.structuredContent.schemas" == 115
+variable "text" jsonpath "$.schemas" == 115
+jsonpath "$.result.structuredContent.entries" count == 3
+variable "text" jsonpath "$.entries" count == 3
 jsonpath "$.result.structuredContent.entries[0].name" == "self"
 variable "text" jsonpath "$.entries[0].name" == "self"
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
@@ -2356,6 +2520,56 @@ jsonpath "$.id" == "list-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/"
 variable "text" jsonpath "$.path" == "/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A directory containing a schema and a sub-directory with the same base name.
+# The listing must distinguish the schema from the directory by the trailing
+# slash on `path` (directories end with `/`, schemas do not).
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1130,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "twins" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1130
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.title" == "Twins"
+jsonpath "$.result.structuredContent.description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.path" == "/twins"
+jsonpath "$.result.structuredContent.entries" count == 2
+jsonpath "$.result.structuredContent.entries[0].name" == "foo"
+jsonpath "$.result.structuredContent.entries[1].name" == "foo"
+jsonpath "$.result.structuredContent.entries[0].type" == "directory"
+jsonpath "$.result.structuredContent.entries[0].path" == "/twins/foo/"
+jsonpath "$.result.structuredContent.entries[0].schemas" == 1
+jsonpath "$.result.structuredContent.entries[1].type" == "schema"
+jsonpath "$.result.structuredContent.entries[1].path" == "/twins/foo"
+jsonpath "$.result.structuredContent.entries[1].title" == "Twin Foo Schema"
+jsonpath "$.result.structuredContent.entries[1].description" == "A schema whose base name collides with a sibling directory"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
