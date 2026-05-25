@@ -198,7 +198,7 @@ public:
     auto results{
         this->search_view_.search(arguments.at("q").to_string(), limit, scope)};
     auto envelope{sourcemeta::core::JSON::make_object()};
-    envelope.assign("results", std::move(results));
+    envelope.assign_assume_new("results", std::move(results));
 
     auto content{sourcemeta::core::JSON::make_array()};
 
@@ -206,9 +206,7 @@ public:
     sourcemeta::core::prettify(envelope, payload);
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
 
-    const auto &results_view{envelope.at("results")};
-    for (std::size_t index{0}; index < results_view.array_size(); ++index) {
-      const auto &entry{results_view.at(index)};
+    for (const auto &entry : envelope.at("results").as_array()) {
       content.push_back(sourcemeta::core::mcp_make_resource_link(
           version, entry.at("identifier").to_string(),
           "application/schema+json", entry.at("title").to_string(),

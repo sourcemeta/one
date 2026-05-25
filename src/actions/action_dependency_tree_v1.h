@@ -108,7 +108,7 @@ public:
     }
 
     auto envelope{sourcemeta::core::JSON::make_object()};
-    envelope.assign("results", std::move(contents.value()));
+    envelope.assign_assume_new("results", std::move(contents.value()));
 
     std::set<std::string_view> unique_uris;
     for (const auto &entry : envelope.at("results").as_array()) {
