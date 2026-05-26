@@ -1,6 +1,7 @@
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
@@ -74,6 +75,22 @@ auto RouterAction::validate(const std::string_view schema_uri,
       schema_uri, sourcemeta::blaze::Mode::FastValidation)};
   sourcemeta::blaze::Evaluator evaluator;
   return evaluator.validate(schema_template, instance);
+}
+
+auto RouterAction::validate_standard(const std::string_view schema_uri,
+                                     const sourcemeta::core::JSON &instance)
+    const -> std::optional<sourcemeta::core::JSON> {
+  const auto schema_template{
+      this->blaze_template(schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
+  sourcemeta::blaze::Evaluator evaluator;
+  auto result{
+      sourcemeta::blaze::standard(evaluator, schema_template, instance,
+                                  sourcemeta::blaze::StandardOutput::Basic)};
+  const auto *valid{result.try_at("valid")};
+  if (valid != nullptr && valid->is_boolean() && valid->to_boolean()) {
+    return std::nullopt;
+  }
+  return result;
 }
 
 auto RouterAction::blaze_template(const std::string_view schema_uri,

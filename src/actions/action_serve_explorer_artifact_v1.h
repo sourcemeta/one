@@ -75,13 +75,18 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    if (!this->validate(this->rpc_schema_, arguments)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+    if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
+        output.has_value()) {
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          request_id, std::move(output));
     }
 
     if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
         arguments.at("schema").to_string().find('#') != std::string::npos) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          request_id,
+          sourcemeta::core::JSON{
+              "The schema must be an absolute URI without a fragment"});
     }
 
     const auto schema_path{

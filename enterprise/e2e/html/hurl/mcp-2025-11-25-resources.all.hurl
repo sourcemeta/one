@@ -576,7 +576,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[46].name" == "error"
 jsonpath "$.result.resources[46].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 6633
+jsonpath "$.result.resources[46].size" == 7181
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[47].name" == "request"

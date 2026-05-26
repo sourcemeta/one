@@ -155,6 +155,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 303
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -466,6 +467,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 315
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -502,6 +504,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 320
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -537,6 +545,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 321
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -573,6 +582,16 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 322
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/properties/schema/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -608,6 +627,16 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 323
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
+jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
+jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -642,6 +671,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 324
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "Tool call must include an \"arguments\" object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

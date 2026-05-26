@@ -80,6 +80,11 @@ public:
                               const sourcemeta::core::JSON &instance) const
       -> bool;
 
+  [[nodiscard]] auto
+  validate_standard(std::string_view schema_uri,
+                    const sourcemeta::core::JSON &instance) const
+      -> std::optional<sourcemeta::core::JSON>;
+
 private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &base_;

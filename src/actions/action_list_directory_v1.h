@@ -75,8 +75,10 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    if (!this->validate(this->rpc_schema_, arguments)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+    if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
+        output.has_value()) {
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          request_id, std::move(output));
     }
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
@@ -94,7 +96,9 @@ public:
 
     const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
     if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          request_id,
+          sourcemeta::core::JSON{"The path must not escape the catalog root"});
     }
 
     auto contents{sourcemeta::one::metapack_read_json(safe_path)};
