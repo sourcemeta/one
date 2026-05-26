@@ -98,6 +98,7 @@ navigation and discovery purposes.
     | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
     | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
     | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
+    | `/entries/*/priority` | Integer | No | For `schema` entries, an importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
 
 === "404"
 
@@ -255,6 +256,7 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/dialect` | String | Yes | The dialect URI of the schema |
     | `/baseDialect` | String | Yes | The base dialect URI of the schema |
     | `/health` | Integer | Yes | The health score of the schema |
+    | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/dependencies` | Integer | Yes | The number of direct and indirect dependencies of the schema |
     | `/bytes` | Integer | Yes | The bytes that the schema occupies |
     | `/bytesBundled` | Integer | Yes | The bytes that the schema occupies when bundled |

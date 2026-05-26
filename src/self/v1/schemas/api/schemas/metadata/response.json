@@ -11,6 +11,7 @@
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
+      "priority": 100,
       "breadcrumb": [
         {
           "name": "Home",
@@ -58,7 +59,8 @@
         "path",
         "baseDialect",
         "dialect",
-        "health"
+        "health",
+        "priority"
       ],
       "properties": {
         "title": {
@@ -93,6 +95,11 @@
           "format": "uri"
         },
         "health": {
+          "type": "integer",
+          "maximum": 100,
+          "minimum": 0
+        },
+        "priority": {
           "type": "integer",
           "maximum": 100,
           "minimum": 0
