@@ -77,8 +77,8 @@ auto RouterAction::validate(const std::string_view schema_uri,
   return evaluator.validate(schema_template, instance);
 }
 
-auto RouterAction::validate_with_trace(const std::string_view schema_uri,
-                                       const sourcemeta::core::JSON &instance)
+auto RouterAction::validate_standard(const std::string_view schema_uri,
+                                     const sourcemeta::core::JSON &instance)
     const -> std::optional<sourcemeta::core::JSON> {
   const auto schema_template{
       this->blaze_template(schema_uri, sourcemeta::blaze::Mode::Exhaustive)};

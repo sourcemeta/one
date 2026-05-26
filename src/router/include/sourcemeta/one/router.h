@@ -80,13 +80,9 @@ public:
                               const sourcemeta::core::JSON &instance) const
       -> bool;
 
-  // Runs the same validation against the given schema URL but returns the
-  // JSON Schema Basic output document, suitable for surfacing to clients
-  // through JSON-RPC error `data`. Returns `nullopt` when the instance is
-  // valid.
   [[nodiscard]] auto
-  validate_with_trace(std::string_view schema_uri,
-                      const sourcemeta::core::JSON &instance) const
+  validate_standard(std::string_view schema_uri,
+                    const sourcemeta::core::JSON &instance) const
       -> std::optional<sourcemeta::core::JSON>;
 
 private:

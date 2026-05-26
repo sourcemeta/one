@@ -75,10 +75,10 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    if (auto trace{this->validate_with_trace(this->rpc_schema_, arguments)};
-        trace.has_value()) {
+    if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
+        output.has_value()) {
       return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id, std::move(trace));
+          request_id, std::move(output));
     }
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
