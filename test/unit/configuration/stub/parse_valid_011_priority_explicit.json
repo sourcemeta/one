@@ -1,0 +1,36 @@
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "low": {
+      "title": "Low",
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/low",
+          "path": "./schemas/example/extension",
+          "x-sourcemeta-one:priority": 0
+        }
+      }
+    },
+    "mid": {
+      "title": "Mid",
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/mid",
+          "path": "./schemas/example/extension",
+          "x-sourcemeta-one:priority": 50
+        }
+      }
+    },
+    "high": {
+      "title": "High",
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/high",
+          "path": "./schemas/example/extension",
+          "x-sourcemeta-one:priority": 100
+        }
+      }
+    }
+  }
+}

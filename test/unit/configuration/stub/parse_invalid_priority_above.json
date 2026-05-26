@@ -1,0 +1,15 @@
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/foo",
+          "path": "./schemas/example/extension",
+          "x-sourcemeta-one:priority": 200
+        }
+      }
+    }
+  }
+}
