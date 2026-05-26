@@ -637,3 +637,63 @@ TEST(Configuration, valid_010_api_disabled) {
 
   EXPECT_EQ(configuration.entries.size(), 0);
 }
+
+TEST(Configuration, valid_011_priority_explicit) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_011_priority_explicit.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
+  EXPECT_PRIORITY(configuration, "low/schemas", 0);
+  EXPECT_PRIORITY(configuration, "mid/schemas", 50);
+  EXPECT_PRIORITY(configuration, "high/schemas", 100);
+}
+
+TEST(Configuration, invalid_priority_above_maximum) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_priority_above.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(
+                   raw_configuration, configuration_path,
+                   configuration_path.parent_path()),
+               sourcemeta::one::ConfigurationValidationError);
+}
+
+TEST(Configuration, invalid_priority_below_minimum) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_priority_below.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(
+                   raw_configuration, configuration_path,
+                   configuration_path.parent_path()),
+               sourcemeta::one::ConfigurationValidationError);
+}
+
+TEST(Configuration, priority_helper_clamps_out_of_range) {
+  sourcemeta::one::Configuration::Collection collection;
+  collection.extra.assign(
+      "x-sourcemeta-one:priority",
+      sourcemeta::core::JSON{
+          static_cast<sourcemeta::core::JSON::Integer>(200)});
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 100);
+
+  collection.extra.assign(
+      "x-sourcemeta-one:priority",
+      sourcemeta::core::JSON{
+          static_cast<sourcemeta::core::JSON::Integer>(-5)});
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 0);
+}
+
+TEST(Configuration, priority_helper_defaults_when_missing_or_wrong_type) {
+  sourcemeta::one::Configuration::Collection collection;
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 100);
+
+  collection.extra.assign("x-sourcemeta-one:priority",
+                          sourcemeta::core::JSON{"high"});
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 100);
+}
