@@ -102,7 +102,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 3
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
-jsonpath "$.result.resources[0].name" == "full"
+jsonpath "$.result.resources[0].name" == "Example With Both"
 jsonpath "$.result.resources[0].description" == "A schema that has both a title and a description"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 242

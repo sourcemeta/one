@@ -331,7 +331,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
-jsonpath "$.result.resources[0].name" == "full"
+jsonpath "$.result.resources[0].name" == "Example With Both"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" == "50"
 
@@ -363,7 +363,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
-jsonpath "$.result.resources[0].name" == "full"
+jsonpath "$.result.resources[0].name" == "Example With Both"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" == "50"
 
