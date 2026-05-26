@@ -78,17 +78,12 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
         offset, page_size,
         [&entries, &configuration](
             const sourcemeta::one::SearchListEntry &entry) -> void {
-          std::string_view name{entry.path};
-          const auto last_slash{name.rfind('/')};
-          if (last_slash != std::string_view::npos) {
-            name.remove_prefix(last_slash + 1);
-          }
-
           std::string uri{configuration.origin};
           uri.append(entry.path);
 
           entries.push_back(sourcemeta::core::mcp_make_resource(
-              uri, name, "application/schema+json", entry.description,
+              uri, entry.title.empty() ? entry.path : entry.title,
+              "application/schema+json", entry.description,
               static_cast<std::size_t>(entry.bytes_raw),
               static_cast<double>(entry.priority) / 100.0));
         });
