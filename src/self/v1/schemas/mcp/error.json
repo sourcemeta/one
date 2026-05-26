@@ -17,7 +17,17 @@
       "error": {
         "code": -32602,
         "message": "Invalid params",
-        "data": "abc"
+        "data": {
+          "valid": false,
+          "errors": [
+            {
+              "keywordLocation": "/properties/q/minLength",
+              "absoluteKeywordLocation": "https://example.com/rpc#/properties/q/minLength",
+              "instanceLocation": "/q",
+              "error": "The string was expected to contain at least one character"
+            }
+          ]
+        }
       }
     },
     {
@@ -252,7 +262,14 @@
               "const": "Invalid params"
             },
             "data": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "$ref": "../api/schemas/evaluate/response.json"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           },
           "additionalProperties": false

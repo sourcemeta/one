@@ -106,36 +106,39 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 202
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 10
+jsonpath "$.result.content" count == 11
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/mcp/ping/response"
+jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+jsonpath "$.result.content[4].uri" == "{{base}}/self/v1/schemas/mcp/ping/response"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+jsonpath "$.result.content[5].uri" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.content[6].type" == "resource_link"
-jsonpath "$.result.content[6].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+jsonpath "$.result.content[6].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
-jsonpath "$.result.content[7].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.content[7].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
-jsonpath "$.result.content[8].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+jsonpath "$.result.content[8].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
-jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent.results" count == 8
+jsonpath "$.result.content[10].type" == "resource_link"
+jsonpath "$.result.content[10].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.content[10].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 9
 jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 jsonpath "$.result.structuredContent.results[0].at" == "/anyOf/0/$ref"
@@ -160,7 +163,10 @@ jsonpath "$.result.structuredContent.results[6].at" == "/anyOf/6/$ref"
 jsonpath "$.result.structuredContent.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
 jsonpath "$.result.structuredContent.results[7].at" == "/anyOf/7/$ref"
-variable "text" jsonpath "$.results" count == 8
+jsonpath "$.result.structuredContent.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+jsonpath "$.result.structuredContent.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+variable "text" jsonpath "$.results" count == 9
 variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 variable "text" jsonpath "$.results[0].at" == "/anyOf/0/$ref"
@@ -185,6 +191,9 @@ variable "text" jsonpath "$.results[6].at" == "/anyOf/6/$ref"
 variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
+variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -257,41 +266,44 @@ dependency_uri: jsonpath "$.result.content[1].uri"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 204
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 10
+jsonpath "$.result.content" count == 11
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.content[1].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/mcp/ping/response"
+jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+jsonpath "$.result.content[4].uri" == "{{base}}/self/v1/schemas/mcp/ping/response"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+jsonpath "$.result.content[5].uri" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.content[6].type" == "resource_link"
-jsonpath "$.result.content[6].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+jsonpath "$.result.content[6].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
-jsonpath "$.result.content[7].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.content[7].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
-jsonpath "$.result.content[8].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+jsonpath "$.result.content[8].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
-jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.content[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent.results" count == 8
+jsonpath "$.result.content[10].type" == "resource_link"
+jsonpath "$.result.content[10].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.content[10].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 9
 jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 jsonpath "$.result.structuredContent.results[0].at" == "/anyOf/0/$ref"
 jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results" count == 8
+variable "text" jsonpath "$.results" count == 9
 variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
 variable "text" jsonpath "$.results[0].at" == "/anyOf/0/$ref"
@@ -316,6 +328,9 @@ variable "text" jsonpath "$.results[6].at" == "/anyOf/6/$ref"
 variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
+variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -325,7 +340,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/schemas/mcp/error
+GET {{base}}/self/v1/schemas/api/schemas/evaluate/response
 HTTP 200
 [Captures]
 schema_text: body
@@ -612,6 +627,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 220
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -683,6 +704,16 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 222
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc#/properties/schema/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -718,6 +749,16 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 223
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
+jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
+jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
