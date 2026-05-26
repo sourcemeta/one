@@ -330,8 +330,8 @@ header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
 jsonpath "$.result.resources" count == 50
-jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
-jsonpath "$.result.resources[0].name" == "error"
+jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.resources[0].name" == "full"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" == "50"
 
@@ -362,8 +362,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
 jsonpath "$.result.resources" count == 50
-jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
-jsonpath "$.result.resources[0].name" == "error"
+jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.resources[0].name" == "full"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" == "50"
 
