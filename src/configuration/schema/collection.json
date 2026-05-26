@@ -27,6 +27,11 @@
     "x-sourcemeta-one:path": {
       "type": "string"
     },
+    "x-sourcemeta-one:priority": {
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 0
+    },
     "baseUri": {
       "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",

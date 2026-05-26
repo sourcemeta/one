@@ -41,6 +41,7 @@ TEST(Configuration_read, read_valid_001) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -107,6 +108,7 @@ TEST(Configuration_read, read_valid_002) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -160,6 +162,7 @@ TEST(Configuration_read, read_valid_003) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -212,6 +215,7 @@ TEST(Configuration_read, read_valid_004) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -267,6 +271,7 @@ TEST(Configuration_read, read_valid_005) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -322,6 +327,7 @@ TEST(Configuration_read, read_valid_006) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -363,6 +369,7 @@ TEST(Configuration_read, read_valid_007) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -409,6 +416,7 @@ TEST(Configuration_read, read_valid_008) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -455,6 +463,7 @@ TEST(Configuration_read, read_valid_009) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -498,6 +507,7 @@ TEST(Configuration_read, read_valid_010) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -537,7 +547,8 @@ TEST(Configuration_read, read_valid_011) {
             "contents": {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
-                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json"
+                "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0
               }
             }
           }
@@ -584,6 +595,7 @@ TEST(Configuration_read, read_valid_012) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -636,6 +648,7 @@ TEST(Configuration_read, read_valid_013) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -692,6 +705,7 @@ TEST(Configuration_read, read_valid_014) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -904,6 +918,7 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }
@@ -960,6 +975,7 @@ TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
+                "x-sourcemeta-one:priority": 0,
                 "baseUri": "http://localhost:8000"
               }
             }

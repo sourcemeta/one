@@ -7,6 +7,8 @@
 
 #include <sourcemeta/one/configuration_error.h>
 
+#include <algorithm>     // std::clamp
+#include <cstdint>       // std::uint8_t
 #include <filesystem>    // std::filesystem::path
 #include <optional>      // std::optional
 #include <string>        // std::string
@@ -68,6 +70,17 @@ struct Configuration {
       -> bool {
     const auto *value{collection.extra.try_at("x-sourcemeta-one:evaluate")};
     return value == nullptr || !value->is_boolean() || value->to_boolean();
+  }
+
+  [[nodiscard]] static auto priority(const Collection &collection)
+      -> std::uint8_t {
+    const auto *value{collection.extra.try_at("x-sourcemeta-one:priority")};
+    if (value == nullptr || !value->is_integer()) {
+      return 100;
+    }
+    return static_cast<std::uint8_t>(
+        std::clamp<sourcemeta::core::JSON::Integer>(value->to_integer(), 0,
+                                                    100));
   }
 
   [[nodiscard]] auto

@@ -51,8 +51,8 @@ auto dereference(const std::filesystem::path &base,
                  sourcemeta::core::JSON &input,
                  const sourcemeta::core::Pointer &location,
                  std::unordered_set<std::string> &visited,
-                 std::unordered_set<std::string> &all_files, const bool is_root)
-    -> void {
+                 std::unordered_set<std::string> &all_files, const bool is_root,
+                 const std::filesystem::path &self_path) -> void {
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
@@ -74,7 +74,7 @@ auto dereference(const std::filesystem::path &base,
         auto extension{read_file(base, new_location, target_path)};
         if (extension.is_object()) {
           dereference(target_path, extension, new_location, visited, all_files,
-                      true);
+                      true, self_path);
           accumulator.merge(std::move(extension).as_object());
         }
 
@@ -86,7 +86,7 @@ auto dereference(const std::filesystem::path &base,
     accumulator.merge(input.as_object());
     input = std::move(accumulator);
     assert(!input.defines("extends"));
-    dereference(base, input, location, visited, all_files, is_root);
+    dereference(base, input, location, visited, all_files, is_root, self_path);
 
     // Read included files
   } else if (!location.empty() && input.defines("include") &&
@@ -103,7 +103,8 @@ auto dereference(const std::filesystem::path &base,
     }
     all_files.emplace(target_path.native());
     input.into(read_file(base, new_location, target_path));
-    dereference(target_path, input, new_location, visited, all_files, is_root);
+    dereference(target_path, input, new_location, visited, all_files, is_root,
+                self_path);
     visited.erase(target_path.native());
 
     // Revisit and relativize paths
@@ -117,6 +118,12 @@ auto dereference(const std::filesystem::path &base,
       input.assign("x-sourcemeta-one:path",
                    sourcemeta::core::JSON{base.string()});
     }
+    if (!input.defines("x-sourcemeta-one:priority") &&
+        sourcemeta::core::is_under_path(base, self_path)) {
+      input.assign("x-sourcemeta-one:priority",
+                   sourcemeta::core::JSON{
+                       static_cast<sourcemeta::core::JSON::Integer>(0)});
+    }
 
     // Recurse on children, if any
   } else if (input.defines("contents") && input.at("contents").is_object()) {
@@ -128,8 +135,8 @@ auto dereference(const std::filesystem::path &base,
                            [](const auto &entry) { return entry.first; });
     for (const auto &key : keys) {
       dereference(base, input.at("contents").at(key),
-                  location.concat({"contents", key}), visited, all_files,
-                  false);
+                  location.concat({"contents", key}), visited, all_files, false,
+                  self_path);
     }
   }
 }
@@ -210,7 +217,8 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   configuration_files.emplace(canonical_config);
   std::unordered_set<std::string> visited;
   visited.emplace(canonical_config);
-  dereference(configuration_path, data, {}, visited, configuration_files, true);
+  dereference(configuration_path, data, {}, visited, configuration_files, true,
+              self_path);
 
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
