@@ -1,5 +1,6 @@
 #include <sourcemeta/blaze/alterschema.h>
-#include <sourcemeta/blaze/frame_error.h>
+#include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/frame.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
@@ -195,6 +196,16 @@ static auto execute_plan(std::mutex &mutex,
               throw sourcemeta::core::FileError<
                   sourcemeta::blaze::SchemaVocabularyError>(
                   entry->path, error.uri(), error.what());
+            }
+
+            throw;
+          } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::blaze::CompilerInvalidRegexError>(
+                  entry->path, error.base(), error.location(), error.regex());
             }
 
             throw;
@@ -813,6 +824,17 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr,
                "error: Could not locate the requested file\n  at path {}\n",
                error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::blaze::CompilerInvalidRegexError> &error) {
+    std::println(stderr,
+                 "error: Invalid regular expression\n"
+                 "  pattern \"{}\"\n"
+                 "  at path {}\n"
+                 "  at schema {}\n"
+                 "  at location {}",
+                 error.regex(), error.path().string(), error.base().recompose(),
+                 sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const std::filesystem::filesystem_error &error) {
     std::println(stderr, "{}", error.what());
