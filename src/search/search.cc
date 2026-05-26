@@ -16,6 +16,10 @@ auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
   std::ranges::sort(entries, [](const SearchEntry &left,
                                 const SearchEntry &right) {
+    if (left.priority != right.priority) {
+      return left.priority > right.priority;
+    }
+
     const auto left_metadata =
         (!left.title.empty() ? 1 : 0) + (!left.description.empty() ? 1 : 0);
     const auto right_metadata =
@@ -84,7 +88,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
         .description_length =
             static_cast<std::uint16_t>(entry.description.size()),
         .bytes_raw = entry.bytes_raw,
-        .bytes_bundled = entry.bytes_bundled};
+        .bytes_bundled = entry.bytes_bundled,
+        .priority = entry.priority};
     std::memcpy(payload.data() + record_position, &record_header,
                 sizeof(SearchRecordHeader));
     record_position += sizeof(SearchRecordHeader);
@@ -302,7 +307,8 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
           .title = title,
           .description = description,
           .bytes_raw = record_header->bytes_raw,
-          .bytes_bundled = record_header->bytes_bundled};
+          .bytes_bundled = record_header->bytes_bundled,
+          .priority = record_header->priority};
 }
 
 auto SearchView::for_each(
@@ -379,7 +385,8 @@ auto SearchView::for_each(
               .title = title,
               .description = description,
               .bytes_raw = record_header->bytes_raw,
-              .bytes_bundled = record_header->bytes_bundled});
+              .bytes_bundled = record_header->bytes_bundled,
+              .priority = record_header->priority});
   }
 }
 
