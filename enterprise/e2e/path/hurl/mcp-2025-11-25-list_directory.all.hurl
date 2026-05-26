@@ -71,6 +71,8 @@ variable "text" jsonpath "$.entries[0].path" == "/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.entries[0].identifier" == "{{base}}/v1/catalog/example/bare"
 variable "text" jsonpath "$.entries[0].identifier" == "{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
+jsonpath "$.result.structuredContent.entries[0].priority" == 100
+variable "text" jsonpath "$.entries[0].priority" == 100
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].title" not exists
 variable "text" jsonpath "$.entries[0].title" not exists
@@ -89,6 +91,8 @@ variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].title" not exists
 variable "text" jsonpath "$.entries[1].title" not exists
 jsonpath "$.result.structuredContent.entries[1].description" == "A schema with only a description and no title"
+jsonpath "$.result.structuredContent.entries[1].priority" == 100
+variable "text" jsonpath "$.entries[1].priority" == 100
 variable "text" jsonpath "$.entries[1].description" == "A schema with only a description and no title"
 jsonpath "$.result.structuredContent.entries[2].name" == "full"
 variable "text" jsonpath "$.entries[2].name" == "full"
@@ -103,6 +107,8 @@ variable "text" jsonpath "$.entries[2].health" == 0
 jsonpath "$.result.structuredContent.entries[2].title" == "Example With Both"
 variable "text" jsonpath "$.entries[2].title" == "Example With Both"
 jsonpath "$.result.structuredContent.entries[2].description" == "A schema that has both a title and a description"
+jsonpath "$.result.structuredContent.entries[2].priority" == 100
+variable "text" jsonpath "$.entries[2].priority" == 100
 variable "text" jsonpath "$.entries[2].description" == "A schema that has both a title and a description"
 jsonpath "$.result.structuredContent.entries[3].name" == "title-only"
 variable "text" jsonpath "$.entries[3].name" == "title-only"
@@ -115,6 +121,8 @@ variable "text" jsonpath "$.entries[3].identifier" == "{{base}}/v1/catalog/examp
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].title" == "Example With Title Only"
+jsonpath "$.result.structuredContent.entries[3].priority" == 100
+variable "text" jsonpath "$.entries[3].priority" == 100
 variable "text" jsonpath "$.entries[3].title" == "Example With Title Only"
 jsonpath "$.result.structuredContent.entries[3].description" not exists
 variable "text" jsonpath "$.entries[3].description" not exists
@@ -199,6 +207,8 @@ variable "text" jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.result.structuredContent.entries[0].path" == "/v1/catalog/example/bare"
 variable "text" jsonpath "$.entries[0].path" == "/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.entries[0].identifier" == "{{base}}/v1/catalog/example/bare"
+jsonpath "$.result.structuredContent.entries[0].priority" == 100
+variable "text" jsonpath "$.entries[0].priority" == 100
 variable "text" jsonpath "$.entries[0].identifier" == "{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.entries[0].title" not exists
 variable "text" jsonpath "$.entries[0].title" not exists
@@ -215,6 +225,8 @@ variable "text" jsonpath "$.entries[1].identifier" == "{{base}}/v1/catalog/examp
 jsonpath "$.result.structuredContent.entries[1].title" not exists
 variable "text" jsonpath "$.entries[1].title" not exists
 jsonpath "$.result.structuredContent.entries[1].description" == "A schema with only a description and no title"
+jsonpath "$.result.structuredContent.entries[1].priority" == 100
+variable "text" jsonpath "$.entries[1].priority" == 100
 variable "text" jsonpath "$.entries[1].description" == "A schema with only a description and no title"
 jsonpath "$.result.structuredContent.entries[2].name" == "full"
 variable "text" jsonpath "$.entries[2].name" == "full"
@@ -227,6 +239,8 @@ variable "text" jsonpath "$.entries[2].identifier" == "{{base}}/v1/catalog/examp
 jsonpath "$.result.structuredContent.entries[2].title" == "Example With Both"
 variable "text" jsonpath "$.entries[2].title" == "Example With Both"
 jsonpath "$.result.structuredContent.entries[2].description" == "A schema that has both a title and a description"
+jsonpath "$.result.structuredContent.entries[2].priority" == 100
+variable "text" jsonpath "$.entries[2].priority" == 100
 variable "text" jsonpath "$.entries[2].description" == "A schema that has both a title and a description"
 jsonpath "$.result.structuredContent.entries[3].name" == "title-only"
 variable "text" jsonpath "$.entries[3].name" == "title-only"
@@ -237,6 +251,8 @@ variable "text" jsonpath "$.entries[3].path" == "/v1/catalog/example/title-only"
 jsonpath "$.result.structuredContent.entries[3].identifier" == "{{base}}/v1/catalog/example/title-only"
 variable "text" jsonpath "$.entries[3].identifier" == "{{base}}/v1/catalog/example/title-only"
 jsonpath "$.result.structuredContent.entries[3].title" == "Example With Title Only"
+jsonpath "$.result.structuredContent.entries[3].priority" == 100
+variable "text" jsonpath "$.entries[3].priority" == 100
 variable "text" jsonpath "$.entries[3].title" == "Example With Title Only"
 jsonpath "$.result.structuredContent.entries[3].description" not exists
 variable "text" jsonpath "$.entries[3].description" not exists

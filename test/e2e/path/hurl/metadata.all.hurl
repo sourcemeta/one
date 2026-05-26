@@ -17,6 +17,7 @@ jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.examples" count == 0
 jsonpath "$.health" == 0
+jsonpath "$.priority" == 100
 jsonpath "$.dependencies" == 0
 jsonpath "$.alert" == null
 jsonpath "$.breadcrumb" count == 2
@@ -53,6 +54,7 @@ jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.examples" count == 0
 jsonpath "$.health" == 0
+jsonpath "$.priority" == 100
 jsonpath "$.dependencies" == 0
 jsonpath "$.alert" == null
 jsonpath "$.breadcrumb" count == 2

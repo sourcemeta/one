@@ -117,6 +117,7 @@ struct MetapackExplorerSchemaExtension {
   std::int64_t bytes_bundled;
   std::int64_t dependencies;
   MetapackVersionInfo version;
+  std::uint8_t priority;
   std::uint16_t path_length;
   std::uint16_t identifier_length;
   std::uint16_t base_dialect_length;
@@ -292,11 +293,11 @@ explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
 static auto make_explorer_schema_extension(
     const std::int64_t health, const std::int64_t bytes,
     const std::int64_t bytes_bundled, const std::int64_t dependencies,
-    const MetapackVersionInfo &version, const std::string_view path,
-    const std::string_view identifier, const std::string_view base_dialect,
-    const std::string_view dialect, const std::string_view title,
-    const std::string_view description, const std::string_view alert)
-    -> std::vector<std::uint8_t> {
+    const MetapackVersionInfo &version, const std::uint8_t priority,
+    const std::string_view path, const std::string_view identifier,
+    const std::string_view base_dialect, const std::string_view dialect,
+    const std::string_view title, const std::string_view description,
+    const std::string_view alert) -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -317,6 +318,7 @@ static auto make_explorer_schema_extension(
   header.bytes_bundled = bytes_bundled;
   header.dependencies = dependencies;
   header.version = version;
+  header.priority = priority;
   header.path_length = static_cast<std::uint16_t>(path.size());
   header.identifier_length = static_cast<std::uint16_t>(identifier.size());
   header.base_dialect_length = static_cast<std::uint16_t>(base_dialect.size());
@@ -454,6 +456,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       result.assign("alert", sourcemeta::core::JSON{nullptr});
     }
 
+    result.assign(
+        "priority",
+        sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+            sourcemeta::one::Configuration::priority(collection))});
+
     result.assign("breadcrumb",
                   make_breadcrumb(configuration.base_path,
                                   resolver_entry.relative_path, false));
@@ -467,6 +474,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         static_cast<std::int64_t>(schema_info.content_bytes),
         static_cast<std::int64_t>(bundle_info.content_bytes),
         result.at("dependencies").to_integer(), parse_version_info(schema_name),
+        static_cast<std::uint8_t>(result.at("priority").to_integer()),
         result.at("path").to_string(), result.at("identifier").to_string(),
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
         result.defines("title") ? result.at("title").to_string() : "",
@@ -907,6 +915,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         entry_json.assign("health", sourcemeta::core::JSON{extension->health});
         entry_json.assign("dependencies",
                           sourcemeta::core::JSON{extension->dependencies});
+        entry_json.assign(
+            "priority",
+            sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+                extension->priority)});
 
         const auto title{explorer_extension_title(extension, extension_base)};
         if (!title.empty()) {

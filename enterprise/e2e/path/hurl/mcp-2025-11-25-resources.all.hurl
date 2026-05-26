@@ -93,7 +93,7 @@ jsonpath "$.result.resources[14].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[14].name" == "response"
 jsonpath "$.result.resources[14].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[14].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[14].size" == 2887
+jsonpath "$.result.resources[14].size" == 3041
 jsonpath "$.result.resources[15].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/metadata/rpc"
 jsonpath "$.result.resources[15].name" == "rpc"
 jsonpath "$.result.resources[15].description" == "Get metadata information about a schema in the catalog"
