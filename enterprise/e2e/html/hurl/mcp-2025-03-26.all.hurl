@@ -349,15 +349,15 @@ jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" isString
 jsonpath "$.result.content[1].type" == "text"
-jsonpath "$.result.content[1].text" == "Full 01 (A schema with both a title and a description (01)): {{base}}/test/full/01"
+jsonpath "$.result.content[1].text" == "{{base}}/test/full/01 (Full 01)"
 jsonpath "$.result.content[2].type" == "text"
-jsonpath "$.result.content[2].text" == "Full 02 (A schema with both a title and a description (02)): {{base}}/test/full/02"
+jsonpath "$.result.content[2].text" == "{{base}}/test/full/02 (Full 02)"
 jsonpath "$.result.content[3].type" == "text"
-jsonpath "$.result.content[3].text" == "Full 03 (A schema with both a title and a description (03)): {{base}}/test/full/03"
+jsonpath "$.result.content[3].text" == "{{base}}/test/full/03 (Full 03)"
 jsonpath "$.result.content[4].type" == "text"
-jsonpath "$.result.content[4].text" == "Full 04 (A schema with both a title and a description (04)): {{base}}/test/full/04"
+jsonpath "$.result.content[4].text" == "{{base}}/test/full/04 (Full 04)"
 jsonpath "$.result.content[5].type" == "text"
-jsonpath "$.result.content[5].text" == "Full 05 (A schema with both a title and a description (05)): {{base}}/test/full/05"
+jsonpath "$.result.content[5].text" == "{{base}}/test/full/05 (Full 05)"
 # Added in 2025-06-18 (resource_link content blocks). Every entry in
 # `content[]` must be a `text` block instead.
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog

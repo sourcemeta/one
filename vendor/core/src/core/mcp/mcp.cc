@@ -3,12 +3,14 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 
-#include <cassert>  // assert
-#include <cstddef>  // std::size_t
-#include <optional> // std::optional
-#include <sstream>  // std::ostringstream
-#include <string>   // std::string
-#include <utility>  // std::move
+#include <algorithm> // std::clamp
+#include <cassert>   // assert
+#include <cmath>     // std::isnan
+#include <cstddef>   // std::size_t
+#include <optional>  // std::optional
+#include <sstream>   // std::ostringstream
+#include <string>    // std::string
+#include <utility>   // std::move
 
 namespace {
 
@@ -40,6 +42,7 @@ const auto MCP_HASH_OPEN_WORLD_HINT{
     sourcemeta::core::JSON::Object::hash("openWorldHint")};
 const auto MCP_HASH_OUTPUT_SCHEMA{
     sourcemeta::core::JSON::Object::hash("outputSchema")};
+const auto MCP_HASH_PRIORITY{sourcemeta::core::JSON::Object::hash("priority")};
 const auto MCP_HASH_PROMPTS{sourcemeta::core::JSON::Object::hash("prompts")};
 const auto MCP_HASH_PROTOCOL_VERSION{
     sourcemeta::core::JSON::Object::hash("protocolVersion")};
@@ -83,20 +86,12 @@ auto mcp_make_resource_link(const MCPProtocolVersion version,
                             const JSON::StringView description)
     -> sourcemeta::core::JSON {
   if (!mcp_supports_resource_link_content(version)) {
-    std::string text;
+    std::string text{uri};
     if (!name.empty()) {
+      text.append(" (");
       text.append(name);
-      if (!description.empty()) {
-        text.append(" (");
-        text.append(description);
-        text.append(")");
-      }
-      text.append(": ");
-    } else if (!description.empty()) {
-      text.append(description);
-      text.append(": ");
+      text.append(")");
     }
-    text.append(uri);
     return mcp_make_text_block(text);
   }
 
@@ -185,7 +180,8 @@ auto mcp_make_error_resource_not_found(const sourcemeta::core::JSON &identifier,
 auto mcp_make_resource(const JSON::StringView uri, const JSON::StringView name,
                        const JSON::StringView mime_type,
                        const JSON::StringView description,
-                       const std::optional<std::size_t> size)
+                       const std::optional<std::size_t> size,
+                       const std::optional<double> priority)
     -> sourcemeta::core::JSON {
   auto resource{sourcemeta::core::JSON::make_object()};
   resource.assign_assume_new("uri", sourcemeta::core::JSON{uri}, MCP_HASH_URI);
@@ -201,6 +197,16 @@ auto mcp_make_resource(const JSON::StringView uri, const JSON::StringView name,
   if (size.has_value()) {
     resource.assign_assume_new("size", sourcemeta::core::JSON{size.value()},
                                MCP_HASH_SIZE);
+  }
+  if (priority.has_value()) {
+    const auto priority_value{std::isnan(priority.value())
+                                  ? 1.0
+                                  : std::clamp(priority.value(), 0.0, 1.0)};
+    auto annotations{sourcemeta::core::JSON::make_object()};
+    annotations.assign_assume_new(
+        "priority", sourcemeta::core::JSON{priority_value}, MCP_HASH_PRIORITY);
+    resource.assign_assume_new("annotations", std::move(annotations),
+                               MCP_HASH_ANNOTATIONS);
   }
   return resource;
 }
@@ -247,6 +253,12 @@ auto mcp_make_tool_descriptor(
     const MCPToolAnnotations &annotations) -> sourcemeta::core::JSON {
   assert(!annotations.read_only || !annotations.destructive);
   assert(!annotations.read_only || annotations.idempotent);
+  // The MCP spec requires `type: "object"` on tool input schemas.
+  // https://modelcontextprotocol.io/specification/2025-06-18/server/tools
+  assert(input_schema.is_object() &&
+         input_schema.defines("type", MCP_HASH_TYPE) &&
+         input_schema.at("type", MCP_HASH_TYPE).is_string() &&
+         input_schema.at("type", MCP_HASH_TYPE).to_string() == "object");
 
   auto entry{sourcemeta::core::JSON::make_object()};
   entry.assign_assume_new("name", sourcemeta::core::JSON{name}, MCP_HASH_NAME);
