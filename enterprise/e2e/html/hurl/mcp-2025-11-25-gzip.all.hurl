@@ -331,8 +331,8 @@ header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
 jsonpath "$.result.resources" count == 15
-jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/37"
-jsonpath "$.result.resources[0].name" == "37"
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/notifications/initialized"
+jsonpath "$.result.resources[0].name" == "initialized"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 
@@ -368,8 +368,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
 jsonpath "$.result.resources" count == 15
-jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/37"
-jsonpath "$.result.resources[0].name" == "37"
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/notifications/initialized"
+jsonpath "$.result.resources[0].name" == "initialized"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 
