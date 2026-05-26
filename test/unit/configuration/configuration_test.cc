@@ -684,8 +684,7 @@ TEST(Configuration, priority_helper_clamps_out_of_range) {
 
   collection.extra.assign(
       "x-sourcemeta-one:priority",
-      sourcemeta::core::JSON{
-          static_cast<sourcemeta::core::JSON::Integer>(-5)});
+      sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(-5)});
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 0);
 }
 
