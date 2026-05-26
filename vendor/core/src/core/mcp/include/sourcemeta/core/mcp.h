@@ -346,7 +346,8 @@ SOURCEMETA_CORE_MCP_EXPORT
 auto mcp_make_resource(const JSON::StringView uri, const JSON::StringView name,
                        const JSON::StringView mime_type,
                        const JSON::StringView description = {},
-                       const std::optional<std::size_t> size = std::nullopt)
+                       const std::optional<std::size_t> size = std::nullopt,
+                       const std::optional<double> priority = std::nullopt)
     -> sourcemeta::core::JSON;
 
 /// @ingroup mcp
