@@ -101,11 +101,11 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 3
 jsonpath "$.result.resources" count == 50
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/api/error"
-jsonpath "$.result.resources[0].name" == "error"
-jsonpath "$.result.resources[0].description" == "The error response format returned by the Sourcemeta One API endpoints"
+jsonpath "$.result.resources[0].uri" == "{{base}}/twins/foo"
+jsonpath "$.result.resources[0].name" == "foo"
+jsonpath "$.result.resources[0].description" == "A schema whose base name collides with a sibling directory"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[0].size" == 1035
+jsonpath "$.result.resources[0].size" == 263
 # Added in 2025-06-18 ("title" on Resource)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$..title" not exists

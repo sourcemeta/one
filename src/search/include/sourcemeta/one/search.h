@@ -25,6 +25,7 @@ struct SearchEntry {
   std::string title;
   std::string description;
   std::uint8_t health;
+  std::uint8_t priority;
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
 };
@@ -36,6 +37,7 @@ struct SearchListEntry {
   std::string_view description;
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
+  std::uint8_t priority;
 };
 
 #pragma pack(push, 1)
@@ -51,12 +53,13 @@ struct SearchRecordHeader {
   std::uint16_t description_length;
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
+  std::uint8_t priority;
 };
 #pragma pack(pop)
 
-// Health is intentionally excluded from this enum as higher-health schemas
-// always rank first regardless of scope. This is a non-negotiable aspect of the
-// sort order to ensure that higher-quality schemas are always preferred.
+// Result ranking is fixed and intentionally not configurable: higher-priority
+// schemas always come first, then entries with richer metadata, then
+// healthier schemas. The scope only narrows which fields are searched
 enum SearchScope : std::uint8_t {
   SearchScopePath = 0b001,
   SearchScopeTitle = 0b010,

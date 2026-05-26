@@ -95,11 +95,11 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 3
 jsonpath "$.result.resources" count == 50
-jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
-jsonpath "$.result.resources[0].name" == "error"
-jsonpath "$.result.resources[0].description" == "The error response format returned by the Sourcemeta One API endpoints"
+jsonpath "$.result.resources[0].uri" == "{{base}}/v1/catalog/example/full"
+jsonpath "$.result.resources[0].name" == "full"
+jsonpath "$.result.resources[0].description" == "A schema that has both a title and a description"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[0].size" == 1046
+jsonpath "$.result.resources[0].size" == 242
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

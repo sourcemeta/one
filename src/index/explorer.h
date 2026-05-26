@@ -528,6 +528,10 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
                  ? static_cast<std::uint8_t>(
                        directory_entry.at("health").to_integer())
                  : static_cast<std::uint8_t>(0),
+             directory_entry.defines("priority")
+                 ? static_cast<std::uint8_t>(
+                       directory_entry.at("priority").to_integer())
+                 : static_cast<std::uint8_t>(100),
              directory_entry.defines("bytes")
                  ? static_cast<std::uint64_t>(
                        directory_entry.at("bytes").to_integer())
