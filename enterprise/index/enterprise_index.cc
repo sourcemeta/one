@@ -89,7 +89,8 @@ auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
 
           entries.push_back(sourcemeta::core::mcp_make_resource(
               uri, name, "application/schema+json", entry.description,
-              static_cast<std::size_t>(entry.bytes_raw)));
+              static_cast<std::size_t>(entry.bytes_raw),
+              static_cast<double>(entry.priority) / 100.0));
         });
 
     page.assign("resources", std::move(entries));
