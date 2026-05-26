@@ -198,7 +198,9 @@ auto ActionMCP_v1::on_tools_call(
   const auto *arguments{
       sourcemeta::core::mcp_tool_call_arguments(request_json)};
   if (arguments == nullptr) {
-    return sourcemeta::core::jsonrpc_make_error_invalid_params(id);
+    return sourcemeta::core::jsonrpc_make_error_invalid_params(
+        id, sourcemeta::core::JSON{
+                "Tool call must include an \"arguments\" object"});
   }
   try {
     return instance->mcp(version, id, *arguments, envelope);

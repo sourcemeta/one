@@ -23,7 +23,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 100
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "Tool call must include an \"arguments\" object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2448,7 +2448,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 113
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "The path must not escape the catalog root"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -155,7 +155,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 303
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -467,7 +467,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 315
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -545,7 +545,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 321
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -671,7 +671,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 324
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" not exists
+jsonpath "$.error.data" == "Tool call must include an \"arguments\" object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

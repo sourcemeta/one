@@ -96,7 +96,9 @@ public:
 
     const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
     if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(request_id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          request_id,
+          sourcemeta::core::JSON{"The path must not escape the catalog root"});
     }
 
     auto contents{sourcemeta::one::metapack_read_json(safe_path)};
