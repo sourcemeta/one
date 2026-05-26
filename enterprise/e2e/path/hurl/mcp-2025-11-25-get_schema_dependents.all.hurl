@@ -164,6 +164,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1599
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" not exists
 jsonpath "$.result" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -201,6 +202,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1600
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" not exists
 jsonpath "$.result" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}

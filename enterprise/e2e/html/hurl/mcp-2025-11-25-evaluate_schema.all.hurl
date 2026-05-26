@@ -147,6 +147,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" not exists
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -327,6 +328,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 914
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" not exists
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -363,6 +365,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 920
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -398,6 +406,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 921
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -433,6 +447,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 920
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -468,6 +488,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 921
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -503,6 +529,16 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 924
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/properties/schema/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/evaluate/rpc#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
