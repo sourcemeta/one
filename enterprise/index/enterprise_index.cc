@@ -140,6 +140,15 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     input_schema_ref.assign("type", sourcemeta::core::JSON{"object"});
     input_schema_ref.assign(
         "$ref", sourcemeta::core::JSON{std::move(input_schema_url).value()});
+    input_schema_ref.assign(
+        "$comment",
+        sourcemeta::core::JSON{
+            "MCP clients should resolve `$ref` references in input "
+            "schemas by default. If yours does not, call `resources/read` "
+            "on the `$ref` URL above to fetch the full input schema that "
+            "defines this tool's parameters. This server is a JSON Schema "
+            "registry, so every `$ref` URL is itself reachable as an MCP "
+            "resource"});
 
     std::optional<sourcemeta::core::JSON> output_schema_ref;
     if (!response_schema.empty()) {

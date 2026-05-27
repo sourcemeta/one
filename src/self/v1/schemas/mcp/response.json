@@ -77,7 +77,8 @@
             "description": "List the contents of a directory in the catalog",
             "inputSchema": {
               "type": "object",
-              "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc"
+              "$ref": "https://example.com/v1/self/v1/schemas/api/list/rpc",
+              "$comment": "MCP clients should resolve `$ref` references in input schemas by default. If yours does not, call `resources/read` on the `$ref` URL above to fetch the full input schema that defines this tool's parameters. This server is a JSON Schema registry, so every `$ref` URL is itself reachable as an MCP resource"
             },
             "outputSchema": {
               "type": "object",

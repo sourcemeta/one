@@ -694,7 +694,7 @@ jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[10].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 3279
+jsonpath "$.result.resources[10].size" == 3613
 jsonpath "$.result.resources[10].annotations.priority" == 0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One MCP Tools Call Request"
@@ -718,7 +718,7 @@ jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/mcp/tools/lis
 jsonpath "$.result.resources[14].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[14].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[14].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[14].size" == 4074
+jsonpath "$.result.resources[14].size" == 4546
 jsonpath "$.result.resources[14].annotations.priority" == 0
 jsonpath "$.result.nextCursor" not exists
 

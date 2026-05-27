@@ -295,7 +295,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[46].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 3290
+jsonpath "$.result.resources[46].size" == 3624
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Tools Call Request"
