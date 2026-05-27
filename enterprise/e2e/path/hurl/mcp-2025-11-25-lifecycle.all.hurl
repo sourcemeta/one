@@ -31,7 +31,7 @@ jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
 jsonpath "$.result.serverInfo.version" matches "^.+$"
 jsonpath "$.result.serverInfo.description" == "The next-generation JSON Schema platform"
 jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}/v1/catalog"
-jsonpath "$.result.instructions" == "This is an instance of Sourcemeta One named \"Sourcemeta\" (The next-generation JSON Schema platform). Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. Use `tools/list` to discover the operations this catalog exposes. Learn more at https://one.sourcemeta.com"
+jsonpath "$.result.instructions" == "This is an instance of Sourcemeta One named \"Sourcemeta\" (The next-generation JSON Schema platform). Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. Use `tools/list` to discover the operations this catalog exposes. Because this server is a JSON Schema registry, the schemas defining each tool's input parameters are themselves resources in this registry. To inspect a tool's full parameter shape, call `resources/read` on the `$ref` URL in that tool's `inputSchema`. Learn more at https://one.sourcemeta.com"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -585,7 +585,11 @@ struct GENERATE_MCP {
         "exposed as an MCP resource via the `JSON Schema` resource template "
         "(see `resources/templates/list`) and is addressable by its "
         "canonical absolute URI. Use `tools/list` to discover the operations "
-        "this catalog exposes. Learn more at https://one.sourcemeta.com"};
+        "this catalog exposes. Because this server is a JSON Schema "
+        "registry, the schemas defining each tool's input parameters are "
+        "themselves resources in this registry. To inspect a tool's full "
+        "parameter shape, call `resources/read` on the `$ref` URL in that "
+        "tool's `inputSchema`. Learn more at https://one.sourcemeta.com"};
 
     std::ostringstream instructions;
     if (configuration.html.has_value()) {
