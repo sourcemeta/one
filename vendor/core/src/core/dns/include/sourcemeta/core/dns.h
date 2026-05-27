@@ -41,11 +41,12 @@ SOURCEMETA_CORE_DNS_EXPORT
 auto is_hostname(const std::string_view value) -> bool;
 
 /// @ingroup dns
-/// Check whether the given string is a valid internationalized host name.
-/// Accepts every input that `is_hostname` accepts, and additionally allows
-/// each label to contain valid UTF-8 non-ASCII byte sequences (RFC 6532
-/// Section 3.1), modelling the U-label extension of RFC 5890 Section
-/// 2.3.2.3. For example:
+/// Check whether the given string is a valid internationalized host name per
+/// RFC 5891 Section 4. Each label is validated as an RFC 5890 A-label or
+/// U-label (with RFC 5892 ContextJ and ContextO contextual rules) and the
+/// RFC 5893 Bidi rule is enforced on every label of a Bidi domain name.
+/// The input must already be in Unicode Normalization Form C, since NFC
+/// normalisation is not performed here. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/dns.h>
@@ -57,11 +58,6 @@ auto is_hostname(const std::string_view value) -> bool;
 ///     "\xec\x8b\xa4\xeb\xa1\x80.\xed\x85\x8c\xec\x8a\xa4\xed\x8a\xb8"));
 /// assert(!sourcemeta::core::is_idn_hostname("-bad"));
 /// ```
-///
-/// This is a best-effort lexical check: it accepts the byte-level structure
-/// of an RFC 5890 U-label but does not perform full IDNA2008 validation
-/// (no NFC normalization, no Bidi rule, no ContextJ/O checks, no Punycode
-/// round-trip).
 SOURCEMETA_CORE_DNS_EXPORT
 auto is_idn_hostname(const std::string_view value) -> bool;
 

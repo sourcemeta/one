@@ -76,6 +76,19 @@ def parse_alias_lines(aliases_path, property_short):
     return rows
 
 
+def build_combining_mark_value_map(aliases_path):
+    """Build {form: int} from PropertyValueAliases.txt mapping each
+    General_Category alias to 1 if it is a combining mark (Mn, Mc, Me,
+    or the supergroup M / Mark / Combining_Mark) and to 0 otherwise."""
+    combining = {"M", "Mn", "Mc", "Me"}
+    result = {}
+    for row in parse_alias_lines(aliases_path, "gc"):
+        value = 1 if any(field in combining for field in row) else 0
+        for field in row:
+            result[field] = value
+    return result
+
+
 def build_value_map(aliases_path, property_short, canonical_order=None):
     """Build {form: int} for a property. With canonical_order, each row's
     integer is its canonical's position in that list; without, the row's
@@ -183,7 +196,7 @@ def emit_property(output, prefix, stage1, unique_pages):
 
 
 def main():
-    if len(sys.argv) != 7:
+    if len(sys.argv) != 8:
         print(
             f"Usage: {sys.argv[0]} "
             "<output.h> "
@@ -191,7 +204,8 @@ def main():
             "<DerivedCombiningClass.txt> "
             "<DerivedJoiningType.txt> "
             "<DerivedBidiClass.txt> "
-            "<Scripts.txt>",
+            "<Scripts.txt> "
+            "<DerivedGeneralCategory.txt>",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -208,6 +222,8 @@ def main():
          build_value_map(aliases_path, "bc", BIDI_CLASS_ORDER)),
         ("UNICODE_SCRIPT", sys.argv[6],
          build_value_map(aliases_path, "sc", UNICODE_SCRIPT_ORDER)),
+        ("IS_COMBINING_MARK", sys.argv[7],
+         build_combining_mark_value_map(aliases_path)),
     ]
 
     with open(output_path, "w") as output:
