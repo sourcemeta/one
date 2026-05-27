@@ -232,7 +232,7 @@ inline constexpr auto utf8_codepoint_byte_count(const char32_t codepoint)
 /// assert(sourcemeta::core::combining_class(U'A') == 0);
 /// ```
 SOURCEMETA_CORE_UNICODE_EXPORT
-auto combining_class(const char32_t codepoint) -> std::uint8_t;
+auto combining_class(const char32_t codepoint) noexcept -> std::uint8_t;
 
 /// @ingroup unicode
 /// Return the joining type of a Unicode codepoint. See
@@ -251,7 +251,7 @@ auto combining_class(const char32_t codepoint) -> std::uint8_t;
 ///        sourcemeta::core::JoiningType::NonJoining);
 /// ```
 SOURCEMETA_CORE_UNICODE_EXPORT
-auto joining_type(const char32_t codepoint) -> JoiningType;
+auto joining_type(const char32_t codepoint) noexcept -> JoiningType;
 
 /// @ingroup unicode
 /// Return the bidirectional class of a Unicode codepoint. See
@@ -270,7 +270,7 @@ auto joining_type(const char32_t codepoint) -> JoiningType;
 ///        sourcemeta::core::BidiClass::ArabicLetter);
 /// ```
 SOURCEMETA_CORE_UNICODE_EXPORT
-auto bidi_class(const char32_t codepoint) -> BidiClass;
+auto bidi_class(const char32_t codepoint) noexcept -> BidiClass;
 
 /// @ingroup unicode
 /// Return the script of a Unicode codepoint. See
@@ -289,7 +289,24 @@ auto bidi_class(const char32_t codepoint) -> BidiClass;
 ///        sourcemeta::core::UnicodeScript::Hebrew);
 /// ```
 SOURCEMETA_CORE_UNICODE_EXPORT
-auto script(const char32_t codepoint) -> UnicodeScript;
+auto script(const char32_t codepoint) noexcept -> UnicodeScript;
+
+/// @ingroup unicode
+/// Return whether a Unicode codepoint is a combining mark, in the sense
+/// of UAX #44 general category Mn (Nonspacing_Mark), Mc (Spacing_Mark),
+/// or Me (Enclosing_Mark). See https://www.unicode.org/reports/tr44/ for
+/// the property's definition. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::is_combining_mark(U'\u0301'));
+/// assert(sourcemeta::core::is_combining_mark(U'\u094D'));
+/// assert(!sourcemeta::core::is_combining_mark(U'A'));
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto is_combining_mark(const char32_t codepoint) noexcept -> bool;
 
 /// @ingroup unicode
 /// Determine the byte length of the valid UTF-8 codepoint starting at the
