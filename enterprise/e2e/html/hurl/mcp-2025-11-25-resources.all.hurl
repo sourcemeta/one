@@ -540,7 +540,7 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[40].name" == "Sourcemeta One Schema Search RPC Input"
 jsonpath "$.result.resources[40].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 1166
+jsonpath "$.result.resources[40].size" == 2002
 jsonpath "$.result.resources[40].annotations.priority" == 0
 jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[41].name" == "Sourcemeta One Schema Stats API Response"

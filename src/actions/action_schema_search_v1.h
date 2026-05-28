@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -186,22 +187,45 @@ public:
     constexpr std::size_t DEFAULT_LIMIT{10};
     std::size_t limit{DEFAULT_LIMIT};
     if (arguments.defines("limit")) {
-      limit = static_cast<std::size_t>(arguments.at("limit").to_integer());
+      const auto &limit_argument{arguments.at("limit")};
+      limit = limit_argument.is_string()
+                  ? static_cast<std::size_t>(sourcemeta::core::to_uint64_t(
+                                                 limit_argument.to_string())
+                                                 .value())
+                  : static_cast<std::size_t>(limit_argument.to_integer());
     }
 
-    std::uint8_t scope{sourcemeta::one::SearchScopePath |
-                       sourcemeta::one::SearchScopeTitle |
-                       sourcemeta::one::SearchScopeDescription};
+    constexpr std::uint8_t DEFAULT_SCOPE{
+        sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+        sourcemeta::one::SearchScopeDescription};
+    std::uint8_t scope{DEFAULT_SCOPE};
+    const auto add_scope_token{[&scope](const std::string_view token) {
+      if (token == "path") {
+        scope |= sourcemeta::one::SearchScopePath;
+      } else if (token == "title") {
+        scope |= sourcemeta::one::SearchScopeTitle;
+      } else if (token == "description") {
+        scope |= sourcemeta::one::SearchScopeDescription;
+      }
+    }};
     if (arguments.defines("scope")) {
       scope = 0;
-      for (const auto &item : arguments.at("scope").as_array()) {
-        const auto &token{item.to_string()};
-        if (token == "path") {
-          scope |= sourcemeta::one::SearchScopePath;
-        } else if (token == "title") {
-          scope |= sourcemeta::one::SearchScopeTitle;
-        } else if (token == "description") {
-          scope |= sourcemeta::one::SearchScopeDescription;
+      const auto &scope_argument{arguments.at("scope")};
+      if (scope_argument.is_string()) {
+        std::string_view remaining{scope_argument.to_string()};
+        while (!remaining.empty()) {
+          const auto comma{remaining.find(',')};
+          add_scope_token(comma != std::string_view::npos
+                              ? remaining.substr(0, comma)
+                              : remaining);
+          if (comma == std::string_view::npos) {
+            break;
+          }
+          remaining = remaining.substr(comma + 1);
+        }
+      } else {
+        for (const auto &item : scope_argument.as_array()) {
+          add_scope_token(item.to_string());
         }
       }
     }

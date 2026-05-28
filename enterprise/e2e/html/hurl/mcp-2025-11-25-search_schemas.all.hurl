@@ -751,7 +751,7 @@ jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/type"
 jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/type"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer but it was of type number"
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer, or string but it was of type number"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
 jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
@@ -769,6 +769,9 @@ POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
+# A string-encoded limit (e.g. "5") is accepted as a workaround for MCP
+# clients that stringify non-string tool arguments, equivalent to limit: 5
+
 {
   "jsonrpc": "2.0",
   "id": 1124,
@@ -786,21 +789,40 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1124
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.valid" == false
-jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/type"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer but it was of type string"
-jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
-jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 6
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].name" == "My Object"
+jsonpath "$.result.content[1].description" == "An Object Example"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/full/01"
+jsonpath "$.result.content[2].name" == "Full 01"
+jsonpath "$.result.content[2].description" == "A schema with both a title and a description (01)"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "http://localhost:8000/test/full/02"
+jsonpath "$.result.content[3].name" == "Full 02"
+jsonpath "$.result.content[3].description" == "A schema with both a title and a description (02)"
+jsonpath "$.result.content[3].mimeType" == "application/schema+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "http://localhost:8000/test/full/03"
+jsonpath "$.result.content[4].name" == "Full 03"
+jsonpath "$.result.content[4].description" == "A schema with both a title and a description (03)"
+jsonpath "$.result.content[4].mimeType" == "application/schema+json"
+jsonpath "$.result.content[5].type" == "resource_link"
+jsonpath "$.result.content[5].uri" == "http://localhost:8000/test/full/04"
+jsonpath "$.result.content[5].name" == "Full 04"
+jsonpath "$.result.content[5].description" == "A schema with both a title and a description (04)"
+jsonpath "$.result.content[5].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 5
+variable "text" jsonpath "$.results" count == 5
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -940,6 +962,158 @@ jsonpath "$.error.data.errors[2].keywordLocation" == "/properties"
 jsonpath "$.error.data.errors[2].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
 jsonpath "$.error.data.errors[2].instanceLocation" == ""
 jsonpath "$.error.data.errors[2].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A comma-separated string scope (e.g. "path") is accepted as a
+# workaround for MCP clients that stringify non-string tool arguments,
+# equivalent to scope: ["path"]
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1130,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "object", "scope": "path" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1130
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 2
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].name" == "My Object"
+jsonpath "$.result.content[1].description" == "An Object Example"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A string scope with an unknown token is rejected at the schema level
+# by the regex pattern
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1131,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "test", "scope": "bogus" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1131
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
+jsonpath "$.error.data.errors[0].error" == "The string value \"bogus\" was expected to match the regular expression \"^(path|title|description)(,(path|title|description))*$\""
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A string limit outside the allowed range is rejected at the schema
+# level by the regex pattern
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1132,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "test", "limit": "101" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1132
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
+jsonpath "$.error.data.errors[0].error" == "The string value \"101\" was expected to match the regular expression \"^([1-9]|[1-9][0-9]|100)$\""
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
