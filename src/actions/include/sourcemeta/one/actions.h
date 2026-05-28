@@ -15,8 +15,15 @@ namespace sourcemeta::one {
   X(NOT_FOUND_V1, ActionNotFound_v1)                                           \
   X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1)                          \
   X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
+  X(GET_SCHEMA_HEALTH_V1, ActionGetSchemaHealth_v1)                            \
+  X(GET_SCHEMA_LOCATIONS_V1, ActionGetSchemaLocations_v1)                      \
+  X(GET_SCHEMA_POSITIONS_V1, ActionGetSchemaPositions_v1)                      \
+  X(GET_SCHEMA_STATS_V1, ActionGetSchemaStats_v1)                              \
+  X(GET_SCHEMA_METADATA_V1, ActionGetSchemaMetadata_v1)                        \
   X(LIST_DIRECTORY_V1, ActionListDirectory_v1)                                 \
   X(DEPENDENCY_TREE_V1, ActionDependencyTree_v1)                               \
+  X(GET_SCHEMA_DEPENDENCIES_V1, ActionGetSchemaDependencies_v1)                \
+  X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependents_v1)                    \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
   X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTrace_v1)                             \
   X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \

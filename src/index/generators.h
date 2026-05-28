@@ -743,74 +743,67 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument
           dependencies_arguments[] = {
-              {"direction", std::string_view{"out"}},
               {"responseSchema", std::string_view{dependencies_schema}},
               {"rpcSchema", std::string_view{dependencies_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependencies/{+schema}",
                  "get_schema_dependencies", next_id++,
-                 sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1,
+                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1,
                  dependencies_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           dependents_arguments[] = {
-              {"direction", std::string_view{"in"}},
               {"responseSchema", std::string_view{dependents_schema}},
               {"rpcSchema", std::string_view{dependents_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependents/{+schema}",
                  "get_schema_dependents", next_id++,
-                 sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1,
+                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1,
                  dependents_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {
-          {"artifact", std::string_view{"health"}},
           {"responseSchema", std::string_view{health_schema}},
           {"rpcSchema", std::string_view{health_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/health/{+schema}", "get_schema_health",
-                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_HEALTH_V1,
                  health_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           locations_arguments[] = {
-              {"artifact", std::string_view{"locations"}},
               {"responseSchema", std::string_view{locations_schema}},
               {"rpcSchema", std::string_view{locations_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/locations/{+schema}",
                  "get_schema_locations", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_LOCATIONS_V1,
                  locations_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           positions_arguments[] = {
-              {"artifact", std::string_view{"positions"}},
               {"responseSchema", std::string_view{positions_schema}},
               {"rpcSchema", std::string_view{positions_rpc_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/positions/{+schema}",
                  "get_schema_positions", next_id++,
-                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1,
                  positions_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
-          {"artifact", std::string_view{"stats"}},
           {"responseSchema", std::string_view{stats_schema}},
           {"rpcSchema", std::string_view{stats_rpc_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/stats/{+schema}", "get_schema_stats",
-                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1,
+                 next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_STATS_V1,
                  stats_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] =
-          {{"artifact", std::string_view{"schema"}},
-           {"responseSchema", std::string_view{metadata_schema}},
+          {{"responseSchema", std::string_view{metadata_schema}},
            {"rpcSchema", std::string_view{metadata_rpc_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/metadata/{+schema}",
                  "get_schema_metadata", next_id++,
-                 sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1,
+                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_METADATA_V1,
                  metadata_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =

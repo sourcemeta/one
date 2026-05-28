@@ -183,7 +183,7 @@ jsonpath "$.result.tools[0].annotations.destructiveHint" == false
 jsonpath "$.result.tools[0].annotations.idempotentHint" == true
 jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
-jsonpath "$.result.tools[1].description" == "Look up the dependency graph of a specific schema (incoming or outgoing)"
+jsonpath "$.result.tools[1].description" == "List the schemas this schema directly or transitively references, the outgoing edges of the dependency graph"
 jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/dependencies/rpc"
 jsonpath "$.result.tools[1].inputSchema.type" == "object"
 jsonpath "$.result.tools[1].annotations.title" == "Get Schema Dependencies"
