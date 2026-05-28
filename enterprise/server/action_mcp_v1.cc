@@ -33,14 +33,15 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
   const auto &id{request_json.at("id")};
 
   std::string cursor_key{"0"};
+  std::string_view cursor_input;
   const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
-    const auto &cursor_string{params->at("cursor").to_string()};
-    if (!cursor_string.empty()) {
-      const auto parsed{sourcemeta::core::to_uint64_t(cursor_string)};
+    cursor_input = params->at("cursor").to_string();
+    if (!cursor_input.empty()) {
+      const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
       if (!parsed.has_value()) {
         return sourcemeta::core::jsonrpc_make_error_invalid_params(
-            id, sourcemeta::core::JSON{cursor_string});
+            id, sourcemeta::core::JSON{cursor_input});
       }
       cursor_key = std::to_string(parsed.value());
     }
@@ -49,7 +50,7 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
   const auto &resources{this->mcp_metadata_.at("resources")};
   if (!resources.defines(cursor_key)) {
     return sourcemeta::core::jsonrpc_make_error_invalid_params(
-        id, sourcemeta::core::JSON{cursor_key});
+        id, sourcemeta::core::JSON{cursor_input});
   }
 
   return sourcemeta::core::jsonrpc_make_success(id, resources.at(cursor_key));

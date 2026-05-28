@@ -879,6 +879,44 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+# The out-of-bounds error echoes the original input verbatim, not the
+# canonicalized form, so callers always see what they sent
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 45,
+  "method": "resources/list",
+  "params": {
+    "cursor": "0999998"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 45
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "0999998"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
