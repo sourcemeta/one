@@ -74,6 +74,20 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": 21,
+      "error": {
+        "code": -32002,
+        "message": "Resource not found",
+        "data": {
+          "uri": "https://json-schema.org/draft/2020-12/schema",
+          "reason": "foreign-origin",
+          "instanceOrigin": "https://schemas.sourcemeta.com",
+          "message": "This URL is not served by this catalog. This instance is sovereign over its own URL namespace. Schemas mirrored from upstream registries live at this instance's origin, not the upstream URL. Query the appropriate registry for foreign URLs"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
       "id": null,
       "error": {
         "code": 5,
@@ -116,7 +130,34 @@
               "const": "Resource not found"
             },
             "data": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "required": [ "uri", "reason", "instanceOrigin", "message" ],
+                  "properties": {
+                    "uri": {
+                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "reason": {
+                      "const": "foreign-origin"
+                    },
+                    "instanceOrigin": {
+                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "additionalProperties": false
