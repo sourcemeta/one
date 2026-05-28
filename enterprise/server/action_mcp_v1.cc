@@ -197,13 +197,11 @@ auto ActionMCP_v1::on_tools_call(
   }
   const auto *arguments{
       sourcemeta::core::mcp_tool_call_arguments(request_json)};
-  if (arguments == nullptr) {
-    return sourcemeta::core::jsonrpc_make_error_invalid_params(
-        id, sourcemeta::core::JSON{
-                "Tool call must include an \"arguments\" object"});
-  }
+  const auto empty_arguments{sourcemeta::core::JSON::make_object()};
   try {
-    return instance->mcp(version, id, *arguments, envelope);
+    return instance->mcp(version, id,
+                         arguments == nullptr ? empty_arguments : *arguments,
+                         envelope);
   } catch (const std::exception &error) {
     return sourcemeta::core::mcp_make_tool_error(id, error.what());
   }

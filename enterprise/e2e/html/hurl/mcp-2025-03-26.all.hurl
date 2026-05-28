@@ -327,6 +327,70 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
+  "id": 60,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: http://localhost:8000
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 60
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" isString
+jsonpath "$.result.structuredContent" not exists
+jsonpath "$..uri" not exists
+jsonpath "$..mimeType" not exists
+variable "text" jsonpath "$.path" == "/"
+variable "text" jsonpath "$.url" == "{{base}}"
+variable "text" jsonpath "$.breadcrumb" count == 0
+variable "text" jsonpath "$.schemas" == 115
+variable "text" jsonpath "$.entries" count == 3
+variable "text" jsonpath "$.entries[0].name" == "self"
+variable "text" jsonpath "$.entries[0].title" == "Self"
+variable "text" jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[0].type" == "directory"
+variable "text" jsonpath "$.entries[0].health" == 100
+variable "text" jsonpath "$.entries[0].schemas" == 45
+variable "text" jsonpath "$.entries[0].path" == "/self/"
+variable "text" jsonpath "$.entries[1].name" == "test"
+variable "text" jsonpath "$.entries[1].type" == "directory"
+variable "text" jsonpath "$.entries[1].health" == 15
+variable "text" jsonpath "$.entries[1].schemas" == 68
+variable "text" jsonpath "$.entries[1].path" == "/test/"
+variable "text" jsonpath "$.entries[2].name" == "twins"
+variable "text" jsonpath "$.entries[2].title" == "Twins"
+variable "text" jsonpath "$.entries[2].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[2].type" == "directory"
+variable "text" jsonpath "$.entries[2].health" == 100
+variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].path" == "/twins/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-03-26
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
   "id": 7,
   "method": "tools/call",
   "params": {
