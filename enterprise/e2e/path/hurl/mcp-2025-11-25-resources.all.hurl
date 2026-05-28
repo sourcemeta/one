@@ -24,33 +24,33 @@ jsonpath "$.result.resources[0].name" == "Example With Both"
 jsonpath "$.result.resources[0].description" == "A schema that has both a title and a description"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 242
-jsonpath "$.result.resources[0].annotations.priority" == 1
+jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/v1/catalog/example/description-only"
 jsonpath "$.result.resources[1].name" == "/v1/catalog/example/description-only"
 jsonpath "$.result.resources[1].description" == "A schema with only a description and no title"
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[1].size" == 219
-jsonpath "$.result.resources[1].annotations.priority" == 1
+jsonpath "$.result.resources[1].annotations.priority" == 0.5
 jsonpath "$.result.resources[2].uri" == "{{base}}/v1/catalog/example/title-only"
 jsonpath "$.result.resources[2].name" == "Example With Title Only"
 jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[2].size" == 185
-jsonpath "$.result.resources[2].annotations.priority" == 1
+jsonpath "$.result.resources[2].annotations.priority" == 0.5
 jsonpath "$.result.resources[3].uri" == "{{base}}/v1/catalog/draft3/object"
 jsonpath "$.result.resources[3].name" == "/v1/catalog/draft3/object"
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[3].size" == 270
-jsonpath "$.result.resources[3].annotations.priority" == 1
+jsonpath "$.result.resources[3].annotations.priority" == 0.5
 jsonpath "$.result.resources[4].uri" == "{{base}}/v1/catalog/draft3/string"
 jsonpath "$.result.resources[4].name" == "/v1/catalog/draft3/string"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[4].size" == 136
-jsonpath "$.result.resources[4].annotations.priority" == 1
+jsonpath "$.result.resources[4].annotations.priority" == 0.5
 jsonpath "$.result.resources[5].uri" == "{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.resources[5].name" == "/v1/catalog/example/bare"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[5].size" == 141
-jsonpath "$.result.resources[5].annotations.priority" == 1
+jsonpath "$.result.resources[5].annotations.priority" == 0.5
 jsonpath "$.result.resources[6].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/error"
 jsonpath "$.result.resources[6].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[6].description" == "The error response format returned by the Sourcemeta One API endpoints"

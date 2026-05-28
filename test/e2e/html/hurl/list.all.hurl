@@ -165,7 +165,7 @@ jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
-jsonpath "$.entries[0].priority" == 100
+jsonpath "$.entries[0].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -232,7 +232,7 @@ jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
-jsonpath "$.entries[0].priority" == 100
+jsonpath "$.entries[0].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -279,7 +279,7 @@ jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/bar"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
-jsonpath "$.entries[0].priority" == 100
+jsonpath "$.entries[0].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -329,7 +329,7 @@ jsonpath "$.entries[1].path" == "/test/schemas/clash/foo"
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
 jsonpath "$.entries[1].alert" == null
-jsonpath "$.entries[1].priority" == 100
+jsonpath "$.entries[1].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -372,7 +372,7 @@ jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/extension/to-without"
 jsonpath "$.entries[0].health" == 50
 jsonpath "$.entries[0].dependencies" == 1
-jsonpath "$.entries[0].priority" == 100
+jsonpath "$.entries[0].priority" == 50
 jsonpath "$.entries[1].bytes" == 132
 jsonpath "$.entries[1].bytesBundled" == 132
 jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
@@ -384,7 +384,7 @@ jsonpath "$.entries[1].alert" == null
 jsonpath "$.entries[1].path" == "/test/extension/with"
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[1].dependencies" == 0
-jsonpath "$.entries[1].priority" == 100
+jsonpath "$.entries[1].priority" == 50
 jsonpath "$.entries[2].bytes" == 135
 jsonpath "$.entries[2].bytesBundled" == 135
 jsonpath "$.entries[2].baseDialect" == "http://json-schema.org/draft-07/schema#"
@@ -396,7 +396,7 @@ jsonpath "$.entries[2].alert" == null
 jsonpath "$.entries[2].path" == "/test/extension/without"
 jsonpath "$.entries[2].health" == 0
 jsonpath "$.entries[2].dependencies" == 0
-jsonpath "$.entries[2].priority" == 100
+jsonpath "$.entries[2].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

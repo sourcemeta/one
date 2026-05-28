@@ -148,7 +148,7 @@ contain the actual schema definitions that power your instance.
 | `/ignore`      | Array  | No  | None | An array of file paths (relative to the configuration file location) to exclude from the schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
-| `/x-sourcemeta-one:priority`      | Integer  | No  | `100` | A hint, from `0` (least important) to `100` (most important), that signals the relative importance of this collection compared to others in the same instance. Consumers may use this to rank or filter collections |
+| `/x-sourcemeta-one:priority`      | Integer  | No  | `50` | A hint, from `0` (least important) to `100` (most important), that signals the relative importance of this collection compared to others in the same instance. Consumers may use this to rank or filter collections |
 
 !!! warning
 

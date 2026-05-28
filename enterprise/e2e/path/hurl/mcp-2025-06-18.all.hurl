@@ -100,7 +100,7 @@ jsonpath "$.result.resources[0].name" == "Example With Both"
 jsonpath "$.result.resources[0].description" == "A schema that has both a title and a description"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 242
-jsonpath "$.result.resources[0].annotations.priority" == 1
+jsonpath "$.result.resources[0].annotations.priority" == 0.5
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

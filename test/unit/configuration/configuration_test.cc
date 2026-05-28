@@ -102,7 +102,7 @@ TEST(Configuration, valid_001) {
                     extra.at("x-sourcemeta-one:path"),
                     sourcemeta::core::JSON{configuration_path.string()});
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example/extension", 100);
+  EXPECT_PRIORITY(configuration, "example/extension", 50);
 }
 
 TEST(Configuration, valid_002) {
@@ -173,7 +173,7 @@ TEST(Configuration, valid_003) {
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, valid_004) {
@@ -227,7 +227,7 @@ TEST(Configuration, valid_004) {
                     sourcemeta::core::JSON{configuration_path.string()});
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, valid_005) {
@@ -281,7 +281,7 @@ TEST(Configuration, valid_005) {
                     sourcemeta::core::JSON{configuration_path.string()});
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, valid_006) {
@@ -335,7 +335,7 @@ TEST(Configuration, valid_006) {
                     sourcemeta::core::JSON{configuration_path.string()});
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, valid_007) {
@@ -389,7 +389,7 @@ TEST(Configuration, valid_007) {
                     sourcemeta::core::JSON{configuration_path.string()});
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, valid_008) {
@@ -428,7 +428,7 @@ TEST(Configuration, valid_008) {
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
-  EXPECT_PRIORITY(configuration, "example", 100);
+  EXPECT_PRIORITY(configuration, "example", 50);
 }
 
 TEST(Configuration, base_path_none) {
@@ -690,9 +690,9 @@ TEST(Configuration, priority_helper_clamps_out_of_range) {
 
 TEST(Configuration, priority_helper_defaults_when_missing_or_wrong_type) {
   sourcemeta::one::Configuration::Collection collection;
-  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 100);
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 
   collection.extra.assign("x-sourcemeta-one:priority",
                           sourcemeta::core::JSON{"high"});
-  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 100);
+  EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 }

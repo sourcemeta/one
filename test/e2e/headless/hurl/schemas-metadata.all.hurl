@@ -12,7 +12,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
-jsonpath "$.priority" == 100
+jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/schemas/no-id"
@@ -52,7 +52,7 @@ jsonpath "$.bytes" == 357
 jsonpath "$.bytesBundled" == 357
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 0
-jsonpath "$.priority" == 100
+jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.identifier" == "{{base}}/test/schemas/string"

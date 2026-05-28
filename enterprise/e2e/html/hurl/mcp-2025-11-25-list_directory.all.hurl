@@ -315,8 +315,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -544,8 +544,8 @@ variable "text" jsonpath "$.entries[0].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[0].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[0].priority" == 100
-variable "text" jsonpath "$.entries[0].priority" == 100
+jsonpath "$.result.structuredContent.entries[0].priority" == 50
+variable "text" jsonpath "$.entries[0].priority" == 50
 variable "text" jsonpath "$.entries[0].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[1].name" == "49"
 variable "text" jsonpath "$.entries[1].name" == "49"
@@ -566,8 +566,8 @@ variable "text" jsonpath "$.entries[1].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[1].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[1].priority" == 100
-variable "text" jsonpath "$.entries[1].priority" == 100
+jsonpath "$.result.structuredContent.entries[1].priority" == 50
+variable "text" jsonpath "$.entries[1].priority" == 50
 variable "text" jsonpath "$.entries[1].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[2].name" == "48"
 variable "text" jsonpath "$.entries[2].name" == "48"
@@ -588,8 +588,8 @@ variable "text" jsonpath "$.entries[2].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[2].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[2].priority" == 100
-variable "text" jsonpath "$.entries[2].priority" == 100
+jsonpath "$.result.structuredContent.entries[2].priority" == 50
+variable "text" jsonpath "$.entries[2].priority" == 50
 variable "text" jsonpath "$.entries[2].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[3].name" == "47"
 variable "text" jsonpath "$.entries[3].name" == "47"
@@ -610,8 +610,8 @@ variable "text" jsonpath "$.entries[3].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[3].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[3].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[3].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[3].priority" == 100
-variable "text" jsonpath "$.entries[3].priority" == 100
+jsonpath "$.result.structuredContent.entries[3].priority" == 50
+variable "text" jsonpath "$.entries[3].priority" == 50
 variable "text" jsonpath "$.entries[3].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[4].name" == "46"
 variable "text" jsonpath "$.entries[4].name" == "46"
@@ -632,8 +632,8 @@ variable "text" jsonpath "$.entries[4].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[4].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[4].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[4].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[4].priority" == 100
-variable "text" jsonpath "$.entries[4].priority" == 100
+jsonpath "$.result.structuredContent.entries[4].priority" == 50
+variable "text" jsonpath "$.entries[4].priority" == 50
 variable "text" jsonpath "$.entries[4].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[5].name" == "45"
 variable "text" jsonpath "$.entries[5].name" == "45"
@@ -654,8 +654,8 @@ variable "text" jsonpath "$.entries[5].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[5].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[5].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[5].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[6].name" == "44"
 variable "text" jsonpath "$.entries[6].name" == "44"
@@ -676,8 +676,8 @@ variable "text" jsonpath "$.entries[6].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[6].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[6].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[6].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[6].priority" == 100
-variable "text" jsonpath "$.entries[6].priority" == 100
+jsonpath "$.result.structuredContent.entries[6].priority" == 50
+variable "text" jsonpath "$.entries[6].priority" == 50
 variable "text" jsonpath "$.entries[6].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[7].name" == "43"
 variable "text" jsonpath "$.entries[7].name" == "43"
@@ -698,8 +698,8 @@ variable "text" jsonpath "$.entries[7].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[7].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[7].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[7].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[7].priority" == 100
-variable "text" jsonpath "$.entries[7].priority" == 100
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[8].name" == "42"
 variable "text" jsonpath "$.entries[8].name" == "42"
@@ -720,8 +720,8 @@ variable "text" jsonpath "$.entries[8].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[8].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[8].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[8].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[8].priority" == 100
-variable "text" jsonpath "$.entries[8].priority" == 100
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 variable "text" jsonpath "$.entries[8].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[9].name" == "41"
 variable "text" jsonpath "$.entries[9].name" == "41"
@@ -742,8 +742,8 @@ variable "text" jsonpath "$.entries[9].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[9].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[9].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[9].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[9].priority" == 100
-variable "text" jsonpath "$.entries[9].priority" == 100
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 variable "text" jsonpath "$.entries[9].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[10].name" == "40"
 variable "text" jsonpath "$.entries[10].name" == "40"
@@ -764,8 +764,8 @@ variable "text" jsonpath "$.entries[10].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[10].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[10].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[10].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[10].priority" == 100
-variable "text" jsonpath "$.entries[10].priority" == 100
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 variable "text" jsonpath "$.entries[10].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[11].name" == "39"
 variable "text" jsonpath "$.entries[11].name" == "39"
@@ -786,8 +786,8 @@ variable "text" jsonpath "$.entries[11].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[11].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[11].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[11].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[11].priority" == 100
-variable "text" jsonpath "$.entries[11].priority" == 100
+jsonpath "$.result.structuredContent.entries[11].priority" == 50
+variable "text" jsonpath "$.entries[11].priority" == 50
 variable "text" jsonpath "$.entries[11].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[12].name" == "38"
 variable "text" jsonpath "$.entries[12].name" == "38"
@@ -808,8 +808,8 @@ variable "text" jsonpath "$.entries[12].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[12].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[12].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[12].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[12].priority" == 100
-variable "text" jsonpath "$.entries[12].priority" == 100
+jsonpath "$.result.structuredContent.entries[12].priority" == 50
+variable "text" jsonpath "$.entries[12].priority" == 50
 variable "text" jsonpath "$.entries[12].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[13].name" == "37"
 variable "text" jsonpath "$.entries[13].name" == "37"
@@ -830,8 +830,8 @@ variable "text" jsonpath "$.entries[13].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[13].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[13].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[13].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[13].priority" == 100
-variable "text" jsonpath "$.entries[13].priority" == 100
+jsonpath "$.result.structuredContent.entries[13].priority" == 50
+variable "text" jsonpath "$.entries[13].priority" == 50
 variable "text" jsonpath "$.entries[13].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[14].name" == "36"
 variable "text" jsonpath "$.entries[14].name" == "36"
@@ -852,8 +852,8 @@ variable "text" jsonpath "$.entries[14].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[14].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[14].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[14].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[14].priority" == 100
-variable "text" jsonpath "$.entries[14].priority" == 100
+jsonpath "$.result.structuredContent.entries[14].priority" == 50
+variable "text" jsonpath "$.entries[14].priority" == 50
 variable "text" jsonpath "$.entries[14].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[15].name" == "35"
 variable "text" jsonpath "$.entries[15].name" == "35"
@@ -874,8 +874,8 @@ variable "text" jsonpath "$.entries[15].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[15].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[15].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[15].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[15].priority" == 100
-variable "text" jsonpath "$.entries[15].priority" == 100
+jsonpath "$.result.structuredContent.entries[15].priority" == 50
+variable "text" jsonpath "$.entries[15].priority" == 50
 variable "text" jsonpath "$.entries[15].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[16].name" == "34"
 variable "text" jsonpath "$.entries[16].name" == "34"
@@ -896,8 +896,8 @@ variable "text" jsonpath "$.entries[16].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[16].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[16].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[16].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[16].priority" == 100
-variable "text" jsonpath "$.entries[16].priority" == 100
+jsonpath "$.result.structuredContent.entries[16].priority" == 50
+variable "text" jsonpath "$.entries[16].priority" == 50
 variable "text" jsonpath "$.entries[16].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[17].name" == "33"
 variable "text" jsonpath "$.entries[17].name" == "33"
@@ -918,8 +918,8 @@ variable "text" jsonpath "$.entries[17].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[17].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[17].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[17].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[17].priority" == 100
-variable "text" jsonpath "$.entries[17].priority" == 100
+jsonpath "$.result.structuredContent.entries[17].priority" == 50
+variable "text" jsonpath "$.entries[17].priority" == 50
 variable "text" jsonpath "$.entries[17].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[18].name" == "32"
 variable "text" jsonpath "$.entries[18].name" == "32"
@@ -940,8 +940,8 @@ variable "text" jsonpath "$.entries[18].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[18].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[18].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[18].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[18].priority" == 100
-variable "text" jsonpath "$.entries[18].priority" == 100
+jsonpath "$.result.structuredContent.entries[18].priority" == 50
+variable "text" jsonpath "$.entries[18].priority" == 50
 variable "text" jsonpath "$.entries[18].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[19].name" == "31"
 variable "text" jsonpath "$.entries[19].name" == "31"
@@ -962,8 +962,8 @@ variable "text" jsonpath "$.entries[19].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[19].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[19].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[19].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[19].priority" == 100
-variable "text" jsonpath "$.entries[19].priority" == 100
+jsonpath "$.result.structuredContent.entries[19].priority" == 50
+variable "text" jsonpath "$.entries[19].priority" == 50
 variable "text" jsonpath "$.entries[19].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[20].name" == "30"
 variable "text" jsonpath "$.entries[20].name" == "30"
@@ -984,8 +984,8 @@ variable "text" jsonpath "$.entries[20].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[20].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[20].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[20].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[20].priority" == 100
-variable "text" jsonpath "$.entries[20].priority" == 100
+jsonpath "$.result.structuredContent.entries[20].priority" == 50
+variable "text" jsonpath "$.entries[20].priority" == 50
 variable "text" jsonpath "$.entries[20].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[21].name" == "29"
 variable "text" jsonpath "$.entries[21].name" == "29"
@@ -1006,8 +1006,8 @@ variable "text" jsonpath "$.entries[21].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[21].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[21].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[21].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[21].priority" == 100
-variable "text" jsonpath "$.entries[21].priority" == 100
+jsonpath "$.result.structuredContent.entries[21].priority" == 50
+variable "text" jsonpath "$.entries[21].priority" == 50
 variable "text" jsonpath "$.entries[21].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[22].name" == "28"
 variable "text" jsonpath "$.entries[22].name" == "28"
@@ -1028,8 +1028,8 @@ variable "text" jsonpath "$.entries[22].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[22].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[22].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[22].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[22].priority" == 100
-variable "text" jsonpath "$.entries[22].priority" == 100
+jsonpath "$.result.structuredContent.entries[22].priority" == 50
+variable "text" jsonpath "$.entries[22].priority" == 50
 variable "text" jsonpath "$.entries[22].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[23].name" == "27"
 variable "text" jsonpath "$.entries[23].name" == "27"
@@ -1050,8 +1050,8 @@ variable "text" jsonpath "$.entries[23].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[23].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[23].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[23].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[23].priority" == 100
-variable "text" jsonpath "$.entries[23].priority" == 100
+jsonpath "$.result.structuredContent.entries[23].priority" == 50
+variable "text" jsonpath "$.entries[23].priority" == 50
 variable "text" jsonpath "$.entries[23].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[24].name" == "26"
 variable "text" jsonpath "$.entries[24].name" == "26"
@@ -1072,8 +1072,8 @@ variable "text" jsonpath "$.entries[24].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[24].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[24].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[24].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[24].priority" == 100
-variable "text" jsonpath "$.entries[24].priority" == 100
+jsonpath "$.result.structuredContent.entries[24].priority" == 50
+variable "text" jsonpath "$.entries[24].priority" == 50
 variable "text" jsonpath "$.entries[24].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[25].name" == "25"
 variable "text" jsonpath "$.entries[25].name" == "25"
@@ -1094,8 +1094,8 @@ variable "text" jsonpath "$.entries[25].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[25].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[25].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[25].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[25].priority" == 100
-variable "text" jsonpath "$.entries[25].priority" == 100
+jsonpath "$.result.structuredContent.entries[25].priority" == 50
+variable "text" jsonpath "$.entries[25].priority" == 50
 variable "text" jsonpath "$.entries[25].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[26].name" == "24"
 variable "text" jsonpath "$.entries[26].name" == "24"
@@ -1116,8 +1116,8 @@ variable "text" jsonpath "$.entries[26].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[26].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[26].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[26].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[26].priority" == 100
-variable "text" jsonpath "$.entries[26].priority" == 100
+jsonpath "$.result.structuredContent.entries[26].priority" == 50
+variable "text" jsonpath "$.entries[26].priority" == 50
 variable "text" jsonpath "$.entries[26].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[27].name" == "23"
 variable "text" jsonpath "$.entries[27].name" == "23"
@@ -1138,8 +1138,8 @@ variable "text" jsonpath "$.entries[27].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[27].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[27].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[27].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[27].priority" == 100
-variable "text" jsonpath "$.entries[27].priority" == 100
+jsonpath "$.result.structuredContent.entries[27].priority" == 50
+variable "text" jsonpath "$.entries[27].priority" == 50
 variable "text" jsonpath "$.entries[27].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[28].name" == "22"
 variable "text" jsonpath "$.entries[28].name" == "22"
@@ -1160,8 +1160,8 @@ variable "text" jsonpath "$.entries[28].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[28].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[28].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[28].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[28].priority" == 100
-variable "text" jsonpath "$.entries[28].priority" == 100
+jsonpath "$.result.structuredContent.entries[28].priority" == 50
+variable "text" jsonpath "$.entries[28].priority" == 50
 variable "text" jsonpath "$.entries[28].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[29].name" == "21"
 variable "text" jsonpath "$.entries[29].name" == "21"
@@ -1182,8 +1182,8 @@ variable "text" jsonpath "$.entries[29].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[29].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[29].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[29].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[29].priority" == 100
-variable "text" jsonpath "$.entries[29].priority" == 100
+jsonpath "$.result.structuredContent.entries[29].priority" == 50
+variable "text" jsonpath "$.entries[29].priority" == 50
 variable "text" jsonpath "$.entries[29].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[30].name" == "20"
 variable "text" jsonpath "$.entries[30].name" == "20"
@@ -1204,8 +1204,8 @@ variable "text" jsonpath "$.entries[30].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[30].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[30].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[30].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[30].priority" == 100
-variable "text" jsonpath "$.entries[30].priority" == 100
+jsonpath "$.result.structuredContent.entries[30].priority" == 50
+variable "text" jsonpath "$.entries[30].priority" == 50
 variable "text" jsonpath "$.entries[30].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[31].name" == "19"
 variable "text" jsonpath "$.entries[31].name" == "19"
@@ -1226,8 +1226,8 @@ variable "text" jsonpath "$.entries[31].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[31].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[31].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[31].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[31].priority" == 100
-variable "text" jsonpath "$.entries[31].priority" == 100
+jsonpath "$.result.structuredContent.entries[31].priority" == 50
+variable "text" jsonpath "$.entries[31].priority" == 50
 variable "text" jsonpath "$.entries[31].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[32].name" == "18"
 variable "text" jsonpath "$.entries[32].name" == "18"
@@ -1248,8 +1248,8 @@ variable "text" jsonpath "$.entries[32].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[32].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[32].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[32].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[32].priority" == 100
-variable "text" jsonpath "$.entries[32].priority" == 100
+jsonpath "$.result.structuredContent.entries[32].priority" == 50
+variable "text" jsonpath "$.entries[32].priority" == 50
 variable "text" jsonpath "$.entries[32].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[33].name" == "17"
 variable "text" jsonpath "$.entries[33].name" == "17"
@@ -1270,8 +1270,8 @@ variable "text" jsonpath "$.entries[33].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[33].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[33].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[33].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[33].priority" == 100
-variable "text" jsonpath "$.entries[33].priority" == 100
+jsonpath "$.result.structuredContent.entries[33].priority" == 50
+variable "text" jsonpath "$.entries[33].priority" == 50
 variable "text" jsonpath "$.entries[33].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[34].name" == "16"
 variable "text" jsonpath "$.entries[34].name" == "16"
@@ -1292,8 +1292,8 @@ variable "text" jsonpath "$.entries[34].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[34].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[34].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[34].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[34].priority" == 100
-variable "text" jsonpath "$.entries[34].priority" == 100
+jsonpath "$.result.structuredContent.entries[34].priority" == 50
+variable "text" jsonpath "$.entries[34].priority" == 50
 variable "text" jsonpath "$.entries[34].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[35].name" == "15"
 variable "text" jsonpath "$.entries[35].name" == "15"
@@ -1314,8 +1314,8 @@ variable "text" jsonpath "$.entries[35].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[35].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[35].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[35].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[35].priority" == 100
-variable "text" jsonpath "$.entries[35].priority" == 100
+jsonpath "$.result.structuredContent.entries[35].priority" == 50
+variable "text" jsonpath "$.entries[35].priority" == 50
 variable "text" jsonpath "$.entries[35].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[36].name" == "14"
 variable "text" jsonpath "$.entries[36].name" == "14"
@@ -1336,8 +1336,8 @@ variable "text" jsonpath "$.entries[36].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[36].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[36].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[36].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[36].priority" == 100
-variable "text" jsonpath "$.entries[36].priority" == 100
+jsonpath "$.result.structuredContent.entries[36].priority" == 50
+variable "text" jsonpath "$.entries[36].priority" == 50
 variable "text" jsonpath "$.entries[36].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[37].name" == "13"
 variable "text" jsonpath "$.entries[37].name" == "13"
@@ -1358,8 +1358,8 @@ variable "text" jsonpath "$.entries[37].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[37].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[37].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[37].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[37].priority" == 100
-variable "text" jsonpath "$.entries[37].priority" == 100
+jsonpath "$.result.structuredContent.entries[37].priority" == 50
+variable "text" jsonpath "$.entries[37].priority" == 50
 variable "text" jsonpath "$.entries[37].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[38].name" == "12"
 variable "text" jsonpath "$.entries[38].name" == "12"
@@ -1380,8 +1380,8 @@ variable "text" jsonpath "$.entries[38].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[38].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[38].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[38].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[38].priority" == 100
-variable "text" jsonpath "$.entries[38].priority" == 100
+jsonpath "$.result.structuredContent.entries[38].priority" == 50
+variable "text" jsonpath "$.entries[38].priority" == 50
 variable "text" jsonpath "$.entries[38].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[39].name" == "11"
 variable "text" jsonpath "$.entries[39].name" == "11"
@@ -1402,8 +1402,8 @@ variable "text" jsonpath "$.entries[39].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[39].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[39].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[39].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[39].priority" == 100
-variable "text" jsonpath "$.entries[39].priority" == 100
+jsonpath "$.result.structuredContent.entries[39].priority" == 50
+variable "text" jsonpath "$.entries[39].priority" == 50
 variable "text" jsonpath "$.entries[39].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[40].name" == "10"
 variable "text" jsonpath "$.entries[40].name" == "10"
@@ -1424,8 +1424,8 @@ variable "text" jsonpath "$.entries[40].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[40].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[40].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[40].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[40].priority" == 100
-variable "text" jsonpath "$.entries[40].priority" == 100
+jsonpath "$.result.structuredContent.entries[40].priority" == 50
+variable "text" jsonpath "$.entries[40].priority" == 50
 variable "text" jsonpath "$.entries[40].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[41].name" == "01"
 variable "text" jsonpath "$.entries[41].name" == "01"
@@ -1446,8 +1446,8 @@ variable "text" jsonpath "$.entries[41].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[41].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[41].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[41].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[41].priority" == 100
-variable "text" jsonpath "$.entries[41].priority" == 100
+jsonpath "$.result.structuredContent.entries[41].priority" == 50
+variable "text" jsonpath "$.entries[41].priority" == 50
 variable "text" jsonpath "$.entries[41].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[42].name" == "02"
 variable "text" jsonpath "$.entries[42].name" == "02"
@@ -1468,8 +1468,8 @@ variable "text" jsonpath "$.entries[42].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[42].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[42].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[42].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[42].priority" == 100
-variable "text" jsonpath "$.entries[42].priority" == 100
+jsonpath "$.result.structuredContent.entries[42].priority" == 50
+variable "text" jsonpath "$.entries[42].priority" == 50
 variable "text" jsonpath "$.entries[42].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[43].name" == "03"
 variable "text" jsonpath "$.entries[43].name" == "03"
@@ -1490,8 +1490,8 @@ variable "text" jsonpath "$.entries[43].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[43].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[43].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[43].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[43].priority" == 100
-variable "text" jsonpath "$.entries[43].priority" == 100
+jsonpath "$.result.structuredContent.entries[43].priority" == 50
+variable "text" jsonpath "$.entries[43].priority" == 50
 variable "text" jsonpath "$.entries[43].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[44].name" == "04"
 variable "text" jsonpath "$.entries[44].name" == "04"
@@ -1512,8 +1512,8 @@ variable "text" jsonpath "$.entries[44].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[44].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[44].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[44].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[44].priority" == 100
-variable "text" jsonpath "$.entries[44].priority" == 100
+jsonpath "$.result.structuredContent.entries[44].priority" == 50
+variable "text" jsonpath "$.entries[44].priority" == 50
 variable "text" jsonpath "$.entries[44].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[45].name" == "05"
 variable "text" jsonpath "$.entries[45].name" == "05"
@@ -1534,8 +1534,8 @@ variable "text" jsonpath "$.entries[45].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[45].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[45].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[45].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[45].priority" == 100
-variable "text" jsonpath "$.entries[45].priority" == 100
+jsonpath "$.result.structuredContent.entries[45].priority" == 50
+variable "text" jsonpath "$.entries[45].priority" == 50
 variable "text" jsonpath "$.entries[45].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[46].name" == "06"
 variable "text" jsonpath "$.entries[46].name" == "06"
@@ -1556,8 +1556,8 @@ variable "text" jsonpath "$.entries[46].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[46].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[46].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[46].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[46].priority" == 100
-variable "text" jsonpath "$.entries[46].priority" == 100
+jsonpath "$.result.structuredContent.entries[46].priority" == 50
+variable "text" jsonpath "$.entries[46].priority" == 50
 variable "text" jsonpath "$.entries[46].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[47].name" == "07"
 variable "text" jsonpath "$.entries[47].name" == "07"
@@ -1578,8 +1578,8 @@ variable "text" jsonpath "$.entries[47].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[47].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[47].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[47].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[47].priority" == 100
-variable "text" jsonpath "$.entries[47].priority" == 100
+jsonpath "$.result.structuredContent.entries[47].priority" == 50
+variable "text" jsonpath "$.entries[47].priority" == 50
 variable "text" jsonpath "$.entries[47].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[48].name" == "08"
 variable "text" jsonpath "$.entries[48].name" == "08"
@@ -1600,8 +1600,8 @@ variable "text" jsonpath "$.entries[48].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[48].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[48].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[48].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[48].priority" == 100
-variable "text" jsonpath "$.entries[48].priority" == 100
+jsonpath "$.result.structuredContent.entries[48].priority" == 50
+variable "text" jsonpath "$.entries[48].priority" == 50
 variable "text" jsonpath "$.entries[48].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[49].name" == "09"
 variable "text" jsonpath "$.entries[49].name" == "09"
@@ -1622,8 +1622,8 @@ variable "text" jsonpath "$.entries[49].dependencies" == 0
 jsonpath "$.result.structuredContent.entries[49].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.entries[49].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.entries[49].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.entries[49].priority" == 100
-variable "text" jsonpath "$.entries[49].priority" == 100
+jsonpath "$.result.structuredContent.entries[49].priority" == 50
+variable "text" jsonpath "$.entries[49].priority" == 50
 variable "text" jsonpath "$.entries[49].dialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1687,8 +1687,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1992,8 +1992,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -2116,8 +2116,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -2240,8 +2240,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -2740,8 +2740,8 @@ variable "text" jsonpath "$.entries[5].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.entries[5].title" == "My Object"
 variable "text" jsonpath "$.entries[5].title" == "My Object"
 jsonpath "$.result.structuredContent.entries[5].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[5].priority" == 100
-variable "text" jsonpath "$.entries[5].priority" == 100
+jsonpath "$.result.structuredContent.entries[5].priority" == 50
+variable "text" jsonpath "$.entries[5].priority" == 50
 variable "text" jsonpath "$.entries[5].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -3145,8 +3145,8 @@ variable "text" jsonpath "$.entries[1].identifier" == "{{base}}/twins/foo"
 jsonpath "$.result.structuredContent.entries[1].title" == "Twin Foo Schema"
 variable "text" jsonpath "$.entries[1].title" == "Twin Foo Schema"
 jsonpath "$.result.structuredContent.entries[1].description" == "A schema whose base name collides with a sibling directory"
-jsonpath "$.result.structuredContent.entries[1].priority" == 100
-variable "text" jsonpath "$.entries[1].priority" == 100
+jsonpath "$.result.structuredContent.entries[1].priority" == 50
+variable "text" jsonpath "$.entries[1].priority" == 50
 variable "text" jsonpath "$.entries[1].description" == "A schema whose base name collides with a sibling directory"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

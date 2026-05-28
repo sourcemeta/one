@@ -41,8 +41,8 @@ variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-
 jsonpath "$.result.structuredContent.examples" count == 0
 variable "text" jsonpath "$.examples" count == 0
 jsonpath "$.result.structuredContent.health" == 0
-jsonpath "$.result.structuredContent.priority" == 100
-variable "text" jsonpath "$.priority" == 100
+jsonpath "$.result.structuredContent.priority" == 50
+variable "text" jsonpath "$.priority" == 50
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.dependencies" == 0
 variable "text" jsonpath "$.dependencies" == 0
@@ -116,8 +116,8 @@ variable "text" jsonpath "$.description" == "An Object Example"
 jsonpath "$.result.structuredContent.examples" count == 1
 variable "text" jsonpath "$.examples" count == 1
 jsonpath "$.result.structuredContent.health" == 67
-jsonpath "$.result.structuredContent.priority" == 100
-variable "text" jsonpath "$.priority" == 100
+jsonpath "$.result.structuredContent.priority" == 50
+variable "text" jsonpath "$.priority" == 50
 variable "text" jsonpath "$.health" == 67
 jsonpath "$.result.structuredContent.dependencies" == 0
 variable "text" jsonpath "$.dependencies" == 0
