@@ -70,7 +70,8 @@ auto to_regex(const std::string_view pattern) -> std::optional<Regex> {
       reinterpret_cast<PCRE2_SPTR>(preprocessed.transformed.value().c_str()),
       preprocessed.transformed.value().size(),
       PCRE2_UTF | PCRE2_UCP | PCRE2_NO_AUTO_CAPTURE | PCRE2_DOTALL |
-          PCRE2_DOLLAR_ENDONLY | PCRE2_NEVER_BACKSLASH_C | PCRE2_NO_UTF_CHECK,
+          PCRE2_DOLLAR_ENDONLY | PCRE2_NEVER_BACKSLASH_C | PCRE2_NO_UTF_CHECK |
+          PCRE2_ALLOW_EMPTY_CLASS,
       &pcre2_error_code, &pcre2_error_offset, nullptr)};
 
   if (pcre2_regex_raw != nullptr) {
@@ -127,7 +128,8 @@ auto is_regex_ecma(const std::string_view pattern) -> bool {
       reinterpret_cast<PCRE2_SPTR>(preprocessed.transformed.value().c_str()),
       preprocessed.transformed.value().size(),
       PCRE2_UTF | PCRE2_UCP | PCRE2_NO_AUTO_CAPTURE | PCRE2_DOTALL |
-          PCRE2_DOLLAR_ENDONLY | PCRE2_NEVER_BACKSLASH_C | PCRE2_NO_UTF_CHECK,
+          PCRE2_DOLLAR_ENDONLY | PCRE2_NEVER_BACKSLASH_C | PCRE2_NO_UTF_CHECK |
+          PCRE2_ALLOW_EMPTY_CLASS,
       &pcre2_error_code, &pcre2_error_offset, nullptr)};
 
   if (pcre2_regex_raw == nullptr) {

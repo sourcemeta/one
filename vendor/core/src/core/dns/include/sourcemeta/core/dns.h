@@ -43,10 +43,9 @@ auto is_hostname(const std::string_view value) -> bool;
 /// @ingroup dns
 /// Check whether the given string is a valid internationalized host name per
 /// RFC 5891 Section 4. Each label is validated as an RFC 5890 A-label or
-/// U-label (with RFC 5892 ContextJ and ContextO contextual rules) and the
-/// RFC 5893 Bidi rule is enforced on every label of a Bidi domain name.
-/// The input must already be in Unicode Normalization Form C, since NFC
-/// normalisation is not performed here. For example:
+/// U-label (with RFC 5892 ContextJ and ContextO contextual rules and the
+/// RFC 5891 §4.1.2.A NFC requirement), and the RFC 5893 Bidi rule is
+/// enforced on every label of a Bidi domain name. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/dns.h>

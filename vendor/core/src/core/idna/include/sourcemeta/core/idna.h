@@ -142,9 +142,7 @@ auto idna_passes_bidi_rule(const std::u32string_view label) noexcept -> bool;
 /// Return whether the given label is a valid U-label per RFC 5891 §4. See
 /// https://www.rfc-editor.org/rfc/rfc5891#section-4 for the criteria.
 /// The Bidi rule is not checked here because Bidi domain detection is a
-/// property of the whole domain, not of a single label. Callers needing
-/// strict conformance must normalise the input to NFC themselves. The
-/// RFC 5891 §4.1.2.A NFC requirement is not enforced. For example:
+/// property of the whole domain, not of a single label. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/idna.h>
@@ -155,7 +153,7 @@ auto idna_passes_bidi_rule(const std::u32string_view label) noexcept -> bool;
 /// assert(!sourcemeta::core::idna_is_valid_u_label(U"-abc"));
 /// ```
 SOURCEMETA_CORE_IDNA_EXPORT
-auto idna_is_valid_u_label(const std::u32string_view label) noexcept -> bool;
+auto idna_is_valid_u_label(const std::u32string_view label) -> bool;
 
 /// @ingroup idna
 /// Return whether the given label is a valid A-label per RFC 5891 §4. See
@@ -177,7 +175,7 @@ auto idna_is_valid_u_label(const std::u32string_view label) noexcept -> bool;
 /// assert(!sourcemeta::core::idna_is_valid_a_label("xn--abc-"));
 /// ```
 SOURCEMETA_CORE_IDNA_EXPORT
-auto idna_is_valid_a_label(const std::string_view label) noexcept -> bool;
+auto idna_is_valid_a_label(const std::string_view label) -> bool;
 
 } // namespace sourcemeta::core
 
