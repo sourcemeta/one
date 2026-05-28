@@ -671,7 +671,12 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 324
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "Tool call must include an \"arguments\" object"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/dependents/rpc#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
