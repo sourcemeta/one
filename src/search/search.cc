@@ -89,7 +89,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
             static_cast<std::uint16_t>(entry.description.size()),
         .bytes_raw = entry.bytes_raw,
         .bytes_bundled = entry.bytes_bundled,
-        .priority = entry.priority};
+        .priority = entry.priority,
+        .health = entry.health};
     std::memcpy(payload.data() + record_position, &record_header,
                 sizeof(SearchRecordHeader));
     record_position += sizeof(SearchRecordHeader);
@@ -217,6 +218,10 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     entry.assign("identifier", sourcemeta::core::JSON{identifier});
     entry.assign("title", sourcemeta::core::JSON{title});
     entry.assign("description", sourcemeta::core::JSON{description});
+    entry.assign("priority", sourcemeta::core::JSON{static_cast<std::int64_t>(
+                                 record_header->priority)});
+    entry.assign("health", sourcemeta::core::JSON{static_cast<std::int64_t>(
+                               record_header->health)});
     result.push_back(std::move(entry));
 
     if (result.array_size() >= limit) {
@@ -308,7 +313,8 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
           .description = description,
           .bytes_raw = record_header->bytes_raw,
           .bytes_bundled = record_header->bytes_bundled,
-          .priority = record_header->priority};
+          .priority = record_header->priority,
+          .health = record_header->health};
 }
 
 auto SearchView::for_each(
@@ -386,7 +392,8 @@ auto SearchView::for_each(
               .description = description,
               .bytes_raw = record_header->bytes_raw,
               .bytes_bundled = record_header->bytes_bundled,
-              .priority = record_header->priority});
+              .priority = record_header->priority,
+              .health = record_header->health});
   }
 }
 

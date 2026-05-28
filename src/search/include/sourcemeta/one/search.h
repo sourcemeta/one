@@ -38,6 +38,7 @@ struct SearchListEntry {
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
   std::uint8_t priority;
+  std::uint8_t health;
 };
 
 #pragma pack(push, 1)
@@ -54,6 +55,7 @@ struct SearchRecordHeader {
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
   std::uint8_t priority;
+  std::uint8_t health;
 };
 #pragma pack(pop)
 

@@ -249,7 +249,7 @@ TEST(Search_build, priority_is_primary_sort_key) {
   EXPECT_EQ(result.at(2).at("path").to_string(), "/low/rich");
 }
 
-TEST(Search_build, priority_does_not_surface_in_search_output) {
+TEST(Search_build, priority_and_health_surface_in_search_output) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", "Desc", 80, 50, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -257,5 +257,8 @@ TEST(Search_build, priority_does_not_surface_in_search_output) {
                                             "foo", 10,
                                             sourcemeta::one::SearchScopePath)};
   EXPECT_EQ(result.size(), 1);
-  EXPECT_FALSE(result.at(0).defines("priority"));
+  EXPECT_TRUE(result.at(0).defines("priority"));
+  EXPECT_EQ(result.at(0).at("priority").to_integer(), 50);
+  EXPECT_TRUE(result.at(0).defines("health"));
+  EXPECT_EQ(result.at(0).at("health").to_integer(), 80);
 }

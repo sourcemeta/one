@@ -8,14 +8,23 @@
         "path": "/schemas/user.json",
         "identifier": "https://example.com/schemas/user.json",
         "title": "User Schema",
-        "description": "Defines a user object"
+        "description": "Defines a user object",
+        "priority": 50,
+        "health": 100
       }
     ]
   ],
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "path", "identifier", "title", "description" ],
+    "required": [
+      "path",
+      "identifier",
+      "title",
+      "description",
+      "priority",
+      "health"
+    ],
     "properties": {
       "title": {
         "type": "string"
@@ -32,6 +41,16 @@
         "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri"
+      },
+      "priority": {
+        "type": "integer",
+        "maximum": 100,
+        "minimum": 0
+      },
+      "health": {
+        "type": "integer",
+        "maximum": 100,
+        "minimum": 0
       }
     },
     "additionalProperties": false
