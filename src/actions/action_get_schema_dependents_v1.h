@@ -20,10 +20,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::Router &dispatcher)
-      : ActionDependencyTree_v1{base, router, identifier, dispatcher} {
-    this->metapack_ = "dependents.metapack";
-  }
+      sourcemeta::one::Router &)
+      : ActionDependencyTree_v1{base, router, identifier,
+                                "dependents.metapack"} {}
 };
 
 #endif

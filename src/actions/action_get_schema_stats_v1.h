@@ -21,10 +21,8 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::Router &dispatcher)
-      : ActionServeSchemaArtifact_v1{base, router, identifier, dispatcher} {
-    this->artifact_ = "stats";
-  }
+      sourcemeta::one::Router &)
+      : ActionServeSchemaArtifact_v1{base, router, identifier, "stats"} {}
 };
 
 #endif

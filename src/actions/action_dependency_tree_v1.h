@@ -152,6 +152,26 @@ public:
   }
 
 protected:
+  ActionDependencyTree_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      const std::string_view metapack)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url()} {
+    this->metapack_ = metapack;
+    router.arguments(identifier, [this](const auto &key, const auto &value) {
+      if (key == "responseSchema") {
+        this->response_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcSchema") {
+        this->rpc_schema_ = std::get<std::string_view>(value);
+      } else if (key == "errorSchema") {
+        this->error_schema_ = std::get<std::string_view>(value);
+      }
+    });
+  }
+
+private:
   std::string_view metapack_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;
