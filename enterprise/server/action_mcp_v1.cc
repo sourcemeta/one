@@ -138,7 +138,20 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
     sourcemeta::core::URI request{uri};
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
-      return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
+      auto data{sourcemeta::core::JSON::make_object()};
+      data.assign("uri", sourcemeta::core::JSON{uri});
+      data.assign("reason", sourcemeta::core::JSON{"foreign-origin"});
+      data.assign("instanceOrigin", sourcemeta::core::JSON{this->server_uri()});
+      data.assign("message",
+                  sourcemeta::core::JSON{
+                      "This URL is not served by this catalog. This "
+                      "instance is sovereign over its own URL namespace. "
+                      "Schemas mirrored from upstream registries live at "
+                      "this instance's origin, not the upstream URL. Query "
+                      "the appropriate registry for foreign URLs"});
+      return sourcemeta::core::jsonrpc_make_error(
+          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+          "Resource not found", std::move(data));
     }
     const auto path{request.path().value_or("")};
     std::string_view schema_path{path};

@@ -211,7 +211,7 @@ jsonpath "$.result.resources[32].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[32].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[32].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 7192
+jsonpath "$.result.resources[32].size" == 8771
 jsonpath "$.result.resources[32].annotations.priority" == 0
 jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Initialize Request"
@@ -542,7 +542,10 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 21
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "https://elsewhere.example.com/foo"
+jsonpath "$.error.data.uri" == "https://elsewhere.example.com/foo"
+jsonpath "$.error.data.reason" == "foreign-origin"
+jsonpath "$.error.data.instanceOrigin" == "{{base}}/v1/catalog"
+jsonpath "$.error.data.message" == "This URL is not served by this catalog. This instance is sovereign over its own URL namespace. Schemas mirrored from upstream registries live at this instance's origin, not the upstream URL. Query the appropriate registry for foreign URLs"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
