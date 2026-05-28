@@ -205,8 +205,13 @@ auto idna_passes_contextj(const std::u32string_view label,
   return true;
 }
 
-auto idna_is_valid_u_label(const std::u32string_view label) noexcept -> bool {
+auto idna_is_valid_u_label(const std::u32string_view label) -> bool {
   if (label.empty()) {
+    return false;
+  }
+
+  // RFC 5891 §4.1.2.A: a U-label must be in Unicode Normalisation Form C
+  if (!is_nfc(label)) {
     return false;
   }
 
@@ -339,7 +344,7 @@ auto idna_passes_bidi_rule(const std::u32string_view label) noexcept -> bool {
   return false;
 }
 
-auto idna_is_valid_a_label(const std::string_view label) noexcept -> bool {
+auto idna_is_valid_a_label(const std::string_view label) -> bool {
   constexpr std::string_view prefix{"xn--"};
   if (!label.starts_with(prefix)) {
     return false;

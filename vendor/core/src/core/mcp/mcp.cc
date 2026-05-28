@@ -86,11 +86,20 @@ auto mcp_make_resource_link(const MCPProtocolVersion version,
                             const JSON::StringView description)
     -> sourcemeta::core::JSON {
   if (!mcp_supports_resource_link_content(version)) {
-    std::string text{uri};
+    // Multi-line fallback is deliberate: the consumer is an LLM reading tool
+    // output, not a human display surface, so a vertical layout keeps all three
+    // fields readable while sidestepping quoting issues, etc. The URI is the
+    // primary identifier and is always emitted, even when other fields are
+    // empty
+    std::string text;
     if (!name.empty()) {
-      text.append(" (");
       text.append(name);
-      text.append(")");
+      text.append("\n");
+    }
+    text.append(uri);
+    if (!description.empty()) {
+      text.append("\n");
+      text.append(description);
     }
     return mcp_make_text_block(text);
   }

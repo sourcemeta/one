@@ -154,4 +154,51 @@ auto is_combining_mark(const char32_t codepoint) noexcept -> bool {
   return IS_COMBINING_MARK_STAGE2[(page << 10U) | (codepoint & 0x3FFU)] != 0;
 }
 
+auto nfc_quick_check(const char32_t codepoint) noexcept -> NFCQuickCheck {
+  if (codepoint > 0x10FFFF) {
+    return NFCQuickCheck::Yes;
+  }
+  const std::size_t page{NFC_QUICK_CHECK_STAGE1[codepoint >> 10U]};
+  return static_cast<NFCQuickCheck>(
+      NFC_QUICK_CHECK_STAGE2[(page << 10U) | (codepoint & 0x3FFU)]);
+}
+
+auto canonical_decomposition(const char32_t codepoint) noexcept
+    -> std::u32string_view {
+  if (codepoint > 0x10FFFF) {
+    return {};
+  }
+  const std::size_t page{CANONICAL_DECOMPOSITION_STAGE1[codepoint >> 10U]};
+  const std::uint16_t packed{
+      CANONICAL_DECOMPOSITION_STAGE2[(page << 10U) | (codepoint & 0x3FFU)]};
+  const auto length{static_cast<std::size_t>(packed >> 14U)};
+  const auto offset{static_cast<std::size_t>(packed & 0x3FFFU)};
+  return std::u32string_view{CANONICAL_DECOMPOSITION_BLOB + offset, length};
+}
+
+auto canonical_composition(const char32_t starter,
+                           const char32_t combining) noexcept
+    -> std::optional<char32_t> {
+  std::size_t low{0};
+  std::size_t high{sizeof(CANONICAL_COMPOSITIONS) /
+                   sizeof(CANONICAL_COMPOSITIONS[0])};
+  while (low < high) {
+    const std::size_t middle{low + ((high - low) >> 1U)};
+    const auto &entry{CANONICAL_COMPOSITIONS[middle]};
+    if (entry.starter < starter ||
+        (entry.starter == starter && entry.combining < combining)) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  const auto count{sizeof(CANONICAL_COMPOSITIONS) /
+                   sizeof(CANONICAL_COMPOSITIONS[0])};
+  if (low < count && CANONICAL_COMPOSITIONS[low].starter == starter &&
+      CANONICAL_COMPOSITIONS[low].combining == combining) {
+    return CANONICAL_COMPOSITIONS[low].composed;
+  }
+  return std::nullopt;
+}
+
 } // namespace sourcemeta::core

@@ -350,13 +350,13 @@ jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" isString
 jsonpath "$.result.content[1].type" == "text"
-jsonpath "$.result.content[1].text" == "{{base}}/v1/catalog/example/bare (/v1/catalog/example/bare)"
+jsonpath "$.result.content[1].text" == "/v1/catalog/example/bare\n{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.content[2].type" == "text"
-jsonpath "$.result.content[2].text" == "{{base}}/v1/catalog/example/description-only (/v1/catalog/example/description-only)"
+jsonpath "$.result.content[2].text" == "/v1/catalog/example/description-only\n{{base}}/v1/catalog/example/description-only\nA schema with only a description and no title"
 jsonpath "$.result.content[3].type" == "text"
-jsonpath "$.result.content[3].text" == "{{base}}/v1/catalog/example/full (Example With Both)"
+jsonpath "$.result.content[3].text" == "Example With Both\n{{base}}/v1/catalog/example/full\nA schema that has both a title and a description"
 jsonpath "$.result.content[4].type" == "text"
-jsonpath "$.result.content[4].text" == "{{base}}/v1/catalog/example/title-only (Example With Title Only)"
+jsonpath "$.result.content[4].text" == "Example With Title Only\n{{base}}/v1/catalog/example/title-only"
 # Added in 2025-06-18 (resource_link content blocks). Every entry in
 # `content[]` must be a `text` block instead.
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog

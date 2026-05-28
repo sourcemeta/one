@@ -190,6 +190,70 @@ inline constexpr auto is_valid_codepoint(const char32_t codepoint) -> bool {
 }
 
 /// @ingroup unicode
+/// Check whether the given codepoint matches the `ucschar` production of
+/// RFC 3987 Section 2.2, the set of non-ASCII characters that an IRI may
+/// carry in components other than the scheme, host, and percent-encoded
+/// octets. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::is_ucschar(0x00A0));
+/// assert(sourcemeta::core::is_ucschar(0x4E2D));
+/// assert(!sourcemeta::core::is_ucschar(0x0041));
+/// assert(!sourcemeta::core::is_ucschar(0xE000));
+/// ```
+inline constexpr auto is_ucschar(const char32_t codepoint) -> bool {
+  if (codepoint >= 0xA0 && codepoint <= 0xD7FF) {
+    return true;
+  }
+  if (codepoint >= 0xF900 && codepoint <= 0xFDCF) {
+    return true;
+  }
+  if (codepoint >= 0xFDF0 && codepoint <= 0xFFEF) {
+    return true;
+  }
+  // Supplementary planes 1 through 14. Each plane allows 0..FFFD;
+  // FFFE and FFFF are noncharacters. Plane 14 starts at offset 0x1000
+  // rather than 0x0000.
+  if (codepoint < 0x10000 || codepoint > 0xEFFFD) {
+    return false;
+  }
+  if (codepoint >= 0xE0000 && codepoint < 0xE1000) {
+    return false;
+  }
+  return (codepoint & 0xFFFFU) <= 0xFFFDU;
+}
+
+/// @ingroup unicode
+/// Check whether the given codepoint matches the `iprivate` production of
+/// RFC 3987 Section 2.2, the set of private-use characters that an IRI
+/// may carry in the query component. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::is_iprivate(0xE000));
+/// assert(sourcemeta::core::is_iprivate(0xF0000));
+/// assert(!sourcemeta::core::is_iprivate(0x0041));
+/// assert(!sourcemeta::core::is_iprivate(0xF8FF + 1));
+/// ```
+inline constexpr auto is_iprivate(const char32_t codepoint) -> bool {
+  if (codepoint >= 0xE000 && codepoint <= 0xF8FF) {
+    return true;
+  }
+  if (codepoint >= 0xF0000 && codepoint <= 0xFFFFD) {
+    return true;
+  }
+  if (codepoint >= 0x100000 && codepoint <= 0x10FFFD) {
+    return true;
+  }
+  return false;
+}
+
+/// @ingroup unicode
 /// Determine the number of UTF-8 bytes that a codepoint encodes to per
 /// RFC 3629: 1 byte for U+0000-U+007F, 2 bytes for U+0080-U+07FF, 3 bytes
 /// for U+0800-U+FFFF, and 4 bytes for U+10000 and above. The caller is
@@ -307,6 +371,100 @@ auto script(const char32_t codepoint) noexcept -> UnicodeScript;
 /// ```
 SOURCEMETA_CORE_UNICODE_EXPORT
 auto is_combining_mark(const char32_t codepoint) noexcept -> bool;
+
+/// @ingroup unicode
+/// Return the NFC quick-check property of a Unicode codepoint per UAX #15.
+/// See https://www.unicode.org/reports/tr15/ for the property's definition.
+/// For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::nfc_quick_check(U'A') ==
+///        sourcemeta::core::NFCQuickCheck::Yes);
+/// assert(sourcemeta::core::nfc_quick_check(U'\u2126') ==
+///        sourcemeta::core::NFCQuickCheck::No);
+/// assert(sourcemeta::core::nfc_quick_check(U'\u0300') ==
+///        sourcemeta::core::NFCQuickCheck::Maybe);
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto nfc_quick_check(const char32_t codepoint) noexcept -> NFCQuickCheck;
+
+/// @ingroup unicode
+/// Return the non-recursive canonical decomposition of a Unicode codepoint
+/// per UAX #15. The view points into static data and remains valid for the
+/// program's lifetime. An empty view means the codepoint has no canonical
+/// decomposition. Hangul precomposed syllables decompose algorithmically
+/// per UAX #15 and are reported as empty here. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::canonical_decomposition(U'A').empty());
+/// assert(sourcemeta::core::canonical_decomposition(U'\u00FC') ==
+///        std::u32string_view{U"u\u0308"});
+/// assert(sourcemeta::core::canonical_decomposition(U'\u2126') ==
+///        std::u32string_view{U"\u03A9"});
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto canonical_decomposition(const char32_t codepoint) noexcept
+    -> std::u32string_view;
+
+/// @ingroup unicode
+/// Return the primary composite of a starter codepoint and a following
+/// codepoint per UAX #15, or std::nullopt if the pair does not form a
+/// primary composite. Hangul jamo composition is algorithmic per UAX #15
+/// §3.12 and is not included in this table. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::canonical_composition(U'A', U'\u0300') ==
+///        U'\u00C0');
+/// assert(sourcemeta::core::canonical_composition(U'u', U'\u0308') ==
+///        U'\u00FC');
+/// assert(sourcemeta::core::canonical_composition(U'A', U'B') ==
+///        std::nullopt);
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto canonical_composition(const char32_t starter,
+                           const char32_t combining) noexcept
+    -> std::optional<char32_t>;
+
+/// @ingroup unicode
+/// Return the Unicode Normalisation Form C of `input` per UAX #15.
+/// For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::nfc(U"A\u0300") == U"\u00C0");
+/// assert(sourcemeta::core::nfc(U"\u00C0") == U"\u00C0");
+/// assert(sourcemeta::core::nfc(U"\u1100\u1161") == U"\uAC00");
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto nfc(const std::u32string_view input) -> std::u32string;
+
+/// @ingroup unicode
+/// Return whether `input` is already in Unicode Normalisation Form C
+/// per UAX #15. Uses a quick-check fast path and falls back to a full
+/// normalise-and-compare when the quick check is inconclusive.
+/// For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/unicode.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::is_nfc(U"À"));
+/// assert(!sourcemeta::core::is_nfc(U"À"));
+/// assert(sourcemeta::core::is_nfc(U"가"));
+/// ```
+SOURCEMETA_CORE_UNICODE_EXPORT
+auto is_nfc(const std::u32string_view input) -> bool;
 
 /// @ingroup unicode
 /// Determine the byte length of the valid UTF-8 codepoint starting at the
