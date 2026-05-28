@@ -41,6 +41,10 @@ jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 variable "text" jsonpath "$.results[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -89,11 +93,15 @@ jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results" count == 1
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
 variable "text" jsonpath "$.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -183,6 +191,10 @@ jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -408,6 +420,8 @@ jsonpath "$.result.structuredContent.results" count == 2
 variable "text" jsonpath "$.results" count == 2
 jsonpath "$.result.structuredContent.results[0].title" == ""
 jsonpath "$.result.structuredContent.results[0].description" == "A schema with only a description (01)"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -459,6 +473,8 @@ jsonpath "$.result.structuredContent.results" count == 2
 variable "text" jsonpath "$.results" count == 2
 jsonpath "$.result.structuredContent.results[0].title" == "Title Only 01"
 jsonpath "$.result.structuredContent.results[0].description" == ""
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -510,6 +526,8 @@ jsonpath "$.result.structuredContent.results" count == 2
 variable "text" jsonpath "$.results" count == 2
 jsonpath "$.result.structuredContent.results[0].title" == ""
 jsonpath "$.result.structuredContent.results[0].description" == ""
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -558,6 +576,10 @@ jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1046,6 +1068,10 @@ jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

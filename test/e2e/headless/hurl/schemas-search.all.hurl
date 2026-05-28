@@ -142,10 +142,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -170,10 +174,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -218,6 +226,8 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -242,6 +252,8 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -266,10 +278,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -294,6 +310,8 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -318,6 +336,8 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -496,10 +516,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -568,6 +592,8 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -636,10 +662,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -664,10 +694,14 @@ jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "http://localhost:8000/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 50
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "http://localhost:8000/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

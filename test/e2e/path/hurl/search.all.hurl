@@ -11,10 +11,14 @@ jsonpath "$[0].path" == "/v1/catalog/draft3/string"
 jsonpath "$[0].identifier" == "http://localhost:8000/v1/catalog/draft3/string"
 jsonpath "$[0].title" == ""
 jsonpath "$[0].description" == ""
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 0
 jsonpath "$[1].path" == "/v1/catalog/example/string"
 jsonpath "$[1].identifier" == "http://localhost:8000/v1/catalog/example/string"
 jsonpath "$[1].title" == ""
 jsonpath "$[1].description" == ""
+jsonpath "$[1].priority" == 50
+jsonpath "$[1].health" == 0
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/search/response
 ```

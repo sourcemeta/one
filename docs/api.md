@@ -297,6 +297,8 @@ be combined in any order (i.e. `scope=title,description`).
     | `/*/identifier` | String | Yes | The absolute URL of the schema |
     | `/*/title` | String | No | The title of the schema (may be an empty string) |
     | `/*/description` | String | No | The description of the schema (may be an empty string). The web explorer renders this as Markdown |
+    | `/*/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/*/health` | Integer | Yes | The health score of the schema (0 to 100) |
 
 === "400"
 
