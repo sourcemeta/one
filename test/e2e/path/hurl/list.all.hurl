@@ -69,26 +69,26 @@ jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/v1/catalog/draft3/divisible"
 jsonpath "$.entries[0].identifier" == "{{base}}/v1/catalog/draft3/divisible"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-03/schema#"
-jsonpath "$.entries[0].priority" == 100
+jsonpath "$.entries[0].priority" == 50
 jsonpath "$.entries[1].name" == "object"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/v1/catalog/draft3/object"
 jsonpath "$.entries[1].identifier" == "{{base}}/v1/catalog/draft3/object"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-03/schema#"
-jsonpath "$.entries[1].priority" == 100
+jsonpath "$.entries[1].priority" == 50
 jsonpath "$.entries[2].name" == "string"
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].path" == "/v1/catalog/draft3/string"
 jsonpath "$.entries[2].identifier" == "{{base}}/v1/catalog/draft3/string"
 jsonpath "$.entries[2].dialect" == "http://json-schema.org/draft-03/schema#"
-jsonpath "$.entries[2].priority" == 100
+jsonpath "$.entries[2].priority" == 50
 jsonpath "$.entries[3].name" == "with-ref"
 jsonpath "$.entries[3].type" == "schema"
 jsonpath "$.entries[3].path" == "/v1/catalog/draft3/with-ref"
 jsonpath "$.entries[3].identifier" == "{{base}}/v1/catalog/draft3/with-ref"
 jsonpath "$.entries[3].dialect" == "http://json-schema.org/draft-03/schema#"
 jsonpath "$.entries[3].dependencies" == 1
-jsonpath "$.entries[3].priority" == 100
+jsonpath "$.entries[3].priority" == 50
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```
@@ -126,23 +126,23 @@ jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/v1/catalog/example/integer"
 jsonpath "$.entries[1].identifier" == "{{base}}/v1/catalog/example/integer"
 jsonpath "$.entries[1].dialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.entries[1].priority" == 100
+jsonpath "$.entries[1].priority" == 50
 jsonpath "$.entries[2].name" == "object"
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].path" == "/v1/catalog/example/object"
 jsonpath "$.entries[2].identifier" == "{{base}}/v1/catalog/example/object"
-jsonpath "$.entries[2].priority" == 100
+jsonpath "$.entries[2].priority" == 50
 jsonpath "$.entries[3].name" == "string"
 jsonpath "$.entries[3].type" == "schema"
 jsonpath "$.entries[3].path" == "/v1/catalog/example/string"
 jsonpath "$.entries[3].identifier" == "{{base}}/v1/catalog/example/string"
-jsonpath "$.entries[3].priority" == 100
+jsonpath "$.entries[3].priority" == 50
 jsonpath "$.entries[4].name" == "with-ref"
 jsonpath "$.entries[4].type" == "schema"
 jsonpath "$.entries[4].path" == "/v1/catalog/example/with-ref"
 jsonpath "$.entries[4].identifier" == "{{base}}/v1/catalog/example/with-ref"
 jsonpath "$.entries[4].dependencies" == 1
-jsonpath "$.entries[4].priority" == 100
+jsonpath "$.entries[4].priority" == 50
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```
@@ -179,18 +179,18 @@ jsonpath "$.entries[1].name" == "no-id"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/v1/catalog/rebased/no-id"
 jsonpath "$.entries[1].identifier" == "{{base}}/v1/catalog/rebased/no-id"
-jsonpath "$.entries[1].priority" == 100
+jsonpath "$.entries[1].priority" == 50
 jsonpath "$.entries[2].name" == "with-id"
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].path" == "/v1/catalog/rebased/with-id"
 jsonpath "$.entries[2].identifier" == "{{base}}/v1/catalog/rebased/with-id"
-jsonpath "$.entries[2].priority" == 100
+jsonpath "$.entries[2].priority" == 50
 jsonpath "$.entries[3].name" == "with-ref"
 jsonpath "$.entries[3].type" == "schema"
 jsonpath "$.entries[3].path" == "/v1/catalog/rebased/with-ref"
 jsonpath "$.entries[3].identifier" == "{{base}}/v1/catalog/rebased/with-ref"
 jsonpath "$.entries[3].dependencies" == 1
-jsonpath "$.entries[3].priority" == 100
+jsonpath "$.entries[3].priority" == 50
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```

@@ -76,7 +76,7 @@ struct Configuration {
       -> std::uint8_t {
     const auto *value{collection.extra.try_at("x-sourcemeta-one:priority")};
     if (value == nullptr || !value->is_integer()) {
-      return 100;
+      return 50;
     }
     return static_cast<std::uint8_t>(
         std::clamp<sourcemeta::core::JSON::Integer>(value->to_integer(), 0,
