@@ -800,8 +800,8 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# resources/list returns empty for out-of-range cursors so a stale cursor
-# from before a reindex no longer surfaces an error
+# resources/list rejects parseable cursors that do not match any page
+# boundary so callers can distinguish "end of pages" from a stale cursor
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -826,8 +826,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 42
-jsonpath "$.result.resources" count == 0
-jsonpath "$.result.nextCursor" not exists
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "999998"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -836,6 +837,9 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# Leading zeros are tolerated and the cursor is normalized to its
+# canonical decimal form, so "050" hits the same page as "50"
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -846,7 +850,7 @@ Content-Type: application/json
   "id": 44,
   "method": "resources/list",
   "params": {
-    "cursor": "00"
+    "cursor": "050"
   }
 }
 ```
@@ -860,9 +864,12 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 44
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "00"
+jsonpath "$.result.resources" count == 50
+jsonpath "$.result.resources[0].uri" == "{{base}}/test/bare/32"
+jsonpath "$.result.resources[0].name" == "/test/bare/32"
+jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[0].size" == 130
+jsonpath "$.result.resources[0].annotations.priority" == 0.5
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
