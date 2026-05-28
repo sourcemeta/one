@@ -31,7 +31,7 @@ jsonpath "$.result.tools[0].annotations.destructiveHint" == false
 jsonpath "$.result.tools[0].annotations.idempotentHint" == true
 jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
-jsonpath "$.result.tools[1].description" == "Look up the dependency graph of a specific schema (incoming or outgoing)"
+jsonpath "$.result.tools[1].description" == "List the schemas this schema directly or transitively references, the outgoing edges of the dependency graph"
 jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc"
 jsonpath "$.result.tools[1].inputSchema.type" == "object"
 jsonpath "$.result.tools[1].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/response"
@@ -42,7 +42,7 @@ jsonpath "$.result.tools[1].annotations.destructiveHint" == false
 jsonpath "$.result.tools[1].annotations.idempotentHint" == true
 jsonpath "$.result.tools[1].annotations.openWorldHint" == false
 jsonpath "$.result.tools[2].name" == "get_schema_dependents"
-jsonpath "$.result.tools[2].description" == "Look up the dependency graph of a specific schema (incoming or outgoing)"
+jsonpath "$.result.tools[2].description" == "List the schemas that directly or transitively reference this schema, the incoming edges of the dependency graph"
 jsonpath "$.result.tools[2].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependents/rpc"
 jsonpath "$.result.tools[2].inputSchema.type" == "object"
 jsonpath "$.result.tools[2].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependents/response"
@@ -53,7 +53,7 @@ jsonpath "$.result.tools[2].annotations.destructiveHint" == false
 jsonpath "$.result.tools[2].annotations.idempotentHint" == true
 jsonpath "$.result.tools[2].annotations.openWorldHint" == false
 jsonpath "$.result.tools[3].name" == "get_schema_health"
-jsonpath "$.result.tools[3].description" == "Look up a precomputed artifact about a specific schema by its absolute URI"
+jsonpath "$.result.tools[3].description" == "Return the lint health score (0 to 100) and any lint findings for a schema in the catalog"
 jsonpath "$.result.tools[3].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/health/rpc"
 jsonpath "$.result.tools[3].inputSchema.type" == "object"
 jsonpath "$.result.tools[3].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/health/response"
@@ -64,7 +64,7 @@ jsonpath "$.result.tools[3].annotations.destructiveHint" == false
 jsonpath "$.result.tools[3].annotations.idempotentHint" == true
 jsonpath "$.result.tools[3].annotations.openWorldHint" == false
 jsonpath "$.result.tools[4].name" == "get_schema_locations"
-jsonpath "$.result.tools[4].description" == "Look up a precomputed artifact about a specific schema by its absolute URI"
+jsonpath "$.result.tools[4].description" == "Return every URI exposed by a schema, including subschemas and anchors, with their parent and base URI relationships. The response carries per-pointer metadata and grows with the schema's pointer count, so substantial payloads are expected for large schemas"
 jsonpath "$.result.tools[4].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/locations/rpc"
 jsonpath "$.result.tools[4].inputSchema.type" == "object"
 jsonpath "$.result.tools[4].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/locations/response"
@@ -75,7 +75,7 @@ jsonpath "$.result.tools[4].annotations.destructiveHint" == false
 jsonpath "$.result.tools[4].annotations.idempotentHint" == true
 jsonpath "$.result.tools[4].annotations.openWorldHint" == false
 jsonpath "$.result.tools[5].name" == "get_schema_positions"
-jsonpath "$.result.tools[5].description" == "Look up a precomputed artifact about a specific schema by its absolute URI"
+jsonpath "$.result.tools[5].description" == "Return the source line and column position of every JSON Pointer inside a schema"
 jsonpath "$.result.tools[5].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/positions/rpc"
 jsonpath "$.result.tools[5].inputSchema.type" == "object"
 jsonpath "$.result.tools[5].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/positions/response"
@@ -86,7 +86,7 @@ jsonpath "$.result.tools[5].annotations.destructiveHint" == false
 jsonpath "$.result.tools[5].annotations.idempotentHint" == true
 jsonpath "$.result.tools[5].annotations.openWorldHint" == false
 jsonpath "$.result.tools[6].name" == "get_schema_stats"
-jsonpath "$.result.tools[6].description" == "Look up a precomputed artifact about a specific schema by its absolute URI"
+jsonpath "$.result.tools[6].description" == "Return per-vocabulary keyword usage statistics for a schema in the catalog, identifying which JSON Schema keywords the schema relies on and how often each appears"
 jsonpath "$.result.tools[6].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/stats/rpc"
 jsonpath "$.result.tools[6].inputSchema.type" == "object"
 jsonpath "$.result.tools[6].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/stats/response"
@@ -97,7 +97,7 @@ jsonpath "$.result.tools[6].annotations.destructiveHint" == false
 jsonpath "$.result.tools[6].annotations.idempotentHint" == true
 jsonpath "$.result.tools[6].annotations.openWorldHint" == false
 jsonpath "$.result.tools[7].name" == "get_schema_metadata"
-jsonpath "$.result.tools[7].description" == "Read a navigation artifact for browsing schemas"
+jsonpath "$.result.tools[7].description" == "Return navigation metadata for a schema in the catalog, including title, description, dialect, byte size, dependency count, and breadcrumb path"
 jsonpath "$.result.tools[7].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/metadata/rpc"
 jsonpath "$.result.tools[7].inputSchema.type" == "object"
 jsonpath "$.result.tools[7].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/metadata/response"
@@ -119,7 +119,7 @@ jsonpath "$.result.tools[8].annotations.destructiveHint" == false
 jsonpath "$.result.tools[8].annotations.idempotentHint" == true
 jsonpath "$.result.tools[8].annotations.openWorldHint" == false
 jsonpath "$.result.tools[9].name" == "trace_schema_evaluation"
-jsonpath "$.result.tools[9].description" == "Validate a JSON instance against a schema and return detailed information about every step of the evaluation process"
+jsonpath "$.result.tools[9].description" == "Validate a JSON instance against a schema and return a step-by-step trace of the evaluation. The trace can be substantial, so prefer non-tracing evaluation when only a valid or invalid verdict is needed and use this when per-step detail is required"
 jsonpath "$.result.tools[9].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/trace/rpc"
 jsonpath "$.result.tools[9].inputSchema.type" == "object"
 jsonpath "$.result.tools[9].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/trace/response"

@@ -151,7 +151,7 @@ public:
         version, request_id, std::move(envelope), std::move(content));
   }
 
-private:
+protected:
   std::string_view metapack_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;

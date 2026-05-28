@@ -5,6 +5,13 @@
 
 #include "action_default_v1.h"
 #include "action_dependency_tree_v1.h"
+#include "action_get_schema_dependencies_v1.h"
+#include "action_get_schema_dependents_v1.h"
+#include "action_get_schema_health_v1.h"
+#include "action_get_schema_locations_v1.h"
+#include "action_get_schema_metadata_v1.h"
+#include "action_get_schema_positions_v1.h"
+#include "action_get_schema_stats_v1.h"
 #include "action_health_check_v1.h"
 #include "action_jsonschema_evaluate_v1.h"
 #include "action_jsonschema_trace_v1.h"

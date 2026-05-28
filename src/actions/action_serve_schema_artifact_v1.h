@@ -111,7 +111,7 @@ public:
                                                    std::move(contents).value());
   }
 
-private:
+protected:
   std::string_view artifact_;
   std::string_view response_schema_;
   std::string_view rpc_schema_;

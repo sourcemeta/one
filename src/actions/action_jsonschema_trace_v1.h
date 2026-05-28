@@ -31,8 +31,10 @@
 class ActionJSONSchemaTrace_v1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
-      "Validate a JSON instance against a schema and return detailed "
-      "information about every step of the evaluation process"};
+      "Validate a JSON instance against a schema and return a step-by-step "
+      "trace of the evaluation. The trace can be substantial, so prefer "
+      "non-tracing evaluation when only a valid or invalid verdict is "
+      "needed and use this when per-step detail is required"};
   static constexpr bool READ_ONLY{true};
   static constexpr bool DESTRUCTIVE{false};
   static constexpr bool IDEMPOTENT{true};

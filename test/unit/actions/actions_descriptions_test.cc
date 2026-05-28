@@ -64,9 +64,70 @@ TEST(Actions_description, jsonschema_trace_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1),
             std::string_view{
-                "Validate a JSON instance against a schema and return "
-                "detailed information about every step of the evaluation "
-                "process"});
+                "Validate a JSON instance against a schema and return a "
+                "step-by-step trace of the evaluation. The trace can be "
+                "substantial, so prefer non-tracing evaluation when only a "
+                "valid or invalid verdict is needed and use this when "
+                "per-step detail is required"});
+}
+
+TEST(Actions_description, get_schema_health_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_HEALTH_V1),
+            std::string_view{"Return the lint health score (0 to 100) and "
+                             "any lint findings for a schema in the catalog"});
+}
+
+TEST(Actions_description, get_schema_locations_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_LOCATIONS_V1),
+            std::string_view{
+                "Return every URI exposed by a schema, including subschemas "
+                "and anchors, with their parent and base URI relationships. "
+                "The response carries per-pointer metadata and grows with "
+                "the schema's pointer count, so substantial payloads are "
+                "expected for large schemas"});
+}
+
+TEST(Actions_description, get_schema_positions_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1),
+            std::string_view{"Return the source line and column position of "
+                             "every JSON Pointer inside a schema"});
+}
+
+TEST(Actions_description, get_schema_stats_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_STATS_V1),
+            std::string_view{
+                "Return per-vocabulary keyword usage statistics for a "
+                "schema in the catalog, identifying which JSON Schema "
+                "keywords the schema relies on and how often each appears"});
+}
+
+TEST(Actions_description, get_schema_metadata_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_METADATA_V1),
+            std::string_view{
+                "Return navigation metadata for a schema in the catalog, "
+                "including title, description, dialect, byte size, "
+                "dependency count, and breadcrumb path"});
+}
+
+TEST(Actions_description, get_schema_dependencies_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1),
+            std::string_view{
+                "List the schemas this schema directly or transitively "
+                "references, the outgoing edges of the dependency graph"});
+}
+
+TEST(Actions_description, get_schema_dependents_v1) {
+  EXPECT_EQ(sourcemeta::one::action_description(
+                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1),
+            std::string_view{
+                "List the schemas that directly or transitively reference "
+                "this schema, the incoming edges of the dependency graph"});
 }
 
 TEST(Actions_description, schema_search_v1) {
