@@ -55,41 +55,6 @@
         }
       }
     },
-    "a2a": {
-      "title": "Agent2Agent (A2A) Protocol",
-      "description": "An open protocol enabling communication and interoperability between opaque agentic applications",
-      "github": "a2aproject",
-      "website": "https://a2a-protocol.org",
-      "contents": {
-        "v1.0.0": {
-          "path": "../../../vendor/public/a2a/v1.0.0/specification/json"
-        },
-        "v0.3.0": {
-          "path": "../../../vendor/public/a2a/v0.3.0/specification/json"
-        },
-        "v0.2.6": {
-          "path": "../../../vendor/public/a2a/v0.2.6/specification/json"
-        },
-        "v0.2.5": {
-          "path": "../../../vendor/public/a2a/v0.2.5/specification/json"
-        },
-        "v0.2.4": {
-          "path": "../../../vendor/public/a2a/v0.2.4/specification/json"
-        },
-        "v0.2.3": {
-          "path": "../../../vendor/public/a2a/v0.2.3/specification/json"
-        },
-        "v0.2.2": {
-          "path": "../../../vendor/public/a2a/v0.2.2/specification/json"
-        },
-        "v0.2.1": {
-          "path": "../../../vendor/public/a2a/v0.2.1/specification/json"
-        },
-        "v0.2.0": {
-          "path": "../../../vendor/public/a2a/v0.2.0/specification/json"
-        }
-      }
-    },
     "sdf": {
       "title": "Semantic Definition Format (SDF)",
       "description": "A format for domain experts to use in the creation and maintenance of data and interaction models that describe Things",
