@@ -4,43 +4,25 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 
-#include <cassert>      // assert
-#include <charconv>     // std::from_chars
-#include <cstddef>      // std::size_t
-#include <exception>    // std::exception
-#include <filesystem>   // std::filesystem
-#include <optional>     // std::optional, std::nullopt
-#include <sstream>      // std::ostringstream
-#include <string>       // std::string
-#include <string_view>  // std::string_view
-#include <system_error> // std::errc
-#include <utility>      // std::move
+#include <cassert>     // assert
+#include <cstddef>     // std::size_t
+#include <exception>   // std::exception
+#include <filesystem>  // std::filesystem
+#include <optional>    // std::optional, std::nullopt
+#include <sstream>     // std::ostringstream
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace {
 
 constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{"application/schema+json"};
-
-auto parse_cursor_as_unsigned_integer(const std::string_view cursor)
-    -> std::optional<std::size_t> {
-  if (cursor.empty()) {
-    return std::nullopt;
-  }
-  if (cursor.size() > 1 && cursor.front() == '0') {
-    return std::nullopt;
-  }
-  std::size_t parsed{0};
-  const auto [end, error]{
-      std::from_chars(cursor.data(), cursor.data() + cursor.size(), parsed)};
-  if (error != std::errc{} || end != cursor.data() + cursor.size()) {
-    return std::nullopt;
-  }
-  return parsed;
-}
 
 } // namespace
 
@@ -51,25 +33,24 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
   const auto &id{request_json.at("id")};
 
   std::string cursor_key{"0"};
+  std::string_view cursor_input;
   const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
-    const auto &cursor_string{params->at("cursor").to_string()};
-    if (!cursor_string.empty()) {
-      const auto parsed{parse_cursor_as_unsigned_integer(cursor_string)};
+    cursor_input = params->at("cursor").to_string();
+    if (!cursor_input.empty()) {
+      const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
       if (!parsed.has_value()) {
         return sourcemeta::core::jsonrpc_make_error_invalid_params(
-            id, sourcemeta::core::JSON{cursor_string});
+            id, sourcemeta::core::JSON{cursor_input});
       }
-      cursor_key = cursor_string;
+      cursor_key = std::to_string(parsed.value());
     }
   }
 
   const auto &resources{this->mcp_metadata_.at("resources")};
   if (!resources.defines(cursor_key)) {
-    auto result{sourcemeta::core::JSON::make_object()};
-    result.assign_assume_new(std::string{"resources"},
-                             sourcemeta::core::JSON::make_array());
-    return sourcemeta::core::jsonrpc_make_success(id, std::move(result));
+    return sourcemeta::core::jsonrpc_make_error_invalid_params(
+        id, sourcemeta::core::JSON{cursor_input});
   }
 
   return sourcemeta::core::jsonrpc_make_success(id, resources.at(cursor_key));
