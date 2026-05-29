@@ -971,7 +971,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A comma-separated string scope (e.g. "path") is accepted as a
+# A JSON-encoded string scope (e.g. "[\"path\"]") is accepted as a
 # workaround for MCP clients that stringify non-string tool arguments,
 # equivalent to scope: ["path"]
 
@@ -985,7 +985,7 @@ Content-Type: application/json
   "method": "tools/call",
   "params": {
     "name": "search_schemas",
-    "arguments": { "q": "object", "scope": "path" }
+    "arguments": { "q": "object", "scope": "[\"path\"]" }
   }
 }
 ```
@@ -1027,8 +1027,8 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A string scope with an unknown token is rejected at the schema level
-# by the regex pattern
+# A string scope that does not parse as JSON is rejected by the handler
+# with a tool error
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -1054,18 +1054,93 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1131
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.valid" == false
-jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
-jsonpath "$.error.data.errors[0].error" == "The string value \"bogus\" was expected to match the regular expression \"^(path|title|description)(,(path|title|description))*$\""
-jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
-jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The scope is not valid JSON"
+jsonpath "$.result.structuredContent" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A string scope that parses as JSON but is not an array is rejected by
+# the handler with a tool error
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1133,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "test", "scope": "\"path\"" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1133
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The scope must be a JSON-encoded array of strings"
+jsonpath "$.result.structuredContent" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A string scope that parses as a JSON array of unknown tokens is
+# rejected by the handler with a tool error
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1134,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "test", "scope": "[\"bogus\"]" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1134
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The scope items must be \"path\", \"title\", or \"description\""
+jsonpath "$.result.structuredContent" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

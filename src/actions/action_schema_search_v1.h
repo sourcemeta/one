@@ -199,33 +199,44 @@ public:
         sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
         sourcemeta::one::SearchScopeDescription};
     std::uint8_t scope{DEFAULT_SCOPE};
-    const auto add_scope_token{[&scope](const std::string_view token) {
+    const auto add_scope_token{[&scope](const std::string_view token) -> bool {
       if (token == "path") {
         scope |= sourcemeta::one::SearchScopePath;
       } else if (token == "title") {
         scope |= sourcemeta::one::SearchScopeTitle;
       } else if (token == "description") {
         scope |= sourcemeta::one::SearchScopeDescription;
+      } else {
+        return false;
       }
+      return true;
     }};
     if (arguments.defines("scope")) {
       scope = 0;
       const auto &scope_argument{arguments.at("scope")};
+      sourcemeta::core::JSON parsed_scope{nullptr};
+      const sourcemeta::core::JSON *scope_array{nullptr};
       if (scope_argument.is_string()) {
-        std::string_view remaining{scope_argument.to_string()};
-        while (!remaining.empty()) {
-          const auto comma{remaining.find(',')};
-          add_scope_token(comma != std::string_view::npos
-                              ? remaining.substr(0, comma)
-                              : remaining);
-          if (comma == std::string_view::npos) {
-            break;
-          }
-          remaining = remaining.substr(comma + 1);
+        try {
+          parsed_scope =
+              sourcemeta::core::parse_json(scope_argument.to_string());
+        } catch (const std::exception &) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope is not valid JSON");
         }
+        if (!parsed_scope.is_array()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope must be a JSON-encoded array of strings");
+        }
+        scope_array = &parsed_scope;
       } else {
-        for (const auto &item : scope_argument.as_array()) {
-          add_scope_token(item.to_string());
+        scope_array = &scope_argument;
+      }
+      for (const auto &item : scope_array->as_array()) {
+        if (!item.is_string() || !add_scope_token(item.to_string())) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope items must be \"path\", \"title\", or "
+                          "\"description\"");
         }
       }
     }
