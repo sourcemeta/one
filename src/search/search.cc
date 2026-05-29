@@ -1,14 +1,17 @@
 #include <sourcemeta/one/search.h>
 
+#include <sourcemeta/core/text.h>
+
 #include <sourcemeta/one/metapack.h>
 
-#include <algorithm>  // std::min, std::ranges::search
-#include <cassert>    // assert
-#include <cctype>     // std::tolower
-#include <cstring>    // std::memcpy
-#include <functional> // std::function
-#include <limits>     // std::numeric_limits
-#include <utility>    // std::move
+#include <algorithm>   // std::min, std::ranges::search
+#include <cassert>     // assert
+#include <cctype>      // std::tolower
+#include <cstring>     // std::memcpy
+#include <functional>  // std::function
+#include <limits>      // std::numeric_limits
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace sourcemeta::one {
 
@@ -37,11 +40,18 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
   constexpr auto MAX_FIELD_LENGTH{
       static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+  constexpr std::string_view TRUNCATION_MARKER{"..."};
+  for (auto &entry : entries) {
+    sourcemeta::core::truncate(entry.title,
+                               MAX_FIELD_LENGTH - TRUNCATION_MARKER.size(),
+                               TRUNCATION_MARKER);
+    sourcemeta::core::truncate(entry.description,
+                               MAX_FIELD_LENGTH - TRUNCATION_MARKER.size(),
+                               TRUNCATION_MARKER);
+  }
   std::erase_if(entries, [](const SearchEntry &entry) {
     return entry.path.size() > MAX_FIELD_LENGTH ||
-           entry.identifier.size() > MAX_FIELD_LENGTH ||
-           entry.title.size() > MAX_FIELD_LENGTH ||
-           entry.description.size() > MAX_FIELD_LENGTH;
+           entry.identifier.size() > MAX_FIELD_LENGTH;
   });
 
   if (entries.empty()) {

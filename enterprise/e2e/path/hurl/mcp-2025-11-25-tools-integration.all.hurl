@@ -282,3 +282,56 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# `get_schema_metadata` returns the schema's title verbatim with no
+# size cap, even when the source title is large. Truncation only applies
+# at the binary-extension boundary used by directory listings and search
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": "metadata-truncated",
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_metadata",
+    "arguments": { "schema": "{{base}}/v1/catalog/example/zzz-truncate-target" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == "metadata-truncated"
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.title" matches "^Z{70000}$"
+jsonpath "$.result.structuredContent.priority" == 50
+jsonpath "$.result.structuredContent.health" == 0
+jsonpath "$.result.structuredContent.dependencies" == 0
+jsonpath "$.result.structuredContent.alert" == null
+variable "text" jsonpath "$.identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.path" == "/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.title" matches "^Z{70000}$"
+variable "text" jsonpath "$.priority" == 50
+variable "text" jsonpath "$.health" == 0
+variable "text" jsonpath "$.dependencies" == 0
+variable "text" jsonpath "$.alert" == null
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

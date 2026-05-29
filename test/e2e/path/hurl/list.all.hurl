@@ -11,7 +11,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/v1/catalog/"
 jsonpath "$.url" == "{{base}}/v1/catalog"
 jsonpath "$.health" == 44
-jsonpath "$.schemas" == 59
+jsonpath "$.schemas" == 60
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.entries" count == 4
 jsonpath "$.entries[0].name" == "draft3"
@@ -21,8 +21,8 @@ jsonpath "$.entries[0].schemas" == 4
 jsonpath "$.entries[0].path" == "/v1/catalog/draft3/"
 jsonpath "$.entries[1].name" == "example"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 23
-jsonpath "$.entries[1].schemas" == 5
+jsonpath "$.entries[1].health" == 20
+jsonpath "$.entries[1].schemas" == 6
 jsonpath "$.entries[1].path" == "/v1/catalog/example/"
 jsonpath "$.entries[2].name" == "rebased"
 jsonpath "$.entries[2].type" == "directory"
@@ -111,12 +111,12 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/v1/catalog/example"
 jsonpath "$.url" == "{{base}}/v1/catalog/example"
-jsonpath "$.health" == 23
-jsonpath "$.schemas" == 5
+jsonpath "$.health" == 20
+jsonpath "$.schemas" == 6
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "example"
 jsonpath "$.breadcrumb[0].path" == "/v1/catalog/example/"
-jsonpath "$.entries" count == 5
+jsonpath "$.entries" count == 6
 jsonpath "$.entries[0].name" == "nested"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].schemas" == 1
@@ -143,6 +143,14 @@ jsonpath "$.entries[4].path" == "/v1/catalog/example/with-ref"
 jsonpath "$.entries[4].identifier" == "{{base}}/v1/catalog/example/with-ref"
 jsonpath "$.entries[4].dependencies" == 1
 jsonpath "$.entries[4].priority" == 50
+# The truncated title surfaces in directory listings the same way it
+# does in search results: 65535 bytes ending in "..."
+jsonpath "$.entries[5].name" == "zzz-truncate-target"
+jsonpath "$.entries[5].type" == "schema"
+jsonpath "$.entries[5].path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.entries[5].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.entries[5].priority" == 50
+jsonpath "$.entries[5].title" matches "^Z{65532}\\.\\.\\.$"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/response
 ```

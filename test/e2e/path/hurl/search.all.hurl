@@ -51,3 +51,31 @@ Access-Control-Allow-Origin: *
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
 jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
+
+# A 70KB title is truncated in the search index to 65535 bytes ending in
+# "..." rather than dropping the schema from the index entirely
+
+GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=truncate-target
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedby"
+[Captures]
+last_response: body
+[Asserts]
+jsonpath "$" count == 1
+jsonpath "$[0].path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$[0].identifier" == "http://localhost:8000/v1/catalog/example/zzz-truncate-target"
+jsonpath "$[0].title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$[0].description" == ""
+jsonpath "$[0].priority" == 50
+jsonpath "$[0].health" == 0
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/search/response
+```
+{{last_response}}
+```
+HTTP 200
+Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

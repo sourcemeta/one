@@ -231,3 +231,58 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# A 70KB schema title is truncated in the search index to 65535 bytes
+# ending in "..." rather than dropping the schema from the index
+# entirely
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1204,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "truncate-target" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1204
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 2
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.content[1].name" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 1
+variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.results[0].title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.structuredContent.results[0].description" == ""
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 0
+variable "text" jsonpath "$.results[0].path" == "/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.results[0].title" matches "^Z{65532}\\.\\.\\.$"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

@@ -172,12 +172,10 @@ TEST(Search_build, skips_entry_with_oversized_identifier) {
   EXPECT_EQ(header.entry_count, 1);
 }
 
-TEST(Search_build, skips_entry_with_oversized_title) {
+TEST(Search_build, truncates_oversized_title_with_ellipsis) {
   const std::string oversized_title(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", oversized_title, "Desc", 80, 100, 0,
-       0},
-      {"/normal", "http://example.com/normal", "Normal", "Desc", 80, 100, 0,
        0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
@@ -185,21 +183,37 @@ TEST(Search_build, skips_entry_with_oversized_title) {
   std::memcpy(&header, payload.data(),
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
+
+  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
+                                            "foo", 10,
+                                            sourcemeta::one::SearchScopePath)};
+  EXPECT_EQ(result.size(), 1);
+  const auto &title{result.at(0).at("title").to_string()};
+  EXPECT_EQ(title.size(), 65535);
+  EXPECT_TRUE(title.starts_with("xxxxx"));
+  EXPECT_TRUE(title.ends_with("..."));
 }
 
-TEST(Search_build, skips_entry_with_oversized_description) {
+TEST(Search_build, truncates_oversized_description_with_ellipsis) {
   const std::string oversized_description(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", oversized_description, 80,
-       100, 0, 0},
-      {"/normal", "http://example.com/normal", "Normal", "Desc", 80, 100, 0,
-       0}};
+       100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
   std::memcpy(&header, payload.data(),
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
+
+  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
+                                            "foo", 10,
+                                            sourcemeta::one::SearchScopePath)};
+  EXPECT_EQ(result.size(), 1);
+  const auto &description{result.at(0).at("description").to_string()};
+  EXPECT_EQ(description.size(), 65535);
+  EXPECT_TRUE(description.starts_with("xxxxx"));
+  EXPECT_TRUE(description.ends_with("..."));
 }
 
 TEST(Search_build, all_entries_oversized_returns_empty) {

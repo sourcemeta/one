@@ -346,7 +346,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 7
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 5
+jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" isString
 jsonpath "$.result.content[1].type" == "text"
@@ -357,6 +357,8 @@ jsonpath "$.result.content[3].type" == "text"
 jsonpath "$.result.content[3].text" == "Example With Both\n{{base}}/v1/catalog/example/full\nA schema that has both a title and a description"
 jsonpath "$.result.content[4].type" == "text"
 jsonpath "$.result.content[4].text" == "Example With Title Only\n{{base}}/v1/catalog/example/title-only"
+jsonpath "$.result.content[5].type" == "text"
+jsonpath "$.result.content[5].text" matches "^Z{65532}\\.\\.\\.\nhttp://localhost:8000/v1/catalog/example/zzz-truncate-target$"
 # Added in 2025-06-18 (resource_link content blocks). Every entry in
 # `content[]` must be a `text` block instead.
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
@@ -370,6 +372,8 @@ jsonpath "$.result.content[3].uri" not exists
 jsonpath "$.result.content[3].mimeType" not exists
 jsonpath "$.result.content[4].uri" not exists
 jsonpath "$.result.content[4].mimeType" not exists
+jsonpath "$.result.content[5].uri" not exists
+jsonpath "$.result.content[5].mimeType" not exists
 # Added in 2025-06-18 (structured tool output)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$.result.structuredContent" not exists

@@ -11,6 +11,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
+#include <sourcemeta/core/text.h>
 
 #include <sourcemeta/one/build.h>
 
@@ -469,6 +470,26 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     const auto schema_name{
         action.destination.parent_path().parent_path().filename().string()};
+    // The binary extension format stores per-field lengths as `uint16_t`,
+    // so title and description that overflow that cap must be truncated
+    // before they are packed. The full strings remain in the JSON above
+    constexpr auto MAX_EXTENSION_FIELD_LENGTH{
+        static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+    constexpr std::string_view EXTENSION_TRUNCATION_MARKER{"..."};
+    std::string extension_title{result.defines("title")
+                                    ? result.at("title").to_string()
+                                    : std::string{}};
+    sourcemeta::core::truncate(extension_title,
+                               MAX_EXTENSION_FIELD_LENGTH -
+                                   EXTENSION_TRUNCATION_MARKER.size(),
+                               EXTENSION_TRUNCATION_MARKER);
+    std::string extension_description{result.defines("description")
+                                          ? result.at("description").to_string()
+                                          : std::string{}};
+    sourcemeta::core::truncate(extension_description,
+                               MAX_EXTENSION_FIELD_LENGTH -
+                                   EXTENSION_TRUNCATION_MARKER.size(),
+                               EXTENSION_TRUNCATION_MARKER);
     const auto extension_bytes{make_explorer_schema_extension(
         result.at("health").to_integer(),
         static_cast<std::int64_t>(schema_info.content_bytes),
@@ -477,9 +498,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         static_cast<std::uint8_t>(result.at("priority").to_integer()),
         result.at("path").to_string(), result.at("identifier").to_string(),
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
-        result.defines("title") ? result.at("title").to_string() : "",
-        result.defines("description") ? result.at("description").to_string()
-                                      : "",
+        extension_title, extension_description,
         result.at("alert").is_string() ? result.at("alert").to_string() : "")};
 
     sourcemeta::one::metapack_write_pretty_json(
