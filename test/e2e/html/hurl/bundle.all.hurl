@@ -124,3 +124,45 @@ HTTP 200
     }
   }
 }
+
+GET {{base}}/test/bundling/single.json?bundle
+HTTP 200
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "{{base}}/test/bundling/single",
+  "title": "Bundling",
+  "description": "A bundling example",
+  "properties": {
+    "foo": {
+      "$ref": "http://localhost:8000/test/v2.0/schema"
+    }
+  },
+  "definitions": {
+    "http://localhost:8000/test/v2.0/schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://localhost:8000/test/v2.0/schema",
+      "type": "integer"
+    }
+  }
+}
+
+GET {{base}}/test/bundling/single.json?bundle=
+HTTP 200
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "{{base}}/test/bundling/single",
+  "title": "Bundling",
+  "description": "A bundling example",
+  "properties": {
+    "foo": {
+      "$ref": "http://localhost:8000/test/v2.0/schema"
+    }
+  },
+  "definitions": {
+    "http://localhost:8000/test/v2.0/schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://localhost:8000/test/v2.0/schema",
+      "type": "integer"
+    }
+  }
+}

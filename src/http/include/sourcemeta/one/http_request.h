@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_HTTP_REQUEST_H
 
 #include <sourcemeta/core/time.h>
+#include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/http_response.h>
 #include <sourcemeta/one/http_uwebsockets.h>
@@ -80,6 +81,11 @@ public:
   [[nodiscard]] auto query(const std::string_view name) const
       -> std::string_view {
     return this->request_->getQuery(name);
+  }
+
+  [[nodiscard]] auto has_query(const std::string_view name) const -> bool {
+    const sourcemeta::core::URI::Query query{this->request_->getQuery()};
+    return query.at(name).has_value();
   }
 
   [[nodiscard]] auto header_gmt(const std::string_view name) const noexcept

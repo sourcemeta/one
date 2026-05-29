@@ -215,7 +215,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[33].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 8771
+jsonpath "$.result.resources[33].size" == 8758
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One MCP Initialize Request"
@@ -293,13 +293,13 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Resources Templates List Response"
 jsonpath "$.result.resources[46].description" == "Sourcemeta One's list of MCP resource templates"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 1926
+jsonpath "$.result.resources[46].size" == 2976
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[47].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 3624
+jsonpath "$.result.resources[47].size" == 4149
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One MCP Tools Call Request"
@@ -544,6 +544,78 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 32
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle=1"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 35,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 35
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 36,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle="
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 36
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle="
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
 jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
 

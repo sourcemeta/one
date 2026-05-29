@@ -576,7 +576,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[46].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 8760
+jsonpath "$.result.resources[46].size" == 8747
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Initialize Request"
@@ -688,13 +688,13 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/resources/
 jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Resources Templates List Response"
 jsonpath "$.result.resources[9].description" == "Sourcemeta One's list of MCP resource templates"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 1915
+jsonpath "$.result.resources[9].size" == 2965
 jsonpath "$.result.resources[9].annotations.priority" == 0
 jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[10].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 3613
+jsonpath "$.result.resources[10].size" == 4138
 jsonpath "$.result.resources[10].annotations.priority" == 0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One MCP Tools Call Request"
@@ -1133,6 +1133,78 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 32
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/self/v1/schemas/mcp/response?bundle=1"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 35,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/self/v1/schemas/mcp/response?bundle"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 35
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/self/v1/schemas/mcp/response?bundle"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 36,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/self/v1/schemas/mcp/response?bundle="
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 36
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/self/v1/schemas/mcp/response?bundle="
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
 jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
 

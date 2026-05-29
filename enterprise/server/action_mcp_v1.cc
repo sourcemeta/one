@@ -142,8 +142,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
     }
     const auto query{request.query()};
-    const auto bundle{query.has_value() &&
-                      !query->at("bundle").value_or("").empty()};
+    const auto bundle{query.has_value() && query->at("bundle").has_value()};
     resolved = sourcemeta::core::weakly_canonical(
         this->resolve_schema_path(schema_path, bundle));
   } catch (const std::exception &) {
