@@ -1109,6 +1109,47 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+# A string scope that parses as an empty JSON array is rejected by the
+# handler with a tool error, mirroring the array form's minItems: 1
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1135,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "test", "scope": "[]" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1135
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The scope must contain at least one item"
+jsonpath "$.result.structuredContent" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 # A string scope that parses as a JSON array of unknown tokens is
 # rejected by the handler with a tool error
 

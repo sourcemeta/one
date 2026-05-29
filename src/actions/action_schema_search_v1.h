@@ -228,6 +228,10 @@ public:
           return sourcemeta::core::mcp_make_tool_error(
               request_id, "The scope must be a JSON-encoded array of strings");
         }
+        if (parsed_scope.empty()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope must contain at least one item");
+        }
         scope_array = &parsed_scope;
       } else {
         scope_array = &scope_argument;
