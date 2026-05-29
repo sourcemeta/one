@@ -250,14 +250,14 @@ header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "call-identity"
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 5
+jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.path" == "/v1/catalog/example"
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -295,14 +295,14 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "call-gzip"
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 5
+jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.path" == "/v1/catalog/example"
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

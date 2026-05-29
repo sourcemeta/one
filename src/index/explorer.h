@@ -11,6 +11,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
+#include <sourcemeta/core/text.h>
 
 #include <sourcemeta/one/build.h>
 
@@ -397,15 +398,28 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     assert(!dialect.empty());
     result.assign("dialect", sourcemeta::core::JSON{dialect});
 
+    constexpr auto MAX_METADATA_FIELD_LENGTH{
+        static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+    constexpr std::string_view METADATA_TRUNCATION_MARKER{"..."};
     if (schema_data.is_object()) {
       const auto title{schema_data.try_at("title")};
       if (title && title->is_string()) {
-        result.assign("title", sourcemeta::core::JSON{title->trim()});
+        std::string trimmed_title{title->trim()};
+        sourcemeta::core::truncate(trimmed_title,
+                                   MAX_METADATA_FIELD_LENGTH -
+                                       METADATA_TRUNCATION_MARKER.size(),
+                                   METADATA_TRUNCATION_MARKER);
+        result.assign("title", sourcemeta::core::JSON{trimmed_title});
       }
       const auto description{schema_data.try_at("description")};
       if (description && description->is_string()) {
+        std::string trimmed_description{description->trim()};
+        sourcemeta::core::truncate(trimmed_description,
+                                   MAX_METADATA_FIELD_LENGTH -
+                                       METADATA_TRUNCATION_MARKER.size(),
+                                   METADATA_TRUNCATION_MARKER);
         result.assign("description",
-                      sourcemeta::core::JSON{description->trim()});
+                      sourcemeta::core::JSON{trimmed_description});
       }
 
       auto examples_array{sourcemeta::core::JSON::make_array()};

@@ -24,7 +24,7 @@ text: jsonpath "$.result.content[0].text"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1300
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 5
+jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
@@ -46,6 +46,11 @@ jsonpath "$.result.content[4].uri" == "{{base}}/v1/catalog/example/title-only"
 jsonpath "$.result.content[4].name" == "Example With Title Only"
 jsonpath "$.result.content[4].description" not exists
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
+jsonpath "$.result.content[5].type" == "resource_link"
+jsonpath "$.result.content[5].uri" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.content[5].name" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.content[5].description" not exists
+jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
 variable "text" jsonpath "$.path" == "/v1/catalog/example"
 jsonpath "$.result.structuredContent.url" == "{{base}}/v1/catalog/example"
@@ -56,12 +61,12 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "example"
 variable "text" jsonpath "$.breadcrumb[0].name" == "example"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/v1/catalog/example/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/v1/catalog/example/"
-jsonpath "$.result.structuredContent.schemas" == 4
-variable "text" jsonpath "$.schemas" == 4
+jsonpath "$.result.structuredContent.schemas" == 5
+variable "text" jsonpath "$.schemas" == 5
 jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
-jsonpath "$.result.structuredContent.entries" count == 4
-variable "text" jsonpath "$.entries" count == 4
+jsonpath "$.result.structuredContent.entries" count == 5
+variable "text" jsonpath "$.entries" count == 5
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"
@@ -126,6 +131,22 @@ variable "text" jsonpath "$.entries[3].priority" == 50
 variable "text" jsonpath "$.entries[3].title" == "Example With Title Only"
 jsonpath "$.result.structuredContent.entries[3].description" not exists
 variable "text" jsonpath "$.entries[3].description" not exists
+jsonpath "$.result.structuredContent.entries[4].name" == "zzz-truncate-target"
+variable "text" jsonpath "$.entries[4].name" == "zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].type" == "schema"
+variable "text" jsonpath "$.entries[4].type" == "schema"
+jsonpath "$.result.structuredContent.entries[4].path" == "/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.entries[4].path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.entries[4].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].health" == 0
+variable "text" jsonpath "$.entries[4].health" == 0
+jsonpath "$.result.structuredContent.entries[4].title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.structuredContent.entries[4].priority" == 50
+variable "text" jsonpath "$.entries[4].priority" == 50
+variable "text" jsonpath "$.entries[4].title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.structuredContent.entries[4].description" not exists
+variable "text" jsonpath "$.entries[4].description" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -162,7 +183,7 @@ schema_uri: jsonpath "$.result.content[3].uri"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1301
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 5
+jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/v1/catalog/example/bare"
@@ -184,6 +205,11 @@ jsonpath "$.result.content[4].uri" == "{{base}}/v1/catalog/example/title-only"
 jsonpath "$.result.content[4].name" == "Example With Title Only"
 jsonpath "$.result.content[4].description" not exists
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
+jsonpath "$.result.content[5].type" == "resource_link"
+jsonpath "$.result.content[5].uri" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.content[5].name" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.content[5].description" not exists
+jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
 variable "text" jsonpath "$.path" == "/v1/catalog/example"
 jsonpath "$.result.structuredContent.url" == "{{base}}/v1/catalog/example"
@@ -194,12 +220,12 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "example"
 variable "text" jsonpath "$.breadcrumb[0].name" == "example"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/v1/catalog/example/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/v1/catalog/example/"
-jsonpath "$.result.structuredContent.schemas" == 4
-variable "text" jsonpath "$.schemas" == 4
+jsonpath "$.result.structuredContent.schemas" == 5
+variable "text" jsonpath "$.schemas" == 5
 jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
-jsonpath "$.result.structuredContent.entries" count == 4
-variable "text" jsonpath "$.entries" count == 4
+jsonpath "$.result.structuredContent.entries" count == 5
+variable "text" jsonpath "$.entries" count == 5
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"
@@ -256,6 +282,20 @@ variable "text" jsonpath "$.entries[3].priority" == 50
 variable "text" jsonpath "$.entries[3].title" == "Example With Title Only"
 jsonpath "$.result.structuredContent.entries[3].description" not exists
 variable "text" jsonpath "$.entries[3].description" not exists
+jsonpath "$.result.structuredContent.entries[4].name" == "zzz-truncate-target"
+variable "text" jsonpath "$.entries[4].name" == "zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].type" == "schema"
+variable "text" jsonpath "$.entries[4].type" == "schema"
+jsonpath "$.result.structuredContent.entries[4].path" == "/v1/catalog/example/zzz-truncate-target"
+variable "text" jsonpath "$.entries[4].path" == "/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].priority" == 50
+variable "text" jsonpath "$.entries[4].priority" == 50
+variable "text" jsonpath "$.entries[4].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
+jsonpath "$.result.structuredContent.entries[4].title" matches "^Z{65532}\\.\\.\\.$"
+variable "text" jsonpath "$.entries[4].title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.result.structuredContent.entries[4].description" not exists
+variable "text" jsonpath "$.entries[4].description" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
