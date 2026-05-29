@@ -345,3 +345,85 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# An LLM-supplied mixed-case directory name (e.g. "EXAMPLE", "Example")
+# resolves to the same directory as the canonical lowercase form because
+# the handler case-folds the input before looking it up
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1303,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "EXAMPLE" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1303
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 6
+jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
+jsonpath "$.result.structuredContent.url" == "{{base}}/v1/catalog/example"
+jsonpath "$.result.structuredContent.schemas" == 5
+jsonpath "$.result.structuredContent.entries" count == 5
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1304,
+  "method": "tools/call",
+  "params": {
+    "name": "list_directory",
+    "arguments": { "path": "Example" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1304
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 6
+jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
+jsonpath "$.result.structuredContent.url" == "{{base}}/v1/catalog/example"
+jsonpath "$.result.structuredContent.schemas" == 5
+jsonpath "$.result.structuredContent.entries" count == 5
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

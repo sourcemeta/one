@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -85,9 +86,15 @@ public:
     const auto explorer_root{this->base() / "explorer"};
 
     auto absolute_path{explorer_root};
+    // TODO: Add a `to_lowercase` overload in vendor/core that operates on
+    // a whole string and call it here instead of looping per character
+    std::string normalized_path{
+        arguments.at_or("path", EMPTY_STRING).to_string()};
+    for (auto &character : normalized_path) {
+      character = sourcemeta::core::to_lowercase(character);
+    }
     const auto relative_path{
-        std::filesystem::path{arguments.at_or("path", EMPTY_STRING).to_string()}
-            .relative_path()};
+        std::filesystem::path{normalized_path}.relative_path()};
     if (!relative_path.empty()) {
       absolute_path /= relative_path;
     }
