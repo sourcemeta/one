@@ -604,7 +604,7 @@ struct GENERATE_MCP {
         "exposed as an MCP resource via the `JSON Schema` resource template "
         "(see `resources/templates/list`) and is addressable by its "
         "canonical absolute URI. This instance is sovereign over its own "
-        "URL namespace, schemas whose URIs lie outside this namespace will "
+        "URL namespace. Schemas whose URIs lie outside this namespace will "
         "not be served here. Use `tools/list` to discover the operations "
         "this catalog exposes. Because this server is a JSON Schema "
         "registry, the schemas defining each tool's input parameters are "
@@ -633,7 +633,7 @@ struct GENERATE_MCP {
         template_uri, "JSON Schema",
         "A JSON Schema in this catalog, addressable by its canonical "
         "absolute URI under this server's origin. This instance is "
-        "sovereign over its own URL namespace, schemas whose URIs lie "
+        "sovereign over its own URL namespace. Schemas whose URIs lie "
         "outside this namespace will not be served here. Substitute "
         "`{+path}` with the schema's catalog path. Include `{?bundle}` "
         "(its presence alone triggers bundling, any value is ignored) "

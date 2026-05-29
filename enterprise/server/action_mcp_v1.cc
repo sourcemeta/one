@@ -128,7 +128,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
                   sourcemeta::core::JSON{
                       "This URL lies outside this catalog's URL namespace. "
                       "This instance is sovereign over its own URL "
-                      "namespace, schemas whose URIs lie outside this "
+                      "namespace. Schemas whose URIs lie outside this "
                       "namespace will not be served here. Query the "
                       "appropriate registry for foreign URLs"});
       return sourcemeta::core::jsonrpc_make_error(
