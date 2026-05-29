@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -85,9 +86,10 @@ public:
     const auto explorer_root{this->base() / "explorer"};
 
     auto absolute_path{explorer_root};
-    const auto relative_path{
+    auto relative_path{
         std::filesystem::path{arguments.at_or("path", EMPTY_STRING).to_string()}
             .relative_path()};
+    sourcemeta::core::to_lowercase(relative_path);
     if (!relative_path.empty()) {
       absolute_path /= relative_path;
     }
