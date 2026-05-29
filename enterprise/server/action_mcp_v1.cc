@@ -5,6 +5,7 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/numeric.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/http.h>
@@ -135,10 +136,8 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
           "Resource not found", std::move(data));
     }
     const auto path{request.path().value_or("")};
-    std::string_view schema_path{path};
-    if (schema_path.ends_with(".json")) {
-      schema_path.remove_suffix(5);
-    }
+    const auto schema_path{
+        sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
     if (schema_path.empty()) {
       return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
     }
