@@ -72,8 +72,9 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Asserts]
 jsonpath "$.valid" == true
 
-# A 70KB title in the source schema gets truncated to 65535 bytes
-# ending in "..." for the metadata endpoint, mirroring the search index
+# The metadata endpoint returns the schema's title verbatim with no
+# size cap, even when the source title is large. Truncation only applies
+# at the binary-extension boundary used by directory listings and search
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/example/zzz-truncate-target
 Accept: application/json
@@ -88,7 +89,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
 jsonpath "$.path" == "/v1/catalog/example/zzz-truncate-target"
-jsonpath "$.title" matches "^Z{65532}\\.\\.\\.$"
+jsonpath "$.title" matches "^Z{70000}$"
 jsonpath "$.priority" == 50
 jsonpath "$.health" == 0
 jsonpath "$.dependencies" == 0
