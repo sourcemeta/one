@@ -406,21 +406,29 @@ static auto index_main(const std::string_view &program,
       continue;
     }
 
-    for (const auto &entry : std::filesystem::recursive_directory_iterator{
-             collection->absolute_path}) {
+    for (auto iterator =
+             std::filesystem::recursive_directory_iterator{
+                 collection->absolute_path};
+         iterator != std::filesystem::recursive_directory_iterator{};
+         ++iterator) {
+      const auto &entry{*iterator};
+
+      if (std::ranges::any_of(collection->ignore, [&entry](
+                                                      const auto &ignore_path) {
+            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
+          })) {
+        if (entry.is_directory()) {
+          iterator.disable_recursion_pending();
+        }
+        continue;
+      }
+
       if (!entry.is_regular_file()) {
         continue;
       }
 
       if (configuration_files.contains(
               std::filesystem::weakly_canonical(entry.path()).native())) {
-        continue;
-      }
-
-      if (std::ranges::any_of(collection->ignore, [&entry](
-                                                      const auto &ignore_path) {
-            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
-          })) {
         continue;
       }
 
