@@ -765,13 +765,13 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+# A string-encoded limit (e.g. "5") is accepted as a workaround for MCP
+# clients that stringify non-string tool arguments, equivalent to limit: 5
+
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
-# A string-encoded limit (e.g. "5") is accepted as a workaround for MCP
-# clients that stringify non-string tool arguments, equivalent to limit: 5
-
 {
   "jsonrpc": "2.0",
   "id": 1124,
