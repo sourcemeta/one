@@ -20,7 +20,7 @@
 #include "explorer.h"
 #include "generators.h"
 
-#include <algorithm>     // std::ranges::sort
+#include <algorithm>     // std::ranges::any_of, std::ranges::sort
 #include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
@@ -414,6 +414,13 @@ static auto index_main(const std::string_view &program,
 
       if (configuration_files.contains(
               std::filesystem::weakly_canonical(entry.path()).native())) {
+        continue;
+      }
+
+      if (std::ranges::any_of(collection->ignore, [&entry](
+                                                      const auto &ignore_path) {
+            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
+          })) {
         continue;
       }
 
