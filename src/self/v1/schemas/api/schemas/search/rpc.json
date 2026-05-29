@@ -13,6 +13,11 @@
     {
       "q": "address",
       "scope": [ "title", "description" ]
+    },
+    {
+      "q": "user",
+      "limit": "5",
+      "scope": "[\"title\",\"description\"]"
     }
   ],
   "type": "object",
@@ -27,15 +32,20 @@
     },
     "limit": {
       "description": "Maximum number of results to return",
+      "$comment": "Accepting a JSON-encoded string form (e.g. \"5\") is a workaround for MCP clients that stringify non-string tool arguments before sending them. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
       "default": 10,
-      "type": "integer",
+      "type": [ "integer", "string" ],
       "maximum": 100,
-      "minimum": 1
+      "minimum": 1,
+      "pattern": "^([1-9]|[1-9][0-9]|100)$"
     },
     "scope": {
       "description": "Schema fields to match the query against",
+      "$comment": "Accepting a JSON-encoded string form (e.g. \"[\\\"title\\\",\\\"description\\\"]\") is a workaround for MCP clients that stringify non-string tool arguments before sending them. The server parses the string before validation, so non-string MCP clients can still send the array form. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
       "default": [ "path", "title", "description" ],
-      "type": "array",
+      "type": [ "array", "string" ],
+      "contentEncoding": "identity",
+      "contentMediaType": "application/json",
       "minItems": 1,
       "uniqueItems": true,
       "items": {

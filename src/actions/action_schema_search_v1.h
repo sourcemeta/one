@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -186,22 +187,60 @@ public:
     constexpr std::size_t DEFAULT_LIMIT{10};
     std::size_t limit{DEFAULT_LIMIT};
     if (arguments.defines("limit")) {
-      limit = static_cast<std::size_t>(arguments.at("limit").to_integer());
+      const auto &limit_argument{arguments.at("limit")};
+      limit = limit_argument.is_string()
+                  ? static_cast<std::size_t>(sourcemeta::core::to_uint64_t(
+                                                 limit_argument.to_string())
+                                                 .value())
+                  : static_cast<std::size_t>(limit_argument.to_integer());
     }
 
-    std::uint8_t scope{sourcemeta::one::SearchScopePath |
-                       sourcemeta::one::SearchScopeTitle |
-                       sourcemeta::one::SearchScopeDescription};
+    constexpr std::uint8_t DEFAULT_SCOPE{
+        sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
+        sourcemeta::one::SearchScopeDescription};
+    std::uint8_t scope{DEFAULT_SCOPE};
+    const auto add_scope_token{[&scope](const std::string_view token) -> bool {
+      if (token == "path") {
+        scope |= sourcemeta::one::SearchScopePath;
+      } else if (token == "title") {
+        scope |= sourcemeta::one::SearchScopeTitle;
+      } else if (token == "description") {
+        scope |= sourcemeta::one::SearchScopeDescription;
+      } else {
+        return false;
+      }
+      return true;
+    }};
     if (arguments.defines("scope")) {
       scope = 0;
-      for (const auto &item : arguments.at("scope").as_array()) {
-        const auto &token{item.to_string()};
-        if (token == "path") {
-          scope |= sourcemeta::one::SearchScopePath;
-        } else if (token == "title") {
-          scope |= sourcemeta::one::SearchScopeTitle;
-        } else if (token == "description") {
-          scope |= sourcemeta::one::SearchScopeDescription;
+      const auto &scope_argument{arguments.at("scope")};
+      sourcemeta::core::JSON parsed_scope{nullptr};
+      const sourcemeta::core::JSON *scope_array{nullptr};
+      if (scope_argument.is_string()) {
+        try {
+          parsed_scope =
+              sourcemeta::core::parse_json(scope_argument.to_string());
+        } catch (const std::exception &) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope is not valid JSON");
+        }
+        if (!parsed_scope.is_array()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope must be a JSON-encoded array of strings");
+        }
+        if (parsed_scope.empty()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope must contain at least one item");
+        }
+        scope_array = &parsed_scope;
+      } else {
+        scope_array = &scope_argument;
+      }
+      for (const auto &item : scope_array->as_array()) {
+        if (!item.is_string() || !add_scope_token(item.to_string())) {
+          return sourcemeta::core::mcp_make_tool_error(
+              request_id, "The scope items must be \"path\", \"title\", or "
+                          "\"description\"");
         }
       }
     }
