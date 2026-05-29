@@ -20,7 +20,7 @@
 #include "explorer.h"
 #include "generators.h"
 
-#include <algorithm>     // std::ranges::sort
+#include <algorithm>     // std::ranges::any_of, std::ranges::sort
 #include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
@@ -406,8 +406,23 @@ static auto index_main(const std::string_view &program,
       continue;
     }
 
-    for (const auto &entry : std::filesystem::recursive_directory_iterator{
-             collection->absolute_path}) {
+    for (auto iterator =
+             std::filesystem::recursive_directory_iterator{
+                 collection->absolute_path};
+         iterator != std::filesystem::recursive_directory_iterator{};
+         ++iterator) {
+      const auto &entry{*iterator};
+
+      if (std::ranges::any_of(collection->ignore, [&entry](
+                                                      const auto &ignore_path) {
+            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
+          })) {
+        if (entry.is_directory()) {
+          iterator.disable_recursion_pending();
+        }
+        continue;
+      }
+
       if (!entry.is_regular_file()) {
         continue;
       }
