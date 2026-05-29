@@ -346,7 +346,7 @@ jsonpath "$.id" == 12
 jsonpath "$.result.resourceTemplates" count == 1
 jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/v1/catalog/{+path}{?bundle}"
 jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
-jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog (optionally bundled)"
+jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace, schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
 jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -618,7 +618,7 @@ jsonpath "$.error.message" == "Resource not found"
 jsonpath "$.error.data.uri" == "https://elsewhere.example.com/foo"
 jsonpath "$.error.data.reason" == "foreign-origin"
 jsonpath "$.error.data.instanceOrigin" == "{{base}}/v1/catalog"
-jsonpath "$.error.data.message" == "This URL is not served by this catalog. This instance is sovereign over its own URL namespace. Schemas mirrored from upstream registries live at this instance's origin, not the upstream URL. Query the appropriate registry for foreign URLs"
+jsonpath "$.error.data.message" == "This URL lies outside this catalog's URL namespace. This instance is sovereign over its own URL namespace, schemas whose URIs lie outside this namespace will not be served here. Query the appropriate registry for foreign URLs"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

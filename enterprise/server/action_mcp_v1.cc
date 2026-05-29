@@ -126,11 +126,11 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       data.assign("instanceOrigin", sourcemeta::core::JSON{this->server_uri()});
       data.assign("message",
                   sourcemeta::core::JSON{
-                      "This URL is not served by this catalog. This "
-                      "instance is sovereign over its own URL namespace. "
-                      "Schemas mirrored from upstream registries live at "
-                      "this instance's origin, not the upstream URL. Query "
-                      "the appropriate registry for foreign URLs"});
+                      "This URL lies outside this catalog's URL namespace. "
+                      "This instance is sovereign over its own URL "
+                      "namespace, schemas whose URIs lie outside this "
+                      "namespace will not be served here. Query the "
+                      "appropriate registry for foreign URLs"});
       return sourcemeta::core::jsonrpc_make_error(
           &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found", std::move(data));
