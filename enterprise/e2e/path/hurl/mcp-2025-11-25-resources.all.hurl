@@ -215,7 +215,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[33].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 8771
+jsonpath "$.result.resources[33].size" == 8758
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One MCP Initialize Request"
@@ -293,13 +293,13 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Resources Templates List Response"
 jsonpath "$.result.resources[46].description" == "Sourcemeta One's list of MCP resource templates"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 1926
+jsonpath "$.result.resources[46].size" == 2976
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[47].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 3624
+jsonpath "$.result.resources[47].size" == 4149
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One MCP Tools Call Request"
@@ -346,7 +346,7 @@ jsonpath "$.id" == 12
 jsonpath "$.result.resourceTemplates" count == 1
 jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/v1/catalog/{+path}{?bundle}"
 jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
-jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog (optionally bundled)"
+jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
 jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -561,6 +561,78 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
+  "id": 35,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 35
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 36,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle="
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 36
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle="
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{bundled_schema_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
   "id": 20,
   "method": "resources/read",
   "params": {
@@ -618,7 +690,7 @@ jsonpath "$.error.message" == "Resource not found"
 jsonpath "$.error.data.uri" == "https://elsewhere.example.com/foo"
 jsonpath "$.error.data.reason" == "foreign-origin"
 jsonpath "$.error.data.instanceOrigin" == "{{base}}/v1/catalog"
-jsonpath "$.error.data.message" == "This URL is not served by this catalog. This instance is sovereign over its own URL namespace. Schemas mirrored from upstream registries live at this instance's origin, not the upstream URL. Query the appropriate registry for foreign URLs"
+jsonpath "$.error.data.message" == "This URL lies outside this catalog's URL namespace. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Query the appropriate registry for foreign URLs"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

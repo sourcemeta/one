@@ -126,11 +126,11 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       data.assign("instanceOrigin", sourcemeta::core::JSON{this->server_uri()});
       data.assign("message",
                   sourcemeta::core::JSON{
-                      "This URL is not served by this catalog. This "
-                      "instance is sovereign over its own URL namespace. "
-                      "Schemas mirrored from upstream registries live at "
-                      "this instance's origin, not the upstream URL. Query "
-                      "the appropriate registry for foreign URLs"});
+                      "This URL lies outside this catalog's URL namespace. "
+                      "This instance is sovereign over its own URL "
+                      "namespace. Schemas whose URIs lie outside this "
+                      "namespace will not be served here. Query the "
+                      "appropriate registry for foreign URLs"});
       return sourcemeta::core::jsonrpc_make_error(
           &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found", std::move(data));
@@ -142,8 +142,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
     }
     const auto query{request.query()};
-    const auto bundle{query.has_value() &&
-                      !query->at("bundle").value_or("").empty()};
+    const auto bundle{query.has_value() && query->at("bundle").has_value()};
     resolved = sourcemeta::core::weakly_canonical(
         this->resolve_schema_path(schema_path, bundle));
   } catch (const std::exception &) {

@@ -48,7 +48,7 @@
           {
             "uriTemplate": "https://example.com/v1/{+path}{?bundle}",
             "name": "JSON Schema",
-            "description": "A JSON Schema in this catalog (optionally bundled)",
+            "description": "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths",
             "mimeType": "application/schema+json"
           }
         ]

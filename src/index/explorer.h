@@ -604,9 +604,8 @@ struct GENERATE_MCP {
         "exposed as an MCP resource via the `JSON Schema` resource template "
         "(see `resources/templates/list`) and is addressable by its "
         "canonical absolute URI. This instance is sovereign over its own "
-        "URL namespace: schemas mirrored from upstream registries (such as "
-        "json-schema.org) are addressable at this instance's URLs, not the "
-        "upstream ones. Use `tools/list` to discover the operations "
+        "URL namespace. Schemas whose URIs lie outside this namespace will "
+        "not be served here. Use `tools/list` to discover the operations "
         "this catalog exposes. Because this server is a JSON Schema "
         "registry, the schemas defining each tool's input parameters are "
         "themselves resources in this registry. To inspect a tool's full "
@@ -632,7 +631,16 @@ struct GENERATE_MCP {
     auto resource_templates{sourcemeta::core::JSON::make_array()};
     resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
         template_uri, "JSON Schema",
-        "A JSON Schema in this catalog (optionally bundled)",
+        "A JSON Schema in this catalog, addressable by its canonical "
+        "absolute URI under this server's origin. This instance is "
+        "sovereign over its own URL namespace. Schemas whose URIs lie "
+        "outside this namespace will not be served here. Substitute "
+        "`{+path}` with the schema's catalog path. Include `{?bundle}` "
+        "(its presence alone triggers bundling, any value is ignored) "
+        "to receive the schema with every external `$ref` inlined into "
+        "a single self-contained document. The URI must not contain a "
+        "fragment. Use `resources/list` to discover the available "
+        "schemas rather than guessing paths",
         "application/schema+json"));
 
     auto resources{sourcemeta::core::JSON::make_object()};

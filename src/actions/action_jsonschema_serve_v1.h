@@ -54,7 +54,7 @@ public:
     const auto is_vscode{user_agent.starts_with("Visual Studio Code") ||
                          user_agent.starts_with("VSCodium")};
     const auto is_deno{user_agent.starts_with("Deno/")};
-    const auto bundle{!request.query("bundle").empty()};
+    const auto bundle{request.has_query("bundle")};
     std::filesystem::path absolute_path;
     if (is_vscode) {
       std::string lowercase_path{schema_path};
