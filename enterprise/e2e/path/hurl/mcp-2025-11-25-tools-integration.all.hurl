@@ -335,3 +335,73 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1300,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_metadata",
+    "arguments": { "schema": "{{base}}/v1/catalog/example/full" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+metadata_path_baseline_text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1300
+jsonpath "$.result.isError" == false
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1301,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_metadata",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/v1/catalog/EXAMPLE/FULL.JSON" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1301
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{metadata_path_baseline_text}}"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

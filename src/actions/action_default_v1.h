@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -76,9 +77,11 @@ public:
       }
     }
 
-    if (path.ends_with(".json")) {
-      ActionJSONSchemaServe_v1::serve(*this, path.substr(0, path.size() - 5),
-                                      request, response, this->error_schema_);
+    const auto stripped_json{
+        sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
+    if (stripped_json.size() != path.size()) {
+      ActionJSONSchemaServe_v1::serve(*this, stripped_json, request, response,
+                                      this->error_schema_);
       return;
     }
 

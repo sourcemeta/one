@@ -127,6 +127,11 @@ HTTP 200
 
 GET {{base}}/test/bundling/single.json?bundle
 HTTP 200
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "{{base}}/test/bundling/single",
@@ -148,6 +153,11 @@ HTTP 200
 
 GET {{base}}/test/bundling/single.json?bundle=
 HTTP 200
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "{{base}}/test/bundling/single",
