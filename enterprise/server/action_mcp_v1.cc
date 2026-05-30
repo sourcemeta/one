@@ -12,9 +12,10 @@
 #include <sourcemeta/one/metapack.h>
 
 #include <cassert>     // assert
-#include <cstddef>     // std::size_t
+#include <cstddef>     // std::size_t, std::ptrdiff_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
+#include <iterator>    // std::ranges::distance
 #include <optional>    // std::optional, std::nullopt
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -130,6 +131,25 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
           id, std::move(data));
     }
     request.canonicalize();
+    // The MCP `resources/read` URI must match the `{+path}{?bundle}` resource
+    // template exactly. Any query parameter other than `bundle` is outside the
+    // template and must be rejected to keep the input shape predictable for
+    // clients
+    if (const auto query_view{request.query()}; query_view.has_value()) {
+      const auto expected_size{
+          static_cast<std::ptrdiff_t>(query_view->at("bundle").has_value())};
+      if (std::ranges::distance(*query_view) != expected_size) {
+        auto data{sourcemeta::core::JSON::make_object()};
+        data.assign("uri", sourcemeta::core::JSON{uri});
+        data.assign("reason",
+                    sourcemeta::core::JSON{"unexpected-query-parameter"});
+        data.assign("message", sourcemeta::core::JSON{
+                                   "The only query parameter accepted by "
+                                   "resources/read is `bundle`"});
+        return sourcemeta::core::jsonrpc_make_error_invalid_params(
+            id, std::move(data));
+      }
+    }
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
       auto data{sourcemeta::core::JSON::make_object()};

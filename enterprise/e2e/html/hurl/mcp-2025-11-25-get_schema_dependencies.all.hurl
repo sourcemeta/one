@@ -591,7 +591,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 215
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -669,7 +669,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 221
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
