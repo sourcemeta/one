@@ -147,7 +147,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -328,7 +328,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 914
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -830,6 +830,43 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 995
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{evaluate_baseline_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 996,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/test/bare/01?foo=bar", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 996
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

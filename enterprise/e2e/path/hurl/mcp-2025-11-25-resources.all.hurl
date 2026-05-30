@@ -215,7 +215,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[33].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 9790
+jsonpath "$.result.resources[33].size" == 10844
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One MCP Initialize Request"
@@ -800,6 +800,80 @@ jsonpath "$.error.message" == "Invalid params"
 jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response#"
 jsonpath "$.error.data.reason" == "fragment-present"
 jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 50,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?foo=bar"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 50
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?foo=bar"
+jsonpath "$.error.data.reason" == "unexpected-query-parameter"
+jsonpath "$.error.data.message" == "The only query parameter accepted by resources/read is `bundle`"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 51,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle&foo=bar"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 51
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle&foo=bar"
+jsonpath "$.error.data.reason" == "unexpected-query-parameter"
+jsonpath "$.error.data.message" == "The only query parameter accepted by resources/read is `bundle`"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

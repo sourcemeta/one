@@ -101,6 +101,19 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": 24,
+      "error": {
+        "code": -32602,
+        "message": "Invalid params",
+        "data": {
+          "uri": "https://schemas.sourcemeta.com/jsonschema/2020-12/schema?foo=bar",
+          "reason": "unexpected-query-parameter",
+          "message": "The only query parameter accepted by resources/read is `bundle`"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
       "id": null,
       "error": {
         "code": 5,
@@ -334,6 +347,24 @@
                     },
                     "reason": {
                       "const": "fragment-present"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [ "uri", "reason", "message" ],
+                  "properties": {
+                    "uri": {
+                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "reason": {
+                      "const": "unexpected-query-parameter"
                     },
                     "message": {
                       "type": "string"
