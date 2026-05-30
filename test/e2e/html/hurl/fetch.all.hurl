@@ -336,29 +336,46 @@ HTTP 404
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Captures]
 case_baseline_body: body
+[Asserts]
+header "ETag" exists
 
 GET {{base}}/test/schemas/string.JSON
 HTTP 200
 Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/string.Json
 HTTP 200
 Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/STRING.json
 HTTP 200
 Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/TEST/SCHEMAS/STRING.JSON
 HTTP 200
 Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"

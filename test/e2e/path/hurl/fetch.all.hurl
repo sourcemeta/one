@@ -200,29 +200,46 @@ jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 
 GET {{base}}/v1/catalog/example/string.json
 HTTP 200
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Captures]
 case_baseline_body: body
+[Asserts]
+header "ETag" exists
 
 GET {{base}}/v1/catalog/example/string.JSON
 HTTP 200
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/v1/catalog/example/string.Json
 HTTP 200
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/v1/catalog/example/STRING.json
 HTTP 200
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
 
 GET {{base}}/v1/catalog/EXAMPLE/STRING.JSON
 HTTP 200
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
 [Asserts]
+header "ETag" exists
 body == "{{case_baseline_body}}"
