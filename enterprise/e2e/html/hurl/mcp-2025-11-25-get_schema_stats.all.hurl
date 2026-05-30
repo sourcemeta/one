@@ -643,7 +643,21 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 stats_baseline_text: jsonpath "$.result.content[0].text"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 900
+jsonpath "$.result.isError" == false
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -660,10 +674,25 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 901
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -680,10 +709,25 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 902
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -700,7 +744,22 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
