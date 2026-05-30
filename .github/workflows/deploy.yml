@@ -254,6 +254,7 @@ jobs:
             kraft cloud deploy --memory 4096 --rollout remove --image schemas --service schemas \
               --kraftfile enterprise/e2e/public/Kraftfile --restart on-failure --replicas 4 ./enterprise/e2e/public
             kraft cloud service get schemas
+            kraft cloud service get schemas --output json
             kraft cloud instance logs "$(kraft cloud service get schemas --output json | jq --raw-output '.[0].instances | split(" ") | .[0]')"
             curl --location --header "Accept: text/html" --retry 10 --retry-all-errors --fail https://${{ env.SERVICE_DOMAIN }}
         env:
