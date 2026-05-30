@@ -88,6 +88,19 @@
     },
     {
       "jsonrpc": "2.0",
+      "id": 22,
+      "error": {
+        "code": -32602,
+        "message": "Invalid params",
+        "data": {
+          "uri": "https://schemas.sourcemeta.com/jsonschema/2020-12/schema#/properties",
+          "reason": "fragment-present",
+          "message": "URIs passed to resources/read must not contain a fragment"
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
       "id": null,
       "error": {
         "code": 5,
@@ -309,6 +322,24 @@
                 },
                 {
                   "type": "string"
+                },
+                {
+                  "type": "object",
+                  "required": [ "uri", "reason", "message" ],
+                  "properties": {
+                    "uri": {
+                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "reason": {
+                      "const": "fragment-present"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               ]
             }
