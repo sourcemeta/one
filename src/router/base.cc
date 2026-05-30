@@ -1,3 +1,4 @@
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/blaze/evaluator.h>
@@ -39,7 +40,9 @@ auto RouterAction::uri_to_relative_path(const std::string_view uri) const
     return std::nullopt;
   }
 
-  return std::filesystem::path{path_option.value()};
+  std::filesystem::path result{path_option.value()};
+  sourcemeta::core::to_lowercase(result);
+  return result;
 }
 
 auto RouterAction::schema_directory(const std::string_view uri) const

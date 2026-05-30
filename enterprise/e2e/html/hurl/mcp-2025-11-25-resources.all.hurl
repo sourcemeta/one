@@ -576,7 +576,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[46].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 8747
+jsonpath "$.result.resources[46].size" == 9779
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Initialize Request"
@@ -1012,6 +1012,193 @@ jsonpath "$.id" == 22
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
 jsonpath "$.error.data" == "{{base}}/does/not/exist"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 40,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/self/v1/schemas/mcp/response#/properties"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 40
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.uri" == "{{base}}/self/v1/schemas/mcp/response#/properties"
+jsonpath "$.error.data.reason" == "fragment-present"
+jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 41,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/self/v1/schemas/mcp/response#"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 41
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.data.uri" == "{{base}}/self/v1/schemas/mcp/response#"
+jsonpath "$.error.data.reason" == "fragment-present"
+jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/self/v1/schemas/mcp/response
+HTTP 200
+[Captures]
+unbundled_response_text: body
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "method": "resources/read",
+  "params": {
+    "uri": "HTTP://localhost:{{port}}/self/v1/schemas/mcp/response"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 42
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "HTTP://localhost:{{port}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{unbundled_response_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 43,
+  "method": "resources/read",
+  "params": {
+    "uri": "http://LOCALHOST:{{port}}/self/v1/schemas/mcp/response"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 43
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "http://LOCALHOST:{{port}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{unbundled_response_text}}"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 44,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/SELF/V1/SCHEMAS/MCP/RESPONSE"
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 44
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/SELF/V1/SCHEMAS/MCP/RESPONSE"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{{unbundled_response_text}}"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

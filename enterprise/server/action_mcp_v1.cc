@@ -118,6 +118,18 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
   std::filesystem::path resolved;
   try {
     sourcemeta::core::URI request{uri};
+    if (request.fragment().has_value()) {
+      auto data{sourcemeta::core::JSON::make_object()};
+      data.assign("uri", sourcemeta::core::JSON{uri});
+      data.assign("reason", sourcemeta::core::JSON{"fragment-present"});
+      data.assign("message",
+                  sourcemeta::core::JSON{
+                      "URIs passed to resources/read must not contain a "
+                      "fragment"});
+      return sourcemeta::core::jsonrpc_make_error_invalid_params(
+          id, std::move(data));
+    }
+    request.canonicalize();
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
       auto data{sourcemeta::core::JSON::make_object()};
