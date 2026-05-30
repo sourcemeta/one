@@ -624,3 +624,84 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 970,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_health",
+    "arguments": { "schema": "{{base}}/test/object" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+health_baseline_text: jsonpath "$.result.content[0].text"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 971,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_health",
+    "arguments": { "schema": "{{base}}/TEST/OBJECT" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 971
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{health_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 972,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_health",
+    "arguments": { "schema": "{{base}}/test/object.JSON" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 972
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{health_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 973,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_health",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/test/object" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 973
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{health_baseline_text}}"

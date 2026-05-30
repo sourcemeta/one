@@ -804,3 +804,84 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1092,
+  "method": "tools/call",
+  "params": {
+    "name": "trace_schema_evaluation",
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+trace_baseline_text: jsonpath "$.result.content[0].text"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1093,
+  "method": "tools/call",
+  "params": {
+    "name": "trace_schema_evaluation",
+    "arguments": { "schema": "{{base}}/TEST/BARE/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 1093
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{trace_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1094,
+  "method": "tools/call",
+  "params": {
+    "name": "trace_schema_evaluation",
+    "arguments": { "schema": "{{base}}/test/bare/01.JSON", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 1094
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{trace_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1095,
+  "method": "tools/call",
+  "params": {
+    "name": "trace_schema_evaluation",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/test/bare/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 1095
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{trace_baseline_text}}"

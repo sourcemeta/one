@@ -698,3 +698,84 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 992,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+evaluate_baseline_text: jsonpath "$.result.content[0].text"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 993,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/TEST/BARE/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 993
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{evaluate_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 994,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "{{base}}/test/bare/01.JSON", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 994
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{evaluate_baseline_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 995,
+  "method": "tools/call",
+  "params": {
+    "name": "evaluate_schema",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/test/bare/01", "stringifiedInstance": "\"hello\"" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 995
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{evaluate_baseline_text}}"

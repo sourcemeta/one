@@ -201,3 +201,32 @@ header "ETag" exists
 
 GET {{base}}/.json
 HTTP 404
+
+GET {{base}}/test/schemas/string.json
+HTTP 200
+[Captures]
+case_baseline_body: body
+
+GET {{base}}/test/schemas/string.JSON
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/test/schemas/string.Json
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/test/schemas/STRING.json
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/TEST/SCHEMAS/STRING.JSON
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"

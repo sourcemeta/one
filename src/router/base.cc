@@ -40,7 +40,12 @@ auto RouterAction::uri_to_relative_path(const std::string_view uri) const
     return std::nullopt;
   }
 
-  std::filesystem::path result{path_option.value()};
+  const auto stripped{sourcemeta::core::remove_suffix_ignore_case(
+      path_option.value(), ".json")};
+  if (stripped.empty()) {
+    return std::nullopt;
+  }
+  std::filesystem::path result{stripped};
   sourcemeta::core::to_lowercase(result);
   return result;
 }

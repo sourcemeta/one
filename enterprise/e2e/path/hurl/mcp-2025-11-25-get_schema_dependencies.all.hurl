@@ -360,3 +360,64 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1600,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependencies",
+    "arguments": { "schema": "{{base}}/v1/catalog/example/full" }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+dependencies_path_baseline_text: jsonpath "$.result.content[0].text"
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1601,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependencies",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/v1/catalog/EXAMPLE/FULL.JSON" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 1601
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{dependencies_path_baseline_text}}"
+
+POST {{base}}/v1/catalog/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1602,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_dependencies",
+    "arguments": { "schema": "{{base}}/v1/catalog/.json" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 1602
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content[0].text" == "Schema not found"

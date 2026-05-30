@@ -197,3 +197,32 @@ Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
+
+GET {{base}}/v1/catalog/example/string.json
+HTTP 200
+[Captures]
+case_baseline_body: body
+
+GET {{base}}/v1/catalog/example/string.JSON
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/v1/catalog/example/string.Json
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/v1/catalog/example/STRING.json
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"
+
+GET {{base}}/v1/catalog/EXAMPLE/STRING.JSON
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+body == "{{case_baseline_body}}"

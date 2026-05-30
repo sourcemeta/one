@@ -61,7 +61,7 @@ structuring your instance.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. The absolute URL _may_ have a path component |
+| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. The absolute URL _may_ have a path component. The path component of this URL is case-sensitive per [RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1). Inside the instance's URL namespace (schema URIs the catalog owns), path lookups are case-insensitive |
 | `/extends`      | Array   | No  | None | One or more configuration files to extend from. See the [Extends](#extends) section for more information |
 | `/contents`     | Object  | No  | None | The top-level [Collections](#collections) and [Pages](#pages) that compose the instance |
 | `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. Enabling the HTML explorer implies the API must also be enabled. See the [HTML](#html) section for more details |

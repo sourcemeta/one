@@ -773,3 +773,43 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 262,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_metadata",
+    "arguments": { "schema": "{{base}}/test/object.JSON" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 262
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 263,
+  "method": "tools/call",
+  "params": {
+    "name": "get_schema_metadata",
+    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/test/object" }
+  }
+}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.id" == 263
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
