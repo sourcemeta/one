@@ -244,11 +244,9 @@ Access-Control-Allow-Origin: *
 header "ETag" exists
 body == "{{case_baseline_body}}"
 
-# The MCP `resources/read` handler rejects any query parameter other than
-# `bundle` because the URI must match the published resource template
-# exactly. The REST schema fetch surface is laxer on purpose: unknown query
-# parameters are silently ignored so curl-style consumers can pin arbitrary
-# tracking parameters (analytics, cache-busters) without 4xx surprises.
+# Unknown query parameters are silently ignored on the REST schema fetch
+# surface, so callers can pin arbitrary tracking parameters without 4xx
+# surprises
 GET {{base}}/v1/catalog/example/string.json?foo=bar
 HTTP 200
 Content-Type: application/schema+json
