@@ -845,6 +845,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
           {"responseSchema", std::string_view{mcp_response_schema}}};
       router.add("/self/v1/mcp", "handle_mcp_request", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
+      // Trailing-slash variant for clients that normalise URLs by
+      // appending `/`. Both routes dispatch to the same MCP handler
+      router.add("/self/v1/mcp/", "handle_mcp_request_trailing_slash",
+                 next_id++, sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           not_found_arguments[] = {
