@@ -106,22 +106,22 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     const auto identifier{router.at(index)};
     const auto context{router.context(identifier)};
 
-    std::string_view rpc_schema;
-    std::string_view response_schema;
-    router.arguments(identifier, [&rpc_schema, &response_schema](
+    std::string_view rpc_request_schema;
+    std::string_view rpc_response_schema;
+    router.arguments(identifier, [&rpc_request_schema, &rpc_response_schema](
                                      const auto &key, const auto &value) {
-      if (key == "rpcSchema") {
-        rpc_schema = std::get<std::string_view>(value);
-      } else if (key == "responseSchema") {
-        response_schema = std::get<std::string_view>(value);
+      if (key == "rpcRequestSchema") {
+        rpc_request_schema = std::get<std::string_view>(value);
+      } else if (key == "rpcResponseSchema") {
+        rpc_response_schema = std::get<std::string_view>(value);
       }
     });
 
     // TODO: Don't infer tool-eligibility from the presence of an
-    // `rpcSchema` argument. The action system itself should expose
+    // `rpcRequestSchema` argument. The action system itself should expose
     // whether a given context is tool-eligible, so the
     // indexer doesn't have to reach into router argument bags
-    if (rpc_schema.empty()) {
+    if (rpc_request_schema.empty()) {
       continue;
     }
 
@@ -131,8 +131,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     const auto description{sourcemeta::one::action_description(context)};
     assert(!description.empty());
 
-    auto input_schema_url{
-        sourcemeta::core::URI::rebase_path(rpc_schema, base_path, base_url)};
+    auto input_schema_url{sourcemeta::core::URI::rebase_path(
+        rpc_request_schema, base_path, base_url)};
     assert(input_schema_url.has_value());
 
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
@@ -151,9 +151,9 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
             "resource"});
 
     std::optional<sourcemeta::core::JSON> output_schema_ref;
-    if (!response_schema.empty()) {
+    if (!rpc_response_schema.empty()) {
       auto output_schema_url{sourcemeta::core::URI::rebase_path(
-          response_schema, base_path, base_url)};
+          rpc_response_schema, base_path, base_url)};
       assert(output_schema_url.has_value());
 
       auto ref{sourcemeta::core::JSON::make_object()};

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Metadata RPC Output",
+  "description": "Get metadata information about a schema in the catalog",
+  "examples": [
+    {
+      "bytes": 512,
+      "bytesBundled": 1024,
+      "identifier": "https://example.com/schemas/user.json",
+      "path": "/schemas/user.json",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "dialect": "https://json-schema.org/draft/2020-12/schema",
+      "health": 100,
+      "priority": 100,
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ],
+      "examples": []
+    }
+  ],
+  "$ref": "../response.json"
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Health RPC Output",
+  "description": "Get the health analysis and score of a schema in the catalog",
+  "examples": [
+    {
+      "score": 100,
+      "errors": []
+    }
+  ],
+  "$ref": "../response.json"
+}

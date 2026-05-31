@@ -11,7 +11,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "string"
     }
@@ -31,7 +31,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "string"
     }
@@ -51,7 +51,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "string"
     }
@@ -71,7 +71,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "string"
     }

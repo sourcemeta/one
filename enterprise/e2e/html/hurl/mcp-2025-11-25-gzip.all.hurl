@@ -330,9 +330,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
-jsonpath "$.result.resources" count == 15
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/notifications/initialized"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Initialized Notification"
+jsonpath "$.result.resources" count == 26
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
+jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Stats API Response"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 
@@ -367,9 +367,9 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
-jsonpath "$.result.resources" count == 15
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/notifications/initialized"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Initialized Notification"
+jsonpath "$.result.resources" count == 26
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
+jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Stats API Response"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 

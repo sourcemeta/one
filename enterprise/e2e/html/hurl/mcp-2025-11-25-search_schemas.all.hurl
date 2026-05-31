@@ -27,16 +27,16 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
@@ -84,20 +84,20 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results" count == 1
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
 variable "text" jsonpath "$.results[0].description" == "An Object Example"
 variable "text" jsonpath "$.results[0].priority" == 50
@@ -181,16 +181,16 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
@@ -233,52 +233,52 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 11
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/full/01"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/full/01"
 jsonpath "$.result.content[2].name" == "Full 01"
 jsonpath "$.result.content[2].description" == "A schema with both a title and a description (01)"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "http://localhost:8000/test/full/02"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/full/02"
 jsonpath "$.result.content[3].name" == "Full 02"
 jsonpath "$.result.content[3].description" == "A schema with both a title and a description (02)"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "http://localhost:8000/test/full/03"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/full/03"
 jsonpath "$.result.content[4].name" == "Full 03"
 jsonpath "$.result.content[4].description" == "A schema with both a title and a description (03)"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "http://localhost:8000/test/full/04"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/full/04"
 jsonpath "$.result.content[5].name" == "Full 04"
 jsonpath "$.result.content[5].description" == "A schema with both a title and a description (04)"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.content[6].type" == "resource_link"
-jsonpath "$.result.content[6].uri" == "http://localhost:8000/test/full/05"
+jsonpath "$.result.content[6].uri" == "{{base}}/test/full/05"
 jsonpath "$.result.content[6].name" == "Full 05"
 jsonpath "$.result.content[6].description" == "A schema with both a title and a description (05)"
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
-jsonpath "$.result.content[7].uri" == "http://localhost:8000/test/description-only/01"
+jsonpath "$.result.content[7].uri" == "{{base}}/test/description-only/01"
 jsonpath "$.result.content[7].name" == "/test/description-only/01"
 jsonpath "$.result.content[7].description" == "A schema with only a description (01)"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
-jsonpath "$.result.content[8].uri" == "http://localhost:8000/test/description-only/02"
+jsonpath "$.result.content[8].uri" == "{{base}}/test/description-only/02"
 jsonpath "$.result.content[8].name" == "/test/description-only/02"
 jsonpath "$.result.content[8].description" == "A schema with only a description (02)"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
-jsonpath "$.result.content[9].uri" == "http://localhost:8000/test/description-only/03"
+jsonpath "$.result.content[9].uri" == "{{base}}/test/description-only/03"
 jsonpath "$.result.content[9].name" == "/test/description-only/03"
 jsonpath "$.result.content[9].description" == "A schema with only a description (03)"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
 jsonpath "$.result.content[10].type" == "resource_link"
-jsonpath "$.result.content[10].uri" == "http://localhost:8000/test/description-only/04"
+jsonpath "$.result.content[10].uri" == "{{base}}/test/description-only/04"
 jsonpath "$.result.content[10].name" == "/test/description-only/04"
 jsonpath "$.result.content[10].description" == "A schema with only a description (04)"
 jsonpath "$.result.content[10].mimeType" == "application/schema+json"
@@ -322,7 +322,7 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
@@ -407,12 +407,12 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/description-only/01"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/description-only/01"
 jsonpath "$.result.content[1].name" == "/test/description-only/01"
 jsonpath "$.result.content[1].description" == "A schema with only a description (01)"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/description-only/02"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/description-only/02"
 jsonpath "$.result.content[2].name" == "/test/description-only/02"
 jsonpath "$.result.content[2].description" == "A schema with only a description (02)"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
@@ -460,12 +460,12 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/title-only/01"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/title-only/01"
 jsonpath "$.result.content[1].name" == "Title Only 01"
 jsonpath "$.result.content[1].description" not exists
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/title-only/02"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/title-only/02"
 jsonpath "$.result.content[2].name" == "Title Only 02"
 jsonpath "$.result.content[2].description" not exists
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
@@ -513,12 +513,12 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/bare/01"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/bare/01"
 jsonpath "$.result.content[1].name" == "/test/bare/01"
 jsonpath "$.result.content[1].description" not exists
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/bare/02"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/bare/02"
 jsonpath "$.result.content[2].name" == "/test/bare/02"
 jsonpath "$.result.content[2].description" not exists
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
@@ -566,16 +566,16 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
@@ -797,27 +797,27 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "http://localhost:8000/test/full/01"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/full/01"
 jsonpath "$.result.content[2].name" == "Full 01"
 jsonpath "$.result.content[2].description" == "A schema with both a title and a description (01)"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "http://localhost:8000/test/full/02"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/full/02"
 jsonpath "$.result.content[3].name" == "Full 02"
 jsonpath "$.result.content[3].description" == "A schema with both a title and a description (02)"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "http://localhost:8000/test/full/03"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/full/03"
 jsonpath "$.result.content[4].name" == "Full 03"
 jsonpath "$.result.content[4].description" == "A schema with both a title and a description (03)"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "http://localhost:8000/test/full/04"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/full/04"
 jsonpath "$.result.content[5].name" == "Full 04"
 jsonpath "$.result.content[5].description" == "A schema with both a title and a description (04)"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
@@ -1004,16 +1004,16 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
@@ -1348,16 +1348,16 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "http://localhost:8000/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "http://localhost:8000/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50

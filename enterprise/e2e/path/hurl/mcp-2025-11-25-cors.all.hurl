@@ -2,7 +2,7 @@ OPTIONS {{base}}/v1/catalog/self/v1/mcp
 HTTP 204
 [Asserts]
 bytes count == 0
-header "Access-Control-Allow-Origin" == "http://localhost:8000"
+header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"
@@ -12,7 +12,7 @@ Origin: http://localhost:8000
 HTTP 204
 [Asserts]
 bytes count == 0
-header "Access-Control-Allow-Origin" == "http://localhost:8000"
+header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"

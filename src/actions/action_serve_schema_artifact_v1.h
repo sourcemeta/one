@@ -41,8 +41,10 @@ public:
         this->artifact_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "rpcSchema") {
-        this->rpc_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcRequestSchema") {
+        this->rpc_request_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcResponseSchema") {
+        this->rpc_response_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
@@ -80,7 +82,8 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments, const std::string_view)
       -> sourcemeta::core::JSON override {
-    if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
+    if (auto output{
+            this->validate_standard(this->rpc_request_schema_, arguments)};
         output.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
@@ -126,8 +129,10 @@ protected:
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "rpcSchema") {
-        this->rpc_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcRequestSchema") {
+        this->rpc_request_schema_ = std::get<std::string_view>(value);
+      } else if (key == "rpcResponseSchema") {
+        this->rpc_response_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
       }
@@ -137,7 +142,8 @@ protected:
 private:
   std::string_view artifact_;
   std::string_view response_schema_;
-  std::string_view rpc_schema_;
+  std::string_view rpc_request_schema_;
+  std::string_view rpc_response_schema_;
   std::string_view error_schema_;
 };
 

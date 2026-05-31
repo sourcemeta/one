@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Dependencies RPC Output",
+  "description": "Get all direct and indirect dependencies of a schema in the catalog",
+  "examples": [
+    [
+      {
+        "from": "https://example.com/schemas/user.json",
+        "to": "https://example.com/schemas/address.json",
+        "at": "/properties/address"
+      }
+    ]
+  ],
+  "$ref": "../response.json"
+}

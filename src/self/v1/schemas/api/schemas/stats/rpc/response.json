@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Statistics RPC Output",
+  "description": "Get keyword statistics by vocabulary about every URI associated with a schema in the catalog",
+  "examples": [
+    {
+      "https://json-schema.org/draft/2020-12/vocab/validation": {
+        "type": 2
+      },
+      "https://json-schema.org/draft/2020-12/vocab/applicator": {
+        "properties": 1
+      },
+      "https://json-schema.org/draft/2020-12/vocab/core": {
+        "$id": 1,
+        "$schema": 1
+      }
+    }
+  ],
+  "$ref": "../response.json"
+}
