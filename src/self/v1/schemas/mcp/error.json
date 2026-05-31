@@ -152,10 +152,32 @@
           "additionalProperties": false
         },
         {
-          "const": {
-            "code": -32003,
-            "message": "Unsupported protocol version"
-          }
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32003
+            },
+            "message": {
+              "const": "Unsupported protocol version"
+            },
+            "data": {
+              "type": "object",
+              "required": [ "current", "supported" ],
+              "properties": {
+                "current": {
+                  "description": "The `MCP-Protocol-Version` header value the client sent, echoed back verbatim",
+                  "type": "string"
+                },
+                "supported": {
+                  "description": "The protocol versions this server implements, in chronological order",
+                  "const": [ "2025-03-26", "2025-06-18", "2025-11-25" ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         },
         {
           "const": {
