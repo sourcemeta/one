@@ -143,10 +143,8 @@
               "const": "Forbidden origin"
             },
             "data": {
-              "description": "The rejected `Origin` header value, echoed back verbatim",
-              "$comment": "TODO: Use Format Assertion when supported on Blaze",
-              "type": "string",
-              "format": "uri"
+              "description": "The rejected `Origin` header value, echoed back verbatim. May be a URI or the literal string `null` per RFC 6454 §6 for opaque origins",
+              "type": "string"
             }
           },
           "additionalProperties": false
