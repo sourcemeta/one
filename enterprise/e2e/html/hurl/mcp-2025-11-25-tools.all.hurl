@@ -212,8 +212,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 52
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "no_such_tool"
+jsonpath "$.error.message" == "Invalid tool name"
+jsonpath "$.error.data" == "Use `tools/list` to discover the available tools"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -248,7 +248,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 53
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"

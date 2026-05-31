@@ -215,7 +215,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[33].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 10844
+jsonpath "$.result.resources[33].size" == 4495
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One MCP Initialize Request"
@@ -299,7 +299,7 @@ jsonpath "$.result.resources[47].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[47].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 4149
+jsonpath "$.result.resources[47].size" == 4167
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One MCP Tools Call Request"
@@ -652,7 +652,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 20
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "not a uri"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -685,12 +684,9 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 21
-jsonpath "$.error.code" == -32002
-jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data.uri" == "https://elsewhere.example.com/foo"
-jsonpath "$.error.data.reason" == "foreign-origin"
-jsonpath "$.error.data.instanceOrigin" == "{{base}}/v1/catalog"
-jsonpath "$.error.data.message" == "This URL lies outside this catalog's URL namespace. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Query the appropriate registry for foreign URLs"
+jsonpath "$.error.code" == 7
+jsonpath "$.error.message" == "Foreign URI"
+jsonpath "$.error.data" == "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -725,7 +721,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 22
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "{{base}}/example/string"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -759,10 +754,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response#/properties"
-jsonpath "$.error.data.reason" == "fragment-present"
-jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -796,10 +789,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response#"
-jsonpath "$.error.data.reason" == "fragment-present"
-jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -833,10 +824,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?foo=bar"
-jsonpath "$.error.data.reason" == "unexpected-query-parameter"
-jsonpath "$.error.data.message" == "The only query parameter accepted by resources/read is `bundle`"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -870,10 +859,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 51
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response?bundle&foo=bar"
-jsonpath "$.error.data.reason" == "unexpected-query-parameter"
-jsonpath "$.error.data.message" == "The only query parameter accepted by resources/read is `bundle`"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1021,7 +1008,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 100
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "{{base}}/v1/catalog/../../etc/passwd"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1056,7 +1042,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 101
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "{{base}}/spec/example/string"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1091,7 +1076,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 102
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "/etc/passwd"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1126,7 +1110,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 23
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "{{base}}/v1/catalog/does/not/exist"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

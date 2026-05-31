@@ -78,8 +78,9 @@ public:
       -> sourcemeta::core::JSON override {
     if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
         output.has_value()) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id, std::move(output));
+      return sourcemeta::core::jsonrpc_make_error(
+          &request_id, -32602, "Params fail against the tool request schema",
+          std::move(output));
     }
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
@@ -96,11 +97,10 @@ public:
     absolute_path /= "%";
     absolute_path /= "directory.metapack";
 
-    const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
+    auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
     if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id,
-          sourcemeta::core::JSON{"The path must not escape the catalog root"});
+      safe_path = sourcemeta::core::weakly_canonical(explorer_root / "%" /
+                                                     "directory.metapack");
     }
 
     auto contents{sourcemeta::one::metapack_read_json(safe_path)};

@@ -576,7 +576,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[46].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[46].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 10833
+jsonpath "$.result.resources[46].size" == 4484
 jsonpath "$.result.resources[46].annotations.priority" == 0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Initialize Request"
@@ -694,7 +694,7 @@ jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[10].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 4138
+jsonpath "$.result.resources[10].size" == 4156
 jsonpath "$.result.resources[10].annotations.priority" == 0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One MCP Tools Call Request"
@@ -754,8 +754,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "abc"
+jsonpath "$.error.message" == "Invalid resource list cursor"
+jsonpath "$.error.data" == "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -789,8 +789,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "-1"
+jsonpath "$.error.message" == "Invalid resource list cursor"
+jsonpath "$.error.data" == "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -827,8 +827,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 42
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "999998"
+jsonpath "$.error.message" == "Invalid resource list cursor"
+jsonpath "$.error.data" == "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -906,8 +906,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 45
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data" == "0999998"
+jsonpath "$.error.message" == "Invalid resource list cursor"
+jsonpath "$.error.data" == "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -976,7 +976,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 20
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "not a uri"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1011,7 +1010,6 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 22
 jsonpath "$.error.code" == -32002
 jsonpath "$.error.message" == "Resource not found"
-jsonpath "$.error.data" == "{{base}}/does/not/exist"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1045,10 +1043,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/self/v1/schemas/mcp/response#/properties"
-jsonpath "$.error.data.reason" == "fragment-present"
-jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1082,10 +1078,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
-jsonpath "$.error.data.uri" == "{{base}}/self/v1/schemas/mcp/response#"
-jsonpath "$.error.data.reason" == "fragment-present"
-jsonpath "$.error.data.message" == "URIs passed to resources/read must not contain a fragment"
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

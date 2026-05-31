@@ -165,7 +165,7 @@ jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/self/v1/schemas
 jsonpath "$.result.structuredContent.results[7].at" == "/anyOf/7/$ref"
 jsonpath "$.result.structuredContent.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.structuredContent.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-jsonpath "$.result.structuredContent.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 variable "text" jsonpath "$.results" count == 9
 variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
@@ -193,7 +193,7 @@ variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tool
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -228,7 +228,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 203
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
+jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -330,7 +331,7 @@ variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tool
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -590,7 +591,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 215
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -627,7 +628,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 220
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
@@ -668,7 +669,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 221
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -705,7 +706,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 222
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
@@ -750,7 +751,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 223
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
@@ -794,7 +795,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 224
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
@@ -1037,7 +1038,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 254
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 

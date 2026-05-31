@@ -181,8 +181,9 @@ public:
       -> sourcemeta::core::JSON override {
     if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
         output.has_value()) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id, std::move(output));
+      return sourcemeta::core::jsonrpc_make_error(
+          &request_id, -32602, "Params fail against the tool request schema",
+          std::move(output));
     }
 
     constexpr std::size_t DEFAULT_LIMIT{10};

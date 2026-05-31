@@ -35,15 +35,17 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
   const auto &id{request_json.at("id")};
 
   std::string cursor_key{"0"};
-  std::string_view cursor_input;
   const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
-    cursor_input = params->at("cursor").to_string();
+    const auto cursor_input{params->at("cursor").to_string()};
     if (!cursor_input.empty()) {
       const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
       if (!parsed.has_value()) {
-        return sourcemeta::core::jsonrpc_make_error_invalid_params(
-            id, sourcemeta::core::JSON{cursor_input});
+        return sourcemeta::core::jsonrpc_make_error(
+            &id, -32602, "Invalid resource list cursor",
+            sourcemeta::core::JSON{
+                "Use the `nextCursor` returned by a prior resources/list "
+                "response, or omit it to start from the beginning"});
       }
       cursor_key = std::to_string(parsed.value());
     }
@@ -51,8 +53,11 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
 
   const auto &resources{this->mcp_metadata_.at("resources")};
   if (!resources.defines(cursor_key)) {
-    return sourcemeta::core::jsonrpc_make_error_invalid_params(
-        id, sourcemeta::core::JSON{cursor_input});
+    return sourcemeta::core::jsonrpc_make_error(
+        &id, -32602, "Invalid resource list cursor",
+        sourcemeta::core::JSON{
+            "Use the `nextCursor` returned by a prior resources/list "
+            "response, or omit it to start from the beginning"});
   }
 
   return sourcemeta::core::jsonrpc_make_success(id, resources.at(cursor_key));
@@ -120,15 +125,11 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
   try {
     sourcemeta::core::URI request{uri};
     if (request.fragment().has_value()) {
-      auto data{sourcemeta::core::JSON::make_object()};
-      data.assign("uri", sourcemeta::core::JSON{uri});
-      data.assign("reason", sourcemeta::core::JSON{"fragment-present"});
-      data.assign("message",
-                  sourcemeta::core::JSON{
-                      "URIs passed to resources/read must not contain a "
-                      "fragment"});
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          id, std::move(data));
+      return sourcemeta::core::jsonrpc_make_error(
+          &id, -32602, "Invalid resource schema URI",
+          sourcemeta::core::JSON{
+              "URIs accepted by resources/read must not contain a fragment "
+              "and may only carry an optional `bundle` query parameter"});
     }
     request.canonicalize();
     // The MCP `resources/read` URI must match the `{+path}{?bundle}` resource
@@ -139,55 +140,50 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       const auto expected_size{
           static_cast<std::ptrdiff_t>(query_view->at("bundle").has_value())};
       if (std::ranges::distance(*query_view) != expected_size) {
-        auto data{sourcemeta::core::JSON::make_object()};
-        data.assign("uri", sourcemeta::core::JSON{uri});
-        data.assign("reason",
-                    sourcemeta::core::JSON{"unexpected-query-parameter"});
-        data.assign("message", sourcemeta::core::JSON{
-                                   "The only query parameter accepted by "
-                                   "resources/read is `bundle`"});
-        return sourcemeta::core::jsonrpc_make_error_invalid_params(
-            id, std::move(data));
+        return sourcemeta::core::jsonrpc_make_error(
+            &id, -32602, "Invalid resource schema URI",
+            sourcemeta::core::JSON{
+                "URIs accepted by resources/read must not contain a fragment "
+                "and may only carry an optional `bundle` query parameter"});
       }
     }
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
-      auto data{sourcemeta::core::JSON::make_object()};
-      data.assign("uri", sourcemeta::core::JSON{uri});
-      data.assign("reason", sourcemeta::core::JSON{"foreign-origin"});
-      data.assign("instanceOrigin", sourcemeta::core::JSON{this->server_uri()});
-      data.assign("message",
-                  sourcemeta::core::JSON{
-                      "This URL lies outside this catalog's URL namespace. "
-                      "This instance is sovereign over its own URL "
-                      "namespace. Schemas whose URIs lie outside this "
-                      "namespace will not be served here. Query the "
-                      "appropriate registry for foreign URLs"});
       return sourcemeta::core::jsonrpc_make_error(
-          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
-          "Resource not found", std::move(data));
+          &id, 7, "Foreign URI",
+          sourcemeta::core::JSON{"This URI lies outside this catalog's "
+                                 "namespace. Query the appropriate registry "
+                                 "instead"});
     }
     const auto path{request.path().value_or("")};
     const auto schema_path{
         sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
     if (schema_path.empty()) {
-      return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
+      return sourcemeta::core::jsonrpc_make_error(
+          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+          "Resource not found");
     }
     const auto query{request.query()};
     const auto bundle{query.has_value() && query->at("bundle").has_value()};
     resolved = sourcemeta::core::weakly_canonical(
         this->resolve_schema_path(schema_path, bundle));
   } catch (const std::exception &) {
-    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::jsonrpc_make_error(
+        &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+        "Resource not found");
   }
 
   if (!sourcemeta::core::is_under_path(resolved, this->base() / "schemas")) {
-    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::jsonrpc_make_error(
+        &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+        "Resource not found");
   }
 
   const auto schema{sourcemeta::one::metapack_read_json(resolved)};
   if (!schema.has_value()) {
-    return sourcemeta::core::mcp_make_error_resource_not_found(id, uri);
+    return sourcemeta::core::jsonrpc_make_error(
+        &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+        "Resource not found");
   }
 
   std::ostringstream payload;
@@ -209,8 +205,10 @@ auto ActionMCP_v1::on_tools_call(
   const auto &name{request_json.at("params").at("name").to_string()};
   const auto &tool_routes{this->mcp_metadata_.at("toolRoutes")};
   if (!tool_routes.defines(name)) {
-    return sourcemeta::core::jsonrpc_make_error_invalid_params(
-        id, sourcemeta::core::JSON{name});
+    return sourcemeta::core::jsonrpc_make_error(
+        &id, -32602, "Invalid tool name",
+        sourcemeta::core::JSON{
+            "Use `tools/list` to discover the available tools"});
   }
   const auto identifier{
       static_cast<sourcemeta::core::URITemplateRouter::Identifier>(
