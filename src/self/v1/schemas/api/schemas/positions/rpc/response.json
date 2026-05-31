@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Positions RPC Output",
+  "description": "Get line and column position information for every token in a schema",
+  "examples": [
+    {
+      "/properties/name": [ 1, 5, 3, 10 ]
+    }
+  ],
+  "$ref": "../response.json"
+}

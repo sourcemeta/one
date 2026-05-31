@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Locations RPC Output",
+  "description": "Get metadata about every URI associated with a schema, including schema resources, subschemas, and anchors",
+  "examples": [
+    {
+      "static": {},
+      "dynamic": {}
+    }
+  ],
+  "$ref": "../response.json"
+}

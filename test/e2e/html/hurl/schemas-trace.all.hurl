@@ -48,7 +48,7 @@ jsonpath "$.steps[0].instancePositions[1]" == 1
 jsonpath "$.steps[0].instancePositions[2]" == 1
 jsonpath "$.steps[0].instancePositions[3]" == 13
 jsonpath "$.steps[0].message" == null
-jsonpath "$.steps[0].keywordLocation" == "http://localhost:8000/test/schemas/string#/type"
+jsonpath "$.steps[0].keywordLocation" == "{{base}}/test/schemas/string#/type"
 jsonpath "$.steps[0].name" == "AssertionTypeStrict"
 jsonpath "$.steps[0].type" == "push"
 jsonpath "$.steps[0].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -60,7 +60,7 @@ jsonpath "$.steps[1].instancePositions[0]" == 1
 jsonpath "$.steps[1].instancePositions[1]" == 1
 jsonpath "$.steps[1].instancePositions[2]" == 1
 jsonpath "$.steps[1].instancePositions[3]" == 13
-jsonpath "$.steps[1].keywordLocation" == "http://localhost:8000/test/schemas/string#/type"
+jsonpath "$.steps[1].keywordLocation" == "{{base}}/test/schemas/string#/type"
 jsonpath "$.steps[1].name" == "AssertionTypeStrict"
 jsonpath "$.steps[1].type" == "pass"
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -96,7 +96,7 @@ jsonpath "$.steps[0].instancePositions[0]" == 1
 jsonpath "$.steps[0].instancePositions[1]" == 1
 jsonpath "$.steps[0].instancePositions[2]" == 1
 jsonpath "$.steps[0].instancePositions[3]" == 13
-jsonpath "$.steps[0].keywordLocation" == "http://localhost:8000/test/bundling/single#/properties"
+jsonpath "$.steps[0].keywordLocation" == "{{base}}/test/bundling/single#/properties"
 jsonpath "$.steps[0].annotation" == null
 jsonpath "$.steps[0].message" == null
 jsonpath "$.steps[0].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -109,7 +109,7 @@ jsonpath "$.steps[1].instancePositions[0]" == 1
 jsonpath "$.steps[1].instancePositions[1]" == 3
 jsonpath "$.steps[1].instancePositions[2]" == 1
 jsonpath "$.steps[1].instancePositions[3]" == 11
-jsonpath "$.steps[1].keywordLocation" == "http://localhost:8000/test/bundling/single#/properties/foo/$ref"
+jsonpath "$.steps[1].keywordLocation" == "{{base}}/test/bundling/single#/properties/foo/$ref"
 jsonpath "$.steps[1].annotation" == null
 jsonpath "$.steps[1].message" == null
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -122,7 +122,7 @@ jsonpath "$.steps[2].instancePositions[0]" == 1
 jsonpath "$.steps[2].instancePositions[1]" == 3
 jsonpath "$.steps[2].instancePositions[2]" == 1
 jsonpath "$.steps[2].instancePositions[3]" == 11
-jsonpath "$.steps[2].keywordLocation" == "http://localhost:8000/test/v2.0/schema#/type"
+jsonpath "$.steps[2].keywordLocation" == "{{base}}/test/v2.0/schema#/type"
 jsonpath "$.steps[2].annotation" == null
 jsonpath "$.steps[2].message" == null
 jsonpath "$.steps[2].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -135,7 +135,7 @@ jsonpath "$.steps[3].instancePositions[0]" == 1
 jsonpath "$.steps[3].instancePositions[1]" == 3
 jsonpath "$.steps[3].instancePositions[2]" == 1
 jsonpath "$.steps[3].instancePositions[3]" == 11
-jsonpath "$.steps[3].keywordLocation" == "http://localhost:8000/test/v2.0/schema#/type"
+jsonpath "$.steps[3].keywordLocation" == "{{base}}/test/v2.0/schema#/type"
 jsonpath "$.steps[3].annotation" == null
 jsonpath "$.steps[3].message" == "The value was expected to be of type integer"
 jsonpath "$.steps[3].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -148,7 +148,7 @@ jsonpath "$.steps[4].instancePositions[0]" == 1
 jsonpath "$.steps[4].instancePositions[1]" == 3
 jsonpath "$.steps[4].instancePositions[2]" == 1
 jsonpath "$.steps[4].instancePositions[3]" == 11
-jsonpath "$.steps[4].keywordLocation" == "http://localhost:8000/test/bundling/single#/properties/foo/$ref"
+jsonpath "$.steps[4].keywordLocation" == "{{base}}/test/bundling/single#/properties/foo/$ref"
 jsonpath "$.steps[4].annotation" == null
 jsonpath "$.steps[4].message" == "The integer value was expected to validate against the referenced schema"
 jsonpath "$.steps[4].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -161,7 +161,7 @@ jsonpath "$.steps[5].instancePositions[0]" == 1
 jsonpath "$.steps[5].instancePositions[1]" == 1
 jsonpath "$.steps[5].instancePositions[2]" == 1
 jsonpath "$.steps[5].instancePositions[3]" == 13
-jsonpath "$.steps[5].keywordLocation" == "http://localhost:8000/test/bundling/single#/properties"
+jsonpath "$.steps[5].keywordLocation" == "{{base}}/test/bundling/single#/properties"
 jsonpath "$.steps[5].annotation" == null
 jsonpath "$.steps[5].message" == "The object value was expected to validate against the single defined property subschema"
 jsonpath "$.steps[5].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -196,7 +196,7 @@ jsonpath "$.steps[0].instancePositions[0]" == 1
 jsonpath "$.steps[0].instancePositions[1]" == 1
 jsonpath "$.steps[0].instancePositions[2]" == 1
 jsonpath "$.steps[0].instancePositions[3]" == 13
-jsonpath "$.steps[0].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties"
+jsonpath "$.steps[0].keywordLocation" == "{{base}}/test/bundling/double#/properties"
 jsonpath "$.steps[0].annotation" == null
 jsonpath "$.steps[0].message" == null
 jsonpath "$.steps[0].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -209,7 +209,7 @@ jsonpath "$.steps[1].instancePositions[0]" == 1
 jsonpath "$.steps[1].instancePositions[1]" == 3
 jsonpath "$.steps[1].instancePositions[2]" == 1
 jsonpath "$.steps[1].instancePositions[3]" == 11
-jsonpath "$.steps[1].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties/foo/$ref"
+jsonpath "$.steps[1].keywordLocation" == "{{base}}/test/bundling/double#/properties/foo/$ref"
 jsonpath "$.steps[1].annotation" == null
 jsonpath "$.steps[1].message" == null
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -222,7 +222,7 @@ jsonpath "$.steps[2].instancePositions[0]" == 1
 jsonpath "$.steps[2].instancePositions[1]" == 3
 jsonpath "$.steps[2].instancePositions[2]" == 1
 jsonpath "$.steps[2].instancePositions[3]" == 11
-jsonpath "$.steps[2].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties/foo/$ref"
+jsonpath "$.steps[2].keywordLocation" == "{{base}}/test/bundling/double#/properties/foo/$ref"
 jsonpath "$.steps[2].annotation" == null
 jsonpath "$.steps[2].message" == "The integer value was expected to validate against the referenced schema"
 jsonpath "$.steps[2].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -235,7 +235,7 @@ jsonpath "$.steps[3].instancePositions[0]" == 1
 jsonpath "$.steps[3].instancePositions[1]" == 1
 jsonpath "$.steps[3].instancePositions[2]" == 1
 jsonpath "$.steps[3].instancePositions[3]" == 13
-jsonpath "$.steps[3].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties"
+jsonpath "$.steps[3].keywordLocation" == "{{base}}/test/bundling/double#/properties"
 jsonpath "$.steps[3].annotation" == null
 jsonpath "$.steps[3].message" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.steps[3].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -270,7 +270,7 @@ jsonpath "$.steps[0].instancePositions[0]" == 1
 jsonpath "$.steps[0].instancePositions[1]" == 1
 jsonpath "$.steps[0].instancePositions[2]" == 1
 jsonpath "$.steps[0].instancePositions[3]" == 13
-jsonpath "$.steps[0].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties"
+jsonpath "$.steps[0].keywordLocation" == "{{base}}/test/bundling/double#/properties"
 jsonpath "$.steps[0].annotation" == null
 jsonpath "$.steps[0].message" == null
 jsonpath "$.steps[0].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -283,7 +283,7 @@ jsonpath "$.steps[1].instancePositions[0]" == 1
 jsonpath "$.steps[1].instancePositions[1]" == 3
 jsonpath "$.steps[1].instancePositions[2]" == 1
 jsonpath "$.steps[1].instancePositions[3]" == 11
-jsonpath "$.steps[1].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties/bar/$ref"
+jsonpath "$.steps[1].keywordLocation" == "{{base}}/test/bundling/double#/properties/bar/$ref"
 jsonpath "$.steps[1].annotation" == null
 jsonpath "$.steps[1].message" == null
 jsonpath "$.steps[1].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -328,7 +328,7 @@ jsonpath "$.steps[6].name" == "ControlJump"
 jsonpath "$.steps[6].evaluatePath" == "/properties/bar/$ref"
 jsonpath "$.steps[6].instanceLocation" == "/bar"
 jsonpath "$.steps[6].instancePositions" count == 4
-jsonpath "$.steps[6].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties/bar/$ref"
+jsonpath "$.steps[6].keywordLocation" == "{{base}}/test/bundling/double#/properties/bar/$ref"
 jsonpath "$.steps[6].annotation" == null
 jsonpath "$.steps[6].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[6].vocabulary" == "http://json-schema.org/draft-07/schema#"
@@ -341,7 +341,7 @@ jsonpath "$.steps[7].instancePositions[0]" == 1
 jsonpath "$.steps[7].instancePositions[1]" == 1
 jsonpath "$.steps[7].instancePositions[2]" == 1
 jsonpath "$.steps[7].instancePositions[3]" == 13
-jsonpath "$.steps[7].keywordLocation" == "http://localhost:8000/test/bundling/double#/properties"
+jsonpath "$.steps[7].keywordLocation" == "{{base}}/test/bundling/double#/properties"
 jsonpath "$.steps[7].annotation" == null
 jsonpath "$.steps[7].message" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.steps[7].vocabulary" == "http://json-schema.org/draft-07/schema#"

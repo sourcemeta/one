@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Directory Listing RPC Output",
+  "description": "List the contents of a directory in the catalog",
+  "examples": [
+    {
+      "health": 100,
+      "schemas": 42,
+      "entries": [],
+      "path": "/schemas",
+      "url": "https://example.com/schemas",
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ]
+    }
+  ],
+  "$ref": "../response.json"
+}

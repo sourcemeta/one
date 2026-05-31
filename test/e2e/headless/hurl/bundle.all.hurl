@@ -15,13 +15,13 @@ HTTP 200
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }
@@ -36,13 +36,13 @@ HTTP 200
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }
@@ -57,13 +57,13 @@ HTTP 200
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }
@@ -94,13 +94,13 @@ HTTP 200
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }
@@ -120,13 +120,13 @@ header "ETag" exists
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }
@@ -146,13 +146,13 @@ header "ETag" exists
   "description": "A bundling example",
   "properties": {
     "foo": {
-      "$ref": "http://localhost:8000/test/schemas/no-id"
+      "$ref": "{{base}}/test/schemas/no-id"
     }
   },
   "definitions": {
-    "http://localhost:8000/test/schemas/no-id": {
+    "{{base}}/test/schemas/no-id": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "$id": "http://localhost:8000/test/schemas/no-id",
+      "$id": "{{base}}/test/schemas/no-id",
       "type": "string"
     }
   }

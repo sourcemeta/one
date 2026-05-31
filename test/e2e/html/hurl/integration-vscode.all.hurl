@@ -11,7 +11,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/v2.0/schema": {
+    "{{base}}/test/v2.0/schema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "integer"
     }
@@ -31,7 +31,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/v2.0/schema": {
+    "{{base}}/test/v2.0/schema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "integer"
     }
@@ -51,7 +51,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/v2.0/schema": {
+    "{{base}}/test/v2.0/schema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "integer"
     }
@@ -71,7 +71,7 @@ HTTP 200
     }
   },
   "definitions": {
-    "http://localhost:8000/test/v2.0/schema": {
+    "{{base}}/test/v2.0/schema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "integer"
     }

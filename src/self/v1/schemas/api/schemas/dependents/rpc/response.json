@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Dependents RPC Output",
+  "description": "Get all direct and transitive dependents of a schema in the catalog",
+  "examples": [
+    [
+      {
+        "from": "https://example.com/schemas/user.json",
+        "to": "https://example.com/schemas/address.json"
+      }
+    ]
+  ],
+  "$ref": "../response.json"
+}

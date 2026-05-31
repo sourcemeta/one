@@ -168,7 +168,7 @@ jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/self/v1/schemas/api/list/rpc/request"
 jsonpath "$.result.tools[0].inputSchema.type" == "object"
-jsonpath "$.result.tools[0].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/list/response"
+jsonpath "$.result.tools[0].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/list/rpc/response"
 jsonpath "$.result.tools[0].outputSchema.type" == "object"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
@@ -261,8 +261,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 115
-variable "text" jsonpath "$.schemas" == 115
+jsonpath "$.result.structuredContent.schemas" == 126
+variable "text" jsonpath "$.schemas" == 126
 jsonpath "$.result.structuredContent.entries" count == 3
 variable "text" jsonpath "$.entries" count == 3
 jsonpath "$.result.structuredContent.entries[0].name" == "self"
@@ -275,8 +275,8 @@ jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 100
 variable "text" jsonpath "$.entries[0].health" == 100
-jsonpath "$.result.structuredContent.entries[0].schemas" == 45
-variable "text" jsonpath "$.entries[0].schemas" == 45
+jsonpath "$.result.structuredContent.entries[0].schemas" == 56
+variable "text" jsonpath "$.entries[0].schemas" == 56
 jsonpath "$.result.structuredContent.entries[0].path" == "/self/"
 variable "text" jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[1].name" == "test"
