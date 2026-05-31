@@ -146,8 +146,9 @@ public:
     if (path.find('#') != std::string_view::npos ||
         path.find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
-          "The schema URI must not contain a fragment", error_schema);
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-schema-uri", "The schema URI must not contain a fragment",
+          error_schema);
       return;
     }
 
@@ -168,7 +169,7 @@ public:
       if (std::filesystem::exists(schema_path)) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-            "no-template",
+            "no-schema-template",
             "This schema was not precompiled for schema evaluation",
             error_schema);
       } else {
@@ -238,7 +239,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                "evaluation-error", exception.what(), error_schema);
+                "schema-evaluation-error", exception.what(), error_schema);
           }
         },
         [error_schema](sourcemeta::one::HTTPRequest &callback_request,
