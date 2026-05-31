@@ -1,6 +1,11 @@
 # Resolve the tool's `outputSchema.$ref` once via `tools/list`. Every
 # successful `tools/call` below validates its `structuredContent` against
-# this schema so the advertised output shape and the actual one stay in lockstep
+# this schema so the advertised output shape and the actual one stay in lockstep.
+#
+# TODO: Drop the `structured_content` body-regex captures in favour of a plain
+# `jsonpath "$.result.structuredContent"` once hurl can inline a captured JSON
+# object as a request body. Tracked upstream at
+# https://github.com/Orange-OpenSource/hurl/issues/2152
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
