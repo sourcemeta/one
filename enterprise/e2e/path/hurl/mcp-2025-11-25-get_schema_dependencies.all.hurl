@@ -83,7 +83,7 @@ jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/v1/catalog/self
 jsonpath "$.result.structuredContent.results[7].at" == "/anyOf/7/$ref"
 jsonpath "$.result.structuredContent.results[8].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 jsonpath "$.result.structuredContent.results[8].to" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/response"
-jsonpath "$.result.structuredContent.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 variable "text" jsonpath "$.results" count == 9
 variable "text" jsonpath "$.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/response"
@@ -111,7 +111,7 @@ variable "text" jsonpath "$.results[7].to" == "{{base}}/v1/catalog/self/v1/schem
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 variable "text" jsonpath "$.results[8].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[8].to" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -207,7 +207,7 @@ jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/v1/catalog/self
 jsonpath "$.result.structuredContent.results[7].at" == "/anyOf/7/$ref"
 jsonpath "$.result.structuredContent.results[8].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 jsonpath "$.result.structuredContent.results[8].to" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/response"
-jsonpath "$.result.structuredContent.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 variable "text" jsonpath "$.results" count == 9
 variable "text" jsonpath "$.results[0].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/response"
@@ -235,7 +235,7 @@ variable "text" jsonpath "$.results[7].to" == "{{base}}/v1/catalog/self/v1/schem
 variable "text" jsonpath "$.results[7].at" == "/anyOf/7/$ref"
 variable "text" jsonpath "$.results[8].from" == "{{base}}/v1/catalog/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[8].to" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/reserved/anyOf/3/properties/data/anyOf/0/$ref"
+variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -311,7 +311,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1499
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -349,7 +349,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1500
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -491,7 +491,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1603
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 

@@ -13,382 +13,162 @@
     },
     {
       "jsonrpc": "2.0",
-      "id": 1,
-      "error": {
-        "code": -32602,
-        "message": "Invalid params",
-        "data": {
-          "valid": false,
-          "errors": [
-            {
-              "keywordLocation": "/properties/q/minLength",
-              "absoluteKeywordLocation": "https://example.com/rpc#/properties/q/minLength",
-              "instanceLocation": "/q",
-              "error": "The string was expected to contain at least one character"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": 2,
-      "error": {
-        "code": 1,
-        "message": "Enterprise edition required",
-        "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": null,
-      "error": {
-        "code": 2,
-        "message": "Forbidden origin"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": null,
-      "error": {
-        "code": 3,
-        "message": "Unsupported protocol version"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": null,
-      "error": {
-        "code": 4,
-        "message": "Method not allowed"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": 20,
-      "error": {
-        "code": -32002,
-        "message": "Resource not found",
-        "data": "https://example.com/v1/foo/v1/example"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
       "id": 21,
       "error": {
-        "code": -32002,
-        "message": "Resource not found",
-        "data": {
-          "uri": "https://json-schema.org/draft/2020-12/schema",
-          "reason": "foreign-origin",
-          "instanceOrigin": "https://schemas.sourcemeta.com",
-          "message": "This URL lies outside this catalog's URL namespace. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Query the appropriate registry for foreign URLs"
-        }
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": 22,
-      "error": {
-        "code": -32602,
-        "message": "Invalid params",
-        "data": {
-          "uri": "https://schemas.sourcemeta.com/jsonschema/2020-12/schema#/properties",
-          "reason": "fragment-present",
-          "message": "URIs passed to resources/read must not contain a fragment"
-        }
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": 24,
-      "error": {
-        "code": -32602,
-        "message": "Invalid params",
-        "data": {
-          "uri": "https://schemas.sourcemeta.com/jsonschema/2020-12/schema?foo=bar",
-          "reason": "unexpected-query-parameter",
-          "message": "The only query parameter accepted by resources/read is `bundle`"
-        }
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": null,
-      "error": {
-        "code": 5,
-        "message": "Request too large"
-      }
-    },
-    {
-      "jsonrpc": "2.0",
-      "id": 51,
-      "error": {
-        "code": 6,
-        "message": "Unsupported operation",
-        "data": "Tool calls are not yet supported"
+        "code": 7,
+        "message": "Foreign URI",
+        "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
       }
     }
   ],
   "type": "object",
-  "required": [ "jsonrpc", "error" ],
+  "required": [ "jsonrpc", "id", "error" ],
   "properties": {
     "jsonrpc": {
       "const": "2.0"
     },
     "id": {
-      "$comment": "The MCP schema types id as `string | number` with no null, but JSON-RPC 2.0 §5 mandates `id: null` when the server cannot read the request id (parse error, invalid request, etc.). MCP claims JSON-RPC 2.0 compliance but does not address this gap. We follow JSON-RPC 2.0 here and emit `id: null` in those cases",
       "type": [ "string", "integer", "null" ]
     },
     "error": {
       "anyOf": [
         {
-          "$ref": "#/$defs/reserved"
+          "$ref": "#/$defs/standard"
         },
         {
-          "type": "object",
-          "required": [ "code", "message", "data" ],
-          "properties": {
-            "code": {
-              "const": -32002
-            },
-            "message": {
-              "const": "Resource not found"
-            },
-            "data": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object",
-                  "required": [ "uri", "reason", "instanceOrigin", "message" ],
-                  "properties": {
-                    "uri": {
-                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "reason": {
-                      "const": "foreign-origin"
-                    },
-                    "instanceOrigin": {
-                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message", "data" ],
-          "properties": {
-            "code": {
-              "const": 1
-            },
-            "message": {
-              "const": "Enterprise edition required"
-            },
-            "data": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": 2
-            },
-            "message": {
-              "const": "Forbidden origin"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": 3
-            },
-            "message": {
-              "const": "Unsupported protocol version"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": 4
-            },
-            "message": {
-              "const": "Method not allowed"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": 5
-            },
-            "message": {
-              "const": "Request too large"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message", "data" ],
-          "properties": {
-            "code": {
-              "const": 6
-            },
-            "message": {
-              "const": "Unsupported operation"
-            },
-            "data": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/$defs/custom"
         }
       ]
     }
   },
   "additionalProperties": false,
   "$defs": {
-    "reserved": {
+    "standard": {
+      "$comment": "JSON-RPC reserved error codes",
       "anyOf": [
         {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": -32700
-            },
-            "message": {
-              "const": "Parse error"
-            }
-          },
-          "additionalProperties": false
+          "const": {
+            "code": -32700,
+            "message": "Parse error"
+          }
+        },
+        {
+          "const": {
+            "code": -32600,
+            "message": "Invalid Request"
+          }
+        },
+        {
+          "const": {
+            "code": -32601,
+            "message": "Method not found"
+          }
+        },
+        {
+          "const": {
+            "code": -32603,
+            "message": "Internal error"
+          }
         },
         {
           "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": -32600
-            },
-            "message": {
-              "const": "Invalid Request"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": -32601
-            },
-            "message": {
-              "const": "Method not found"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message" ],
+          "required": [ "code", "message", "data" ],
           "properties": {
             "code": {
               "const": -32602
             },
             "message": {
-              "const": "Invalid params"
+              "const": "Params fail against the tool request schema"
             },
             "data": {
-              "anyOf": [
-                {
-                  "$ref": "../api/schemas/evaluate/response.json"
-                },
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object",
-                  "required": [ "uri", "reason", "message" ],
-                  "properties": {
-                    "uri": {
-                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "reason": {
-                      "const": "fragment-present"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                },
-                {
-                  "type": "object",
-                  "required": [ "uri", "reason", "message" ],
-                  "properties": {
-                    "uri": {
-                      "$comment": "TODO: Use Format Assertion when supported on Blaze",
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "reason": {
-                      "const": "unexpected-query-parameter"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              ]
+              "$ref": "../api/schemas/evaluate/response.json"
             }
           },
           "additionalProperties": false
         },
         {
-          "type": "object",
-          "required": [ "code", "message" ],
-          "properties": {
-            "code": {
-              "const": -32603
-            },
-            "message": {
-              "const": "Internal error"
-            }
-          },
-          "additionalProperties": false
+          "const": {
+            "code": -32602,
+            "message": "Invalid resource schema URI",
+            "data": "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid tool name",
+            "data": "Use `tools/list` to discover the available tools"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid resource list cursor",
+            "data": "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid tool input schema URI",
+            "data": "The schema must be an absolute URI without a fragment or query parameters"
+          }
+        },
+        {
+          "const": {
+            "code": -32002,
+            "message": "Resource not found"
+          }
+        }
+      ]
+    },
+    "custom": {
+      "$comment": "Implementation-specific error codes outside the JSON-RPC reserved range",
+      "anyOf": [
+        {
+          "const": {
+            "code": 1,
+            "message": "Enterprise edition required",
+            "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
+          }
+        },
+        {
+          "const": {
+            "code": 2,
+            "message": "Forbidden origin"
+          }
+        },
+        {
+          "const": {
+            "code": 3,
+            "message": "Unsupported protocol version"
+          }
+        },
+        {
+          "const": {
+            "code": 4,
+            "message": "Method not allowed"
+          }
+        },
+        {
+          "const": {
+            "code": 5,
+            "message": "Request too large"
+          }
+        },
+        {
+          "const": {
+            "code": 6,
+            "message": "Unsupported operation",
+            "data": "Batch operations are not supported in this protocol version yet"
+          }
+        },
+        {
+          "const": {
+            "code": 7,
+            "message": "Foreign URI",
+            "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
+          }
         }
       ]
     }

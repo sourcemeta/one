@@ -96,15 +96,16 @@ public:
       -> sourcemeta::core::JSON override {
     if (auto output{this->validate_standard(this->rpc_schema_, arguments)};
         output.has_value()) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id, std::move(output));
+      return sourcemeta::core::jsonrpc_make_error(
+          &request_id, -32602, "Params fail against the tool request schema",
+          std::move(output));
     }
 
     if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
         arguments.at("schema").to_string().find('#') != std::string::npos ||
         arguments.at("schema").to_string().find('?') != std::string::npos) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_params(
-          request_id,
+      return sourcemeta::core::jsonrpc_make_error(
+          &request_id, -32602, "Invalid tool input schema URI",
           sourcemeta::core::JSON{"The schema must be an absolute URI without "
                                  "a fragment or query parameters"});
     }

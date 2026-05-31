@@ -113,7 +113,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 402
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -333,7 +333,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 415
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -370,7 +370,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 420
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
@@ -411,7 +411,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 421
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
@@ -448,7 +448,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 422
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
@@ -493,7 +493,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 423
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
@@ -537,7 +537,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 424
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
@@ -790,7 +790,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 974
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid params"
+jsonpath "$.error.message" == "Invalid tool input schema URI"
 jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
 jsonpath "$.result" not exists
 
