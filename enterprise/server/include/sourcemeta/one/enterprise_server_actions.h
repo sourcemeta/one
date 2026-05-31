@@ -59,9 +59,11 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     const auto origin_header{request.header("origin")};
     if (!origin_header.empty() && origin_header != this->allowed_origin_) {
-      this->write_envelope(request, response, sourcemeta::one::STATUS_FORBIDDEN,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32001, "Forbidden origin"));
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_FORBIDDEN,
+          sourcemeta::core::jsonrpc_make_error(
+              nullptr, -32001, "Forbidden origin",
+              sourcemeta::core::JSON{std::string{origin_header}}));
       return;
     }
 
