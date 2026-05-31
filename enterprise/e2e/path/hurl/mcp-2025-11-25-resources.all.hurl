@@ -95,7 +95,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Dependencies RPC Output"
 jsonpath "$.result.resources[13].description" == "Get all direct and indirect dependencies of a schema in the catalog"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 535
+jsonpath "$.result.resources[13].size" == 703
 jsonpath "$.result.resources[13].annotations.priority" == 0
 jsonpath "$.result.resources[14].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Schema Dependents API Response"
@@ -113,7 +113,7 @@ jsonpath "$.result.resources[16].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[16].name" == "Sourcemeta One Schema Dependents RPC Output"
 jsonpath "$.result.resources[16].description" == "Get all direct and transitive dependents of a schema in the catalog"
 jsonpath "$.result.resources[16].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[16].size" == 494
+jsonpath "$.result.resources[16].size" == 660
 jsonpath "$.result.resources[16].annotations.priority" == 0
 jsonpath "$.result.resources[17].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[17].name" == "Sourcemeta One Schema Evaluate API Request"
@@ -233,7 +233,7 @@ jsonpath "$.result.resources[36].uri" == "{{base}}/v1/catalog/self/v1/schemas/ap
 jsonpath "$.result.resources[36].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[36].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[36].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[36].size" == 579
+jsonpath "$.result.resources[36].size" == 753
 jsonpath "$.result.resources[36].annotations.priority" == 0
 jsonpath "$.result.resources[37].uri" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Stats API Response"
