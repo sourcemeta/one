@@ -9,7 +9,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 4
+jsonpath "$.error.code" == -32004
 jsonpath "$.error.message" == "Method not allowed"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -31,7 +31,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 4
+jsonpath "$.error.code" == -32004
 jsonpath "$.error.message" == "Method not allowed"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -53,7 +53,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 4
+jsonpath "$.error.code" == -32004
 jsonpath "$.error.message" == "Method not allowed"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}

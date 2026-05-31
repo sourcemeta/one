@@ -466,7 +466,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 6
+jsonpath "$.error.code" == -32006
 jsonpath "$.error.message" == "Unsupported operation"
 jsonpath "$.error.data" == "Batch operations are not supported in this protocol version yet"
 

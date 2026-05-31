@@ -59,9 +59,9 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     const auto origin_header{request.header("origin")};
     if (!origin_header.empty() && origin_header != this->allowed_origin_) {
-      this->write_envelope(
-          request, response, sourcemeta::one::STATUS_FORBIDDEN,
-          sourcemeta::core::jsonrpc_make_error(nullptr, 2, "Forbidden origin"));
+      this->write_envelope(request, response, sourcemeta::one::STATUS_FORBIDDEN,
+                           sourcemeta::core::jsonrpc_make_error(
+                               nullptr, -32001, "Forbidden origin"));
       return;
     }
 
@@ -82,7 +82,7 @@ public:
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                            sourcemeta::core::jsonrpc_make_error(
-                               nullptr, 4, "Method not allowed"));
+                               nullptr, -32004, "Method not allowed"));
       return;
     }
 
@@ -90,10 +90,10 @@ public:
         sourcemeta::core::mcp_resolve_protocol_version(
             request.header("mcp-protocol-version"))};
     if (!negotiated_version.has_value()) {
-      this->write_envelope(request, response,
-                           sourcemeta::one::STATUS_BAD_REQUEST,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, 3, "Unsupported protocol version"));
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          sourcemeta::core::jsonrpc_make_error(nullptr, -32003,
+                                               "Unsupported protocol version"));
       return;
     }
 
@@ -106,7 +106,7 @@ public:
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
                                  sourcemeta::core::jsonrpc_make_error(
-                                     nullptr, 5, "Request too large"));
+                                     nullptr, -32005, "Request too large"));
             return;
           }
           this->on_message(version, callback_request, callback_response,

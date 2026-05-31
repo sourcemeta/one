@@ -15,7 +15,7 @@
       "jsonrpc": "2.0",
       "id": 21,
       "error": {
-        "code": 7,
+        "code": -32007,
         "message": "Foreign URI",
         "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
       }
@@ -127,45 +127,45 @@
       "anyOf": [
         {
           "const": {
-            "code": 1,
+            "code": -32000,
             "message": "Enterprise edition required",
             "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
           }
         },
         {
           "const": {
-            "code": 2,
+            "code": -32001,
             "message": "Forbidden origin"
           }
         },
         {
           "const": {
-            "code": 3,
+            "code": -32003,
             "message": "Unsupported protocol version"
           }
         },
         {
           "const": {
-            "code": 4,
+            "code": -32004,
             "message": "Method not allowed"
           }
         },
         {
           "const": {
-            "code": 5,
+            "code": -32005,
             "message": "Request too large"
           }
         },
         {
           "const": {
-            "code": 6,
+            "code": -32006,
             "message": "Unsupported operation",
             "data": "Batch operations are not supported in this protocol version yet"
           }
         },
         {
           "const": {
-            "code": 7,
+            "code": -32007,
             "message": "Foreign URI",
             "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
           }

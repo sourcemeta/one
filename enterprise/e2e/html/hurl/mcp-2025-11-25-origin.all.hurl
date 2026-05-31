@@ -43,7 +43,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 2
+jsonpath "$.error.code" == -32001
 jsonpath "$.error.message" == "Forbidden origin"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -71,7 +71,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 2
+jsonpath "$.error.code" == -32001
 jsonpath "$.error.message" == "Forbidden origin"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
