@@ -18,10 +18,9 @@ Content-Type: application/json
 ```
 HTTP 200
 [Captures]
-output_schema_path: jsonpath "$.result.tools[10].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='search_schemas'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
-jsonpath "$.result.tools[10].name" == "search_schemas"
-jsonpath "$.result.tools[10].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/response"
+jsonpath "$.result.tools[?@.name=='search_schemas'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/response"
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25

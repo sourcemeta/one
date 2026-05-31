@@ -18,10 +18,9 @@ Content-Type: application/json
 ```
 HTTP 200
 [Captures]
-output_schema_path: jsonpath "$.result.tools[1].outputSchema['$ref']" regex "https?://[^/]+/v1/catalog(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_dependencies'].outputSchema['$ref']" regex "https?://[^/]+/v1/catalog(.+)"
 [Asserts]
-jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
-jsonpath "$.result.tools[1].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc/response"
+jsonpath "$.result.tools[?@.name=='get_schema_dependencies'].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc/response"
 
 POST {{base}}/v1/catalog/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -426,6 +425,7 @@ Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 dependencies_path_baseline_text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1600
@@ -434,6 +434,14 @@ jsonpath "$.result.isError" == false
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -460,6 +468,7 @@ Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1601
@@ -469,6 +478,14 @@ jsonpath "$.result.content[0].text" == "{{dependencies_path_baseline_text}}"
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]

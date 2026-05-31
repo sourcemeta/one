@@ -18,10 +18,9 @@ Content-Type: application/json
 ```
 HTTP 200
 [Captures]
-output_schema_path: jsonpath "$.result.tools[6].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_stats'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
-jsonpath "$.result.tools[6].name" == "get_schema_stats"
-jsonpath "$.result.tools[6].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/stats/rpc/response"
+jsonpath "$.result.tools[?@.name=='get_schema_stats'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/stats/rpc/response"
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -707,6 +706,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 stats_baseline_text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 900
@@ -715,6 +715,14 @@ jsonpath "$.result.isError" == false
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -741,6 +749,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 901
@@ -750,6 +759,14 @@ jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -776,6 +793,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 902
@@ -785,6 +803,14 @@ jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -811,6 +837,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
@@ -820,6 +847,14 @@ jsonpath "$.result.content[0].text" == "{{stats_baseline_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]

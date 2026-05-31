@@ -18,10 +18,9 @@ Content-Type: application/json
 ```
 HTTP 200
 [Captures]
-output_schema_path: jsonpath "$.result.tools[7].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_metadata'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
-jsonpath "$.result.tools[7].name" == "get_schema_metadata"
-jsonpath "$.result.tools[7].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/metadata/rpc/response"
+jsonpath "$.result.tools[?@.name=='get_schema_metadata'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/metadata/rpc/response"
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
@@ -830,6 +829,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 261
@@ -839,6 +839,14 @@ jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -865,6 +873,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 262
@@ -874,6 +883,14 @@ jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -900,6 +917,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 263
@@ -909,6 +927,14 @@ jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
