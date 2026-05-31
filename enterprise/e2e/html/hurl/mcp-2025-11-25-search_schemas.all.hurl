@@ -618,7 +618,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"q\""
 
@@ -659,11 +659,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/minimum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/minimum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/limit/minimum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The integer value 0 was expected to be greater than or equal to the integer 1"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -704,11 +704,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/maximum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/maximum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/limit/maximum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The integer value 101 was expected to be less than or equal to the integer 100"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -749,11 +749,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/limit/type"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer, or string but it was of type number"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -861,11 +861,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/minItems"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/minItems"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/scope/minItems"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[0].error" == "The array value was expected to contain at least 1 item but it contained 0 items"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -906,11 +906,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/uniqueItems"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/uniqueItems"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/scope/uniqueItems"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[0].error" == "The array value contained the following duplicate item: \"path\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -951,15 +951,15 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 3
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/items/enum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/items/enum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/scope/items/enum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope/0"
 jsonpath "$.error.data.errors[0].error" == "The string value \"bogus\" was expected to equal one of the following values: \"description\", \"path\", and \"title\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties/scope/items"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/scope/items"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/scope/items"
 jsonpath "$.error.data.errors[1].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[1].error" == "Every item in the array value was expected to validate against the given subschema"
 jsonpath "$.error.data.errors[2].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[2].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[2].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[2].instanceLocation" == ""
 jsonpath "$.error.data.errors[2].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -1223,11 +1223,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/limit/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/limit/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The string value \"101\" was expected to match the regular expression \"^([1-9]|[1-9][0-9]|100)$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -1268,11 +1268,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/additionalProperties"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
 jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/additionalProperties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
@@ -1401,11 +1401,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/minLength"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/q/minLength"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/q/minLength"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to consist of at least 1 character but it consisted of 0 characters"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -1447,11 +1447,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/q/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/q/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"   \" was expected to match the regular expression \"\\S\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 
@@ -1493,11 +1493,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties/q/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties/q/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\t\n\r \" was expected to match the regular expression \"\\S\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/api/schemas/search/rpc/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
 

@@ -46,30 +46,30 @@ Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#1)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/rpc.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/rpc/request.json (#3)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/rpc.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/rpc/request.json (#5)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/rpc.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/rpc/request.json (#7)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#8)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/rpc.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/rpc/request.json (#10)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/rpc.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/rpc/request.json (#12)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/rpc.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/rpc/request.json (#14)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/rpc.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/rpc/request.json (#16)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#17)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/rpc.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/rpc/request.json (#19)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/rpc.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/rpc/request.json (#21)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#22)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/rpc.json (#23)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/rpc/request.json (#23)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#24)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/rpc.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/rpc/request.json (#26)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#27)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#29)
@@ -92,30 +92,30 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 Detecting: $(realpath "$TMP")/schemas/foo.json (#46)
 (  2%) Resolving: self/v1/schemas/api/error.json
 (  4%) Resolving: self/v1/schemas/api/list/response.json
-(  6%) Resolving: self/v1/schemas/api/list/rpc.json
+(  6%) Resolving: self/v1/schemas/api/list/rpc/request.json
 (  8%) Resolving: self/v1/schemas/api/schemas/dependencies/response.json
-( 10%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc.json
+( 10%) Resolving: self/v1/schemas/api/schemas/dependencies/rpc/request.json
 ( 13%) Resolving: self/v1/schemas/api/schemas/dependents/response.json
-( 15%) Resolving: self/v1/schemas/api/schemas/dependents/rpc.json
+( 15%) Resolving: self/v1/schemas/api/schemas/dependents/rpc/request.json
 ( 17%) Resolving: self/v1/schemas/api/schemas/evaluate/request.json
 ( 19%) Resolving: self/v1/schemas/api/schemas/evaluate/response.json
-( 21%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc.json
+( 21%) Resolving: self/v1/schemas/api/schemas/evaluate/rpc/request.json
 ( 23%) Resolving: self/v1/schemas/api/schemas/health/response.json
-( 26%) Resolving: self/v1/schemas/api/schemas/health/rpc.json
+( 26%) Resolving: self/v1/schemas/api/schemas/health/rpc/request.json
 ( 28%) Resolving: self/v1/schemas/api/schemas/locations/response.json
-( 30%) Resolving: self/v1/schemas/api/schemas/locations/rpc.json
+( 30%) Resolving: self/v1/schemas/api/schemas/locations/rpc/request.json
 ( 32%) Resolving: self/v1/schemas/api/schemas/metadata/response.json
-( 34%) Resolving: self/v1/schemas/api/schemas/metadata/rpc.json
+( 34%) Resolving: self/v1/schemas/api/schemas/metadata/rpc/request.json
 ( 36%) Resolving: self/v1/schemas/api/schemas/position.json
 ( 39%) Resolving: self/v1/schemas/api/schemas/positions/response.json
-( 41%) Resolving: self/v1/schemas/api/schemas/positions/rpc.json
+( 41%) Resolving: self/v1/schemas/api/schemas/positions/rpc/request.json
 ( 43%) Resolving: self/v1/schemas/api/schemas/search/response.json
-( 45%) Resolving: self/v1/schemas/api/schemas/search/rpc.json
+( 45%) Resolving: self/v1/schemas/api/schemas/search/rpc/request.json
 ( 47%) Resolving: self/v1/schemas/api/schemas/stats/response.json
-( 50%) Resolving: self/v1/schemas/api/schemas/stats/rpc.json
+( 50%) Resolving: self/v1/schemas/api/schemas/stats/rpc/request.json
 ( 52%) Resolving: self/v1/schemas/api/schemas/trace/request.json
 ( 54%) Resolving: self/v1/schemas/api/schemas/trace/response.json
-( 56%) Resolving: self/v1/schemas/api/schemas/trace/rpc.json
+( 56%) Resolving: self/v1/schemas/api/schemas/trace/rpc/request.json
 ( 58%) Resolving: self/v1/schemas/mcp/error.json
 ( 60%) Resolving: self/v1/schemas/mcp/initialize/request.json
 ( 63%) Resolving: self/v1/schemas/mcp/initialize/response.json
