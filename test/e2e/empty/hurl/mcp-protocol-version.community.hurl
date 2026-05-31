@@ -100,6 +100,11 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
 jsonpath "$.error.code" == -32003
 jsonpath "$.error.message" == "Unsupported protocol version"
+jsonpath "$.error.data.current" == "2024-11-05"
+jsonpath "$.error.data.supported" count == 3
+jsonpath "$.error.data.supported[0]" == "2025-03-26"
+jsonpath "$.error.data.supported[1]" == "2025-06-18"
+jsonpath "$.error.data.supported[2]" == "2025-11-25"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

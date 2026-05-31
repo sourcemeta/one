@@ -133,16 +133,49 @@
           }
         },
         {
-          "const": {
-            "code": -32001,
-            "message": "Forbidden origin"
-          }
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32001
+            },
+            "message": {
+              "const": "Forbidden origin"
+            },
+            "data": {
+              "description": "The rejected `Origin` header value, echoed back verbatim. May be a URI or the literal string `null` per RFC 6454 §6 for opaque origins",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         },
         {
-          "const": {
-            "code": -32003,
-            "message": "Unsupported protocol version"
-          }
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32003
+            },
+            "message": {
+              "const": "Unsupported protocol version"
+            },
+            "data": {
+              "type": "object",
+              "required": [ "current", "supported" ],
+              "properties": {
+                "current": {
+                  "description": "The `MCP-Protocol-Version` header value the client sent, echoed back verbatim",
+                  "type": "string"
+                },
+                "supported": {
+                  "description": "The protocol versions this server implements, in chronological order",
+                  "const": [ "2025-03-26", "2025-06-18", "2025-11-25" ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         },
         {
           "const": {

@@ -85,14 +85,23 @@ public:
       return;
     }
 
+    const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
-        sourcemeta::core::mcp_resolve_protocol_version(
-            request.header("mcp-protocol-version"))};
+        sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
     if (!negotiated_version.has_value()) {
-      this->write_envelope(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          sourcemeta::core::jsonrpc_make_error(nullptr, -32003,
-                                               "Unsupported protocol version"));
+      auto data{sourcemeta::core::JSON::make_object()};
+      data.assign("current",
+                  sourcemeta::core::JSON{std::string{requested_version}});
+      auto supported{sourcemeta::core::JSON::make_array()};
+      supported.push_back(sourcemeta::core::JSON{"2025-03-26"});
+      supported.push_back(sourcemeta::core::JSON{"2025-06-18"});
+      supported.push_back(sourcemeta::core::JSON{"2025-11-25"});
+      data.assign("supported", std::move(supported));
+      this->write_envelope(request, response,
+                           sourcemeta::one::STATUS_BAD_REQUEST,
+                           sourcemeta::core::jsonrpc_make_error(
+                               nullptr, -32003, "Unsupported protocol version",
+                               std::move(data)));
       return;
     }
 
