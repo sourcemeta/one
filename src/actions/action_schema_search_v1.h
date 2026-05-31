@@ -67,7 +67,8 @@ public:
     if (query.empty()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "missing-query", "You must provide a query parameter to search for",
+          "missing-search-query",
+          "You must provide a query parameter to search for",
           this->error_schema_);
       return;
     }

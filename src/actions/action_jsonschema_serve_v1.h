@@ -42,8 +42,9 @@ public:
     if (schema_path.find('#') != std::string_view::npos ||
         schema_path.find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST, "invalid-uri",
-          "The schema URI must not contain a fragment", error_schema);
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          "invalid-schema-uri", "The schema URI must not contain a fragment",
+          error_schema);
       return;
     }
 

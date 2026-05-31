@@ -8,7 +8,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/missing-query"
+jsonpath "$.title" == "sourcemeta:one/missing-search-query"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -30,7 +30,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/missing-query"
+jsonpath "$.title" == "sourcemeta:one/missing-search-query"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

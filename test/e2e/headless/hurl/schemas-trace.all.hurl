@@ -86,7 +86,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:one/no-template"
+jsonpath "$.title" == "sourcemeta:one/no-schema-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

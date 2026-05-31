@@ -6,7 +6,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -16,7 +16,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -26,7 +26,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -36,7 +36,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -46,7 +46,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -56,7 +56,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -66,7 +66,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -80,7 +80,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -94,7 +94,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
@@ -104,7 +104,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
-jsonpath "$.title" == "sourcemeta:one/invalid-uri"
+jsonpath "$.title" == "sourcemeta:one/invalid-schema-uri"
 jsonpath "$.status" == 400
 jsonpath "$.detail" == "The schema URI must not contain a fragment"
 

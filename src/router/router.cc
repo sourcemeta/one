@@ -65,8 +65,8 @@ auto Router::dispatch(
   auto *instance{this->action(identifier, context)};
   if (instance == nullptr) [[unlikely]] {
     this->error(request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
-                "unknown-handler-code",
-                "This server version does not implement the handler for "
+                "unknown-action",
+                "This version does not implement such action handler for "
                 "this URL");
     return;
   }
