@@ -456,7 +456,7 @@ jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[26].name" == "Sourcemeta One Schema Dependencies RPC Output"
 jsonpath "$.result.resources[26].description" == "Get all direct and indirect dependencies of a schema in the catalog"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 524
+jsonpath "$.result.resources[26].size" == 692
 jsonpath "$.result.resources[26].annotations.priority" == 0
 jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[27].name" == "Sourcemeta One Schema Dependents API Response"
@@ -474,7 +474,7 @@ jsonpath "$.result.resources[29].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[29].name" == "Sourcemeta One Schema Dependents RPC Output"
 jsonpath "$.result.resources[29].description" == "Get all direct and transitive dependents of a schema in the catalog"
 jsonpath "$.result.resources[29].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[29].size" == 483
+jsonpath "$.result.resources[29].size" == 649
 jsonpath "$.result.resources[29].annotations.priority" == 0
 jsonpath "$.result.resources[30].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[30].name" == "Sourcemeta One Schema Evaluate API Request"
@@ -594,7 +594,7 @@ jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[49].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[49].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[49].size" == 568
+jsonpath "$.result.resources[49].size" == 742
 jsonpath "$.result.resources[49].annotations.priority" == 0
 jsonpath "$.result.nextCursor" == "100"
 

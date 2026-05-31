@@ -3,16 +3,25 @@
   "title": "Sourcemeta One Schema Search RPC Output",
   "description": "Search for schemas in the catalog by query term",
   "examples": [
-    [
-      {
-        "path": "/schemas/user.json",
-        "identifier": "https://example.com/schemas/user.json",
-        "title": "User Schema",
-        "description": "Defines a user object",
-        "priority": 50,
-        "health": 100
-      }
-    ]
+    {
+      "results": [
+        {
+          "path": "/schemas/user.json",
+          "identifier": "https://example.com/schemas/user.json",
+          "title": "User Schema",
+          "description": "Defines a user object",
+          "priority": 50,
+          "health": 100
+        }
+      ]
+    }
   ],
-  "$ref": "../response.json"
+  "type": "object",
+  "required": [ "results" ],
+  "properties": {
+    "results": {
+      "$ref": "../response.json"
+    }
+  },
+  "additionalProperties": false
 }
