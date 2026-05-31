@@ -7,5 +7,5 @@
       "valid": true
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/evaluate/response.json"
 }

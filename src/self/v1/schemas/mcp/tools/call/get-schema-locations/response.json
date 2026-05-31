@@ -8,5 +8,5 @@
       "dynamic": {}
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/locations/response.json"
 }

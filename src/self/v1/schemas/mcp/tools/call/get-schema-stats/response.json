@@ -16,5 +16,5 @@
       }
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/stats/response.json"
 }

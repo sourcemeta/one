@@ -20,7 +20,7 @@
   "required": [ "results" ],
   "properties": {
     "results": {
-      "$ref": "../response.json"
+      "$ref": "../../../../api/schemas/search/response.json"
     }
   },
   "additionalProperties": false

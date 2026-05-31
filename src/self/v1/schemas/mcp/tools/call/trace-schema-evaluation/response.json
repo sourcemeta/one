@@ -8,5 +8,5 @@
       "steps": []
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/trace/response.json"
 }

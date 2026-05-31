@@ -52,9 +52,9 @@ public:
         this->request_schema_ = std::get<std::string_view>(value);
       } else if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "rpcRequestSchema") {
+      } else if (key == "mcpRequestSchema") {
         this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "rpcResponseSchema") {
+      } else if (key == "mcpResponseSchema") {
         this->rpc_response_schema_ = std::get<std::string_view>(value);
       } else if (key == "errorSchema") {
         this->error_schema_ = std::get<std::string_view>(value);
