@@ -81,7 +81,7 @@ public:
       this->write_envelope(request, response,
                            sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
                            sourcemeta::core::jsonrpc_make_error(
-                               nullptr, 4, "Method not allowed"));
+                               nullptr, -32004, "Method not allowed"));
       return;
     }
 
@@ -89,10 +89,10 @@ public:
         sourcemeta::core::mcp_resolve_protocol_version(
             request.header("mcp-protocol-version"))};
     if (!negotiated_version.has_value()) {
-      this->write_envelope(request, response,
-                           sourcemeta::one::STATUS_BAD_REQUEST,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, 3, "Unsupported protocol version"));
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
+          sourcemeta::core::jsonrpc_make_error(nullptr, -32003,
+                                               "Unsupported protocol version"));
       return;
     }
 
@@ -105,7 +105,7 @@ public:
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
                                  sourcemeta::core::jsonrpc_make_error(
-                                     nullptr, 5, "Request too large"));
+                                     nullptr, -32005, "Request too large"));
             return;
           }
           sourcemeta::core::JSON request_json{nullptr};
@@ -123,7 +123,7 @@ public:
                 callback_request, callback_response, sourcemeta::one::STATUS_OK,
                 version == sourcemeta::core::MCPProtocolVersion::V_2025_03_26
                     ? sourcemeta::core::jsonrpc_make_error(
-                          nullptr, 6, "Unsupported operation",
+                          nullptr, -32006, "Unsupported operation",
                           sourcemeta::core::JSON{
                               "Batch operations are not supported in this "
                               "protocol version yet"})
@@ -178,7 +178,7 @@ private:
         "MCP support is only available in the Enterprise edition of "
         "Sourcemeta One"};
     return sourcemeta::core::jsonrpc_make_error(
-        id, 1, "Enterprise edition required",
+        id, -32000, "Enterprise edition required",
         sourcemeta::core::JSON{MCP_ENTERPRISE_REQUIRED_DATA});
   }
 

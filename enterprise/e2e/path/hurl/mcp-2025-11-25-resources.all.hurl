@@ -215,7 +215,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[33].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 4495
+jsonpath "$.result.resources[33].size" == 4555
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One MCP Initialize Request"
@@ -684,7 +684,7 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 21
-jsonpath "$.error.code" == 7
+jsonpath "$.error.code" == -32007
 jsonpath "$.error.message" == "Foreign URI"
 jsonpath "$.error.data" == "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
 

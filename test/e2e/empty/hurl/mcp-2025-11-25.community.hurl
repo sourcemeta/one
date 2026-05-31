@@ -58,7 +58,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 1
+jsonpath "$.error.code" == -32000
 jsonpath "$.error.message" == "Enterprise edition required"
 jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
 
@@ -142,7 +142,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 42
-jsonpath "$.error.code" == 1
+jsonpath "$.error.code" == -32000
 jsonpath "$.error.message" == "Enterprise edition required"
 jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
 

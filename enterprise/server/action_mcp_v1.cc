@@ -150,7 +150,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
     request.relative_to(sourcemeta::core::URI{this->server_uri()});
     if (request.is_absolute()) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, 7, "Foreign URI",
+          &id, -32007, "Foreign URI",
           sourcemeta::core::JSON{"This URI lies outside this catalog's "
                                  "namespace. Query the appropriate registry "
                                  "instead"});
@@ -248,7 +248,7 @@ auto ActionMCP_v1::on_message(
       this->write_envelope(
           request, response, sourcemeta::one::STATUS_OK,
           sourcemeta::core::jsonrpc_make_error(
-              nullptr, 6, "Unsupported operation",
+              nullptr, -32006, "Unsupported operation",
               sourcemeta::core::JSON{
                   "Batch operations are not supported in this protocol "
                   "version yet"}));

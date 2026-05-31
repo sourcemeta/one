@@ -95,7 +95,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
-jsonpath "$.error.code" == 3
+jsonpath "$.error.code" == -32003
 jsonpath "$.error.message" == "Unsupported protocol version"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
