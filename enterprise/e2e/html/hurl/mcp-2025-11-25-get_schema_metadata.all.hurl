@@ -1,3 +1,23 @@
+# Resolve the tool's `outputSchema.$ref` once via `tools/list`. Every
+# successful `tools/call` below validates its `structuredContent` against
+# this schema so the advertised output shape and the actual one stay in lockstep
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "method": "tools/list"
+}
+```
+HTTP 200
+[Captures]
+output_schema_path: jsonpath "$.result.tools[7].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+[Asserts]
+jsonpath "$.result.tools[7].name" == "get_schema_metadata"
+jsonpath "$.result.tools[7].outputSchema['$ref']" == "{{base}}/self/v1/schemas/api/schemas/metadata/rpc/response"
+
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
@@ -20,6 +40,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 800
@@ -71,6 +92,14 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
@@ -93,6 +122,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 801
@@ -138,6 +168,14 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
@@ -160,6 +198,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 802
@@ -173,6 +212,14 @@ variable "text" jsonpath "$.dependencies" == 9
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -344,6 +391,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 813
@@ -358,6 +406,14 @@ variable "text" jsonpath "$.title" == "My Object"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
@@ -701,6 +757,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "metadata-call-string-id"
@@ -713,6 +770,14 @@ variable "text" jsonpath "$.title" == "My Object"
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 {{last_response}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
 ```
 HTTP 200
 [Asserts]
