@@ -694,29 +694,37 @@ struct GENERATE_URITEMPLATE_ROUTES {
         configuration.base_path +
         "/self/v1/schemas/api/schemas/search/response"};
     const auto list_rpc_schema{configuration.base_path +
-                               "/self/v1/schemas/api/list/rpc"};
+                               "/self/v1/schemas/api/list/rpc/request"};
     const auto dependencies_rpc_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependencies/rpc"};
+        "/self/v1/schemas/api/schemas/dependencies/rpc/request"};
     const auto dependents_rpc_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependents/rpc"};
-    const auto health_rpc_schema{configuration.base_path +
-                                 "/self/v1/schemas/api/schemas/health/rpc"};
+        "/self/v1/schemas/api/schemas/dependents/rpc/request"};
+    const auto health_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/health/rpc/request"};
     const auto locations_rpc_schema{
-        configuration.base_path + "/self/v1/schemas/api/schemas/locations/rpc"};
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/locations/rpc/request"};
     const auto positions_rpc_schema{
-        configuration.base_path + "/self/v1/schemas/api/schemas/positions/rpc"};
-    const auto stats_rpc_schema{configuration.base_path +
-                                "/self/v1/schemas/api/schemas/stats/rpc"};
-    const auto metadata_rpc_schema{configuration.base_path +
-                                   "/self/v1/schemas/api/schemas/metadata/rpc"};
-    const auto evaluate_rpc_schema{configuration.base_path +
-                                   "/self/v1/schemas/api/schemas/evaluate/rpc"};
-    const auto trace_rpc_schema{configuration.base_path +
-                                "/self/v1/schemas/api/schemas/trace/rpc"};
-    const auto search_rpc_schema{configuration.base_path +
-                                 "/self/v1/schemas/api/schemas/search/rpc"};
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/positions/rpc/request"};
+    const auto stats_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/stats/rpc/request"};
+    const auto metadata_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/metadata/rpc/request"};
+    const auto evaluate_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/evaluate/rpc/request"};
+    const auto trace_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/trace/rpc/request"};
+    const auto search_rpc_schema{
+        configuration.base_path +
+        "/self/v1/schemas/api/schemas/search/rpc/request"};
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
     const auto mcp_request_schema{configuration.base_path +
