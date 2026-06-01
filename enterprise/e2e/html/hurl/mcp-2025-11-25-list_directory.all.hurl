@@ -3104,8 +3104,10 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 118
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.path" == "/"
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "Directory not found"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

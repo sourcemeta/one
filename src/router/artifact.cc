@@ -42,11 +42,13 @@ auto uri_to_relative_path(const std::string_view uri,
   }
 
   const auto path_option{parsed->path()};
-  if (!path_option.has_value() || path_option.value().starts_with("/")) {
+  if (path_option.has_value() && path_option.value().starts_with("/")) {
     return std::nullopt;
   }
 
-  std::string_view normalized{path_option.value()};
+  std::string_view normalized{path_option.has_value()
+                                  ? std::string_view{path_option.value()}
+                                  : std::string_view{}};
   while (normalized.starts_with("../")) {
     normalized.remove_prefix(3);
   }
