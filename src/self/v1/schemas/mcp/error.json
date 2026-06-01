@@ -191,13 +191,6 @@
         },
         {
           "const": {
-            "code": -32006,
-            "message": "Unsupported operation",
-            "data": "Batch operations are not supported in this protocol version yet"
-          }
-        },
-        {
-          "const": {
             "code": -32007,
             "message": "Foreign URI",
             "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"

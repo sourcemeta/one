@@ -13,6 +13,7 @@
 #include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -138,8 +139,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const std::string_view) -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
+      -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
@@ -174,13 +175,17 @@ private:
       -> sourcemeta::core::JSON;
 
   auto on_tools_call(sourcemeta::core::MCPProtocolVersion version,
-                     const sourcemeta::core::JSON &request_json,
-                     std::string_view envelope) -> sourcemeta::core::JSON;
+                     const sourcemeta::core::JSON &request_json)
+      -> sourcemeta::core::JSON;
 
   auto on_message(sourcemeta::core::MCPProtocolVersion version,
                   sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response, std::string &&body)
       -> void;
+
+  auto process_one(sourcemeta::core::MCPProtocolVersion version,
+                   const sourcemeta::core::JSON &request_json)
+      -> std::optional<sourcemeta::core::JSON>;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   sourcemeta::one::Router &dispatcher_;

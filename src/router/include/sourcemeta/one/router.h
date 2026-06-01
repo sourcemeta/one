@@ -42,8 +42,7 @@ public:
 
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &id,
-                   const sourcemeta::core::JSON &arguments,
-                   const std::string_view envelope)
+                   const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {

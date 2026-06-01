@@ -149,7 +149,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[22].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[22].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 5838
+jsonpath "$.result.resources[22].size" == 5622
 jsonpath "$.result.resources[22].annotations.priority" == 0
 jsonpath "$.result.resources[23].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One MCP Initialize Request"
@@ -189,9 +189,9 @@ jsonpath "$.result.resources[28].size" == 609
 jsonpath "$.result.resources[28].annotations.priority" == 0
 jsonpath "$.result.resources[29].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[29].name" == "Sourcemeta One MCP Request"
-jsonpath "$.result.resources[29].description" == "Any incoming MCP request the server accepts"
+jsonpath "$.result.resources[29].description" == "Any incoming MCP request the server accepts. The body may be a single JSON-RPC envelope or a JSON-RPC 2.0 batch (an array of envelopes) on protocol version `2025-03-26`"
 jsonpath "$.result.resources[29].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[29].size" == 1784
+jsonpath "$.result.resources[29].size" == 2531
 jsonpath "$.result.resources[29].annotations.priority" == 0
 jsonpath "$.result.resources[30].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/resources/list/request"
 jsonpath "$.result.resources[30].name" == "Sourcemeta One MCP Resources List Request"
@@ -233,7 +233,7 @@ jsonpath "$.result.resources[36].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[36].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[36].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[36].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[36].size" == 4192
+jsonpath "$.result.resources[36].size" == 4810
 jsonpath "$.result.resources[36].annotations.priority" == 0
 jsonpath "$.result.resources[37].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Evaluate RPC Input"

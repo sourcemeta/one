@@ -111,32 +111,63 @@
         },
         "isError": false
       }
+    },
+    [
+      {
+        "jsonrpc": "2.0",
+        "id": 100,
+        "result": {}
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 101,
+        "result": {
+          "resources": []
+        }
+      }
+    ]
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/single"
+    },
+    {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/single"
+      }
     }
   ],
-  "anyOf": [
-    {
-      "$ref": "./initialize/response.json"
-    },
-    {
-      "$ref": "./ping/response.json"
-    },
-    {
-      "$ref": "./error.json"
-    },
-    {
-      "$ref": "./resources/list/response.json"
-    },
-    {
-      "$ref": "./resources/templates/list/response.json"
-    },
-    {
-      "$ref": "./resources/read/response.json"
-    },
-    {
-      "$ref": "./tools/list/response.json"
-    },
-    {
-      "$ref": "./tools/call/response.json"
+  "$defs": {
+    "single": {
+      "$comment": "Any single JSON-RPC envelope the server emits (success or error)",
+      "anyOf": [
+        {
+          "$ref": "./initialize/response.json"
+        },
+        {
+          "$ref": "./ping/response.json"
+        },
+        {
+          "$ref": "./error.json"
+        },
+        {
+          "$ref": "./resources/list/response.json"
+        },
+        {
+          "$ref": "./resources/templates/list/response.json"
+        },
+        {
+          "$ref": "./resources/read/response.json"
+        },
+        {
+          "$ref": "./tools/list/response.json"
+        },
+        {
+          "$ref": "./tools/call/response.json"
+        }
+      ]
     }
-  ]
+  }
 }

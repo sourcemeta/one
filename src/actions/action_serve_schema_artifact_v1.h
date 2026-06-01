@@ -80,7 +80,7 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments, const std::string_view)
+           const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
     if (auto output{
             this->validate_standard(this->rpc_request_schema_, arguments)};
