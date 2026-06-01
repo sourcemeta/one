@@ -33,13 +33,15 @@ jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 1
 jsonpath "$[0].error" not exists
 jsonpath "$[0].result.protocolVersion" == "2025-03-26"
-jsonpath "$[0].result.capabilities.resources.subscribe" == false
-jsonpath "$[0].result.capabilities.resources.listChanged" == false
+jsonpath "$[0].result.capabilities" isObject
+jsonpath "$[0].result.capabilities.resources" isObject
+jsonpath "$[0].result.capabilities.resources" isEmpty
 jsonpath "$[0].result.serverInfo.name" == "sourcemeta-one"
-jsonpath "$[0].result.serverInfo.version" == "1.0.0"
-jsonpath "$[0].result.serverInfo.title" == "Sourcemeta One"
-jsonpath "$[0].result.serverInfo.description" == "A JSON Schema registry"
-jsonpath "$[0].result.serverInfo.websiteUrl" == "https://example.com"
+jsonpath "$[0].result.serverInfo.version" matches "^.+$"
+jsonpath "$[0].result.serverInfo.title" not exists
+jsonpath "$[0].result.serverInfo.description" not exists
+jsonpath "$[0].result.serverInfo.websiteUrl" not exists
+jsonpath "$[0].result.instructions" == "This is an instance of Sourcemeta One named \"Sourcemeta\" (The next-generation JSON Schema platform). Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Use `tools/list` to discover the operations this catalog exposes. Because this server is a JSON Schema registry, the schemas defining each tool's input parameters are themselves resources in this registry. To inspect a tool's full parameter shape, call `resources/read` on the `$ref` URL in that tool's `inputSchema`. Learn more at https://one.sourcemeta.com"
 jsonpath "$[1].jsonrpc" == "2.0"
 jsonpath "$[1].id" == 2
 jsonpath "$[1].result" not exists
