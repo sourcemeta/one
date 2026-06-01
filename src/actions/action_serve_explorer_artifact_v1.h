@@ -11,8 +11,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
-#include "action_serve_metapack_file_v1.h"
-
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
@@ -63,27 +61,32 @@ public:
       return;
     }
 
-    auto absolute_path{this->base() / "explorer"};
-    if (!matches.empty() && !matches.front().empty()) {
-      absolute_path /= matches.front();
+    const std::string_view path_match{matches.empty() ? std::string_view{}
+                                                      : matches.front()};
+    const auto path{this->artifact_resolve_path(
+        path_match, InputKind::Match, Tree::Explorer, this->artifact_)};
+    if (!path.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", this->error_schema_);
+      return;
     }
-    absolute_path /= "%";
-    absolute_path /= std::string{this->artifact_} + ".metapack";
-    ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                      true, {}, this->response_schema_, request,
-                                      response, this->error_schema_);
+    this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
+                         this->response_schema_, request, response,
+                         this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
     if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
@@ -95,17 +98,14 @@ public:
                                  "a fragment or query parameters"});
     }
 
-    const auto schema_path{
-        this->uri_to_relative_path(arguments.at("schema").to_string())};
-    if (!schema_path.has_value()) {
+    const auto path{this->artifact_resolve_path(
+        arguments.at("schema").to_string(), InputKind::URI, Tree::Explorer,
+        this->artifact_)};
+    if (!path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
-
-    auto absolute_path{this->base() / "explorer" / schema_path.value() / "%"};
-    absolute_path /= std::string{this->artifact_} + ".metapack";
-
-    auto contents{sourcemeta::one::metapack_read_json(absolute_path)};
+    auto contents{this->artifact_read_json(path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

@@ -11,6 +11,7 @@
 #include <sourcemeta/one/http.h>
 
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr, std::make_unique
 #include <mutex>       // std::once_flag
@@ -18,6 +19,7 @@
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::pair
 
 namespace sourcemeta::one {
 
@@ -25,10 +27,11 @@ class Router;
 
 class RouterAction {
 public:
-  RouterAction(const std::filesystem::path &base,
-               const std::string_view base_path,
+  RouterAction(const std::filesystem::path &index_directory,
+               const std::string_view server_uri_base_path,
                const std::string_view server_uri)
-      : base_{base}, base_path_{base_path}, server_uri_{server_uri} {}
+      : index_directory_{index_directory},
+        server_uri_base_path_{server_uri_base_path}, server_uri_{server_uri} {}
   virtual ~RouterAction() = default;
 
   // To avoid mistakes
@@ -45,49 +48,54 @@ public:
                    const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON = 0;
 
-  [[nodiscard]] auto base() const noexcept -> const std::filesystem::path & {
-    return this->base_;
-  }
-
-  [[nodiscard]] auto base_path() const noexcept -> std::string_view {
-    return this->base_path_;
+  [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
+    return this->server_uri_base_path_;
   }
 
   [[nodiscard]] auto server_uri() const noexcept -> std::string_view {
     return this->server_uri_;
   }
 
-  [[nodiscard]] auto schema_directory(const std::string_view uri) const
+  enum class Tree : std::uint8_t { Schemas, Explorer };
+  enum class InputKind : std::uint8_t { URI, Match };
+
+  [[nodiscard]] auto artifact_resolve_path(std::string_view input,
+                                           InputKind kind, Tree tree,
+                                           std::string_view artifact_name,
+                                           bool check_existence = true) const
       -> std::optional<std::filesystem::path>;
-
-  [[nodiscard]] auto uri_to_relative_path(const std::string_view uri) const
-      -> std::optional<std::filesystem::path>;
-
-  [[nodiscard]] auto resolve_schema_path(std::string_view schema_relative_path,
-                                         bool bundle) const
-      -> std::filesystem::path;
-
-  // Loads a precompiled Blaze template from disk for the given
-  // self-served schema URL (e.g. an `mcpRequestSchema` route argument). The
-  // mode picks `blaze-fast.metapack` (FastValidation) or
-  // `blaze-exhaustive.metapack` (Exhaustive). Asserts the file exists.
-  [[nodiscard]] auto blaze_template(std::string_view schema_uri,
-                                    sourcemeta::blaze::Mode mode) const
-      -> sourcemeta::blaze::Template;
-
-  [[nodiscard]] auto validate(std::string_view schema_uri,
-                              const sourcemeta::core::JSON &instance) const
-      -> bool;
 
   [[nodiscard]] auto
-  validate_standard(std::string_view schema_uri,
-                    const sourcemeta::core::JSON &instance) const
+  artifact_read_json(const std::filesystem::path &absolute_path) const
       -> std::optional<sourcemeta::core::JSON>;
 
+  auto artifact_serve(const std::filesystem::path &absolute_path,
+                      const char *code, bool enable_cors, std::string_view mime,
+                      std::string_view link, HTTPRequest &request,
+                      HTTPResponse &response,
+                      std::string_view error_schema) const -> void;
+
+  [[nodiscard]] auto
+  schema_evaluate_fast(std::string_view schema_uri,
+                       const sourcemeta::core::JSON &instance) const -> bool;
+
+  [[nodiscard]] auto schema_evaluate(std::string_view schema_uri,
+                                     const sourcemeta::core::JSON &instance,
+                                     sourcemeta::blaze::Mode mode) const
+      -> std::pair<bool, sourcemeta::core::JSON>;
+
+  [[nodiscard]] auto schema_evaluate_with_tracing(
+      std::string_view schema_uri, const sourcemeta::core::JSON &instance,
+      const sourcemeta::blaze::Callback &callback) const -> bool;
+
 private:
+  [[nodiscard]] auto blaze_compile(std::string_view schema_uri,
+                                   sourcemeta::blaze::Mode mode) const
+      -> sourcemeta::blaze::Template;
+
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  const std::filesystem::path &base_;
-  std::string_view base_path_;
+  const std::filesystem::path &index_directory_;
+  std::string_view server_uri_base_path_;
   std::string_view server_uri_;
 };
 

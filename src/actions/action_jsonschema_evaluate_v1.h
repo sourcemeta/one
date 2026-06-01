@@ -7,20 +7,14 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/blaze/evaluator.h>
-#include <sourcemeta/blaze/output.h>
-
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
-#include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
-#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -63,10 +57,12 @@ public:
     ActionJSONSchemaEvaluate_v1::serve_post(
         matches, request, response, *this, this->response_schema_,
         this->error_schema_, this->request_schema_,
-        [this](const std::filesystem::path &template_path,
+        [this](const std::string_view schema_uri,
                const std::string &body) -> sourcemeta::core::JSON {
-          return this->evaluate(template_path,
-                                sourcemeta::core::parse_json(body));
+          return this
+              ->schema_evaluate(schema_uri, sourcemeta::core::parse_json(body),
+                                sourcemeta::blaze::Mode::Exhaustive)
+              .second;
         });
   }
 
@@ -74,40 +70,37 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
-        arguments.at("schema").to_string().find('#') != std::string::npos ||
-        arguments.at("schema").to_string().find('?') != std::string::npos) {
+    const auto &schema_uri{arguments.at("schema").to_string()};
+    if (!sourcemeta::core::URI::is_uri(schema_uri) ||
+        schema_uri.find('#') != std::string::npos ||
+        schema_uri.find('?') != std::string::npos) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Invalid tool input schema URI",
           sourcemeta::core::JSON{"The schema must be an absolute URI without "
                                  "a fragment or query parameters"});
     }
 
-    const auto directory{
-        this->schema_directory(arguments.at("schema").to_string())};
-    if (!directory.has_value()) {
+    const auto schema_present{this->artifact_resolve_path(
+        schema_uri, InputKind::URI, Tree::Schemas, "schema")};
+    const auto evaluation_enabled{this->artifact_resolve_path(
+        schema_uri, InputKind::URI, Tree::Schemas, "blaze-exhaustive")};
+    if (!schema_present.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
 
-    const auto template_path{directory.value() / "blaze-exhaustive.metapack"};
-    if (!std::filesystem::exists(template_path)) {
-      const auto schema_path{directory.value() / "schema.metapack"};
-      if (std::filesystem::exists(schema_path)) {
-        return sourcemeta::core::mcp_make_tool_error(
-            request_id,
-            "This schema was not precompiled for schema evaluation");
-      }
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Schema not found");
+    if (!evaluation_enabled.has_value()) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "This schema was not precompiled for schema evaluation");
     }
 
     sourcemeta::core::JSON parsed_instance{nullptr};
@@ -123,7 +116,10 @@ public:
     }
 
     return sourcemeta::core::mcp_make_tool_success(
-        version, request_id, this->evaluate(template_path, parsed_instance));
+        version, request_id,
+        this->schema_evaluate(schema_uri, parsed_instance,
+                              sourcemeta::blaze::Mode::Exhaustive)
+            .second);
   }
 
   template <typename Perform>
@@ -164,30 +160,34 @@ public:
       return;
     }
 
-    auto template_path{self.base() / "schemas"};
-    template_path /= path;
-    template_path /= "%";
-    template_path /= "blaze-exhaustive.metapack";
-    if (!std::filesystem::exists(template_path)) {
-      const auto schema_path{template_path.parent_path() / "schema.metapack"};
-      if (std::filesystem::exists(schema_path)) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-            "no-schema-template",
-            "This schema was not precompiled for schema evaluation",
-            error_schema);
-      } else {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", error_schema);
-      }
+    std::string schema_uri{self.server_uri()};
+    schema_uri.push_back('/');
+    schema_uri.append(path);
+    const auto schema_present{self.artifact_resolve_path(
+        schema_uri, sourcemeta::one::RouterAction::InputKind::URI,
+        sourcemeta::one::RouterAction::Tree::Schemas, "schema")};
+    const auto evaluation_enabled{self.artifact_resolve_path(
+        schema_uri, sourcemeta::one::RouterAction::InputKind::URI,
+        sourcemeta::one::RouterAction::Tree::Schemas, "blaze-exhaustive")};
+    if (!schema_present.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", error_schema);
+      return;
+    }
+
+    if (!evaluation_enabled.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+          "no-schema-template",
+          "This schema was not precompiled for schema evaluation",
+          error_schema);
       return;
     }
 
     request.body(
-        [response_schema, error_schema,
-         template_path = std::move(template_path), &self, request_schema,
-         perform = std::move(perform)](
+        [response_schema, error_schema, schema_uri = std::move(schema_uri),
+         &self, request_schema, perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) {
@@ -218,7 +218,7 @@ public:
             return;
           }
 
-          if (!self.validate(request_schema, instance)) {
+          if (!self.schema_evaluate_fast(request_schema, instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_BAD_REQUEST, "invalid-request",
@@ -228,7 +228,7 @@ public:
           }
 
           try {
-            const auto result{perform(template_path, body)};
+            const auto result{perform(schema_uri, body)};
             callback_response.write_status(sourcemeta::one::STATUS_OK);
             callback_response.write_header("Content-Type", "application/json");
             callback_response.write_header("Access-Control-Allow-Origin", "*");
@@ -261,31 +261,6 @@ public:
   }
 
 private:
-  auto evaluate(const std::filesystem::path &template_path,
-                const sourcemeta::core::JSON &instance)
-      -> sourcemeta::core::JSON {
-    if (!std::filesystem::exists(template_path)) {
-      throw std::runtime_error{"Schema template not found"};
-    }
-
-    // TODO: Cache this conversion across runs, potentially using the schema
-    // file "checksum" as the cache key. This is important as the template
-    // might be compressed
-    const auto template_json_option{
-        sourcemeta::one::metapack_read_json(template_path)};
-    assert(template_json_option.has_value());
-    const auto &template_json{template_json_option.value()};
-    const auto schema_template{sourcemeta::blaze::from_json(template_json)};
-    if (!schema_template.has_value()) {
-      throw std::runtime_error{"Failed to parse schema template"};
-    }
-
-    sourcemeta::blaze::Evaluator evaluator;
-    return sourcemeta::blaze::standard(
-        evaluator, schema_template.value(), instance,
-        sourcemeta::blaze::StandardOutput::Basic);
-  }
-
   std::string_view request_schema_;
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;

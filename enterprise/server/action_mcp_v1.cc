@@ -121,7 +121,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
   const auto &id{request_json.at("id")};
   const auto &uri{request_json.at("params").at("uri").to_string()};
 
-  std::filesystem::path resolved;
+  bool bundle{false};
   try {
     sourcemeta::core::URI request{uri};
     if (request.fragment().has_value()) {
@@ -155,31 +155,22 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
                                  "namespace. Query the appropriate registry "
                                  "instead"});
     }
-    const auto path{request.path().value_or("")};
-    const auto schema_path{
-        sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
-    if (schema_path.empty()) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
-          "Resource not found");
-    }
-    const auto query{request.query()};
-    const auto bundle{query.has_value() && query->at("bundle").has_value()};
-    resolved = sourcemeta::core::weakly_canonical(
-        this->resolve_schema_path(schema_path, bundle));
+    bundle = request.query().has_value() &&
+             request.query()->at("bundle").has_value();
   } catch (const std::exception &) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
         "Resource not found");
   }
 
-  if (!sourcemeta::core::is_under_path(resolved, this->base() / "schemas")) {
+  const auto schema_artifact_path{this->artifact_resolve_path(
+      uri, InputKind::URI, Tree::Schemas, bundle ? "bundle" : "schema")};
+  if (!schema_artifact_path.has_value()) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
         "Resource not found");
   }
-
-  const auto schema{sourcemeta::one::metapack_read_json(resolved)};
+  const auto schema{this->artifact_read_json(schema_artifact_path.value())};
   if (!schema.has_value()) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
@@ -244,7 +235,7 @@ auto ActionMCP_v1::process_one(
   if (!sourcemeta::core::mcp_is_request_method(method)) {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
   }
-  if (!this->validate(this->request_schema_, request_json)) {
+  if (!this->schema_evaluate_fast(this->request_schema_, request_json)) {
     return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
   }
   if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {

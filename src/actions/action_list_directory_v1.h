@@ -12,8 +12,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
-#include "action_serve_metapack_file_v1.h"
-
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
@@ -53,60 +51,44 @@ public:
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    const auto explorer_root{this->base() / "explorer"};
-    auto absolute_path{explorer_root};
-    if (!matches.empty() && !matches.front().empty()) {
-      absolute_path /= matches.front();
-    }
-    absolute_path /= "%";
-    absolute_path /= "directory.metapack";
-
-    const auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
-    if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
+    const std::string_view path_match{matches.empty() ? std::string_view{}
+                                                      : matches.front()};
+    const auto path{this->artifact_resolve_path(path_match, InputKind::Match,
+                                                Tree::Explorer, "directory")};
+    if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
           "There is nothing at this URL", this->error_schema_);
       return;
     }
-
-    ActionServeMetapackFile_v1::serve(safe_path, sourcemeta::one::STATUS_OK,
-                                      true, {}, this->response_schema_, request,
-                                      response, this->error_schema_);
+    this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
+                         this->response_schema_, request, response,
+                         this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
-    const auto explorer_root{this->base() / "explorer"};
-
-    auto absolute_path{explorer_root};
-    auto relative_path{
-        std::filesystem::path{arguments.at_or("path", EMPTY_STRING).to_string()}
-            .relative_path()};
-    sourcemeta::core::to_lowercase(relative_path);
-    if (!relative_path.empty()) {
-      absolute_path /= relative_path;
+    const auto &path_arg{arguments.at_or("path", EMPTY_STRING).to_string()};
+    auto path{this->artifact_resolve_path(path_arg, InputKind::Match,
+                                          Tree::Explorer, "directory",
+                                          /*check_existence=*/false)};
+    if (!path.has_value()) {
+      path = this->artifact_resolve_path("", InputKind::Match, Tree::Explorer,
+                                         "directory");
     }
-    absolute_path /= "%";
-    absolute_path /= "directory.metapack";
-
-    auto safe_path{sourcemeta::core::weakly_canonical(absolute_path)};
-    if (!sourcemeta::core::is_under_path(safe_path, explorer_root)) {
-      safe_path = sourcemeta::core::weakly_canonical(explorer_root / "%" /
-                                                     "directory.metapack");
-    }
-
-    auto contents{sourcemeta::one::metapack_read_json(safe_path)};
+    auto contents{this->artifact_read_json(path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Directory not found");

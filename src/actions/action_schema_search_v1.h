@@ -181,12 +181,13 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
     constexpr std::size_t DEFAULT_LIMIT{10};

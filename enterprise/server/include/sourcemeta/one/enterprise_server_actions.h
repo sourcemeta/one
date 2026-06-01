@@ -46,10 +46,11 @@ public:
       }
     });
 
-    const auto mcp_metadata_path{this->base() / "explorer" / "%" /
-                                 "mcp.metapack"};
+    const auto mcp_metadata_path{this->artifact_resolve_path(
+        "", InputKind::Match, Tree::Explorer, "mcp")};
+    assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
-        sourcemeta::one::metapack_read_json(mcp_metadata_path)};
+        this->artifact_read_json(mcp_metadata_path.value())};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
     this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();

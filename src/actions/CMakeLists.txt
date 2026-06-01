@@ -10,7 +10,6 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_not_found_v1.h
     action_schema_search_v1.h
     action_serve_explorer_artifact_v1.h
-    action_serve_metapack_file_v1.h
     action_serve_schema_artifact_v1.h
     action_serve_static_v1.h
     action_mcp_v1.h)
