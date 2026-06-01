@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One MCP Request",
-  "description": "Any incoming MCP request the server accepts",
+  "description": "Any incoming MCP request the server accepts. The body may be a single JSON-RPC envelope or a JSON-RPC 2.0 batch (an array of envelopes) on protocol version `2025-03-26`",
   "examples": [
     {
       "jsonrpc": "2.0",
@@ -56,35 +56,64 @@
         "name": "list_directory",
         "arguments": {}
       }
+    },
+    [
+      {
+        "jsonrpc": "2.0",
+        "id": 100,
+        "method": "ping"
+      },
+      {
+        "jsonrpc": "2.0",
+        "id": 101,
+        "method": "resources/list"
+      }
+    ]
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/single"
+    },
+    {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/single"
+      }
     }
   ],
-  "anyOf": [
-    {
-      "$ref": "./initialize/request.json"
-    },
-    {
-      "$ref": "./notifications/initialized.json"
-    },
-    {
-      "$ref": "./notifications/cancelled.json"
-    },
-    {
-      "$ref": "./ping/request.json"
-    },
-    {
-      "$ref": "./resources/list/request.json"
-    },
-    {
-      "$ref": "./resources/templates/list/request.json"
-    },
-    {
-      "$ref": "./resources/read/request.json"
-    },
-    {
-      "$ref": "./tools/list/request.json"
-    },
-    {
-      "$ref": "./tools/call/request.json"
+  "$defs": {
+    "single": {
+      "$comment": "Any single JSON-RPC envelope the server accepts (request or notification)",
+      "anyOf": [
+        {
+          "$ref": "./initialize/request.json"
+        },
+        {
+          "$ref": "./notifications/initialized.json"
+        },
+        {
+          "$ref": "./notifications/cancelled.json"
+        },
+        {
+          "$ref": "./ping/request.json"
+        },
+        {
+          "$ref": "./resources/list/request.json"
+        },
+        {
+          "$ref": "./resources/templates/list/request.json"
+        },
+        {
+          "$ref": "./resources/read/request.json"
+        },
+        {
+          "$ref": "./tools/list/request.json"
+        },
+        {
+          "$ref": "./tools/call/request.json"
+        }
+      ]
     }
-  ]
+  }
 }

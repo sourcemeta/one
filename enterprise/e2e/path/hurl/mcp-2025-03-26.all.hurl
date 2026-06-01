@@ -400,11 +400,11 @@ Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == null
-jsonpath "$.error.code" == -32006
-jsonpath "$.error.message" == "Unsupported operation"
-jsonpath "$.error.data" == "Batch operations are not supported in this protocol version yet"
+jsonpath "$" count == 1
+jsonpath "$[0].jsonrpc" == "2.0"
+jsonpath "$[0].id" == 1
+jsonpath "$[0].result" isObject
+jsonpath "$[0].result" isEmpty
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

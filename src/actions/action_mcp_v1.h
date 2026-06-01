@@ -25,6 +25,7 @@ using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
 #include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -126,23 +127,69 @@ public:
                                  sourcemeta::core::jsonrpc_make_error_parse());
             return;
           }
-          if (request_json.is_array()) {
-            // TODO: Support batches for strict compliance to MCP 2025-03-26
-            this->write_envelope(
-                callback_request, callback_response, sourcemeta::one::STATUS_OK,
-                version == sourcemeta::core::MCPProtocolVersion::V_2025_03_26
-                    ? sourcemeta::core::jsonrpc_make_error(
-                          nullptr, -32006, "Unsupported operation",
-                          sourcemeta::core::JSON{
-                              "Batch operations are not supported in this "
-                              "protocol version yet"})
-                    : sourcemeta::core::jsonrpc_make_error_invalid_request(
-                          nullptr));
+          if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
+            if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
+              this->write_envelope(
+                  callback_request, callback_response,
+                  sourcemeta::one::STATUS_OK,
+                  sourcemeta::core::jsonrpc_make_error_invalid_request(
+                      nullptr));
+              return;
+            }
+            if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
+              // JSON-RPC §6: an empty array body must produce a single Invalid
+              // Request envelope, not an empty array response
+              this->write_envelope(
+                  callback_request, callback_response,
+                  sourcemeta::one::STATUS_OK,
+                  sourcemeta::core::jsonrpc_make_error_invalid_request(
+                      nullptr));
+              return;
+            }
+            auto responses{sourcemeta::core::JSON::make_array()};
+            for (const auto &sub : request_json.as_array()) {
+              sourcemeta::core::JSON sub_id{nullptr};
+              if (const auto *parsed_id{
+                      sourcemeta::core::jsonrpc_request_id(sub)};
+                  parsed_id != nullptr) {
+                sub_id = *parsed_id;
+              }
+              try {
+                auto envelope{this->process_one(sub)};
+                if (envelope.has_value()) {
+                  responses.push_back(std::move(envelope).value());
+                }
+              } catch (const std::exception &) {
+                responses.push_back(
+                    sourcemeta::core::jsonrpc_make_error_internal(&sub_id));
+              }
+            }
+            if (responses.empty()) {
+              // JSON-RPC §6: a batch containing nothing but notifications must
+              // produce no response body
+              callback_response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+              callback_response.write_header("Access-Control-Allow-Origin",
+                                             this->allowed_origin_);
+              sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED,
+                                             callback_request,
+                                             callback_response);
+              return;
+            }
+            this->write_envelope(callback_request, callback_response,
+                                 sourcemeta::one::STATUS_OK, responses);
             return;
           }
-          this->write_envelope(callback_request, callback_response,
-                               sourcemeta::one::STATUS_OK,
-                               this->on_message(request_json));
+          auto envelope{this->process_one(request_json)};
+          if (envelope.has_value()) {
+            this->write_envelope(callback_request, callback_response,
+                                 sourcemeta::one::STATUS_OK, envelope.value());
+            return;
+          }
+          callback_response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+          callback_response.write_header("Access-Control-Allow-Origin",
+                                         this->allowed_origin_);
+          sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED,
+                                         callback_request, callback_response);
         },
         [this](sourcemeta::one::HTTPRequest &callback_request,
                sourcemeta::one::HTTPResponse &callback_response,
@@ -159,8 +206,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const std::string_view) -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
+      -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
@@ -192,8 +239,12 @@ private:
   }
 
   [[nodiscard]] auto
-  on_message(const sourcemeta::core::JSON &request_json) const
-      -> sourcemeta::core::JSON {
+  process_one(const sourcemeta::core::JSON &request_json) const
+      -> std::optional<sourcemeta::core::JSON> {
+    if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
+      return std::nullopt;
+    }
+
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
     if (method.empty()) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(

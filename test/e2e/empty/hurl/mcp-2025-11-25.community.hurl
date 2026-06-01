@@ -48,27 +48,10 @@ Content-Type: application/json
 ```
 { "jsonrpc": "2.0", "method": "notifications/initialized" }
 ```
-HTTP 200
-Content-Type: application/json
+HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == null
-jsonpath "$.error.code" == -32000
-jsonpath "$.error.message" == "Enterprise edition required"
-jsonpath "$.error.data" == "MCP support is only available in the Enterprise edition of Sourcemeta One"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-[Asserts]
-jsonpath "$.valid" == true
+bytes count == 0
 
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25

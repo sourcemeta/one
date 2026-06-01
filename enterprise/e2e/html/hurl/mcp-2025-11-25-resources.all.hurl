@@ -510,7 +510,7 @@ jsonpath "$.result.resources[35].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[35].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[35].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[35].size" == 5827
+jsonpath "$.result.resources[35].size" == 5611
 jsonpath "$.result.resources[35].annotations.priority" == 0
 jsonpath "$.result.resources[36].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[36].name" == "Sourcemeta One MCP Initialize Request"
@@ -550,9 +550,9 @@ jsonpath "$.result.resources[41].size" == 598
 jsonpath "$.result.resources[41].annotations.priority" == 0
 jsonpath "$.result.resources[42].uri" == "{{base}}/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[42].name" == "Sourcemeta One MCP Request"
-jsonpath "$.result.resources[42].description" == "Any incoming MCP request the server accepts"
+jsonpath "$.result.resources[42].description" == "Any incoming MCP request the server accepts. The body may be a single JSON-RPC envelope or a JSON-RPC 2.0 batch (an array of envelopes) on protocol version `2025-03-26`"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 1773
+jsonpath "$.result.resources[42].size" == 2520
 jsonpath "$.result.resources[42].annotations.priority" == 0
 jsonpath "$.result.resources[43].uri" == "{{base}}/self/v1/schemas/mcp/resources/list/request"
 jsonpath "$.result.resources[43].name" == "Sourcemeta One MCP Resources List Request"
@@ -594,7 +594,7 @@ jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[49].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[49].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[49].size" == 4181
+jsonpath "$.result.resources[49].size" == 4799
 jsonpath "$.result.resources[49].annotations.priority" == 0
 jsonpath "$.result.nextCursor" == "100"
 

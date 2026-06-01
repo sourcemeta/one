@@ -199,8 +199,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
 
 auto ActionMCP_v1::on_tools_call(
     const sourcemeta::core::MCPProtocolVersion version,
-    const sourcemeta::core::JSON &request_json, const std::string_view envelope)
-    -> sourcemeta::core::JSON {
+    const sourcemeta::core::JSON &request_json) -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
   const auto &name{request_json.at("params").at("name").to_string()};
   const auto &tool_routes{this->mcp_metadata_.at("toolRoutes")};
@@ -222,11 +221,52 @@ auto ActionMCP_v1::on_tools_call(
   const auto empty_arguments{sourcemeta::core::JSON::make_object()};
   try {
     return instance->mcp(version, id,
-                         arguments == nullptr ? empty_arguments : *arguments,
-                         envelope);
+                         arguments == nullptr ? empty_arguments : *arguments);
   } catch (const std::exception &error) {
     return sourcemeta::core::mcp_make_tool_error(id, error.what());
   }
+}
+
+auto ActionMCP_v1::process_one(
+    const sourcemeta::core::MCPProtocolVersion version,
+    const sourcemeta::core::JSON &request_json)
+    -> std::optional<sourcemeta::core::JSON> {
+  if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
+    return std::nullopt;
+  }
+  if (!sourcemeta::core::jsonrpc_is_request(request_json)) {
+    return sourcemeta::core::jsonrpc_make_error_invalid_request(
+        sourcemeta::core::jsonrpc_request_id(request_json));
+  }
+  const auto *id{sourcemeta::core::jsonrpc_request_id(request_json)};
+  assert(id != nullptr);
+  const auto method{sourcemeta::core::jsonrpc_method(request_json)};
+  if (!sourcemeta::core::mcp_is_request_method(method)) {
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
+  }
+  if (!this->validate(this->request_schema_, request_json)) {
+    return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
+  }
+  if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
+    return this->on_initialize(request_json);
+  }
+  if (method == sourcemeta::core::MCP_METHOD_TOOLS_LIST) {
+    return this->on_tools_list(version, request_json);
+  }
+  if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
+    return this->on_resources_list(request_json);
+  }
+  if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
+    return this->on_resources_read(request_json);
+  }
+  if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
+    return this->on_tools_call(version, request_json);
+  }
+  if (this->mcp_metadata_.defines(method)) {
+    return sourcemeta::core::jsonrpc_make_success(
+        *id, this->mcp_metadata_.at(method));
+  }
+  return sourcemeta::core::jsonrpc_make_success_empty(*id);
 }
 
 auto ActionMCP_v1::on_message(
@@ -242,66 +282,68 @@ auto ActionMCP_v1::on_message(
     return;
   }
 
-  if (request_json.is_array()) {
-    if (version == sourcemeta::core::MCPProtocolVersion::V_2025_03_26) {
-      // TODO: Support batches for strict compliance to MCP 2025-03-26
-      this->write_envelope(
-          request, response, sourcemeta::one::STATUS_OK,
-          sourcemeta::core::jsonrpc_make_error(
-              nullptr, -32006, "Unsupported operation",
-              sourcemeta::core::JSON{
-                  "Batch operations are not supported in this protocol "
-                  "version yet"}));
-    } else {
+  if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
+    if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
+      // Batches were removed in MCP 2025-06-18. JSON-RPC §6: an unrecognised
+      // batch shape yields a single Invalid Request response
       this->write_envelope(
           request, response, sourcemeta::one::STATUS_OK,
           sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr));
+      return;
     }
+    if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
+      // JSON-RPC §6: an empty array body must produce a single Invalid Request
+      // envelope, not an empty array response
+      this->write_envelope(
+          request, response, sourcemeta::one::STATUS_OK,
+          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr));
+      return;
+    }
+    auto responses{sourcemeta::core::JSON::make_array()};
+    for (const auto &sub : request_json.as_array()) {
+      sourcemeta::core::JSON sub_id{nullptr};
+      if (const auto *parsed_id{sourcemeta::core::jsonrpc_request_id(sub)};
+          parsed_id != nullptr) {
+        sub_id = *parsed_id;
+      }
+      try {
+        auto envelope{this->process_one(version, sub)};
+        if (envelope.has_value()) {
+          responses.push_back(std::move(envelope).value());
+        }
+      } catch (const std::exception &) {
+        // One sub-element throwing cannot poison the rest of the batch
+        responses.push_back(
+            sourcemeta::core::jsonrpc_make_error_internal(&sub_id));
+      }
+    }
+    if (responses.empty()) {
+      // JSON-RPC §6: "If there are no Response objects contained within the
+      // Response array as it is to be sent to the client, the server MUST NOT
+      // return an empty Array and should return nothing at all."
+      response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+      response.write_header("Access-Control-Allow-Origin",
+                            this->allowed_origin_);
+      sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
+                                     response);
+      return;
+    }
+    this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
+                         responses);
     return;
   }
 
-  if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
-    response.write_status(sourcemeta::one::STATUS_ACCEPTED);
-    response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
-    sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
-                                   response);
+  auto envelope{this->process_one(version, request_json)};
+  if (envelope.has_value()) {
+    this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
+                         envelope.value());
     return;
   }
 
-  if (!sourcemeta::core::jsonrpc_is_request(request_json)) {
-    this->write_envelope(
-        request, response, sourcemeta::one::STATUS_OK,
-        sourcemeta::core::jsonrpc_make_error_invalid_request(
-            sourcemeta::core::jsonrpc_request_id(request_json)));
-    return;
-  }
-
-  const auto *id{sourcemeta::core::jsonrpc_request_id(request_json)};
-  assert(id != nullptr);
-  const auto method{sourcemeta::core::jsonrpc_method(request_json)};
-  sourcemeta::core::JSON envelope{nullptr};
-  if (!sourcemeta::core::mcp_is_request_method(method)) {
-    envelope = sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
-  } else if (!this->validate(this->request_schema_, request_json)) {
-    envelope = sourcemeta::core::jsonrpc_make_error_invalid_request(id);
-  } else if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
-    envelope = this->on_initialize(request_json);
-  } else if (method == sourcemeta::core::MCP_METHOD_TOOLS_LIST) {
-    envelope = this->on_tools_list(version, request_json);
-  } else if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-    envelope = this->on_resources_list(request_json);
-  } else if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
-    envelope = this->on_resources_read(request_json);
-  } else if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-    envelope = this->on_tools_call(version, request_json, body);
-  } else if (this->mcp_metadata_.defines(method)) {
-    envelope = sourcemeta::core::jsonrpc_make_success(
-        *id, this->mcp_metadata_.at(method));
-  } else {
-    envelope = sourcemeta::core::jsonrpc_make_success_empty(*id);
-  }
-
-  this->write_envelope(request, response, sourcemeta::one::STATUS_OK, envelope);
+  response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+  response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+  sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
+                                 response);
 }
 
 } // namespace sourcemeta::one::enterprise
