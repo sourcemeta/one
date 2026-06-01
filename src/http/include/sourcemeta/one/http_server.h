@@ -97,7 +97,7 @@ public:
 
 private:
   static auto load_balance(struct us_socket_context_t *,
-                           LIBUS_SOCKET_DESCRIPTOR fd)
+                           LIBUS_SOCKET_DESCRIPTOR fd, char *, int)
       -> LIBUS_SOCKET_DESCRIPTOR {
     const auto target{
         HTTPServer::round_robin_.fetch_add(1, std::memory_order_relaxed) %
