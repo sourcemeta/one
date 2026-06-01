@@ -10,8 +10,6 @@
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
-#include "action_serve_metapack_file_v1.h"
-
 #include <algorithm>   // std::ranges::transform
 #include <cctype>      // std::tolower
 #include <filesystem>  // std::filesystem
@@ -56,37 +54,24 @@ public:
                          user_agent.starts_with("VSCodium")};
     const auto is_deno{user_agent.starts_with("Deno/")};
     const auto bundle{request.has_query("bundle")};
-    std::filesystem::path absolute_path;
-    if (is_vscode) {
-      std::string lowercase_path{schema_path};
-      std::ranges::transform(lowercase_path, lowercase_path.begin(),
-                             [](const unsigned char character) {
-                               return std::tolower(character);
-                             });
-      absolute_path =
-          self.base() / "schemas" / lowercase_path / "%" / "editor.metapack";
-    } else {
-      absolute_path = self.resolve_schema_path(schema_path, bundle || is_deno);
-    }
 
-    if (request.method() != "get" && request.method() != "head" &&
-        !std::filesystem::exists(absolute_path)) {
+    const std::string_view artifact{is_vscode ? std::string_view{"editor"}
+                                    : (bundle || is_deno)
+                                        ? std::string_view{"bundle"}
+                                        : std::string_view{"schema"}};
+    const auto path{self.artifact_resolve_path(
+        schema_path, sourcemeta::one::RouterAction::InputKind::Match,
+        sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
+    if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
           "There is nothing at this URL", error_schema);
       return;
     }
-
-    if (is_deno) {
-      // For HTTP imports, as Deno won't like the `application/schema+json` one
-      ActionServeMetapackFile_v1::serve(
-          absolute_path, sourcemeta::one::STATUS_OK, true, "application/json",
-          {}, request, response, error_schema);
-    } else {
-      ActionServeMetapackFile_v1::serve(absolute_path,
-                                        sourcemeta::one::STATUS_OK, true, {},
-                                        {}, request, response, error_schema);
-    }
+    self.artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true,
+                        is_deno ? std::string_view{"application/json"}
+                                : std::string_view{},
+                        {}, request, response, error_schema);
   }
 
   auto rest(const std::span<std::string_view> matches,

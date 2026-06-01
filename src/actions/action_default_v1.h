@@ -12,7 +12,6 @@
 #include <sourcemeta/one/router.h>
 
 #include "action_jsonschema_serve_v1.h"
-#include "action_serve_metapack_file_v1.h"
 
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
@@ -46,7 +45,7 @@ public:
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     const auto stripped{sourcemeta::core::URI::strip_path_prefix(
-        request.path(), this->base_path())};
+        request.path(), this->server_uri_base_path())};
     if (!stripped.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
@@ -58,10 +57,17 @@ public:
 
     if (path.empty()) {
       if (request.prefers_html()) {
-        ActionServeMetapackFile_v1::serve(
-            this->base() / "explorer" / "%" / "directory-html.metapack",
-            sourcemeta::one::STATUS_OK, false, {}, {}, request, response,
-            this->error_schema_);
+        const auto root_html{this->artifact_resolve_path(
+            "", InputKind::Match, Tree::Explorer, "directory-html")};
+        if (root_html.has_value()) {
+          this->artifact_serve(root_html.value(), sourcemeta::one::STATUS_OK,
+                               false, {}, {}, request, response,
+                               this->error_schema_);
+          return;
+        }
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+            "There is nothing at this URL", this->error_schema_);
         return;
       } else if (request.method() == "get" || request.method() == "head") {
         sourcemeta::one::json_error(
@@ -87,24 +93,30 @@ public:
 
     if (request.method() == "get" || request.method() == "head") {
       if (request.prefers_html()) {
-        auto explorer_path{this->base() / "explorer" / path / "%"};
-        if (std::filesystem::exists(explorer_path / "schema-html.metapack") &&
-            !path.ends_with("/")) {
-          ActionServeMetapackFile_v1::serve(
-              explorer_path / "schema-html.metapack",
-              sourcemeta::one::STATUS_OK, false, {}, {}, request, response,
-              this->error_schema_);
+        const auto schema_html{this->artifact_resolve_path(
+            path, InputKind::Match, Tree::Explorer, "schema-html")};
+        const auto directory_html{this->artifact_resolve_path(
+            path, InputKind::Match, Tree::Explorer, "directory-html")};
+        if (!path.ends_with("/") && schema_html.has_value()) {
+          this->artifact_serve(schema_html.value(), sourcemeta::one::STATUS_OK,
+                               false, {}, {}, request, response,
+                               this->error_schema_);
+        } else if (directory_html.has_value()) {
+          this->artifact_serve(directory_html.value(),
+                               sourcemeta::one::STATUS_OK, false, {}, {},
+                               request, response, this->error_schema_);
         } else {
-          explorer_path /= "directory-html.metapack";
-          if (std::filesystem::exists(explorer_path)) {
-            ActionServeMetapackFile_v1::serve(
-                explorer_path, sourcemeta::one::STATUS_OK, false, {}, {},
-                request, response, this->error_schema_);
+          const auto not_found{this->artifact_resolve_path(
+              "", InputKind::Match, Tree::Explorer, "404")};
+          if (not_found.has_value()) {
+            this->artifact_serve(not_found.value(),
+                                 sourcemeta::one::STATUS_NOT_FOUND, false, {},
+                                 {}, request, response, this->error_schema_);
           } else {
-            ActionServeMetapackFile_v1::serve(
-                this->base() / "explorer" / "%" / "404.metapack",
-                sourcemeta::one::STATUS_NOT_FOUND, false, {}, {}, request,
-                response, this->error_schema_);
+            sourcemeta::one::json_error(
+                request, response, sourcemeta::one::STATUS_NOT_FOUND,
+                "not-found", "There is nothing at this URL",
+                this->error_schema_);
           }
         }
       } else {

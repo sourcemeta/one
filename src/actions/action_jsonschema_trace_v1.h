@@ -68,9 +68,13 @@ public:
     ActionJSONSchemaEvaluate_v1::serve_post(
         matches, request, response, *this, this->response_schema_,
         this->error_schema_, this->request_schema_,
-        [this](const std::filesystem::path &template_path,
+        [this](const std::string_view schema_uri,
                const std::string &body) -> sourcemeta::core::JSON {
-          return this->evaluate(template_path, body);
+          sourcemeta::core::PointerPositionTracker tracker;
+          sourcemeta::core::JSON instance_json{nullptr};
+          sourcemeta::core::parse_json(body, instance_json, std::ref(tracker));
+          return this->trace(schema_uri, instance_json, &tracker,
+                             sourcemeta::core::Pointer{});
         });
   }
 
@@ -78,40 +82,37 @@ public:
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
-        arguments.at("schema").to_string().find('#') != std::string::npos ||
-        arguments.at("schema").to_string().find('?') != std::string::npos) {
+    const auto &schema_uri{arguments.at("schema").to_string()};
+    if (!sourcemeta::core::URI::is_uri(schema_uri) ||
+        schema_uri.find('#') != std::string::npos ||
+        schema_uri.find('?') != std::string::npos) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Invalid tool input schema URI",
           sourcemeta::core::JSON{"The schema must be an absolute URI without "
                                  "a fragment or query parameters"});
     }
 
-    const auto directory{
-        this->schema_directory(arguments.at("schema").to_string())};
-    if (!directory.has_value()) {
+    const auto schema_present{this->artifact_resolve_path(
+        schema_uri, InputKind::URI, Tree::Schemas, "schema")};
+    const auto evaluation_enabled{this->artifact_resolve_path(
+        schema_uri, InputKind::URI, Tree::Schemas, "blaze-exhaustive")};
+    if (!schema_present.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
 
-    const auto template_path{directory.value() / "blaze-exhaustive.metapack"};
-    if (!std::filesystem::exists(template_path)) {
-      const auto schema_path{directory.value() / "schema.metapack"};
-      if (std::filesystem::exists(schema_path)) {
-        return sourcemeta::core::mcp_make_tool_error(
-            request_id,
-            "This schema was not precompiled for schema evaluation");
-      }
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Schema not found");
+    if (!evaluation_enabled.has_value()) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "This schema was not precompiled for schema evaluation");
     }
 
     sourcemeta::core::PointerPositionTracker tracker;
@@ -128,13 +129,10 @@ public:
           request_id, "The instance is not valid JSON");
     }
 
-    const auto schema_template{
-        ActionJSONSchemaTrace_v1::compile_template(template_path)};
-    sourcemeta::blaze::Evaluator evaluator;
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->trace(evaluator, schema_template, parsed_instance, template_path,
-                    &tracker, sourcemeta::core::Pointer{}));
+        this->trace(schema_uri, parsed_instance, &tracker,
+                    sourcemeta::core::Pointer{}));
   }
 
 private:
@@ -155,17 +153,16 @@ private:
 
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
-        const auto directory{this->schema_directory(keyword_location_string)};
-        if (directory.has_value()) {
-          const auto locations_path{directory.value() / "locations.metapack"};
-          if (std::filesystem::exists(locations_path)) {
-            auto locations{sourcemeta::one::metapack_read_json(locations_path)};
-            if (locations.has_value() && locations.value().is_object() &&
-                locations.value().defines("static")) {
-              cached = referenced_locations
-                           .emplace(schema_uri, std::move(locations.value()))
-                           .first;
-            }
+        const auto locations_path{
+            this->artifact_resolve_path(keyword_location_string, InputKind::URI,
+                                        Tree::Schemas, "locations")};
+        if (locations_path.has_value()) {
+          auto locations{this->artifact_read_json(locations_path.value())};
+          if (locations.has_value() && locations.value().is_object() &&
+              locations.value().defines("static")) {
+            cached = referenced_locations
+                         .emplace(schema_uri, std::move(locations).value())
+                         .first;
           }
         }
       }
@@ -202,19 +199,20 @@ private:
     return sourcemeta::core::JSON{nullptr};
   }
 
-  auto trace(sourcemeta::blaze::Evaluator &evaluator,
-             const sourcemeta::blaze::Template &schema_template,
+  auto trace(const std::string_view schema_uri,
              const sourcemeta::core::JSON &instance_json,
-             const std::filesystem::path &template_path,
              const sourcemeta::core::PointerPositionTracker *tracker,
              const sourcemeta::core::Pointer &instance_prefix)
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    auto locations_path{template_path.parent_path() / "locations.metapack"};
-    // TODO: Cache loaded locations across trace requests for performance
+    const auto locations_path{this->artifact_resolve_path(
+        schema_uri, InputKind::URI, Tree::Schemas, "locations")};
+    if (!locations_path.has_value()) {
+      throw std::runtime_error{"Failed to read schema locations metadata"};
+    }
     const auto locations_option{
-        sourcemeta::one::metapack_read_json(locations_path)};
+        this->artifact_read_json(locations_path.value())};
     if (!locations_option.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }
@@ -231,8 +229,8 @@ private:
     std::unordered_map<std::string, sourcemeta::core::JSON>
         referenced_locations;
 
-    const auto result{evaluator.validate(
-        schema_template, instance_json,
+    const auto result{this->schema_evaluate_with_tracing(
+        schema_uri, instance_json,
         [this, &steps, tracker, &instance_prefix, &static_locations,
          &instance_json, &referenced_locations](
             const sourcemeta::blaze::EvaluationType type, const bool valid,
@@ -299,38 +297,6 @@ private:
     document.assign("valid", sourcemeta::core::JSON{result});
     document.assign("steps", std::move(steps));
     return document;
-  }
-
-  auto evaluate(const std::filesystem::path &template_path,
-                const std::string &instance) -> sourcemeta::core::JSON {
-    const auto schema_template{
-        ActionJSONSchemaTrace_v1::compile_template(template_path)};
-    sourcemeta::core::PointerPositionTracker tracker;
-    sourcemeta::core::JSON instance_json{nullptr};
-    sourcemeta::core::parse_json(instance, instance_json, std::ref(tracker));
-    sourcemeta::blaze::Evaluator evaluator;
-    return this->trace(evaluator, schema_template, instance_json, template_path,
-                       &tracker, sourcemeta::core::Pointer{});
-  }
-
-  static auto compile_template(const std::filesystem::path &template_path)
-      -> sourcemeta::blaze::Template {
-    if (!std::filesystem::exists(template_path)) {
-      throw std::runtime_error{"Schema template not found"};
-    }
-
-    // TODO: Cache this conversion across runs, potentially using the schema
-    // file "checksum" as the cache key. This is important as the template
-    // might be compressed
-    const auto template_json_option{
-        sourcemeta::one::metapack_read_json(template_path)};
-    assert(template_json_option.has_value());
-    const auto &template_json{template_json_option.value()};
-    auto schema_template{sourcemeta::blaze::from_json(template_json)};
-    if (!schema_template.has_value()) {
-      throw std::runtime_error{"Failed to parse schema template"};
-    }
-    return std::move(schema_template).value();
   }
 
   std::string_view request_schema_;

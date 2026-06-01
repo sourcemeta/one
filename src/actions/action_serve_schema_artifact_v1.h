@@ -11,8 +11,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
-#include "action_serve_metapack_file_v1.h"
-
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
@@ -71,23 +69,30 @@ public:
       return;
     }
 
-    auto absolute_path{this->base() / "schemas" / matches.front() / "%"};
-    absolute_path /= std::string{this->artifact_} + ".metapack";
-    ActionServeMetapackFile_v1::serve(absolute_path, sourcemeta::one::STATUS_OK,
-                                      true, {}, this->response_schema_, request,
-                                      response, this->error_schema_);
+    const auto path{this->artifact_resolve_path(
+        matches.front(), InputKind::Match, Tree::Schemas, this->artifact_)};
+    if (!path.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+          "There is nothing at this URL", this->error_schema_);
+      return;
+    }
+    this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
+                         this->response_schema_, request, response,
+                         this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments)
       -> sourcemeta::core::JSON override {
-    if (auto output{
-            this->validate_standard(this->rpc_request_schema_, arguments)};
-        output.has_value()) {
+    auto [request_valid, request_output]{
+        this->schema_evaluate(this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
-          std::move(output));
+          std::move(request_output));
     }
 
     if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
@@ -99,15 +104,14 @@ public:
                                  "a fragment or query parameters"});
     }
 
-    const auto directory{
-        this->schema_directory(arguments.at("schema").to_string())};
-    if (!directory.has_value()) {
+    const auto path{this->artifact_resolve_path(
+        arguments.at("schema").to_string(), InputKind::URI, Tree::Schemas,
+        this->artifact_)};
+    if (!path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
-
-    auto contents{sourcemeta::one::metapack_read_json(
-        directory.value() / (std::string{this->artifact_} + ".metapack"))};
+    auto contents{this->artifact_read_json(path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

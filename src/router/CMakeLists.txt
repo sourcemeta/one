@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME router
-  SOURCES base.cc router.cc)
+  SOURCES artifact.cc router.cc evaluate.cc)
 
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::mcp)
@@ -12,4 +12,6 @@ target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::blaze::compiler)
 target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::blaze::output)
 target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::core::text)
+target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::core::io)
+target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_router PRIVATE sourcemeta::one::shared)
