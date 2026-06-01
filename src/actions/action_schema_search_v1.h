@@ -36,9 +36,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::Router &)
+      sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url()},
+                                      router.base_url(), dispatcher},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
