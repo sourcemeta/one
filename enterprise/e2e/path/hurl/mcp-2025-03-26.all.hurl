@@ -175,7 +175,7 @@ jsonpath "$.id" == 5
 jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
-jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/rpc/request"
+jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/list-directory/request"
 jsonpath "$.result.tools[0].inputSchema.type" == "object"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
@@ -184,7 +184,7 @@ jsonpath "$.result.tools[0].annotations.idempotentHint" == true
 jsonpath "$.result.tools[0].annotations.openWorldHint" == false
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
 jsonpath "$.result.tools[1].description" == "List the schemas this schema directly or transitively references, the outgoing edges of the dependency graph"
-jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/schemas/dependencies/rpc/request"
+jsonpath "$.result.tools[1].inputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request"
 jsonpath "$.result.tools[1].inputSchema.type" == "object"
 jsonpath "$.result.tools[1].annotations.title" == "Get Schema Dependencies"
 jsonpath "$.result.tools[1].annotations.readOnlyHint" == true

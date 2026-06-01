@@ -20,7 +20,7 @@ HTTP 200
 [Captures]
 output_schema_path: jsonpath "$.result.tools[?@.name=='list_directory'].outputSchema['$ref']" regex "https?://[^/]+/v1/catalog(.+)"
 [Asserts]
-jsonpath "$.result.tools[?@.name=='list_directory'].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/api/list/rpc/response"
+jsonpath "$.result.tools[?@.name=='list_directory'].outputSchema['$ref']" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/list-directory/response"
 
 POST {{base}}/v1/catalog/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25

@@ -7,5 +7,5 @@
       "/properties/name": [ 1, 5, 3, 10 ]
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/positions/response.json"
 }

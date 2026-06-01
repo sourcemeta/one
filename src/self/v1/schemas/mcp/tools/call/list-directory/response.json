@@ -17,5 +17,5 @@
       ]
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/list/response.json"
 }

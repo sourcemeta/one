@@ -8,5 +8,5 @@
       "errors": []
     }
   ],
-  "$ref": "../response.json"
+  "$ref": "../../../../api/schemas/health/response.json"
 }

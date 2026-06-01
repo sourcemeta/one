@@ -693,70 +693,72 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto search_response_schema{
         configuration.base_path +
         "/self/v1/schemas/api/schemas/search/response"};
-    const auto list_rpc_request_schema{configuration.base_path +
-                                       "/self/v1/schemas/api/list/rpc/request"};
-    const auto list_rpc_response_schema{
-        configuration.base_path + "/self/v1/schemas/api/list/rpc/response"};
-    const auto dependencies_rpc_request_schema{
+    const auto list_directory_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependencies/rpc/request"};
-    const auto dependencies_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/list-directory/request"};
+    const auto list_directory_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependencies/rpc/response"};
-    const auto dependents_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/list-directory/response"};
+    const auto get_schema_dependencies_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependents/rpc/request"};
-    const auto dependents_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request"};
+    const auto get_schema_dependencies_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/dependents/rpc/response"};
-    const auto health_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response"};
+    const auto get_schema_dependents_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/health/rpc/request"};
-    const auto health_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"};
+    const auto get_schema_dependents_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/health/rpc/response"};
-    const auto locations_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"};
+    const auto get_schema_health_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/locations/rpc/request"};
-    const auto locations_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-health/request"};
+    const auto get_schema_health_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/locations/rpc/response"};
-    const auto positions_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-health/response"};
+    const auto get_schema_locations_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/positions/rpc/request"};
-    const auto positions_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-locations/request"};
+    const auto get_schema_locations_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/positions/rpc/response"};
-    const auto stats_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-locations/response"};
+    const auto get_schema_positions_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/stats/rpc/request"};
-    const auto stats_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-positions/request"};
+    const auto get_schema_positions_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/stats/rpc/response"};
-    const auto metadata_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-positions/response"};
+    const auto get_schema_stats_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/metadata/rpc/request"};
-    const auto metadata_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-stats/request"};
+    const auto get_schema_stats_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/metadata/rpc/response"};
-    const auto evaluate_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-stats/response"};
+    const auto get_schema_metadata_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/evaluate/rpc/request"};
-    const auto evaluate_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-metadata/request"};
+    const auto get_schema_metadata_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/evaluate/rpc/response"};
-    const auto trace_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/get-schema-metadata/response"};
+    const auto evaluate_schema_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/trace/rpc/request"};
-    const auto trace_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/evaluate-schema/request"};
+    const auto evaluate_schema_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/trace/rpc/response"};
-    const auto search_rpc_request_schema{
+        "/self/v1/schemas/mcp/tools/call/evaluate-schema/response"};
+    const auto trace_schema_evaluation_request_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/search/rpc/request"};
-    const auto search_rpc_response_schema{
+        "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"};
+    const auto trace_schema_evaluation_response_schema{
         configuration.base_path +
-        "/self/v1/schemas/api/schemas/search/rpc/response"};
+        "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response"};
+    const auto search_schemas_request_schema{
+        configuration.base_path +
+        "/self/v1/schemas/mcp/tools/call/search-schemas/request"};
+    const auto search_schemas_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/mcp/tools/call/search-schemas/response"};
     const auto error_schema{configuration.base_path +
                             "/self/v1/schemas/api/error"};
     const auto mcp_request_schema{configuration.base_path +
@@ -775,8 +777,9 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
           {"responseSchema", std::string_view{list_schema}},
-          {"rpcRequestSchema", std::string_view{list_rpc_request_schema}},
-          {"rpcResponseSchema", std::string_view{list_rpc_response_schema}},
+          {"mcpRequestSchema", std::string_view{list_directory_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{list_directory_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/list{/path*}", "list_directory", next_id++,
                  sourcemeta::one::ACTION_TYPE_LIST_DIRECTORY_V1,
@@ -785,10 +788,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument
           dependencies_arguments[] = {
               {"responseSchema", std::string_view{dependencies_schema}},
-              {"rpcRequestSchema",
-               std::string_view{dependencies_rpc_request_schema}},
-              {"rpcResponseSchema",
-               std::string_view{dependencies_rpc_response_schema}},
+              {"mcpRequestSchema",
+               std::string_view{get_schema_dependencies_request_schema}},
+              {"mcpResponseSchema",
+               std::string_view{get_schema_dependencies_response_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependencies/{+schema}",
                  "get_schema_dependencies", next_id++,
@@ -798,10 +801,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument
           dependents_arguments[] = {
               {"responseSchema", std::string_view{dependents_schema}},
-              {"rpcRequestSchema",
-               std::string_view{dependents_rpc_request_schema}},
-              {"rpcResponseSchema",
-               std::string_view{dependents_rpc_response_schema}},
+              {"mcpRequestSchema",
+               std::string_view{get_schema_dependents_request_schema}},
+              {"mcpResponseSchema",
+               std::string_view{get_schema_dependents_response_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/dependents/{+schema}",
                  "get_schema_dependents", next_id++,
@@ -810,8 +813,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {
           {"responseSchema", std::string_view{health_schema}},
-          {"rpcRequestSchema", std::string_view{health_rpc_request_schema}},
-          {"rpcResponseSchema", std::string_view{health_rpc_response_schema}},
+          {"mcpRequestSchema",
+           std::string_view{get_schema_health_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{get_schema_health_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/health/{+schema}", "get_schema_health",
                  next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_HEALTH_V1,
@@ -820,10 +825,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument
           locations_arguments[] = {
               {"responseSchema", std::string_view{locations_schema}},
-              {"rpcRequestSchema",
-               std::string_view{locations_rpc_request_schema}},
-              {"rpcResponseSchema",
-               std::string_view{locations_rpc_response_schema}},
+              {"mcpRequestSchema",
+               std::string_view{get_schema_locations_request_schema}},
+              {"mcpResponseSchema",
+               std::string_view{get_schema_locations_response_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/locations/{+schema}",
                  "get_schema_locations", next_id++,
@@ -833,10 +838,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument
           positions_arguments[] = {
               {"responseSchema", std::string_view{positions_schema}},
-              {"rpcRequestSchema",
-               std::string_view{positions_rpc_request_schema}},
-              {"rpcResponseSchema",
-               std::string_view{positions_rpc_response_schema}},
+              {"mcpRequestSchema",
+               std::string_view{get_schema_positions_request_schema}},
+              {"mcpResponseSchema",
+               std::string_view{get_schema_positions_response_schema}},
               {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/positions/{+schema}",
                  "get_schema_positions", next_id++,
@@ -845,8 +850,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
           {"responseSchema", std::string_view{stats_schema}},
-          {"rpcRequestSchema", std::string_view{stats_rpc_request_schema}},
-          {"rpcResponseSchema", std::string_view{stats_rpc_response_schema}},
+          {"mcpRequestSchema",
+           std::string_view{get_schema_stats_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{get_schema_stats_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/stats/{+schema}", "get_schema_stats",
                  next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_STATS_V1,
@@ -854,9 +861,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] =
           {{"responseSchema", std::string_view{metadata_schema}},
-           {"rpcRequestSchema", std::string_view{metadata_rpc_request_schema}},
-           {"rpcResponseSchema",
-            std::string_view{metadata_rpc_response_schema}},
+           {"mcpRequestSchema",
+            std::string_view{get_schema_metadata_request_schema}},
+           {"mcpResponseSchema",
+            std::string_view{get_schema_metadata_response_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/metadata/{+schema}",
                  "get_schema_metadata", next_id++,
@@ -866,9 +874,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =
           {{"requestSchema", std::string_view{evaluate_request_schema}},
            {"responseSchema", std::string_view{evaluate_response_schema}},
-           {"rpcRequestSchema", std::string_view{evaluate_rpc_request_schema}},
-           {"rpcResponseSchema",
-            std::string_view{evaluate_rpc_response_schema}},
+           {"mcpRequestSchema",
+            std::string_view{evaluate_schema_request_schema}},
+           {"mcpResponseSchema",
+            std::string_view{evaluate_schema_response_schema}},
            {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/evaluate/{+schema}", "evaluate_schema",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
@@ -877,8 +886,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
           {"requestSchema", std::string_view{trace_request_schema}},
           {"responseSchema", std::string_view{trace_response_schema}},
-          {"rpcRequestSchema", std::string_view{trace_rpc_request_schema}},
-          {"rpcResponseSchema", std::string_view{trace_rpc_response_schema}},
+          {"mcpRequestSchema",
+           std::string_view{trace_schema_evaluation_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{trace_schema_evaluation_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/trace/{+schema}",
                  "trace_schema_evaluation", next_id++,
@@ -887,8 +898,9 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument search_arguments[] = {
           {"responseSchema", std::string_view{search_response_schema}},
-          {"rpcRequestSchema", std::string_view{search_rpc_request_schema}},
-          {"rpcResponseSchema", std::string_view{search_rpc_response_schema}},
+          {"mcpRequestSchema", std::string_view{search_schemas_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{search_schemas_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/search", "search_schemas", next_id++,
                  sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,

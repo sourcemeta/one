@@ -16,7 +16,7 @@
   "required": [ "results" ],
   "properties": {
     "results": {
-      "$ref": "../response.json"
+      "$ref": "../../../../api/schemas/dependents/response.json"
     }
   },
   "additionalProperties": false

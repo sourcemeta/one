@@ -110,15 +110,15 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     std::string_view rpc_response_schema;
     router.arguments(identifier, [&rpc_request_schema, &rpc_response_schema](
                                      const auto &key, const auto &value) {
-      if (key == "rpcRequestSchema") {
+      if (key == "mcpRequestSchema") {
         rpc_request_schema = std::get<std::string_view>(value);
-      } else if (key == "rpcResponseSchema") {
+      } else if (key == "mcpResponseSchema") {
         rpc_response_schema = std::get<std::string_view>(value);
       }
     });
 
     // TODO: Don't infer tool-eligibility from the presence of an
-    // `rpcRequestSchema` argument. The action system itself should expose
+    // `mcpRequestSchema` argument. The action system itself should expose
     // whether a given context is tool-eligible, so the
     // indexer doesn't have to reach into router argument bags
     if (rpc_request_schema.empty()) {
