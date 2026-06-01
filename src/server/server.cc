@@ -1,3 +1,4 @@
+#include <sourcemeta/core/stacktrace.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
@@ -67,6 +68,7 @@ auto terminate(int signal) -> void {
 // as possible, so we can take better advantage of scale-to-zero.
 auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
+  sourcemeta::core::stacktrace_on_crash();
 
   std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
             << sourcemeta::one::version() << "\n";

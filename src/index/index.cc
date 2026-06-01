@@ -7,6 +7,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/parallel.h>
+#include <sourcemeta/core/stacktrace.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 #include <sourcemeta/core/yaml.h>
@@ -637,6 +638,8 @@ static auto index_main(const std::string_view &program,
 }
 
 auto main(int argc, char *argv[]) noexcept -> int {
+  sourcemeta::core::stacktrace_on_crash();
+
   try {
     sourcemeta::core::Options app;
     app.flag("help", {"h"});
