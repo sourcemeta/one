@@ -59,8 +59,7 @@ public:
   enum class Tree : std::uint8_t { Schemas, Explorer };
 
   [[nodiscard]] auto artifact_resolve_path(std::string_view input, Tree tree,
-                                           std::string_view artifact_name,
-                                           bool check_existence = true) const
+                                           std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 
   [[nodiscard]] auto

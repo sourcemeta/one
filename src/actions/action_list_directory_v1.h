@@ -81,10 +81,11 @@ public:
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
     const auto &path_arg{arguments.at_or("path", EMPTY_STRING).to_string()};
-    auto path{this->artifact_resolve_path(path_arg, Tree::Explorer, "directory",
-                                          /*check_existence=*/false)};
+    const auto path{
+        this->artifact_resolve_path(path_arg, Tree::Explorer, "directory")};
     if (!path.has_value()) {
-      path = this->artifact_resolve_path("", Tree::Explorer, "directory");
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Directory not found");
     }
     auto contents{this->artifact_read_json(path.value())};
     if (!contents.has_value()) {

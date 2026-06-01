@@ -42,16 +42,20 @@ auto uri_to_relative_path(const std::string_view uri,
   }
 
   const auto path_option{parsed->path()};
-  if (!path_option.has_value() || path_option.value().empty() ||
-      path_option.value().starts_with("/")) {
+  if (!path_option.has_value() || path_option.value().starts_with("/")) {
     return std::nullopt;
   }
 
-  const auto stripped{sourcemeta::core::remove_suffix_ignore_case(
-      path_option.value(), ".json")};
-  if (stripped.empty()) {
-    return std::nullopt;
+  std::string_view normalized{path_option.value()};
+  while (normalized.starts_with("../")) {
+    normalized.remove_prefix(3);
   }
+  if (normalized == "..") {
+    normalized = std::string_view{};
+  }
+
+  const auto stripped{
+      sourcemeta::core::remove_suffix_ignore_case(normalized, ".json")};
   std::filesystem::path result{stripped};
   sourcemeta::core::to_lowercase(result);
   return result;
@@ -61,10 +65,9 @@ auto uri_to_relative_path(const std::string_view uri,
 
 namespace sourcemeta::one {
 
-auto RouterAction::artifact_resolve_path(const std::string_view input,
-                                         const Tree tree,
-                                         const std::string_view artifact_name,
-                                         const bool check_existence) const
+auto RouterAction::artifact_resolve_path(
+    const std::string_view input, const Tree tree,
+    const std::string_view artifact_name) const
     -> std::optional<std::filesystem::path> {
   const std::string_view tree_segment{tree == Tree::Schemas ? "schemas"
                                                             : "explorer"};
@@ -75,12 +78,14 @@ auto RouterAction::artifact_resolve_path(const std::string_view input,
     if (!resolved.has_value()) {
       auto stripped{sourcemeta::core::URI::strip_path_prefix(
           input, this->server_uri_base_path_)};
-      if (!stripped.has_value() || stripped.value().empty()) {
+      if (!stripped.has_value()) {
         return std::nullopt;
       }
       resolved = std::filesystem::path{std::move(stripped).value()};
     }
-    directory /= std::move(resolved).value();
+    if (!resolved.value().empty()) {
+      directory /= std::move(resolved).value();
+    }
   }
   directory /= "%";
   directory /= std::string{artifact_name} + ".metapack";
@@ -88,14 +93,7 @@ auto RouterAction::artifact_resolve_path(const std::string_view input,
   if (!sourcemeta::core::is_under_path(canonical, tree_root)) {
     return std::nullopt;
   }
-  // TODO: Normalise this opt-out away. The only caller that disables this
-  // (list_directory MCP) needs to distinguish "path violates traversal"
-  // (lenient fallback to root) from "valid path but file missing" (return
-  // an error). Both collapse to nullopt when `check_existence` is true. A
-  // future iteration should either drop the lenient fallback (cleaner UX,
-  // requires hurl test updates) or expose a separate predicate so the caller
-  // can detect traversal violations without combining concerns here
-  if (check_existence && !std::filesystem::exists(canonical)) {
+  if (!std::filesystem::exists(canonical)) {
     return std::nullopt;
   }
   return canonical;
