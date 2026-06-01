@@ -43,7 +43,6 @@ auto uri_to_relative_path(const std::string_view uri,
 
   const auto path_option{parsed->path()};
   if (!path_option.has_value() || path_option.value().empty() ||
-      path_option.value().starts_with("..") ||
       path_option.value().starts_with("/")) {
     return std::nullopt;
   }
@@ -63,7 +62,7 @@ auto uri_to_relative_path(const std::string_view uri,
 namespace sourcemeta::one {
 
 auto RouterAction::artifact_resolve_path(const std::string_view input,
-                                         const InputKind kind, const Tree tree,
+                                         const Tree tree,
                                          const std::string_view artifact_name,
                                          const bool check_existence) const
     -> std::optional<std::filesystem::path> {
@@ -72,30 +71,16 @@ auto RouterAction::artifact_resolve_path(const std::string_view input,
   const auto tree_root{this->index_directory_ / tree_segment};
   auto directory{tree_root};
   if (!input.empty()) {
-    // TODO: Investigate whether the URI and Match modes can be unified. The
-    // only divergence today is `.json` suffix handling: URI inputs are JSON
-    // Schema identifiers where `foo/bar.json` and `foo/bar` refer to the same
-    // schema, so the canonical form drops the suffix. Match inputs are raw
-    // URITemplate captures where `v2.0.json` is a different path than `v2.0`,
-    // so the suffix must be preserved
-    if (kind == InputKind::URI) {
-      auto resolved{uri_to_relative_path(input, this->server_uri_)};
-      if (!resolved.has_value()) {
-        auto stripped{sourcemeta::core::URI::strip_path_prefix(
-            input, this->server_uri_base_path_)};
-        if (!stripped.has_value() || stripped.value().empty()) {
-          return std::nullopt;
-        }
-        resolved = std::filesystem::path{std::move(stripped).value()};
+    auto resolved{uri_to_relative_path(input, this->server_uri_)};
+    if (!resolved.has_value()) {
+      auto stripped{sourcemeta::core::URI::strip_path_prefix(
+          input, this->server_uri_base_path_)};
+      if (!stripped.has_value() || stripped.value().empty()) {
+        return std::nullopt;
       }
-      directory /= std::move(resolved).value();
-    } else {
-      auto relative{std::filesystem::path{input}.relative_path()};
-      if (!relative.empty()) {
-        sourcemeta::core::to_lowercase(relative);
-        directory /= relative;
-      }
+      resolved = std::filesystem::path{std::move(stripped).value()};
     }
+    directory /= std::move(resolved).value();
   }
   directory /= "%";
   directory /= std::string{artifact_name} + ".metapack";

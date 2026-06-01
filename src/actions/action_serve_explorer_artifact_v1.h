@@ -63,8 +63,8 @@ public:
 
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
-    const auto path{this->artifact_resolve_path(
-        path_match, InputKind::Match, Tree::Explorer, this->artifact_)};
+    const auto path{this->artifact_resolve_path(path_match, Tree::Explorer,
+                                                this->artifact_)};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
@@ -99,8 +99,7 @@ public:
     }
 
     const auto path{this->artifact_resolve_path(
-        arguments.at("schema").to_string(), InputKind::URI, Tree::Explorer,
-        this->artifact_)};
+        arguments.at("schema").to_string(), Tree::Explorer, this->artifact_)};
     if (!path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

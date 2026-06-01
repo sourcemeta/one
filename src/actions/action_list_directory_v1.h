@@ -53,8 +53,8 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
-    const auto path{this->artifact_resolve_path(path_match, InputKind::Match,
-                                                Tree::Explorer, "directory")};
+    const auto path{
+        this->artifact_resolve_path(path_match, Tree::Explorer, "directory")};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
@@ -81,12 +81,10 @@ public:
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
     const auto &path_arg{arguments.at_or("path", EMPTY_STRING).to_string()};
-    auto path{this->artifact_resolve_path(path_arg, InputKind::Match,
-                                          Tree::Explorer, "directory",
+    auto path{this->artifact_resolve_path(path_arg, Tree::Explorer, "directory",
                                           /*check_existence=*/false)};
     if (!path.has_value()) {
-      path = this->artifact_resolve_path("", InputKind::Match, Tree::Explorer,
-                                         "directory");
+      path = this->artifact_resolve_path("", Tree::Explorer, "directory");
     }
     auto contents{this->artifact_read_json(path.value())};
     if (!contents.has_value()) {

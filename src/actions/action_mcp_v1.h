@@ -53,8 +53,8 @@ public:
       }
     });
 
-    const auto mcp_metadata_path{this->artifact_resolve_path(
-        "", InputKind::Match, Tree::Explorer, "mcp")};
+    const auto mcp_metadata_path{
+        this->artifact_resolve_path("", Tree::Explorer, "mcp")};
     assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
         this->artifact_read_json(mcp_metadata_path.value())};

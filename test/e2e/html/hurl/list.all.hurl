@@ -177,17 +177,37 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/list/test/v2.0.json
-HTTP 404
-Content-Type: application/problem+json
+HTTP 200
+Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.status" == 404
-jsonpath "$.title" == "sourcemeta:one/not-found"
-jsonpath "$.detail" == "There is nothing at this URL"
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.path" == "/test/v2.0"
+jsonpath "$.url" == "{{base}}/test/v2.0"
+jsonpath "$.schemas" == 1
+jsonpath "$.breadcrumb" count == 2
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "v2.0"
+jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
+jsonpath "$.entries" count == 1
+jsonpath "$.entries[0].bytes" == 130
+jsonpath "$.entries[0].bytesBundled" == 130
+jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[0].identifier" == "{{base}}/test/v2.0/schema"
+jsonpath "$.entries[0].name" == "schema"
+jsonpath "$.entries[0].type" == "schema"
+jsonpath "$.entries[0].alert" == null
+jsonpath "$.entries[0].path" == "/test/v2.0/schema"
+jsonpath "$.entries[0].health" == 0
+jsonpath "$.entries[0].dependencies" == 0
+jsonpath "$.entries[0].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

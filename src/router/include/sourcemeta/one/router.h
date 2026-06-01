@@ -57,10 +57,8 @@ public:
   }
 
   enum class Tree : std::uint8_t { Schemas, Explorer };
-  enum class InputKind : std::uint8_t { URI, Match };
 
-  [[nodiscard]] auto artifact_resolve_path(std::string_view input,
-                                           InputKind kind, Tree tree,
+  [[nodiscard]] auto artifact_resolve_path(std::string_view input, Tree tree,
                                            std::string_view artifact_name,
                                            bool check_existence = true) const
       -> std::optional<std::filesystem::path>;

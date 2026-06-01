@@ -164,7 +164,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
   }
 
   const auto schema_artifact_path{this->artifact_resolve_path(
-      uri, InputKind::URI, Tree::Schemas, bundle ? "bundle" : "schema")};
+      uri, Tree::Schemas, bundle ? "bundle" : "schema")};
   if (!schema_artifact_path.has_value()) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,

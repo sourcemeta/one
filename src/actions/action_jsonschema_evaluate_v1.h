@@ -89,10 +89,10 @@ public:
                                  "a fragment or query parameters"});
     }
 
-    const auto schema_present{this->artifact_resolve_path(
-        schema_uri, InputKind::URI, Tree::Schemas, "schema")};
+    const auto schema_present{
+        this->artifact_resolve_path(schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        schema_uri, InputKind::URI, Tree::Schemas, "blaze-exhaustive")};
+        schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
@@ -164,11 +164,10 @@ public:
     schema_uri.push_back('/');
     schema_uri.append(path);
     const auto schema_present{self.artifact_resolve_path(
-        schema_uri, sourcemeta::one::RouterAction::InputKind::URI,
-        sourcemeta::one::RouterAction::Tree::Schemas, "schema")};
+        schema_uri, sourcemeta::one::RouterAction::Tree::Schemas, "schema")};
     const auto evaluation_enabled{self.artifact_resolve_path(
-        schema_uri, sourcemeta::one::RouterAction::InputKind::URI,
-        sourcemeta::one::RouterAction::Tree::Schemas, "blaze-exhaustive")};
+        schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
+        "blaze-exhaustive")};
     if (!schema_present.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
