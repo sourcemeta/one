@@ -9,11 +9,12 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/router_lru.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
-#include <memory>      // std::unique_ptr, std::make_unique
+#include <memory>      // std::make_unique, std::shared_ptr, std::unique_ptr
 #include <mutex>       // std::once_flag
 #include <optional>    // std::optional
 #include <span>        // std::span
@@ -29,9 +30,10 @@ class RouterAction {
 public:
   RouterAction(const std::filesystem::path &index_directory,
                const std::string_view server_uri_base_path,
-               const std::string_view server_uri)
+               const std::string_view server_uri, Router &dispatcher)
       : index_directory_{index_directory},
-        server_uri_base_path_{server_uri_base_path}, server_uri_{server_uri} {}
+        server_uri_base_path_{server_uri_base_path}, server_uri_{server_uri},
+        dispatcher_{dispatcher} {}
   virtual ~RouterAction() = default;
 
   // To avoid mistakes
@@ -54,6 +56,10 @@ public:
 
   [[nodiscard]] auto server_uri() const noexcept -> std::string_view {
     return this->server_uri_;
+  }
+
+  [[nodiscard]] auto dispatcher() const noexcept -> Router & {
+    return this->dispatcher_;
   }
 
   enum class Tree : std::uint8_t { Schemas, Explorer };
@@ -86,14 +92,16 @@ public:
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
 private:
-  [[nodiscard]] auto blaze_compile(std::string_view schema_uri,
-                                   sourcemeta::blaze::Mode mode) const
-      -> sourcemeta::blaze::Template;
+  [[nodiscard]] auto blaze_template(std::string_view schema_uri,
+                                    sourcemeta::blaze::Mode mode) const
+      -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &index_directory_;
   std::string_view server_uri_base_path_;
   std::string_view server_uri_;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+  Router &dispatcher_;
 };
 
 using RouterActionConstructor =
@@ -141,7 +149,12 @@ public:
              const char *const code, std::string &&identifier,
              std::string &&message) const -> void;
 
+  [[nodiscard]] auto blaze_template(const std::filesystem::path &absolute_path)
+      -> std::shared_ptr<const sourcemeta::blaze::Template>;
+
 private:
+  static constexpr std::size_t TEMPLATE_CACHE_CAPACITY{50};
+
   struct Slot {
     std::unique_ptr<RouterAction> instance;
     std::once_flag flag;
@@ -156,6 +169,8 @@ private:
   std::unique_ptr<Slot[]> slots_;
   std::size_t slots_size_;
   std::string_view default_error_schema_;
+  RouterLRU<std::filesystem::path, sourcemeta::blaze::Template> template_cache_{
+      TEMPLATE_CACHE_CAPACITY};
 };
 
 } // namespace sourcemeta::one

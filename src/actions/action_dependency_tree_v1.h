@@ -33,9 +33,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::Router &)
+      sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url()} {
+                                      router.base_url(), dispatcher} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "direction") {
         this->metapack_ = std::get<std::string_view>(value) == "in"
@@ -155,9 +155,9 @@ protected:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      const std::string_view metapack)
+      const std::string_view metapack, sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url()} {
+                                      router.base_url(), dispatcher} {
     this->metapack_ = metapack;
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {

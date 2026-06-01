@@ -20,8 +20,9 @@ public:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      sourcemeta::one::Router &)
-      : ActionServeSchemaArtifact_v1{base, router, identifier, "positions"} {}
+      sourcemeta::one::Router &dispatcher)
+      : ActionServeSchemaArtifact_v1{base, router, identifier, "positions",
+                                     dispatcher} {}
 };
 
 #endif

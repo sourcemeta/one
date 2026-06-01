@@ -203,7 +203,7 @@ auto ActionMCP_v1::on_tools_call(
   const auto identifier{
       static_cast<sourcemeta::core::URITemplateRouter::Identifier>(
           tool_routes.at(name).to_integer())};
-  auto *instance{this->dispatcher_.action(identifier)};
+  auto *instance{this->dispatcher().action(identifier)};
   if (instance == nullptr) [[unlikely]] {
     return sourcemeta::core::jsonrpc_make_error_internal(&id);
   }

@@ -36,8 +36,7 @@ public:
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url()},
-        dispatcher_{dispatcher} {
+                                      router.base_url(), dispatcher} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
@@ -188,8 +187,6 @@ private:
                    const sourcemeta::core::JSON &request_json)
       -> std::optional<sourcemeta::core::JSON>;
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-  sourcemeta::one::Router &dispatcher_;
   std::string_view allowed_origin_;
   std::string_view response_schema_;
   std::string_view request_schema_;
