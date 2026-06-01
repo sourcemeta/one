@@ -69,7 +69,7 @@ public:
       -> std::filesystem::path;
 
   // Loads a precompiled Blaze template from disk for the given
-  // self-served schema URL (e.g. an `rpcRequestSchema` route argument). The
+  // self-served schema URL (e.g. an `mcpRequestSchema` route argument). The
   // mode picks `blaze-fast.metapack` (FastValidation) or
   // `blaze-exhaustive.metapack` (Exhaustive). Asserts the file exists.
   [[nodiscard]] auto blaze_template(std::string_view schema_uri,

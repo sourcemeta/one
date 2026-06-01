@@ -118,7 +118,7 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     });
 
     // TODO: Don't infer tool-eligibility from the presence of an
-    // `rpcRequestSchema` argument. The action system itself should expose
+    // `mcpRequestSchema` argument. The action system itself should expose
     // whether a given context is tool-eligible, so the
     // indexer doesn't have to reach into router argument bags
     if (rpc_request_schema.empty()) {
