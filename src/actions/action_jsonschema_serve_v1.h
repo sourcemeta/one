@@ -60,8 +60,7 @@ public:
                                         ? std::string_view{"bundle"}
                                         : std::string_view{"schema"}};
     const auto path{self.artifact_resolve_path(
-        schema_path, sourcemeta::one::RouterAction::InputKind::Match,
-        sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
+        schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",

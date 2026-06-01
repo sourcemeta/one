@@ -57,8 +57,8 @@ public:
 
     if (path.empty()) {
       if (request.prefers_html()) {
-        const auto root_html{this->artifact_resolve_path(
-            "", InputKind::Match, Tree::Explorer, "directory-html")};
+        const auto root_html{
+            this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
         if (root_html.has_value()) {
           this->artifact_serve(root_html.value(), sourcemeta::one::STATUS_OK,
                                false, {}, {}, request, response,
@@ -93,10 +93,10 @@ public:
 
     if (request.method() == "get" || request.method() == "head") {
       if (request.prefers_html()) {
-        const auto schema_html{this->artifact_resolve_path(
-            path, InputKind::Match, Tree::Explorer, "schema-html")};
+        const auto schema_html{
+            this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
-            path, InputKind::Match, Tree::Explorer, "directory-html")};
+            path, Tree::Explorer, "directory-html")};
         if (!path.ends_with("/") && schema_html.has_value()) {
           this->artifact_serve(schema_html.value(), sourcemeta::one::STATUS_OK,
                                false, {}, {}, request, response,
@@ -106,8 +106,8 @@ public:
                                sourcemeta::one::STATUS_OK, false, {}, {},
                                request, response, this->error_schema_);
         } else {
-          const auto not_found{this->artifact_resolve_path(
-              "", InputKind::Match, Tree::Explorer, "404")};
+          const auto not_found{
+              this->artifact_resolve_path("", Tree::Explorer, "404")};
           if (not_found.has_value()) {
             this->artifact_serve(not_found.value(),
                                  sourcemeta::one::STATUS_NOT_FOUND, false, {},

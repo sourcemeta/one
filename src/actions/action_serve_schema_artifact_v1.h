@@ -69,8 +69,8 @@ public:
       return;
     }
 
-    const auto path{this->artifact_resolve_path(
-        matches.front(), InputKind::Match, Tree::Schemas, this->artifact_)};
+    const auto path{this->artifact_resolve_path(matches.front(), Tree::Schemas,
+                                                this->artifact_)};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
@@ -105,8 +105,7 @@ public:
     }
 
     const auto path{this->artifact_resolve_path(
-        arguments.at("schema").to_string(), InputKind::URI, Tree::Schemas,
-        this->artifact_)};
+        arguments.at("schema").to_string(), Tree::Schemas, this->artifact_)};
     if (!path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

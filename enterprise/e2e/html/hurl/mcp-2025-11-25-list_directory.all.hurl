@@ -3105,6 +3105,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 118
 jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" == "Directory not found"
 

@@ -101,10 +101,10 @@ public:
                                  "a fragment or query parameters"});
     }
 
-    const auto schema_present{this->artifact_resolve_path(
-        schema_uri, InputKind::URI, Tree::Schemas, "schema")};
+    const auto schema_present{
+        this->artifact_resolve_path(schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        schema_uri, InputKind::URI, Tree::Schemas, "blaze-exhaustive")};
+        schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
@@ -153,9 +153,8 @@ private:
 
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
-        const auto locations_path{
-            this->artifact_resolve_path(keyword_location_string, InputKind::URI,
-                                        Tree::Schemas, "locations")};
+        const auto locations_path{this->artifact_resolve_path(
+            keyword_location_string, Tree::Schemas, "locations")};
         if (locations_path.has_value()) {
           auto locations{this->artifact_read_json(locations_path.value())};
           if (locations.has_value() && locations.value().is_object() &&
@@ -206,8 +205,8 @@ private:
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_path{this->artifact_resolve_path(
-        schema_uri, InputKind::URI, Tree::Schemas, "locations")};
+    const auto locations_path{
+        this->artifact_resolve_path(schema_uri, Tree::Schemas, "locations")};
     if (!locations_path.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }

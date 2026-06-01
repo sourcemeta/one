@@ -15,7 +15,7 @@ auto RouterAction::blaze_compile(const std::string_view schema_uri,
                                  const sourcemeta::blaze::Mode mode) const
     -> sourcemeta::blaze::Template {
   const auto template_path{this->artifact_resolve_path(
-      schema_uri, InputKind::URI, Tree::Schemas,
+      schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
   assert(template_path.has_value());
