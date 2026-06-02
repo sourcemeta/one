@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(one VERSION 6.3.0 LANGUAGES C CXX)
+file(READ "${CMAKE_CURRENT_LIST_DIR}/VERSION" ONE_PROJECT_VERSION)
+set_property(DIRECTORY APPEND PROPERTY
+  CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/VERSION")
+string(STRIP "${ONE_PROJECT_VERSION}" ONE_PROJECT_VERSION)
+project(one VERSION "${ONE_PROJECT_VERSION}" LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(DebugSymbols)
@@ -118,7 +122,11 @@ sourcemeta_target_clang_format(SOURCES
   test/*.h test/*.cc
   enterprise/*.h enterprise/*.cc)
 sourcemeta_target_shellcheck(SOURCES
-  test/*.sh docker/*.sh enterprise/scripts/*.sh benchmark/*.sh)
+  release.sh
+  test/*.sh
+  docker/*.sh
+  enterprise/scripts/*.sh
+  benchmark/*.sh)
 
 if(ONE_TESTS)
   enable_testing()

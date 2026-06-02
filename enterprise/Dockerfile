@@ -28,6 +28,7 @@ COPY contrib /source/contrib
 COPY vendor /source/vendor
 COPY DEPENDENCIES /source/DEPENDENCIES
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY VERSION /source/VERSION
 COPY enterprise /source/enterprise
 
 # For testing
