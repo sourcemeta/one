@@ -543,6 +543,17 @@ batching](https://www.jsonrpc.org/specification#batch), and the standard
 hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
 
+!!! warning "Tool argument stringification"
+
+    Note several widely-deployed MCP clients incorrectly stringify non-string
+    tool arguments before transmission. See the following open tickets:
+    [`anthropics/claude-code#24599`](https://github.com/anthropics/claude-code/issues/24599)
+    and
+    [`modelcontextprotocol/python-sdk#1112`](https://github.com/modelcontextprotocol/python-sdk/issues/1112).
+    We work around this on a per-tool basis as needed so that affected clients
+    remain fully interoperable with Sourcemeta One. We aim to eventually revert
+    these workarounds once the client ecosystem stabilises.
+
 === "200"
 
     A JSON-RPC response envelope, or, on `2025-03-26`, a batch of envelopes.
