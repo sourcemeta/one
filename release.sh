@@ -14,7 +14,10 @@ fi
 
 BUMP_TYPE="$1"
 
-CURRENT_VERSION="$(cat VERSION)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VERSION_FILE="${SCRIPT_DIR}/VERSION"
+
+CURRENT_VERSION="$(cat "$VERSION_FILE")"
 MAJOR="$(echo "$CURRENT_VERSION" | cut -d . -f1)"
 MINOR="$(echo "$CURRENT_VERSION" | cut -d . -f2)"
 PATCH="$(echo "$CURRENT_VERSION" | cut -d . -f3)"
@@ -40,20 +43,9 @@ esac
 NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
 echo "Bumping version: ${CURRENT_VERSION} -> ${NEW_VERSION}"
 
-replace_version() {
-  file="$1"
-  if ! grep -q "$CURRENT_VERSION" "$file"
-  then
-    echo "Error: ${CURRENT_VERSION} not found in ${file}" 1>&2
-    exit 1
-  fi
-  sed -i.bak "s/${CURRENT_VERSION}/${NEW_VERSION}/g" "$file"
-  rm -f "${file}.bak"
-}
+echo "$NEW_VERSION" > "$VERSION_FILE"
 
-replace_version VERSION
-
-git add VERSION
-git commit --gpg-sign --signoff --message "v${NEW_VERSION}"
-git tag --sign "v${NEW_VERSION}" --message "v${NEW_VERSION}"
-git log -1 --patch
+git -C "$SCRIPT_DIR" commit --only --gpg-sign --signoff \
+  --message "v${NEW_VERSION}" -- VERSION
+git -C "$SCRIPT_DIR" tag --sign "v${NEW_VERSION}" --message "v${NEW_VERSION}"
+git -C "$SCRIPT_DIR" log -1 --patch
