@@ -5,7 +5,6 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
-#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -97,15 +96,6 @@ public:
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
           std::move(request_output));
-    }
-
-    if (!sourcemeta::core::URI::is_uri(arguments.at("schema").to_string()) ||
-        arguments.at("schema").to_string().find('#') != std::string::npos ||
-        arguments.at("schema").to_string().find('?') != std::string::npos) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &request_id, -32602, "Invalid tool input schema URI",
-          sourcemeta::core::JSON{"The schema must be an absolute URI without "
-                                 "a fragment or query parameters"});
     }
 
     const auto path{this->artifact_resolve_path(

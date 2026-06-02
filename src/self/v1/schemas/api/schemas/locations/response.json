@@ -46,17 +46,17 @@
           "enum": [ "resource", "anchor", "pointer", "subschema" ]
         },
         "base": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "uri"
         },
         "baseDialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "uri"
         },
         "dialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "uri"
         },
@@ -66,14 +66,14 @@
               "type": "null"
             },
             {
-              "$comment": "TODO: Use Format Assertion when supported on Blaze",
+              "x-format-assertion": true,
               "type": "string",
               "format": "json-pointer"
             }
           ]
         },
         "pointer": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "json-pointer"
         },
@@ -81,12 +81,12 @@
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "json-pointer"
         },
         "root": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
+          "x-format-assertion": true,
           "type": "string",
           "format": "uri"
         },

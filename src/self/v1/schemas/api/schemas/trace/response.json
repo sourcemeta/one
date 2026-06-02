@@ -32,12 +32,12 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "x-format-assertion": true,
             "type": "string",
             "format": "json-pointer"
           },
           "instanceLocation": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "x-format-assertion": true,
             "type": "string",
             "format": "json-pointer"
           },
@@ -51,7 +51,7 @@
             }
           },
           "keywordLocation": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "x-format-assertion": true,
             "type": "string",
             "format": "uri"
           },
@@ -67,7 +67,7 @@
                 "type": "null"
               },
               {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri"
               }

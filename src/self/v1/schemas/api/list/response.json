@@ -36,7 +36,7 @@
             "type": "string"
           },
           "path": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
+            "x-format-assertion": true,
             "type": "string",
             "format": "uri-reference"
           }
@@ -45,7 +45,7 @@
       }
     },
     "email": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "email"
     },
@@ -67,7 +67,7 @@
                 "const": "directory"
               },
               "email": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "email"
               },
@@ -87,12 +87,12 @@
                 "type": "string"
               },
               "path": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri-reference"
               },
               "website": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri"
               }
@@ -128,17 +128,17 @@
       "minimum": 0
     },
     "path": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri-reference"
     },
     "url": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri"
     },
     "website": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri"
     }

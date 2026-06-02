@@ -12,8 +12,8 @@
     "@codemirror/view": "^6.38.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.1",
+    "@playwright/test": "^1.60.0",
     "@sourcemeta/jsonschema": "^15.8.0",
-    "jsdom": "^26.0.0"
+    "jsdom": "^29.1.1"
   }
 }

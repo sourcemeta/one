@@ -139,6 +139,7 @@
               "type": "string"
             },
             "websiteUrl": {
+              "x-format-assertion": true,
               "type": "string",
               "format": "uri"
             },
@@ -149,6 +150,7 @@
                 "required": [ "src" ],
                 "properties": {
                   "src": {
+                    "x-format-assertion": true,
                     "type": "string",
                     "format": "uri"
                   },

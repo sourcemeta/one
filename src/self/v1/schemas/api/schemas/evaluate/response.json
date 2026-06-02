@@ -36,7 +36,7 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri"
               },
@@ -45,12 +45,12 @@
                 "minItems": 1
               },
               "instanceLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "json-pointer"
               },
               "keywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "json-pointer"
               }
@@ -81,7 +81,7 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri"
               },
@@ -89,12 +89,12 @@
                 "type": "string"
               },
               "instanceLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "json-pointer"
               },
               "keywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "json-pointer"
               }

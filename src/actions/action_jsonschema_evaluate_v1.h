@@ -4,7 +4,6 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
-#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -80,15 +79,6 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    if (!sourcemeta::core::URI::is_uri(schema_uri) ||
-        schema_uri.find('#') != std::string::npos ||
-        schema_uri.find('?') != std::string::npos) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &request_id, -32602, "Invalid tool input schema URI",
-          sourcemeta::core::JSON{"The schema must be an absolute URI without "
-                                 "a fragment or query parameters"});
-    }
-
     const auto schema_present{
         this->artifact_resolve_path(schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(

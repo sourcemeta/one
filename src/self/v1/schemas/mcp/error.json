@@ -109,13 +109,6 @@
         },
         {
           "const": {
-            "code": -32602,
-            "message": "Invalid tool input schema URI",
-            "data": "The schema must be an absolute URI without a fragment or query parameters"
-          }
-        },
-        {
-          "const": {
             "code": -32002,
             "message": "Resource not found"
           }

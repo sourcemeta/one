@@ -37,6 +37,7 @@ test-playwright:
 ifneq ($(wildcard playwright/),)
 	$(MAKE) -C $(ROOT) node_modules
 	$(NPX) playwright install chromium
+	@echo "Playwright dependencies installed"
 	env PLAYWRIGHT_BASE_URL=$(BASE):$(PORT) \
 		$(NPX) playwright test --config playwright/playwright.config.js
 endif

@@ -12,8 +12,9 @@
   "properties": {
     "schema": {
       "description": "Absolute URI of a JSON Schema in this catalog",
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
+      "pattern": "^[^#?]*$",
       "format": "uri"
     }
   },
