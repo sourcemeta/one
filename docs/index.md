@@ -76,15 +76,15 @@ without building complex JSON Schema infrastructure from scratch.
   meta-schemas](https://github.com/microsoft/vscode-json-languageservice/issues/149)
 - :material-check: __Schema Health Checks__ Monitor and guarantee schema best
   practices with comprehensive built-in linting and [custom
-  rules](configuration.md#linter)
-  ([Enterprise](commercial.md)). The most advanced JSON Schema linter
-  available, designed with input from the JSON Schema organisation
+  rules](configuration.md#linter) ([Enterprise](commercial.md)). The most
+  advanced JSON Schema linter available, designed with input from the JSON
+  Schema organisation
 - :material-api: __Rich HTTP API__ High-performance programmatic access for
   CI/CD pipelines, tooling integration, and custom workflows. Check out the
   [documentation](api.md) to learn more
 - :octicons-versions-16: __JSON Schema Compatibility__ Full support for JSON
-  Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, plus custom
-  meta-schemas, [Standard Output
+  Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, plus
+  `format` validation, custom meta-schemas, [Standard Output
   Formats](https://json-schema.org/draft/2020-12/json-schema-core#name-output-formatting),
   annotation collection, JSON Schema
   [Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents),
