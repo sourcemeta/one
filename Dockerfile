@@ -11,6 +11,7 @@ COPY src /source/src
 COPY contrib /source/contrib
 COPY vendor /source/vendor
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY VERSION /source/VERSION
 
 # For testing
 COPY test/cli /source/test/cli
