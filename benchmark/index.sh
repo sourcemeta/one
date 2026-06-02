@@ -18,4 +18,5 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
   "$HERE/index-n.sh" "$INDEX" 100
   "$HERE/index-n.sh" "$INDEX" 1000
   "$HERE/index-n.sh" "$INDEX" 10000
+  "$HERE/index-custom-meta-schema.sh" "$INDEX" 10000
 } | jq --slurp 'add'
