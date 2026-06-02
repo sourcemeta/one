@@ -113,6 +113,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#56)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#57)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#58)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/meta.json (#59)
 (  1%) Resolving: example/schemas/a.json
 (  3%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice
@@ -123,8 +124,8 @@ EOF
 cat << EOF > "$TMP/expected_ba.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
-Detecting: $(realpath "$TMP")/schemas/b.json (#1)
-Detecting: $(realpath "$TMP")/schemas/a.json (#2)
+Detecting: $(realpath "$TMP")/schemas/a.json (#1)
+Detecting: $(realpath "$TMP")/schemas/b.json (#2)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#3)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#4)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#5)
@@ -181,10 +182,11 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#56)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#57)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#58)
-(  1%) Resolving: example/schemas/b.json
-(  3%) Resolving: example/schemas/a.json
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/meta.json (#59)
+(  1%) Resolving: example/schemas/a.json
+(  3%) Resolving: example/schemas/b.json
 error: Cannot register the same identifier twice
-  at path $(realpath "$TMP")/schemas/a.json
+  at path $(realpath "$TMP")/schemas/b.json
   at identifier https://sourcemeta.com/example/schemas/test
 EOF
 

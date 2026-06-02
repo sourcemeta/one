@@ -1,0 +1,5 @@
+{
+  "resolve": {
+    "https://schemas.sourcemeta.com/self/v1/schemas/meta": "./schemas/meta.json"
+  }
+}

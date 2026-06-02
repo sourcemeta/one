@@ -10,6 +10,7 @@
         "v1": {
           "contents": {
             "schemas": {
+              "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas",
               "path": "./schemas"
             }
           }

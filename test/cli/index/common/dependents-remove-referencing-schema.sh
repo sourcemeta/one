@@ -126,6 +126,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#55)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#56)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#57)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/meta.json (#58)
 ( 16%) Producing: explorer/%/directory.metapack
 ( 33%) Producing: explorer/%/directory-html.metapack
 ( 50%) Producing: explorer/%/search.metapack
@@ -542,6 +543,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/mcp/tools/list/response/%
 ./explorer/self/v1/schemas/mcp/tools/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/response/%/schema.metapack
+./explorer/self/v1/schemas/meta
+./explorer/self/v1/schemas/meta/%
+./explorer/self/v1/schemas/meta/%/schema-html.metapack
+./explorer/self/v1/schemas/meta/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -1326,6 +1331,19 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/positions.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/schema.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/stats.metapack
+./schemas/self/v1/schemas/meta
+./schemas/self/v1/schemas/meta/%
+./schemas/self/v1/schemas/meta/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/meta/%/blaze-fast.metapack
+./schemas/self/v1/schemas/meta/%/bundle.metapack
+./schemas/self/v1/schemas/meta/%/dependencies.metapack
+./schemas/self/v1/schemas/meta/%/dependents.metapack
+./schemas/self/v1/schemas/meta/%/editor.metapack
+./schemas/self/v1/schemas/meta/%/health.metapack
+./schemas/self/v1/schemas/meta/%/locations.metapack
+./schemas/self/v1/schemas/meta/%/positions.metapack
+./schemas/self/v1/schemas/meta/%/schema.metapack
+./schemas/self/v1/schemas/meta/%/stats.metapack
 ./state.bin
 ./version.json
 EOF

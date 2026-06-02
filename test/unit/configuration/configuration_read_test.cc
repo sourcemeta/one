@@ -42,7 +42,7 @@ TEST(Configuration_read, read_valid_001) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -109,7 +109,7 @@ TEST(Configuration_read, read_valid_002) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -163,7 +163,7 @@ TEST(Configuration_read, read_valid_003) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -216,7 +216,7 @@ TEST(Configuration_read, read_valid_004) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -272,7 +272,7 @@ TEST(Configuration_read, read_valid_005) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -328,7 +328,7 @@ TEST(Configuration_read, read_valid_006) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -370,7 +370,7 @@ TEST(Configuration_read, read_valid_007) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -417,7 +417,7 @@ TEST(Configuration_read, read_valid_008) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -464,7 +464,7 @@ TEST(Configuration_read, read_valid_009) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -508,7 +508,7 @@ TEST(Configuration_read, read_valid_010) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -548,7 +548,8 @@ TEST(Configuration_read, read_valid_011) {
               "schemas": {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
-                "x-sourcemeta-one:priority": 0
+                "x-sourcemeta-one:priority": 0,
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -596,7 +597,7 @@ TEST(Configuration_read, read_valid_012) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -649,7 +650,7 @@ TEST(Configuration_read, read_valid_013) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -706,7 +707,7 @@ TEST(Configuration_read, read_valid_014) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -919,7 +920,7 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }
@@ -976,7 +977,7 @@ TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
                 "path": "SELF_DIRECTORY/v1/schemas",
                 "x-sourcemeta-one:path": "SELF_DIRECTORY/v1/one.json",
                 "x-sourcemeta-one:priority": 0,
-                "baseUri": "http://localhost:8000"
+                "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas"
               }
             }
           }

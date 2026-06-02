@@ -330,7 +330,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
-jsonpath "$.result.resources" count == 26
+jsonpath "$.result.resources" count == 27
 jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
 jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Evaluate RPC Input"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
@@ -367,7 +367,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
-jsonpath "$.result.resources" count == 26
+jsonpath "$.result.resources" count == 27
 jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
 jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Evaluate RPC Input"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"

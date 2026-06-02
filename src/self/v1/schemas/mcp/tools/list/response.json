@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One MCP Tools List Response",
   "description": "Sourcemeta One's list of MCP tools",
   "examples": [
@@ -69,7 +69,6 @@
                     "const": "object"
                   },
                   "$ref": {
-                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
                     "type": "string",
                     "format": "uri"
                   },
@@ -89,7 +88,6 @@
                     "const": "object"
                   },
                   "$ref": {
-                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
                     "type": "string",
                     "format": "uri"
                   }

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Metadata API Response",
   "description": "The response format for the schema metadata API endpoint",
   "examples": [
@@ -38,7 +38,6 @@
             "type": "string"
           },
           "path": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
             "type": "string",
             "format": "uri-reference"
           }
@@ -77,7 +76,6 @@
           "type": [ "string", "null" ]
         },
         "baseDialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
@@ -90,7 +88,6 @@
           "minimum": 0
         },
         "dialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
@@ -105,12 +102,10 @@
           "minimum": 0
         },
         "identifier": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
         "path": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri-reference"
         }

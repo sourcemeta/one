@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Dependencies API Response",
   "description": "The response format for the schema dependencies API endpoint",
   "examples": [
@@ -17,17 +17,14 @@
     "required": [ "from", "to", "at" ],
     "properties": {
       "at": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "json-pointer"
       },
       "from": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri"
       },
       "to": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri"
       }

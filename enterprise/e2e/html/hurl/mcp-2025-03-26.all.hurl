@@ -355,14 +355,14 @@ jsonpath "$..mimeType" not exists
 variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
-variable "text" jsonpath "$.schemas" == 126
+variable "text" jsonpath "$.schemas" == 127
 variable "text" jsonpath "$.entries" count == 3
 variable "text" jsonpath "$.entries[0].name" == "self"
 variable "text" jsonpath "$.entries[0].title" == "Self"
 variable "text" jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 variable "text" jsonpath "$.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].health" == 100
-variable "text" jsonpath "$.entries[0].schemas" == 56
+variable "text" jsonpath "$.entries[0].schemas" == 57
 variable "text" jsonpath "$.entries[0].path" == "/self/"
 variable "text" jsonpath "$.entries[1].name" == "test"
 variable "text" jsonpath "$.entries[1].type" == "directory"

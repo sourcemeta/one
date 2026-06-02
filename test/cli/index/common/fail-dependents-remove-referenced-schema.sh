@@ -125,6 +125,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#55)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#56)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#57)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/meta.json (#58)
 (  7%) Producing: explorer/%/directory.metapack
 ( 14%) Producing: schemas/example/schemas/b/%/dependencies.metapack
 error: Could not resolve the reference to an external schema

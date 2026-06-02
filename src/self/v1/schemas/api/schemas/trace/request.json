@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Trace API Request",
   "description": "The JSON instance to trace evaluation against a schema in the catalog",
   "examples": [

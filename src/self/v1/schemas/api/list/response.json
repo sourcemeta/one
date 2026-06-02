@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One List API Response",
   "description": "The response format for the directory listing API endpoint",
   "examples": [
@@ -36,7 +36,6 @@
             "type": "string"
           },
           "path": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
             "type": "string",
             "format": "uri-reference"
           }
@@ -45,7 +44,6 @@
       }
     },
     "email": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "email"
     },
@@ -67,7 +65,6 @@
                 "const": "directory"
               },
               "email": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "email"
               },
@@ -87,12 +84,10 @@
                 "type": "string"
               },
               "path": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri-reference"
               },
               "website": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri"
               }
@@ -128,17 +123,14 @@
       "minimum": 0
     },
     "path": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "uri-reference"
     },
     "url": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "uri"
     },
     "website": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "uri"
     }

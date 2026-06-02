@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Evaluate RPC Output",
   "description": "Evaluate a JSON instance against a schema in the catalog and return whether it is valid plus any errors",
   "examples": [

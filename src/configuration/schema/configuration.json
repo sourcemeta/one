@@ -41,7 +41,7 @@
               "type": "string"
             },
             "url": {
-              "$comment": "TODO: Use Format Assertion when supported on Blaze",
+              "x-format-assertion": true,
               "type": "string",
               "format": "uri"
             }
@@ -61,7 +61,7 @@
       "additionalProperties": false
     },
     "url": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri"
     }

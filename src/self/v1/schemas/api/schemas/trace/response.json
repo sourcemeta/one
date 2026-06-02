@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Trace API Response",
   "description": "The response format for the schema trace API endpoint",
   "examples": [
@@ -32,12 +32,10 @@
           },
           "annotation": true,
           "evaluatePath": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
             "type": "string",
             "format": "json-pointer"
           },
           "instanceLocation": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
             "type": "string",
             "format": "json-pointer"
           },
@@ -51,7 +49,6 @@
             }
           },
           "keywordLocation": {
-            "$comment": "TODO: Use Format Assertion when supported on Blaze",
             "type": "string",
             "format": "uri"
           },
@@ -67,7 +64,6 @@
                 "type": "null"
               },
               {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri"
               }

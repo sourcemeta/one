@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Search API Response",
   "description": "The response format for the schema search API endpoint",
   "examples": [
@@ -33,12 +33,10 @@
         "type": "string"
       },
       "path": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri-reference"
       },
       "identifier": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
         "type": "string",
         "format": "uri"
       },

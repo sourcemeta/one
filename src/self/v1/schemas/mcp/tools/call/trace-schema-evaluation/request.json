@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Trace RPC Input",
   "description": "Trace step-by-step evaluation of a JSON instance against a schema in the catalog, exposing each step, rule application, and decision point",
   "examples": [
@@ -17,7 +17,6 @@
   "properties": {
     "schema": {
       "description": "Absolute URI of a JSON Schema in this catalog",
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "uri"
     },

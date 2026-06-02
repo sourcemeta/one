@@ -46,10 +46,10 @@ cat << EOF > "$TMP/expected.txt"
         "v1": {
           "contents": {
             "schemas": {
+              "baseUri": "https://schemas.sourcemeta.com/self/v1/schemas",
               "path": "$ONE_PREFIX/share/sourcemeta/one/self/v1/schemas",
               "x-sourcemeta-one:path": "$ONE_PREFIX/share/sourcemeta/one/self/v1/one.json",
-              "x-sourcemeta-one:priority": 0,
-              "baseUri": "https://sourcemeta.com/"
+              "x-sourcemeta-one:priority": 0
             }
           }
         }

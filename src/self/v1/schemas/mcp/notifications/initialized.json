@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One MCP Initialized Notification",
   "description": "Client signal that the handshake is complete and normal operation may begin",
   "examples": [

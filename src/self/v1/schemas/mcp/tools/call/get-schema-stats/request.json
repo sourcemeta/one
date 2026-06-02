@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Statistics RPC Input",
   "description": "Get keyword statistics by vocabulary about every URI associated with a schema in the catalog",
   "examples": [
@@ -12,7 +12,6 @@
   "properties": {
     "schema": {
       "description": "Absolute URI of a JSON Schema in this catalog",
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
       "type": "string",
       "format": "uri"
     }

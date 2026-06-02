@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Evaluate API Response",
   "description": "The response format for the schema evaluation API endpoint",
   "examples": [
@@ -36,7 +36,6 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri"
               },
@@ -45,12 +44,10 @@
                 "minItems": 1
               },
               "instanceLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "json-pointer"
               },
               "keywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "json-pointer"
               }
@@ -81,7 +78,6 @@
             ],
             "properties": {
               "absoluteKeywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri"
               },
@@ -89,12 +85,10 @@
                 "type": "string"
               },
               "instanceLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "json-pointer"
               },
               "keywordLocation": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "json-pointer"
               }

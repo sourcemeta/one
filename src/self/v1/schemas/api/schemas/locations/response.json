@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One Schema Locations API Response",
   "description": "The response format for the schema frame locations API endpoint",
   "examples": [
@@ -46,17 +46,14 @@
           "enum": [ "resource", "anchor", "pointer", "subschema" ]
         },
         "base": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
         "baseDialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
         "dialect": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },
@@ -66,14 +63,12 @@
               "type": "null"
             },
             {
-              "$comment": "TODO: Use Format Assertion when supported on Blaze",
               "type": "string",
               "format": "json-pointer"
             }
           ]
         },
         "pointer": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "json-pointer"
         },
@@ -81,12 +76,10 @@
           "$ref": "../position.json"
         },
         "relativePointer": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "json-pointer"
         },
         "root": {
-          "$comment": "TODO: Use Format Assertion when supported on Blaze",
           "type": "string",
           "format": "uri"
         },

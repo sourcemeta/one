@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://schemas.sourcemeta.com/self/v1/schemas/meta",
   "title": "Sourcemeta One MCP Resources Read Response",
   "description": "Sourcemeta One's response containing an MCP resource",
   "examples": [
@@ -39,7 +39,6 @@
             "required": [ "uri", "mimeType", "text" ],
             "properties": {
               "uri": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
                 "type": "string",
                 "format": "uri"
               },

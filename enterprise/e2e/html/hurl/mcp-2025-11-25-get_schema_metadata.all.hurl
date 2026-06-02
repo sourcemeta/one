@@ -209,9 +209,9 @@ jsonpath "$.id" == 802
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.title" == "Sourcemeta One MCP Response"
-jsonpath "$.result.structuredContent.dependencies" == 9
+jsonpath "$.result.structuredContent.dependencies" == 17
 variable "text" jsonpath "$.title" == "Sourcemeta One MCP Response"
-variable "text" jsonpath "$.dependencies" == 9
+variable "text" jsonpath "$.dependencies" == 17
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -254,8 +254,17 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 803
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid tool input schema URI"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request#/properties/schema/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].error" == "The string value \"test/object\" was expected to represent a valid URI"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -562,8 +571,17 @@ schema_path: header "Link" regex "<([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 821
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid tool input schema URI"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request#/properties/schema/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to represent a valid URI"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
