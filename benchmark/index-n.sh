@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# Measures one cold indexer run over a registry of N trivial schemas,
-# all using the standard draft 2020-12 dialect. Pairs with
-# `index-custom-meta-schema.sh` to surface the per-schema overhead of a
-# user-defined meta-schema vs the bundled standard one.
-
 set -o errexit
 set -o nounset
 
