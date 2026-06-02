@@ -69,7 +69,7 @@
                     "const": "object"
                   },
                   "$ref": {
-                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                    "x-format-assertion": true,
                     "type": "string",
                     "format": "uri"
                   },
@@ -89,7 +89,7 @@
                     "const": "object"
                   },
                   "$ref": {
-                    "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                    "x-format-assertion": true,
                     "type": "string",
                     "format": "uri"
                   }

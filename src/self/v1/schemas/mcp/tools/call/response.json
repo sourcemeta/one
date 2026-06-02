@@ -151,7 +151,7 @@
                 "const": "resource_link"
               },
               "uri": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri"
               },

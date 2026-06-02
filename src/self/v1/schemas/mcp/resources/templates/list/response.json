@@ -40,7 +40,7 @@
             "required": [ "uriTemplate", "name", "description", "mimeType" ],
             "properties": {
               "uriTemplate": {
-                "$comment": "TODO: Use Format Assertion when supported on Blaze",
+                "x-format-assertion": true,
                 "type": "string",
                 "format": "uri-template"
               },

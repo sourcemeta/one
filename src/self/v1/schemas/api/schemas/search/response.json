@@ -33,12 +33,12 @@
         "type": "string"
       },
       "path": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "x-format-assertion": true,
         "type": "string",
         "format": "uri-reference"
       },
       "identifier": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "x-format-assertion": true,
         "type": "string",
         "format": "uri"
       },

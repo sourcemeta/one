@@ -16,12 +16,12 @@
     "required": [ "from", "to" ],
     "properties": {
       "from": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "x-format-assertion": true,
         "type": "string",
         "format": "uri"
       },
       "to": {
-        "$comment": "TODO: Use Format Assertion when supported on Blaze",
+        "x-format-assertion": true,
         "type": "string",
         "format": "uri"
       }

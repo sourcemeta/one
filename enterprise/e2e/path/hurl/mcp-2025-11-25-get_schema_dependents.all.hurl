@@ -205,8 +205,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1599
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid tool input schema URI"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
 jsonpath "$.result" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -243,8 +243,8 @@ schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1600
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid tool input schema URI"
-jsonpath "$.error.data" == "The schema must be an absolute URI without a fragment or query parameters"
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
 jsonpath "$.result" not exists
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
