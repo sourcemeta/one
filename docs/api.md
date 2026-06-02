@@ -485,3 +485,84 @@ schema.
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
+
+## Model Context Protocol
+
+!!! success "Enterprise"
+
+    The Model Context Protocol server is only available in the
+    [Enterprise](commercial.md) edition. Learn more about [commercial
+    licensing](commercial.md).
+
+*This endpoint exposes the entire instance as a [Model Context
+Protocol](https://modelcontextprotocol.io) server, offering every JSON Schema
+in the catalog as an MCP resource and every action documented above as an
+MCP tool.*
+
+```
+POST /self/v1/mcp
+```
+
+Sourcemeta One implements the [Streamable
+HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http)
+transport with full CORS support, and enforces the [`Origin` header
+validation](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#security-warning)
+principle recommended by the specification to protect against DNS rebinding
+attacks.
+
+**Protocol versions.** The server simultaneously supports three revisions of
+the MCP specification:
+[`2025-03-26`](https://modelcontextprotocol.io/specification/2025-03-26),
+[`2025-06-18`](https://modelcontextprotocol.io/specification/2025-06-18), and
+[`2025-11-25`](https://modelcontextprotocol.io/specification/2025-11-25).
+Clients pick a revision on every request via the `MCP-Protocol-Version`
+header, falling back to `2025-03-26` when omitted as the [specification
+requires](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header).
+We recommend connecting with the latest revision to take advantage of all
+available features, but the server gracefully degrades to support older
+clients as needed.
+
+**Resources.** Every JSON Schema in the catalog is offered as an MCP resource
+addressable by its canonical absolute URI, served in paginated form. The
+configured [`x-sourcemeta-one:priority`](configuration.md) hint of each
+schema is mapped to the standard MCP `annotations.priority` value, so that
+AI clients can rank schemas by their declared importance.
+
+**Tools.** Every action documented in this page is also exposed as an MCP
+tool that performs the same work over JSON-RPC. The server supports the full
+range of advanced MCP tool features applicable to each revision, including
+per-tool
+[`outputSchema`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#output-schema)
+declarations, [structured
+content](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content)
+responses,
+[`resource_link`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#resource-links)
+content blocks, [JSON-RPC
+batching](https://www.jsonrpc.org/specification#batch), and the standard
+[tool
+hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
+(`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
+
+=== "200"
+
+    A JSON-RPC response envelope, or, on `2025-03-26`, a batch of envelopes.
+
+=== "202"
+
+    Acknowledged notification with no body.
+
+=== "400"
+
+    The `MCP-Protocol-Version` header is not one of the supported revisions.
+
+=== "403"
+
+    The request `Origin` does not match the configured instance URL.
+
+=== "405"
+
+    The HTTP method is not `POST` or `OPTIONS`.
+
+=== "413"
+
+    The request body exceeds the maximum allowed size.

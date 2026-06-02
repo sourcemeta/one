@@ -93,6 +93,10 @@ without building complex JSON Schema infrastructure from scratch.
   performance with minimal compute resources. Run instances on modest hardware,
   reducing infrastructure costs while maintaining enterprise-scale throughput
   with a stateless horizontally-scalable design
+- :material-robot: __MCP Server (Enterprise Only)__ Every instance doubles as a
+  fully-featured [Model Context Protocol](api.md#model-context-protocol)
+  server, letting AI tooling discover schemas as resources and call every HTTP
+  API action as a JSON-RPC tool
 
 </div>
 

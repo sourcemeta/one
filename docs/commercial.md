@@ -31,6 +31,15 @@ Sourcemeta One is available in two editions:
   license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
   from Sourcemeta.
 
+## Model Context Protocol
+
+Every Enterprise instance doubles as a fully-featured [Model Context Protocol
+(MCP)](api.md#model-context-protocol) server.  Every schema in the catalog is
+exposed as a discoverable MCP resource and every HTTP API action is offered as
+a JSON-RPC tool (not as a layer on top of REST but as a true MCP-first
+integration), helping your AI assistants get the most out of your schema single
+source of truth.
+
 ## Standard Library
 
 Sourcemeta maintains a growing library of hand-crafted high-quality schemas
