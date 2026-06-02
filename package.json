@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
-    "@sourcemeta/jsonschema": "^15.5.0",
+    "@sourcemeta/jsonschema": "^15.8.0",
     "jsdom": "^26.0.0"
   }
 }

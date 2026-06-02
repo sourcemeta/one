@@ -252,6 +252,167 @@
         "url": "http://localhost:8000",
         "api": false
       }
+    },
+    {
+      "description": "Top-level url that is not an absolute URI is invalid",
+      "valid": false,
+      "data": {
+        "url": "relative/path"
+      }
+    },
+    {
+      "description": "html.action.url that is not an absolute URI is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "html": {
+          "name": "Title",
+          "description": "Description",
+          "action": {
+            "title": "Docs",
+            "icon": "book",
+            "url": "relative/path"
+          }
+        },
+        "contents": {
+          "test": {
+            "title": "A sample schema folder",
+            "description": "For testing purposes",
+            "github": "sourcemeta/one"
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection baseUri that is not a URI reference is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "baseUri": "://bad",
+            "path": "./schemas/example"
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection defaultDialect that is not an absolute URI is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "baseUri": "https://example.com/extension",
+            "path": "./schemas/example/extension",
+            "defaultDialect": "relative/path"
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection email that is not an email address is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "email": "not-an-email",
+            "baseUri": "https://example.com/extension",
+            "path": "./schemas/example/extension"
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection website that is not an absolute URI is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "website": "relative/path",
+            "baseUri": "https://example.com/extension",
+            "path": "./schemas/example/extension"
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection resolve key that is not a URI reference is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "baseUri": "https://example.com/extension",
+            "path": "./schemas/example/extension",
+            "resolve": {
+              "://bad": "/foo.json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Collection resolve value that is not a URI reference is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "baseUri": "https://example.com/extension",
+            "path": "./schemas/example/extension",
+            "resolve": {
+              "https://other.com/single.json": "://bad"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Page email that is not an email address is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "email": "not-an-email",
+            "contents": {
+              "test": {
+                "title": "A sample schema folder",
+                "description": "For testing purposes"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Page website that is not an absolute URI is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "contents": {
+          "example": {
+            "title": "Test",
+            "website": "relative/path",
+            "contents": {
+              "test": {
+                "title": "A sample schema folder",
+                "description": "For testing purposes"
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

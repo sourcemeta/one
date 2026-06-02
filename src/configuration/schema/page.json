@@ -20,7 +20,7 @@
       "$ref": "./contents.json"
     },
     "email": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "email"
     },
@@ -28,7 +28,7 @@
       "type": "string"
     },
     "website": {
-      "$comment": "TODO: Use Format Assertion when supported on Blaze",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri"
     }
