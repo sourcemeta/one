@@ -1,0 +1,98 @@
+#!/bin/sh
+
+set -o errexit
+set -o nounset
+
+TMP="$(mktemp -d)"
+clean() { rm -rf "$TMP"; }
+trap clean EXIT
+
+mkdir -p "$TMP/schemas/foo"
+
+cat << 'EOF' > "$TMP/schemas/foo.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/foo"
+}
+EOF
+
+cat << 'EOF' > "$TMP/schemas/foo/bar.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/foo/bar"
+}
+EOF
+
+cat << EOF > "$TMP/one.json"
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+"$1" "$TMP/one.json" "$TMP/output"
+
+cd "$TMP/output"
+find . -mindepth 1 \
+  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/manifest.txt"
+cd - > /dev/null
+
+cat << 'EOF' > "$TMP/expected.txt"
+./configuration.json
+./explorer
+./explorer/%
+./explorer/%/directory.metapack
+./explorer/%/mcp.metapack
+./explorer/%/search.metapack
+./explorer/example
+./explorer/example/%
+./explorer/example/%/directory.metapack
+./explorer/example/foo
+./explorer/example/foo/%
+./explorer/example/foo/%/directory.metapack
+./explorer/example/foo/%/schema.metapack
+./explorer/example/foo/bar
+./explorer/example/foo/bar/%
+./explorer/example/foo/bar/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/foo
+./schemas/example/foo/%
+./schemas/example/foo/%/blaze-exhaustive.metapack
+./schemas/example/foo/%/blaze-fast.metapack
+./schemas/example/foo/%/bundle.metapack
+./schemas/example/foo/%/dependencies.metapack
+./schemas/example/foo/%/dependents.metapack
+./schemas/example/foo/%/editor.metapack
+./schemas/example/foo/%/health.metapack
+./schemas/example/foo/%/locations.metapack
+./schemas/example/foo/%/positions.metapack
+./schemas/example/foo/%/schema.metapack
+./schemas/example/foo/%/stats.metapack
+./schemas/example/foo/bar
+./schemas/example/foo/bar/%
+./schemas/example/foo/bar/%/blaze-exhaustive.metapack
+./schemas/example/foo/bar/%/blaze-fast.metapack
+./schemas/example/foo/bar/%/bundle.metapack
+./schemas/example/foo/bar/%/dependencies.metapack
+./schemas/example/foo/bar/%/dependents.metapack
+./schemas/example/foo/bar/%/editor.metapack
+./schemas/example/foo/bar/%/health.metapack
+./schemas/example/foo/bar/%/locations.metapack
+./schemas/example/foo/bar/%/positions.metapack
+./schemas/example/foo/bar/%/schema.metapack
+./schemas/example/foo/bar/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+diff "$TMP/manifest.txt" "$TMP/expected.txt"
