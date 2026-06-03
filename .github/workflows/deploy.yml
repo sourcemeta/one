@@ -212,7 +212,9 @@ jobs:
       registry-password: ${{ secrets.GITHUB_TOKEN }}
 
   release:
-    needs: docker-multi-arch
+    needs:
+      - docker-multi-arch
+      - enterprise-provenance
     runs-on: ubuntu-latest
     permissions:
       contents: write
