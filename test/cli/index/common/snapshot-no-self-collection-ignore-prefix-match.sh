@@ -40,10 +40,10 @@ EOF
 "$1" "$TMP/one.json" "$TMP/output"
 
 cd "$TMP/output"
-find . -mindepth 1 | LC_ALL=C sort \
-  | sed -E -e '/^\.\/explorer\/self(\/|$)/d' \
-           -e '/^\.\/schemas\/self(\/|$)/d' \
-  > "$TMP/manifest.txt"
+find . -mindepth 1 \
+  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected.txt"
