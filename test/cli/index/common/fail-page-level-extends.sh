@@ -19,12 +19,10 @@ cat << 'EOF' > "$TMP/one.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
 error: Invalid configuration
   at path $(realpath "$TMP")/one.json
 The value was expected to be an object that defines the property "include"

@@ -12,12 +12,10 @@ cat << EOF > "$TMP/one.json"
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 99999999999999999999999 \
-  2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+  > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/one.json
 error: Expected a valid numeric value for option
   at option concurrency
   with value 99999999999999999999999

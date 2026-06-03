@@ -50,7 +50,7 @@ EOF
 # It should fail with a low limit
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
   --maximum-direct-directory-entries 2 --concurrency 1 \
-  2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+  > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
@@ -59,8 +59,7 @@ error: Too many entries in a single directory
   with count 13
 EOF
 
-tail -n 3 "$TMP/output.txt" > "$TMP/actual.txt"
-diff "$TMP/actual.txt" "$TMP/expected.txt"
+diff "$TMP/output.txt" "$TMP/expected.txt"
 
 # It should succeed without the limit
 rm -rf "$TMP/output"
