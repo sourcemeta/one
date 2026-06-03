@@ -15,12 +15,10 @@ cat << 'EOF' > "$TMP/b.json"
 { "extends": ["./a.json"] }
 EOF
 
-"$1" --skip-banner "$TMP/a.json" "$TMP/output" 2> "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/a.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Writing output to: $(realpath "$TMP")/output
-Using configuration: $(realpath "$TMP")/a.json
 error: Circular reference detected in configuration
   from path $(realpath "$TMP")/b.json
   at location "/extends/extends"
