@@ -141,7 +141,10 @@ instances.
 
 **Supply chain security**: The Enterprise container image is cryptographically
 signed with Cosign/Sigstore, includes a signed SPDX Software Bill of Materials
-(SBOM), and ships with the OpenSSL FIPS provider for FIPS-ready cryptography.
+(SBOM), publishes a [SLSA](https://slsa.dev/spec/v1.0/) Build Level 3
+Provenance attestation, and ships with the OpenSSL FIPS provider for FIPS-ready
+cryptography. See the [commercial documentation](./commercial.md#supply-chain-security)
+for details.
 
 **Expert commercial support & training**: [Commercial
 Licenses](./commercial.md) give you access to world-class JSON Schema expertise
