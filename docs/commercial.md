@@ -122,9 +122,12 @@ cosign verify-attestation --type spdx \
 The SLSA Build Level 3 Provenance attestation can be verified using
 [`slsa-verifier`](https://github.com/slsa-framework/slsa-verifier), which
 checks both the Sigstore signature and that the provenance references the
-expected source repository and tag. For example:
+expected source repository and tag. Verifying images from `ghcr.io` requires
+exporting `GH_TOKEN` with a GitHub token that has read access to the
+container registry. For example:
 
 ```sh
+export GH_TOKEN=<your-github-token>
 slsa-verifier verify-image \
   ghcr.io/sourcemeta/one-enterprise:v6.2.0 \
   --source-uri github.com/sourcemeta/one \
