@@ -81,6 +81,16 @@ supply chain security and regulatory compliance capabilities:
   FIPS provider (`openssl-provider-fips`) for all cryptographic operations,
   supporting organizations that require FIPS 140 compliance.
 
+- **SLSA Build Level 3 Provenance.** Each Enterprise release publishes a
+  [SLSA v1.0](https://slsa.dev/spec/v1.0/) Provenance attestation that
+  describes how the image was built, including the source repository, the
+  exact commit, the workflow invocation, and the runner identity. The
+  attestation is generated and signed by GitHub Actions through Sigstore on
+  a hardened, isolated build platform, satisfying the SLSA Build Level 3
+  non-forgeability requirements and providing verifiable evidence of build
+  integrity for supply chain audits and regulatory frameworks such as the
+  NIST Secure Software Development Framework (SSDF).
+
 ### Verifying Image Signatures
 
 You can verify that an Enterprise container image was built and signed by
@@ -105,6 +115,23 @@ cosign verify-attestation --type spdx \
   --certificate-identity-regexp "^https://github.com/sourcemeta/one/" \
   ghcr.io/sourcemeta/one-enterprise:v4.2.2 \
   | jq -r '.payload' | base64 -d | jq '.predicate'
+```
+
+### Verifying Build Provenance
+
+The SLSA Build Level 3 Provenance attestation can be verified using
+[`slsa-verifier`](https://github.com/slsa-framework/slsa-verifier), which
+checks both the Sigstore signature and that the provenance references the
+expected source repository and tag. Verifying images from `ghcr.io` requires
+exporting `GH_TOKEN` with a GitHub token that has read access to the
+container registry. For example:
+
+```sh
+export GH_TOKEN=<your-github-token>
+slsa-verifier verify-image \
+  ghcr.io/sourcemeta/one-enterprise:v6.2.0 \
+  --source-uri github.com/sourcemeta/one \
+  --source-tag v6.2.0
 ```
 
 ## Our Commitment to Excellence

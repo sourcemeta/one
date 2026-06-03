@@ -151,6 +151,9 @@ jobs:
       packages: write
       id-token: write
     runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -166,6 +169,13 @@ jobs:
         id: meta
         with:
           images: ghcr.io/${{ github.repository_owner }}/one-enterprise
+
+      - id: digest
+        run: >
+          digest=$(docker buildx imagetools inspect
+          "ghcr.io/${{ github.repository_owner }}/one-enterprise:${{ steps.meta.outputs.version }}"
+          --format '{{json .Manifest}}' | jq --raw-output '.digest');
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
       - run: >
           node ./enterprise/scripts/sbom.js
@@ -185,8 +195,26 @@ jobs:
           "https://github.com/${{ github.repository }}/.github/workflows/deploy.yml@${{ github.ref }}"
           "/tmp/sbom.spdx.json"
 
+  # SLSA Build Level 3 Provenance
+  # See https://github.com/slsa-framework/slsa-github-generator
+  enterprise-provenance:
+    needs: enterprise-cosign
+    permissions:
+      actions: read
+      id-token: write
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
+    with:
+      image: ghcr.io/${{ github.repository_owner }}/one-enterprise
+      digest: ${{ needs.enterprise-cosign.outputs.digest }}
+      registry-username: ${{ github.actor }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+
   release:
-    needs: docker-multi-arch
+    needs:
+      - docker-multi-arch
+      - enterprise-provenance
     runs-on: ubuntu-latest
     permissions:
       contents: write
