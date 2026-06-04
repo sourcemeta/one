@@ -2,6 +2,8 @@
 
 #include <sourcemeta/one/build.h>
 
+#include "test_rules.h"
+
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
@@ -14,11 +16,17 @@ TEST(Build_state, round_trip_empty) {
   const auto path{state_path("empty")};
   std::filesystem::create_directories(path.parent_path());
 
-  const sourcemeta::one::BuildState original_entries;
+  sourcemeta::one::BuildState original_entries;
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  loaded_entries.load(path);
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      test_rules::RULES.sentinel);
   EXPECT_TRUE(loaded_entries.empty());
 }
 
@@ -31,10 +39,16 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
                            {.file_mark = now, .dependencies = {}});
 
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  loaded_entries.load(path);
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
@@ -53,10 +67,16 @@ TEST(Build_state, round_trip_with_file_mark) {
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
                            {.file_mark = now, .dependencies = {}});
 
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  loaded_entries.load(path);
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -85,10 +105,16 @@ TEST(Build_state, round_trip_with_dependencies) {
                         "/output/schemas/baz/%/schema.metapack",
                         "/output/schemas/qux/%/schema.metapack"}});
 
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  loaded_entries.load(path);
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -115,10 +141,16 @@ TEST(Build_state, round_trip_multiple_entries) {
   original_entries.emplace("/output/configuration.json",
                            {.file_mark = now, .dependencies = {}});
 
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
-  loaded_entries.load(path);
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(

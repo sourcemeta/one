@@ -1,7 +1,5 @@
 #include <sourcemeta/one/build_state.h>
 
-#include "rules.h"
-
 #include <sourcemeta/core/io.h>
 
 #include <cassert> // assert
@@ -15,21 +13,21 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{2};
-constexpr std::uint32_t SCHEMA_INDEX_MAGIC{0x58444953};
-constexpr std::size_t HEADER_SIZE{24};
+constexpr std::uint32_t STATE_VERSION{3};
+constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
+constexpr std::size_t HEADER_SIZE{28};
 
 #pragma pack(push, 1)
-struct SchemaIndexRecord {
+struct LeafIndexRecord {
   std::uint32_t relative_path_offset;
   std::uint16_t relative_path_length;
   std::int64_t root_mtime;
   std::uint16_t target_bitmap;
-  std::uint8_t has_cross_schema_deps;
+  std::uint8_t has_cross_leaf_deps;
   std::uint8_t padding;
 };
 #pragma pack(pop)
-static_assert(sizeof(SchemaIndexRecord) == 18);
+static_assert(sizeof(LeafIndexRecord) == 18);
 
 // Slot layout (32 bytes, open-addressing with linear probing):
 //   0:  hash         u64
@@ -102,7 +100,20 @@ auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
   return std::unique_lock<std::mutex>{this->mutex_};
 }
 
-auto BuildState::load(const std::filesystem::path &path) -> void {
+auto BuildState::configure(std::span<const LeafRule> rules,
+                           std::uint32_t fingerprint, std::string_view sentinel)
+    -> void {
+  this->leaf_rules = rules;
+  this->rules_fingerprint = fingerprint;
+  this->sentinel_separator = std::string{"/"} + std::string{sentinel} + "/";
+}
+
+auto BuildState::load(const std::filesystem::path &path,
+                      std::span<const LeafRule> rules,
+                      std::uint32_t fingerprint, std::string_view sentinel)
+    -> void {
+  this->configure(rules, fingerprint, sentinel);
+
   if (!std::filesystem::exists(path)) {
     return;
   }
@@ -127,7 +138,9 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
     sourcemeta::core::BinaryReader header_reader{*this->view};
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
-    if (magic != STATE_MAGIC || version != STATE_VERSION) {
+    const auto on_disk_fingerprint{header_reader.get_dword()};
+    if (magic != STATE_MAGIC || version != STATE_VERSION ||
+        on_disk_fingerprint != fingerprint) {
       this->table_capacity = 0;
       this->table_slots = nullptr;
       this->string_pool = nullptr;
@@ -147,17 +160,17 @@ auto BuildState::load(const std::filesystem::path &path) -> void {
         this->table_slots +
         static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE;
 
-    const auto schema_table_start{
-        HEADER_SIZE +
-        static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE +
-        pool_size_value};
-    if (schema_table_start + sizeof(std::uint32_t) * 2 <= file_size &&
-        read_field<std::uint32_t>(this->view_data, schema_table_start) ==
-            SCHEMA_INDEX_MAGIC) {
-      this->persisted_schema_count = read_field<std::uint32_t>(
-          this->view_data, schema_table_start + sizeof(std::uint32_t));
-      this->persisted_schema_table =
-          this->view_data + schema_table_start + sizeof(std::uint32_t) * 2;
+    const auto leaf_table_start{HEADER_SIZE +
+                                static_cast<std::size_t>(this->table_capacity) *
+                                    SLOT_SIZE +
+                                pool_size_value};
+    if (leaf_table_start + sizeof(std::uint32_t) * 2 <= file_size &&
+        read_field<std::uint32_t>(this->view_data, leaf_table_start) ==
+            LEAF_INDEX_MAGIC) {
+      this->persisted_leaf_count = read_field<std::uint32_t>(
+          this->view_data, leaf_table_start + sizeof(std::uint32_t));
+      this->persisted_leaf_table =
+          this->view_data + leaf_table_start + sizeof(std::uint32_t) * 2;
     }
   } catch (...) {
     this->table_capacity = 0;
@@ -331,7 +344,7 @@ auto BuildState::commit(const std::filesystem::path &path,
 
   this->dirty = true;
   this->keys_stale = true;
-  this->schema_index_stale = true;
+  this->leaf_index_stale = true;
 }
 
 auto BuildState::forget(const std::string &key) -> void {
@@ -372,7 +385,7 @@ auto BuildState::forget(const std::string &key) -> void {
 
   this->dirty = true;
   this->keys_stale = true;
-  this->schema_index_stale = true;
+  this->leaf_index_stale = true;
 }
 
 auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
@@ -391,7 +404,7 @@ auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
 
   this->dirty = true;
   this->keys_stale = true;
-  this->schema_index_stale = true;
+  this->leaf_index_stale = true;
 }
 
 auto BuildState::keys() const -> const std::vector<std::string_view> & {
@@ -496,96 +509,91 @@ auto BuildState::deleted_keys() const -> const
   return this->deleted;
 }
 
-auto BuildState::build_schema_index(const std::string &output) const -> void {
-  this->schema_index_cache.clear();
-  this->schema_index_output = output;
+auto BuildState::build_leaf_index(const std::string &output) const -> void {
+  this->leaf_index_cache.clear();
+  this->leaf_index_output = output;
 
-  if (this->persisted_schema_table != nullptr &&
-      this->persisted_schema_count > 0 && this->overlay.empty() &&
-      this->deleted.empty()) {
-    const auto *cursor{this->persisted_schema_table};
-    for (std::uint32_t index{0}; index < this->persisted_schema_count;
-         index++) {
-      const auto *record{reinterpret_cast<const SchemaIndexRecord *>(cursor)};
-      cursor += sizeof(SchemaIndexRecord);
+  if (this->persisted_leaf_table != nullptr && this->persisted_leaf_count > 0 &&
+      this->overlay.empty() && this->deleted.empty()) {
+    const auto *cursor{this->persisted_leaf_table};
+    for (std::uint32_t index{0}; index < this->persisted_leaf_count; index++) {
+      const auto *record{reinterpret_cast<const LeafIndexRecord *>(cursor)};
+      cursor += sizeof(LeafIndexRecord);
       const std::string relative_path{reinterpret_cast<const char *>(cursor),
                                       record->relative_path_length};
       cursor += record->relative_path_length;
 
       using file_time = std::filesystem::file_time_type;
-      auto &entry{this->schema_index_cache[relative_path]};
+      auto &entry{this->leaf_index_cache[relative_path]};
       entry.root_mtime =
           file_time{std::chrono::duration_cast<file_time::duration>(
               std::chrono::nanoseconds{record->root_mtime})};
       entry.target_bitmap = record->target_bitmap;
-      entry.has_cross_schema_deps = record->has_cross_schema_deps != 0;
+      entry.has_cross_leaf_deps = record->has_cross_leaf_deps != 0;
     }
 
-    this->schema_index_stale = false;
+    this->leaf_index_stale = false;
     return;
   }
 
-  const auto schemas_prefix{output + "/schemas/"};
-  const auto explorer_prefix{output + "/explorer/"};
-  static constexpr std::string_view sentinel{"/%/"};
+  const auto primary_prefix{output + "/schemas/"};
+  const auto secondary_prefix{output + "/explorer/"};
 
-  auto extract_schema_base = [&](std::string_view key)
+  auto extract_primary_base = [&](std::string_view key)
       -> std::pair<std::string_view, std::string_view> {
     std::string_view prefix;
-    if (key.starts_with(schemas_prefix)) {
-      prefix = schemas_prefix;
-    } else if (key.starts_with(explorer_prefix)) {
-      prefix = explorer_prefix;
+    if (key.starts_with(primary_prefix)) {
+      prefix = primary_prefix;
+    } else if (key.starts_with(secondary_prefix)) {
+      prefix = secondary_prefix;
     } else {
       return {{}, {}};
     }
 
     const auto after_prefix{key.substr(prefix.size())};
-    const auto sentinel_pos{after_prefix.find(sentinel)};
+    const auto sentinel_pos{after_prefix.find(this->sentinel_separator)};
     if (sentinel_pos == std::string_view::npos) {
       return {{}, {}};
     }
 
-    return {after_prefix.substr(0, sentinel_pos),
-            after_prefix.substr(sentinel_pos + sentinel.size())};
+    return {
+        after_prefix.substr(0, sentinel_pos),
+        after_prefix.substr(sentinel_pos + this->sentinel_separator.size())};
   };
 
   auto process_key = [&](std::filesystem::file_time_type mtime,
                          bool is_explorer, std::string_view relative_path,
                          std::string_view filename) {
-    auto &schema_entry{this->schema_index_cache[std::string{relative_path}]};
+    auto &leaf_entry{this->leaf_index_cache[std::string{relative_path}]};
 
-    for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+    for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
          rule_index++) {
-      const auto &rule{PER_SCHEMA_RULES[rule_index]};
-      if (filename == rule.filename &&
-          ((rule.base == TargetBase::Explorer) == is_explorer)) {
-        schema_entry.target_bitmap |=
-            static_cast<std::uint16_t>(1 << rule_index);
+      const auto &rule{this->leaf_rules[rule_index]};
+      if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
+        leaf_entry.target_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
         if (rule.is_root) {
-          schema_entry.root_mtime = mtime;
+          leaf_entry.root_mtime = mtime;
         }
         break;
       }
     }
   };
 
-  auto check_cross_schema_deps =
+  auto check_cross_leaf_deps =
       [&](std::string_view owner_relative,
           const std::vector<std::filesystem::path> &dependencies) {
         for (const auto &dependency : dependencies) {
           const auto [dep_relative, dep_filename] =
-              extract_schema_base(dependency.native());
+              extract_primary_base(dependency.native());
           if (!dep_relative.empty() && dep_relative != owner_relative) {
-            auto &schema_entry{
-                this->schema_index_cache[std::string{owner_relative}]};
-            schema_entry.has_cross_schema_deps = true;
+            auto &leaf_entry{
+                this->leaf_index_cache[std::string{owner_relative}]};
+            leaf_entry.has_cross_leaf_deps = true;
             return;
           }
         }
       };
 
-  // Scan disk entries sequentially
   for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
        ++slot_index) {
     const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
@@ -598,12 +606,12 @@ auto BuildState::build_schema_index(const std::string &output) const -> void {
       continue;
     }
 
-    const auto [relative_path, filename] = extract_schema_base(key);
+    const auto [relative_path, filename] = extract_primary_base(key);
     if (relative_path.empty()) {
       continue;
     }
 
-    const bool is_explorer{key.starts_with(explorer_prefix)};
+    const bool is_explorer{key.starts_with(secondary_prefix)};
     const auto nanoseconds{read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
     using file_time = std::filesystem::file_time_type;
     const auto mtime{file_time{std::chrono::duration_cast<file_time::duration>(
@@ -611,7 +619,6 @@ auto BuildState::build_schema_index(const std::string &output) const -> void {
 
     process_key(mtime, is_explorer, relative_path, filename);
 
-    // Check deps for cross-schema references
     const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
     if (data_count > 0) {
       auto offset{static_cast<std::size_t>(
@@ -620,56 +627,55 @@ auto BuildState::build_schema_index(const std::string &output) const -> void {
            ++dependency_index) {
         const auto dependency_path{read_pool_string(this->string_pool, offset)};
         const auto [dep_relative, dep_filename] =
-            extract_schema_base(dependency_path);
+            extract_primary_base(dependency_path);
         if (!dep_relative.empty() && dep_relative != relative_path) {
-          this->schema_index_cache[std::string{relative_path}]
-              .has_cross_schema_deps = true;
+          this->leaf_index_cache[std::string{relative_path}]
+              .has_cross_leaf_deps = true;
           break;
         }
       }
     }
   }
 
-  // Scan overlay entries
   for (const auto &[entry_path, entry_value] : this->overlay) {
-    const auto [relative_path, filename] = extract_schema_base(entry_path);
+    const auto [relative_path, filename] = extract_primary_base(entry_path);
     if (relative_path.empty()) {
       continue;
     }
 
     const bool is_explorer{
-        std::string_view{entry_path}.starts_with(explorer_prefix)};
+        std::string_view{entry_path}.starts_with(secondary_prefix)};
     process_key(entry_value.file_mark, is_explorer, relative_path, filename);
-    check_cross_schema_deps(relative_path, entry_value.dependencies);
+    check_cross_leaf_deps(relative_path, entry_value.dependencies);
   }
 
-  this->schema_index_stale = false;
+  this->leaf_index_stale = false;
 }
 
-auto BuildState::schema_state(const std::string &output,
-                              const std::string &relative_path, const bool,
-                              const bool) const -> const SchemaStateEntry * {
-  if (this->schema_index_stale || this->schema_index_output != output) {
-    this->build_schema_index(output);
+auto BuildState::leaf_state(const std::string &output,
+                            const std::string &relative_path, const bool,
+                            const bool) const -> const LeafStateEntry * {
+  if (this->leaf_index_stale || this->leaf_index_output != output) {
+    this->build_leaf_index(output);
   }
 
-  const auto match{this->schema_index_cache.find(relative_path)};
-  if (match == this->schema_index_cache.end()) {
+  const auto match{this->leaf_index_cache.find(relative_path)};
+  if (match == this->leaf_index_cache.end()) {
     return nullptr;
   }
 
   return &match->second;
 }
 
-auto BuildState::schema_relative_paths(const std::string &output) const
+auto BuildState::leaf_relative_paths(const std::string &output) const
     -> std::vector<std::string> {
-  if (this->schema_index_stale || this->schema_index_output != output) {
-    this->build_schema_index(output);
+  if (this->leaf_index_stale || this->leaf_index_output != output) {
+    this->build_leaf_index(output);
   }
 
   std::vector<std::string> result;
-  result.reserve(this->schema_index_cache.size());
-  for (const auto &[relative_path, entry] : this->schema_index_cache) {
+  result.reserve(this->leaf_index_cache.size());
+  for (const auto &[relative_path, entry] : this->leaf_index_cache) {
     result.push_back(relative_path);
   }
 
@@ -707,7 +713,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     std::memcpy(slots.data(), this->table_slots, old_slots_size);
 
     sourcemeta::core::BinaryReader pool_size_reader{*this->view};
-    pool_size_reader.seek(16);
+    // Pool size sits two dwords past the magic/version/fingerprint/capacity/
+    // entry_count prefix. Layout: [magic, version, fingerprint, capacity,
+    // entry_count, pool_size, resolver_entry_count].
+    pool_size_reader.seek(20);
     old_pool_size = pool_size_reader.get_dword();
 
     auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
@@ -960,80 +969,78 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     }};
 
     const auto output_dir{path.parent_path().string()};
-    const auto schemas_prefix{output_dir + "/schemas/"};
-    const auto explorer_prefix{output_dir + "/explorer/"};
-    static constexpr std::string_view sentinel_marker{"/%/"};
+    const auto primary_prefix{output_dir + "/schemas/"};
+    const auto secondary_prefix{output_dir + "/explorer/"};
 
-    std::unordered_map<std::string, SchemaStateEntry, TransparentHash,
+    std::unordered_map<std::string, LeafStateEntry, TransparentHash,
                        TransparentEqual>
-        save_schema_index;
+        save_leaf_index;
 
-    if (can_patch && this->persisted_schema_table != nullptr) {
-      const auto *record_ptr{this->persisted_schema_table};
+    if (can_patch && this->persisted_leaf_table != nullptr) {
+      const auto *record_ptr{this->persisted_leaf_table};
       for (std::uint32_t record_index = 0;
-           record_index < this->persisted_schema_count; ++record_index) {
+           record_index < this->persisted_leaf_count; ++record_index) {
         const auto *record{
-            reinterpret_cast<const SchemaIndexRecord *>(record_ptr)};
+            reinterpret_cast<const LeafIndexRecord *>(record_ptr)};
         const auto relative_path{std::string{
             reinterpret_cast<const char *>(record_ptr + sizeof(*record)),
             record->relative_path_length}};
-        auto &schema_entry{save_schema_index[relative_path]};
+        auto &leaf_entry{save_leaf_index[relative_path]};
         using file_time = std::filesystem::file_time_type;
-        schema_entry.root_mtime =
+        leaf_entry.root_mtime =
             file_time{std::chrono::duration_cast<file_time::duration>(
                 std::chrono::nanoseconds{record->root_mtime})};
-        schema_entry.target_bitmap = record->target_bitmap;
-        schema_entry.has_cross_schema_deps = record->has_cross_schema_deps != 0;
+        leaf_entry.target_bitmap = record->target_bitmap;
+        leaf_entry.has_cross_leaf_deps = record->has_cross_leaf_deps != 0;
         record_ptr += sizeof(*record) + record->relative_path_length;
       }
 
       for (const auto &deleted_key : this->deleted) {
         std::string_view key_prefix;
-        if (std::string_view{deleted_key}.starts_with(schemas_prefix)) {
-          key_prefix = schemas_prefix;
-        } else if (std::string_view{deleted_key}.starts_with(explorer_prefix)) {
-          key_prefix = explorer_prefix;
+        if (std::string_view{deleted_key}.starts_with(primary_prefix)) {
+          key_prefix = primary_prefix;
+        } else if (std::string_view{deleted_key}.starts_with(
+                       secondary_prefix)) {
+          key_prefix = secondary_prefix;
         } else {
           continue;
         }
 
         const auto after{
             std::string_view{deleted_key}.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(sentinel_marker)};
+        const auto sentinel_position{after.find(this->sentinel_separator)};
         if (sentinel_position == std::string_view::npos) {
           continue;
         }
 
-        save_schema_index.erase(
-            std::string{after.substr(0, sentinel_position)});
+        save_leaf_index.erase(std::string{after.substr(0, sentinel_position)});
       }
 
       std::unordered_set<std::string, TransparentHash, TransparentEqual>
-          affected_schemas;
+          affected_leaves;
       for (const auto &[overlay_key, overlay_entry] : this->overlay) {
         std::string_view key_view{overlay_key};
         std::string_view key_prefix;
-        if (key_view.starts_with(schemas_prefix)) {
-          key_prefix = schemas_prefix;
-        } else if (key_view.starts_with(explorer_prefix)) {
-          key_prefix = explorer_prefix;
+        if (key_view.starts_with(primary_prefix)) {
+          key_prefix = primary_prefix;
+        } else if (key_view.starts_with(secondary_prefix)) {
+          key_prefix = secondary_prefix;
         } else {
           continue;
         }
 
         const auto after{key_view.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(sentinel_marker)};
+        const auto sentinel_position{after.find(this->sentinel_separator)};
         if (sentinel_position == std::string_view::npos) {
           continue;
         }
 
-        affected_schemas.insert(
-            std::string{after.substr(0, sentinel_position)});
+        affected_leaves.insert(std::string{after.substr(0, sentinel_position)});
       }
 
-      for (const auto &affected_relative : affected_schemas) {
-        auto &schema_entry{save_schema_index[affected_relative]};
-        schema_entry = SchemaStateEntry{};
+      for (const auto &affected_relative : affected_leaves) {
+        auto &leaf_entry{save_leaf_index[affected_relative]};
+        leaf_entry = LeafStateEntry{};
 
         for (std::uint32_t slot_index = 0; slot_index < capacity;
              ++slot_index) {
@@ -1045,17 +1052,17 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           const auto key{read_slot_key(slot)};
           std::string_view key_prefix;
           bool is_explorer{false};
-          if (key.starts_with(schemas_prefix)) {
-            key_prefix = schemas_prefix;
-          } else if (key.starts_with(explorer_prefix)) {
-            key_prefix = explorer_prefix;
+          if (key.starts_with(primary_prefix)) {
+            key_prefix = primary_prefix;
+          } else if (key.starts_with(secondary_prefix)) {
+            key_prefix = secondary_prefix;
             is_explorer = true;
           } else {
             continue;
           }
 
           const auto after{key.substr(key_prefix.size())};
-          const auto sentinel_position{after.find(sentinel_marker)};
+          const auto sentinel_position{after.find(this->sentinel_separator)};
           if (sentinel_position == std::string_view::npos) {
             continue;
           }
@@ -1064,19 +1071,20 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             continue;
           }
 
-          const auto filename{after.substr(sentinel_position + 3)};
-          for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+          const auto filename{after.substr(sentinel_position +
+                                           this->sentinel_separator.size())};
+          for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
                rule_index++) {
-            const auto &rule{PER_SCHEMA_RULES[rule_index]};
+            const auto &rule{this->leaf_rules[rule_index]};
             if (filename == rule.filename &&
-                ((rule.base == TargetBase::Explorer) == is_explorer)) {
-              schema_entry.target_bitmap |=
+                ((rule.base == 1) == is_explorer)) {
+              leaf_entry.target_bitmap |=
                   static_cast<std::uint16_t>(1 << rule_index);
               if (rule.is_root) {
                 const auto nanoseconds{
                     read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
                 using file_time = std::filesystem::file_time_type;
-                schema_entry.root_mtime =
+                leaf_entry.root_mtime =
                     file_time{std::chrono::duration_cast<file_time::duration>(
                         std::chrono::nanoseconds{nanoseconds})};
               }
@@ -1086,26 +1094,26 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
           const auto data_count{
               read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
-          if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
+          if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
             auto offset{static_cast<std::size_t>(
                 read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
             for (std::uint16_t dep_index = 0; dep_index < data_count;
                  ++dep_index) {
               const auto dependency_path{read_slot_pool_string(offset)};
               std::string_view dep_prefix;
-              if (dependency_path.starts_with(schemas_prefix)) {
-                dep_prefix = schemas_prefix;
-              } else if (dependency_path.starts_with(explorer_prefix)) {
-                dep_prefix = explorer_prefix;
+              if (dependency_path.starts_with(primary_prefix)) {
+                dep_prefix = primary_prefix;
+              } else if (dependency_path.starts_with(secondary_prefix)) {
+                dep_prefix = secondary_prefix;
               } else {
                 continue;
               }
 
               const auto dep_after{dependency_path.substr(dep_prefix.size())};
-              const auto dep_sentinel{dep_after.find(sentinel_marker)};
+              const auto dep_sentinel{dep_after.find(this->sentinel_separator)};
               if (dep_sentinel != std::string_view::npos &&
                   dep_after.substr(0, dep_sentinel) != affected_relative) {
-                schema_entry.has_cross_schema_deps = true;
+                leaf_entry.has_cross_leaf_deps = true;
                 break;
               }
             }
@@ -1123,37 +1131,37 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         const auto key{read_slot_key(slot)};
         std::string_view key_prefix;
         bool is_explorer{false};
-        if (key.starts_with(schemas_prefix)) {
-          key_prefix = schemas_prefix;
-        } else if (key.starts_with(explorer_prefix)) {
-          key_prefix = explorer_prefix;
+        if (key.starts_with(primary_prefix)) {
+          key_prefix = primary_prefix;
+        } else if (key.starts_with(secondary_prefix)) {
+          key_prefix = secondary_prefix;
           is_explorer = true;
         } else {
           continue;
         }
 
         const auto after{key.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(sentinel_marker)};
+        const auto sentinel_position{after.find(this->sentinel_separator)};
         if (sentinel_position == std::string_view::npos) {
           continue;
         }
 
         const auto relative_path{after.substr(0, sentinel_position)};
-        const auto filename{after.substr(sentinel_position + 3)};
-        auto &schema_entry{save_schema_index[std::string{relative_path}]};
+        const auto filename{
+            after.substr(sentinel_position + this->sentinel_separator.size())};
+        auto &leaf_entry{save_leaf_index[std::string{relative_path}]};
 
-        for (std::size_t rule_index{0}; rule_index < PER_SCHEMA_RULES.size();
+        for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
              rule_index++) {
-          const auto &rule{PER_SCHEMA_RULES[rule_index]};
-          if (filename == rule.filename &&
-              ((rule.base == TargetBase::Explorer) == is_explorer)) {
-            schema_entry.target_bitmap |=
+          const auto &rule{this->leaf_rules[rule_index]};
+          if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
+            leaf_entry.target_bitmap |=
                 static_cast<std::uint16_t>(1 << rule_index);
             if (rule.is_root) {
               const auto nanoseconds{
                   read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
               using file_time = std::filesystem::file_time_type;
-              schema_entry.root_mtime =
+              leaf_entry.root_mtime =
                   file_time{std::chrono::duration_cast<file_time::duration>(
                       std::chrono::nanoseconds{nanoseconds})};
             }
@@ -1162,26 +1170,26 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         }
 
         const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
-        if (data_count > 0 && !schema_entry.has_cross_schema_deps) {
+        if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
           auto offset{static_cast<std::size_t>(
               read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
           for (std::uint16_t dep_index = 0; dep_index < data_count;
                ++dep_index) {
             const auto dependency_path{read_slot_pool_string(offset)};
             std::string_view dep_prefix;
-            if (dependency_path.starts_with(schemas_prefix)) {
-              dep_prefix = schemas_prefix;
-            } else if (dependency_path.starts_with(explorer_prefix)) {
-              dep_prefix = explorer_prefix;
+            if (dependency_path.starts_with(primary_prefix)) {
+              dep_prefix = primary_prefix;
+            } else if (dependency_path.starts_with(secondary_prefix)) {
+              dep_prefix = secondary_prefix;
             } else {
               continue;
             }
 
             const auto dep_after{dependency_path.substr(dep_prefix.size())};
-            const auto dep_sentinel{dep_after.find(sentinel_marker)};
+            const auto dep_sentinel{dep_after.find(this->sentinel_separator)};
             if (dep_sentinel != std::string_view::npos &&
                 dep_after.substr(0, dep_sentinel) != relative_path) {
-              schema_entry.has_cross_schema_deps = true;
+              leaf_entry.has_cross_leaf_deps = true;
               break;
             }
           }
@@ -1189,38 +1197,36 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       }
     }
 
-    std::string schema_index_buffer;
-    const auto schema_count{
-        static_cast<std::uint32_t>(save_schema_index.size())};
-    schema_index_buffer.reserve(
-        sizeof(SCHEMA_INDEX_MAGIC) + sizeof(schema_count) +
-        schema_count * (sizeof(SchemaIndexRecord) + 64));
-    schema_index_buffer.append(
-        reinterpret_cast<const char *>(&SCHEMA_INDEX_MAGIC),
-        sizeof(SCHEMA_INDEX_MAGIC));
-    schema_index_buffer.append(reinterpret_cast<const char *>(&schema_count),
-                               sizeof(schema_count));
+    std::string leaf_index_buffer;
+    const auto leaf_count{static_cast<std::uint32_t>(save_leaf_index.size())};
+    leaf_index_buffer.reserve(sizeof(LEAF_INDEX_MAGIC) + sizeof(leaf_count) +
+                              leaf_count * (sizeof(LeafIndexRecord) + 64));
+    leaf_index_buffer.append(reinterpret_cast<const char *>(&LEAF_INDEX_MAGIC),
+                             sizeof(LEAF_INDEX_MAGIC));
+    leaf_index_buffer.append(reinterpret_cast<const char *>(&leaf_count),
+                             sizeof(leaf_count));
 
-    for (const auto &[relative_path, schema_entry] : save_schema_index) {
-      SchemaIndexRecord record{};
+    for (const auto &[relative_path, leaf_entry] : save_leaf_index) {
+      LeafIndexRecord record{};
       record.relative_path_offset = 0;
       record.relative_path_length =
           static_cast<std::uint16_t>(relative_path.size());
       record.root_mtime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                              schema_entry.root_mtime.time_since_epoch())
+                              leaf_entry.root_mtime.time_since_epoch())
                               .count();
-      record.target_bitmap = schema_entry.target_bitmap;
-      record.has_cross_schema_deps = schema_entry.has_cross_schema_deps ? 1 : 0;
+      record.target_bitmap = leaf_entry.target_bitmap;
+      record.has_cross_leaf_deps = leaf_entry.has_cross_leaf_deps ? 1 : 0;
       record.padding = 0;
-      schema_index_buffer.append(reinterpret_cast<const char *>(&record),
-                                 sizeof(record));
-      schema_index_buffer.append(relative_path);
+      leaf_index_buffer.append(reinterpret_cast<const char *>(&record),
+                               sizeof(record));
+      leaf_index_buffer.append(relative_path);
     }
 
     sourcemeta::core::atomic_write_file(path, [&](std::ostream &stream) {
       sourcemeta::core::BinaryWriter writer{stream};
       writer.put_dword(STATE_MAGIC);
       writer.put_dword(STATE_VERSION);
+      writer.put_dword(this->rules_fingerprint);
       writer.put_dword(capacity);
       writer.put_dword(output_count);
       writer.put_dword(total_pool_size);
@@ -1239,8 +1245,8 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       }
 
       writer.put_bytes(
-          reinterpret_cast<const std::byte *>(schema_index_buffer.data()),
-          schema_index_buffer.size());
+          reinterpret_cast<const std::byte *>(leaf_index_buffer.data()),
+          leaf_index_buffer.size());
     });
   }
 }
