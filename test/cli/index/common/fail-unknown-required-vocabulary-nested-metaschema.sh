@@ -52,7 +52,7 @@ cat << 'EOF' > "$TMP/schemas/meta-b.json"
 EOF
 
 
-"$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 > "$TMP/output.txt" && CODE="$?" || CODE="$?"
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"

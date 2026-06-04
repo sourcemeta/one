@@ -46,12 +46,12 @@ cat << 'EOF' > "$TMP/schemas/b.json"
 EOF
 
 # Run 1: full build from scratch
-"$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 \
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" \
     > /dev/null 2>&1
 
 # Run 2: remove schema A (which is referenced by B)
 rm "$TMP/schemas/a.json"
-"$1" --skip-banner --deterministic "$TMP/one.json" "$TMP/output" --concurrency 1 \
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" \
     > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 

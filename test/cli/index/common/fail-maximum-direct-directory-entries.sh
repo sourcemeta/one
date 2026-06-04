@@ -49,7 +49,7 @@ EOF
 
 # It should fail with a low limit
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
-  --maximum-direct-directory-entries 2 --concurrency 1 \
+  --maximum-direct-directory-entries 2 \
   > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
