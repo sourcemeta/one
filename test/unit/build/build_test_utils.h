@@ -5,6 +5,8 @@
 
 #include <sourcemeta/one/build.h>
 
+#include "test_rules.h"
+
 #include <algorithm>  // std::ranges::sort
 #include <cstddef>    // std::size_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
@@ -14,11 +16,50 @@
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
-auto MTIME(int seconds) -> std::filesystem::file_time_type {
+struct TestLeafEntry {
+  std::string identifier;
+  std::filesystem::path path;
+  std::filesystem::path relative_path;
+  std::filesystem::file_time_type mtime;
+  bool evaluate{true};
+};
+
+class TestLeaves {
+public:
+  TestLeaves() = default;
+  TestLeaves(std::initializer_list<TestLeafEntry> init)
+      : storage_(init.begin(), init.end()) {
+    refs_.reserve(storage_.size());
+    for (const auto &entry : storage_) {
+      refs_.emplace_back(
+          std::string_view{entry.identifier},
+          sourcemeta::one::LeafView{.path = &entry.path,
+                                    .relative_path = &entry.relative_path,
+                                    .mtime = entry.mtime,
+                                    .evaluate = entry.evaluate});
+    }
+  }
+
+  TestLeaves(const TestLeaves &) = delete;
+  auto operator=(const TestLeaves &) -> TestLeaves & = delete;
+  TestLeaves(TestLeaves &&) = delete;
+  auto operator=(TestLeaves &&) -> TestLeaves & = delete;
+  ~TestLeaves() = default;
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator sourcemeta::one::LeafSet() const { return refs_; }
+
+private:
+  std::vector<TestLeafEntry> storage_;
+  std::vector<std::pair<std::string_view, sourcemeta::one::LeafView>> refs_;
+};
+
+[[maybe_unused]] static auto MTIME(int seconds)
+    -> std::filesystem::file_time_type {
   return std::filesystem::file_time_type{std::chrono::seconds{seconds}};
 }
 
-static auto
+[[maybe_unused]] static auto
 __check_no_intra_wave_dependencies(const sourcemeta::one::BuildPlan &plan)
     -> void {
   for (std::size_t wave_index{0}; wave_index < plan.waves.size();
@@ -39,7 +80,7 @@ __check_no_intra_wave_dependencies(const sourcemeta::one::BuildPlan &plan)
   }
 }
 
-static auto
+[[maybe_unused]] static auto
 __check_no_forward_dependencies(const sourcemeta::one::BuildPlan &plan)
     -> void {
   for (std::size_t wave_index{0}; wave_index < plan.waves.size();
@@ -71,12 +112,12 @@ static auto __is_under(const std::filesystem::path &path,
          path_native.starts_with(base_native);
 }
 
-static auto
+[[maybe_unused]] static auto
 __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
   std::vector<const std::filesystem::path *> remove_destinations;
   for (const auto &wave : plan.waves) {
     for (const auto &action : wave) {
-      if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
+      if (action.type == test_rules::ACTION_REMOVE) {
         remove_destinations.push_back(&action.destination);
       }
     }
@@ -84,7 +125,7 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
 
   for (const auto &wave : plan.waves) {
     for (const auto &action : wave) {
-      if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
+      if (action.type == test_rules::ACTION_REMOVE) {
         continue;
       }
 
@@ -104,7 +145,7 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
   }
 }
 
-static auto
+[[maybe_unused]] static auto
 __check_dependencies_resolvable(const sourcemeta::one::BuildPlan &plan,
                                 const sourcemeta::one::BuildState &entries,
                                 const std::filesystem::path &output) -> void {
@@ -136,7 +177,7 @@ __check_dependencies_resolvable(const sourcemeta::one::BuildPlan &plan,
   }
 }
 
-static auto
+[[maybe_unused]] static auto
 __check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
     -> void {
   std::unordered_set<std::string> all_destinations;
@@ -150,52 +191,29 @@ __check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
   }
 }
 
-static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
-                               const std::filesystem::path &output,
-                               const std::filesystem::path &relative_output,
-                               const bool evaluate, const bool web,
-                               const std::filesystem::file_time_type mark)
-    -> void {
-  const auto base{output / "schemas" / relative_output / "%"};
-  const auto explorer_base{output / "explorer" / relative_output / "%"};
-  entries.emplace(base / "schema.metapack",
+[[maybe_unused]] static auto
+ADD_LEAF_ENTRIES(sourcemeta::one::BuildState &entries,
+                 const std::filesystem::path &output,
+                 const std::filesystem::path &relative_output, const bool web,
+                 const std::filesystem::file_time_type mark) -> void {
+  const auto primary_base{output / "primary" / relative_output / "%"};
+  const auto secondary_base{output / "secondary" / relative_output / "%"};
+  entries.emplace(primary_base / "primary.bin",
                   {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "dependencies.metapack",
+  entries.emplace(secondary_base / "metadata.bin",
                   {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "locations.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "positions.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "stats.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "bundle.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "health.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(base / "editor.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  entries.emplace(explorer_base / "schema.metapack",
-                  {.file_mark = mark, .dependencies = {}});
-  if (evaluate) {
-    entries.emplace(base / "blaze-exhaustive.metapack",
-                    {.file_mark = mark, .dependencies = {}});
-    entries.emplace(base / "blaze-fast.metapack",
-                    {.file_mark = mark, .dependencies = {}});
-  }
   if (web) {
-    entries.emplace(explorer_base / "schema-html.metapack",
-                    {.file_mark = mark, .dependencies = {}});
-    entries.emplace(explorer_base / "directory-html.metapack",
+    entries.emplace(secondary_base / "web.bin",
                     {.file_mark = mark, .dependencies = {}});
   }
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define EXPECT_CONSISTENT_PLAN(plan, entries, output, build_type,              \
+#define EXPECT_CONSISTENT_PLAN(plan, entries, output, build_mode,              \
                                expected_waves, expected_size)                  \
   do {                                                                         \
     EXPECT_EQ((plan).output, (output));                                        \
-    EXPECT_EQ((plan).type, sourcemeta::one::BuildPlan::Type::build_type);      \
+    EXPECT_EQ((plan).type, (build_mode));                                      \
     EXPECT_EQ((plan).waves.size(), (expected_waves));                          \
     EXPECT_EQ((plan).size, (expected_size));                                   \
     __check_no_intra_wave_dependencies(plan);                                  \
@@ -211,8 +229,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
   do {                                                                         \
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
-    EXPECT_EQ(action_ref_##wave##_##index.type,                                \
-              sourcemeta::one::BuildPlan::Action::Type::expected_type);        \
+    EXPECT_EQ(action_ref_##wave##_##index.type, (expected_type));              \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
     EXPECT_EQ(action_ref_##wave##_##index.data,                                \
               std::string_view{expected_data});                                \
@@ -228,8 +245,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
   do {                                                                         \
     EXPECT_EQ((plan).waves[(wave)].size(), (wave_size));                       \
     const auto &action_ref_##wave##_##index{(plan).waves[(wave)][(index)]};    \
-    EXPECT_EQ(action_ref_##wave##_##index.type,                                \
-              sourcemeta::one::BuildPlan::Action::Type::expected_type);        \
+    EXPECT_EQ(action_ref_##wave##_##index.type, (expected_type));              \
     EXPECT_EQ(action_ref_##wave##_##index.destination, (expected_dest));       \
     EXPECT_EQ(action_ref_##wave##_##index.data,                                \
               std::string_view{expected_data});                                \
@@ -251,8 +267,7 @@ static auto ADD_SCHEMA_ENTRIES(sourcemeta::one::BuildState &entries,
     }                                                                          \
     for (const auto &total_files_wave : (plan).waves) {                        \
       for (const auto &total_files_action : total_files_wave) {                \
-        if (total_files_action.type ==                                         \
-            sourcemeta::one::BuildPlan::Action::Type::Remove) {                \
+        if (total_files_action.type == test_rules::ACTION_REMOVE) {            \
           total_files_result.erase(total_files_action.destination);            \
           const auto total_files_prefix{                                       \
               total_files_action.destination.string() + "/"};                  \

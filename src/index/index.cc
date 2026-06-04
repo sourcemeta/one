@@ -20,6 +20,7 @@
 
 #include "explorer.h"
 #include "generators.h"
+#include "rules.h"
 
 #include <algorithm>     // std::ranges::any_of, std::ranges::sort
 #include <array>         // std::array
@@ -138,7 +139,7 @@ static auto execute_plan(std::mutex &mutex,
           const auto relative_path{
               destination_view.substr(canonical_output.native().size() + 1)};
 
-          if (action.type == sourcemeta::one::BuildPlan::Action::Type::Remove) {
+          if (action.type == sourcemeta::one::ACTION_REMOVE) {
             print_progress(mutex, threads, "Disposing", relative_path, current,
                            plan.size);
             std::filesystem::remove_all(action.destination);
@@ -346,7 +347,10 @@ static auto index_main(const std::string_view &program,
 
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
-  entries.load(state_path);
+  entries.load(
+      state_path, sourcemeta::one::INDEX_RULES.leaves,
+      sourcemeta::one::rules_fingerprint<sourcemeta::one::INDEX_RULES>(),
+      sourcemeta::one::INDEX_RULES.sentinel);
 
   // Only trust on-disk files when the state was loaded successfully,
   // otherwise the entries map and the on-disk artefacts are out of sync
@@ -370,8 +374,10 @@ static auto index_main(const std::string_view &program,
                                 ? std::string{app.at("comment").at(0)}
                                 : std::string{}};
   const auto build_type{configuration.html.has_value()
-                            ? sourcemeta::one::BuildPlan::Type::Full
-                            : sourcemeta::one::BuildPlan::Type::Headless};
+                            ? sourcemeta::one::MODE_FULL
+                            : sourcemeta::one::MODE_HEADLESS};
+  const std::string_view mode_label{
+      configuration.html.has_value() ? "Full" : "Headless"};
 
   // Mainly to not screw up the logs
   std::mutex mutex;
@@ -557,19 +563,32 @@ static auto index_main(const std::string_view &program,
               ? parse_numeric_option(app, "maximum-direct-directory-entries")
               : 1000};
 
-  auto produce_plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Produce, build_type,
-                             entries, canonical_output, resolver.data(),
-                             this_version, incremental, comment, limits)};
+  std::vector<std::pair<std::string_view, sourcemeta::one::LeafView>>
+      leaves_storage;
+  leaves_storage.reserve(resolver.data().size());
+  for (const auto &[uri, entry] : resolver.data()) {
+    leaves_storage.emplace_back(
+        std::string_view{uri},
+        sourcemeta::one::LeafView{.path = &entry.path,
+                                  .relative_path = &entry.relative_path,
+                                  .mtime = entry.mtime,
+                                  .evaluate = entry.evaluate});
+  }
+  const sourcemeta::one::LeafSet leaves{leaves_storage};
+
+  auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
+      sourcemeta::one::BuildPhase::Produce, build_type, entries,
+      canonical_output, leaves, this_version, incremental, comment, mode_label,
+      limits)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
   PROFILE_END(profiling, "Producing (Build)");
 
-  auto combine_plan{
-      sourcemeta::one::delta(sourcemeta::one::BuildPhase::Combine, build_type,
-                             entries, canonical_output, resolver.data(),
-                             this_version, incremental, comment, limits)};
+  auto combine_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
+      sourcemeta::one::BuildPhase::Combine, build_type, entries,
+      canonical_output, leaves, this_version, incremental, comment, mode_label,
+      limits)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(mutex, entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");

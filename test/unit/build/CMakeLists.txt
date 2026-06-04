@@ -1,6 +1,7 @@
 sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME build
   SOURCES
     build_test_utils.h
+    test_rules.h
     build_delta_test.cc
     build_state_test.cc)
 target_link_libraries(sourcemeta_one_build_unit PRIVATE sourcemeta::one::build)
