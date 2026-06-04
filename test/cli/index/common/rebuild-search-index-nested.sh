@@ -60,7 +60,7 @@ extract_search_paths() {
 }
 
 # Run 1: full build with two schemas in separate directories
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
 extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"
@@ -78,7 +78,7 @@ cat << 'EOF' > "$TMP/schemas-left/a.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
 extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"
@@ -95,7 +95,7 @@ cat << 'EOF' > "$TMP/schemas-right/c.json"
 }
 EOF
 
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 > /dev/null 2>&1
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
 extract_search_paths "$SEARCH" > "$TMP/search_actual.txt"
 cat << 'EOF' > "$TMP/search_expected.txt"

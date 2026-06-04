@@ -17,10 +17,6 @@ cat << 'EOF' > "$TMP/schemas/foo.json"
 }
 EOF
 
-cat << 'EOF' > "$TMP/schemas/bar.json"
-[1, 2, 3]
-EOF
-
 cat << EOF > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
@@ -30,7 +26,8 @@ cat << EOF > "$TMP/one.json"
       "baseUri": "https://example.com",
       "path": "./schemas",
       "ignore": [
-        "./schemas/bar.json"
+        "./schemas/does-not-exist",
+        "./schemas/missing.json"
       ]
     }
   }
@@ -39,10 +36,10 @@ EOF
 "$1" "$TMP/one.json" "$TMP/output"
 
 cd "$TMP/output"
-find . -mindepth 1 | LC_ALL=C sort \
-  | sed -E -e '/^\.\/explorer\/self(\/|$)/d' \
-           -e '/^\.\/schemas\/self(\/|$)/d' \
-  > "$TMP/manifest.txt"
+find . -mindepth 1 \
+  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected.txt"

@@ -61,7 +61,7 @@ remove_threads_information() {
 }
 
 # Run 1: full build from scratch
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 \
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" \
     > /dev/null 2>&1
 
 # Run 2: modify B to add a $ref to A
@@ -74,7 +74,7 @@ cat << 'EOF' > "$TMP/schemas/b.json"
   }
 }
 EOF
-"$1" --skip-banner "$TMP/one.json" "$TMP/output" --concurrency 1 \
+"$1" --skip-banner "$TMP/one.json" "$TMP/output" \
     2> "$TMP/output.txt"
 remove_threads_information "$TMP/output.txt"
 grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
