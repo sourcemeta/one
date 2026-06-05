@@ -4,6 +4,10 @@ Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type
 Access-Control-Max-Age: 3600
+Allow: POST, OPTIONS
+[Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 
 POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
 HTTP 400
@@ -14,6 +18,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"
 jsonpath "$.detail" == "You must pass an instance to validate against"
@@ -25,6 +31,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
@@ -37,6 +45,8 @@ Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 jsonpath "$.steps" count == 2
 jsonpath "$.steps[0].annotation" == null
@@ -73,6 +83,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/api/schemas/trace/test/no-blaze/string
@@ -85,6 +97,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/no-schema-template"
 jsonpath "$.detail" == "This schema was not precompiled for schema evaluation"
@@ -96,4 +110,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true

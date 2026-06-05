@@ -111,6 +111,7 @@ auto RouterAction::artifact_serve(const std::filesystem::path &absolute_path,
                                   const char *code, const bool enable_cors,
                                   const std::string_view mime,
                                   const std::string_view link,
+                                  const std::string_view referrer_policy,
                                   HTTPRequest &request, HTTPResponse &response,
                                   const std::string_view error_schema) const
     -> void {
@@ -192,10 +193,10 @@ auto RouterAction::artifact_serve(const std::filesystem::path &absolute_path,
     response.write_header("Access-Control-Allow-Origin", "*");
   }
 
-  if (!mime.empty()) {
-    response.write_header("Content-Type", mime);
-  } else {
-    response.write_header("Content-Type", info->mime);
+  response.write_header("Content-Type", mime.empty() ? info->mime : mime);
+
+  if (!referrer_policy.empty()) {
+    response.write_header("Referrer-Policy", referrer_policy);
   }
 
   response.write_header("Last-Modified",

@@ -74,6 +74,15 @@ public:
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
       response.write_header("Access-Control-Max-Age", "3600");
+      // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
+      // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
+      response.write_header("Allow", "POST, OPTIONS");
+      // Debuggability echo (spec default, no negotiation has happened).
+      response.write_header(
+          "MCP-Protocol-Version",
+          sourcemeta::core::mcp_protocol_version_string(
+              sourcemeta::core::MCPProtocolVersion::V_2025_03_26));
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
       return;
@@ -87,6 +96,12 @@ public:
       return;
     }
 
+    // MCP Streamable HTTP transport / Protocol Version Header:
+    // - Client MUST send `MCP-Protocol-Version` on every request after init
+    // - If header is absent, server SHOULD assume 2025-03-26 (handled inside
+    //   `mcp_resolve_protocol_version`)
+    // - If header is invalid/unsupported, server MUST respond with 400
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
         sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
@@ -116,7 +131,8 @@ public:
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
                                  sourcemeta::core::jsonrpc_make_error(
-                                     nullptr, -32005, "Request too large"));
+                                     nullptr, -32005, "Request too large"),
+                                 version);
             return;
           }
           sourcemeta::core::JSON request_json{nullptr};
@@ -125,26 +141,36 @@ public:
           } catch (const std::exception &) {
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_BAD_REQUEST,
-                                 sourcemeta::core::jsonrpc_make_error_parse());
+                                 sourcemeta::core::jsonrpc_make_error_parse(),
+                                 version);
             return;
           }
           if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
             if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
+              // MCP 2025-06-18 removed JSON-RPC batching. Any array body on
+              // a protocol version that doesn't support batching is treated
+              // as an unrecognized batch shape: per JSON-RPC 2.0 §6, a
+              // batch that fails to be recognized as a valid Array yields a
+              // single Invalid Request response.
+              // https://www.jsonrpc.org/specification#batch
               this->write_envelope(
                   callback_request, callback_response,
                   sourcemeta::one::STATUS_OK,
-                  sourcemeta::core::jsonrpc_make_error_invalid_request(
-                      nullptr));
+                  sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+                  version);
               return;
             }
             if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
-              // JSON-RPC §6: an empty array body must produce a single Invalid
-              // Request envelope, not an empty array response
+              // JSON-RPC 2.0 §6: "If the batch rpc call itself fails to be
+              // recognized as a valid JSON or as an Array with at least one
+              // value, the response from the Server MUST be a single
+              // Response object." Empty array body falls here.
+              // https://www.jsonrpc.org/specification#batch
               this->write_envelope(
                   callback_request, callback_response,
                   sourcemeta::one::STATUS_OK,
-                  sourcemeta::core::jsonrpc_make_error_invalid_request(
-                      nullptr));
+                  sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+                  version);
               return;
             }
             auto responses{sourcemeta::core::JSON::make_array()};
@@ -166,42 +192,54 @@ public:
               }
             }
             if (responses.empty()) {
-              // JSON-RPC §6: a batch containing nothing but notifications must
-              // produce no response body
+              // JSON-RPC 2.0 §6: "If there are no Response objects contained
+              // within the Response array as it is to be sent to the client,
+              // the server MUST NOT return an empty Array and should return
+              // nothing at all." A batch of pure notifications falls here.
+              // https://www.jsonrpc.org/specification#batch
               callback_response.write_status(sourcemeta::one::STATUS_ACCEPTED);
               callback_response.write_header("Access-Control-Allow-Origin",
                                              this->allowed_origin_);
+              callback_response.write_header(
+                  "MCP-Protocol-Version",
+                  sourcemeta::core::mcp_protocol_version_string(version));
               sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED,
                                              callback_request,
                                              callback_response);
               return;
             }
             this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::one::STATUS_OK, responses);
+                                 sourcemeta::one::STATUS_OK, responses,
+                                 version);
             return;
           }
           auto envelope{this->process_one(request_json)};
           if (envelope.has_value()) {
             this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::one::STATUS_OK, envelope.value());
+                                 sourcemeta::one::STATUS_OK, envelope.value(),
+                                 version);
             return;
           }
           callback_response.write_status(sourcemeta::one::STATUS_ACCEPTED);
           callback_response.write_header("Access-Control-Allow-Origin",
                                          this->allowed_origin_);
+          callback_response.write_header(
+              "MCP-Protocol-Version",
+              sourcemeta::core::mcp_protocol_version_string(version));
           sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED,
                                          callback_request, callback_response);
         },
-        [this](sourcemeta::one::HTTPRequest &callback_request,
-               sourcemeta::one::HTTPResponse &callback_response,
-               const std::exception_ptr &error) {
+        [this, version = negotiated_version.value()](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            const std::exception_ptr &error) {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &) {
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                sourcemeta::core::jsonrpc_make_error_internal());
+                sourcemeta::core::jsonrpc_make_error_internal(), version);
           }
         });
   }
@@ -213,13 +251,23 @@ public:
   }
 
 private:
-  auto write_envelope(sourcemeta::one::HTTPRequest &request,
-                      sourcemeta::one::HTTPResponse &response,
-                      const char *status,
-                      const sourcemeta::core::JSON &envelope) const -> void {
+  auto
+  write_envelope(sourcemeta::one::HTTPRequest &request,
+                 sourcemeta::one::HTTPResponse &response, const char *status,
+                 const sourcemeta::core::JSON &envelope,
+                 const sourcemeta::core::MCPProtocolVersion version =
+                     sourcemeta::core::MCPProtocolVersion::V_2025_03_26) const
+      -> void {
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+    // Debuggability echo: not mandated by MCP, but lets clients confirm
+    // which protocol revision the server interpreted. For error paths
+    // where no negotiation succeeded, we echo the spec-default `2025-03-26`.
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
+    response.write_header(
+        "MCP-Protocol-Version",
+        sourcemeta::core::mcp_protocol_version_string(version));
     if (!this->response_schema_.empty()) {
       sourcemeta::one::write_link_header(response, this->response_schema_);
     }

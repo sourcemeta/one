@@ -53,8 +53,8 @@ auto GENERATE_WEB_INDEX::handler(
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
-  metapack_write_text(action.destination, writer.str(), "text/html",
-                      MetapackEncoding::GZIP, {},
+  metapack_write_text(action.destination, writer.str(),
+                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {},
                       std::chrono::duration_cast<std::chrono::milliseconds>(
                           timestamp_end - timestamp_start));
 }

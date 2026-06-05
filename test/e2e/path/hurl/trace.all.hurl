@@ -5,6 +5,8 @@ HTTP 200
 Access-Control-Allow-Origin: *
 Link: </v1/catalog/self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 jsonpath "$.steps" count == 2
 jsonpath "$.steps[0].keywordLocation" == "{{base}}/v1/catalog/example/string#/type"
@@ -20,6 +22,8 @@ Content-Type: application/json
 3.14
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 jsonpath "$.steps[0].keywordLocation" == "{{base}}/v1/catalog/example/nested/deep#/type"
 
@@ -28,6 +32,8 @@ Content-Type: application/json
 true
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 jsonpath "$.steps[0].keywordLocation" == "{{base}}/v1/catalog/rebased/with-id#/type"
 
@@ -36,11 +42,15 @@ Content-Type: application/json
 {"name": "hello"}
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/trace/example/string
 HTTP 400
 Content-Type: application/problem+json
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/no-instance"

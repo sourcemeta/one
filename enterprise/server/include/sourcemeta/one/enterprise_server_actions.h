@@ -58,6 +58,16 @@ public:
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    // MCP Streamable HTTP transport / Security Warning:
+    // "Servers MUST validate the Origin header on all incoming connections
+    // to prevent DNS rebinding attacks." Mandatory per the MCP spec, not
+    // defensive-only. Do not remove this check.
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#security-warning
+    //
+    // RFC 6454 §7.3: user agents send `Origin: null` from privacy-sensitive
+    // contexts (sandboxed iframes, file://, data:). The literal "null" is
+    // never a real allowlisted origin, so the byte-compare below correctly
+    // rejects it. https://datatracker.ietf.org/doc/html/rfc6454#section-7.3
     const auto origin_header{request.header("origin")};
     if (!origin_header.empty() && origin_header != this->allowed_origin_) {
       this->write_envelope(
@@ -76,6 +86,15 @@ public:
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
       response.write_header("Access-Control-Max-Age", "3600");
+      // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
+      // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
+      response.write_header("Allow", "POST, OPTIONS");
+      // Debuggability echo (spec default, no negotiation has happened).
+      response.write_header(
+          "MCP-Protocol-Version",
+          sourcemeta::core::mcp_protocol_version_string(
+              sourcemeta::core::MCPProtocolVersion::V_2025_03_26));
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
       return;
@@ -89,6 +108,12 @@ public:
       return;
     }
 
+    // MCP Streamable HTTP transport / Protocol Version Header:
+    // - Client MUST send `MCP-Protocol-Version` on every request after init
+    // - If header is absent, server SHOULD assume 2025-03-26 (handled inside
+    //   `mcp_resolve_protocol_version`)
+    // - If header is invalid/unsupported, server MUST respond with 400
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
         sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
@@ -118,22 +143,24 @@ public:
             this->write_envelope(callback_request, callback_response,
                                  sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
                                  sourcemeta::core::jsonrpc_make_error(
-                                     nullptr, -32005, "Request too large"));
+                                     nullptr, -32005, "Request too large"),
+                                 version);
             return;
           }
           this->on_message(version, callback_request, callback_response,
                            std::move(body));
         },
-        [this](sourcemeta::one::HTTPRequest &callback_request,
-               sourcemeta::one::HTTPResponse &callback_response,
-               const std::exception_ptr &error) {
+        [this, version = negotiated_version.value()](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            const std::exception_ptr &error) {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &) {
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                sourcemeta::core::jsonrpc_make_error_internal());
+                sourcemeta::core::jsonrpc_make_error_internal(), version);
           }
         });
   }
@@ -145,13 +172,22 @@ public:
   }
 
 private:
-  auto write_envelope(sourcemeta::one::HTTPRequest &request,
-                      sourcemeta::one::HTTPResponse &response,
-                      const char *const status,
-                      const sourcemeta::core::JSON &envelope) const -> void {
+  auto write_envelope(
+      sourcemeta::one::HTTPRequest &request,
+      sourcemeta::one::HTTPResponse &response, const char *const status,
+      const sourcemeta::core::JSON &envelope,
+      const sourcemeta::core::MCPProtocolVersion version =
+          sourcemeta::core::MCPProtocolVersion::V_2025_03_26) const -> void {
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+    // Debuggability echo: not mandated by MCP, but lets clients confirm
+    // which protocol revision the server interpreted. For error paths
+    // where no negotiation succeeded, we echo the spec-default `2025-03-26`.
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
+    response.write_header(
+        "MCP-Protocol-Version",
+        sourcemeta::core::mcp_protocol_version_string(version));
     if (!this->response_schema_.empty()) {
       sourcemeta::one::write_link_header(response, this->response_schema_);
     }

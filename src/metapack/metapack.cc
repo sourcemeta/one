@@ -4,6 +4,7 @@
 #include <sourcemeta/core/gzip.h>
 #include <sourcemeta/core/io.h>
 
+#include <bit>         // std::endian
 #include <cassert>     // assert
 #include <cstring>     // std::memcpy
 #include <optional>    // std::optional, std::nullopt
@@ -11,6 +12,11 @@
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
+
+// Refuse to compile on big-endian hosts so silent magic-mismatch failures
+// cannot ship.
+static_assert(std::endian::native == std::endian::little,
+              "Metapack binary format assumes little-endian host");
 
 namespace sourcemeta::one {
 

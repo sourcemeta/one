@@ -7,6 +7,8 @@ Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 1
@@ -21,6 +23,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/self/v1/schemas/api/schemas/dependents/response
@@ -32,6 +36,8 @@ Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 0
@@ -43,6 +49,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
@@ -54,6 +62,8 @@ Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 0
@@ -65,6 +75,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/recursive
@@ -76,6 +88,8 @@ Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 0
@@ -87,6 +101,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/cycle/foo
@@ -98,6 +114,8 @@ Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$" count == 3
@@ -118,6 +136,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 HEAD {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
@@ -126,6 +146,8 @@ Content-Type: application/json
 Access-Control-Allow-Origin: *
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
@@ -139,6 +161,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
@@ -150,6 +174,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/xyz/
@@ -161,6 +187,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
@@ -172,6 +200,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies
@@ -183,6 +213,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 jsonpath "$.detail" == "There is nothing at this URL"
@@ -194,4 +226,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true

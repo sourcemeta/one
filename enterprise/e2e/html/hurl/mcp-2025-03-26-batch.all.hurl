@@ -9,6 +9,8 @@ Content-Type: application/json
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.result.resourceTemplates" count == 1
 jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
 
@@ -28,10 +30,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 1
@@ -52,6 +57,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch mixing a valid request with a structurally invalid sub-element. The
@@ -70,10 +77,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 3
@@ -93,6 +103,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch containing only notifications. JSON-RPC §6: server must not return an
@@ -110,6 +122,8 @@ Content-Type: application/json
 HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count == 0
 
 # Empty array body. JSON-RPC §6 explicitly says this must produce a single
@@ -124,10 +138,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" isObject
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
@@ -142,6 +159,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch with one request only. The response must still be an array, matching
@@ -157,10 +176,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 4
@@ -174,6 +196,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch with one request and one notification. The notification produces no
@@ -192,10 +216,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 5
@@ -209,6 +236,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch where one sub-element is a successful tools/call. MCP 2025-03-26 tool
@@ -231,10 +260,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 50
@@ -258,6 +290,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch where a tool call references an unknown tool. The error envelope is
@@ -275,10 +309,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 6
@@ -298,6 +335,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch elements with identical ids. The spec does not forbid id collisions,
@@ -315,10 +354,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 8
@@ -337,6 +379,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch of literal scalars. Per JSON-RPC §6 each non-conforming element
@@ -352,10 +396,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 3
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == null
@@ -382,6 +429,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch on 2025-06-18 is rejected with a single Invalid Request envelope
@@ -395,10 +444,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-06-18
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" isObject
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
@@ -413,6 +465,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Same single-envelope rejection on 2025-11-25
@@ -426,10 +480,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" isObject
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
@@ -444,6 +501,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 # Batch with one valid request and one sub-element with a wrong jsonrpc
@@ -462,10 +521,13 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-03-26
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].jsonrpc" == "2.0"
 jsonpath "$[0].id" == 9
@@ -485,4 +547,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true

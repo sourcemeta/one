@@ -151,6 +151,13 @@ using the standard [JSON Schema
 Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents)
 process.
 
+!!! warning "`bundle` is a presence flag, not a boolean"
+
+    Bundling is triggered by the presence of the `bundle` query parameter
+    regardless of its value. `?bundle`, `?bundle=1`, `?bundle=true`,
+    `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
+    bundling, omit the parameter entirely.
+
 
 === "200"
 

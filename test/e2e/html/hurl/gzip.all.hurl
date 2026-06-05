@@ -3,6 +3,8 @@ HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
 
 GET {{base}}/test/schemas/string.json
@@ -12,6 +14,8 @@ Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
 
 GET {{base}}/test/schemas/string.json
@@ -20,6 +24,8 @@ HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Encoding" not exists
 bytes count > 0
 
@@ -29,6 +35,8 @@ HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Encoding" not exists
 bytes count > 0
 
@@ -37,6 +45,8 @@ Accept-Encoding: identity;q=0
 HTTP 406
 Content-Type: application/problem+json
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 406
 jsonpath "$.title" == "sourcemeta:one/cannot-satisfy-content-encoding"
 
@@ -45,6 +55,8 @@ Accept-Encoding: *;q=0
 HTTP 406
 Content-Type: application/problem+json
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 406
 jsonpath "$.title" == "sourcemeta:one/cannot-satisfy-content-encoding"
 
@@ -55,6 +67,8 @@ Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
 
 GET {{base}}/test/schemas/string.json
@@ -64,6 +78,8 @@ Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
 
 GET {{base}}/test/schemas/string.json
@@ -73,4 +89,6 @@ Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
