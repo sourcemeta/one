@@ -1,7 +1,4 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/schemas/custom-meta-draft7.json",
-  "allOf": [
-    { "$ref": "http://json-schema.org/draft-07/schema#" }
-  ]
+  "$id": "https://example.com/schemas/custom-meta-draft7.json"
 }

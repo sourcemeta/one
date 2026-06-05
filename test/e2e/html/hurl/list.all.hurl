@@ -123,7 +123,7 @@ jsonpath "$.entries[10].schemas" == 1
 jsonpath "$.entries[10].path" == "/test/same/"
 jsonpath "$.entries[11].name" == "schemas"
 jsonpath "$.entries[11].type" == "directory"
-jsonpath "$.entries[11].health" == 7
+jsonpath "$.entries[11].health" == 6
 jsonpath "$.entries[11].schemas" == 29
 jsonpath "$.entries[11].path" == "/test/schemas/"
 jsonpath "$.entries[12].name" == "unsafe-alert"

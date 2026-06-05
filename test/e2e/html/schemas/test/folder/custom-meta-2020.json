@@ -10,8 +10,5 @@
     "https://json-schema.org/draft/2020-12/vocab/content": true,
     "https://json-schema.org/draft/2020-12/vocab/unevaluated": true
   },
-  "$dynamicAnchor": "meta",
-  "allOf": [
-    { "$ref": "https://json-schema.org/draft/2020-12/schema" }
-  ]
+  "$dynamicAnchor": "meta"
 }

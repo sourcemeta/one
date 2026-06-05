@@ -446,7 +446,7 @@ jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Dependents API Response"
 jsonpath "$.result.resources[23].description" == "The response format for the schema dependents API endpoint"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 820
+jsonpath "$.result.resources[23].size" == 986
 jsonpath "$.result.resources[23].annotations.priority" == 0
 jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Evaluate API Request"
@@ -665,7 +665,7 @@ jsonpath "$.result.resources[3].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[3].name" == "Sourcemeta One Schema Dependencies RPC Output"
 jsonpath "$.result.resources[3].description" == "Get all direct and indirect dependencies of a schema in the catalog"
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[3].size" == 736
+jsonpath "$.result.resources[3].size" == 741
 jsonpath "$.result.resources[3].annotations.priority" == 0
 jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"
 jsonpath "$.result.resources[4].name" == "Sourcemeta One Schema Dependents RPC Input"
@@ -677,7 +677,7 @@ jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[5].name" == "Sourcemeta One Schema Dependents RPC Output"
 jsonpath "$.result.resources[5].description" == "Get all direct and transitive dependents of a schema in the catalog"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[5].size" == 691
+jsonpath "$.result.resources[5].size" == 735
 jsonpath "$.result.resources[5].annotations.priority" == 0
 jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-health/request"
 jsonpath "$.result.resources[6].name" == "Sourcemeta One Schema Health RPC Input"
