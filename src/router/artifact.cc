@@ -168,10 +168,12 @@ auto RouterAction::artifact_serve(
   // more accurate replacement for the condition in If-Modified-Since, and
   // the two are only combined for the sake of interoperating with older
   // intermediaries that might not implement If-None-Match." Header
-  // presence (not match outcome) is what suppresses If-Modified-Since.
+  // *presence* (not match outcome, and not non-empty value) is what
+  // suppresses If-Modified-Since: even a malformed `If-None-Match:` with
+  // an empty value still triggers the MUST per spec letter.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3
-  if (!request.header("if-none-match").empty()) {
+  if (request.header_exists("if-none-match")) {
     for (const auto &match : request.header_list("if-none-match")) {
       // Cache hit
       if (match.first == "*" || match.first == etag_weak ||

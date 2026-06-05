@@ -118,6 +118,16 @@ public:
     return this->request_->getHeader(name);
   }
 
+  [[nodiscard]] auto header_exists(const std::string_view name) const noexcept
+      -> bool {
+    for (const auto [key, value] : *this->request_) {
+      if (key == name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   [[nodiscard]] auto query(const std::string_view name) const
       -> std::string_view {
     return this->request_->getQuery(name);
