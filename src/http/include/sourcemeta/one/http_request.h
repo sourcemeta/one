@@ -35,39 +35,73 @@ public:
       : request_{nullptr}, response_{response}, method_{std::move(method)},
         path_{std::move(path)}, response_encoding_{encoding} {}
 
-  // If the identity;q=0 or *;q=0 directives explicitly forbid the identity
-  // encoding, the server should return a 406 Not Acceptable error. See
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+  // RFC 9110 §12.5.3:
+  // - Identity is acceptable by default unless explicitly excluded by
+  //   `identity;q=0` or by `*;q=0` without a specific identity entry.
+  // - The server may return 406 Not Acceptable when no representation is
+  //   acceptable. See
+  //   https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
   //
-  // When the client's preferences leave both gzip and identity acceptable at
-  // equal effective quality (e.g. `Accept-Encoding: *;q=0.5`), we prefer
-  // gzip by design: artifacts are stored gzipped at rest in the metapack, so
-  // emitting gzip is the cheap path. Identity would require inflating before
-  // send. RFC 9110 §12.5.3 permits either choice when q-values tie.
+  // We prefer gzip by design when both gzip and identity are acceptable at
+  // equal effective q-value as the indexer gzip's artifacts by default.
+  // For "x-gzip" interop see
+  // https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.5
   auto negotiate() -> void {
-    for (const auto &rule : this->header_list("accept-encoding")) {
-      // Skip any encoding explicitly disallowed by the client (q=0)
-      if (rule.second == 0.0f) {
-        // If the client explicitly prohibited identity or *, we can't satisfy
-        if (rule.first == "*" || rule.first == "identity") {
-          this->satisfiable_encoding_ = false;
-          break;
-        }
-        continue;
-      }
+    // TODO: Upstream this complex logic into Core
+    bool identity_listed{false};
+    bool identity_excluded{false};
+    bool gzip_listed{false};
+    bool wildcard_listed{false};
+    bool wildcard_excluded{false};
+    float gzip_best_q{0.0f};
+    float identity_best_q{0.0f};
+    float wildcard_best_q{0.0f};
 
+    for (const auto &rule : this->header_list("accept-encoding")) {
       if (rule.first == "identity") {
-        break;
-      } else if (
-          rule.first == "*" || rule.first == "gzip" ||
-          // For compatibility with previous implementations of HTTP,
-          // applications SHOULD consider "x-gzip" [...] to be
-          // equivalent to "gzip". See
-          // https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.5
-          rule.first == "x-gzip") {
-        this->response_encoding_ = sourcemeta::one::Encoding::GZIP;
-        break;
+        identity_listed = true;
+        if (rule.second == 0.0f) {
+          identity_excluded = true;
+        } else {
+          identity_best_q = std::max(identity_best_q, rule.second);
+        }
+      } else if (rule.first == "gzip" || rule.first == "x-gzip") {
+        gzip_listed = true;
+        if (rule.second > 0.0f) {
+          gzip_best_q = std::max(gzip_best_q, rule.second);
+        }
+      } else if (rule.first == "*") {
+        wildcard_listed = true;
+        if (rule.second == 0.0f) {
+          wildcard_excluded = true;
+        } else {
+          wildcard_best_q = std::max(wildcard_best_q, rule.second);
+        }
       }
+    }
+
+    // Wildcard supplies q for codings not explicitly listed
+    if (!gzip_listed && wildcard_best_q > 0.0f) {
+      gzip_best_q = wildcard_best_q;
+    }
+    if (!identity_listed) {
+      if (wildcard_excluded) {
+        identity_excluded = true;
+      } else if (wildcard_best_q > 0.0f) {
+        identity_best_q = wildcard_best_q;
+      } else if (!wildcard_listed) {
+        // No Accept-Encoding info applies so identity acceptable by default
+        identity_best_q = 1.0f;
+      }
+    }
+    if (identity_excluded) {
+      identity_best_q = 0.0f;
+    }
+
+    if (gzip_best_q > 0.0f && gzip_best_q >= identity_best_q) {
+      this->response_encoding_ = sourcemeta::one::Encoding::GZIP;
+    } else if (identity_best_q == 0.0f) {
+      this->satisfiable_encoding_ = false;
     }
   }
 
