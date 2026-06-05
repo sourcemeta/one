@@ -56,8 +56,7 @@ public:
     // - Content-Security-Policy frame-ancestors (W3C CSP Level 3 §6.4.2):
     //   https://www.w3.org/TR/CSP3/#directive-frame-ancestors
     //   Modern clickjacking control: deny embedding the web UI in any
-    //   iframe. The catalog is read-only and has no legitimate iframe use
-    //   case.
+    //   iframe.
     //
     // - X-Frame-Options (RFC 7034):
     //   https://datatracker.ietf.org/doc/html/rfc7034
