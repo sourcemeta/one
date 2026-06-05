@@ -262,8 +262,7 @@ private:
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
     // Debuggability echo: not mandated by MCP, but lets clients confirm
     // which protocol revision the server interpreted. For error paths
-    // where no negotiation succeeded (method-not-allowed, unsupported
-    // version), we echo the spec-default `2025-03-26`.
+    // where no negotiation succeeded, we echo the spec-default `2025-03-26`.
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     response.write_header(
         "MCP-Protocol-Version",

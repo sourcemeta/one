@@ -44,6 +44,14 @@ public:
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    // W3C Referrer Policy (https://www.w3.org/TR/referrer-policy/): on the
+    // web UI we send the full URL on same-origin navigation and only the
+    // origin on cross-origin navigation. Schema paths within the browser
+    // encode the user's current view and would otherwise leak via every
+    // external link click. Applies to HTML responses only; JSON and static
+    // assets pass an empty referrer policy and emit no header.
+    static constexpr std::string_view HTML_REFERRER_POLICY{
+        "strict-origin-when-cross-origin"};
     const auto stripped{sourcemeta::core::URI::strip_path_prefix(
         request.path(), this->server_uri_base_path())};
     if (!stripped.has_value()) {
@@ -61,8 +69,8 @@ public:
             this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
         if (root_html.has_value()) {
           this->artifact_serve(root_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, request, response,
-                               this->error_schema_);
+                               false, {}, {}, HTML_REFERRER_POLICY, request,
+                               response, this->error_schema_);
           return;
         }
         sourcemeta::one::json_error(
@@ -99,19 +107,20 @@ public:
             path, Tree::Explorer, "directory-html")};
         if (!path.ends_with("/") && schema_html.has_value()) {
           this->artifact_serve(schema_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, request, response,
-                               this->error_schema_);
+                               false, {}, {}, HTML_REFERRER_POLICY, request,
+                               response, this->error_schema_);
         } else if (directory_html.has_value()) {
-          this->artifact_serve(directory_html.value(),
-                               sourcemeta::one::STATUS_OK, false, {}, {},
-                               request, response, this->error_schema_);
+          this->artifact_serve(
+              directory_html.value(), sourcemeta::one::STATUS_OK, false, {}, {},
+              HTML_REFERRER_POLICY, request, response, this->error_schema_);
         } else {
           const auto not_found{
               this->artifact_resolve_path("", Tree::Explorer, "404")};
           if (not_found.has_value()) {
             this->artifact_serve(not_found.value(),
                                  sourcemeta::one::STATUS_NOT_FOUND, false, {},
-                                 {}, request, response, this->error_schema_);
+                                 {}, HTML_REFERRER_POLICY, request, response,
+                                 this->error_schema_);
           } else {
             sourcemeta::one::json_error(
                 request, response, sourcemeta::one::STATUS_NOT_FOUND,

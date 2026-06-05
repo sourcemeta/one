@@ -6,6 +6,8 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedb
 [Captures]
 last_response: body
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
 jsonpath "$[0].path" == "/v1/catalog/draft3/string"
 jsonpath "$[0].identifier" == "{{base}}/v1/catalog/draft3/string"
@@ -27,6 +29,8 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 HTTP 200
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=nonexistent_term_xyz
@@ -34,6 +38,8 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 0
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search
@@ -41,6 +47,8 @@ HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=%20%20%20
@@ -48,6 +56,8 @@ HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
 jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
@@ -63,6 +73,8 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedb
 [Captures]
 last_response: body
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/v1/catalog/example/zzz-truncate-target"
 jsonpath "$[0].identifier" == "{{base}}/v1/catalog/example/zzz-truncate-target"
@@ -78,4 +90,6 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 HTTP 200
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Referrer-Policy" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-3][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true

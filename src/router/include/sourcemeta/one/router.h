@@ -74,8 +74,8 @@ public:
 
   auto artifact_serve(const std::filesystem::path &absolute_path,
                       const char *code, bool enable_cors, std::string_view mime,
-                      std::string_view link, HTTPRequest &request,
-                      HTTPResponse &response,
+                      std::string_view link, std::string_view referrer_policy,
+                      HTTPRequest &request, HTTPResponse &response,
                       std::string_view error_schema) const -> void;
 
   [[nodiscard]] auto

@@ -58,7 +58,7 @@ public:
     }
 
     this->artifact_serve(this->file_root_ / matches.front(),
-                         sourcemeta::one::STATUS_OK, false, {}, {}, request,
+                         sourcemeta::one::STATUS_OK, false, {}, {}, {}, request,
                          response, this->error_schema_);
   }
 

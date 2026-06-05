@@ -62,7 +62,7 @@ public:
       return;
     }
     this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
-                         this->response_schema_, request, response,
+                         this->response_schema_, {}, request, response,
                          this->error_schema_);
   }
 

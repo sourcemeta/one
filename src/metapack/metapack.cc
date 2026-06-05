@@ -13,10 +13,8 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-// The metapack binary format is read by memcpy'ing #pragma pack(1) structs
-// directly out of an mmap, with no byte-order conversion. Cross-architecture
-// artifact portability is not currently supported. Refuse to compile on
-// big-endian hosts so silent magic-mismatch failures cannot ship.
+// Refuse to compile on big-endian hosts so silent magic-mismatch failures
+// cannot ship.
 static_assert(std::endian::native == std::endian::little,
               "Metapack binary format assumes little-endian host");
 
