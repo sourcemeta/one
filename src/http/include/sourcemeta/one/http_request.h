@@ -118,8 +118,14 @@ public:
     return this->request_->getHeader(name);
   }
 
+  // uWebSockets stores header field-names lowercased, so `name` must be
+  // lowercase too
   [[nodiscard]] auto header_exists(const std::string_view name) const noexcept
       -> bool {
+    if (this->request_ == nullptr) {
+      return false;
+    }
+
     for (const auto [key, value] : *this->request_) {
       if (key == name) {
         return true;
