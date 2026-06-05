@@ -355,6 +355,7 @@ GET /self/v1/api/schemas/dependents/{path}
     |----------|------|----------|-------------|
     | `/*/from` | String | Yes | The absolute URL of the schema that originates the dependency |
     | `/*/to` | String | Yes | The absolute URL of the schema being referenced |
+    | `/*/at` | String | Yes | The JSON Pointer to the schema location where the dependency originates |
 
 === "404"
 

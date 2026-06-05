@@ -14,7 +14,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 102
+jsonpath "$.schemas" == 106
 jsonpath "$.entries" count >= 2
 jsonpath "$.entries[0].name" == "self"
 jsonpath "$.entries[0].title" == "Self"
@@ -28,7 +28,7 @@ jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 13
-jsonpath "$.entries[1].schemas" == 46
+jsonpath "$.entries[1].schemas" == 50
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -62,7 +62,7 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.schemas" == 46
+jsonpath "$.schemas" == 50
 jsonpath "$.entries" count == 13
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].type" == "directory"
@@ -124,7 +124,7 @@ jsonpath "$.entries[10].path" == "/test/same/"
 jsonpath "$.entries[11].name" == "schemas"
 jsonpath "$.entries[11].type" == "directory"
 jsonpath "$.entries[11].health" == 7
-jsonpath "$.entries[11].schemas" == 25
+jsonpath "$.entries[11].schemas" == 29
 jsonpath "$.entries[11].path" == "/test/schemas/"
 jsonpath "$.entries[12].name" == "unsafe-alert"
 jsonpath "$.entries[12].type" == "directory"
