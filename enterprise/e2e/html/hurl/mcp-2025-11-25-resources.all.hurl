@@ -440,7 +440,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Dependencies API Response"
 jsonpath "$.result.resources[22].description" == "The response format for the schema dependencies API endpoint"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 987
+jsonpath "$.result.resources[22].size" == 992
 jsonpath "$.result.resources[22].annotations.priority" == 0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Dependents API Response"
