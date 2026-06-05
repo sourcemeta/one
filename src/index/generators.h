@@ -39,6 +39,7 @@
 #include <queue>         // std::queue
 #include <set>           // std::set
 #include <sstream>       // std::ostringstream
+#include <tuple>         // std::tuple
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
 
@@ -313,7 +314,8 @@ struct GENERATE_DEPENDENTS {
 
     using DirectMap =
         std::unordered_map<sourcemeta::core::JSON::String,
-                           std::unordered_set<sourcemeta::core::JSON::String>>;
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
     DirectMap direct;
     for (const auto &dependency : action.dependencies) {
       const auto contents_option{
@@ -322,15 +324,16 @@ struct GENERATE_DEPENDENTS {
       const auto &contents{contents_option.value()};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
-        direct[entry.at("to").to_string()].emplace(
-            entry.at("from").to_string());
+        direct[entry.at("to").to_string()].emplace(entry.at("from").to_string(),
+                                                   entry.at("at").to_string());
       }
     }
 
-    using TransitiveMap =
-        std::unordered_map<sourcemeta::core::JSON::String,
-                           std::set<std::pair<sourcemeta::core::JSON::String,
-                                              sourcemeta::core::JSON::String>>>;
+    using TransitiveMap = std::unordered_map<
+        sourcemeta::core::JSON::String,
+        std::set<std::tuple<sourcemeta::core::JSON::String,
+                            sourcemeta::core::JSON::String,
+                            sourcemeta::core::JSON::String>>>;
     TransitiveMap transitive;
     for (const auto &[target, _] : direct) {
       auto &edges{transitive[target]};
@@ -346,8 +349,8 @@ struct GENERATE_DEPENDENTS {
           continue;
         }
 
-        for (const auto &dependent : match->second) {
-          edges.emplace(dependent, current);
+        for (const auto &[dependent, at] : match->second) {
+          edges.emplace(dependent, current, at);
           if (visited.emplace(dependent).second) {
             queue.emplace(dependent);
           }
@@ -358,10 +361,11 @@ struct GENERATE_DEPENDENTS {
     auto result{sourcemeta::core::JSON::make_array()};
     const auto match{transitive.find(std::string{action.data})};
     if (match != transitive.cend()) {
-      for (const auto &[from, to] : match->second) {
+      for (const auto &[from, to, at] : match->second) {
         auto object{sourcemeta::core::JSON::make_object()};
         object.assign("from", sourcemeta::core::JSON{from});
         object.assign("to", sourcemeta::core::JSON{to});
+        object.assign("at", sourcemeta::core::JSON{at});
         result.push_back(std::move(object));
       }
     }

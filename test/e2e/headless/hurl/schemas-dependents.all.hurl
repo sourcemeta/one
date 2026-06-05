@@ -17,10 +17,13 @@ header "Last-Modified" exists
 jsonpath "$" count == 3
 jsonpath "$[0].from" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[0].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[0].at" == "/properties/foo/$ref"
 jsonpath "$[1].from" == "{{base}}/test/schemas/with-rebase"
 jsonpath "$[1].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[1].at" == "/$ref"
 jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase-same-host"
 jsonpath "$[2].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[2].at" == "/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -54,12 +57,16 @@ header "Last-Modified" exists
 jsonpath "$" count == 4
 jsonpath "$[0].from" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[0].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[0].at" == "/properties/foo/$ref"
 jsonpath "$[1].from" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[1].to" == "{{base}}/test/schemas/no-id"
+jsonpath "$[1].at" == "/properties/foo/$ref"
 jsonpath "$[2].from" == "{{base}}/test/schemas/with-rebase"
 jsonpath "$[2].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[2].at" == "/$ref"
 jsonpath "$[3].from" == "{{base}}/test/schemas/with-rebase-same-host"
 jsonpath "$[3].to" == "{{base}}/test/schemas/bundling-single"
+jsonpath "$[3].at" == "/$ref"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

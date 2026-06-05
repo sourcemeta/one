@@ -7,7 +7,7 @@
       {
         "from": "https://example.com/schemas/user.json",
         "to": "https://example.com/schemas/address.json",
-        "at": "/properties/address"
+        "at": "/properties/address/$ref"
       }
     ]
   ],

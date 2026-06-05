@@ -1,0 +1,5 @@
+{
+  "$schema": "https://example.com/schemas/custom-meta-2020.json",
+  "$id": "https://example.com/schemas/using-meta-2020.json",
+  "type": "string"
+}

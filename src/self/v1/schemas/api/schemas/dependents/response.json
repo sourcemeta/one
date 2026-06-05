@@ -6,15 +6,21 @@
     [
       {
         "from": "https://example.com/schemas/user.json",
-        "to": "https://example.com/schemas/address.json"
+        "to": "https://example.com/schemas/address.json",
+        "at": "/properties/address/$ref"
       }
     ]
   ],
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "from", "to" ],
+    "required": [ "from", "to", "at" ],
     "properties": {
+      "at": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "json-pointer"
+      },
       "from": {
         "x-format-assertion": true,
         "type": "string",
