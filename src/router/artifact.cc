@@ -144,25 +144,6 @@ auto RouterAction::artifact_serve(
     return;
   }
 
-  // Note that `If-Modified-Since` can only be used with a `GET` or `HEAD`.
-  // See
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
-  const auto if_modified_since{request.header_gmt("if-modified-since")};
-  // Time comparison can be flaky, but adding a bit of tolerance leads
-  // to more consistent behavior.
-  if (if_modified_since.has_value() &&
-      (if_modified_since.value() + std::chrono::seconds(1)) >=
-          info->last_modified) {
-    response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
-    if (enable_cors) {
-      response.write_header("Access-Control-Allow-Origin", "*");
-    }
-
-    sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
-                                   request, response);
-    return;
-  }
-
   // Our checksum is computed over the identity (uncompressed) payload at
   // index time. When the wire response is gzip-encoded the wire bytes are
   // not what the checksum covers, so per RFC 9110 §8.8.1 the validator must
@@ -179,10 +160,45 @@ auto RouterAction::artifact_serve(
   const auto &checksum{info->checksum_hex};
   const std::string etag_strong{std::string{"\""} + checksum + "\""};
   const std::string etag_weak{std::string{"W/\""} + checksum + "\""};
-  for (const auto &match : request.header_list("if-none-match")) {
-    // Cache hit
-    if (match.first == "*" || match.first == etag_weak ||
-        match.first == etag_strong) {
+
+  // RFC 9110 §13.2.2 (Precedence of Preconditions): If-None-Match is
+  // evaluated before If-Modified-Since. RFC 9110 §13.1.3: "A recipient
+  // MUST ignore If-Modified-Since if the request contains an If-None-Match
+  // header field; the condition in If-None-Match is considered to be a
+  // more accurate replacement for the condition in If-Modified-Since, and
+  // the two are only combined for the sake of interoperating with older
+  // intermediaries that might not implement If-None-Match." Header
+  // *presence* (not match outcome, and not non-empty value) is what
+  // suppresses If-Modified-Since: even a malformed `If-None-Match:` with
+  // an empty value still triggers the MUST per spec letter.
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3
+  if (request.header_exists("if-none-match")) {
+    for (const auto &match : request.header_list("if-none-match")) {
+      // Cache hit
+      if (match.first == "*" || match.first == etag_weak ||
+          match.first == etag_strong) {
+        response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
+        if (enable_cors) {
+          response.write_header("Access-Control-Allow-Origin", "*");
+        }
+
+        sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
+                                       request, response);
+        return;
+      }
+    }
+  } else {
+    // Per RFC 9110 §13.1.3 If-Modified-Since is only evaluated when
+    // If-None-Match is absent. It can only be used with GET or HEAD; this
+    // function is reached only on those methods (checked at the entry).
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since
+    const auto if_modified_since{request.header_gmt("if-modified-since")};
+    // Time comparison can be flaky, but adding a bit of tolerance leads
+    // to more consistent behavior.
+    if (if_modified_since.has_value() &&
+        (if_modified_since.value() + std::chrono::seconds(1)) >=
+            info->last_modified) {
       response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
