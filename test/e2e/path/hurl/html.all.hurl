@@ -1,7 +1,8 @@
 GET {{base}}/v1/catalog
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
 [Asserts]
 xpath "string(/html/head/title)" == "Sourcemeta Schemas"
 xpath "boolean(//h6[contains(text(), 'Special directories')])" == true

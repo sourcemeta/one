@@ -12,6 +12,7 @@ Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "MCP-Protocol-Version" == "2025-11-25"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1
 jsonpath "$.result" isObject

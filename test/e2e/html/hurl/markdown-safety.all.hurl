@@ -1,7 +1,7 @@
 GET {{base}}/test/doc/unsafe
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//div[contains(@class, 'text-secondary')]//script)" == 0
 xpath "count(//div[contains(@class, 'text-secondary')]//iframe)" == 0
@@ -9,7 +9,7 @@ xpath "count(//div[contains(@class, 'text-secondary')]//iframe)" == 0
 GET {{base}}/test/unsafe-alert/example
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//div[contains(@class, 'alert')]//script)" == 0
 xpath "count(//div[contains(@class, 'alert')]//iframe)" == 0

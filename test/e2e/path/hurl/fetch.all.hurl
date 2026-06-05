@@ -146,6 +146,8 @@ HTTP 200
 [Captures]
 string_etag: header "ETag"
 string_content_length: header "Content-Length"
+[Asserts]
+header "Date" exists
 
 HEAD {{base}}/v1/catalog/example/string.json
 HTTP 200
@@ -161,6 +163,7 @@ HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 [Asserts]
+header "Date" exists
 jsonpath "$.status" == 404
 jsonpath "$.title" == "sourcemeta:one/not-found"
 
@@ -188,7 +191,7 @@ HTTP 404
 GET {{base}}/v1/catalog
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 
 POST {{base}}/v1/catalog/example/string.json
 HTTP 405

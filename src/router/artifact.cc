@@ -192,10 +192,16 @@ auto RouterAction::artifact_serve(const std::filesystem::path &absolute_path,
     response.write_header("Access-Control-Allow-Origin", "*");
   }
 
-  if (!mime.empty()) {
-    response.write_header("Content-Type", mime);
-  } else {
-    response.write_header("Content-Type", info->mime);
+  const std::string_view effective_mime{mime.empty() ? info->mime : mime};
+  response.write_header("Content-Type", effective_mime);
+
+  // W3C Referrer Policy §3.7: send full URL on same-origin requests, only
+  // the origin (no path) on cross-origin requests. Mild privacy improvement
+  // for the web UI; schema paths within the browser otherwise leak via
+  // every external link click. Applies to HTML responses only.
+  // https://www.w3.org/TR/referrer-policy/#referrer-policy-strict-origin-when-cross-origin
+  if (effective_mime.starts_with("text/html")) {
+    response.write_header("Referrer-Policy", "strict-origin-when-cross-origin");
   }
 
   response.write_header("Last-Modified",

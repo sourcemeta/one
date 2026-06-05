@@ -4,7 +4,7 @@ HTTP 405
 GET {{base}}
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "Sourcemeta Schemas"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -18,7 +18,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "A sample schema folder"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -28,7 +28,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "A sample schema folder"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -55,7 +55,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 GET {{base}}/test/doc/string-1
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "Non-blank string"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -65,7 +65,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc/string-1.html
 Accept: text/html
 HTTP 404
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -75,7 +75,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/v2.0
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "/test/v2.0"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -85,7 +85,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/xxxxxxx
 Accept: text/html
 HTTP 404
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -132,7 +132,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
@@ -141,7 +141,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/foobar/sourcemeta:one/not-found
 Accept: text/html
 HTTP 404
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
@@ -150,7 +150,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "/test/schemas/clash"
 xpath "count(//table/tbody/tr)" == 2
@@ -163,7 +163,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash/foo
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
 xpath "count(//code)" > 0
@@ -172,7 +172,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash/foo/
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
 xpath "count(//code)" == 0
@@ -185,14 +185,14 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Captures]
 page1_script_v: xpath "substring-after(//script/@src, '?v=')"
 page1_style_v: xpath "substring-after(//link[@rel='stylesheet']/@href, '?v=')"
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Captures]
 page2_script_v: xpath "substring-after(//script/@src, '?v=')"
 page2_style_v: xpath "substring-after(//link[@rel='stylesheet']/@href, '?v=')"

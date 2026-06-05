@@ -38,6 +38,12 @@ public:
   // If the identity;q=0 or *;q=0 directives explicitly forbid the identity
   // encoding, the server should return a 406 Not Acceptable error. See
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+  //
+  // When the client's preferences leave both gzip and identity acceptable at
+  // equal effective quality (e.g. `Accept-Encoding: *;q=0.5`), we prefer
+  // gzip by design: artifacts are stored gzipped at rest in the metapack, so
+  // emitting gzip is the cheap path. Identity would require inflating before
+  // send. RFC 9110 §12.5.3 permits either choice when q-values tie.
   auto negotiate() -> void {
     for (const auto &rule : this->header_list("accept-encoding")) {
       // Skip any encoding explicitly disallowed by the client (q=0)
@@ -126,8 +132,17 @@ public:
       const std::size_t value_start{token.find_first_of(';')};
       if (value_start != std::string::npos && value_start + 3 < token.size() &&
           token[value_start + 1] == 'q' && token[value_start + 2] == '=') {
-        result.emplace_back(token.substr(start, value_start - start),
-                            std::stof(token.substr(value_start + 3)));
+        // Garbage q values (e.g. `q=abc`) would otherwise escape as an
+        // exception out of `header_list` -> `negotiate()` -> dispatch's catch
+        // -> 500. Treat unparsable as the default 1.0 to keep negotiation
+        // defensive against malformed client input.
+        float quality{1.0f};
+        try {
+          quality = std::stof(token.substr(value_start + 3));
+        } catch (const std::exception &) {
+          quality = 1.0f;
+        }
+        result.emplace_back(token.substr(start, value_start - start), quality);
       } else if (value_start != std::string::npos) {
         // Malformed quality value, treat as default 1.0
         result.emplace_back(token.substr(start, value_start - start), 1.0f);

@@ -14,7 +14,7 @@ header "ETag" exists
 GET {{base}}/test/draft3/string
 Accept: text/html
 HTTP 200
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 [Asserts]
 body contains "Draft3"
 body contains "https://www.learnjsonschema.com/draft3"

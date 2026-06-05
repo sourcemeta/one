@@ -128,6 +128,10 @@ public:
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers", "Content-Type");
       response.write_header("Access-Control-Max-Age", "3600");
+      // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
+      // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
+      response.write_header("Allow", "POST, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
                                      request, response);
       return;

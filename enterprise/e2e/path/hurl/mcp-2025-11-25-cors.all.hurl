@@ -6,6 +6,8 @@ header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"
+header "Allow" == "POST, OPTIONS"
+header "MCP-Protocol-Version" == "2025-03-26"
 
 OPTIONS {{base}}/v1/catalog/self/v1/mcp
 Origin: http://localhost:8000
@@ -16,6 +18,8 @@ header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"
+header "Allow" == "POST, OPTIONS"
+header "MCP-Protocol-Version" == "2025-03-26"
 
 OPTIONS {{base}}/v1/catalog/self/v1/mcp
 Origin: https://evil.example
@@ -27,6 +31,7 @@ Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "MCP-Protocol-Version" == "2025-03-26"
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
 jsonpath "$.error.code" == -32001

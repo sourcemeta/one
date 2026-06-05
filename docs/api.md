@@ -151,6 +151,13 @@ using the standard [JSON Schema
 Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents)
 process.
 
+!!! warning "`bundle` is a presence flag, not a boolean"
+
+    Bundling is triggered by the presence of the `bundle` query parameter
+    regardless of its value. `?bundle`, `?bundle=1`, `?bundle=true`,
+    `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
+    bundling, omit the parameter entirely.
+
 
 === "200"
 
@@ -527,6 +534,21 @@ addressable by its canonical absolute URI, served in paginated form. The
 configured [`x-sourcemeta-one:priority`](configuration.md) hint of each
 schema is mapped to the standard MCP `annotations.priority` value, so that
 AI clients can rank schemas by their declared importance.
+
+**Cursor opacity.** Cursor values returned by `resources/list` (`nextCursor`)
+are server-defined opaque strings. Clients MUST treat them as opaque and
+round-trip them verbatim. Do not parse, regenerate, or assume any structure
+about the cursor format.
+
+**Statelessness.** Sourcemeta One's MCP endpoint is stateless. It does not
+issue [`Mcp-Session-Id`](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#session-management)
+on initialization and does not honor session IDs sent by clients. This is
+conformant with MCP's session management `MAY` clause.
+
+**Request `id`.** Sourcemeta One follows MCP's stricter rule and rejects
+requests where `id` is `null` with `-32600 Invalid Request`. JSON-RPC 2.0
+§4 calls null-id "discouraged but technically valid". MCP requires the
+request `id` MUST NOT be null. We follow MCP.
 
 **Tools.** Every action documented in this page is also exposed as an MCP
 tool that performs the same work over JSON-RPC. The server supports the full

@@ -235,6 +235,11 @@ auto ActionMCP_v1::process_one(
   if (!sourcemeta::core::mcp_is_request_method(method)) {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
   }
+  // Schema validation enforces MCP's stricter rules on top of JSON-RPC 2.0.
+  // Most notably, MCP requires `id` MUST NOT be null even though JSON-RPC
+  // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
+  // follows MCP's tighter rule and rejects null-id requests here.
+  // https://www.jsonrpc.org/specification (§4)
   if (!this->schema_evaluate_fast(this->request_schema_, request_json)) {
     return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
   }
@@ -269,25 +274,32 @@ auto ActionMCP_v1::on_message(
     request_json = sourcemeta::core::parse_json(body);
   } catch (const std::exception &) {
     this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
-                         sourcemeta::core::jsonrpc_make_error_parse());
+                         sourcemeta::core::jsonrpc_make_error_parse(), version);
     return;
   }
 
   if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
     if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
-      // Batches were removed in MCP 2025-06-18. JSON-RPC §6: an unrecognised
-      // batch shape yields a single Invalid Request response
+      // MCP 2025-06-18 removed JSON-RPC batching. Any array body on a
+      // protocol version that doesn't support batching is treated as an
+      // unrecognized batch shape: per JSON-RPC 2.0 §6, an unrecognized
+      // batch yields a single Invalid Request response object.
+      // https://www.jsonrpc.org/specification#batch
       this->write_envelope(
           request, response, sourcemeta::one::STATUS_OK,
-          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr));
+          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+          version);
       return;
     }
     if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
-      // JSON-RPC §6: an empty array body must produce a single Invalid Request
-      // envelope, not an empty array response
+      // JSON-RPC 2.0 §6: "If the batch rpc call itself fails to be recognized
+      // as a valid JSON or as an Array with at least one value, the response
+      // from the Server MUST be a single Response object." Empty array body
+      // falls here. https://www.jsonrpc.org/specification#batch
       this->write_envelope(
           request, response, sourcemeta::one::STATUS_OK,
-          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr));
+          sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+          version);
       return;
     }
     auto responses{sourcemeta::core::JSON::make_array()};
@@ -309,30 +321,37 @@ auto ActionMCP_v1::on_message(
       }
     }
     if (responses.empty()) {
-      // JSON-RPC §6: "If there are no Response objects contained within the
-      // Response array as it is to be sent to the client, the server MUST NOT
-      // return an empty Array and should return nothing at all."
+      // JSON-RPC 2.0 §6: "If there are no Response objects contained within
+      // the Response array as it is to be sent to the client, the server
+      // MUST NOT return an empty Array and should return nothing at all."
+      // A batch of pure notifications falls here.
+      // https://www.jsonrpc.org/specification#batch
       response.write_status(sourcemeta::one::STATUS_ACCEPTED);
       response.write_header("Access-Control-Allow-Origin",
                             this->allowed_origin_);
+      response.write_header(
+          "MCP-Protocol-Version",
+          sourcemeta::core::mcp_protocol_version_string(version));
       sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
                                      response);
       return;
     }
     this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
-                         responses);
+                         responses, version);
     return;
   }
 
   auto envelope{this->process_one(version, request_json)};
   if (envelope.has_value()) {
     this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
-                         envelope.value());
+                         envelope.value(), version);
     return;
   }
 
   response.write_status(sourcemeta::one::STATUS_ACCEPTED);
   response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+  response.write_header("MCP-Protocol-Version",
+                        sourcemeta::core::mcp_protocol_version_string(version));
   sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
                                  response);
 }
