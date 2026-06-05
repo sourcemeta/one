@@ -170,11 +170,15 @@ public:
     }
 
     if (!evaluation_enabled.has_value()) {
+      // RFC 9110 §15.5.6: Allow lists the methods this specific target
+      // resource currently supports. POST hits this very branch (returns
+      // 405) when the schema was not precompiled, so only OPTIONS is
+      // actually supported on this URL.
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "no-schema-template",
           "This schema was not precompiled for schema evaluation", error_schema,
-          "POST, OPTIONS");
+          "OPTIONS");
       return;
     }
 

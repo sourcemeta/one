@@ -66,7 +66,7 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   response.write_header("Access-Control-Allow-Origin", "*");
   // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported methods.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
-  if (!allow.empty()) {
+  if (!allow.empty() && std::string_view{code} == STATUS_METHOD_NOT_ALLOWED) {
     response.write_header("Allow", allow);
   }
   if (!schema.empty()) {

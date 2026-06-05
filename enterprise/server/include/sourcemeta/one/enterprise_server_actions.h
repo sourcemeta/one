@@ -184,7 +184,8 @@ private:
     // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
     // methods. The MCP endpoint accepts POST and OPTIONS only.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
-    if (status == sourcemeta::one::STATUS_METHOD_NOT_ALLOWED) {
+    if (std::string_view{status} ==
+        sourcemeta::one::STATUS_METHOD_NOT_ALLOWED) {
       response.write_header("Allow", "POST, OPTIONS");
     }
     // Debuggability echo: not mandated by MCP, but lets clients confirm
