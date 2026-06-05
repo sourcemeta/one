@@ -406,6 +406,7 @@ Content-Type: application/problem+json
 "Hello World"
 HTTP 405
 Access-Control-Allow-Origin: *
+Allow: POST, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

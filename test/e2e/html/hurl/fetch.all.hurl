@@ -364,6 +364,7 @@ POST {{base}}/test/schemas/string.json
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -390,6 +391,7 @@ DELETE {{base}}/test/schemas/string.json
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

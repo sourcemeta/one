@@ -150,7 +150,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "method-not-allowed", "This HTTP method is invalid for this URL",
-          error_schema);
+          error_schema, "POST, OPTIONS");
       return;
     }
 
@@ -173,8 +173,8 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
           "no-schema-template",
-          "This schema was not precompiled for schema evaluation",
-          error_schema);
+          "This schema was not precompiled for schema evaluation", error_schema,
+          "POST, OPTIONS");
       return;
     }
 

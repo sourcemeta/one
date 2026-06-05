@@ -53,8 +53,8 @@ inline auto send_response(const char *const code, const HTTPRequest &request,
 // See https://www.rfc-editor.org/rfc/rfc7807
 inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
                        const char *const code, std::string &&identifier,
-                       std::string &&message, const std::string_view schema)
-    -> void {
+                       std::string &&message, const std::string_view schema,
+                       const std::string_view allow = {}) -> void {
   auto object{sourcemeta::core::JSON::make_object()};
   object.assign("title", sourcemeta::core::JSON{"sourcemeta:one/" +
                                                 std::move(identifier)});
@@ -64,6 +64,11 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   response.write_status(code);
   response.write_header("Content-Type", "application/problem+json");
   response.write_header("Access-Control-Allow-Origin", "*");
+  // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported methods.
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
+  if (!allow.empty()) {
+    response.write_header("Allow", allow);
+  }
   if (!schema.empty()) {
     write_link_header(response, schema);
   }
