@@ -223,6 +223,15 @@ auto RouterAction::artifact_serve(
                                     ? etag_weak
                                     : etag_strong);
 
+  // RFC 9110 §12.5.5: emit Vary on cacheable responses so shared caches key
+  // the entry by the request headers that select the representation. The
+  // wire encoding and the ETag form (strong vs weak per RFC 9110 §8.8.1)
+  // both vary with `Accept-Encoding`; without this header a shared cache
+  // can serve the gzip variant to a client that didn't request gzip, or
+  // the strong-form ETag against a weak-form cached entry.
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-12.5.5
+  response.write_header("Vary", "Accept-Encoding");
+
   // See
   // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
   if (!link.empty()) {
