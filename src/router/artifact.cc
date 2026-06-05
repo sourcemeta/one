@@ -107,14 +107,12 @@ auto RouterAction::artifact_read_json(
   return sourcemeta::one::metapack_read_json(absolute_path);
 }
 
-auto RouterAction::artifact_serve(const std::filesystem::path &absolute_path,
-                                  const char *code, const bool enable_cors,
-                                  const std::string_view mime,
-                                  const std::string_view link,
-                                  const std::string_view referrer_policy,
-                                  HTTPRequest &request, HTTPResponse &response,
-                                  const std::string_view error_schema) const
-    -> void {
+auto RouterAction::artifact_serve(
+    const std::filesystem::path &absolute_path, const char *code,
+    const bool enable_cors, const std::string_view mime,
+    const std::string_view link, const BrowserSecurityHeaders &browser_security,
+    HTTPRequest &request, HTTPResponse &response,
+    const std::string_view error_schema) const -> void {
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
@@ -195,8 +193,16 @@ auto RouterAction::artifact_serve(const std::filesystem::path &absolute_path,
 
   response.write_header("Content-Type", mime.empty() ? info->mime : mime);
 
-  if (!referrer_policy.empty()) {
-    response.write_header("Referrer-Policy", referrer_policy);
+  if (!browser_security.referrer_policy.empty()) {
+    response.write_header("Referrer-Policy", browser_security.referrer_policy);
+  }
+  if (!browser_security.frame_ancestors.empty()) {
+    response.write_header("Content-Security-Policy",
+                          std::string{"frame-ancestors "}.append(
+                              browser_security.frame_ancestors));
+  }
+  if (!browser_security.x_frame_options.empty()) {
+    response.write_header("X-Frame-Options", browser_security.x_frame_options);
   }
 
   response.write_header("Last-Modified",

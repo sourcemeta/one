@@ -44,14 +44,34 @@ public:
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    // W3C Referrer Policy (https://www.w3.org/TR/referrer-policy/): on the
-    // web UI we send the full URL on same-origin navigation and only the
-    // origin on cross-origin navigation. Schema paths within the browser
-    // encode the user's current view and would otherwise leak via every
-    // external link click. Applies to HTML responses only; JSON and static
-    // assets pass an empty referrer policy and emit no header.
-    static constexpr std::string_view HTML_REFERRER_POLICY{
-        "strict-origin-when-cross-origin"};
+    // Browser-targeted security headers we apply to every HTML response:
+    //
+    // - Referrer-Policy (W3C Referrer Policy):
+    //   https://www.w3.org/TR/referrer-policy/
+    //   Send full URL on same-origin navigation, only the origin on
+    //   cross-origin navigation. Schema paths within the browser encode the
+    //   user's current view and would otherwise leak via every external link
+    //   click.
+    //
+    // - Content-Security-Policy frame-ancestors (W3C CSP Level 3 §6.4.2):
+    //   https://www.w3.org/TR/CSP3/#directive-frame-ancestors
+    //   Modern clickjacking control: deny embedding the web UI in any
+    //   iframe.
+    //
+    // - X-Frame-Options (RFC 7034):
+    //   https://datatracker.ietf.org/doc/html/rfc7034
+    //   Legacy clickjacking control for browsers that predate CSP3
+    //   frame-ancestors. Belt-and-suspenders for old client coverage at
+    //   near-zero header cost.
+    //
+    // JSON and static-asset responses pass a default-constructed (all-empty)
+    // instance and emit none of these.
+    static constexpr sourcemeta::one::RouterAction::BrowserSecurityHeaders
+        HTML_BROWSER_SECURITY{
+            .referrer_policy = "strict-origin-when-cross-origin",
+            .frame_ancestors = "'none'",
+            .x_frame_options = "DENY",
+        };
     const auto stripped{sourcemeta::core::URI::strip_path_prefix(
         request.path(), this->server_uri_base_path())};
     if (!stripped.has_value()) {
@@ -69,7 +89,7 @@ public:
             this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
         if (root_html.has_value()) {
           this->artifact_serve(root_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, HTML_REFERRER_POLICY, request,
+                               false, {}, {}, HTML_BROWSER_SECURITY, request,
                                response, this->error_schema_);
           return;
         }
@@ -107,19 +127,19 @@ public:
             path, Tree::Explorer, "directory-html")};
         if (!path.ends_with("/") && schema_html.has_value()) {
           this->artifact_serve(schema_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, HTML_REFERRER_POLICY, request,
+                               false, {}, {}, HTML_BROWSER_SECURITY, request,
                                response, this->error_schema_);
         } else if (directory_html.has_value()) {
           this->artifact_serve(
               directory_html.value(), sourcemeta::one::STATUS_OK, false, {}, {},
-              HTML_REFERRER_POLICY, request, response, this->error_schema_);
+              HTML_BROWSER_SECURITY, request, response, this->error_schema_);
         } else {
           const auto not_found{
               this->artifact_resolve_path("", Tree::Explorer, "404")};
           if (not_found.has_value()) {
             this->artifact_serve(not_found.value(),
                                  sourcemeta::one::STATUS_NOT_FOUND, false, {},
-                                 {}, HTML_REFERRER_POLICY, request, response,
+                                 {}, HTML_BROWSER_SECURITY, request, response,
                                  this->error_schema_);
           } else {
             sourcemeta::one::json_error(
