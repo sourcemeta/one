@@ -150,16 +150,17 @@ public:
           this->on_message(version, callback_request, callback_response,
                            std::move(body));
         },
-        [this](sourcemeta::one::HTTPRequest &callback_request,
-               sourcemeta::one::HTTPResponse &callback_response,
-               const std::exception_ptr &error) {
+        [this, version = negotiated_version.value()](
+            sourcemeta::one::HTTPRequest &callback_request,
+            sourcemeta::one::HTTPResponse &callback_response,
+            const std::exception_ptr &error) {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &) {
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                sourcemeta::core::jsonrpc_make_error_internal());
+                sourcemeta::core::jsonrpc_make_error_internal(), version);
           }
         });
   }
