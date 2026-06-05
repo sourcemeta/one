@@ -109,3 +109,59 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count > 0
+
+# RFC 9110 §13.1.3 / §13.2.2: If-None-Match takes precedence over
+# If-Modified-Since. When both headers are present the recipient MUST
+# ignore If-Modified-Since and evaluate If-None-Match alone, regardless
+# of the match outcome.
+# https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3
+# https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
+
+# (1) IMS in the past (would normally return 200) + matching INM:
+# INM wins, response is 304 by ETag match.
+GET {{base}}/test/schemas/string.json
+If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT
+If-None-Match: {{test_schemas_string_json_etag}}
+HTTP 304
+Access-Control-Allow-Origin: *
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "Content-Type" not exists
+bytes count == 0
+
+# (2) IMS in the future (would normally return 304) + non-matching INM:
+# INM wins, response is 200 because INM did not match. The IMS that
+# would have produced 304 is ignored per the MUST in §13.1.3. This is
+# the key regression the precondition-order fix prevents: previously
+# the server short-circuited on IMS before INM was even consulted.
+GET {{base}}/test/schemas/string.json
+If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
+If-None-Match: "definitely-not-a-real-checksum"
+HTTP 200
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" matches /^"[0-9a-f]+"$/
+header "Vary" == "Accept-Encoding"
+bytes count > 0
+
+# (3) Sanity baseline: IMS in the future + no INM evaluates IMS
+# normally and returns 304.
+GET {{base}}/test/schemas/string.json
+If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
+HTTP 304
+Access-Control-Allow-Origin: *
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "Content-Type" not exists
+bytes count == 0
