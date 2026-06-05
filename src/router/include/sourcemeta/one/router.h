@@ -64,6 +64,21 @@ public:
 
   enum class Tree : std::uint8_t { Schemas, Explorer };
 
+  struct BrowserSecurityHeaders {
+    // W3C Referrer Policy (https://www.w3.org/TR/referrer-policy/)
+    std::string_view referrer_policy{};
+    // W3C CSP Level 3 §6.4.2
+    // (https://www.w3.org/TR/CSP3/#directive-frame-ancestors) Value is the
+    // directive's source-list (e.g. `'none'`, `'self'`, an origin allowlist).
+    // The full header value is composed as `frame-ancestors <value>`.
+    std::string_view frame_ancestors{};
+    // RFC 7034 (https://datatracker.ietf.org/doc/html/rfc7034)
+    // Legacy clickjacking control for browsers that predate CSP3
+    // frame-ancestors. Value is one of "DENY", "SAMEORIGIN", or
+    // "ALLOW-FROM <uri>".
+    std::string_view x_frame_options{};
+  };
+
   [[nodiscard]] auto artifact_resolve_path(std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
@@ -74,7 +89,8 @@ public:
 
   auto artifact_serve(const std::filesystem::path &absolute_path,
                       const char *code, bool enable_cors, std::string_view mime,
-                      std::string_view link, std::string_view referrer_policy,
+                      std::string_view link,
+                      const BrowserSecurityHeaders &browser_security,
                       HTTPRequest &request, HTTPResponse &response,
                       std::string_view error_schema) const -> void;
 

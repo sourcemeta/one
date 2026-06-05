@@ -21,6 +21,8 @@ HTTP 200
 output_schema_path: jsonpath "$.result.tools[?@.name=='evaluate_schema'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.result.tools[?@.name=='evaluate_schema'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/response"
 
@@ -50,6 +52,8 @@ text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 900
@@ -66,6 +70,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -76,6 +82,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -105,6 +113,8 @@ text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 901
@@ -129,6 +139,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -139,6 +151,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -168,6 +182,8 @@ text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 902
@@ -182,6 +198,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -192,6 +210,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -219,6 +239,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
@@ -243,6 +265,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -270,6 +294,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 910
@@ -284,6 +310,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -311,6 +339,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 911
@@ -324,6 +354,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -351,6 +383,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 913
@@ -364,6 +398,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -393,6 +429,8 @@ text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 912
@@ -407,6 +445,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -417,6 +457,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -445,6 +487,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 914
@@ -469,6 +513,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -496,6 +542,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 920
@@ -515,6 +563,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -542,6 +592,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 921
@@ -561,6 +613,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -588,6 +642,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 920
@@ -607,6 +663,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -634,6 +692,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 921
@@ -653,6 +713,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -680,6 +742,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 924
@@ -703,6 +767,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -730,6 +796,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 925
@@ -743,6 +811,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -772,6 +842,8 @@ text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "evaluate-call-string-id"
@@ -786,6 +858,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -796,6 +870,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -825,6 +901,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 990
@@ -841,6 +919,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -869,6 +949,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 991
@@ -885,6 +967,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -914,6 +998,8 @@ evaluate_baseline_text: jsonpath "$.result.content[0].text"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 992
@@ -926,6 +1012,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -936,6 +1024,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -964,6 +1054,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 993
@@ -977,6 +1069,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -987,6 +1081,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -1015,6 +1111,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 994
@@ -1028,6 +1126,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -1038,6 +1138,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -1066,6 +1168,8 @@ schema_path: header "Link" regex "<([^>]+)>"
 structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 995
@@ -1079,6 +1183,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -1089,6 +1195,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
@@ -1116,6 +1224,8 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 996
@@ -1140,5 +1250,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 [Asserts]
 header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
