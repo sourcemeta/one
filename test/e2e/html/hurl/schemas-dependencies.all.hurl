@@ -242,6 +242,7 @@ POST {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

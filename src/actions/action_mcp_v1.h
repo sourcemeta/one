@@ -261,6 +261,13 @@ private:
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+    // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
+    // methods. The MCP endpoint accepts POST and OPTIONS only.
+    // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
+    if (std::string_view{status} ==
+        sourcemeta::one::STATUS_METHOD_NOT_ALLOWED) {
+      response.write_header("Allow", "POST, OPTIONS");
+    }
     // Debuggability echo: not mandated by MCP, but lets clients confirm
     // which protocol revision the server interpreted. For error paths
     // where no negotiation succeeded, we echo the spec-default `2025-03-26`.

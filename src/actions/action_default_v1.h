@@ -106,7 +106,7 @@ public:
         sourcemeta::one::json_error(
             request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
             "method-not-allowed", "This HTTP method is invalid for this URL",
-            this->error_schema_);
+            this->error_schema_, "GET, HEAD");
         return;
       }
     }

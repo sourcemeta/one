@@ -116,7 +116,7 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
         "method-not-allowed", "This HTTP method is invalid for this URL",
-        error_schema);
+        error_schema, "GET, HEAD");
     return;
   }
 

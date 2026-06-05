@@ -2,6 +2,7 @@ GET {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
 [Captures]
@@ -33,6 +34,7 @@ DELETE {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
 [Captures]
@@ -64,6 +66,7 @@ PUT {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
 [Captures]

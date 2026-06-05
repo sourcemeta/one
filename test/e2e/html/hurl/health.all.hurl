@@ -23,6 +23,7 @@ POST {{base}}/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -35,6 +36,7 @@ PUT {{base}}/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -47,6 +49,7 @@ DELETE {{base}}/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -59,6 +62,7 @@ PATCH {{base}}/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -71,6 +75,7 @@ OPTIONS {{base}}/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
