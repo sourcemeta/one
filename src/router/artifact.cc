@@ -12,7 +12,6 @@
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
 #include <optional>    // std::optional
-#include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -164,15 +163,26 @@ auto RouterAction::artifact_serve(
     return;
   }
 
+  // Our checksum is computed over the identity (uncompressed) payload at
+  // index time. When the wire response is gzip-encoded the wire bytes are
+  // not what the checksum covers, so per RFC 9110 §8.8.1 the validator must
+  // be marked weak:
+  //
+  //   "if the origin server sends the same validator for a representation
+  //   with a gzip content coding applied as it does for a representation
+  //   with no content coding, then that validator is weak."
+  //
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.1
+  //
+  // When the wire response is identity, the wire bytes exactly match what
+  // the checksum covers, so the validator can be strong.
   const auto &checksum{info->checksum_hex};
-  std::ostringstream etag_value_strong;
-  std::ostringstream etag_value_weak;
-  etag_value_strong << '"' << checksum << '"';
-  etag_value_weak << 'W' << '/' << '"' << checksum << '"';
+  const std::string etag_strong{std::string{"\""} + checksum + "\""};
+  const std::string etag_weak{std::string{"W/\""} + checksum + "\""};
   for (const auto &match : request.header_list("if-none-match")) {
     // Cache hit
-    if (match.first == "*" || match.first == etag_value_weak.str() ||
-        match.first == etag_value_strong.str()) {
+    if (match.first == "*" || match.first == etag_weak ||
+        match.first == etag_strong) {
       response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
@@ -208,9 +218,10 @@ auto RouterAction::artifact_serve(
   response.write_header("Last-Modified",
                         sourcemeta::core::to_gmt(info->last_modified));
 
-  std::ostringstream etag;
-  etag << '"' << checksum << '"';
-  response.write_header("ETag", std::move(etag).str());
+  response.write_header("ETag", request.response_encoding() ==
+                                        sourcemeta::one::Encoding::GZIP
+                                    ? etag_weak
+                                    : etag_strong);
 
   // See
   // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1
