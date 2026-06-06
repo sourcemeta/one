@@ -70,6 +70,7 @@ public:
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin",
                             this->allowed_origin_);
+      response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers",
                             "Content-Type, MCP-Protocol-Version");
@@ -202,6 +203,8 @@ public:
                   sourcemeta::core::HTTP_STATUS_ACCEPTED);
               callback_response.write_header("Access-Control-Allow-Origin",
                                              this->allowed_origin_);
+              callback_response.write_header("Access-Control-Expose-Headers",
+                                             "Link, ETag");
               callback_response.write_header(
                   "MCP-Protocol-Version",
                   sourcemeta::core::mcp_protocol_version_string(version));
@@ -226,6 +229,8 @@ public:
               sourcemeta::core::HTTP_STATUS_ACCEPTED);
           callback_response.write_header("Access-Control-Allow-Origin",
                                          this->allowed_origin_);
+          callback_response.write_header("Access-Control-Expose-Headers",
+                                         "Link, ETag");
           callback_response.write_header(
               "MCP-Protocol-Version",
               sourcemeta::core::mcp_protocol_version_string(version));
@@ -265,6 +270,7 @@ private:
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
     // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
     // methods. The MCP endpoint accepts POST and OPTIONS only.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6

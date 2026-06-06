@@ -6,6 +6,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body

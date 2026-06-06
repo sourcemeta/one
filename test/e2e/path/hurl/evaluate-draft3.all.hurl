@@ -3,6 +3,7 @@ Content-Type: application/json
 "hello"
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -31,6 +32,7 @@ Content-Type: application/json
 1234
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -59,6 +61,7 @@ Content-Type: application/json
 { "name": "Ada" }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -87,6 +90,7 @@ Content-Type: application/json
 { "age": 7 }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -137,6 +141,7 @@ Content-Type: application/json
 { "tag": "alpha" }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -176,6 +181,7 @@ Content-Type: application/json
 "hello"
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 [Captures]
 last_response: body

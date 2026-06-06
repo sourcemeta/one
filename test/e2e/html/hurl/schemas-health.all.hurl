@@ -3,6 +3,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/health/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -38,6 +39,7 @@ GET {{base}}/self/v1/api/schemas/health/xyz/
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -69,6 +71,7 @@ GET {{base}}/self/v1/api/schemas/health
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

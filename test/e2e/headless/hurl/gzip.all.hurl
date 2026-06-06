@@ -2,6 +2,7 @@ GET {{base}}/test/schemas/string.json
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -15,6 +16,7 @@ HTTP 200
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -27,6 +29,7 @@ Accept-Encoding: gzip;q=0
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -40,6 +43,7 @@ Accept-Encoding: gzip;q=0, identity
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -80,6 +84,7 @@ HTTP 200
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -93,6 +98,7 @@ HTTP 200
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -106,6 +112,7 @@ HTTP 200
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

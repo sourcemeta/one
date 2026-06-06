@@ -2,6 +2,7 @@ GET {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
@@ -34,6 +35,7 @@ DELETE {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
@@ -66,6 +68,7 @@ PUT {{base}}/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26

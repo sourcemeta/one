@@ -63,6 +63,7 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   response.write_status(status);
   response.write_header("Content-Type", "application/problem+json");
   response.write_header("Access-Control-Allow-Origin", "*");
+  response.write_header("Access-Control-Expose-Headers", "Link, ETag");
   // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported methods.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
   if (!allow.empty() &&

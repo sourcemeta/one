@@ -2,6 +2,7 @@ GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=string
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -41,6 +42,7 @@ GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=nonexistent_term_xyz
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -52,6 +54,7 @@ GET {{base}}/v1/catalog/self/v1/api/schemas/search
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -63,6 +66,7 @@ GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=%20%20%20
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -80,6 +84,7 @@ GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=truncate-target
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body

@@ -3,6 +3,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -49,6 +50,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -99,6 +101,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body

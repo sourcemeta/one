@@ -174,6 +174,7 @@ public:
     auto result{this->search_view_.search(query, limit, scope)};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
+    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
     response.write_header("Content-Type", "application/json");
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
