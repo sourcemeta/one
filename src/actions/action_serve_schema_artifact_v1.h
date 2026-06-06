@@ -55,8 +55,8 @@ public:
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "missing-schema-match", "This action requires a schema path match",
-          this->error_schema_);
+          "sourcemeta:one/missing-schema-match",
+          "This action requires a schema path match", this->error_schema_);
       return;
     }
 

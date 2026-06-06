@@ -86,6 +86,14 @@ public:
     const auto &path{stripped.value()};
 
     if (path.empty()) {
+      if (request.method() != "get" && request.method() != "head") {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+            "sourcemeta:one/method-not-allowed",
+            "This HTTP method is invalid for this URL", this->error_schema_,
+            "GET, HEAD");
+        return;
+      }
       if (sourcemeta::core::http_match_accept(
               request.header("accept"), {"application/json", "text/html"}) ==
           "text/html") {
@@ -98,25 +106,12 @@ public:
                                this->error_schema_);
           return;
         }
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-            "sourcemeta:one/not-found", "There is nothing at this URL",
-            this->error_schema_);
-        return;
-      } else if (request.method() == "get" || request.method() == "head") {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-            "sourcemeta:one/not-found", "There is nothing at this URL",
-            this->error_schema_);
-        return;
-      } else {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-            "sourcemeta:one/method-not-allowed",
-            "This HTTP method is invalid for this URL", this->error_schema_,
-            "GET, HEAD");
-        return;
       }
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
+      return;
     }
 
     const auto stripped_json{
