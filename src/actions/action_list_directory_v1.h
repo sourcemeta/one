@@ -59,7 +59,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "sourcemeta:one/not-found", "There is nothing at this URL",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
     this->artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,

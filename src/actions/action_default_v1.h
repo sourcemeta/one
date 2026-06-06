@@ -79,7 +79,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "sourcemeta:one/not-found", "There is nothing at this URL",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
 
@@ -91,7 +91,7 @@ public:
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "sourcemeta:one/method-not-allowed",
             "This HTTP method is invalid for this URL", this->error_schema_,
-            "GET, HEAD");
+            "*", "GET, HEAD");
         return;
       }
       if (sourcemeta::core::http_match_accept(
@@ -110,7 +110,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "sourcemeta:one/not-found", "There is nothing at this URL",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
 
@@ -152,7 +152,7 @@ public:
             sourcemeta::one::json_error(
                 request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
                 "sourcemeta:one/not-found", "There is nothing at this URL",
-                this->error_schema_);
+                this->error_schema_, "*");
           }
         }
       } else {
@@ -163,7 +163,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "sourcemeta:one/not-found", "There is nothing at this URL",
-          this->error_schema_);
+          this->error_schema_, "*");
     }
   }
 

@@ -66,7 +66,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "sourcemeta:one/method-not-allowed",
-          "This HTTP method is invalid for this URL", this->error_schema_,
+          "This HTTP method is invalid for this URL", this->error_schema_, "*",
           "GET, HEAD");
       return;
     }
@@ -77,7 +77,7 @@ public:
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "sourcemeta:one/missing-search-query",
           "You must provide a query parameter to search for",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
 
@@ -86,7 +86,7 @@ public:
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "sourcemeta:one/invalid-search-query",
           "The search query must contain at least one non-whitespace character",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
 
@@ -96,7 +96,7 @@ public:
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "sourcemeta:one/invalid-search-query",
           "The search query must not exceed 256 characters",
-          this->error_schema_);
+          this->error_schema_, "*");
       return;
     }
 
@@ -116,7 +116,7 @@ public:
             request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
             "sourcemeta:one/invalid-search-limit",
             "The limit must be a positive integer between 1 and 100",
-            this->error_schema_);
+            this->error_schema_, "*");
         return;
       }
 
@@ -149,7 +149,7 @@ public:
               "sourcemeta:one/invalid-search-scope",
               "The scope must be a comma-separated list of: path, title, "
               "description",
-              this->error_schema_);
+              this->error_schema_, "*");
           return;
         }
 
@@ -166,7 +166,7 @@ public:
             "sourcemeta:one/invalid-search-scope",
             "The scope must be a comma-separated list of: path, title, "
             "description",
-            this->error_schema_);
+            this->error_schema_, "*");
         return;
       }
     }

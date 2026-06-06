@@ -117,34 +117,35 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
         "sourcemeta:one/method-not-allowed",
-        "This HTTP method is invalid for this URL", error_schema, "GET, HEAD");
+        "This HTTP method is invalid for this URL", error_schema,
+        enable_cors ? "*" : "", "GET, HEAD");
     return;
   }
 
   if (!std::filesystem::exists(absolute_path)) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                                "sourcemeta:one/not-found",
-                                "There is nothing at this URL", error_schema);
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "sourcemeta:one/not-found", "There is nothing at this URL",
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
   sourcemeta::core::FileView view{absolute_path};
   if (view.size() <
       sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                                "sourcemeta:one/not-found",
-                                "There is nothing at this URL", error_schema);
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "sourcemeta:one/not-found", "There is nothing at this URL",
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
   const auto info{sourcemeta::one::metapack_info(view)};
   if (!info.has_value()) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                                "sourcemeta:one/not-found",
-                                "There is nothing at this URL", error_schema);
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "sourcemeta:one/not-found", "There is nothing at this URL",
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
@@ -282,10 +283,10 @@ auto RouterAction::artifact_serve(
 
   const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
   if (!payload_start.has_value()) {
-    sourcemeta::one::json_error(request, response,
-                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                                "sourcemeta:one/not-found",
-                                "There is nothing at this URL", error_schema);
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "sourcemeta:one/not-found", "There is nothing at this URL",
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 

@@ -40,20 +40,20 @@ static auto dispatch(sourcemeta::one::Router &actions,
                        std::span{matches.data(), matches_size}, request,
                        response);
     } else {
-      actions.error(request, response,
-                    sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
-                    "sourcemeta:one/cannot-satisfy-content-encoding",
-                    "The server cannot satisfy the request content encoding");
+      actions.error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
+          "sourcemeta:one/cannot-satisfy-content-encoding",
+          "The server cannot satisfy the request content encoding", "*");
     }
   } catch (const std::exception &error) {
     actions.error(request, response,
                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                  "sourcemeta:one/uncaught-error", error.what());
+                  "sourcemeta:one/uncaught-error", error.what(), "*");
   } catch (...) {
     actions.error(request, response,
                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                   "sourcemeta:one/uncaught-error",
-                  "An unknown unexpected error occurred");
+                  "An unknown unexpected error occurred", "*");
   }
 }
 

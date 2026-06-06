@@ -143,7 +143,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "sourcemeta:one/invalid-schema-uri",
-          "The schema URI must not contain a fragment", error_schema);
+          "The schema URI must not contain a fragment", error_schema, "*");
       return;
     }
 
@@ -151,7 +151,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "sourcemeta:one/method-not-allowed",
-          "This HTTP method is invalid for this URL", error_schema,
+          "This HTTP method is invalid for this URL", error_schema, "*",
           "POST, OPTIONS");
       return;
     }
@@ -165,10 +165,10 @@ public:
         schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
         "blaze-exhaustive")};
     if (!schema_present.has_value()) {
-      sourcemeta::one::json_error(request, response,
-                                  sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                                  "sourcemeta:one/not-found",
-                                  "There is nothing at this URL", error_schema);
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          error_schema, "*");
       return;
     }
 
@@ -181,7 +181,7 @@ public:
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "sourcemeta:one/no-schema-template",
           "This schema was not precompiled for schema evaluation", error_schema,
-          "OPTIONS");
+          "*", "OPTIONS");
       return;
     }
 
@@ -196,7 +196,7 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                 "sourcemeta:one/payload-too-large",
-                "The request body is too large", error_schema);
+                "The request body is too large", error_schema, "*");
             return;
           }
 
@@ -205,7 +205,8 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                 "sourcemeta:one/no-instance",
-                "You must pass an instance to validate against", error_schema);
+                "You must pass an instance to validate against", error_schema,
+                "*");
             return;
           }
 
@@ -217,7 +218,7 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                 "sourcemeta:one/invalid-json",
-                "The request body is not valid JSON", error_schema);
+                "The request body is not valid JSON", error_schema, "*");
             return;
           }
 
@@ -227,7 +228,7 @@ public:
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                 "sourcemeta:one/invalid-request",
                 "The request body does not match the expected schema",
-                error_schema);
+                error_schema, "*");
             return;
           }
 
@@ -251,7 +252,7 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                 "sourcemeta:one/schema-evaluation-error", exception.what(),
-                error_schema);
+                error_schema, "*");
           }
         },
         [error_schema](sourcemeta::one::HTTPRequest &callback_request,
@@ -263,8 +264,8 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                "sourcemeta:one/uncaught-error", exception.what(),
-                error_schema);
+                "sourcemeta:one/uncaught-error", exception.what(), error_schema,
+                "*");
           }
         });
   }
