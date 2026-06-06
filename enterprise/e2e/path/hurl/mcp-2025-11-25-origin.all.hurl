@@ -1,4 +1,5 @@
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Origin: http://localhost:8000
 Content-Type: application/json
@@ -37,6 +38,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Origin: https://evil.example
 Content-Type: application/json
@@ -76,6 +78,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Origin: http://localhost:1234
 Content-Type: application/json
@@ -117,6 +120,7 @@ jsonpath "$.valid" == true
 # Non-browser callers omit the `Origin` header entirely. Treat that as a
 # trusted same-origin request rather than a forbidden one
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -157,6 +161,7 @@ jsonpath "$.valid" == true
 # iframes, `file://`, `data:`). The four-character literal is a valid value
 # to reject and echo, even though it is not a URI
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Origin: null
 Content-Type: application/json

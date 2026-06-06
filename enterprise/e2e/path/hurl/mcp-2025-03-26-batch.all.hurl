@@ -2,6 +2,7 @@
 # batch case to fully assert the inner template descriptor without duplicating
 # the canonical resourceTemplates assertion across hurl files
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -20,6 +21,7 @@ jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/v1/catalog/{+p
 # return responses as an array in any order. We preserve input order so clients
 # do not have to id-match
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -72,6 +74,7 @@ jsonpath "$.valid" == true
 # valid one dispatches normally. The invalid one returns its own Invalid
 # Request envelope. Neither failure can poison the other
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -123,6 +126,7 @@ jsonpath "$.valid" == true
 # empty array, it must "return nothing at all". We use the same 202 Accepted
 # semantics the single-notification path uses
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -144,6 +148,7 @@ bytes count == 0
 # Empty array body. JSON-RPC §6 explicitly says this must produce a single
 # Response object, not an empty array
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -187,6 +192,7 @@ jsonpath "$.valid" == true
 # the shape of the request. Batch-aware clients distinguish "single response"
 # from "1-element array"
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -229,6 +235,7 @@ jsonpath "$.valid" == true
 # response entry, but the body is still a 1-element array because at least
 # one response exists
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -278,6 +285,7 @@ jsonpath "$.valid" == true
 # below still validates the whole batch body against the wrapped
 # `mcp/response` schema, which keeps the contract on the response shape
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -332,6 +340,7 @@ jsonpath "$.valid" == true
 # Batch where a tool call references an unknown tool. The error envelope is
 # returned for that sub-element while the rest of the batch proceeds
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -382,6 +391,7 @@ jsonpath "$.valid" == true
 # Batch elements with identical ids. The spec does not forbid id collisions,
 # clients are responsible for picking unique ones. We must still process both
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -432,6 +442,7 @@ jsonpath "$.valid" == true
 # yields its own Invalid Request envelope. The response array has one entry
 # per sub-element (id null because non-objects have no id to echo)
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -485,6 +496,7 @@ jsonpath "$.valid" == true
 
 # Batch on 2025-06-18 is rejected with a single Invalid Request envelope
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```
@@ -526,6 +538,7 @@ jsonpath "$.valid" == true
 
 # Same single-envelope rejection on 2025-11-25
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -569,6 +582,7 @@ jsonpath "$.valid" == true
 # version. The wrong-version one comes back as Invalid Request, the other
 # dispatches normally
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```

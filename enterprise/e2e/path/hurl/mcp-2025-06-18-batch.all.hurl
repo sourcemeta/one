@@ -5,6 +5,7 @@
 
 # Single-element batch
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```
@@ -46,6 +47,7 @@ jsonpath "$.valid" == true
 
 # Multi-element batch with otherwise-valid requests
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```
@@ -90,6 +92,7 @@ jsonpath "$.valid" == true
 
 # Empty array body
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```
@@ -133,6 +136,7 @@ jsonpath "$.valid" == true
 # 2025-06-18 the version rejects the batch wrapper itself, so the contents
 # do not matter and the response is still the Invalid Request envelope
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```
@@ -177,6 +181,7 @@ jsonpath "$.valid" == true
 
 # Batch with garbage sub-elements
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-06-18
 Content-Type: application/json
 ```

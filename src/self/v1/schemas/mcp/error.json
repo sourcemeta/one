@@ -184,9 +184,21 @@
         },
         {
           "const": {
+            "code": -32006,
+            "message": "Accept header must list application/json and text/event-stream"
+          }
+        },
+        {
+          "const": {
             "code": -32007,
             "message": "Foreign URI",
             "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
+          }
+        },
+        {
+          "const": {
+            "code": -32008,
+            "message": "Content-Type must be application/json"
           }
         }
       ]

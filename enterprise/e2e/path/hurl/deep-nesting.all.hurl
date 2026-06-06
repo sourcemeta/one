@@ -1,4 +1,5 @@
 POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
