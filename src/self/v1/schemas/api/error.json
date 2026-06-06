@@ -4,12 +4,14 @@
   "description": "The error response format returned by the Sourcemeta One API endpoints",
   "examples": [
     {
-      "title": "sourcemeta:one/not-found",
+      "type": "sourcemeta:one/not-found",
+      "title": "Not Found",
       "status": 404,
       "detail": "There is nothing at this URL"
     },
     {
-      "title": "sourcemeta:one/schema-evaluation-error",
+      "type": "sourcemeta:one/schema-evaluation-error",
+      "title": "Internal Server Error",
       "status": 500,
       "detail": "Compilation failed: unsupported keyword"
     }
@@ -17,122 +19,141 @@
   "anyOf": [
     {
       "const": {
-        "title": "sourcemeta:one/not-found",
+        "type": "sourcemeta:one/not-found",
+        "title": "Not Found",
         "status": 404,
         "detail": "There is nothing at this URL"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/method-not-allowed",
+        "type": "sourcemeta:one/method-not-allowed",
+        "title": "Method Not Allowed",
         "status": 405,
         "detail": "This HTTP method is invalid for this URL"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/no-schema-template",
+        "type": "sourcemeta:one/no-schema-template",
+        "title": "Method Not Allowed",
         "status": 405,
         "detail": "This schema was not precompiled for schema evaluation"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-schema-uri",
+        "type": "sourcemeta:one/invalid-schema-uri",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The schema URI must not contain a fragment"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/missing-search-query",
+        "type": "sourcemeta:one/missing-search-query",
+        "title": "Bad Request",
         "status": 400,
         "detail": "You must provide a query parameter to search for"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-search-query",
+        "type": "sourcemeta:one/invalid-search-query",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The search query must contain at least one non-whitespace character"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-search-query",
+        "type": "sourcemeta:one/invalid-search-query",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The search query must not exceed 256 characters"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-search-limit",
+        "type": "sourcemeta:one/invalid-search-limit",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The limit must be a positive integer between 1 and 100"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-search-scope",
+        "type": "sourcemeta:one/invalid-search-scope",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The scope must be a comma-separated list of: path, title, description"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/no-instance",
+        "type": "sourcemeta:one/no-instance",
+        "title": "Bad Request",
         "status": 400,
         "detail": "You must pass an instance to validate against"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-json",
+        "type": "sourcemeta:one/invalid-json",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The request body is not valid JSON"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/invalid-request",
+        "type": "sourcemeta:one/invalid-request",
+        "title": "Bad Request",
         "status": 400,
         "detail": "The request body does not match the expected schema"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/cannot-satisfy-content-encoding",
+        "type": "sourcemeta:one/cannot-satisfy-content-encoding",
+        "title": "Not Acceptable",
         "status": 406,
         "detail": "The server cannot satisfy the request content encoding"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/payload-too-large",
+        "type": "sourcemeta:one/payload-too-large",
+        "title": "Content Too Large",
         "status": 413,
         "detail": "The request body is too large"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/missing-schema-match",
+        "type": "sourcemeta:one/missing-schema-match",
+        "title": "Internal Server Error",
         "status": 500,
         "detail": "This action requires a schema path match"
       }
     },
     {
       "const": {
-        "title": "sourcemeta:one/unknown-action",
+        "type": "sourcemeta:one/unknown-action",
+        "title": "Not Implemented",
         "status": 501,
         "detail": "This version does not implement such action handler for this URL"
       }
     },
     {
       "type": "object",
-      "required": [ "title", "status", "detail" ],
+      "required": [ "type", "title", "status", "detail" ],
       "properties": {
-        "title": {
+        "type": {
           "const": "sourcemeta:one/schema-evaluation-error"
+        },
+        "title": {
+          "const": "Internal Server Error"
         },
         "status": {
           "const": 500
@@ -146,10 +167,13 @@
     },
     {
       "type": "object",
-      "required": [ "title", "status", "detail" ],
+      "required": [ "type", "title", "status", "detail" ],
       "properties": {
-        "title": {
+        "type": {
           "const": "sourcemeta:one/uncaught-error"
+        },
+        "title": {
+          "const": "Internal Server Error"
         },
         "status": {
           "const": 500

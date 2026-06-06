@@ -45,21 +45,23 @@ public:
     if (this->file_root_.empty()) {
       if (request.method() != "get" && request.method() != "head") {
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-            "method-not-allowed", "This HTTP method is invalid for this URL",
-            this->error_schema_, "GET, HEAD");
+            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+            "sourcemeta:one/method-not-allowed",
+            "This HTTP method is invalid for this URL", this->error_schema_,
+            "GET, HEAD");
         return;
       }
 
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
       return;
     }
 
     this->artifact_serve(this->file_root_ / matches.front(),
-                         sourcemeta::one::STATUS_OK, false, {}, {}, {}, request,
-                         response, this->error_schema_);
+                         sourcemeta::core::HTTP_STATUS_OK, false, {}, {}, {},
+                         request, response, this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

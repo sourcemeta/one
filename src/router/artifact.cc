@@ -1,3 +1,4 @@
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/time.h>
@@ -107,22 +108,23 @@ auto RouterAction::artifact_read_json(
 }
 
 auto RouterAction::artifact_serve(
-    const std::filesystem::path &absolute_path, const char *code,
-    const bool enable_cors, const std::string_view mime,
-    const std::string_view link, const BrowserSecurityHeaders &browser_security,
-    HTTPRequest &request, HTTPResponse &response,
-    const std::string_view error_schema) const -> void {
+    const std::filesystem::path &absolute_path,
+    const sourcemeta::core::HTTPStatus &status, const bool enable_cors,
+    const std::string_view mime, const std::string_view link,
+    const BrowserSecurityHeaders &browser_security, HTTPRequest &request,
+    HTTPResponse &response, const std::string_view error_schema) const -> void {
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-        "method-not-allowed", "This HTTP method is invalid for this URL",
-        error_schema, "GET, HEAD");
+        request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+        "sourcemeta:one/method-not-allowed",
+        "This HTTP method is invalid for this URL", error_schema, "GET, HEAD");
     return;
   }
 
   if (!std::filesystem::exists(absolute_path)) {
     sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                "sourcemeta:one/not-found",
                                 "There is nothing at this URL", error_schema);
     return;
   }
@@ -131,7 +133,8 @@ auto RouterAction::artifact_serve(
   if (view.size() <
       sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
     sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                "sourcemeta:one/not-found",
                                 "There is nothing at this URL", error_schema);
     return;
   }
@@ -139,7 +142,8 @@ auto RouterAction::artifact_serve(
   const auto info{sourcemeta::one::metapack_info(view)};
   if (!info.has_value()) {
     sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                "sourcemeta:one/not-found",
                                 "There is nothing at this URL", error_schema);
     return;
   }
@@ -174,19 +178,16 @@ auto RouterAction::artifact_serve(
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3
   if (request.header_exists("if-none-match")) {
-    for (const auto &match : request.header_list("if-none-match")) {
-      // Cache hit
-      if (match.first == "*" || match.first == etag_weak ||
-          match.first == etag_strong) {
-        response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
-        if (enable_cors) {
-          response.write_header("Access-Control-Allow-Origin", "*");
-        }
-
-        sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
-                                       request, response);
-        return;
+    if (sourcemeta::core::http_field_list_contains_any(
+            request.header("if-none-match"), {"*", etag_strong, etag_weak})) {
+      response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
+      if (enable_cors) {
+        response.write_header("Access-Control-Allow-Origin", "*");
       }
+
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
+                                     request, response);
+      return;
     }
   } else {
     // Per RFC 9110 §13.1.3 If-Modified-Since is only evaluated when
@@ -199,18 +200,18 @@ auto RouterAction::artifact_serve(
     if (if_modified_since.has_value() &&
         (if_modified_since.value() + std::chrono::seconds(1)) >=
             info->last_modified) {
-      response.write_status(sourcemeta::one::STATUS_NOT_MODIFIED);
+      response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
       }
 
-      sourcemeta::one::send_response(sourcemeta::one::STATUS_NOT_MODIFIED,
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
       return;
     }
   }
 
-  response.write_status(code);
+  response.write_status(status);
 
   // To support requests from web browsers
   if (enable_cors) {
@@ -232,7 +233,7 @@ auto RouterAction::artifact_serve(
   }
 
   response.write_header("Last-Modified",
-                        sourcemeta::core::to_gmt(info->last_modified));
+                        sourcemeta::core::to_imf_fixdate(info->last_modified));
 
   response.write_header("ETag", request.response_encoding() ==
                                         sourcemeta::one::Encoding::GZIP
@@ -275,7 +276,8 @@ auto RouterAction::artifact_serve(
   const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
   if (!payload_start.has_value()) {
     sourcemeta::one::json_error(request, response,
-                                sourcemeta::one::STATUS_NOT_FOUND, "not-found",
+                                sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                "sourcemeta:one/not-found",
                                 "There is nothing at this URL", error_schema);
     return;
   }
@@ -287,10 +289,10 @@ auto RouterAction::artifact_serve(
                              payload_size};
 
   if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
-    sourcemeta::one::send_response(code, request, response, contents,
+    sourcemeta::one::send_response(status, request, response, contents,
                                    sourcemeta::one::Encoding::GZIP);
   } else {
-    sourcemeta::one::send_response(code, request, response, contents,
+    sourcemeta::one::send_response(status, request, response, contents,
                                    sourcemeta::one::Encoding::Identity);
   }
 }

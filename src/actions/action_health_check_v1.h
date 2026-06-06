@@ -42,15 +42,16 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-          "method-not-allowed", "This HTTP method is invalid for this URL",
-          this->error_schema_, "GET, HEAD");
+          request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+          "sourcemeta:one/method-not-allowed",
+          "This HTTP method is invalid for this URL", this->error_schema_,
+          "GET, HEAD");
       return;
     }
 
-    response.write_status(sourcemeta::one::STATUS_OK);
+    response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
-    sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK, request,
                                    response);
   }
 

@@ -273,7 +273,7 @@ auto ActionMCP_v1::on_message(
   try {
     request_json = sourcemeta::core::parse_json(body);
   } catch (const std::exception &) {
-    this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
+    this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                          sourcemeta::core::jsonrpc_make_error_parse(), version);
     return;
   }
@@ -286,7 +286,7 @@ auto ActionMCP_v1::on_message(
       // batch yields a single Invalid Request response object.
       // https://www.jsonrpc.org/specification#batch
       this->write_envelope(
-          request, response, sourcemeta::one::STATUS_OK,
+          request, response, sourcemeta::core::HTTP_STATUS_OK,
           sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
           version);
       return;
@@ -297,7 +297,7 @@ auto ActionMCP_v1::on_message(
       // from the Server MUST be a single Response object." Empty array body
       // falls here. https://www.jsonrpc.org/specification#batch
       this->write_envelope(
-          request, response, sourcemeta::one::STATUS_OK,
+          request, response, sourcemeta::core::HTTP_STATUS_OK,
           sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
           version);
       return;
@@ -326,34 +326,34 @@ auto ActionMCP_v1::on_message(
       // MUST NOT return an empty Array and should return nothing at all."
       // A batch of pure notifications falls here.
       // https://www.jsonrpc.org/specification#batch
-      response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+      response.write_status(sourcemeta::core::HTTP_STATUS_ACCEPTED);
       response.write_header("Access-Control-Allow-Origin",
                             this->allowed_origin_);
       response.write_header(
           "MCP-Protocol-Version",
           sourcemeta::core::mcp_protocol_version_string(version));
-      sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
-                                     response);
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_ACCEPTED,
+                                     request, response);
       return;
     }
-    this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
+    this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                          responses, version);
     return;
   }
 
   auto envelope{this->process_one(version, request_json)};
   if (envelope.has_value()) {
-    this->write_envelope(request, response, sourcemeta::one::STATUS_OK,
+    this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                          envelope.value(), version);
     return;
   }
 
-  response.write_status(sourcemeta::one::STATUS_ACCEPTED);
+  response.write_status(sourcemeta::core::HTTP_STATUS_ACCEPTED);
   response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
   response.write_header("MCP-Protocol-Version",
                         sourcemeta::core::mcp_protocol_version_string(version));
-  sourcemeta::one::send_response(sourcemeta::one::STATUS_ACCEPTED, request,
-                                 response);
+  sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_ACCEPTED,
+                                 request, response);
 }
 
 } // namespace sourcemeta::one::enterprise

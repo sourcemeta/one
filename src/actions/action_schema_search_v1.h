@@ -59,17 +59,18 @@ public:
 
     if (request.method() != "get") {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-          "method-not-allowed", "This HTTP method is invalid for this URL",
-          this->error_schema_, "GET");
+          request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+          "sourcemeta:one/method-not-allowed",
+          "This HTTP method is invalid for this URL", this->error_schema_,
+          "GET");
       return;
     }
 
     const auto query{request.query("q")};
     if (query.empty()) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "missing-search-query",
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/missing-search-query",
           "You must provide a query parameter to search for",
           this->error_schema_);
       return;
@@ -77,8 +78,8 @@ public:
 
     if (query.find_first_not_of(" \t\n\r\f\v") == std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "invalid-search-query",
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/invalid-search-query",
           "The search query must contain at least one non-whitespace character",
           this->error_schema_);
       return;
@@ -87,8 +88,8 @@ public:
     constexpr std::size_t MAXIMUM_QUERY_LENGTH{256};
     if (query.size() > MAXIMUM_QUERY_LENGTH) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "invalid-search-query",
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/invalid-search-query",
           "The search query must not exceed 256 characters",
           this->error_schema_);
       return;
@@ -107,8 +108,8 @@ public:
           pointer != limit_param.data() + limit_param.size() ||
           parsed_limit < 1 || parsed_limit > MAXIMUM_LIMIT) {
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-            "invalid-search-limit",
+            request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+            "sourcemeta:one/invalid-search-limit",
             "The limit must be a positive integer between 1 and 100",
             this->error_schema_);
         return;
@@ -139,8 +140,8 @@ public:
           scope |= sourcemeta::one::SearchScopeDescription;
         } else {
           sourcemeta::one::json_error(
-              request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-              "invalid-search-scope",
+              request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+              "sourcemeta:one/invalid-search-scope",
               "The scope must be a comma-separated list of: path, title, "
               "description",
               this->error_schema_);
@@ -156,8 +157,8 @@ public:
 
       if (scope == 0) {
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-            "invalid-search-scope",
+            request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+            "sourcemeta:one/invalid-search-scope",
             "The scope must be a comma-separated list of: path, title, "
             "description",
             this->error_schema_);
@@ -166,13 +167,13 @@ public:
     }
 
     auto result{this->search_view_.search(query, limit, scope)};
-    response.write_status(sourcemeta::one::STATUS_OK);
+    response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Content-Type", "application/json");
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);
-    sourcemeta::one::send_response(sourcemeta::one::STATUS_OK, request,
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK, request,
                                    response, output.str(),
                                    sourcemeta::one::Encoding::Identity);
   }

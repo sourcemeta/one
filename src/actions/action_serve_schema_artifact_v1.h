@@ -53,18 +53,19 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (matches.empty()) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-          "missing-schema-match", "This action requires a schema path match",
-          this->error_schema_);
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          "sourcemeta:one/missing-schema-match",
+          "This action requires a schema path match", this->error_schema_);
       return;
     }
 
     if (matches.front().find('#') != std::string_view::npos ||
         matches.front().find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "invalid-schema-uri", "The schema URI must not contain a fragment",
-          this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/invalid-schema-uri",
+          "The schema URI must not contain a fragment", this->error_schema_);
       return;
     }
 
@@ -72,12 +73,13 @@ public:
                                                 this->artifact_)};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
       return;
     }
-    this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
-                         this->response_schema_, {}, request, response,
+    this->artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
+                         {}, this->response_schema_, {}, request, response,
                          this->error_schema_);
   }
 
