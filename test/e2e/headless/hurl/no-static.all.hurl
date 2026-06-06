@@ -2,6 +2,7 @@ GET {{base}}/self/v1/static/style.min.css
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -16,6 +17,7 @@ HEAD {{base}}/self/v1/static/style.min.css
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -26,6 +28,7 @@ POST {{base}}/self/v1/static/style.min.css
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -40,6 +43,7 @@ PUT {{base}}/self/v1/static/style.min.css
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -54,6 +58,7 @@ DELETE {{base}}/self/v1/static/style.min.css
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists

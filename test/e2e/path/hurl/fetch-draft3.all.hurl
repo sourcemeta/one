@@ -3,6 +3,7 @@ HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -35,6 +36,7 @@ HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -60,6 +62,7 @@ HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -77,6 +80,7 @@ HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -108,6 +112,7 @@ HEAD {{base}}/v1/catalog/draft3/string.json
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -122,6 +127,7 @@ GET {{base}}/v1/catalog/draft3/nonexistent.json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -135,6 +141,7 @@ POST {{base}}/v1/catalog/draft3/string.json
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists

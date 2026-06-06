@@ -3,6 +3,7 @@ HTTP 200
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 test_schemas_string_json_etag: header "ETag"
 [Asserts]
@@ -22,6 +23,7 @@ HTTP 200
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 test_schemas_string_json_etag_weak: header "ETag"
 [Asserts]
@@ -39,6 +41,7 @@ GET {{base}}/test/schemas/string.json
 If-None-Match: {{test_schemas_string_json_etag_weak}}
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -54,6 +57,7 @@ Accept-Encoding: gzip
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -66,6 +70,7 @@ bytes count == 0
 GET {{base}}/test/schemas/string.json
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -78,6 +83,7 @@ GET {{base}}/test/schemas/string.json
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -90,6 +96,7 @@ GET {{base}}/test/schemas/string.json
 If-None-Match: W/{{test_schemas_string_json_etag}}
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -103,6 +110,7 @@ If-None-Match: "12345"
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -124,6 +132,7 @@ If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -143,6 +152,7 @@ If-None-Match: "definitely-not-a-real-checksum"
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -158,6 +168,7 @@ GET {{base}}/test/schemas/string.json
 If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
 HTTP 304
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

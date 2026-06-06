@@ -43,6 +43,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -118,6 +119,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -185,6 +187,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -240,6 +243,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -285,6 +289,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -330,6 +335,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -374,6 +380,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -433,6 +440,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -478,6 +486,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -533,6 +542,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -583,6 +593,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -638,6 +649,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -692,6 +704,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -745,6 +758,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -795,6 +809,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -839,6 +854,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -898,6 +914,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -955,6 +972,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -1012,6 +1030,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -1069,6 +1088,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -1126,6 +1146,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]

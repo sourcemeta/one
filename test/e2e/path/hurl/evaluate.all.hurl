@@ -3,6 +3,7 @@ Content-Type: application/json
 "hello"
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -31,6 +32,7 @@ Content-Type: application/json
 1234
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -59,6 +61,7 @@ Content-Type: application/json
 { "name": "hello" }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -91,6 +94,7 @@ Content-Type: application/json
 { "name": 123 }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -104,6 +108,7 @@ Content-Type: application/json
 { "value": true }
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -134,6 +139,7 @@ Content-Type: application/json
 3.14
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -190,6 +196,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

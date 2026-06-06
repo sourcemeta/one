@@ -1,6 +1,7 @@
 OPTIONS {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
 HTTP 204
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Access-Control-Allow-Methods: POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type
 Access-Control-Max-Age: 3600
@@ -15,6 +16,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
 HTTP 400
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -47,6 +49,7 @@ Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -76,6 +79,7 @@ Content-Type: application/json
 1234
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -110,6 +114,7 @@ Content-Type: application/json
 "Hello World"
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -145,6 +150,7 @@ Content-Type: application/problem+json
 "Hello World"
 HTTP 405
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]

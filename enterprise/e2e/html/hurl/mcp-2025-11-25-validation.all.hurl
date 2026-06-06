@@ -7,6 +7,7 @@ this is not even json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -43,6 +44,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -79,6 +81,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -115,6 +118,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -151,6 +155,7 @@ null
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -187,6 +192,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -223,6 +229,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -267,6 +274,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -312,6 +320,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -348,6 +357,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
@@ -383,6 +393,7 @@ Content-Type: application/json
 ```
 HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -403,6 +414,7 @@ Content-Type: application/json
 ```
 HTTP 202
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -420,6 +432,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]

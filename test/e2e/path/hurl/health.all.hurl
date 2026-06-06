@@ -1,6 +1,7 @@
 GET {{base}}/v1/catalog/self/v1/health
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -12,6 +13,7 @@ header "Link" not exists
 HEAD {{base}}/v1/catalog/self/v1/health
 HTTP 200
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -23,6 +25,7 @@ POST {{base}}/v1/catalog/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -37,6 +40,7 @@ PUT {{base}}/v1/catalog/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -51,6 +55,7 @@ DELETE {{base}}/v1/catalog/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -65,6 +70,7 @@ PATCH {{base}}/v1/catalog/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists
@@ -79,6 +85,7 @@ OPTIONS {{base}}/v1/catalog/self/v1/health
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
 header "Referrer-Policy" not exists

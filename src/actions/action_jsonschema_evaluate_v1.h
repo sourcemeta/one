@@ -125,6 +125,7 @@ public:
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin", "*");
+      response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers", "Content-Type");
       response.write_header("Access-Control-Max-Age", "3600");
@@ -235,6 +236,8 @@ public:
             callback_response.write_status(sourcemeta::core::HTTP_STATUS_OK);
             callback_response.write_header("Content-Type", "application/json");
             callback_response.write_header("Access-Control-Allow-Origin", "*");
+            callback_response.write_header("Access-Control-Expose-Headers",
+                                           "Link, ETag");
             sourcemeta::one::write_link_header(callback_response,
                                                response_schema);
             std::ostringstream payload;

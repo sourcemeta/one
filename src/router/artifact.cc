@@ -183,6 +183,7 @@ auto RouterAction::artifact_serve(
       response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
+        response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       }
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
@@ -203,6 +204,7 @@ auto RouterAction::artifact_serve(
       response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
+        response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       }
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
@@ -216,6 +218,11 @@ auto RouterAction::artifact_serve(
   // To support requests from web browsers
   if (enable_cors) {
     response.write_header("Access-Control-Allow-Origin", "*");
+    // WHATWG Fetch §3.2.2 (CORS-safelisted response-header name): Link and
+    // ETag are not in the safelist, so cross-origin browser scripts cannot
+    // read them without an explicit Access-Control-Expose-Headers grant.
+    // https://fetch.spec.whatwg.org/#cors-safelisted-response-header-name
+    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
   }
 
   response.write_header("Content-Type", mime.empty() ? info->mime : mime);

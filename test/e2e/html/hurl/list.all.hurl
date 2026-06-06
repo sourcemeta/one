@@ -2,6 +2,7 @@ GET {{base}}/self/v1/api/list
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -51,6 +52,7 @@ GET {{base}}/self/v1/api/list/test
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -156,6 +158,7 @@ GET {{base}}/self/v1/api/list/test/v2.0
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -207,6 +210,7 @@ GET {{base}}/self/v1/api/list/test/v2.0.json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -258,6 +262,7 @@ GET {{base}}/self/v1/api/list/test/schemas/versions
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -312,6 +317,7 @@ GET {{base}}/self/v1/api/list/test/schemas/clash/foo
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -368,6 +374,7 @@ GET {{base}}/self/v1/api/list/test/schemas/clash
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -427,6 +434,7 @@ GET {{base}}/self/v1/api/list/test/extension
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body

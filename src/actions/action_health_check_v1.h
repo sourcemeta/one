@@ -51,6 +51,7 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
+    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK, request,
                                    response);
   }

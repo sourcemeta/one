@@ -2,6 +2,7 @@ GET {{base}}/self/api/list
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -33,6 +34,7 @@ POST {{base}}/self/api/schemas/evaluate/foo
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

@@ -2,6 +2,7 @@ OPTIONS {{base}}
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -33,6 +34,7 @@ Accept: text/html
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -61,6 +63,7 @@ Accept: text/html
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -89,6 +92,7 @@ Accept: text/html
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -180,6 +184,7 @@ Accept: text/html
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404

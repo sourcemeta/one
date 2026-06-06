@@ -2,6 +2,7 @@ GET {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
@@ -34,6 +35,7 @@ DELETE {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
@@ -66,6 +68,7 @@ PUT {{base}}/v1/catalog/self/v1/mcp
 HTTP 405
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
+Access-Control-Expose-Headers: Link, ETag
 Allow: POST, OPTIONS
 Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-03-26
@@ -116,6 +119,7 @@ GET {{base}}/self/v1/mcp
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

@@ -2,6 +2,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/bundling/single
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -36,6 +37,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/self/v1/schemas/api/schemas/depend
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -67,6 +69,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -98,6 +101,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/recursive
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -129,6 +133,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/cycle/foo
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -169,6 +174,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/using-meta-draft7
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -198,6 +204,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/using-meta-2020
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -227,6 +234,7 @@ HEAD {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -242,6 +250,7 @@ POST {{base}}/self/v1/api/schemas/dependencies/test/v2.0/schema
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -274,6 +283,7 @@ GET {{base}}/self/v1/api/schemas/dependencies/xyz/
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -305,6 +315,7 @@ GET {{base}}/self/v1/api/schemas/dependencies
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

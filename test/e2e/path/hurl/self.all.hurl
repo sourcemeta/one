@@ -10,6 +10,7 @@ GET {{base}}/v1/catalog/self/v1/api/list
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -40,6 +41,7 @@ GET {{base}}/v1/catalog/self/v1/api/list/self
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -70,6 +72,7 @@ GET {{base}}/v1/catalog/self/v1/schemas/api/error.json
 HTTP 200
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

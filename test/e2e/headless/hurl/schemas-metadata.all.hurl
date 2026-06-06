@@ -3,6 +3,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -50,6 +51,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -109,6 +111,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -124,6 +127,7 @@ POST {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
@@ -157,6 +161,7 @@ Accept: application/json
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -188,6 +193,7 @@ GET {{base}}/self/v1/api/schemas/metadata
 HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -220,6 +226,7 @@ Accept: application/json
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
