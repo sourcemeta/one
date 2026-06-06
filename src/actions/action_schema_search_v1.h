@@ -57,12 +57,17 @@ public:
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
 
-    if (request.method() != "get") {
+    // RFC 9110 §9.3.2: "The HEAD method is identical to GET except that the
+    // server MUST NOT send content in the response. [...] The server SHOULD
+    // send the same header fields in response to a HEAD request as it would
+    // have sent if the request method had been GET."
+    // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.2
+    if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "sourcemeta:one/method-not-allowed",
           "This HTTP method is invalid for this URL", this->error_schema_,
-          "GET");
+          "GET, HEAD");
       return;
     }
 

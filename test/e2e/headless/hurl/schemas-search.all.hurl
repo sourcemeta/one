@@ -126,7 +126,7 @@ POST {{base}}/self/v1/api/schemas/search?q=foo
 HTTP 405
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
-Allow: GET
+Allow: GET, HEAD
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -1137,3 +1137,63 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
+
+# RFC 9110 §9.3.2: HEAD MUST produce the same header fields as the
+# corresponding GET, with no content body. Capture the GET response so the
+# subsequent HEAD asserts header parity and zero body.
+GET {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+[Captures]
+get_content_length: header "Content-Length"
+
+HEAD {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "Content-Length" == {{get_content_length}}
+bytes count == 0
+
+# HEAD against a successful result (with matches) keeps parity too.
+GET {{base}}/self/v1/api/schemas/search?q=bundling
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+[Captures]
+get_content_length: header "Content-Length"
+
+HEAD {{base}}/self/v1/api/schemas/search?q=bundling
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "Content-Length" == {{get_content_length}}
+bytes count == 0
+
+# HEAD against a 400 (missing query) returns the same Problem Details
+# headers with an empty body.
+HEAD {{base}}/self/v1/api/schemas/search
+HTTP 400
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+bytes count == 0
