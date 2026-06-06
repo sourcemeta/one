@@ -88,7 +88,8 @@ public:
       -> std::optional<sourcemeta::core::JSON>;
 
   auto artifact_serve(const std::filesystem::path &absolute_path,
-                      const char *code, bool enable_cors, std::string_view mime,
+                      const sourcemeta::core::HTTPStatus &status,
+                      bool enable_cors, std::string_view mime,
                       std::string_view link,
                       const BrowserSecurityHeaders &browser_security,
                       HTTPRequest &request, HTTPResponse &response,
@@ -162,8 +163,8 @@ public:
       -> RouterAction *;
 
   auto error(const HTTPRequest &request, HTTPResponse &response,
-             const char *const code, std::string &&identifier,
-             std::string &&message) const -> void;
+             const sourcemeta::core::HTTPStatus &status, std::string_view type,
+             std::string_view detail) const -> void;
 
   [[nodiscard]] auto blaze_template(const std::filesystem::path &absolute_path)
       -> std::shared_ptr<const sourcemeta::blaze::Template>;

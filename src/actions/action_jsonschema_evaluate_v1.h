@@ -123,7 +123,7 @@ public:
       -> void {
     const auto &path{matches.front()};
     if (request.method() == "options") {
-      response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
+      response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin", "*");
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       response.write_header("Access-Control-Allow-Headers", "Content-Type");
@@ -132,7 +132,7 @@ public:
       // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
       // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
       response.write_header("Allow", "POST, OPTIONS");
-      sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
                                      request, response);
       return;
     }
@@ -140,17 +140,18 @@ public:
     if (path.find('#') != std::string_view::npos ||
         path.find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "invalid-schema-uri", "The schema URI must not contain a fragment",
-          error_schema);
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/invalid-schema-uri",
+          "The schema URI must not contain a fragment", error_schema);
       return;
     }
 
     if (request.method() != "post") {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-          "method-not-allowed", "This HTTP method is invalid for this URL",
-          error_schema, "POST, OPTIONS");
+          request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+          "sourcemeta:one/method-not-allowed",
+          "This HTTP method is invalid for this URL", error_schema,
+          "POST, OPTIONS");
       return;
     }
 
@@ -163,9 +164,10 @@ public:
         schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
         "blaze-exhaustive")};
     if (!schema_present.has_value()) {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", error_schema);
+      sourcemeta::one::json_error(request, response,
+                                  sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                  "sourcemeta:one/not-found",
+                                  "There is nothing at this URL", error_schema);
       return;
     }
 
@@ -175,8 +177,8 @@ public:
       // 405) when the schema was not precompiled, so only OPTIONS is
       // actually supported on this URL.
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-          "no-schema-template",
+          request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+          "sourcemeta:one/no-schema-template",
           "This schema was not precompiled for schema evaluation", error_schema,
           "OPTIONS");
       return;
@@ -191,7 +193,8 @@ public:
           if (too_big) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE, "payload-too-large",
+                sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
+                "sourcemeta:one/payload-too-large",
                 "The request body is too large", error_schema);
             return;
           }
@@ -199,7 +202,8 @@ public:
           if (body.empty()) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_BAD_REQUEST, "no-instance",
+                sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                "sourcemeta:one/no-instance",
                 "You must pass an instance to validate against", error_schema);
             return;
           }
@@ -210,7 +214,8 @@ public:
           } catch (const std::exception &) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_BAD_REQUEST, "invalid-json",
+                sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                "sourcemeta:one/invalid-json",
                 "The request body is not valid JSON", error_schema);
             return;
           }
@@ -218,7 +223,8 @@ public:
           if (!self.schema_evaluate_fast(request_schema, instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_BAD_REQUEST, "invalid-request",
+                sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                "sourcemeta:one/invalid-request",
                 "The request body does not match the expected schema",
                 error_schema);
             return;
@@ -226,21 +232,23 @@ public:
 
           try {
             const auto result{perform(schema_uri, body)};
-            callback_response.write_status(sourcemeta::one::STATUS_OK);
+            callback_response.write_status(sourcemeta::core::HTTP_STATUS_OK);
             callback_response.write_header("Content-Type", "application/json");
             callback_response.write_header("Access-Control-Allow-Origin", "*");
             sourcemeta::one::write_link_header(callback_response,
                                                response_schema);
             std::ostringstream payload;
             sourcemeta::core::prettify(result, payload);
-            sourcemeta::one::send_response(
-                sourcemeta::one::STATUS_OK, callback_request, callback_response,
-                payload.str(), sourcemeta::one::Encoding::Identity);
+            sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK,
+                                           callback_request, callback_response,
+                                           payload.str(),
+                                           sourcemeta::one::Encoding::Identity);
           } catch (const std::exception &exception) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
-                "schema-evaluation-error", exception.what(), error_schema);
+                sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                "sourcemeta:one/schema-evaluation-error", exception.what(),
+                error_schema);
           }
         },
         [error_schema](sourcemeta::one::HTTPRequest &callback_request,
@@ -251,8 +259,9 @@ public:
           } catch (const std::exception &exception) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR, "uncaught-error",
-                exception.what(), error_schema);
+                sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                "sourcemeta:one/uncaught-error", exception.what(),
+                error_schema);
           }
         });
   }

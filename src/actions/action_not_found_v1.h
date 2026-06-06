@@ -41,8 +41,9 @@ public:
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     sourcemeta::one::json_error(
-        request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-        "There is nothing at this URL", this->error_schema_);
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "sourcemeta:one/not-found", "There is nothing at this URL",
+        this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

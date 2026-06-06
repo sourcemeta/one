@@ -23,10 +23,11 @@ Router::Router(const std::filesystem::path &base,
 
 auto Router::error(const sourcemeta::one::HTTPRequest &request,
                    sourcemeta::one::HTTPResponse &response,
-                   const char *const code, std::string &&identifier,
-                   std::string &&message) const -> void {
-  sourcemeta::one::json_error(request, response, code, std::move(identifier),
-                              std::move(message), this->default_error_schema_);
+                   const sourcemeta::core::HTTPStatus &status,
+                   const std::string_view type,
+                   const std::string_view detail) const -> void {
+  sourcemeta::one::json_error(request, response, status, type, detail,
+                              this->default_error_schema_);
 }
 
 auto Router::action(
@@ -64,8 +65,9 @@ auto Router::dispatch(
     sourcemeta::one::HTTPResponse &response) -> void {
   auto *instance{this->action(identifier, context)};
   if (instance == nullptr) [[unlikely]] {
-    this->error(request, response, sourcemeta::one::STATUS_NOT_IMPLEMENTED,
-                "unknown-action",
+    this->error(request, response,
+                sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
+                "sourcemeta:one/unknown-action",
                 "This version does not implement such action handler for "
                 "this URL");
     return;

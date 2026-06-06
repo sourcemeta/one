@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_DEFAULT_V1_H
 #define SOURCEMETA_ONE_ACTIONS_DEFAULT_V1_H
 
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
@@ -76,37 +77,44 @@ public:
         request.path(), this->server_uri_base_path())};
     if (!stripped.has_value()) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
       return;
     }
 
     const auto &path{stripped.value()};
 
     if (path.empty()) {
-      if (request.prefers_html()) {
+      if (sourcemeta::core::http_match_accept(
+              request.header("accept"), {"application/json", "text/html"}) ==
+          "text/html") {
         const auto root_html{
             this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
         if (root_html.has_value()) {
-          this->artifact_serve(root_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, HTML_BROWSER_SECURITY, request,
-                               response, this->error_schema_);
+          this->artifact_serve(root_html.value(),
+                               sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+                               HTML_BROWSER_SECURITY, request, response,
+                               this->error_schema_);
           return;
         }
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", this->error_schema_);
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+            "sourcemeta:one/not-found", "There is nothing at this URL",
+            this->error_schema_);
         return;
       } else if (request.method() == "get" || request.method() == "head") {
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-            "There is nothing at this URL", this->error_schema_);
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+            "sourcemeta:one/not-found", "There is nothing at this URL",
+            this->error_schema_);
         return;
       } else {
         sourcemeta::one::json_error(
-            request, response, sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
-            "method-not-allowed", "This HTTP method is invalid for this URL",
-            this->error_schema_, "GET, HEAD");
+            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+            "sourcemeta:one/method-not-allowed",
+            "This HTTP method is invalid for this URL", this->error_schema_,
+            "GET, HEAD");
         return;
       }
     }
@@ -120,31 +128,35 @@ public:
     }
 
     if (request.method() == "get" || request.method() == "head") {
-      if (request.prefers_html()) {
+      if (sourcemeta::core::http_match_accept(
+              request.header("accept"), {"application/json", "text/html"}) ==
+          "text/html") {
         const auto schema_html{
             this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
             path, Tree::Explorer, "directory-html")};
         if (!path.ends_with("/") && schema_html.has_value()) {
-          this->artifact_serve(schema_html.value(), sourcemeta::one::STATUS_OK,
-                               false, {}, {}, HTML_BROWSER_SECURITY, request,
-                               response, this->error_schema_);
+          this->artifact_serve(schema_html.value(),
+                               sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+                               HTML_BROWSER_SECURITY, request, response,
+                               this->error_schema_);
         } else if (directory_html.has_value()) {
-          this->artifact_serve(
-              directory_html.value(), sourcemeta::one::STATUS_OK, false, {}, {},
-              HTML_BROWSER_SECURITY, request, response, this->error_schema_);
+          this->artifact_serve(directory_html.value(),
+                               sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+                               HTML_BROWSER_SECURITY, request, response,
+                               this->error_schema_);
         } else {
           const auto not_found{
               this->artifact_resolve_path("", Tree::Explorer, "404")};
           if (not_found.has_value()) {
             this->artifact_serve(not_found.value(),
-                                 sourcemeta::one::STATUS_NOT_FOUND, false, {},
-                                 {}, HTML_BROWSER_SECURITY, request, response,
-                                 this->error_schema_);
+                                 sourcemeta::core::HTTP_STATUS_NOT_FOUND, false,
+                                 {}, {}, HTML_BROWSER_SECURITY, request,
+                                 response, this->error_schema_);
           } else {
             sourcemeta::one::json_error(
-                request, response, sourcemeta::one::STATUS_NOT_FOUND,
-                "not-found", "There is nothing at this URL",
+                request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                "sourcemeta:one/not-found", "There is nothing at this URL",
                 this->error_schema_);
           }
         }
@@ -154,8 +166,9 @@ public:
       }
     } else {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
     }
   }
 

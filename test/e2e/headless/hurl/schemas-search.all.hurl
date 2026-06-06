@@ -12,7 +12,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/missing-search-query"
+jsonpath "$.type" == "sourcemeta:one/missing-search-query"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -42,7 +43,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/missing-search-query"
+jsonpath "$.type" == "sourcemeta:one/missing-search-query"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "You must provide a query parameter to search for"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -72,7 +74,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -102,7 +105,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The search query must contain at least one non-whitespace character"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -133,7 +137,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
-jsonpath "$.title" == "sourcemeta:one/method-not-allowed"
+jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
+jsonpath "$.title" == "Method Not Allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -475,7 +480,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -505,7 +511,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -535,7 +542,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -565,7 +573,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -595,7 +604,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -625,7 +635,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -655,7 +666,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -725,7 +737,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -755,7 +768,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -819,7 +833,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -849,7 +864,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -959,7 +975,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-limit"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The limit must be a positive integer between 1 and 100"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -989,7 +1006,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-query"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The search query must not exceed 256 characters"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1103,7 +1121,8 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
-jsonpath "$.title" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.type" == "sourcemeta:one/invalid-search-scope"
+jsonpath "$.title" == "Bad Request"
 jsonpath "$.detail" == "The scope must be a comma-separated list of: path, title, description"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

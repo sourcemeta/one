@@ -39,19 +39,21 @@ public:
             uWS::SocketContextOptions options{};
             auto *app{new uWS::SSLApp(options)};
 
-            app->any("/*",
-                     // NOLINTNEXTLINE(bugprone-exception-escape)
-                     [&on_request](auto *const raw_response,
-                                   auto *const raw_request) noexcept -> void {
-                       HTTPResponse response{raw_response};
-                       HTTPRequest request{raw_request, raw_response};
-                       try {
-                         on_request(request, response);
-                       } catch (...) {
-                         response.write_status(STATUS_INTERNAL_SERVER_ERROR);
-                         response.send_without_content();
-                       }
-                     });
+            app->any(
+                "/*",
+                // NOLINTNEXTLINE(bugprone-exception-escape)
+                [&on_request](auto *const raw_response,
+                              auto *const raw_request) noexcept -> void {
+                  HTTPResponse response{raw_response};
+                  HTTPRequest request{raw_request, raw_response};
+                  try {
+                    on_request(request, response);
+                  } catch (...) {
+                    response.write_status(
+                        sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR);
+                    response.send_without_content();
+                  }
+                });
 
             {
               std::lock_guard<std::mutex> guard{setup_mutex};

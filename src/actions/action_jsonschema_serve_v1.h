@@ -41,9 +41,9 @@ public:
     if (schema_path.find('#') != std::string_view::npos ||
         schema_path.find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_BAD_REQUEST,
-          "invalid-schema-uri", "The schema URI must not contain a fragment",
-          error_schema);
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "sourcemeta:one/invalid-schema-uri",
+          "The schema URI must not contain a fragment", error_schema);
       return;
     }
 
@@ -63,12 +63,13 @@ public:
     const auto path{self.artifact_resolve_path(
         schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
     if (!path.has_value()) {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", error_schema);
+      sourcemeta::one::json_error(request, response,
+                                  sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                                  "sourcemeta:one/not-found",
+                                  "There is nothing at this URL", error_schema);
       return;
     }
-    self.artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true,
+    self.artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
                         is_deno ? std::string_view{"application/json"}
                                 : std::string_view{},
                         {}, {}, request, response, error_schema);

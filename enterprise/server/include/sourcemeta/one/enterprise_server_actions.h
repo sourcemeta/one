@@ -71,7 +71,7 @@ public:
     const auto origin_header{request.header("origin")};
     if (!origin_header.empty() && origin_header != this->allowed_origin_) {
       this->write_envelope(
-          request, response, sourcemeta::one::STATUS_FORBIDDEN,
+          request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
           sourcemeta::core::jsonrpc_make_error(
               nullptr, -32001, "Forbidden origin",
               sourcemeta::core::JSON{std::string{origin_header}}));
@@ -79,7 +79,7 @@ public:
     }
 
     if (request.method() == "options") {
-      response.write_status(sourcemeta::one::STATUS_NO_CONTENT);
+      response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Access-Control-Allow-Origin",
                             this->allowed_origin_);
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -95,14 +95,14 @@ public:
           "MCP-Protocol-Version",
           sourcemeta::core::mcp_protocol_version_string(
               sourcemeta::core::MCPProtocolVersion::V_2025_03_26));
-      sourcemeta::one::send_response(sourcemeta::one::STATUS_NO_CONTENT,
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
                                      request, response);
       return;
     }
 
     if (request.method() != "post") {
       this->write_envelope(request, response,
-                           sourcemeta::one::STATUS_METHOD_NOT_ALLOWED,
+                           sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
                            sourcemeta::core::jsonrpc_make_error(
                                nullptr, -32004, "Method not allowed"));
       return;
@@ -127,7 +127,7 @@ public:
       supported.push_back(sourcemeta::core::JSON{"2025-11-25"});
       data.assign("supported", std::move(supported));
       this->write_envelope(request, response,
-                           sourcemeta::one::STATUS_BAD_REQUEST,
+                           sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                            sourcemeta::core::jsonrpc_make_error(
                                nullptr, -32003, "Unsupported protocol version",
                                std::move(data)));
@@ -140,11 +140,12 @@ public:
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) {
           if (too_big) {
-            this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::one::STATUS_PAYLOAD_TOO_LARGE,
-                                 sourcemeta::core::jsonrpc_make_error(
-                                     nullptr, -32005, "Request too large"),
-                                 version);
+            this->write_envelope(
+                callback_request, callback_response,
+                sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
+                sourcemeta::core::jsonrpc_make_error(nullptr, -32005,
+                                                     "Request too large"),
+                version);
             return;
           }
           this->on_message(version, callback_request, callback_response,
@@ -159,7 +160,7 @@ public:
           } catch (const std::exception &) {
             this->write_envelope(
                 callback_request, callback_response,
-                sourcemeta::one::STATUS_INTERNAL_SERVER_ERROR,
+                sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                 sourcemeta::core::jsonrpc_make_error_internal(), version);
           }
         });
@@ -172,20 +173,21 @@ public:
   }
 
 private:
-  auto write_envelope(
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response, const char *const status,
-      const sourcemeta::core::JSON &envelope,
-      const sourcemeta::core::MCPProtocolVersion version =
-          sourcemeta::core::MCPProtocolVersion::V_2025_03_26) const -> void {
+  auto
+  write_envelope(sourcemeta::one::HTTPRequest &request,
+                 sourcemeta::one::HTTPResponse &response,
+                 const sourcemeta::core::HTTPStatus &status,
+                 const sourcemeta::core::JSON &envelope,
+                 const sourcemeta::core::MCPProtocolVersion version =
+                     sourcemeta::core::MCPProtocolVersion::V_2025_03_26) const
+      -> void {
     response.write_status(status);
     response.write_header("Content-Type", "application/json");
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
     // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
     // methods. The MCP endpoint accepts POST and OPTIONS only.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
-    if (std::string_view{status} ==
-        sourcemeta::one::STATUS_METHOD_NOT_ALLOWED) {
+    if (status == sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED) {
       response.write_header("Allow", "POST, OPTIONS");
     }
     // Debuggability echo: not mandated by MCP, but lets clients confirm

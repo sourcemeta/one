@@ -57,12 +57,13 @@ public:
         this->artifact_resolve_path(path_match, Tree::Explorer, "directory")};
     if (!path.has_value()) {
       sourcemeta::one::json_error(
-          request, response, sourcemeta::one::STATUS_NOT_FOUND, "not-found",
-          "There is nothing at this URL", this->error_schema_);
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "sourcemeta:one/not-found", "There is nothing at this URL",
+          this->error_schema_);
       return;
     }
-    this->artifact_serve(path.value(), sourcemeta::one::STATUS_OK, true, {},
-                         this->response_schema_, {}, request, response,
+    this->artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
+                         {}, this->response_schema_, {}, request, response,
                          this->error_schema_);
   }
 
