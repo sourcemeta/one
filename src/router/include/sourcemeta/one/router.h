@@ -164,7 +164,7 @@ public:
 
   auto error(const HTTPRequest &request, HTTPResponse &response,
              const sourcemeta::core::HTTPStatus &status, std::string_view type,
-             std::string_view detail) const -> void;
+             std::string_view detail, std::string_view origin) const -> void;
 
   [[nodiscard]] auto blaze_template(const std::filesystem::path &absolute_path)
       -> std::shared_ptr<const sourcemeta::blaze::Template>;

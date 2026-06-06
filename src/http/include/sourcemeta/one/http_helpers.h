@@ -51,18 +51,21 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
       std::format("{} {} {}", status.wire, request.method(), request.path()));
 }
 
+// CORS scope is required at every error site. No default for `origin` so a
+// caller cannot silently widen a restricted-origin handler to wildcard.
 inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
                        const sourcemeta::core::HTTPStatus &status,
                        const std::string_view type,
                        const std::string_view detail,
                        const std::string_view schema,
+                       const std::string_view origin,
                        const std::string_view allow = {}) -> void {
   const auto body{sourcemeta::core::http_make_problem_details(
       {.status = status, .type = type, .detail = detail})};
 
   response.write_status(status);
   response.write_header("Content-Type", "application/problem+json");
-  response.write_header("Access-Control-Allow-Origin", "*");
+  response.write_header("Access-Control-Allow-Origin", origin);
   response.write_header("Access-Control-Expose-Headers", "Link, ETag");
   // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported methods.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
