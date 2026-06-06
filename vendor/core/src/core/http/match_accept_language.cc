@@ -20,8 +20,8 @@ auto language_specificity(const std::string_view range,
   }
   if (range.size() > candidate.size() && range[candidate.size()] == '-' &&
       sourcemeta::core::http_iequals_ascii(
-          // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage)
-          std::string_view{range.data(), candidate.size()}, candidate)) {
+          sourcemeta::core::http_subview(range, 0, candidate.size()),
+          candidate)) {
     return candidate.size();
   }
   return 0;

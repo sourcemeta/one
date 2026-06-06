@@ -118,7 +118,7 @@ public:
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#sending-messages-to-the-server
     const auto accept{request.header("accept")};
     if (accept.empty() ||
-        !sourcemeta::one::http_accept_includes_all(
+        !sourcemeta::core::http_accept_includes_all(
             accept, {"application/json", "text/event-stream"})) {
       this->write_envelope(request, response,
                            sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
@@ -134,7 +134,7 @@ public:
     // error). The MUST is implicit in MCP's wire spec. Parameters do not
     // change the media-type identity, so any params (including
     // `charset=utf-8`) are accepted.
-    if (!sourcemeta::one::http_content_type_matches(
+    if (!sourcemeta::core::http_content_type_matches(
             request.header("content-type"), "application/json")) {
       this->write_envelope(
           request, response,

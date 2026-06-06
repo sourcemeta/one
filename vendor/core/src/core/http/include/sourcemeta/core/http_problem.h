@@ -11,11 +11,7 @@
 namespace sourcemeta::core {
 
 /// @ingroup http
-/// Fields of an RFC 9457 §3.1 Problem Details object. When `type` is
-/// empty the builder substitutes `"about:blank"` (the RFC 9457 §4.2
-/// default). When `title` is empty the builder substitutes the status
-/// reason-phrase. Empty `detail` and `instance` are omitted from the
-/// output. The `status` field is mandatory.
+/// Fields of an RFC 9457 §3.1 Problem Details object.
 struct HTTPProblemDetails {
   HTTPStatus status;
   JSON::StringView type{"about:blank"};
@@ -25,9 +21,7 @@ struct HTTPProblemDetails {
 };
 
 /// @ingroup http
-/// Build an RFC 9457 §3.1 Problem Details JSON object. The caller writes
-/// the `Content-Type: application/problem+json` header and the body to
-/// the wire. For example:
+/// Build an RFC 9457 §3.1 Problem Details JSON object. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>

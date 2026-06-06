@@ -2,9 +2,11 @@
 #define SOURCEMETA_CORE_HTTP_HELPERS_H_
 
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint16_t
 #include <string_view> // std::string_view
 #include <utility>     // std::pair
 
+// Bounds are validated by surrounding logic.
 // NOLINTBEGIN(bugprone-suspicious-stringview-data-usage)
 namespace sourcemeta::core {
 
@@ -31,13 +33,48 @@ inline auto http_iequals_ascii(const std::string_view left,
   return true;
 }
 
+inline auto http_subview(const std::string_view value, const std::size_t offset,
+                         const std::size_t length) noexcept
+    -> std::string_view {
+  return std::string_view{value.data() + offset, length};
+}
+
+inline auto http_media_specificity(const std::string_view range,
+                                   const std::string_view candidate) noexcept
+    -> std::uint8_t {
+  if (http_iequals_ascii(range, candidate)) {
+    return 3;
+  }
+  if (range == "*/*") {
+    return 1;
+  }
+  const auto range_slash{range.find('/')};
+  const auto candidate_slash{candidate.find('/')};
+  if (range_slash == std::string_view::npos ||
+      candidate_slash == std::string_view::npos) {
+    return 0;
+  }
+  if (range.size() - range_slash != 2 || range[range_slash + 1] != '*') {
+    return 0;
+  }
+  if (range_slash != candidate_slash) {
+    return 0;
+  }
+  for (std::size_t index{0}; index < range_slash; ++index) {
+    if (http_ascii_lower(range[index]) != http_ascii_lower(candidate[index])) {
+      return 0;
+    }
+  }
+  return 2;
+}
+
 inline auto http_trim_trailing_ows(const std::string_view value) noexcept
     -> std::string_view {
   std::size_t size{value.size()};
   while (size > 0 && http_is_ows(value[size - 1])) {
     --size;
   }
-  return std::string_view{value.data(), size};
+  return http_subview(value, 0, size);
 }
 
 inline auto http_trim_leading_ows(const std::string_view value) noexcept
@@ -46,13 +83,7 @@ inline auto http_trim_leading_ows(const std::string_view value) noexcept
   while (position < value.size() && http_is_ows(value[position])) {
     ++position;
   }
-  return std::string_view{value.data() + position, value.size() - position};
-}
-
-inline auto http_subview(const std::string_view value, const std::size_t offset,
-                         const std::size_t length) noexcept
-    -> std::string_view {
-  return std::string_view{value.data() + offset, length};
+  return http_subview(value, position, value.size() - position);
 }
 
 template <typename Visitor>
@@ -97,11 +128,8 @@ inline auto http_split_entry(const std::string_view entry) noexcept
   while (semicolon < entry.size() && entry[semicolon] != ';') {
     ++semicolon;
   }
-  const auto value{
-      http_trim_trailing_ows(std::string_view{entry.data(), semicolon})};
-  const auto rest{
-      std::string_view{entry.data() + semicolon, entry.size() - semicolon}};
-  return {value, rest};
+  return {http_trim_trailing_ows(http_subview(entry, 0, semicolon)),
+          http_subview(entry, semicolon, entry.size() - semicolon)};
 }
 
 template <typename Visitor>
@@ -120,8 +148,7 @@ inline auto http_for_each_parameter(const std::string_view parameters,
            parameters[end_position] != ';') {
       ++end_position;
     }
-    const std::string_view raw{
-        http_subview(parameters, position, end_position - position)};
+    const auto raw{http_subview(parameters, position, end_position - position)};
     position = end_position;
     if (raw.empty()) {
       continue;
@@ -133,9 +160,9 @@ inline auto http_for_each_parameter(const std::string_view parameters,
     if (equals == raw.size()) {
       visit(http_trim_trailing_ows(raw), std::string_view{});
     } else {
-      visit(http_trim_trailing_ows(std::string_view{raw.data(), equals}),
-            http_trim_trailing_ows(std::string_view{raw.data() + equals + 1,
-                                                    raw.size() - equals - 1}));
+      visit(http_trim_trailing_ows(http_subview(raw, 0, equals)),
+            http_trim_trailing_ows(
+                http_subview(raw, equals + 1, raw.size() - equals - 1)));
     }
   }
 }
@@ -152,26 +179,23 @@ inline auto http_parse_qvalue(const std::string_view value) noexcept -> float {
   if (value.size() == 1) {
     return integer_part;
   }
-  if (value[1] != '.') {
+  if (value[1] != '.' || value.size() > 5) {
     return 1.0f;
   }
-  float fraction{0.0f};
-  float divisor{10.0f};
-  std::size_t digit_count{0};
+  std::uint16_t numerator{0};
+  std::uint16_t denominator{1};
   for (std::size_t index{2}; index < value.size(); ++index) {
-    if (digit_count >= 3) {
-      return 1.0f;
-    }
     const char character{value[index]};
     if (character < '0' || character > '9') {
       return 1.0f;
     }
-    fraction += static_cast<float>(character - '0') / divisor;
-    divisor *= 10.0f;
-    ++digit_count;
+    numerator = static_cast<std::uint16_t>(numerator * 10 + (character - '0'));
+    denominator = static_cast<std::uint16_t>(denominator * 10);
   }
+  const float fraction{static_cast<float>(numerator) /
+                       static_cast<float>(denominator)};
   const float result{integer_part + fraction};
-  if (result < 0.0f || result > 1.0f) {
+  if (result > 1.0f) {
     return 1.0f;
   }
   return result;
@@ -205,7 +229,8 @@ template <typename Visitor>
 inline auto http_for_each_field_value(const std::string_view header,
                                       Visitor visit) -> void {
   http_for_each_list_entry(header, [&visit](const std::string_view entry) {
-    const auto [value, _] = http_split_entry(entry);
+    const auto [value, parameters] = http_split_entry(entry);
+    (void)parameters;
     if (!value.empty()) {
       visit(value);
     }

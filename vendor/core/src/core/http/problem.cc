@@ -1,6 +1,7 @@
 #include <sourcemeta/core/http_problem.h>
 
 #include <cassert> // assert
+#include <cstdint> // std::int64_t
 
 namespace {
 
