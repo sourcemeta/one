@@ -194,9 +194,10 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css.meta
 HTTP 404
 Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Access-Control-Allow-Origin" not exists
+header "Access-Control-Expose-Headers" not exists
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

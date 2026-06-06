@@ -117,8 +117,8 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
         "sourcemeta:one/method-not-allowed",
-        "This HTTP method is invalid for this URL", error_schema, "*",
-        "GET, HEAD");
+        "This HTTP method is invalid for this URL", error_schema,
+        enable_cors ? "*" : "", "GET, HEAD");
     return;
   }
 
@@ -126,7 +126,7 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
         "sourcemeta:one/not-found", "There is nothing at this URL",
-        error_schema, "*");
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
@@ -136,7 +136,7 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
         "sourcemeta:one/not-found", "There is nothing at this URL",
-        error_schema, "*");
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
@@ -145,7 +145,7 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
         "sourcemeta:one/not-found", "There is nothing at this URL",
-        error_schema, "*");
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
@@ -286,7 +286,7 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
         "sourcemeta:one/not-found", "There is nothing at this URL",
-        error_schema, "*");
+        error_schema, enable_cors ? "*" : "");
     return;
   }
 
