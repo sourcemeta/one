@@ -80,16 +80,16 @@ auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   sourcemeta::core::stacktrace_on_crash();
 
-  const auto program{std::filesystem::path{argv[0]}.filename().string()};
-
-  std::println("Sourcemeta One {} v{}", sourcemeta::one::edition(),
-               sourcemeta::one::version());
-
   // Mainly for Docker Compose
   std::signal(SIGINT, terminate);
   std::signal(SIGTERM, terminate);
 
   try {
+    const auto program{std::filesystem::path{argv[0]}.filename().string()};
+
+    std::println("Sourcemeta One {} v{}", sourcemeta::one::edition(),
+                 sourcemeta::one::version());
+
     if (argc != 3) [[unlikely]] {
       print_usage(program);
       return EXIT_FAILURE;
