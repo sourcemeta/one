@@ -396,7 +396,6 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 variable "page1_script_v" == "{{page2_script_v}}"
 variable "page1_style_v" == "{{page2_style_v}}"
 
-
 # RFC 9110 §15.5.6: write methods on a path that resolves to a
 # directory-html resource must respond 405 with Allow listing what the
 # server does accept, rather than the catch-all 404 that would mask the
