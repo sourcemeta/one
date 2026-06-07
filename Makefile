@@ -56,8 +56,12 @@ lint:
 	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --target clang_format_test
 	$(CMAKE) --build $(OUTPUT) --config $(PRESET) --target shellcheck
 
+.PHONY: check
+check:
+	./contrib/check-enterprise-hurl-tests.sh
+
 .PHONY: test
-test:
+test: check
 	$(CTEST) --test-dir $(OUTPUT) --build-config $(PRESET) --output-on-failure --parallel
 
 .PHONY: docker-build
@@ -68,8 +72,7 @@ docker-build: $(DOCKERFILE)
 
 # Useful to run the entire main suite in a single command
 .PHONY: test-e2e
-test-e2e:
-	./contrib/check-enterprise-hurl-tests.sh
+test-e2e: check
 	./contrib/e2e-native.sh test/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/headless $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/html $(EDITION) $(SANDBOX_PORT)
