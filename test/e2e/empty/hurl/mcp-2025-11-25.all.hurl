@@ -575,7 +575,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-
 # RFC 6454 §4 mandates lowercasing scheme and host before origin equality,
 # via the i;ascii-casemap collation of RFC 4790. A mixed-case scheme on
 # the inbound Origin must still match the configured allowlist.
