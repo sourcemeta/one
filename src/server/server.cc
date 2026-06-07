@@ -1,3 +1,5 @@
+#include <sourcemeta/core/numeric.h>
+#include <sourcemeta/core/preprocessor.h>
 #include <sourcemeta/core/stacktrace.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -8,10 +10,11 @@
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
 #include <csignal>     // std::signal, SIGINT, SIGTERM
 #include <cstdint>     // std::uint16_t
-#include <cstdlib>     // EXIT_FAILURE, std::exit
+#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS, std::exit
 #include <filesystem>  // std::filesystem
-#include <iostream>    // std::cout, std::cerr
+#include <iostream>    // std::cerr
 #include <limits>      // std::numeric_limits
+#include <print>       // std::print, std::println
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
 
@@ -64,6 +67,11 @@ auto terminate(int signal) -> void {
   std::exit(EXIT_SUCCESS);
 }
 
+SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
+    -> void {
+  std::println("Usage: {} <path/to/output/directory> <port>", program);
+}
+
 // We try to keep this function as straight to the point as possible
 // with minimal input validation (outside debug builds). The intention
 // is for the server to start running and bind to the port as quickly
@@ -72,8 +80,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   sourcemeta::core::stacktrace_on_crash();
 
-  std::cout << "Sourcemeta One " << sourcemeta::one::edition() << " v"
-            << sourcemeta::one::version() << "\n";
+  const auto program{std::filesystem::path{argv[0]}.filename().string()};
+
+  std::println("Sourcemeta One {} v{}", sourcemeta::one::edition(),
+               sourcemeta::one::version());
 
   // Mainly for Docker Compose
   std::signal(SIGINT, terminate);
@@ -81,19 +91,26 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
   try {
     if (argc != 3) [[unlikely]] {
-      std::cout << "Usage: " << argv[0]
-                << " <path/to/output/directory> <port>\n";
+      print_usage(program);
       return EXIT_FAILURE;
     }
 
-    const auto port{static_cast<std::uint16_t>(std::stoul(argv[2]))};
-    assert(port > 0);
+    const std::string_view port_argument{argv[2]};
+    const auto parsed_port{sourcemeta::core::to_uint16_t(port_argument)};
+    if (!parsed_port.has_value() || parsed_port.value() == 0) [[unlikely]] {
+      print_usage(program);
+      std::println("error: The port must be a valid TCP port");
+      return EXIT_FAILURE;
+    }
+
+    const auto port{parsed_port.value()};
 
     // Note we purposely DO NOT canonicalise in order to NOT resolve
     // symlinks in the output location
     const std::filesystem::path base{argv[1]};
     if (!base.is_absolute()) [[unlikely]] {
-      std::cout << "The output directory path must be absolute\n";
+      print_usage(program);
+      std::println("error: The output directory path must be absolute");
       return EXIT_FAILURE;
     }
 

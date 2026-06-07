@@ -12,6 +12,7 @@
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
+#include <format>      // std::format
 #include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -163,8 +164,8 @@ auto RouterAction::artifact_serve(
   // When the wire response is identity, the wire bytes exactly match what
   // the checksum covers, so the validator can be strong.
   const auto &checksum{info->checksum_hex};
-  const std::string etag_strong{std::string{"\""} + checksum + "\""};
-  const std::string etag_weak{std::string{"W/\""} + checksum + "\""};
+  const auto etag_strong{std::format("\"{}\"", checksum)};
+  const auto etag_weak{std::format("W/\"{}\"", checksum)};
 
   // RFC 9110 §13.2.2 (Precedence of Preconditions): If-None-Match is
   // evaluated before If-Modified-Since. RFC 9110 §13.1.3: "A recipient
