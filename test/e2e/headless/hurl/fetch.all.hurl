@@ -276,6 +276,10 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response_405: body
+schema_path_405: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -287,6 +291,14 @@ jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
 jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_405}}
+```
+{{last_response_405}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 # A write method on a non-`.json` path that resolves to nothing must
 # stay 404 so the 405 cannot be used to enumerate the catalog.
 PATCH {{base}}/test/schemas/xxx
@@ -294,6 +306,10 @@ HTTP 404
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response_404: body
+schema_path_404: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -305,6 +321,14 @@ jsonpath "$.status" == 404
 jsonpath "$.type" == "sourcemeta:one/not-found"
 jsonpath "$.title" == "Not Found"
 jsonpath "$.detail" == "There is nothing at this URL"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_404}}
+```
+{{last_response_404}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 GET {{base}}/test/no-base/no-id.json
 HTTP 200
