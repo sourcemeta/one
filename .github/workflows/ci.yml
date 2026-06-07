@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: ./contrib/check-enterprise-hurl-tests.sh
 
       - run: make docker-build PRESET=Release PARALLEL=$(nproc) ${{ matrix.edition.options }}
 

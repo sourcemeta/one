@@ -69,6 +69,7 @@ docker-build: $(DOCKERFILE)
 # Useful to run the entire main suite in a single command
 .PHONY: test-e2e
 test-e2e:
+	./contrib/check-enterprise-hurl-tests.sh
 	./contrib/e2e-native.sh test/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/headless $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/html $(EDITION) $(SANDBOX_PORT)
