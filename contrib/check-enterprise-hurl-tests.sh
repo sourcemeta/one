@@ -4,8 +4,7 @@ set -o errexit
 set -o nounset
 
 ROOT="$(pwd)"
-
-OFFENDERS="$(find "$ROOT/test/e2e" -type f -name '*.enterprise.hurl' 2>/dev/null || true)"
+OFFENDERS="$(find "$ROOT/test/e2e" -type f -name '*.enterprise.hurl')"
 
 if [ -n "$OFFENDERS" ]
 then
