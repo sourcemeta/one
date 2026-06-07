@@ -162,14 +162,15 @@ public:
     } else {
       // RFC 9110 §15.5.6: when the path resolves to an existing resource
       // the response must be 405 with Allow listing what is supported.
-      // Paths that resolve to nothing keep the 404 so a probing client
-      // cannot use the 405 to enumerate the catalog.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
+      const auto schema_json{
+          this->artifact_resolve_path(path, Tree::Schemas, "schema")};
       const auto schema_html{
           this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
       const auto directory_html{
           this->artifact_resolve_path(path, Tree::Explorer, "directory-html")};
-      if ((!path.ends_with("/") && schema_html.has_value()) ||
+      if (schema_json.has_value() ||
+          (!path.ends_with("/") && schema_html.has_value()) ||
           directory_html.has_value()) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
