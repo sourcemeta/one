@@ -97,6 +97,41 @@ public:
       return;
     }
 
+    // MCP Streamable HTTP transport / Sending Messages, item 2: "The client
+    // MUST include an Accept header, listing both application/json and
+    // text/event-stream as supported content types." The MUST is on the
+    // client. Defensively rejecting clients that omit either media type
+    // catches integration bugs before SSE lands. Both types must be
+    // individually acceptable per RFC 9110 §12.5.1 (q-aware, wildcard-aware).
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#sending-messages-to-the-server
+    const auto accept{request.header("accept")};
+    if (accept.empty() ||
+        !sourcemeta::core::http_accept_includes_all(
+            accept, {"application/json", "text/event-stream"})) {
+      this->write_envelope(request, response,
+                           sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
+                           sourcemeta::core::jsonrpc_make_error(
+                               nullptr, -32006,
+                               "Accept header must list application/json and "
+                               "text/event-stream"));
+      return;
+    }
+
+    // MCP requests carry a JSON-RPC body. Reject other media types up front
+    // rather than letting the parser surface a confusing -32700 (parse
+    // error). The MUST is implicit in MCP's wire spec. Parameters do not
+    // change the media-type identity, so any params (including
+    // `charset=utf-8`) are accepted.
+    if (!sourcemeta::core::http_content_type_matches(
+            request.header("content-type"), "application/json")) {
+      this->write_envelope(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
+          sourcemeta::core::jsonrpc_make_error(
+              nullptr, -32008, "Content-Type must be application/json"));
+      return;
+    }
+
     // MCP Streamable HTTP transport / Protocol Version Header:
     // - Client MUST send `MCP-Protocol-Version` on every request after init
     // - If header is absent, server SHOULD assume 2025-03-26 (handled inside

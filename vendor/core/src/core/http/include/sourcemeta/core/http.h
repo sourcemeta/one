@@ -32,19 +32,16 @@
 namespace sourcemeta::core {
 
 /// @ingroup http
-/// A content coding the server can produce. Mirrors the encoding modules
-/// currently present in this project.
+/// A content coding supported by this implementation.
 enum class HTTPContentEncoding : std::uint8_t {
   Identity,
   GZIP,
 };
 
 /// @ingroup http
-/// Pick the best media-type candidate against an `Accept` header per RFC
-/// 9110 §12.5.1. Highest effective `q` wins. Ties are broken by
-/// media-range specificity, then by candidate order. Returns an empty
-/// value when no candidate is acceptable. The returned view borrows from
-/// the input `candidates` list. For example:
+/// Pick the best media-type candidate against an `Accept` header per RFC 9110
+/// §12.5.1. Returns an empty value when no candidate is acceptable. The
+/// returned view borrows from `candidates`. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -61,11 +58,47 @@ auto http_match_accept(const std::string_view accept_header,
     -> std::string_view;
 
 /// @ingroup http
-/// Pick the best language-tag candidate against an `Accept-Language`
-/// header per RFC 9110 §12.5.4 and RFC 4647 §3.4 Lookup. A client tag
-/// matches a candidate when the candidate is a prefix of the tag at a
-/// subtag boundary (so `en-US` client matches `en` candidate). Returns
-/// an empty value when no candidate matches. For example:
+/// Test whether every media type is individually acceptable under an `Accept`
+/// header per RFC 9110 §12.5.1. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/http.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::http_accept_includes_all(
+///     "text/html, application/json",
+///     {"text/html", "application/json"}));
+/// assert(!sourcemeta::core::http_accept_includes_all(
+///     "text/html;q=0, application/json", {"text/html"}));
+/// ```
+SOURCEMETA_CORE_HTTP_EXPORT
+auto http_accept_includes_all(
+    const std::string_view accept_header,
+    std::initializer_list<std::string_view> media_types) noexcept -> bool;
+
+/// @ingroup http
+/// Test whether a `Content-Type` header denotes the given media type per RFC
+/// 9110 §8.3.1. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/http.h>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::http_content_type_matches(
+///     "application/json; charset=UTF-8", "application/json"));
+/// assert(!sourcemeta::core::http_content_type_matches(
+///     "application/xml", "application/json"));
+/// ```
+SOURCEMETA_CORE_HTTP_EXPORT
+auto http_content_type_matches(const std::string_view content_type_header,
+                               const std::string_view media_type) noexcept
+    -> bool;
+
+/// @ingroup http
+/// Pick the best language-tag candidate against an `Accept-Language` header
+/// per RFC 9110 §12.5.4 using the RFC 4647 §3.4 Lookup scheme. Returns an
+/// empty value when no candidate is acceptable. The returned view borrows from
+/// `candidates`. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -81,10 +114,8 @@ auto http_match_accept_language(
     std::initializer_list<std::string_view> candidates) -> std::string_view;
 
 /// @ingroup http
-/// Resolve a content coding against an `Accept-Encoding` header per RFC
-/// 9110 §12.5.3. Identity is acceptable by default unless explicitly
-/// excluded. Ties are broken by `server_preference`. Returns no value
-/// when no coding is acceptable. For example:
+/// Resolve a content coding against an `Accept-Encoding` header per RFC 9110
+/// §12.5.3. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -102,9 +133,7 @@ auto http_negotiate_encoding(
     -> std::optional<HTTPContentEncoding>;
 
 /// @ingroup http
-/// Parse an HTTP-date string per RFC 9110 §5.6.7. Tries the IMF-fixdate,
-/// RFC 850, and ANSI C asctime grammars in that order and returns the
-/// first successful parse. Returns no value if none match. For example:
+/// Parse an HTTP-date string per RFC 9110 §5.6.7. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -122,9 +151,9 @@ auto http_from_date(const std::string_view value) noexcept
     -> std::optional<std::chrono::system_clock::time_point>;
 
 /// @ingroup http
-/// A typed RFC 8288 §3 link-value. The caller owns the backing storage
-/// for every field. The caller is responsible for URI escaping `target`
-/// and for ensuring parameter values are valid `quoted-string` content.
+/// A typed RFC 8288 §3 link-value. The caller owns the backing storage for
+/// every field, must URI-escape `target`, and must ensure parameter values are
+/// valid `quoted-string` content.
 struct HTTPLink {
   std::string_view target;
   std::string_view rel;
@@ -132,9 +161,7 @@ struct HTTPLink {
 };
 
 /// @ingroup http
-/// Append an RFC 8288 §3 link-value to `out`. Existing contents are
-/// preserved. Lets callers amortise allocations across requests by
-/// reusing a buffer. For example:
+/// Append an RFC 8288 §3 link-value to `out`. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -150,8 +177,7 @@ SOURCEMETA_CORE_HTTP_EXPORT
 auto http_format_link(const HTTPLink &link, std::string &out) -> void;
 
 /// @ingroup http
-/// Convenience overload that wraps the sink form. Returns the formatted
-/// link as a new string. For example:
+/// Format an RFC 8288 §3 link-value. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -166,8 +192,8 @@ SOURCEMETA_CORE_HTTP_EXPORT
 auto http_format_link(const HTTPLink &link) -> std::string;
 
 /// @ingroup http
-/// Append an RFC 8288 §3.5 comma-separated multi-link value to `out`.
-/// For example:
+/// Append an RFC 8288 §3.5 comma-separated multi-link value to `out`. For
+/// example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -187,8 +213,7 @@ auto http_format_links(std::span<const HTTPLink> links, std::string &out)
     -> void;
 
 /// @ingroup http
-/// Convenience overload that wraps the sink form. Returns the multi-link
-/// value as a new string. For example:
+/// Format an RFC 8288 §3.5 comma-separated multi-link value. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>
@@ -205,9 +230,8 @@ SOURCEMETA_CORE_HTTP_EXPORT
 auto http_format_links(std::span<const HTTPLink> links) -> std::string;
 
 /// @ingroup http
-/// Test whether a comma-separated header value per RFC 9110 §5.6.1 lists
-/// any of the given tokens. Each entry's value (the portion before any
-/// `;parameters`) is compared verbatim against `tokens`. For example:
+/// Test whether a comma-separated header value per RFC 9110 §5.6.1 lists any
+/// of the given tokens. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http.h>

@@ -7,6 +7,7 @@
 # object as a request body. Tracked upstream at
 # https://github.com/Orange-OpenSource/hurl/issues/2152
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -27,6 +28,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.result.tools[?@.name=='get_schema_dependents'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -91,6 +93,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -155,6 +158,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -229,6 +233,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -285,6 +290,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -370,6 +376,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -416,6 +423,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -462,6 +470,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -508,6 +517,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -553,6 +563,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -617,6 +628,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -663,6 +675,7 @@ jsonpath "$.valid" == true
 
 # Schema URI with a fragment is rejected
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -719,6 +732,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -770,6 +784,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -826,6 +841,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -881,6 +897,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -936,6 +953,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -986,6 +1004,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1031,6 +1050,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1095,6 +1115,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1153,6 +1174,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1211,6 +1233,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1269,6 +1292,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -1327,6 +1351,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```

@@ -7,9 +7,7 @@
 namespace sourcemeta::core {
 
 /// @ingroup http
-/// A typed HTTP status code per RFC 9110 §15. The `wire` member is the
-/// concatenated `"<code> <phrase>"` form callers pass to APIs accepting
-/// an HTTP status-line text. For example:
+/// A typed HTTP status code per RFC 9110 §15. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/http_status.h>

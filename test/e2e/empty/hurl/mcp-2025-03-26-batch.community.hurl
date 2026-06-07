@@ -3,6 +3,7 @@
 # stub's "Enterprise edition required" envelope. The initialize succeeds. The
 # batch as a whole completes and the response shape is an array
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -70,6 +71,7 @@ jsonpath "$.valid" == true
 # Batch on 2025-11-25 community is still rejected with a single Invalid
 # Request envelope because batches were removed from that revision
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
@@ -111,6 +113,7 @@ jsonpath "$.valid" == true
 
 # Batch of only notifications on community: 202 Accepted with no body
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```
@@ -131,6 +134,7 @@ bytes count == 0
 
 # Empty array on 2025-03-26 community: single Invalid Request envelope
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-03-26
 Content-Type: application/json
 ```

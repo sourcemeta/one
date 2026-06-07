@@ -131,6 +131,7 @@ jsonpath "$.type" == "sourcemeta:one/not-found"
 jsonpath "$.title" == "Not Found"
 
 POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
