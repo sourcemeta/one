@@ -28,6 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - run: make check ${{ matrix.edition.options }}
+
       - run: make docker-build PRESET=Release PARALLEL=$(nproc) ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
@@ -80,6 +82,12 @@ jobs:
           path: test/e2e/path
           edition: ${{ matrix.edition.name }}
 
+      - name: E2E (enterprise/empty)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/empty
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
       - name: E2E (enterprise/html)
         uses: ./.github/actions/e2e
         with:

@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -53,6 +54,13 @@ public:
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
     this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
+    // Indexing canonicalizes the configured origin URL, lowercasing scheme
+    // and host per RFC 3986 §3.1 and §3.2.2. RFC 6454 §4 origin equality
+    // assumes both sides are already in this form, so per-request compares
+    // only need to fold the inbound header. Catch a stale metapack that
+    // somehow carried a mixed-case origin through.
+    // https://datatracker.ietf.org/doc/html/rfc6454#section-4
+    assert(sourcemeta::core::is_lowercase(this->allowed_origin_));
   }
 
   auto rest(const std::span<std::string_view>,
@@ -69,13 +77,17 @@ public:
     // never a real allowlisted origin, so the byte-compare below correctly
     // rejects it. https://datatracker.ietf.org/doc/html/rfc6454#section-7.3
     const auto origin_header{request.header("origin")};
-    if (!origin_header.empty() && origin_header != this->allowed_origin_) {
-      this->write_envelope(
-          request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-          sourcemeta::core::jsonrpc_make_error(
-              nullptr, -32001, "Forbidden origin",
-              sourcemeta::core::JSON{std::string{origin_header}}));
-      return;
+    if (!origin_header.empty()) {
+      std::string origin_canonical{origin_header};
+      sourcemeta::core::to_lowercase(origin_canonical);
+      if (origin_canonical != this->allowed_origin_) {
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+            sourcemeta::core::jsonrpc_make_error(
+                nullptr, -32001, "Forbidden origin",
+                sourcemeta::core::JSON{std::string{origin_header}}));
+        return;
+      }
     }
 
     if (request.method() == "options") {
