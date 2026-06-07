@@ -160,10 +160,29 @@ public:
                                         this->error_schema_);
       }
     } else {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "sourcemeta:one/not-found", "There is nothing at this URL",
-          this->error_schema_, "*");
+      // RFC 9110 §15.5.6: when the path resolves to an existing resource
+      // the response must be 405 with Allow listing what is supported.
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
+      const auto schema_json{
+          this->artifact_resolve_path(path, Tree::Schemas, "schema")};
+      const auto schema_html{
+          this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
+      const auto directory_html{
+          this->artifact_resolve_path(path, Tree::Explorer, "directory-html")};
+      if (schema_json.has_value() ||
+          (!path.ends_with("/") && schema_html.has_value()) ||
+          directory_html.has_value()) {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+            "sourcemeta:one/method-not-allowed",
+            "This HTTP method is invalid for this URL", this->error_schema_,
+            "*", "GET, HEAD");
+      } else {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+            "sourcemeta:one/not-found", "There is nothing at this URL",
+            this->error_schema_, "*");
+      }
     }
   }
 

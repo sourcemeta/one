@@ -112,7 +112,6 @@ header "Access-Control-Max-Age" == "3600"
 header "Allow" == "POST, OPTIONS"
 header "MCP-Protocol-Version" == "2025-03-26"
 
-
 # MCP Streamable HTTP §Sending Messages, item 2: client MUST list both
 # application/json and text/event-stream in Accept. Server enforces this
 # defensively. The parser is q-aware (q=0 means "not acceptable") and
