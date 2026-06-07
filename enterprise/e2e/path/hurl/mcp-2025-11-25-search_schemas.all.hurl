@@ -336,6 +336,168 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# A fractional `limit` is neither an integer (the canonical form) nor a
+# string that matches the integer-shaped pattern, so the request schema
+# rejects it before the argument coercion path can swallow the fraction.
+POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1204,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "example", "limit": 10.5 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1204
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 2
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/limit/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer, or string but it was of type number"
+jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/v1/catalog/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].instanceLocation" == ""
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A `limit` below the inclusive minimum of 1 must be rejected as
+# out-of-range rather than silently coerced to a useful value.
+POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1205,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "example", "limit": 0 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1205
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/minimum"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A `limit` above the inclusive maximum of 100 must be rejected for the
+# same reason. Locks the upper bound that protects the search action
+# from runaway result sets.
+POST {{base}}/v1/catalog/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1206,
+  "method": "tools/call",
+  "params": {
+    "name": "search_schemas",
+    "arguments": { "q": "example", "limit": 101 }
+  }
+}
+```
+HTTP 200
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </v1/catalog/self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "</v1/catalog([^>]+)>"
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 1206
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/maximum"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
+
+POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+[Asserts]
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # A 70KB schema title is truncated in the search index to 65535 bytes
 # ending in "..." rather than dropping the schema from the index
 # entirely
