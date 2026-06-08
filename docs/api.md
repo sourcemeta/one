@@ -562,6 +562,22 @@ hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#too
     remain fully interoperable with Sourcemeta One. We aim to eventually revert
     these workarounds once the client ecosystem stabilises.
 
+!!! warning "MCP client schema compliance"
+
+    The MCP ecosystem is young and several widely-deployed clients get confused
+    by any tool `inputSchema` beyond the most trivial shape, rejecting or
+    silently degrading legal JSON Schema constructs such as `$ref` (including
+    the schemas-as-resources pattern this server relies on). OpenAI Codex is
+    currently among the most affected. See for example
+    [`openai/codex#13746`](https://github.com/openai/codex/issues/13746),
+    [`openai/codex#3152`](https://github.com/openai/codex/issues/3152), and
+    [`openai/codex#4176`](https://github.com/openai/codex/issues/4176).  Our
+    stance on broad compliance gaps like these is to *not* work around them on
+    our side. Mangling the MCP surface to fit each non-compliant client would
+    compromise the integrity of the specification for every other client. We
+    will instead keep the server faithful to the specification and put pressure
+    on MCP client providers to reach a reasonable level of compliance.
+
 === "200"
 
     A JSON-RPC response envelope, or, on `2025-03-26`, a batch of envelopes.
