@@ -15,6 +15,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -45,6 +46,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -60,6 +62,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "abc", "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -83,6 +86,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -98,6 +102,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "method": "notifications/initialized" }
 ```
 HTTP 202
+Cache-Control: no-store
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -120,6 +125,7 @@ Content-Type: application/json
 }
 ```
 HTTP 202
+Cache-Control: no-store
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -142,6 +148,7 @@ Content-Type: application/json
 }
 ```
 HTTP 202
+Cache-Control: no-store
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -160,6 +167,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 7, "method": "notifications/initialized" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -183,6 +191,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -195,6 +204,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/mcp
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -216,6 +226,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -224,6 +235,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 OPTIONS {{base}}/self/v1/mcp
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

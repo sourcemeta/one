@@ -6,6 +6,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "ping-identity", "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -30,6 +31,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -46,6 +48,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "ping-gzip", "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -70,6 +73,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -94,6 +98,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -125,6 +130,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -150,6 +156,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -181,6 +188,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -196,6 +204,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "tools-identity", "method": "tools/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -231,6 +240,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -247,6 +257,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "tools-gzip", "method": "tools/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -282,6 +293,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -305,6 +317,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -337,6 +350,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -361,6 +375,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -393,6 +408,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -408,6 +424,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "rlist-identity", "method": "resources/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -435,6 +452,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -451,6 +469,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "rlist-gzip", "method": "resources/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -478,6 +497,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -487,6 +507,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/example/bare
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Captures]
 schema_text: body
 [Asserts]
@@ -508,6 +529,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -534,6 +556,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -555,6 +578,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -581,6 +605,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -596,6 +621,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "tlist-identity", "method": "resources/templates/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -623,6 +649,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -639,6 +666,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "tlist-gzip", "method": "resources/templates/list" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
@@ -666,6 +694,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -682,6 +711,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "neg-gzip-q0", "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -706,6 +736,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -722,6 +753,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": "neg-identity-q0", "method": "ping" }
 ```
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists

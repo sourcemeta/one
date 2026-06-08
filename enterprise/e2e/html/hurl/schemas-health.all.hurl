@@ -1,6 +1,7 @@
 GET {{base}}/self/v1/api/schemas/health/test/object
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -28,6 +29,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

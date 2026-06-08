@@ -1,5 +1,6 @@
 GET {{base}}/v1/catalog/self/v1/api/list
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -48,6 +49,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -58,6 +60,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/list/draft3
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -111,6 +114,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -121,6 +125,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/list/example
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -183,6 +188,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -193,6 +199,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/list/rebased
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -241,6 +248,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

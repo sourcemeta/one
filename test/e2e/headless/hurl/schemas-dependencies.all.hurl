@@ -1,5 +1,6 @@
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/bundling-single
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -25,6 +26,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -35,6 +37,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/self/v1/schemas/api/schemas/dependents/response
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -57,6 +60,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -67,6 +71,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/no-id
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -89,6 +94,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -99,6 +105,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/recursive
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -121,6 +128,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -131,6 +139,7 @@ jsonpath "$.valid" == true
 
 HEAD {{base}}/self/v1/api/schemas/dependencies/test/schemas/no-id
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -147,6 +156,7 @@ bytes count == 0
 
 POST {{base}}/self/v1/api/schemas/dependencies/test/schemas/no-id
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -171,6 +181,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -181,6 +192,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies/xyz/
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -204,6 +216,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -214,6 +227,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/dependencies
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -237,6 +251,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

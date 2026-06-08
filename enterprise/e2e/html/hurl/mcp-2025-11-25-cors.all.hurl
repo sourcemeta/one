@@ -1,5 +1,6 @@
 OPTIONS {{base}}/self/v1/mcp
 HTTP 204
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -16,6 +17,7 @@ header "MCP-Protocol-Version" == "2025-03-26"
 OPTIONS {{base}}/self/v1/mcp
 Origin: http://localhost:8000
 HTTP 204
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -32,6 +34,7 @@ header "MCP-Protocol-Version" == "2025-03-26"
 OPTIONS {{base}}/self/v1/mcp
 Origin: https://evil.example
 HTTP 403
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -56,6 +59,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

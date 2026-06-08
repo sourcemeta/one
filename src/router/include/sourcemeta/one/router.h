@@ -93,7 +93,8 @@ public:
                       std::string_view link,
                       const BrowserSecurityHeaders &browser_security,
                       HTTPRequest &request, HTTPResponse &response,
-                      std::string_view error_schema) const -> void;
+                      std::string_view error_schema,
+                      std::string_view cache_control) const -> void;
 
   [[nodiscard]] auto
   schema_evaluate_fast(std::string_view schema_uri,

@@ -8,6 +8,7 @@
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
+#include <cassert>     // assert
 #include <chrono>      // std::chrono::seconds
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
 #include <exception>   // std::exception
@@ -113,7 +114,14 @@ auto RouterAction::artifact_serve(
     const sourcemeta::core::HTTPStatus &status, const bool enable_cors,
     const std::string_view mime, const std::string_view link,
     const BrowserSecurityHeaders &browser_security, HTTPRequest &request,
-    HTTPResponse &response, const std::string_view error_schema) const -> void {
+    HTTPResponse &response, const std::string_view error_schema,
+    const std::string_view cache_control) const -> void {
+  // Caller must pick the cache scope explicitly so no surface
+  // silently inherits an inappropriate default. Cacheability is a
+  // per-surface policy decision (RFC 9111 §5.2.2): static assets
+  // pin for a year, JSON API surfaces revalidate every hit, MCP and
+  // health probe responses are uncacheable, etc.
+  assert(!cache_control.empty());
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
@@ -187,6 +195,13 @@ auto RouterAction::artifact_serve(
         response.write_header("Access-Control-Allow-Origin", "*");
         response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       }
+      // RFC 9111 §4.3.4: a 304 response that updates a stored
+      // response in the cache propagates fresh metadata to the
+      // cached representation, so the caching directives the
+      // origin would have sent on the 200 must travel on the 304
+      // too. Otherwise the cache may keep evaluating against a
+      // stale, more permissive `Cache-Control`.
+      response.write_header("Cache-Control", cache_control);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -208,6 +223,8 @@ auto RouterAction::artifact_serve(
         response.write_header("Access-Control-Allow-Origin", "*");
         response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       }
+      // See the matching comment on the If-None-Match branch.
+      response.write_header("Cache-Control", cache_control);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -257,6 +274,10 @@ auto RouterAction::artifact_serve(
   // the strong-form ETag against a weak-form cached entry.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-12.5.5
   response.write_header("Vary", "Accept-Encoding");
+
+  // RFC 9111 §5.2.2 — Cache-Control. Each surface picks its own
+  // value; we just emit verbatim.
+  response.write_header("Cache-Control", cache_control);
 
   // See
   // https://json-schema.org/draft/2020-12/json-schema-core.html#section-9.5.1.1

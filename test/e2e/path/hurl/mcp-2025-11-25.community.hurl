@@ -15,6 +15,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -46,6 +47,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -61,6 +63,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "method": "notifications/initialized" }
 ```
 HTTP 202
+Cache-Control: no-store
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -78,6 +81,7 @@ Content-Type: application/json
 this is not even json
 ```
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -102,6 +106,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -117,6 +122,7 @@ Content-Type: application/json
 [ { "jsonrpc": "2.0", "id": 1, "method": "ping" } ]
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -141,6 +147,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -156,6 +163,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 42, "method": "no/such/method" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -180,6 +188,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -194,6 +203,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 60, "method": "initialize" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -218,6 +228,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -232,6 +243,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 61, "method": "initialize", "params": "not-an-object" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -256,6 +268,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

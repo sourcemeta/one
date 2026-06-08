@@ -1,6 +1,7 @@
 GET {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -74,6 +75,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -85,6 +87,7 @@ jsonpath "$.valid" == true
 HEAD {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -101,6 +104,7 @@ bytes count == 0
 
 POST {{base}}/self/v1/api/schemas/locations/test/schemas/no-id
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -125,6 +129,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -135,6 +140,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/locations/xyz/
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -158,6 +164,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -168,6 +175,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/locations
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -191,6 +199,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

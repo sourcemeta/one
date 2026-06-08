@@ -2,6 +2,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/trace/example/string
 Content-Type: application/json
 "hello"
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/trace/response>; rel="describedby"
@@ -24,6 +25,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/trace/example/nested/deep
 Content-Type: application/json
 3.14
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -36,6 +38,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/trace/rebased/with-id
 Content-Type: application/json
 true
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -48,6 +51,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/trace/example/with-ref
 Content-Type: application/json
 {"name": "hello"}
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -57,6 +61,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/trace/example/string
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists

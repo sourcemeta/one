@@ -1,5 +1,6 @@
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=string
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -30,6 +31,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -40,6 +42,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=nonexistent_term_xyz
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -52,6 +55,7 @@ jsonpath "$" count == 0
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -65,6 +69,7 @@ jsonpath "$.status" == 400
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=%20%20%20
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -84,6 +89,7 @@ jsonpath "$.detail" == "The search query must contain at least one non-whitespac
 
 GET {{base}}/v1/catalog/self/v1/api/schemas/search?q=truncate-target
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -108,6 +114,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

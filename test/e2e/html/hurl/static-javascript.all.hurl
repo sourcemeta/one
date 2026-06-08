@@ -1,5 +1,6 @@
 GET {{base}}/self/v1/static/main.min.js
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/javascript
 [Asserts]
 header "Referrer-Policy" not exists

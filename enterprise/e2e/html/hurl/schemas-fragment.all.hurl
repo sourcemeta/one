@@ -2,6 +2,7 @@
 
 GET {{base}}/self/v1/api/schemas/metadata/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -19,6 +20,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/locations/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -36,6 +38,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/positions/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -53,6 +56,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/stats/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -70,6 +74,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/health/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -87,6 +92,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -104,6 +110,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/dependents/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -125,6 +132,7 @@ Content-Type: application/json
 "hi"
 ```
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -146,6 +154,7 @@ Content-Type: application/json
 "hi"
 ```
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -163,6 +172,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 
 GET {{base}}/test/object%23meta
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -182,6 +192,7 @@ jsonpath "$.detail" == "The schema URI must not contain a fragment"
 # preflight headers, so the browser does not see this as a CORS failure.
 OPTIONS {{base}}/self/v1/api/schemas/evaluate/test/object%23meta
 HTTP 204
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Access-Control-Allow-Methods: POST, OPTIONS
@@ -196,6 +207,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 OPTIONS {{base}}/self/v1/api/schemas/trace/test/object%23meta
 HTTP 204
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Access-Control-Allow-Methods: POST, OPTIONS

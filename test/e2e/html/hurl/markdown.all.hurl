@@ -1,6 +1,7 @@
 GET {{base}}/test/doc/markdown
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -15,6 +16,7 @@ xpath "boolean(//div[contains(@class, 'text-secondary')]//a[@href='https://examp
 GET {{base}}/test/doc/markdown
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -27,6 +29,7 @@ xpath "boolean(//h2[contains(@class, 'fw-bold')]//strong)" == false
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -39,6 +42,7 @@ xpath "boolean(//div[contains(@class, 'text-secondary')]//a[@href='https://examp
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -52,6 +56,7 @@ xpath "boolean(//td[contains(@class, 'small')]//a[@href='https://example.com'])"
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -64,6 +69,7 @@ xpath "boolean(//td//small//strong)" == false
 GET {{base}}/test/markdown-alert/example
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -76,6 +82,7 @@ xpath "boolean(//div[contains(@class, 'alert')]//a[@href='https://example.com'][
 GET {{base}}/test/v2.0/schema
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -88,6 +95,7 @@ xpath "count(//div[@data-sourcemeta-ui-tab-id='health']//div[contains(@class, 'm
 GET {{base}}/self/v1/api/schemas/metadata/test/doc/markdown
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 [Asserts]
 header "Referrer-Policy" not exists

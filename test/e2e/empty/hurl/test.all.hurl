@@ -1,6 +1,7 @@
 GET {{base}}
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -12,6 +13,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/api/list
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

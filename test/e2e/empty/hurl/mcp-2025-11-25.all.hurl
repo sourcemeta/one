@@ -1,5 +1,6 @@
 GET {{base}}/self/v1/mcp
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -24,6 +25,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -33,6 +35,7 @@ jsonpath "$.valid" == true
 
 DELETE {{base}}/self/v1/mcp
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -57,6 +60,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -66,6 +70,7 @@ jsonpath "$.valid" == true
 
 PUT {{base}}/self/v1/mcp
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
@@ -90,6 +95,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -99,6 +105,7 @@ jsonpath "$.valid" == true
 
 OPTIONS {{base}}/self/v1/mcp
 HTTP 204
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -135,6 +142,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -158,6 +166,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -170,6 +179,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -193,6 +203,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -205,6 +216,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -228,6 +240,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -243,6 +256,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -266,6 +280,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -278,6 +293,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -299,6 +315,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -311,6 +328,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -332,6 +350,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -343,6 +362,7 @@ MCP-Protocol-Version: 2025-11-25
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 415
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -366,6 +386,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -378,6 +399,7 @@ Content-Type: text/plain
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 415
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -401,6 +423,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -414,6 +437,7 @@ Content-Type: application/json-bad
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 415
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -437,6 +461,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -449,6 +474,7 @@ Content-Type: application/json; charset=utf-8
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -470,6 +496,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -482,6 +509,7 @@ Content-Type: application/json;charset=utf-8
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -503,6 +531,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -516,6 +545,7 @@ Content-Type: application/json; charset=utf-8; profile=mcp
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -537,6 +567,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -550,6 +581,7 @@ Content-Type: Application/JSON
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -571,6 +603,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -586,6 +619,7 @@ Origin: HTTP://localhost:8000
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -607,6 +641,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -620,6 +655,7 @@ Origin: http://LOCALHOST:8000
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -641,6 +677,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -654,6 +691,7 @@ Origin: HTTP://LOCALHOST:8000
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -675,5 +713,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true

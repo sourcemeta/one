@@ -330,6 +330,7 @@ auto ActionMCP_v1::on_message(
       response.write_header("Access-Control-Allow-Origin",
                             this->allowed_origin_);
       response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+      response.write_header("Cache-Control", "no-store");
       response.write_header(
           "MCP-Protocol-Version",
           sourcemeta::core::mcp_protocol_version_string(version));
@@ -352,6 +353,7 @@ auto ActionMCP_v1::on_message(
   response.write_status(sourcemeta::core::HTTP_STATUS_ACCEPTED);
   response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
   response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+  response.write_header("Cache-Control", "no-store");
   response.write_header("MCP-Protocol-Version",
                         sourcemeta::core::mcp_protocol_version_string(version));
   sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_ACCEPTED,

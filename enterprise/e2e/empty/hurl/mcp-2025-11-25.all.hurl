@@ -10,6 +10,7 @@ Origin: http://Evil.Example.Com
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 403
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -34,6 +35,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -49,6 +51,7 @@ Origin: null
 { "jsonrpc": "2.0", "id": 1, "method": "ping" }
 ```
 HTTP 403
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -73,5 +76,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true

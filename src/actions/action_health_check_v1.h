@@ -52,6 +52,10 @@ public:
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+    // A cached health probe response defeats the point of the probe:
+    // load balancers / orchestrators must observe live state on every
+    // hit, not the last frozen success from a now-failing instance.
+    response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK, request,
                                    response);
   }

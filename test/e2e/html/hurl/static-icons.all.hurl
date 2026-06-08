@@ -1,5 +1,6 @@
 HEAD {{base}}/self/v1/static/apple-touch-icon.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -11,6 +12,7 @@ header "Access-Control-Allow-Origin" not exists
 
 HEAD {{base}}/self/v1/static/favicon.ico
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/vnd.microsoft.icon
 [Asserts]
 header "Referrer-Policy" not exists
@@ -22,6 +24,7 @@ header "Access-Control-Allow-Origin" not exists
 
 HEAD {{base}}/self/v1/static/icon.svg
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/svg+xml
 [Asserts]
 header "Referrer-Policy" not exists
@@ -33,6 +36,7 @@ header "Access-Control-Allow-Origin" not exists
 
 HEAD {{base}}/self/v1/static/icon_192x192.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -44,6 +48,7 @@ header "Access-Control-Allow-Origin" not exists
 
 HEAD {{base}}/self/v1/static/icon_512x512.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -55,6 +60,7 @@ header "Access-Control-Allow-Origin" not exists
 
 HEAD {{base}}/self/v1/static/manifest.webmanifest
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: application/manifest+json
 [Asserts]
 header "Referrer-Policy" not exists
@@ -66,6 +72,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/apple-touch-icon.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -77,6 +84,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/favicon.ico
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/vnd.microsoft.icon
 [Asserts]
 header "Referrer-Policy" not exists
@@ -88,6 +96,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/icon.svg
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/svg+xml
 [Asserts]
 header "Referrer-Policy" not exists
@@ -99,6 +108,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/icon_192x192.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -110,6 +120,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/icon_512x512.png
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
 header "Referrer-Policy" not exists
@@ -121,6 +132,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/manifest.webmanifest
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: application/manifest+json
 [Asserts]
 header "Referrer-Policy" not exists

@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.html
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

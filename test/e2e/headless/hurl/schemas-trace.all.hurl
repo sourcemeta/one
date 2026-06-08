@@ -1,5 +1,6 @@
 OPTIONS {{base}}/self/v1/api/schemas/trace/test/schemas/string
 HTTP 204
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Access-Control-Allow-Methods: POST, OPTIONS
@@ -14,6 +15,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -37,6 +39,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -49,6 +52,7 @@ POST {{base}}/self/v1/api/schemas/trace/test/schemas/string
 Content-Type: application/json
 "Hello World"
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
@@ -94,6 +98,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -106,6 +111,7 @@ POST {{base}}/self/v1/api/schemas/trace/test/no-blaze/string
 Content-Type: application/problem+json
 "Hello World"
 HTTP 405
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Allow: OPTIONS
@@ -129,6 +135,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

@@ -1,6 +1,7 @@
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/example/string
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -37,6 +38,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -48,6 +50,7 @@ jsonpath "$.valid" == true
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/rebased/with-id
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -84,6 +87,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -99,6 +103,7 @@ jsonpath "$.valid" == true
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/example/zzz-truncate-target
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -126,6 +131,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

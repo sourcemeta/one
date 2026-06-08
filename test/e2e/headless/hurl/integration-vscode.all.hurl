@@ -1,6 +1,7 @@
 GET {{base}}/test/schemas/bundling-single.json
 User-Agent: Visual Studio Code (desktop)
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -26,6 +27,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 GET {{base}}/test/schemas/bundling-single.json
 User-Agent: VSCodium (desktop)
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -51,6 +53,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 GET {{base}}/test/schemas/bundling-single.json?bundle=0
 User-Agent: VSCodium (desktop)
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -76,6 +79,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 GET {{base}}/test/schemas/bundling-single.json?unidentify=0
 User-Agent: VSCodium (desktop)
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

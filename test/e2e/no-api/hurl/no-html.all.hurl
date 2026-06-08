@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.html
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -17,6 +18,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 
 GET {{base}}/self/v1/static/main.js
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -34,6 +36,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 
 GET {{base}}/self/v1/static/main.css
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -19,6 +20,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -38,6 +40,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/integer.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -57,6 +60,7 @@ header "Vary" == "Accept-Encoding"
 
 HEAD {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -78,6 +82,7 @@ header "Vary" == "Accept-Encoding"
 # configuration so the response carries no Link.
 DELETE {{base}}/test/schemas/string
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -99,6 +104,7 @@ jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 # the contract for an unsupported method is identical.
 DELETE {{base}}/test/schemas/string.json
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -119,6 +125,7 @@ jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 # stay 404 so the 405 cannot be used to enumerate the catalog.
 PATCH {{base}}/test/schemas/xxx
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -138,6 +145,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 # Same for the `.json` variant of a path that does not resolve.
 PATCH {{base}}/test/schemas/xxx.json
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

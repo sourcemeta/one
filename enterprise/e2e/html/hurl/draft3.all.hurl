@@ -1,5 +1,6 @@
 GET {{base}}/test/draft3/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -20,6 +21,7 @@ header "Vary" == "Accept-Encoding"
 GET {{base}}/test/draft3/string
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -33,6 +35,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/string
 Content-Type: application/json
 "alpha"
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -48,6 +51,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -58,6 +62,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/test/draft3/with-ref.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -82,6 +87,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/draft3/with-ref.json?bundle=1
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -115,6 +121,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/with-ref
 Content-Type: application/json
 { "tag": "beta" }
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Captures]
 last_response: body
@@ -130,6 +137,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/schemas/evaluate/
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -142,6 +150,7 @@ POST {{base}}/self/v1/api/schemas/evaluate/test/draft3/with-ref
 Content-Type: application/json
 { "tag": 99 }
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
