@@ -109,7 +109,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

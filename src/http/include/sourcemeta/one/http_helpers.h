@@ -52,6 +52,37 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
       std::format("{} {} {}", status.wire, request.method(), request.path()));
 }
 
+// RFC 9110 §9.3.7: OPTIONS responses describe communication options
+// for the target resource. Fetch §3.2.2 (CORS preflight): non-simple
+// cross-origin requests issue an OPTIONS preflight whose ACK shape
+// (status 204 + Access-Control-Allow-*) governs whether the actual
+// request fires. The per-surface `allow_methods` and `allow_headers`
+// are required so each action declares its own contract explicitly,
+// matching the K and L disciplines.
+// https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
+// https://fetch.spec.whatwg.org/#cors-preflight-fetch
+inline auto cors_preflight(const HTTPRequest &request, HTTPResponse &response,
+                           const std::string_view allow_methods,
+                           const std::string_view allow_headers) -> void {
+  assert(!allow_methods.empty());
+  assert(!allow_headers.empty());
+  assert(allow_methods.find_first_of("\r\n") == std::string_view::npos);
+  assert(allow_headers.find_first_of("\r\n") == std::string_view::npos);
+  response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
+  response.write_header("Access-Control-Allow-Origin", "*");
+  response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+  response.write_header("Access-Control-Allow-Methods", allow_methods);
+  response.write_header("Access-Control-Allow-Headers", allow_headers);
+  response.write_header("Access-Control-Max-Age", "3600");
+  // Browser preflight cache is governed by `Access-Control-Max-Age`;
+  // `no-store` keeps shared HTTP caches from storing this response.
+  response.write_header("Cache-Control", "no-store");
+  // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
+  // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
+  response.write_header("Allow", allow_methods);
+  send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT, request, response);
+}
+
 // CORS scope is required at every error site. No default for `origin` so a
 // caller cannot silently widen a restricted-origin handler to wildcard. An
 // empty origin means the route is CORS-disabled and no Allow-Origin or

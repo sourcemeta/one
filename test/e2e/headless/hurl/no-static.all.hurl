@@ -34,7 +34,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -51,7 +51,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -68,7 +68,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
