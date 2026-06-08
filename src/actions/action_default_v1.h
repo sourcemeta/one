@@ -45,6 +45,12 @@ public:
   auto rest(const std::span<std::string_view>,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    if (request.method() == "options") {
+      sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
+                                      "Accept, Accept-Encoding, If-None-Match, "
+                                      "If-Modified-Since");
+      return;
+    }
     // Browser-targeted security headers we apply to every HTML response:
     //
     // - Referrer-Policy (W3C Referrer Policy):
@@ -91,7 +97,7 @@ public:
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "sourcemeta:one/method-not-allowed",
             "This HTTP method is invalid for this URL", this->error_schema_,
-            "*", "GET, HEAD");
+            "*", "GET, HEAD, OPTIONS");
         return;
       }
       if (sourcemeta::core::http_match_accept(
@@ -180,7 +186,7 @@ public:
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "sourcemeta:one/method-not-allowed",
             "This HTTP method is invalid for this URL", this->error_schema_,
-            "*", "GET, HEAD");
+            "*", "GET, HEAD, OPTIONS");
       } else {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,

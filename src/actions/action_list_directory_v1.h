@@ -51,6 +51,12 @@ public:
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    if (request.method() == "options") {
+      sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
+                                      "Accept-Encoding, If-None-Match, "
+                                      "If-Modified-Since");
+      return;
+    }
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
     const auto path{

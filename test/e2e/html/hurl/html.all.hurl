@@ -1,34 +1,18 @@
 OPTIONS {{base}}
-HTTP 405
+HTTP 204
 Cache-Control: no-store
-Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: Accept, Accept-Encoding, If-None-Match, If-Modified-Since
+Access-Control-Max-Age: 3600
+Allow: GET, HEAD, OPTIONS
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
-jsonpath "$.title" == "Method Not Allowed"
-jsonpath "$.status" == 405
-jsonpath "$.detail" == "This HTTP method is invalid for this URL"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-jsonpath "$.valid" == true
 
 # Regression: an HTML-preferring client doing a write method on the root URL
 # must see 405 (Allow lists the supported methods), not 404. Content
@@ -40,7 +24,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -73,7 +57,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -106,7 +90,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -463,7 +447,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -498,7 +482,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
@@ -531,7 +515,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Allow: GET, HEAD
+Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body

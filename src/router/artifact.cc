@@ -133,7 +133,7 @@ auto RouterAction::artifact_serve(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
         "sourcemeta:one/method-not-allowed",
         "This HTTP method is invalid for this URL", error_schema,
-        enable_cors ? "*" : "", "GET, HEAD");
+        enable_cors ? "*" : "", "GET, HEAD, OPTIONS");
     return;
   }
 

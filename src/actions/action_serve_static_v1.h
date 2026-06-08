@@ -42,13 +42,19 @@ public:
   auto rest(const std::span<std::string_view> matches,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    if (request.method() == "options") {
+      sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
+                                      "Accept-Encoding, If-None-Match, "
+                                      "If-Modified-Since");
+      return;
+    }
     if (this->file_root_.empty()) {
       if (request.method() != "get" && request.method() != "head") {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "sourcemeta:one/method-not-allowed",
             "This HTTP method is invalid for this URL", this->error_schema_,
-            "*", "GET, HEAD");
+            "*", "GET, HEAD, OPTIONS");
         return;
       }
 
