@@ -199,7 +199,7 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                 "sourcemeta:one/payload-too-large",
-                "The request body is too large", error_schema, "*");
+                "The request body exceeds the 4 MB limit", error_schema, "*");
             return;
           }
 

@@ -126,7 +126,7 @@
         "type": "sourcemeta:one/payload-too-large",
         "title": "Content Too Large",
         "status": 413,
-        "detail": "The request body is too large"
+        "detail": "The request body exceeds the 4 MB limit"
       }
     },
     {
