@@ -1,6 +1,7 @@
 GET {{base}}/test/schemas/bundling-single.json
 User-Agent: Deno/2.4.5
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 [Asserts]
 header "Referrer-Policy" not exists

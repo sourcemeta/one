@@ -1,5 +1,6 @@
 GET {{base}}/v1/catalog/self/v1/health
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -8,6 +9,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/v1/catalog/self/v1/api/list
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -29,6 +31,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -39,6 +42,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/api/list/self
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -60,6 +64,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/list/r
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -70,6 +75,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/self/v1/schemas/api/error.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

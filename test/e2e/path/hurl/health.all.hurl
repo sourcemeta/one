@@ -1,5 +1,6 @@
 GET {{base}}/v1/catalog/self/v1/health
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -12,6 +13,7 @@ header "Link" not exists
 
 HEAD {{base}}/v1/catalog/self/v1/health
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -23,6 +25,7 @@ header "Link" not exists
 
 POST {{base}}/v1/catalog/self/v1/health
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -39,6 +42,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 PUT {{base}}/v1/catalog/self/v1/health
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -55,6 +59,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 DELETE {{base}}/v1/catalog/self/v1/health
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -71,6 +76,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 PATCH {{base}}/v1/catalog/self/v1/health
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -87,6 +93,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 OPTIONS {{base}}/v1/catalog/self/v1/health
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

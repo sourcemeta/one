@@ -2,6 +2,7 @@ GET {{base}}/../explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -12,6 +13,7 @@ GET {{base}}/test/doc/../../../explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

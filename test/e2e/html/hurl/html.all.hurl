@@ -1,5 +1,6 @@
 OPTIONS {{base}}
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -24,6 +25,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -33,6 +35,7 @@ jsonpath "$.valid" == true
 POST {{base}}
 Accept: text/html
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -57,12 +60,14 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 PUT {{base}}
 Accept: text/html
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -87,12 +92,14 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 DELETE {{base}}
 Accept: text/html
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -117,12 +124,14 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 GET {{base}}
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -141,6 +150,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -155,6 +165,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -168,6 +179,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists
@@ -177,6 +189,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 GET {{base}}/test/doc
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists
@@ -187,6 +200,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 GET {{base}}/test/doc.json
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -200,6 +214,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 GET {{base}}/test/doc/string-1
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -214,6 +229,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/doc/string-1.html
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -228,6 +244,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/v2.0
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -242,6 +259,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/xxxxxxx
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -256,6 +274,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/v2.0?locations=1
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -264,6 +283,7 @@ GET {{base}}/test/v2.0?health=1
 Accept: text/html
 
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -271,6 +291,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/v2.0?positions=1
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -278,6 +299,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/v2.0?positions=1
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -285,6 +307,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/%25
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -292,6 +315,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/%25/test
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
@@ -299,6 +323,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -312,6 +337,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/foobar/sourcemeta:one/not-found
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -325,6 +351,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -342,6 +369,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash/foo
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -355,6 +383,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/test/schemas/clash/foo/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -372,6 +401,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -384,6 +414,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 GET {{base}}/test/doc
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -402,6 +433,7 @@ variable "page1_style_v" == "{{page2_style_v}}"
 # resource's existence.
 DELETE {{base}}/test/doc
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -426,6 +458,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -434,6 +467,7 @@ jsonpath "$.valid" == true
 # but the contract for an unsupported method is identical.
 PATCH {{base}}/test/doc/string-1.json
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -458,12 +492,14 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 # Same for a path that resolves to a schema-html resource.
 PATCH {{base}}/test/doc/string-1
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -488,6 +524,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -495,6 +532,7 @@ jsonpath "$.valid" == true
 # stay 404, so the 405 cannot be used to enumerate the catalog.
 DELETE {{base}}/xxxxxxx.json
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -519,12 +557,14 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 # Same for a non-`.json` unknown path through the default fallback.
 DELETE {{base}}/xxxxxxx
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -549,5 +589,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true

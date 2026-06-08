@@ -1,5 +1,6 @@
 HEAD {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/css
 [Asserts]
 header "Referrer-Policy" not exists
@@ -11,6 +12,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/css
 [Asserts]
 header "Referrer-Policy" not exists
@@ -23,6 +25,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 Accept-Encoding: gzip
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/css
 Content-Encoding: gzip
 [Asserts]
@@ -35,6 +38,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -46,6 +50,7 @@ header "Vary" == "Accept-Encoding"
 css_etag: header "ETag"
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -59,6 +64,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-None-Match: {{css_etag}}
 HTTP 304
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -71,6 +77,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-None-Match: W/{{css_etag}}
 HTTP 304
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -83,6 +90,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-None-Match: "12345"
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/css
 [Asserts]
 header "Referrer-Policy" not exists
@@ -94,6 +102,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -104,6 +113,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -114,6 +124,7 @@ header "Last-Modified" exists
 css_last_modified: header "Last-Modified"
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -126,6 +137,7 @@ GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: FOO
 Content-Type: text/css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -137,6 +149,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: {{css_last_modified}}
 HTTP 304
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -149,6 +162,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
 HTTP 304
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -161,6 +175,7 @@ header "Access-Control-Allow-Origin" not exists
 GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/css
 [Asserts]
 header "Referrer-Policy" not exists
@@ -172,6 +187,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -182,6 +198,7 @@ header "Content-Length" exists
 css_content_length: header "Content-Length"
 HEAD {{base}}/self/v1/static/style.min.css
 HTTP 200
+Cache-Control: public, max-age=31536000, immutable
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -193,6 +210,7 @@ header "Access-Control-Allow-Origin" not exists
 
 GET {{base}}/self/v1/static/style.min.css.meta
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Access-Control-Allow-Origin" not exists

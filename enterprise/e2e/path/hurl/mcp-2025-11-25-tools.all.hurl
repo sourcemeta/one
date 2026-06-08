@@ -10,6 +10,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -153,6 +154,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -176,6 +178,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -202,6 +205,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -225,6 +229,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -249,6 +254,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -272,6 +278,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -301,6 +308,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -325,6 +333,7 @@ Content-Type: application/json
 }
 ```
 HTTP 200
+Cache-Control: no-store
 Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
@@ -350,6 +359,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

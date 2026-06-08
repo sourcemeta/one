@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -20,6 +21,7 @@ header "Vary" == "Accept-Encoding"
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
@@ -40,6 +42,7 @@ header "Vary" == "Accept-Encoding"
 GET {{base}}/test/schemas/string.json
 If-None-Match: {{test_schemas_string_json_etag_weak}}
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -56,6 +59,7 @@ GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -69,6 +73,7 @@ bytes count == 0
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -82,6 +87,7 @@ header "Vary" == "Accept-Encoding"
 GET {{base}}/test/schemas/string.json
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -95,6 +101,7 @@ bytes count == 0
 GET {{base}}/test/schemas/string.json
 If-None-Match: W/{{test_schemas_string_json_etag}}
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -108,6 +115,7 @@ bytes count == 0
 GET {{base}}/test/schemas/string.json
 If-None-Match: "12345"
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -131,6 +139,7 @@ GET {{base}}/test/schemas/string.json
 If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT
 If-None-Match: {{test_schemas_string_json_etag}}
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -150,6 +159,7 @@ GET {{base}}/test/schemas/string.json
 If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
 If-None-Match: "definitely-not-a-real-checksum"
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -167,6 +177,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
 HTTP 304
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]

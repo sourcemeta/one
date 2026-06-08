@@ -74,6 +74,12 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
 
   response.write_status(status);
   response.write_header("Content-Type", "application/problem+json");
+  // RFC 9111 §5.2.2.5: a stale error response is a footgun for both
+  // shared caches and the client. The error condition is dynamic
+  // (the request shape, server state, the moment) and a 500 cached
+  // even briefly turns a transient hiccup into a sticky outage.
+  // Apply uniformly across every error envelope.
+  response.write_header("Cache-Control", "no-store");
   if (!origin.empty()) {
     response.write_header("Access-Control-Allow-Origin", origin);
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");

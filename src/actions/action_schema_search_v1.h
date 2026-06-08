@@ -176,6 +176,11 @@ public:
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
     response.write_header("Content-Type", "application/json");
+    // Search results are query-dependent and the corpus shifts as
+    // the catalog grows; 60 seconds is a freshness window that
+    // amortises full-text cost across typing-into-a-search-box
+    // bursts without serving stale ranking long-term.
+    response.write_header("Cache-Control", "public, max-age=60");
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);

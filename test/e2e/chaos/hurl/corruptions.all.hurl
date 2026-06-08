@@ -4,6 +4,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -15,6 +16,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -26,6 +28,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -37,6 +40,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -48,6 +52,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -59,6 +64,7 @@ retry: 3
 retry-interval: 1000
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -74,6 +80,7 @@ retry-interval: 1000
 ```
 HTTP *
 [Asserts]
+header "Cache-Control" exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

@@ -1,5 +1,6 @@
 GET {{base}}/v1/catalog/draft3/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -19,6 +20,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/v1/catalog/draft3/object.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -45,6 +47,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/v1/catalog/draft3/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Captures]
 draft3_string_etag: header "ETag"
 draft3_string_content_length: header "Content-Length"
@@ -56,6 +59,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 HEAD {{base}}/v1/catalog/draft3/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -71,6 +75,7 @@ header "Content-Length" == {{draft3_string_content_length}}
 
 GET {{base}}/v1/catalog/draft3/nonexistent.json
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -86,6 +91,7 @@ jsonpath "$.title" == "Not Found"
 
 POST {{base}}/v1/catalog/draft3/string.json
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

@@ -1,5 +1,6 @@
 GET {{base}}/self/v1/static/style.min.css
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -16,6 +17,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 
 HEAD {{base}}/self/v1/static/style.min.css
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -28,6 +30,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 POST {{base}}/self/v1/static/style.min.css
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -44,6 +47,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 PUT {{base}}/self/v1/static/style.min.css
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -60,6 +64,7 @@ jsonpath "$.title" == "Method Not Allowed"
 
 DELETE {{base}}/self/v1/static/style.min.css
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

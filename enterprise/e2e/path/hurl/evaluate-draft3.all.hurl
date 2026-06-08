@@ -2,6 +2,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/string
 Content-Type: application/json
 "hello"
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -19,6 +20,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -31,6 +33,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/string
 Content-Type: application/json
 1234
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -48,6 +51,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -60,6 +64,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "name": "Ada" }
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -77,6 +82,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -89,6 +95,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/draft3/object
 Content-Type: application/json
 { "age": 7 }
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -106,6 +113,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

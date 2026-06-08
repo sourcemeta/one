@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -13,6 +14,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
@@ -27,6 +29,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip;q=0
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -41,6 +44,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip;q=0, identity
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -55,6 +59,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: identity;q=0
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists
@@ -69,6 +74,7 @@ jsonpath "$.title" == "Not Acceptable"
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: *;q=0
 HTTP 406
+Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
 header "Referrer-Policy" not exists
@@ -83,6 +89,7 @@ jsonpath "$.title" == "Not Acceptable"
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip;
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
@@ -97,6 +104,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip;q
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *
@@ -111,6 +119,7 @@ bytes count > 0
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip;q=
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Content-Encoding: gzip
 Access-Control-Allow-Origin: *

@@ -1,6 +1,7 @@
 GET {{base}}/test/doc/unsafe
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -13,6 +14,7 @@ xpath "count(//div[contains(@class, 'text-secondary')]//iframe)" == 0
 GET {{base}}/test/unsafe-alert/example
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
@@ -25,6 +27,7 @@ xpath "count(//div[contains(@class, 'alert')]//iframe)" == 0
 GET {{base}}/self/v1/api/schemas/metadata/test/doc/unsafe
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 [Asserts]
 header "Referrer-Policy" not exists

@@ -1,5 +1,6 @@
 GET {{base}}
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -16,6 +17,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 
 GET {{base}}/test
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

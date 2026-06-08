@@ -2,6 +2,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/string
 Content-Type: application/json
 "hello"
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -19,6 +20,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -31,6 +33,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/string
 Content-Type: application/json
 1234
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -48,6 +51,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -60,6 +64,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/with-ref
 Content-Type: application/json
 { "name": "hello" }
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -81,6 +86,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -93,6 +99,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/with-ref
 Content-Type: application/json
 { "name": 123 }
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -107,6 +114,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/rebased/with-ref
 Content-Type: application/json
 { "value": true }
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -126,6 +134,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -138,6 +147,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/nested/deep
 Content-Type: application/json
 3.14
 HTTP 200
+Cache-Control: no-store
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
@@ -152,6 +162,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/nested/deep
 Content-Type: application/json
 "not a number"
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -163,6 +174,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/rebased/nested/deep-with-i
 Content-Type: application/json
 null
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -174,6 +186,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/rebased/nested/deep-no-id
 Content-Type: application/json
 5
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -185,6 +198,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/rebased/nested/deep-no-id
 Content-Type: application/json
 -1
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -194,6 +208,7 @@ jsonpath "$.valid" == false
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/example/string
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -216,6 +231,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists

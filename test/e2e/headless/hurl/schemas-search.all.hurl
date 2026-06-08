@@ -1,5 +1,6 @@
 GET {{base}}/self/v1/api/schemas/search
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -23,6 +24,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -33,6 +35,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -56,6 +59,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -66,6 +70,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=%20%20%20
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -89,6 +94,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -99,6 +105,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=%09%0A%0D
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -122,6 +129,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -132,6 +140,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/api/schemas/search?q=foo
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -156,6 +165,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -166,6 +176,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -185,6 +196,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -195,6 +207,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -226,6 +239,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -236,6 +250,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bUNdLing
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -267,6 +282,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -277,6 +293,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=e
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -296,6 +313,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -306,6 +324,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=1
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -331,6 +350,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -341,6 +361,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -366,6 +387,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -376,6 +398,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,description
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -407,6 +430,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -417,6 +441,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=description
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -442,6 +467,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -452,6 +478,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=1&scope=path
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -477,6 +504,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -487,6 +515,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=0
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -510,6 +539,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -520,6 +550,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=-1
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -543,6 +574,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -553,6 +585,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=abc
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -576,6 +609,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -586,6 +620,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=101
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -609,6 +644,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -619,6 +655,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=invalid
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -642,6 +679,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -652,6 +690,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title,invalid
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -675,6 +714,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -685,6 +725,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=3.5
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -708,6 +749,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -718,6 +760,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=&scope=
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -749,6 +792,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -759,6 +803,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=Path
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -782,6 +827,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -792,6 +838,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,%20title
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -815,6 +862,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -825,6 +873,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title,
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -850,6 +899,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -860,6 +910,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -883,6 +934,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -893,6 +945,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,,
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -916,6 +969,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -926,6 +980,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,path
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -957,6 +1012,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -967,6 +1023,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=100
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -998,6 +1055,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1008,6 +1066,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=%2B5
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1031,6 +1090,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1041,6 +1101,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1064,6 +1125,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1074,6 +1136,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling%00extra
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1093,6 +1156,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1103,6 +1167,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling%09single
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1122,6 +1187,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1132,6 +1198,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling%0Asingle
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1151,6 +1218,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1161,6 +1229,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path%00extra
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1184,6 +1253,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -1197,6 +1267,7 @@ jsonpath "$.valid" == true
 # subsequent HEAD asserts header parity and zero body.
 GET {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1206,6 +1277,7 @@ get_content_length: header "Content-Length"
 
 HEAD {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1221,6 +1293,7 @@ bytes count == 0
 # HEAD against a successful result (with matches) keeps parity too.
 GET {{base}}/self/v1/api/schemas/search?q=bundling
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1230,6 +1303,7 @@ get_content_length: header "Content-Length"
 
 HEAD {{base}}/self/v1/api/schemas/search?q=bundling
 HTTP 200
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -1246,6 +1320,7 @@ bytes count == 0
 # headers with an empty body.
 HEAD {{base}}/self/v1/api/schemas/search
 HTTP 400
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag

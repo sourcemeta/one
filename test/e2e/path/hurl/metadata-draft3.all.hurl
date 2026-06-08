@@ -1,6 +1,7 @@
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/draft3/string
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -33,6 +34,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Referrer-Policy" not exists
@@ -44,6 +46,7 @@ jsonpath "$.valid" == true
 GET {{base}}/v1/catalog/self/v1/api/schemas/metadata/draft3/with-ref
 Accept: application/json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -64,6 +67,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate/self/v1/schemas/api/schema
 {{last_response}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -73,6 +77,7 @@ jsonpath "$.valid" == true
 
 GET {{base}}/v1/catalog/draft3/with-ref.json?bundle=1
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-03/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *

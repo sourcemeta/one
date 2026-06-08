@@ -1,5 +1,6 @@
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -14,6 +15,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -41,6 +43,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/string
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -55,6 +58,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -82,6 +86,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/with-rebase-same-host.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -95,6 +100,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/with-rebase.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -108,6 +114,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/string.json?foo=bar&baz=qux
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -135,6 +142,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/no-id.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -148,6 +156,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/no-schema.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -161,6 +170,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/absolute-refs.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -174,6 +184,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/%25/test.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -186,6 +197,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -201,6 +213,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 HEAD {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -217,6 +230,7 @@ header "Content-Length" == {{test_schemas_string_json_content_length}}
 
 POST {{base}}/test/schemas/string.json
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -234,6 +248,7 @@ jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
 DELETE {{base}}/test/schemas/string.json
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -251,6 +266,7 @@ jsonpath "$.detail" == "This HTTP method is invalid for this URL"
 
 PUT {{base}}/test/schemas/xxx.json
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -272,6 +288,7 @@ jsonpath "$.detail" == "There is nothing at this URL"
 # and not just the html overlays.
 DELETE {{base}}/test/schemas/string
 HTTP 405
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -296,6 +313,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_405}}
 {{last_response_405}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -303,6 +321,7 @@ jsonpath "$.valid" == true
 # stay 404 so the 405 cannot be used to enumerate the catalog.
 PATCH {{base}}/test/schemas/xxx
 HTTP 404
+Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -327,11 +346,13 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_404}}
 {{last_response_404}}
 ```
 HTTP 200
+Cache-Control: no-store
 [Asserts]
 jsonpath "$.valid" == true
 
 GET {{base}}/test/no-base/no-id.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -351,6 +372,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/no-base/test-1.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -370,6 +392,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/.json
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -378,6 +401,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -394,6 +418,7 @@ header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string.JSON
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -409,6 +434,7 @@ body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/string.Json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -424,6 +450,7 @@ body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/STRING.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -439,6 +466,7 @@ body == "{{case_baseline_body}}"
 
 GET {{base}}/TEST/SCHEMAS/STRING.JSON
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *

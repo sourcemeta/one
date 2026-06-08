@@ -2,6 +2,7 @@ GET {{base}}/../explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -12,6 +13,7 @@ GET {{base}}/test/schemas/string/../../../explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -29,6 +31,7 @@ GET {{base}}/%2E%2E/explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -41,6 +44,7 @@ GET {{base}}/test/schemas/string/%2E%2E/%2E%2E/%2E%2E/explorer/index.json
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -54,6 +58,7 @@ GET {{base}}/%2E%2E/%2E%2E/%2E%2E/etc/passwd
 [Options]
 path-as-is: true
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -65,6 +70,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 # success response. Locks against an accidental future emission.
 GET {{base}}/test/schemas/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Server" not exists
 header "X-Powered-By" not exists
@@ -74,6 +80,7 @@ header "X-Powered-By" not exists
 # absence assertion.
 GET {{base}}/this-path-does-not-exist
 HTTP 404
+Cache-Control: no-store
 [Asserts]
 header "Server" not exists
 header "X-Powered-By" not exists
