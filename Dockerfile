@@ -102,9 +102,16 @@ COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
 
 # Pre-create the output directory and hand both runtime directories to
 # the non-root account so the indexer and server can write through
-# them without elevation.
-RUN mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
-  && chown -R sourcemeta:sourcemeta \
+# them without elevation. The directories are empty at this point (one
+# was just created by `WORKDIR` and the other by `mkdir`), so the
+# chown is non-recursive to avoid traversing the entire image
+# filesystem if a build-arg override ever pointed either path at the
+# rootfs root.
+RUN test -n "${SOURCEMETA_ONE_WORKDIR}" && test -n "${SOURCEMETA_ONE_OUTPUT}" \
+  && test "${SOURCEMETA_ONE_WORKDIR}" != "/" \
+  && test "${SOURCEMETA_ONE_OUTPUT}" != "/" \
+  && mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
+  && chown sourcemeta:sourcemeta \
        "${SOURCEMETA_ONE_WORKDIR}" "${SOURCEMETA_ONE_OUTPUT}"
 
 USER sourcemeta:sourcemeta
