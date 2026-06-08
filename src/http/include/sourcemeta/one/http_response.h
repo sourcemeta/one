@@ -2,7 +2,7 @@
 #define SOURCEMETA_ONE_HTTP_RESPONSE_H
 
 #include <sourcemeta/core/gzip.h>
-#include <sourcemeta/core/http_status.h>
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/one/http_uwebsockets.h>
