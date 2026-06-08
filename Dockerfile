@@ -52,6 +52,25 @@ RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 FROM debian:trixie-slim
 
+# Install `gosu` so the runtime entrypoint can drop from root to the
+# unprivileged service account. We deliberately don't set `USER` on
+# this image so build-time `RUN` instructions (including those in
+# downstream consumer Dockerfiles) keep executing as root, matching
+# the well-trodden Postgres/Redis/MySQL pattern.
+RUN apt-get --yes update \
+  && apt-get install --yes --no-install-recommends gosu \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create the unprivileged service account that the entrypoint will
+# `gosu` into. The UID sits above the typical 1000-range dev user
+# (so host-mounted volumes can be mapped unambiguously) and outside
+# the Debian system-user range (1-999) reserved for daemons.
+ARG SOURCEMETA_ONE_UID=10001
+RUN groupadd --system --gid "${SOURCEMETA_ONE_UID}" sourcemeta \
+  && useradd --system --uid "${SOURCEMETA_ONE_UID}" \
+       --gid "${SOURCEMETA_ONE_UID}" \
+       --no-create-home --shell /usr/sbin/nologin sourcemeta
+
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
@@ -89,6 +108,16 @@ ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
+
+# Pre-create the output directory and hand it to the service account
+# so the runtime server can read through it (and the optional
+# transactional re-index path can write through it) without
+# elevation. The chown is non-recursive to keep blast-radius bounded
+# if a build-arg override ever pointed the path at the rootfs root.
+RUN test -n "${SOURCEMETA_ONE_OUTPUT}" \
+  && test "${SOURCEMETA_ONE_OUTPUT}" != "/" \
+  && mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
+  && chown sourcemeta:sourcemeta "${SOURCEMETA_ONE_OUTPUT}"
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \
