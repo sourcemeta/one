@@ -81,8 +81,13 @@ FROM debian:trixie-slim
 # this image so build-time `RUN` instructions (including those in
 # downstream consumer Dockerfiles) keep executing as root, matching
 # the well-trodden Postgres/Redis/MySQL pattern.
+#
+# `libcap2-bin` provides `setcap`, used below to grant the server
+# binary `CAP_NET_BIND_SERVICE` so the dropped service account can
+# bind privileged ports (below 1024) if the operator chooses to run
+# without a separate TLS terminator in front of the image.
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  gosu openssl-provider-fips \
+  gosu libcap2-bin openssl-provider-fips \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 
@@ -126,6 +131,13 @@ COPY --from=builder /usr/share/sourcemeta/one \
 RUN ldd /usr/bin/sourcemeta-one-index
 RUN ldd /usr/bin/sourcemeta-one-server
 
+# File capabilities are filesystem extended attributes that do not
+# survive a cross-stage `COPY --from=builder`, so the capability has
+# to be applied here in the runtime stage after the binary lands.
+# `+ep` puts the capability in both the permitted and effective sets
+# of the process at exec time.
+RUN setcap cap_net_bind_service+ep /usr/bin/sourcemeta-one-server
+
 # Verify that the index binary uses system OpenSSL for cryptography
 RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
 # Verify that the OpenSSL FIPS provider is configured and present
@@ -163,11 +175,14 @@ COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
 # so the runtime server can read through it (and the optional
 # transactional re-index path can write through it) without
 # elevation. The chown is non-recursive to keep blast-radius bounded
-# if a build-arg override ever pointed the path at the rootfs root.
+# if a build-arg override ever pointed the path at the rootfs root,
+# and we normalize via `realpath` so values like `/..`, `/foo/..`, or
+# symlinks that resolve to `/` are rejected too.
 RUN test -n "${SOURCEMETA_ONE_OUTPUT}" \
-  && test "${SOURCEMETA_ONE_OUTPUT}" != "/" \
   && mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
-  && chown sourcemeta:sourcemeta "${SOURCEMETA_ONE_OUTPUT}"
+  && resolved_output="$(realpath "${SOURCEMETA_ONE_OUTPUT}")" \
+  && test "${resolved_output}" != "/" \
+  && chown sourcemeta:sourcemeta "${resolved_output}"
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \
