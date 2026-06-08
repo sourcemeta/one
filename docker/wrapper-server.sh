@@ -21,9 +21,11 @@ set -o nounset
 # build time, so the default server (which only reads from it) works
 # at any UID. Operators that need write access from an arbitrary UID
 # (e.g. the optional transactional re-index path) should run as
-# `--user <UID>:10001` so the process inherits the `sourcemeta` group
-# and picks up the directory's group-write bit, or bind-mount their
-# own writable volume over the output path.
+# `--user <UID>:<sourcemeta-gid>` (the GID matches the
+# `SOURCEMETA_ONE_UID` build arg, default `10001`) so the process
+# inherits the `sourcemeta` group and picks up the directory's
+# group-write bit, or bind-mount their own writable volume over the
+# output path.
 #
 # Binding `SOURCEMETA_ONE_PORT` to a privileged port (below 1024)
 # works even after the privilege drop because the server binary
