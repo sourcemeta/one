@@ -4,6 +4,7 @@ HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

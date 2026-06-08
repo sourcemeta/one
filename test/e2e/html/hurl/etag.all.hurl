@@ -8,13 +8,13 @@ Access-Control-Expose-Headers: Link, ETag
 [Captures]
 test_schemas_string_json_etag: header "ETag"
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 # Identity response: strong ETag form `"<hex>"` per RFC 9110 §8.8.1
 header "ETag" matches /^"[0-9a-f]+"$/
-header "Vary" == "Accept-Encoding"
 
 # Gzip-encoded response: weak ETag form `W/"<hex>"` per RFC 9110 §8.8.1
 # https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.1
@@ -29,12 +29,12 @@ Access-Control-Expose-Headers: Link, ETag
 [Captures]
 test_schemas_string_json_etag_weak: header "ETag"
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" matches /^W\/"[0-9a-f]+"$/
-header "Vary" == "Accept-Encoding"
 
 # Weak-form ETag captured from a gzip-encoded response still matches when
 # sent as If-None-Match on an identity request: the comparison strips the
@@ -46,6 +46,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -63,6 +64,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -77,12 +79,12 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" == {{test_schemas_string_json_etag}}
-header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string.json
 If-None-Match: {{test_schemas_string_json_etag}}
@@ -91,6 +93,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -105,6 +108,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -120,6 +124,7 @@ Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -143,6 +148,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -164,12 +170,12 @@ Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" matches /^"[0-9a-f]+"$/
-header "Vary" == "Accept-Encoding"
 bytes count > 0
 
 # (3) Sanity baseline: IMS in the future + no INM evaluates IMS
@@ -181,6 +187,7 @@ Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

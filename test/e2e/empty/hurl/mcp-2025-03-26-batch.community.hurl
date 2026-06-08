@@ -32,6 +32,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -64,6 +65,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -90,6 +92,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -109,6 +112,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -131,6 +135,7 @@ Cache-Control: no-store
 Access-Control-Allow-Origin: http://localhost:8000
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -156,6 +161,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -175,6 +181,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

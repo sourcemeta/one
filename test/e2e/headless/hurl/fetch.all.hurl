@@ -6,17 +6,18 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -49,17 +50,18 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -88,6 +90,7 @@ GET {{base}}/test/schemas/with-rebase-same-host.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -102,6 +105,7 @@ GET {{base}}/test/schemas/with-rebase.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -116,6 +120,7 @@ GET {{base}}/test/schemas/string.json?foo=bar&baz=qux
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -144,6 +149,7 @@ GET {{base}}/test/schemas/no-id.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -158,6 +164,7 @@ GET {{base}}/test/schemas/no-schema.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -172,6 +179,7 @@ GET {{base}}/test/schemas/absolute-refs.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -186,6 +194,7 @@ GET {{base}}/test/schemas/%25/test.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -206,6 +215,7 @@ Access-Control-Expose-Headers: Link, ETag
 test_schemas_string_json_etag: header "ETag"
 test_schemas_string_json_content_length: header "Content-Length"
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -219,13 +229,13 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count == 0
 header "ETag" == {{test_schemas_string_json_etag}}
-header "Vary" == "Accept-Encoding"
 header "Content-Length" == {{test_schemas_string_json_content_length}}
 
 POST {{base}}/test/schemas/string.json
@@ -236,10 +246,10 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
@@ -254,10 +264,10 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Allow: GET, HEAD
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
@@ -271,10 +281,10 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404
 jsonpath "$.type" == "sourcemeta:one/not-found"
@@ -298,10 +308,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response_405: body
 schema_path_405: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
@@ -315,6 +325,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_405}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # A write method on a non-`.json` path that resolves to nothing must
@@ -330,11 +341,11 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response_404: body
 schema_path_404: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Allow" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404
 jsonpath "$.type" == "sourcemeta:one/not-found"
@@ -348,6 +359,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path_404}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 GET {{base}}/test/no-base/no-id.json
@@ -358,12 +370,12 @@ Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/no-base/no-id",
@@ -378,12 +390,12 @@ Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/test/no-base/test-1",
@@ -394,6 +406,7 @@ GET {{base}}/.json
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -409,12 +422,12 @@ Access-Control-Expose-Headers: Link, ETag
 [Captures]
 case_baseline_body: body
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 
 GET {{base}}/test/schemas/string.JSON
 HTTP 200
@@ -424,12 +437,12 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/string.Json
@@ -440,12 +453,12 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 body == "{{case_baseline_body}}"
 
 GET {{base}}/test/schemas/STRING.json
@@ -456,12 +469,12 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 body == "{{case_baseline_body}}"
 
 GET {{base}}/TEST/SCHEMAS/STRING.JSON
@@ -472,10 +485,10 @@ Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-header "Vary" == "Accept-Encoding"
 body == "{{case_baseline_body}}"

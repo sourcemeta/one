@@ -8,6 +8,7 @@ Access-Control-Allow-Headers: Content-Type
 Access-Control-Max-Age: 3600
 Allow: POST, OPTIONS
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -24,10 +25,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 jsonpath "$.type" == "sourcemeta:one/no-instance"
@@ -42,6 +43,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -60,6 +62,7 @@ Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -101,6 +104,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -119,6 +123,7 @@ Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -212,6 +217,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -230,6 +236,7 @@ Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -297,6 +304,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -315,6 +323,7 @@ Link: </self/v1/schemas/api/schemas/trace/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -414,6 +423,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -433,10 +443,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 405
 jsonpath "$.type" == "sourcemeta:one/no-schema-template"
@@ -451,6 +461,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

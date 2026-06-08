@@ -83,10 +83,10 @@ public:
           this->error_schema_, "*");
       return;
     }
-    this->artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
-                         {}, this->response_schema_, {}, request, response,
-                         this->error_schema_,
-                         "public, max-age=0, must-revalidate");
+    this->artifact_serve(
+        path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
+        this->response_schema_, {}, request, response, this->error_schema_,
+        "public, max-age=0, must-revalidate", "Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,

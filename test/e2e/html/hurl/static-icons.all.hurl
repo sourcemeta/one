@@ -3,6 +3,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -15,6 +16,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/vnd.microsoft.icon
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -27,6 +29,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/svg+xml
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -39,6 +42,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -51,6 +55,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -63,6 +68,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: application/manifest+json
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -75,6 +81,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -87,6 +94,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/vnd.microsoft.icon
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -99,6 +107,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/svg+xml
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -111,6 +120,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -123,6 +133,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: image/png
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -135,6 +146,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: application/manifest+json
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

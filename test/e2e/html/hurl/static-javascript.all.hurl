@@ -3,6 +3,7 @@ HTTP 200
 Cache-Control: public, max-age=31536000, immutable
 Content-Type: text/javascript
 [Asserts]
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

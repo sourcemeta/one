@@ -26,6 +26,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 test_path: jsonpath "$.result.structuredContent.entries[1].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -46,6 +47,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -80,6 +82,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 object_path: jsonpath "$.result.structuredContent.entries[5].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -102,6 +105,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -135,6 +139,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -156,6 +161,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -190,6 +196,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 hit_path: jsonpath "$.result.structuredContent.results[0].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -208,6 +215,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -241,6 +249,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -262,6 +271,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -296,6 +306,7 @@ schema_path: header "Link" regex "<([^>]+)>"
 error_location: jsonpath "$.result.structuredContent.errors[0].absoluteKeywordLocation"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -314,6 +325,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -347,6 +359,7 @@ last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -368,6 +381,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

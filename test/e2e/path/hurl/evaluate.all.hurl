@@ -9,6 +9,7 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -23,6 +24,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -40,6 +42,7 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -54,6 +57,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -71,6 +75,7 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -89,6 +94,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -104,6 +110,7 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -121,6 +128,7 @@ Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describe
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -137,6 +145,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -152,6 +161,7 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -164,6 +174,7 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -176,6 +187,7 @@ null
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -188,6 +200,7 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -200,6 +213,7 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -216,10 +230,10 @@ Link: </v1/catalog/self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 400
 jsonpath "$.type" == "sourcemeta:one/no-instance"
@@ -234,6 +248,7 @@ HTTP 200
 Cache-Control: no-store
 Link: </v1/catalog/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

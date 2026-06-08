@@ -3,6 +3,7 @@ User-Agent: Visual Studio Code (desktop)
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -29,6 +30,7 @@ User-Agent: VSCodium (desktop)
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -55,6 +57,7 @@ User-Agent: VSCodium (desktop)
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -81,6 +84,7 @@ User-Agent: VSCodium (desktop)
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

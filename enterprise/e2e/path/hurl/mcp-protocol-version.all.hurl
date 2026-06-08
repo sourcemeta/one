@@ -16,6 +16,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -33,6 +34,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -57,6 +59,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -73,6 +76,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -97,6 +101,7 @@ MCP-Protocol-Version: 2025-06-18
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -113,6 +118,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -137,6 +143,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "</v1/catalog([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -158,6 +165,7 @@ POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

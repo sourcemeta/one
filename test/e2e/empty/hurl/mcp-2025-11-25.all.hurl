@@ -11,6 +11,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -27,6 +28,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -46,6 +48,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -62,6 +65,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -81,6 +85,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -97,6 +102,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -107,6 +113,7 @@ OPTIONS {{base}}/self/v1/mcp
 HTTP 204
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -152,6 +159,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -168,6 +176,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Accept that omits application/json → 406.
@@ -189,6 +198,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -205,6 +215,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Accept that lists application/json with q=0 → not acceptable, 406.
@@ -226,6 +237,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -242,6 +254,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Substring trap: an Accept value that contains the literal characters
@@ -266,6 +279,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -282,6 +296,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Wildcards satisfy the requirement: `*/*` covers both required types.
@@ -303,6 +318,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -317,6 +333,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Per-type wildcards too: application/* + text/* together cover both.
@@ -338,6 +355,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -352,6 +370,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Missing Content-Type → 415.
@@ -372,6 +391,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -388,6 +408,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Foreign Content-Type → 415.
@@ -409,6 +430,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -425,6 +447,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Substring trap on Content-Type: `application/json-bad` shares the prefix
@@ -447,6 +470,7 @@ MCP-Protocol-Version: 2025-03-26
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -463,6 +487,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # `; charset=utf-8` with a leading space is valid per RFC 9110 §5.6.6.
@@ -484,6 +509,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -498,6 +524,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # `;charset=utf-8` without the leading space is also valid per §5.6.6.
@@ -519,6 +546,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -533,6 +561,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Multiple parameters beyond charset must still pass through. Media-type
@@ -555,6 +584,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -569,6 +599,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Mixed-case media type must match per RFC 9110 §8.3.1 (media-type names
@@ -591,6 +622,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -605,6 +637,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # RFC 6454 §4 mandates lowercasing scheme and host before origin equality,
@@ -629,6 +662,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -643,6 +677,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Uppercase host segment must also match per RFC 6454 §4 host folding.
@@ -665,6 +700,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -679,6 +715,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Both scheme and host folded together must still match.
@@ -701,6 +738,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -715,4 +753,5 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
