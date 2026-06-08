@@ -128,6 +128,13 @@ auto RouterAction::artifact_serve(
   // the default action is Accept-branched, others just gzip), so
   // the caller has to pick the right stack.
   assert(!vary.empty());
+  // OPTIONS preflight is a per-surface concern (the Allow-Headers axis
+  // varies by action), so each caller short-circuits it before reaching
+  // here via `cors_preflight`. If this assertion fires, a caller is
+  // missing that early branch and the 405 emitted below would advertise
+  // `Allow: GET, HEAD, OPTIONS` while simultaneously refusing OPTIONS,
+  // which is internally inconsistent.
+  assert(request.method() != "options");
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
