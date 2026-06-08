@@ -53,7 +53,7 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
-                                      "Accept, Accept-Encoding, If-None-Match, "
+                                      "Accept-Encoding, If-None-Match, "
                                       "If-Modified-Since");
       return;
     }
