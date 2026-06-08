@@ -194,8 +194,8 @@ public:
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-                sourcemeta::core::jsonrpc_make_error(nullptr, -32005,
-                                                     "Request too large"),
+                sourcemeta::core::jsonrpc_make_error(
+                    nullptr, -32005, "Request body exceeds the 4 MB limit"),
                 version);
             return;
           }

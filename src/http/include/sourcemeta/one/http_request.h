@@ -102,12 +102,15 @@ public:
   // - callback: Invoked with (response, body, too_big) on completion
   // - on_error: Invoked with (response, exception_ptr) on any exception,
   //   including exceptions thrown by the main callback
-  // - max_size: Maximum body size in bytes (default 1MB)
+  // - max_size: Maximum body size in bytes. 4 MB accommodates realistic
+  //   JSON Schema instances and evaluate bodies while still rejecting
+  //   pathological inputs. RFC 9110 §15.5.14 maps oversize bodies to
+  //   413 Content Too Large.
   // Note: If the request is aborted, the callback is not invoked
   template <typename Callback, typename ErrorCallback>
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
   auto body(Callback callback, ErrorCallback on_error,
-            std::size_t max_size = static_cast<std::size_t>(1024) * 1024)
+            std::size_t max_size = static_cast<std::size_t>(4) * 1024 * 1024)
       -> void {
     auto raw_response = this->response_;
     auto snapshot = std::make_shared<HTTPRequest>(
