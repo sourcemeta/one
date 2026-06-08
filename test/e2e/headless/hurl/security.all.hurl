@@ -18,7 +18,12 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 # `..` segments are. A naive URL decoder that decodes before the path
 # normalizer would let a request escape the catalog root through
 # `%2E%2E` and read host-filesystem files outside the index directory.
+# `path-as-is` keeps libcurl from canonicalizing the path before the
+# wire write, so the request the server sees is the literal
+# percent-encoded form the attacker would send.
 GET {{base}}/%2E%2E/explorer/index.json
+[Options]
+path-as-is: true
 HTTP 404
 [Asserts]
 header "Referrer-Policy" not exists
@@ -29,6 +34,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 # Same shape on a path under a real schema namespace, with mixed
 # percent-encoding to defeat a string-equality `..` blocklist.
 GET {{base}}/test/schemas/string/%2E%2E/%2E%2E/%2E%2E/explorer/index.json
+[Options]
+path-as-is: true
 HTTP 404
 [Asserts]
 header "Referrer-Policy" not exists
@@ -40,6 +47,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 # fall to 404, not 500 (which would suggest the parser blew up) and
 # not a file leak.
 GET {{base}}/%2E%2E/%2E%2E/%2E%2E/etc/passwd
+[Options]
+path-as-is: true
 HTTP 404
 [Asserts]
 header "Referrer-Policy" not exists
