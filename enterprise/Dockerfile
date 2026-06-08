@@ -182,7 +182,8 @@ RUN test -n "${SOURCEMETA_ONE_OUTPUT}" \
   && mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
   && resolved_output="$(realpath "${SOURCEMETA_ONE_OUTPUT}")" \
   && test "${resolved_output}" != "/" \
-  && chown sourcemeta:sourcemeta "${resolved_output}"
+  && chown sourcemeta:sourcemeta "${resolved_output}" \
+  && chmod 775 "${resolved_output}"
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \

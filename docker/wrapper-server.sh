@@ -17,6 +17,14 @@ set -o nounset
 # (and `gosu` itself uses `execve(2)`), so SIGTERM and friends reach
 # the server process directly without an intermediate shell.
 #
+# The output directory is mode 775 owned by the `sourcemeta` group at
+# build time, so the default server (which only reads from it) works
+# at any UID. Operators that need write access from an arbitrary UID
+# (e.g. the optional transactional re-index path) should run as
+# `--user <UID>:10001` so the process inherits the `sourcemeta` group
+# and picks up the directory's group-write bit, or bind-mount their
+# own writable volume over the output path.
+#
 # Binding `SOURCEMETA_ONE_PORT` to a privileged port (below 1024)
 # works even after the privilege drop because the server binary
 # carries `CAP_NET_BIND_SERVICE` as a file capability, granted at
