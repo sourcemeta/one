@@ -36,6 +36,8 @@ public:
       threads.emplace_back(std::make_unique<std::thread>(
           [index, port, &on_request, &on_listen, &on_error, &setup_barrier,
            &setup_mutex]() {
+            // uWS provides slow-loris protection out of the box, so
+            // we don't have to configure any of it ourselves.
             uWS::SocketContextOptions options{};
             auto *app{new uWS::SSLApp(options)};
 
