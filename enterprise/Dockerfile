@@ -115,6 +115,18 @@ RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
 RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
 RUN test -f /usr/lib/*/ossl-modules/fips.so
 
+# Create the non-root runtime account before the package purge removes
+# `passwd` (and with it `useradd`). The user lives in `/etc/passwd`
+# after this point and survives the purge. The exact UID sits above
+# the typical 1000-range dev user (so host-mounted volumes can be
+# mapped unambiguously) and outside the Debian system-user range
+# (1-999) reserved for daemons.
+ARG SOURCEMETA_ONE_UID=10001
+RUN groupadd --system --gid "${SOURCEMETA_ONE_UID}" sourcemeta \
+  && useradd --system --uid "${SOURCEMETA_ONE_UID}" \
+       --gid "${SOURCEMETA_ONE_UID}" \
+       --no-create-home --shell /usr/sbin/nologin sourcemeta
+
 # Remove packages not needed at runtime to reduce the image attack surface.
 RUN cp /bin/mount /bin/umount /tmp/ \
   && apt-get --yes update \
@@ -141,6 +153,19 @@ ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
+
+# Pre-create the output directory and hand both runtime directories to
+# the non-root account so the indexer and server can write through
+# them without elevation.
+RUN mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
+  && chown -R sourcemeta:sourcemeta \
+       "${SOURCEMETA_ONE_WORKDIR}" "${SOURCEMETA_ONE_OUTPUT}"
+
+USER sourcemeta:sourcemeta
+# Build-time tripwire: fail the image if the USER directive did not
+# actually drop privileges to the non-root account.
+RUN test "$(id -u)" -eq "${SOURCEMETA_ONE_UID}" \
+  && test "$(id -g)" -eq "${SOURCEMETA_ONE_UID}"
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \

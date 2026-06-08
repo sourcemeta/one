@@ -77,6 +77,16 @@ COPY --from=builder /usr/share/sourcemeta/one \
 RUN ldd /usr/bin/sourcemeta-one-index
 RUN ldd /usr/bin/sourcemeta-one-server
 
+# Run as a fixed non-root UID/GID. The exact value sits above the
+# typical 1000-range dev user (so host-mounted volumes can be mapped
+# unambiguously) and outside the Debian system-user range (1-999)
+# reserved for daemons.
+ARG SOURCEMETA_ONE_UID=10001
+RUN groupadd --system --gid "${SOURCEMETA_ONE_UID}" sourcemeta \
+  && useradd --system --uid "${SOURCEMETA_ONE_UID}" \
+       --gid "${SOURCEMETA_ONE_UID}" \
+       --no-create-home --shell /usr/sbin/nologin sourcemeta
+
 # We expect images that extend this one to use this directory
 ARG SOURCEMETA_ONE_WORKDIR=/source
 ENV SOURCEMETA_ONE_WORKDIR=${SOURCEMETA_ONE_WORKDIR}
@@ -89,6 +99,19 @@ ENV SOURCEMETA_ONE_OUTPUT=${SOURCEMETA_ONE_OUTPUT}
 COPY docker/wrapper-index.sh /usr/bin/sourcemeta
 COPY docker/wrapper-server.sh /usr/bin/sourcemeta-server
 COPY docker/transaction-overlayfs.sh /usr/bin/sourcemeta-transaction-overlayfs
+
+# Pre-create the output directory and hand both runtime directories to
+# the non-root account so the indexer and server can write through
+# them without elevation.
+RUN mkdir -p "${SOURCEMETA_ONE_OUTPUT}" \
+  && chown -R sourcemeta:sourcemeta \
+       "${SOURCEMETA_ONE_WORKDIR}" "${SOURCEMETA_ONE_OUTPUT}"
+
+USER sourcemeta:sourcemeta
+# Build-time tripwire: fail the image if the USER directive did not
+# actually drop privileges to the non-root account.
+RUN test "$(id -u)" -eq "${SOURCEMETA_ONE_UID}" \
+  && test "$(id -g)" -eq "${SOURCEMETA_ONE_UID}"
 
 ENV SOURCEMETA_ONE_PORT=8000
 HEALTHCHECK --interval=1s --timeout=2s --start-period=1s --retries=10 CMD grep -qE \
