@@ -4,6 +4,7 @@ path-as-is: true
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -15,6 +16,7 @@ path-as-is: true
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -33,6 +35,7 @@ path-as-is: true
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -46,6 +49,7 @@ path-as-is: true
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -60,6 +64,7 @@ path-as-is: true
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -72,6 +77,7 @@ GET {{base}}/test/schemas/string.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Server" not exists
 header "X-Powered-By" not exists
 
@@ -82,5 +88,6 @@ GET {{base}}/this-path-does-not-exist
 HTTP 404
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 header "Server" not exists
 header "X-Powered-By" not exists

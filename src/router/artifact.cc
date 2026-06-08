@@ -115,13 +115,19 @@ auto RouterAction::artifact_serve(
     const std::string_view mime, const std::string_view link,
     const BrowserSecurityHeaders &browser_security, HTTPRequest &request,
     HTTPResponse &response, const std::string_view error_schema,
-    const std::string_view cache_control) const -> void {
+    const std::string_view cache_control, const std::string_view vary) const
+    -> void {
   // Caller must pick the cache scope explicitly so no surface
   // silently inherits an inappropriate default. Cacheability is a
   // per-surface policy decision (RFC 9111 §5.2.2): static assets
   // pin for a year, JSON API surfaces revalidate every hit, MCP and
   // health probe responses are uncacheable, etc.
   assert(!cache_control.empty());
+  // Same discipline for `Vary`: the negotiation axes that select a
+  // representation differ by surface (schema fetch is UA-branched,
+  // the default action is Accept-branched, others just gzip), so
+  // the caller has to pick the right stack.
+  assert(!vary.empty());
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
@@ -202,6 +208,7 @@ auto RouterAction::artifact_serve(
       // too. Otherwise the cache may keep evaluating against a
       // stale, more permissive `Cache-Control`.
       response.write_header("Cache-Control", cache_control);
+      response.write_header("Vary", vary);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -225,6 +232,7 @@ auto RouterAction::artifact_serve(
       }
       // See the matching comment on the If-None-Match branch.
       response.write_header("Cache-Control", cache_control);
+      response.write_header("Vary", vary);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -266,14 +274,13 @@ auto RouterAction::artifact_serve(
                                     ? etag_weak
                                     : etag_strong);
 
-  // RFC 9110 §12.5.5: emit Vary on cacheable responses so shared caches key
-  // the entry by the request headers that select the representation. The
-  // wire encoding and the ETag form (strong vs weak per RFC 9110 §8.8.1)
-  // both vary with `Accept-Encoding`; without this header a shared cache
-  // can serve the gzip variant to a client that didn't request gzip, or
-  // the strong-form ETag against a weak-form cached entry.
+  // RFC 9110 §12.5.5: emit Vary on cacheable responses so shared caches
+  // key the entry by the request headers that select the representation.
+  // Every surface includes `Accept-Encoding` (the wire encoding and the
+  // ETag form per RFC 9110 §8.8.1 both vary with it); surfaces with
+  // additional negotiation axes stack them on top.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-12.5.5
-  response.write_header("Vary", "Accept-Encoding");
+  response.write_header("Vary", vary);
 
   // RFC 9111 §5.2.2 — Cache-Control. Each surface picks its own
   // value; we just emit verbatim.

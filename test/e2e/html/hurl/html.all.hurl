@@ -10,10 +10,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -27,6 +27,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Regression: an HTML-preferring client doing a write method on the root URL
@@ -45,10 +46,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -62,6 +63,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 PUT {{base}}
@@ -77,10 +79,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -94,6 +96,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 DELETE {{base}}
@@ -109,10 +112,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -126,6 +129,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 GET {{base}}
@@ -137,6 +141,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "Sourcemeta Schemas"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -156,6 +161,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "A sample schema folder"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -171,6 +177,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "A sample schema folder"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -182,16 +189,17 @@ HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 GET {{base}}/test/doc
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -205,6 +213,7 @@ Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
+header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.status" == 404
 jsonpath "$.type" == "sourcemeta:one/not-found"
@@ -220,6 +229,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "Non-blank string"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -235,6 +245,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -250,6 +261,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "/test/v2.0"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -265,6 +277,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
@@ -276,6 +289,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -285,6 +299,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -293,6 +308,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -301,6 +317,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -309,6 +326,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -317,6 +335,7 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Access-Control-Allow-Origin" not exists
 
@@ -329,6 +348,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
@@ -343,6 +363,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "count(//script[not(contains(@src, '?v='))])" == 0
 xpath "count(//link[@rel='stylesheet' and not(contains(@href, '?v='))])" == 0
@@ -357,6 +378,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "/test/schemas/clash"
 xpath "count(//table/tbody/tr)" == 2
@@ -375,6 +397,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
 xpath "count(//code)" > 0
@@ -389,6 +412,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 xpath "string(/html/head/title)" == "/test/schemas/clash/foo"
 xpath "count(//code)" == 0
@@ -410,6 +434,7 @@ X-Frame-Options: DENY
 page1_script_v: xpath "substring-after(//script/@src, '?v=')"
 page1_style_v: xpath "substring-after(//link[@rel='stylesheet']/@href, '?v=')"
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 GET {{base}}/test/doc
 Accept: text/html
@@ -423,6 +448,7 @@ X-Frame-Options: DENY
 page2_script_v: xpath "substring-after(//script/@src, '?v=')"
 page2_style_v: xpath "substring-after(//link[@rel='stylesheet']/@href, '?v=')"
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 variable "page1_script_v" == "{{page2_script_v}}"
 variable "page1_style_v" == "{{page2_style_v}}"
@@ -443,10 +469,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -460,6 +486,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # The `.json` variant of an existing schema path takes a different
@@ -477,10 +504,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -494,6 +521,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Same for a path that resolves to a schema-html resource.
@@ -509,10 +537,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/method-not-allowed"
 jsonpath "$.title" == "Method Not Allowed"
@@ -526,6 +554,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # But a write method on a path that does not resolve to anything must
@@ -541,11 +570,11 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Allow" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/not-found"
 jsonpath "$.title" == "Not Found"
@@ -559,6 +588,7 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true
 
 # Same for a non-`.json` unknown path through the default fallback.
@@ -573,11 +603,11 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Allow" not exists
-header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.type" == "sourcemeta:one/not-found"
 jsonpath "$.title" == "Not Found"
@@ -591,4 +621,5 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 HTTP 200
 Cache-Control: no-store
 [Asserts]
+header "Vary" not exists
 jsonpath "$.valid" == true

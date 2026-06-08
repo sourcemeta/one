@@ -69,11 +69,17 @@ public:
           error_schema, "*");
       return;
     }
-    self.artifact_serve(path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
-                        is_deno ? std::string_view{"application/json"}
-                                : std::string_view{},
-                        {}, {}, request, response, error_schema,
-                        "public, max-age=0, must-revalidate");
+    // RFC 9110 §12.5.5: this surface UA-branches the served artifact
+    // (VSCode receives the `$id`-less variant; Deno receives an
+    // `application/json` content-type override). Shared caches must
+    // therefore key the entry by `User-Agent` on top of the universal
+    // `Accept-Encoding` axis, otherwise a cache hit from one client
+    // could leak the wrong representation to another.
+    self.artifact_serve(
+        path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
+        is_deno ? std::string_view{"application/json"} : std::string_view{}, {},
+        {}, request, response, error_schema,
+        "public, max-age=0, must-revalidate", "User-Agent, Accept-Encoding");
   }
 
   auto rest(const std::span<std::string_view> matches,

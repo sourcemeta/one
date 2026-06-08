@@ -181,6 +181,9 @@ public:
     // amortises full-text cost across typing-into-a-search-box
     // bursts without serving stale ranking long-term.
     response.write_header("Cache-Control", "public, max-age=60");
+    // RFC 9110 §12.5.5: the gzip negotiation axis applies, no other
+    // request-shaping axis selects the representation on this surface.
+    response.write_header("Vary", "Accept-Encoding");
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);
