@@ -188,6 +188,29 @@ public:
       return;
     }
 
+    // RFC 9110 §10.1.1: refuse unrecognised expectations with 417 before
+    // touching the body. uWS already auto-acknowledged `100-continue`
+    // upstream, so anything left here is a value we cannot honour.
+    if (sourcemeta::one::expect_header_unrecognised(request)) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_EXPECTATION_FAILED,
+          "sourcemeta:one/expectation-failed",
+          "The Expect header carries an unsupported expectation", error_schema,
+          "*");
+      return;
+    }
+
+    // RFC 9110 §15.5.14: when the client declares a `Content-Length`
+    // beyond the cap, fast-fail with 413 before scheduling the read.
+    if (sourcemeta::one::content_length_exceeds(
+            request, static_cast<std::size_t>(4) * 1024 * 1024)) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
+          "sourcemeta:one/payload-too-large",
+          "The request body exceeds the 4 MB limit", error_schema, "*");
+      return;
+    }
+
     request.body(
         [response_schema, error_schema, schema_uri = std::move(schema_uri),
          &self, request_schema, perform = std::move(perform)](

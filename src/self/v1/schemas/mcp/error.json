@@ -184,6 +184,12 @@
         },
         {
           "const": {
+            "code": -32009,
+            "message": "The Expect header carries an unsupported expectation"
+          }
+        },
+        {
+          "const": {
             "code": -32006,
             "message": "Accept header must list application/json and text/event-stream"
           }

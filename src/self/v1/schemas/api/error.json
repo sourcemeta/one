@@ -131,6 +131,14 @@
     },
     {
       "const": {
+        "type": "sourcemeta:one/expectation-failed",
+        "title": "Expectation Failed",
+        "status": 417,
+        "detail": "The Expect header carries an unsupported expectation"
+      }
+    },
+    {
+      "const": {
         "type": "sourcemeta:one/missing-schema-match",
         "title": "Internal Server Error",
         "status": 500,

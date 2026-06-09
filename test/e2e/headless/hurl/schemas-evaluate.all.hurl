@@ -50,6 +50,79 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# RFC 9110 §10.1.1: any expectation other than `100-continue` is
+# unsupported. The fast-fail emits 417 before the body is touched
+POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
+Expect: please-do-something-weird
+Content-Type: application/json
+"Hello World"
+HTTP 417
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.status" == 417
+jsonpath "$.type" == "sourcemeta:one/expectation-failed"
+jsonpath "$.title" == "Expectation Failed"
+jsonpath "$.detail" == "The Expect header carries an unsupported expectation"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+jsonpath "$.valid" == true
+
+# RFC 9110 §15.5.14: when a client declares a `Content-Length` that
+# already exceeds the 4 MB cap, fast-fail with 413 before scheduling
+# the read
+POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
+Content-Length: 5000000
+Content-Type: application/json
+"Hello World"
+HTTP 413
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.status" == 413
+jsonpath "$.type" == "sourcemeta:one/payload-too-large"
+jsonpath "$.title" == "Content Too Large"
+jsonpath "$.detail" == "The request body exceeds the 4 MB limit"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
 Content-Type: application/json
 "Hello World"

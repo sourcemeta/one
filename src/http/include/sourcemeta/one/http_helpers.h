@@ -8,17 +8,19 @@
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
 
-#include <cassert>     // assert
-#include <chrono>      // std::chrono::system_clock
-#include <cstddef>     // std::size_t
-#include <format>      // std::format
-#include <mutex>       // std::mutex, std::lock_guard
-#include <optional>    // std::optional
-#include <print>       // std::print
-#include <sstream>     // std::ostringstream
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <thread>      // std::this_thread
+#include <cassert>      // assert
+#include <charconv>     // std::from_chars
+#include <chrono>       // std::chrono::system_clock
+#include <cstddef>      // std::size_t
+#include <format>       // std::format
+#include <mutex>        // std::mutex, std::lock_guard
+#include <optional>     // std::optional
+#include <print>        // std::print
+#include <sstream>      // std::ostringstream
+#include <string>       // std::string
+#include <string_view>  // std::string_view
+#include <system_error> // std::errc
+#include <thread>       // std::this_thread
 
 namespace sourcemeta::one {
 
@@ -35,6 +37,39 @@ inline auto write_link_header(HTTPResponse &response,
   response.write_header("Link",
                         sourcemeta::core::http_format_link(
                             {.target = schema_path, .rel = "describedby"}));
+}
+
+// RFC 9110 §10.1.1: any expectation other than `100-continue` is
+// unsupported. uWS auto-acknowledges `100-continue` via router
+// middleware before our handler runs, so by the time we read the
+// `Expect` header here, the only values that can still appear are
+// either empty or something we cannot honour.
+inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
+  const auto expect{request.header("expect")};
+  return !expect.empty() && expect != "100-continue";
+}
+
+// RFC 9110 §8.6 + §15.5.14: if the client declares a `Content-Length`
+// that already exceeds the inbound body cap, refuse before reading
+// the body. uWS has already sent its automatic `100 Continue` for
+// `Expect: 100-continue` requests, but well-behaved clients abort
+// their upload on a mid-stream 4xx, so the fast-fail still saves
+// both sides bandwidth versus reading bytes until the cap trips.
+inline auto content_length_exceeds(const HTTPRequest &request,
+                                   const std::size_t max_size) -> bool {
+  const auto content_length{request.header("content-length")};
+  if (content_length.empty()) {
+    return false;
+  }
+  std::size_t declared{0};
+  const auto [pointer, error_code] =
+      std::from_chars(content_length.data(),
+                      content_length.data() + content_length.size(), declared);
+  if (error_code != std::errc{} ||
+      pointer != content_length.data() + content_length.size()) {
+    return false;
+  }
+  return declared > max_size;
 }
 
 inline auto send_response(const sourcemeta::core::HTTPStatus &status,
