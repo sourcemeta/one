@@ -594,7 +594,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == null
 jsonpath "$.error.code" == -32005
-jsonpath "$.error.message" == "Request body exceeds the 4 MB limit"
+jsonpath "$.error.message" == "Request body is too large"
 jsonpath "$.error.data" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

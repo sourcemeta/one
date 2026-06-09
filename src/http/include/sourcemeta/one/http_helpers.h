@@ -55,8 +55,7 @@ inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
 // `Expect: 100-continue` requests, but well-behaved clients abort
 // their upload on a mid-stream 4xx, so the fast-fail still saves
 // both sides bandwidth versus reading bytes until the cap trips.
-inline auto content_length_exceeds(const HTTPRequest &request,
-                                   const std::size_t max_size) -> bool {
+inline auto request_body_too_large(const HTTPRequest &request) -> bool {
   const auto content_length{request.header("content-length")};
   if (content_length.empty()) {
     return false;
@@ -69,7 +68,7 @@ inline auto content_length_exceeds(const HTTPRequest &request,
       pointer != content_length.data() + content_length.size()) {
     return false;
   }
-  return declared > max_size;
+  return declared > MAX_REQUEST_BODY_BYTES;
 }
 
 inline auto send_response(const sourcemeta::core::HTTPStatus &status,

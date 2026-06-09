@@ -111,7 +111,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.status" == 413
 jsonpath "$.type" == "sourcemeta:one/payload-too-large"
 jsonpath "$.title" == "Content Too Large"
-jsonpath "$.detail" == "The request body exceeds the 4 MB limit"
+jsonpath "$.detail" == "The request body is too large"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

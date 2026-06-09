@@ -8,6 +8,7 @@
 #include <sourcemeta/one/http_uwebsockets.h>
 
 #include <chrono>      // std::chrono::system_clock
+#include <cstddef>     // std::size_t
 #include <exception>   // std::exception_ptr, std::current_exception
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
@@ -16,6 +17,12 @@
 #include <utility>     // std::move
 
 namespace sourcemeta::one {
+
+// 4 MB inbound body cap. Accommodates realistic JSON Schema instances
+// and evaluate bodies while still rejecting pathological inputs. RFC
+// 9110 §15.5.14 maps oversize bodies to 413 Content Too Large.
+inline constexpr std::size_t MAX_REQUEST_BODY_BYTES{
+    static_cast<std::size_t>(4) * 1024 * 1024};
 
 class HTTPRequest {
 public:
@@ -102,16 +109,13 @@ public:
   // - callback: Invoked with (response, body, too_big) on completion
   // - on_error: Invoked with (response, exception_ptr) on any exception,
   //   including exceptions thrown by the main callback
-  // - max_size: Maximum body size in bytes. 4 MB accommodates realistic
-  //   JSON Schema instances and evaluate bodies while still rejecting
-  //   pathological inputs. RFC 9110 §15.5.14 maps oversize bodies to
-  //   413 Content Too Large.
+  // - max_size: Maximum body size in bytes. Defaults to the universal
+  //   cap. See `MAX_REQUEST_BODY_BYTES` above for the rationale.
   // Note: If the request is aborted, the callback is not invoked
   template <typename Callback, typename ErrorCallback>
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
   auto body(Callback callback, ErrorCallback on_error,
-            std::size_t max_size = static_cast<std::size_t>(4) * 1024 * 1024)
-      -> void {
+            std::size_t max_size = MAX_REQUEST_BODY_BYTES) -> void {
     auto raw_response = this->response_;
     auto snapshot = std::make_shared<HTTPRequest>(
         std::string{this->method()}, std::string{this->path()},

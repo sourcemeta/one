@@ -179,7 +179,7 @@
         {
           "const": {
             "code": -32005,
-            "message": "Request body exceeds the 4 MB limit"
+            "message": "Request body is too large"
           }
         },
         {

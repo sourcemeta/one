@@ -202,12 +202,11 @@ public:
 
     // RFC 9110 §15.5.14: when the client declares a `Content-Length`
     // beyond the cap, fast-fail with 413 before scheduling the read.
-    if (sourcemeta::one::content_length_exceeds(
-            request, static_cast<std::size_t>(4) * 1024 * 1024)) {
+    if (sourcemeta::one::request_body_too_large(request)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-          "sourcemeta:one/payload-too-large",
-          "The request body exceeds the 4 MB limit", error_schema, "*");
+          "sourcemeta:one/payload-too-large", "The request body is too large",
+          error_schema, "*");
       return;
     }
 
@@ -222,7 +221,7 @@ public:
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                 "sourcemeta:one/payload-too-large",
-                "The request body exceeds the 4 MB limit", error_schema, "*");
+                "The request body is too large", error_schema, "*");
             return;
           }
 
