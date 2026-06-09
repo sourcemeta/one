@@ -75,10 +75,10 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const std::chrono::milliseconds duration,
                            const std::string &content) -> void {
   // Always compute the compressed representation so the size lands in
-  // the header (currently gzip; the field name stays compression-agnostic
-  // so a future codec swap is mechanical). For compressed-storage
-  // artifacts the bytes are also what we write to disk; for Identity
-  // storage only the size is kept.
+  // the header. The codec is gzip today, the field name stays
+  // compression-agnostic so a future codec swap is mechanical. For
+  // compressed-storage artifacts the bytes are also what we write to
+  // disk. For Identity storage only the size is kept.
   const auto compressed{sourcemeta::core::gzip(
       reinterpret_cast<const std::uint8_t *>(content.data()), content.size())};
   sourcemeta::core::write_file(destination, [&](std::ostream &output) {
