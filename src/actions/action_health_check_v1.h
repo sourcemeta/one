@@ -48,7 +48,7 @@ public:
     if (request.method() != "get" && request.method() != "head") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-          "sourcemeta:one/method-not-allowed",
+          "urn:sourcemeta:one:method-not-allowed",
           "This HTTP method is invalid for this URL", this->error_schema_, "*",
           "GET, HEAD, OPTIONS");
       return;

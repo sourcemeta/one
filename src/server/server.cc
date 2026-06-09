@@ -45,17 +45,17 @@ static auto dispatch(sourcemeta::one::Router &actions,
     } else {
       actions.error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
-          "sourcemeta:one/cannot-satisfy-content-encoding",
+          "urn:sourcemeta:one:cannot-satisfy-content-encoding",
           "The server cannot satisfy the request content encoding", "*");
     }
   } catch (const std::exception &error) {
     actions.error(request, response,
                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                  "sourcemeta:one/uncaught-error", error.what(), "*");
+                  "urn:sourcemeta:one:uncaught-error", error.what(), "*");
   } catch (...) {
     actions.error(request, response,
                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                  "sourcemeta:one/uncaught-error",
+                  "urn:sourcemeta:one:uncaught-error",
                   "An unknown unexpected error occurred", "*");
   }
 }

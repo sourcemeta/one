@@ -145,7 +145,7 @@ public:
         path.find("%23") != std::string_view::npos) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-          "sourcemeta:one/invalid-schema-uri",
+          "urn:sourcemeta:one:invalid-schema-uri",
           "The schema URI must not contain a fragment", error_schema, "*");
       return;
     }
@@ -153,7 +153,7 @@ public:
     if (request.method() != "post") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-          "sourcemeta:one/method-not-allowed",
+          "urn:sourcemeta:one:method-not-allowed",
           "This HTTP method is invalid for this URL", error_schema, "*",
           "POST, OPTIONS");
       return;
@@ -170,7 +170,7 @@ public:
     if (!schema_present.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "sourcemeta:one/not-found", "There is nothing at this URL",
+          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
           error_schema, "*");
       return;
     }
@@ -182,7 +182,7 @@ public:
       // actually supported on this URL.
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-          "sourcemeta:one/no-schema-template",
+          "urn:sourcemeta:one:no-schema-template",
           "This schema was not precompiled for schema evaluation", error_schema,
           "*", "OPTIONS");
       return;
@@ -194,7 +194,7 @@ public:
     if (sourcemeta::one::expect_header_unrecognised(request)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_EXPECTATION_FAILED,
-          "sourcemeta:one/expectation-failed",
+          "urn:sourcemeta:one:expectation-failed",
           "The Expect header carries an unsupported expectation", error_schema,
           "*");
       return;
@@ -205,8 +205,8 @@ public:
     if (sourcemeta::one::request_body_too_large(request)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-          "sourcemeta:one/payload-too-large", "The request body is too large",
-          error_schema, "*");
+          "urn:sourcemeta:one:payload-too-large",
+          "The request body is too large", error_schema, "*");
       return;
     }
 
@@ -220,7 +220,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-                "sourcemeta:one/payload-too-large",
+                "urn:sourcemeta:one:payload-too-large",
                 "The request body is too large", error_schema, "*");
             return;
           }
@@ -229,7 +229,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                "sourcemeta:one/no-instance",
+                "urn:sourcemeta:one:no-instance",
                 "You must pass an instance to validate against", error_schema,
                 "*");
             return;
@@ -242,7 +242,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                "sourcemeta:one/invalid-json",
+                "urn:sourcemeta:one:invalid-json",
                 "The request body is not valid JSON", error_schema, "*");
             return;
           }
@@ -251,7 +251,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                "sourcemeta:one/invalid-request",
+                "urn:sourcemeta:one:invalid-request",
                 "The request body does not match the expected schema",
                 error_schema, "*");
             return;
@@ -280,7 +280,7 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                "sourcemeta:one/schema-evaluation-error", exception.what(),
+                "urn:sourcemeta:one:schema-evaluation-error", exception.what(),
                 error_schema, "*");
           }
         },
@@ -293,8 +293,8 @@ public:
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                "sourcemeta:one/uncaught-error", exception.what(), error_schema,
-                "*");
+                "urn:sourcemeta:one:uncaught-error", exception.what(),
+                error_schema, "*");
           }
         });
   }

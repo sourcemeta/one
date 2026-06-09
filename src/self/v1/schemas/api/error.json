@@ -4,13 +4,13 @@
   "description": "The error response format returned by the Sourcemeta One API endpoints",
   "examples": [
     {
-      "type": "sourcemeta:one/not-found",
+      "type": "urn:sourcemeta:one:not-found",
       "title": "Not Found",
       "status": 404,
       "detail": "There is nothing at this URL"
     },
     {
-      "type": "sourcemeta:one/schema-evaluation-error",
+      "type": "urn:sourcemeta:one:schema-evaluation-error",
       "title": "Internal Server Error",
       "status": 500,
       "detail": "Compilation failed: unsupported keyword"
@@ -19,7 +19,7 @@
   "anyOf": [
     {
       "const": {
-        "type": "sourcemeta:one/not-found",
+        "type": "urn:sourcemeta:one:not-found",
         "title": "Not Found",
         "status": 404,
         "detail": "There is nothing at this URL"
@@ -27,7 +27,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/method-not-allowed",
+        "type": "urn:sourcemeta:one:method-not-allowed",
         "title": "Method Not Allowed",
         "status": 405,
         "detail": "This HTTP method is invalid for this URL"
@@ -35,7 +35,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/no-schema-template",
+        "type": "urn:sourcemeta:one:no-schema-template",
         "title": "Method Not Allowed",
         "status": 405,
         "detail": "This schema was not precompiled for schema evaluation"
@@ -43,7 +43,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-schema-uri",
+        "type": "urn:sourcemeta:one:invalid-schema-uri",
         "title": "Bad Request",
         "status": 400,
         "detail": "The schema URI must not contain a fragment"
@@ -51,7 +51,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/missing-search-query",
+        "type": "urn:sourcemeta:one:missing-search-query",
         "title": "Bad Request",
         "status": 400,
         "detail": "You must provide a query parameter to search for"
@@ -59,7 +59,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-search-query",
+        "type": "urn:sourcemeta:one:invalid-search-query",
         "title": "Bad Request",
         "status": 400,
         "detail": "The search query must contain at least one non-whitespace character"
@@ -67,7 +67,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-search-query",
+        "type": "urn:sourcemeta:one:invalid-search-query",
         "title": "Bad Request",
         "status": 400,
         "detail": "The search query must not exceed 256 characters"
@@ -75,7 +75,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-search-limit",
+        "type": "urn:sourcemeta:one:invalid-search-limit",
         "title": "Bad Request",
         "status": 400,
         "detail": "The limit must be a positive integer between 1 and 100"
@@ -83,7 +83,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-search-scope",
+        "type": "urn:sourcemeta:one:invalid-search-scope",
         "title": "Bad Request",
         "status": 400,
         "detail": "The scope must be a comma-separated list of: path, title, description"
@@ -91,7 +91,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/no-instance",
+        "type": "urn:sourcemeta:one:no-instance",
         "title": "Bad Request",
         "status": 400,
         "detail": "You must pass an instance to validate against"
@@ -99,7 +99,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-json",
+        "type": "urn:sourcemeta:one:invalid-json",
         "title": "Bad Request",
         "status": 400,
         "detail": "The request body is not valid JSON"
@@ -107,7 +107,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/invalid-request",
+        "type": "urn:sourcemeta:one:invalid-request",
         "title": "Bad Request",
         "status": 400,
         "detail": "The request body does not match the expected schema"
@@ -115,7 +115,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/cannot-satisfy-content-encoding",
+        "type": "urn:sourcemeta:one:cannot-satisfy-content-encoding",
         "title": "Not Acceptable",
         "status": 406,
         "detail": "The server cannot satisfy the request content encoding"
@@ -123,7 +123,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/payload-too-large",
+        "type": "urn:sourcemeta:one:payload-too-large",
         "title": "Content Too Large",
         "status": 413,
         "detail": "The request body is too large"
@@ -131,7 +131,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/expectation-failed",
+        "type": "urn:sourcemeta:one:expectation-failed",
         "title": "Expectation Failed",
         "status": 417,
         "detail": "The Expect header carries an unsupported expectation"
@@ -139,7 +139,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/missing-schema-match",
+        "type": "urn:sourcemeta:one:missing-schema-match",
         "title": "Internal Server Error",
         "status": 500,
         "detail": "This action requires a schema path match"
@@ -147,7 +147,7 @@
     },
     {
       "const": {
-        "type": "sourcemeta:one/unknown-action",
+        "type": "urn:sourcemeta:one:unknown-action",
         "title": "Not Implemented",
         "status": 501,
         "detail": "This version does not implement such action handler for this URL"
@@ -158,7 +158,7 @@
       "required": [ "type", "title", "status", "detail" ],
       "properties": {
         "type": {
-          "const": "sourcemeta:one/schema-evaluation-error"
+          "const": "urn:sourcemeta:one:schema-evaluation-error"
         },
         "title": {
           "const": "Internal Server Error"
@@ -178,7 +178,7 @@
       "required": [ "type", "title", "status", "detail" ],
       "properties": {
         "type": {
-          "const": "sourcemeta:one/uncaught-error"
+          "const": "urn:sourcemeta:one:uncaught-error"
         },
         "title": {
           "const": "Internal Server Error"
