@@ -109,8 +109,7 @@ public:
   // - callback: Invoked with (response, body, too_big) on completion
   // - on_error: Invoked with (response, exception_ptr) on any exception,
   //   including exceptions thrown by the main callback
-  // - max_size: Maximum body size in bytes. Defaults to the universal
-  //   cap. See `MAX_REQUEST_BODY_BYTES` above for the rationale.
+  // - max_size: Maximum body size in bytes.
   // Note: If the request is aborted, the callback is not invoked
   template <typename Callback, typename ErrorCallback>
   // NOLINTNEXTLINE(performance-unnecessary-value-param)

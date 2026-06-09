@@ -3,24 +3,23 @@
 
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/time.h>
 
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
 
-#include <cassert>      // assert
-#include <charconv>     // std::from_chars
-#include <chrono>       // std::chrono::system_clock
-#include <cstddef>      // std::size_t
-#include <format>       // std::format
-#include <mutex>        // std::mutex, std::lock_guard
-#include <optional>     // std::optional
-#include <print>        // std::print
-#include <sstream>      // std::ostringstream
-#include <string>       // std::string
-#include <string_view>  // std::string_view
-#include <system_error> // std::errc
-#include <thread>       // std::this_thread
+#include <cassert>     // assert
+#include <chrono>      // std::chrono::system_clock
+#include <cstddef>     // std::size_t
+#include <format>      // std::format
+#include <mutex>       // std::mutex, std::lock_guard
+#include <optional>    // std::optional
+#include <print>       // std::print
+#include <sstream>     // std::ostringstream
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <thread>      // std::this_thread
 
 namespace sourcemeta::one {
 
@@ -56,19 +55,9 @@ inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
 // their upload on a mid-stream 4xx, so the fast-fail still saves
 // both sides bandwidth versus reading bytes until the cap trips.
 inline auto request_body_too_large(const HTTPRequest &request) -> bool {
-  const auto content_length{request.header("content-length")};
-  if (content_length.empty()) {
-    return false;
-  }
-  std::size_t declared{0};
-  const auto [pointer, error_code] =
-      std::from_chars(content_length.data(),
-                      content_length.data() + content_length.size(), declared);
-  if (error_code != std::errc{} ||
-      pointer != content_length.data() + content_length.size()) {
-    return false;
-  }
-  return declared > MAX_REQUEST_BODY_BYTES;
+  const auto declared{
+      sourcemeta::core::to_uint64_t(request.header("content-length"))};
+  return declared.has_value() && declared.value() > MAX_REQUEST_BODY_BYTES;
 }
 
 inline auto send_response(const sourcemeta::core::HTTPStatus &status,
