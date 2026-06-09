@@ -40,7 +40,7 @@
     "defaultDialect": {
       "x-format-assertion": true,
       "type": "string",
-      "format": "uri"
+      "format": "uri-reference"
     },
     "email": {
       "x-format-assertion": true,

@@ -13,24 +13,40 @@
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard
+#include <optional>      // std::optional, std::nullopt
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
 
+static auto
+pre_resolve(const sourcemeta::one::Configuration::Collection &collection,
+            const std::string_view uri, const sourcemeta::core::URI &server)
+    -> std::optional<std::string> {
+  const auto match{collection.resolve.find(std::string{uri})};
+  if (match == collection.resolve.cend()) {
+    return std::nullopt;
+  }
+  sourcemeta::core::URI target{match->second};
+  if (target.is_relative()) {
+    sourcemeta::core::URI merged{server};
+    merged.append_path(std::move(target));
+    return merged.recompose();
+  }
+  return target.recompose();
+}
+
 static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::JSON::String &uri,
-                   const sourcemeta::core::JSON::String &new_base,
+                   const sourcemeta::core::URI &new_base,
                    const sourcemeta::core::JSON::String &new_prefix)
     -> sourcemeta::core::JSON::String {
   sourcemeta::core::URI maybe_relative{uri};
-  maybe_relative.relative_to(collection.base);
+  maybe_relative.relative_to(collection.base_uri);
   if (maybe_relative.is_relative()) {
     auto suffix{maybe_relative.path().value_or("")};
     assert(!suffix.empty());
     return sourcemeta::core::URI{new_base}
         .append_path(new_prefix)
-        // TODO: Let `append_path` take a URI
-        // TODO: Also implement a move overload
         .append_path(suffix)
         .canonicalize()
         .recompose();
@@ -69,7 +85,7 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
               const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
               const sourcemeta::core::JSON::String &keyword,
               const sourcemeta::core::JSON::String &reference,
-              const std::string_view url) -> void {
+              const sourcemeta::core::URI &server) -> void {
   // We never want to mess with internal references.
   // We assume those are always well formed
   if (reference.starts_with('#')) {
@@ -79,9 +95,26 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   // If we have a match in the configuration resolver, then trust that.
   const auto match{collection.resolve.find(reference)};
   if (match != collection.resolve.cend()) {
-    sourcemeta::core::URI target{url};
-    target.append_path(match->second);
-    schema.assign(keyword, sourcemeta::core::JSON{target.path().value_or("")});
+    sourcemeta::core::URI target{match->second};
+    if (target.is_relative()) {
+      sourcemeta::core::URI merged{server};
+      merged.append_path(std::move(target));
+      target = std::move(merged);
+    }
+    const auto target_path{target.path()};
+    if (target_path.has_value()) {
+      target.path(normalise_identifier(target_path.value()));
+    }
+    // For targets in the instance URL's namespace, store the served value
+    // as a relative reference so the schema body stays portable across
+    // deployments. For foreign authorities, keep the full URI so reference
+    // resolution sees it as-is (and fails honestly if unregistered).
+    if (target.has_same_authority(server)) {
+      schema.assign(keyword,
+                    sourcemeta::core::JSON{target.recompose_relative()});
+    } else {
+      schema.assign(keyword, sourcemeta::core::JSON{target.recompose()});
+    }
     return;
   }
 
@@ -105,7 +138,8 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
 
 namespace sourcemeta::one {
 
-Resolver::Resolver(const std::string_view url) : server_url{url} {}
+Resolver::Resolver(const std::string_view url)
+    : server_url{url}, server_uri{std::string{url}} {}
 
 auto Resolver::operator()(
     std::string_view raw_identifier,
@@ -219,7 +253,7 @@ auto Resolver::operator()(
         if (maybe_ref && maybe_ref->is_string()) {
           normalise_ref(*result->second.collection, entry.second.base,
                         subschema, "$ref", maybe_ref->to_string(),
-                        this->server_url);
+                        this->server_uri);
         }
 
         if (entry.second.base_dialect ==
@@ -229,7 +263,7 @@ auto Resolver::operator()(
           if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
             normalise_ref(*result->second.collection, entry.second.base,
                           subschema, "$dynamicRef",
-                          maybe_dynamic_ref->to_string(), this->server_url);
+                          maybe_dynamic_ref->to_string(), this->server_uri);
           }
         }
       }
@@ -272,7 +306,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     // a file-system-based identifier based on the *current* URI
     /////////////////////////////////////////////////////////////////////////////
     const auto default_identifier{
-        sourcemeta::core::URI{collection.base}
+        sourcemeta::core::URI{collection.base_uri}
             .append_path(normalise_identifier(
                 std::filesystem::relative(path, collection.absolute_path)
                     .string()))
@@ -281,19 +315,22 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     sourcemeta::core::URI identifier_uri{
         normalise_identifier(sourcemeta::blaze::identify(
             schema,
-            [this](const auto subidentifier) {
+            [this, &collection](const auto subidentifier) {
+              const auto rewritten{
+                  pre_resolve(collection, subidentifier, this->server_uri)};
+              if (rewritten.has_value()) {
+                return this->operator()(*rewritten);
+              }
               return this->operator()(subidentifier);
             },
             default_dialect_str, default_identifier))};
     identifier_uri.canonicalize();
-    auto identifier{
-        identifier_uri.is_relative()
-            // TODO: Becase with `try_resolve_from`, `https://example.com/foo` +
-            // `bar.json` will be `https://example.com/bar.json` instead of
-            // `https://example.com/foo/bar.json`. Maybe we need an
-            // `append_from`?
-            ? (collection.base + "/" + identifier_uri.recompose())
-            : identifier_uri.recompose()};
+    auto identifier{identifier_uri.is_relative()
+                        ? sourcemeta::core::URI{collection.base_uri}
+                              .append_path(std::move(identifier_uri))
+                              .canonicalize()
+                              .recompose()
+                        : identifier_uri.recompose()};
     // We have to do something if the schema is the base. Note that URI
     // canonicalisation technically cannot remove trailing slashes as they might
     // have meaning in certain use cases. But we still consider them equal in
@@ -321,18 +358,32 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     // (4) Determine the dialect of the schema, which we also need to make sure
     // we rebase according to the one base URI, etc
     /////////////////////////////////////////////////////////////////////////////
-    const auto raw_dialect{
+    std::string raw_dialect{
         sourcemeta::blaze::dialect(schema, default_dialect_str)};
     if (raw_dialect.empty()) {
       throw sourcemeta::blaze::SchemaUnknownDialectError();
     }
+    auto rewritten{pre_resolve(collection, raw_dialect, this->server_uri)};
+    bool resolved_to_instance{false};
+    if (rewritten.has_value()) {
+      raw_dialect = std::move(*rewritten);
+      // If pre_resolve yielded a URI already in the instance URL's authority,
+      // it is already in the canonical registry form. The rebase machinery
+      // exists to translate baseUri-canonical identifiers into server-URL
+      // form, and would only mangle a URI that is already there.
+      resolved_to_instance =
+          sourcemeta::core::URI{raw_dialect}.has_same_authority(
+              this->server_uri);
+    }
     const auto is_official_dialect{
+        !resolved_to_instance &&
         sourcemeta::blaze::is_known_schema(raw_dialect)};
     auto current_dialect{
-        is_official_dialect
-            ? std::string{raw_dialect}
+        resolved_to_instance ? normalise_identifier(raw_dialect)
+        : is_official_dialect
+            ? raw_dialect
             : rebase(collection, normalise_identifier(raw_dialect),
-                     std::string{this->server_url}, collection_relative_path)};
+                     this->server_uri, collection_relative_path)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -347,7 +398,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
         new_identifier,
         Entry{.path = path,
               .relative_path = sourcemeta::core::URI{new_identifier}
-                                   .relative_to(std::string{this->server_url})
+                                   .relative_to(this->server_uri)
                                    .recompose(),
               .mtime = mtime,
               .evaluate = evaluate,
