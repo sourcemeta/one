@@ -1,0 +1,4 @@
+{
+  "$schema": "urn:example:custom-meta",
+  "type": "string"
+}

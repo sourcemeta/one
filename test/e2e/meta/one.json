@@ -1,0 +1,36 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "hero": "<p class=\"mb-0\">A sample sandbox for testing custom meta-schemas</p>",
+    "action": {
+      "title": "Star on GitHub",
+      "url": "https://github.com/sourcemeta/one",
+      "icon": "github"
+    }
+  },
+  "contents": {
+    "meta": {
+      "title": "Meta",
+      "description": "A collection of custom meta-schemas",
+      "path": "./schemas/meta"
+    },
+    "with-relative-default-dialect": {
+      "title": "With Relative Default Dialect",
+      "description": "Schemas that point at a custom meta-schema via a relative defaultDialect",
+      "path": "./schemas/with-relative-default-dialect",
+      "defaultDialect": "../meta/custom"
+    },
+    "with-jsonschema-json": {
+      "include": "./schemas/with-jsonschema-json"
+    },
+    "with-schema-resolve-and-default-dialect": {
+      "title": "With $schema, Resolve and Default Dialect",
+      "description": "Schemas that declare $schema as an absolute non-registry URI routed via resolve, with a matching defaultDialect",
+      "path": "./schemas/with-schema-resolve-and-default-dialect",
+      "defaultDialect": "urn:example:custom-meta",
+      "resolve": {
+        "urn:example:custom-meta": "/meta/custom.json"
+      }
+    }
+  }
+}
