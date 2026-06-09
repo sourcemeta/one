@@ -10,8 +10,10 @@
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
+#include <cstddef>     // std::size_t
 #include <format>      // std::format
 #include <mutex>       // std::mutex, std::lock_guard
+#include <optional>    // std::optional
 #include <print>       // std::print
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -43,11 +45,14 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
       std::format("{} {} {}", status.wire, request.method(), request.path()));
 }
 
-inline auto send_response(const sourcemeta::core::HTTPStatus &status,
-                          const HTTPRequest &request, HTTPResponse &response,
-                          const std::string &message,
-                          const Encoding current_encoding) -> void {
-  response.send(request, message, current_encoding);
+inline auto send_response(
+    const sourcemeta::core::HTTPStatus &status, const HTTPRequest &request,
+    HTTPResponse &response, const std::string &message,
+    const Encoding current_encoding,
+    const std::optional<std::size_t> precomputed_compressed_size = std::nullopt)
+    -> void {
+  response.send(request, message, current_encoding,
+                precomputed_compressed_size);
   HTTP_LOG(
       std::format("{} {} {}", status.wire, request.method(), request.path()));
 }

@@ -336,8 +336,10 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::send_response(status, request, response, contents,
                                    sourcemeta::one::Encoding::GZIP);
   } else {
-    sourcemeta::one::send_response(status, request, response, contents,
-                                   sourcemeta::one::Encoding::Identity);
+    sourcemeta::one::send_response(
+        status, request, response, contents,
+        sourcemeta::one::Encoding::Identity,
+        static_cast<std::size_t>(info->compressed_bytes));
   }
 }
 

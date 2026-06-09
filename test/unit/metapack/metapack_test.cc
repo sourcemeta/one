@@ -273,6 +273,42 @@ TEST(Metapack, write_and_read_text_gzip_large) {
   EXPECT_EQ(result.value(), large_text + "\n");
 }
 
+TEST(Metapack, compressed_bytes_matches_payload_for_gzip_encoding) {
+  const auto path{test_path("compressed_bytes_gzip.metapack")};
+  auto document{sourcemeta::core::JSON::make_object()};
+  document.assign("hello", sourcemeta::core::JSON{"world"});
+
+  sourcemeta::one::metapack_write_json(path, document, "application/json",
+                                       sourcemeta::one::MetapackEncoding::GZIP,
+                                       {}, std::chrono::milliseconds{0});
+
+  sourcemeta::core::FileView view{path};
+  const auto payload_offset{
+      sourcemeta::one::metapack_payload_offset(view).value()};
+  const auto payload_size{view.size() - payload_offset};
+
+  const auto info{sourcemeta::one::metapack_info(view).value()};
+  EXPECT_EQ(info.encoding, sourcemeta::one::MetapackEncoding::GZIP);
+  EXPECT_EQ(info.compressed_bytes, payload_size);
+}
+
+TEST(Metapack, compressed_bytes_populated_for_identity_encoding) {
+  const auto path{test_path("compressed_bytes_identity.metapack")};
+  auto document{sourcemeta::core::JSON::make_object()};
+  document.assign("hello", sourcemeta::core::JSON{"world"});
+
+  sourcemeta::one::metapack_write_json(
+      path, document, "application/json",
+      sourcemeta::one::MetapackEncoding::Identity, {},
+      std::chrono::milliseconds{0});
+
+  sourcemeta::core::FileView view{path};
+  const auto info{sourcemeta::one::metapack_info(view).value()};
+  EXPECT_EQ(info.encoding, sourcemeta::one::MetapackEncoding::Identity);
+  EXPECT_GT(info.compressed_bytes, 0);
+  EXPECT_NE(info.compressed_bytes, info.content_bytes);
+}
+
 TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
   const auto path{test_path("bad_content_bytes.metapack")};
 

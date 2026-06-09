@@ -26,7 +26,8 @@ static auto write_binary_header(std::ostream &output,
                                 const std::span<const std::uint8_t> extension,
                                 const std::chrono::milliseconds duration,
                                 const std::string_view payload,
-                                const std::size_t uncompressed_size) -> void {
+                                const std::size_t uncompressed_size,
+                                const std::size_t compressed_size) -> void {
   MetapackHeader header{};
   header.magic = METAPACK_MAGIC;
   header.format_version = METAPACK_VERSION;
@@ -38,6 +39,7 @@ static auto write_binary_header(std::ostream &output,
                              now.time_since_epoch())
                              .count();
   header.content_bytes = uncompressed_size;
+  header.compressed_bytes = compressed_size;
   header.duration = duration.count();
 
   const auto hex_string{sourcemeta::core::sha256(payload)};
@@ -72,14 +74,18 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const std::span<const std::uint8_t> extension,
                            const std::chrono::milliseconds duration,
                            const std::string &content) -> void {
+  // Always compute the compressed representation so the size lands in
+  // the header (currently gzip; the field name stays compression-agnostic
+  // so a future codec swap is mechanical). For compressed-storage
+  // artifacts the bytes are also what we write to disk; for Identity
+  // storage only the size is kept.
+  const auto compressed{sourcemeta::core::gzip(
+      reinterpret_cast<const std::uint8_t *>(content.data()), content.size())};
   sourcemeta::core::write_file(destination, [&](std::ostream &output) {
     write_binary_header(output, mime, encoding, extension, duration, content,
-                        content.size());
+                        content.size(), compressed.size());
 
     if (encoding == MetapackEncoding::GZIP) {
-      const auto compressed{sourcemeta::core::gzip(
-          reinterpret_cast<const std::uint8_t *>(content.data()),
-          content.size())};
       output.write(compressed.data(),
                    static_cast<std::streamsize>(compressed.size()));
     } else {
@@ -335,6 +341,7 @@ auto metapack_info(const sourcemeta::core::FileView &view)
                       .mime = std::string{mime_data, header->mime_length},
                       .encoding = header->encoding,
                       .content_bytes = header->content_bytes,
+                      .compressed_bytes = header->compressed_bytes,
                       .duration = std::chrono::milliseconds{header->duration}};
 }
 
