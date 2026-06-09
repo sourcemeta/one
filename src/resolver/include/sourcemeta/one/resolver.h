@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_RESOLVER_H_
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/configuration.h>
 
@@ -74,6 +75,7 @@ private:
   Views views;
   std::shared_mutex mutex;
   std::string_view server_url;
+  sourcemeta::core::URI server_uri;
 };
 
 } // namespace sourcemeta::one

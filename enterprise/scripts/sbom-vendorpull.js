@@ -13,7 +13,6 @@ const LICENSES = {
   "pcre2": "BSD-3-Clause",
   "libdeflate": "MIT",
   "cmark-gfm": "BSD-2-Clause",
-  "zlib": "Zlib",
   "unicodetools": "Unicode-3.0"
 };
 

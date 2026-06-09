@@ -298,8 +298,8 @@
       }
     },
     {
-      "description": "Collection defaultDialect that is not an absolute URI is invalid",
-      "valid": false,
+      "description": "Collection defaultDialect may be a relative URI reference",
+      "valid": true,
       "data": {
         "url": "http://localhost:8000",
         "contents": {
@@ -307,7 +307,7 @@
             "title": "Test",
             "baseUri": "https://example.com/extension",
             "path": "./schemas/example/extension",
-            "defaultDialect": "relative/path"
+            "defaultDialect": "../meta/custom"
           }
         }
       }

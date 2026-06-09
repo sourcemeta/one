@@ -135,7 +135,7 @@ contain the actual schema definitions that power your instance.
 |-----------------|------|----------|---------|-------------|
 | `/path`         | String  | :red_circle: **Yes** (unless `include` is set) | N/A | The path (relative to the location of the configuration file) to the directory which includes the schemas for this collection. The directory will be recursively traversed in search of `.json`, `.yaml`, or `.yml` schemas |
 | `/baseUri`         | String  | No  | *The top-level `url`* | The base URI of every schema file that is part of this collection, for rebasing purposes. If a schema defines an explicit identifier that is not relative to this base URI, the generation of the instance will fail |
-| `/defaultDialect` | String  | No  | None | The default JSON Schema dialect URI to use for schemas that do not declare the `$schema` keyword |
+| `/defaultDialect` | String  | No  | None | The default JSON Schema dialect URI Reference to use for schemas that do not declare the `$schema` keyword. Accepts a URI reference, which is rebased against the collection's `baseUri` (or the top-level `url` joined with the collection path) unless it names an [official JSON Schema dialect](https://json-schema.org/specification-links) |
 | `/title`        | String  | No  | None | The concise title of the schema collection |
 | `/description`  | String  | No  | None | A longer description of the schema collection. The web explorer renders this as Markdown |
 | `/email`        | String  | No  | None | The e-mail address associated with the schema collection |
