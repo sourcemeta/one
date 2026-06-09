@@ -202,7 +202,11 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 
 === "413"
 
-    The request body exceeds the 4 MB cap. See [RFC 9110 §15.5.14](https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.14).
+    The request body is too large. See [RFC 9110 §15.5.14](https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.14).
+
+=== "417"
+
+    The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
 
 ### Trace
 
@@ -256,7 +260,11 @@ insight into the validation engine's behavior and logic flow.
 
 === "413"
 
-    The request body exceeds the 4 MB cap. See [RFC 9110 §15.5.14](https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.14).
+    The request body is too large. See [RFC 9110 §15.5.14](https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.14).
+
+=== "417"
+
+    The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
 
 ### Metadata
 

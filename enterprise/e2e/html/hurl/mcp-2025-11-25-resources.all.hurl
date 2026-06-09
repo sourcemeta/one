@@ -444,7 +444,7 @@ jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[20].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 5179
+jsonpath "$.result.resources[20].size" == 5395
 jsonpath "$.result.resources[20].annotations.priority" == 0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One List API Response"
@@ -534,7 +534,7 @@ jsonpath "$.result.resources[35].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[35].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[35].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[35].size" == 5710
+jsonpath "$.result.resources[35].size" == 5860
 jsonpath "$.result.resources[35].annotations.priority" == 0
 jsonpath "$.result.resources[36].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[36].name" == "Sourcemeta One MCP Initialize Request"

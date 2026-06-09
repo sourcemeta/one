@@ -126,7 +126,15 @@
         "type": "sourcemeta:one/payload-too-large",
         "title": "Content Too Large",
         "status": 413,
-        "detail": "The request body exceeds the 4 MB limit"
+        "detail": "The request body is too large"
+      }
+    },
+    {
+      "const": {
+        "type": "sourcemeta:one/expectation-failed",
+        "title": "Expectation Failed",
+        "status": 417,
+        "detail": "The Expect header carries an unsupported expectation"
       }
     },
     {

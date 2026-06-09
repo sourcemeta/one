@@ -4,6 +4,8 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME http
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::json)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::time)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::http)
+target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::numeric)
+target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::text)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::core::gzip)
 target_link_libraries(sourcemeta_one_http INTERFACE sourcemeta::one::shared)

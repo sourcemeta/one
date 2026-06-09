@@ -3,11 +3,14 @@
 
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/numeric.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/time.h>
 
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
 
+#include <algorithm>   // std::ranges::equal
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
 #include <cstddef>     // std::size_t
@@ -35,6 +38,35 @@ inline auto write_link_header(HTTPResponse &response,
   response.write_header("Link",
                         sourcemeta::core::http_format_link(
                             {.target = schema_path, .rel = "describedby"}));
+}
+
+// RFC 9110 §10.1.1: any expectation other than `100-continue` is
+// unsupported. uWS auto-acknowledges `100-continue` via router
+// middleware before our handler runs, so by the time we read the
+// `Expect` header here, the only values that can still appear are
+// either empty or something we cannot honour. The expectation
+// token is case-insensitive per the same section, so case-fold
+// the inbound value before the compare.
+inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
+  const auto expect{request.header("expect")};
+  return !expect.empty() &&
+         !std::ranges::equal(expect, std::string_view{"100-continue"},
+                             [](const char left, const char right) {
+                               return sourcemeta::core::to_lowercase(left) ==
+                                      right;
+                             });
+}
+
+// RFC 9110 §8.6 + §15.5.14: if the client declares a `Content-Length`
+// that already exceeds the inbound body cap, refuse before reading
+// the body. uWS has already sent its automatic `100 Continue` for
+// `Expect: 100-continue` requests, but well-behaved clients abort
+// their upload on a mid-stream 4xx, so the fast-fail still saves
+// both sides bandwidth versus reading bytes until the cap trips.
+inline auto request_body_too_large(const HTTPRequest &request) -> bool {
+  const auto declared{
+      sourcemeta::core::to_uint64_t(request.header("content-length"))};
+  return declared.has_value() && declared.value() > MAX_REQUEST_BODY_BYTES;
 }
 
 inline auto send_response(const sourcemeta::core::HTTPStatus &status,
