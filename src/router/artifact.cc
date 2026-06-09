@@ -10,10 +10,12 @@
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::seconds
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
 #include <format>      // std::format
+#include <limits>      // std::numeric_limits
 #include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -336,8 +338,17 @@ auto RouterAction::artifact_serve(
     sourcemeta::one::send_response(status, request, response, contents,
                                    sourcemeta::one::Encoding::GZIP);
   } else {
-    sourcemeta::one::send_response(status, request, response, contents,
-                                   sourcemeta::one::Encoding::Identity);
+    // The header carries the compressed size as a fixed-width `uint64_t`
+    // to keep the metapack format portable across architectures. Narrow
+    // to `std::size_t` for the uWS API. On 64-bit hosts this is a no-op,
+    // and the assert guards a hypothetical 32-bit build from truncating
+    // a >4 GB artifact (which the indexer would never produce on
+    // realistic schema inputs).
+    assert(info->compressed_bytes <= std::numeric_limits<std::size_t>::max());
+    sourcemeta::one::send_response(
+        status, request, response, contents,
+        sourcemeta::one::Encoding::Identity,
+        static_cast<std::size_t>(info->compressed_bytes));
   }
 }
 

@@ -19,7 +19,7 @@
 namespace sourcemeta::one {
 
 static constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
-static constexpr std::uint16_t METAPACK_VERSION{1};
+static constexpr std::uint16_t METAPACK_VERSION{2};
 static constexpr std::uint64_t METAPACK_MAX_DECOMPRESSION_RATIO{1024};
 
 enum class MetapackEncoding : std::uint8_t { Identity = 0, GZIP = 1 };
@@ -32,6 +32,14 @@ struct MetapackHeader {
   std::uint8_t reserved;
   std::int64_t last_modified;
   std::uint64_t content_bytes;
+  // The size in bytes of the artifact after applying the compression
+  // matching the supported wire content-coding. The codec is gzip
+  // today, the field name stays compression-agnostic so a future codec
+  // swap is mechanical. Precomputed at index time so the server can
+  // answer HEAD with Content-Encoding set without compressing on the
+  // fly only to discard the bytes. For compressed-storage artifacts
+  // this equals the payload size on disk.
+  std::uint64_t compressed_bytes;
   std::int64_t duration;
   std::array<std::uint8_t, 32> checksum;
   std::uint16_t mime_length;
@@ -44,6 +52,7 @@ struct MetapackInfo {
   std::string mime;
   MetapackEncoding encoding;
   std::uint64_t content_bytes;
+  std::uint64_t compressed_bytes;
   std::chrono::milliseconds duration;
 };
 
