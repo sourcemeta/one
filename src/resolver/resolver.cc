@@ -250,20 +250,25 @@ auto Resolver::operator()(
       auto &subschema{sourcemeta::core::get(schema, entry.second.pointer)};
       if (subschema.is_object()) {
         const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
-        if (maybe_ref && maybe_ref->is_string()) {
-          normalise_ref(*result->second.collection, entry.second.base,
-                        subschema, "$ref", maybe_ref->to_string(),
-                        this->server_uri);
-        }
-
-        if (entry.second.base_dialect ==
-            sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12) {
-          const auto maybe_dynamic_ref{
-              subschema.try_at("$dynamicRef", dynamic_ref_hash)};
-          if (maybe_dynamic_ref && maybe_dynamic_ref->is_string()) {
-            normalise_ref(*result->second.collection, entry.second.base,
-                          subschema, "$dynamicRef",
-                          maybe_dynamic_ref->to_string(), this->server_uri);
+        const auto maybe_dynamic_ref{
+            entry.second.base_dialect ==
+                    sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12
+                ? subschema.try_at("$dynamicRef", dynamic_ref_hash)
+                : nullptr};
+        const auto has_ref{maybe_ref && maybe_ref->is_string()};
+        const auto has_dynamic_ref{maybe_dynamic_ref &&
+                                   maybe_dynamic_ref->is_string()};
+        if (has_ref || has_dynamic_ref) {
+          const sourcemeta::core::URI subschema_base{
+              std::string{entry.second.base}};
+          if (has_ref) {
+            normalise_ref(*result->second.collection, subschema_base, subschema,
+                          "$ref", maybe_ref->to_string(), this->server_uri);
+          }
+          if (has_dynamic_ref) {
+            normalise_ref(*result->second.collection, subschema_base, subschema,
+                          "$dynamicRef", maybe_dynamic_ref->to_string(),
+                          this->server_uri);
           }
         }
       }
@@ -348,8 +353,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     /////////////////////////////////////////////////////////////////////////////
     // (3) Determine the new URI of the schema, from the one base URI
     /////////////////////////////////////////////////////////////////////////////
-    const auto new_identifier{rebase(collection, identifier,
-                                     std::string{this->server_url},
+    const auto new_identifier{rebase(collection, identifier, this->server_uri,
                                      collection_relative_path)};
     // Otherwise we have things like "../" that should not be there
     assert(new_identifier.find("..") == std::string::npos);
