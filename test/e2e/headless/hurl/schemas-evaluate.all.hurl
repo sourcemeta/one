@@ -50,6 +50,26 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# RFC 9110 §10.1.1: the expectation token is case-insensitive. A
+# `100-Continue` (capital C) request must NOT be rejected as an
+# unknown expectation
+POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string
+Expect: 100-Continue
+Content-Type: application/json
+"Hello World"
+HTTP 200
+Cache-Control: no-store
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # RFC 9110 §10.1.1: any expectation other than `100-continue` is
 # unsupported. The fast-fail emits 417 before the body is touched
 POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/string

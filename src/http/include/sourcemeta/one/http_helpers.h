@@ -4,11 +4,13 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/numeric.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/time.h>
 
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
 
+#include <algorithm>   // std::ranges::equal
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
 #include <cstddef>     // std::size_t
@@ -42,10 +44,17 @@ inline auto write_link_header(HTTPResponse &response,
 // unsupported. uWS auto-acknowledges `100-continue` via router
 // middleware before our handler runs, so by the time we read the
 // `Expect` header here, the only values that can still appear are
-// either empty or something we cannot honour.
+// either empty or something we cannot honour. The expectation
+// token is case-insensitive per the same section, so case-fold
+// the inbound value before the compare.
 inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
   const auto expect{request.header("expect")};
-  return !expect.empty() && expect != "100-continue";
+  return !expect.empty() &&
+         !std::ranges::equal(expect, std::string_view{"100-continue"},
+                             [](const char left, const char right) {
+                               return sourcemeta::core::to_lowercase(left) ==
+                                      right;
+                             });
 }
 
 // RFC 9110 §8.6 + §15.5.14: if the client declares a `Content-Length`
