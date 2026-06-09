@@ -67,7 +67,7 @@ auto Router::dispatch(
   if (instance == nullptr) [[unlikely]] {
     this->error(request, response,
                 sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
-                "sourcemeta:one/unknown-action",
+                "urn:sourcemeta:one:unknown-action",
                 "This version does not implement such action handler for "
                 "this URL",
                 "*");

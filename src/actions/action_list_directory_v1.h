@@ -64,7 +64,7 @@ public:
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "sourcemeta:one/not-found", "There is nothing at this URL",
+          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
           this->error_schema_, "*");
       return;
     }

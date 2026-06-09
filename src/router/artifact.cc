@@ -140,7 +140,7 @@ auto RouterAction::artifact_serve(
   if (request.method() != "get" && request.method() != "head") {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-        "sourcemeta:one/method-not-allowed",
+        "urn:sourcemeta:one:method-not-allowed",
         "This HTTP method is invalid for this URL", error_schema,
         enable_cors ? "*" : "", "GET, HEAD, OPTIONS");
     return;
@@ -149,7 +149,7 @@ auto RouterAction::artifact_serve(
   if (!std::filesystem::exists(absolute_path)) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "sourcemeta:one/not-found", "There is nothing at this URL",
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
         error_schema, enable_cors ? "*" : "");
     return;
   }
@@ -159,7 +159,7 @@ auto RouterAction::artifact_serve(
       sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "sourcemeta:one/not-found", "There is nothing at this URL",
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
         error_schema, enable_cors ? "*" : "");
     return;
   }
@@ -168,7 +168,7 @@ auto RouterAction::artifact_serve(
   if (!info.has_value()) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "sourcemeta:one/not-found", "There is nothing at this URL",
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
         error_schema, enable_cors ? "*" : "");
     return;
   }
@@ -323,7 +323,7 @@ auto RouterAction::artifact_serve(
   if (!payload_start.has_value()) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "sourcemeta:one/not-found", "There is nothing at this URL",
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
         error_schema, enable_cors ? "*" : "");
     return;
   }

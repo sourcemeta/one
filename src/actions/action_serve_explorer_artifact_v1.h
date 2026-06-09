@@ -61,7 +61,7 @@ public:
          matches.front().find("%23") != std::string_view::npos)) {
       sourcemeta::one::json_error(request, response,
                                   sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                                  "sourcemeta:one/invalid-schema-uri",
+                                  "urn:sourcemeta:one:invalid-schema-uri",
                                   "The schema URI must not contain a fragment",
                                   this->error_schema_, "*");
       return;
@@ -74,7 +74,7 @@ public:
     if (!path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "sourcemeta:one/not-found", "There is nothing at this URL",
+          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
           this->error_schema_, "*");
       return;
     }
