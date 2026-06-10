@@ -5,63 +5,58 @@
 #include <sourcemeta/one/http_response.h>
 #include <sourcemeta/one/http_uwebsockets.h>
 
-#include <algorithm> // std::max
-#include <atomic>    // std::atomic
-#include <cassert>   // assert
-#include <chrono>    // std::chrono::milliseconds
-#include <cstdint>   // std::uint16_t
-#include <latch>     // std::latch
-#include <memory>    // std::unique_ptr, std::make_unique
-#include <mutex>     // std::mutex, std::lock_guard
-#include <thread>    // std::thread, std::thread::hardware_concurrency
-#include <vector>    // std::vector
+#include <algorithm>   // std::max
+#include <atomic>      // std::atomic
+#include <cassert>     // assert
+#include <chrono>      // std::chrono::milliseconds
+#include <csignal>     // std::signal, SIGINT, SIGTERM
+#include <cstdint>     // std::uint16_t
+#include <latch>       // std::latch
+#include <memory>      // std::unique_ptr, std::make_unique
+#include <mutex>       // std::mutex, std::lock_guard
+#include <string_view> // std::string_view
+#include <thread>      // std::thread, std::thread::hardware_concurrency
+#include <unistd.h>    // write, STDERR_FILENO
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
 class HTTPServer {
 public:
-  // POSIX.1-2017 §2.4.3: only the listed async-signal-safe functions
-  // may run from a signal handler. This setter is callable from one
-  // because it does nothing but an atomic store. Callers from non-
-  // signal context (tests, watchdogs) may also use it.
-  static auto request_stop() noexcept -> void {
-    HTTPServer::should_stop_.store(true, std::memory_order_release);
-  }
-
-  // Returns true when a cooperative shutdown has been requested.
-  // Lets `main` distinguish "constructor returned because we asked
-  // the server to stop" from "constructor returned because nothing
-  // bound the port".
-  static auto stop_requested() noexcept -> bool {
-    return HTTPServer::should_stop_.load(std::memory_order_acquire);
-  }
-
   template <typename RequestHandler, typename ListenCallback,
             typename ErrorCallback>
   HTTPServer(const std::uint16_t port, RequestHandler on_request,
              ListenCallback on_listen, ErrorCallback on_error) {
-    this->concurrency_ = std::max(1u, std::thread::hardware_concurrency());
-    this->round_robin_.store(0, std::memory_order_relaxed);
-    // Each worker stores its app pointer through an atomic so that
-    // `load_balance`, which runs on whatever thread the kernel hands
-    // an accept to, never reads a half-published value or a freed
-    // pointer through the published value.
+    HTTPServer::concurrency_ =
+        std::max(1u, std::thread::hardware_concurrency());
+    HTTPServer::round_robin_.store(0, std::memory_order_relaxed);
+    HTTPServer::should_stop_.store(false, std::memory_order_relaxed);
+    HTTPServer::workers_alive_.store(HTTPServer::concurrency_,
+                                     std::memory_order_relaxed);
     // std::atomic is neither copyable nor movable, so std::vector
     // operations on it are awkward. A heap-allocated array sized
     // once at construction is the cleanest owning shape.
     HTTPServer::apps_ =
         // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-        std::make_unique<std::atomic<uWS::SSLApp *>[]>(this->concurrency_);
-    for (unsigned int index{0}; index < this->concurrency_; ++index) {
+        std::make_unique<std::atomic<uWS::SSLApp *>[]>(
+            HTTPServer::concurrency_);
+    for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
       HTTPServer::apps_[index].store(nullptr, std::memory_order_relaxed);
     }
 
-    std::latch setup_barrier{static_cast<std::ptrdiff_t>(this->concurrency_)};
+    // Take ownership of SIGINT and SIGTERM for the lifetime of this
+    // constructor. The previous dispositions are restored before
+    // returning so the process is left as we found it.
+    const auto previous_int{std::signal(SIGINT, HTTPServer::on_signal)};
+    const auto previous_term{std::signal(SIGTERM, HTTPServer::on_signal)};
+
+    std::latch setup_barrier{
+        static_cast<std::ptrdiff_t>(HTTPServer::concurrency_)};
     std::mutex setup_mutex;
 
     std::vector<std::unique_ptr<std::thread>> threads;
-    threads.reserve(this->concurrency_);
-    for (unsigned int index{0}; index < this->concurrency_; ++index) {
+    threads.reserve(HTTPServer::concurrency_);
+    for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
       threads.emplace_back(std::make_unique<std::thread>(
           [index, port, &on_request, &on_listen, &on_error, &setup_barrier,
            &setup_mutex]() {
@@ -122,43 +117,65 @@ public:
             // in `load_balance`.
             HTTPServer::apps_[index].store(nullptr, std::memory_order_release);
             delete app;
+            HTTPServer::workers_alive_.fetch_sub(1, std::memory_order_release);
           }));
     }
 
-    // Watcher thread: parks on `should_stop_` and, once requested,
-    // defers `app->close()` onto each worker's event loop. The defer
-    // hop is required because `us_socket_context_close` must run on
-    // the thread that owns the loop. The short sleep after observing
-    // the flag lets any preOpen call already in flight finish before
-    // we start tearing down apps.
-    std::thread watcher{[]() {
-      while (!HTTPServer::should_stop_.load(std::memory_order_acquire)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{50});
-      }
+    // Poll on this thread (the one that called the constructor) so
+    // there is no separate watcher thread to schedule. Exits when
+    // either a stop was requested or every worker has already exited
+    // on its own (e.g. nothing bound the port).
+    while (!HTTPServer::should_stop_.load(std::memory_order_acquire) &&
+           HTTPServer::workers_alive_.load(std::memory_order_acquire) > 0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds{50});
+    }
+
+    if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
+      this->stopped_gracefully_ = true;
+      // Give any preOpen call already in flight time to finish
+      // against the old listen sockets before they disappear.
       std::this_thread::sleep_for(std::chrono::milliseconds{50});
       for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
         auto *app{HTTPServer::apps_[index].load(std::memory_order_acquire)};
         if (app != nullptr) {
+          // `us_socket_context_close` must run on the loop's thread.
           app->getLoop()->defer([app]() { app->close(); });
         }
       }
-    }};
+    }
 
     for (auto &thread : threads) {
       thread->join();
     }
-    watcher.join();
+
+    std::signal(SIGINT, previous_int);
+    std::signal(SIGTERM, previous_term);
+  }
+
+  // Returns true when the server exited because SIGINT or SIGTERM
+  // arrived. False means every worker exited on its own (e.g. nothing
+  // bound the port).
+  [[nodiscard]] auto stopped_gracefully() const noexcept -> bool {
+    return this->stopped_gracefully_;
   }
 
 private:
+  // POSIX.1-2017 §2.4.3: limited to the async-signal-safe set.
+  // `write(2)` is on it, and an atomic store on a lock-free type is
+  // safe in practice. No formatting, no allocation, no locks.
+  static auto on_signal(int /* signal */) noexcept -> void {
+    constexpr std::string_view message{"Terminating on requested signal\n"};
+    (void)::write(STDERR_FILENO, message.data(), message.size());
+    HTTPServer::should_stop_.store(true, std::memory_order_release);
+  }
+
   static auto load_balance(struct us_socket_context_t *,
                            LIBUS_SOCKET_DESCRIPTOR fd, char *, int)
       -> LIBUS_SOCKET_DESCRIPTOR {
-    // Drop new accepts once shutdown has been requested. By the time
-    // the watcher thread defers `app->close()`, listen sockets are
-    // still alive for a short window, and the kernel may keep handing
-    // us connections during that window. Refusing them here avoids
-    // dispatching work to apps that are about to disappear.
+    // Drop new accepts once shutdown has been requested. The kernel
+    // can hand us connections for a short window before listen
+    // sockets actually close, and dispatching them to apps that are
+    // about to disappear is wasted work.
     if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
       return static_cast<LIBUS_SOCKET_DESCRIPTOR>(-1);
     }
@@ -174,9 +191,11 @@ private:
     return static_cast<LIBUS_SOCKET_DESCRIPTOR>(-1);
   }
 
+  bool stopped_gracefully_{false};
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
   static inline std::unique_ptr<std::atomic<uWS::SSLApp *>[]> apps_;
   static inline std::atomic<unsigned int> round_robin_{0};
+  static inline std::atomic<unsigned int> workers_alive_{0};
   static inline std::atomic<bool> should_stop_{false};
   static inline unsigned int concurrency_{0};
 };

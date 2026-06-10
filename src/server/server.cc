@@ -6,9 +6,7 @@
 #include <sourcemeta/one/actions.h>
 
 #include <array>       // std::array
-#include <cassert>     // assert
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
-#include <csignal>     // std::signal, SIGINT, SIGTERM
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint16_t
 #include <cstdio>      // std::setvbuf, stderr, _IOLBF
@@ -16,10 +14,9 @@
 #include <filesystem>  // std::filesystem
 #include <iostream>    // std::cerr
 #include <limits>      // std::numeric_limits
-#include <print>       // std::print, std::println
+#include <print>       // std::println
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
-#include <unistd.h>    // write, STDERR_FILENO
 
 // TODO: Maybe we should merge this entire function into `Router`?
 static auto dispatch(sourcemeta::one::Router &actions,
@@ -63,21 +60,6 @@ static auto dispatch(sourcemeta::one::Router &actions,
   }
 }
 
-// POSIX.1-2017 §2.4.3 lists the functions guaranteed safe to call
-// from a signal handler. `std::cerr <<` and `std::exit` are not on
-// that list. Restrict the handler to `write(2)` plus an atomic flag
-// store. The real shutdown work (closing apps, joining workers)
-// happens in the watcher thread inside `HTTPServer`, which polls
-// the flag from normal context.
-extern "C" auto terminate(int /* signal */) noexcept -> void {
-  static constexpr std::string_view message{
-      "Terminating on requested signal\n"};
-  // Best-effort. If the write fails (interrupted, EPIPE, etc.) we
-  // still proceed with the cooperative shutdown via the flag.
-  (void)::write(STDERR_FILENO, message.data(), message.size());
-  sourcemeta::one::HTTPServer::request_stop();
-}
-
 SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
     -> void {
   std::println("Usage: {} <path/to/output/directory> <port>", program);
@@ -95,10 +77,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   // into its own `write` syscall. Line-buffer it so each request log
   // line lands on stderr as one syscall instead of several.
   std::setvbuf(stderr, nullptr, _IOLBF, 0);
-
-  // Mainly for Docker Compose
-  std::signal(SIGINT, terminate);
-  std::signal(SIGTERM, terminate);
 
   try {
     const auto program{std::filesystem::path{argv[0]}.filename().string()};
@@ -134,7 +112,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     sourcemeta::one::Router actions{base, router,
                                     sourcemeta::one::CONSTRUCTORS};
 
-    sourcemeta::one::HTTPServer(
+    const sourcemeta::one::HTTPServer server{
         port,
         [&actions, &router](sourcemeta::one::HTTPRequest &request,
                             sourcemeta::one::HTTPResponse &response) {
@@ -151,13 +129,9 @@ auto main(int argc, char *argv[]) noexcept -> int {
         [](const std::uint16_t requested_port) {
           sourcemeta::one::HTTP_LOG("Failed to listen on port " +
                                     std::to_string(requested_port));
-        });
+        }};
 
-    // The constructor returns either because all workers exited the
-    // event loop (cooperative shutdown via `request_stop`) or because
-    // none of them ever managed to bind the requested port. Only the
-    // latter is a failure.
-    if (sourcemeta::one::HTTPServer::stop_requested()) {
+    if (server.stopped_gracefully()) {
       sourcemeta::one::HTTP_LOG("The server stopped gracefully");
       return EXIT_SUCCESS;
     }
