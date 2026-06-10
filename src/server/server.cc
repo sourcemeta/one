@@ -6,16 +6,15 @@
 #include <sourcemeta/one/actions.h>
 
 #include <array>       // std::array
-#include <cassert>     // assert
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
-#include <csignal>     // std::signal, SIGINT, SIGTERM
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint16_t
 #include <cstdio>      // std::setvbuf, stderr, _IOLBF
-#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS, std::exit
+#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
 #include <filesystem>  // std::filesystem
 #include <iostream>    // std::cerr
 #include <limits>      // std::numeric_limits
-#include <print>       // std::print, std::println
+#include <print>       // std::println
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
 
@@ -61,13 +60,6 @@ static auto dispatch(sourcemeta::one::Router &actions,
   }
 }
 
-auto terminate(int signal) -> void {
-  std::cerr << "Terminatting on signal: " << signal << "\n";
-  // TODO: Use `us_listen_socket_close` instead
-  // See https://github.com/uNetworking/uWebSockets/issues/1402
-  std::exit(EXIT_SUCCESS);
-}
-
 SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
     -> void {
   std::println("Usage: {} <path/to/output/directory> <port>", program);
@@ -85,10 +77,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   // into its own `write` syscall. Line-buffer it so each request log
   // line lands on stderr as one syscall instead of several.
   std::setvbuf(stderr, nullptr, _IOLBF, 0);
-
-  // Mainly for Docker Compose
-  std::signal(SIGINT, terminate);
-  std::signal(SIGTERM, terminate);
 
   try {
     const auto program{std::filesystem::path{argv[0]}.filename().string()};
@@ -124,7 +112,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     sourcemeta::one::Router actions{base, router,
                                     sourcemeta::one::CONSTRUCTORS};
 
-    sourcemeta::one::HTTPServer(
+    const sourcemeta::one::HTTPServer server{
         port,
         [&actions, &router](sourcemeta::one::HTTPRequest &request,
                             sourcemeta::one::HTTPResponse &response) {
@@ -141,8 +129,12 @@ auto main(int argc, char *argv[]) noexcept -> int {
         [](const std::uint16_t requested_port) {
           sourcemeta::one::HTTP_LOG("Failed to listen on port " +
                                     std::to_string(requested_port));
-        });
+        }};
 
+    if (server.stopped_gracefully()) {
+      sourcemeta::one::HTTP_LOG("The server stopped gracefully");
+      return EXIT_SUCCESS;
+    }
     sourcemeta::one::HTTP_LOG("The server could not start");
     return EXIT_FAILURE;
   } catch (const std::exception &error) {

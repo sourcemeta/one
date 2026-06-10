@@ -11,7 +11,7 @@ trap clean EXIT
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-Sourcemeta One $2 v$3
+Sourcemeta One $3 v$4
 Usage: $(basename "$1") <path/to/output/directory> <port>
 error: The output directory path must be absolute
 EOF
