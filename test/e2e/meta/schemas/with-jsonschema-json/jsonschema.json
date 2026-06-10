@@ -1,0 +1,6 @@
+{
+  "title": "With jsonschema.json",
+  "description": "Same as with-relative-default-dialect, but defined through an included jsonschema.json manifest",
+  "path": "./schemas",
+  "defaultDialect": "../meta/custom"
+}
