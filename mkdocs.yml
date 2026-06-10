@@ -30,6 +30,8 @@ nav:
     - guide/adoption.md
     - guide/development.md
     - guide/evolution.md
+    - Advanced:
+      - guide/using-custom-metaschemas.md
   - configuration.md
   - integrations.md
   - api.md
