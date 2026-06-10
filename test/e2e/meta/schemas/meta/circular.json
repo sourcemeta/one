@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$dynamicAnchor": "meta",
+  "title": "Circular Schema",
+  "description": "The recursive schema definition that applies to every nested subschema, disallowing any keyword not defined by the dialect",
+  "examples": [
+    {
+      "type": "string"
+    }
+  ],
+  "allOf": [
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/core"
+    },
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/applicator"
+    },
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/validation"
+    },
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/meta-data"
+    },
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/format-annotation"
+    },
+    {
+      "$ref": "https://json-schema.org/draft/2020-12/meta/content"
+    },
+    {
+      "$ref": "keywords/x-author.json"
+    },
+    {
+      "$ref": "rules/circular/object-additional-properties.json"
+    },
+    {
+      "$ref": "rules/circular/no-conditionals.json"
+    }
+  ],
+  "unevaluatedProperties": false
+}

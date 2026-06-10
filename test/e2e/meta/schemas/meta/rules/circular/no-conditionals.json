@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true
+  },
+  "title": "No Conditionals Rule",
+  "description": "You must not use the if, then, and else applicator keywords",
+  "examples": [
+    {
+      "type": "string"
+    }
+  ],
+  "properties": {
+    "if": false,
+    "then": false,
+    "else": false
+  }
+}

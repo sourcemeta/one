@@ -1,0 +1,225 @@
+{
+  "target": "../../schemas/meta/custom.json",
+  "tests": [
+    {
+      "description": "The empty object is invalid as the author keyword is required",
+      "valid": false,
+      "data": {}
+    },
+    {
+      "description": "An object that only declares an author is valid",
+      "valid": true,
+      "data": {
+        "x-author": "Jane Doe"
+      }
+    },
+    {
+      "description": "The author keyword must be a string",
+      "valid": false,
+      "data": {
+        "x-author": 1
+      }
+    },
+    {
+      "description": "The true boolean schema is valid",
+      "valid": true,
+      "data": true
+    },
+    {
+      "description": "The false boolean schema is valid",
+      "valid": true,
+      "data": false
+    },
+    {
+      "description": "A schema using keywords from every vocabulary is valid",
+      "valid": true,
+      "data": {
+        "x-author": "Jane Doe",
+        "$anchor": "example",
+        "title": "Example",
+        "description": "An example schema",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "email",
+            "contentEncoding": "base64"
+          }
+        },
+        "required": [ "name" ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "description": "Keywords not defined by the dialect are disallowed",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "foo": "bar"
+      }
+    },
+    {
+      "description": "An object type schema must declare additionalProperties",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "type": "object"
+      }
+    },
+    {
+      "description": "A type array containing object must declare additionalProperties",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "type": [ "object", "null" ]
+      }
+    },
+    {
+      "description": "An object type schema that declares additionalProperties is valid",
+      "valid": true,
+      "data": {
+        "x-author": "Jane Doe",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "description": "The conditional keywords are disallowed",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "if": {
+          "type": "string"
+        },
+        "then": {
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "description": "Nested subschemas do not require an author",
+      "valid": true,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "description": "Nested subschemas may declare an author",
+      "valid": true,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": {
+          "name": {
+            "x-author": "John Doe",
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "description": "Nested object type subschemas must declare additionalProperties",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": {
+          "name": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "description": "The conditional keywords are disallowed in nested subschemas",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": {
+          "name": {
+            "if": true
+          }
+        }
+      }
+    },
+    {
+      "description": "Keywords not defined by the dialect are disallowed in nested subschemas",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": {
+          "name": {
+            "foo": "bar"
+          }
+        }
+      }
+    },
+    {
+      "description": "The `$id` keyword must be a string",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "$id": 1
+      }
+    },
+    {
+      "description": "The `properties` keyword must be an object",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "properties": 1
+      }
+    },
+    {
+      "description": "The unevaluated applicator keywords are not part of the dialect",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "unevaluatedProperties": false
+      }
+    },
+    {
+      "description": "The `type` keyword must be a string or an array",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "type": 1
+      }
+    },
+    {
+      "description": "The `minLength` keyword must be a non-negative integer",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "minLength": -1
+      }
+    },
+    {
+      "description": "The `title` keyword must be a string",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "title": 1
+      }
+    },
+    {
+      "description": "The `format` keyword must be a string",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "format": 1
+      }
+    },
+    {
+      "description": "The `contentEncoding` keyword must be a string",
+      "valid": false,
+      "data": {
+        "x-author": "Jane Doe",
+        "contentEncoding": 1
+      }
+    }
+  ]
+}

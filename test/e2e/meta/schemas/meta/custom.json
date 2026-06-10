@@ -3,7 +3,32 @@
   "$vocabulary": {
     "https://json-schema.org/draft/2020-12/vocab/core": true,
     "https://json-schema.org/draft/2020-12/vocab/applicator": true,
-    "https://json-schema.org/draft/2020-12/vocab/validation": true
+    "https://json-schema.org/draft/2020-12/vocab/validation": true,
+    "https://json-schema.org/draft/2020-12/vocab/meta-data": true,
+    "https://json-schema.org/draft/2020-12/vocab/format-annotation": true,
+    "https://json-schema.org/draft/2020-12/vocab/content": true
   },
-  "$dynamicAnchor": "meta"
+  "title": "Custom Meta-Schema",
+  "description": "A custom meta-schema that extends the JSON Schema 2020-12 dialect with additional top level and recursive constraints for testing purposes",
+  "examples": [
+    {
+      "x-author": "Jane Doe",
+      "title": "Example",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "allOf": [
+    {
+      "$ref": "circular.json"
+    },
+    {
+      "$ref": "rules/top/x-author-required.json"
+    }
+  ]
 }

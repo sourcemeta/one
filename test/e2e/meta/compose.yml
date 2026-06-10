@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      additional_contexts:
+        root: ../../..
       args:
         SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
     environment:

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true
+  },
+  "title": "Author Keyword",
+  "description": "Keyword for attributing schemas to their authors",
+  "examples": [
+    {
+      "x-author": "Jane Doe"
+    }
+  ],
+  "properties": {
+    "x-author": {
+      "description": "The author of the schema",
+      "type": "string"
+    }
+  }
+}
