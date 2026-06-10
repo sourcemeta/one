@@ -1,4 +1,5 @@
 {
   "$schema": "urn:example:custom-meta",
+  "x-author": "Jane Doe",
   "type": "string"
 }

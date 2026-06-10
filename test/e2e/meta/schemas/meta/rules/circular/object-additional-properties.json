@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true
+  },
+  "title": "Object Additional Properties Rule",
+  "description": "You must declare additionalProperties when type is or contains object",
+  "examples": [
+    {
+      "type": "object",
+      "additionalProperties": false
+    }
+  ],
+  "if": {
+    "required": [ "type" ],
+    "properties": {
+      "type": {
+        "anyOf": [
+          {
+            "const": "object"
+          },
+          {
+            "type": "array",
+            "contains": {
+              "const": "object"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "then": {
+    "required": [ "additionalProperties" ],
+    "properties": {
+      "additionalProperties": true
+    }
+  }
+}

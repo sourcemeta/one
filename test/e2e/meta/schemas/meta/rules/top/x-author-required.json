@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true
+  },
+  "title": "Author Required Rule",
+  "description": "You must declare the x-author keyword at the top level",
+  "examples": [
+    {
+      "x-author": "Jane Doe"
+    }
+  ],
+  "required": [ "x-author" ],
+  "properties": {
+    "x-author": true
+  }
+}
