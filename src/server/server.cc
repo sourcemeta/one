@@ -9,15 +9,17 @@
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
 #include <csignal>     // std::signal, SIGINT, SIGTERM
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint16_t
 #include <cstdio>      // std::setvbuf, stderr, _IOLBF
-#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS, std::exit
+#include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS
 #include <filesystem>  // std::filesystem
 #include <iostream>    // std::cerr
 #include <limits>      // std::numeric_limits
 #include <print>       // std::print, std::println
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
+#include <unistd.h>    // write, STDERR_FILENO
 
 // TODO: Maybe we should merge this entire function into `Router`?
 static auto dispatch(sourcemeta::one::Router &actions,
@@ -61,11 +63,19 @@ static auto dispatch(sourcemeta::one::Router &actions,
   }
 }
 
-auto terminate(int signal) -> void {
-  std::cerr << "Terminatting on signal: " << signal << "\n";
-  // TODO: Use `us_listen_socket_close` instead
-  // See https://github.com/uNetworking/uWebSockets/issues/1402
-  std::exit(EXIT_SUCCESS);
+// POSIX.1-2017 §2.4.3 lists the functions guaranteed safe to call
+// from a signal handler. `std::cerr <<` and `std::exit` are not on
+// that list. Restrict the handler to `write(2)` plus an atomic flag
+// store. The real shutdown work (closing apps, joining workers)
+// happens in the watcher thread inside `HTTPServer`, which polls
+// the flag from normal context.
+extern "C" auto terminate(int /* signal */) noexcept -> void {
+  static constexpr std::string_view message{
+      "Terminating on requested signal\n"};
+  // Best-effort. If the write fails (interrupted, EPIPE, etc.) we
+  // still proceed with the cooperative shutdown via the flag.
+  (void)::write(STDERR_FILENO, message.data(), message.size());
+  sourcemeta::one::HTTPServer::request_stop();
 }
 
 SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
@@ -143,6 +153,14 @@ auto main(int argc, char *argv[]) noexcept -> int {
                                     std::to_string(requested_port));
         });
 
+    // The constructor returns either because all workers exited the
+    // event loop (cooperative shutdown via `request_stop`) or because
+    // none of them ever managed to bind the requested port. Only the
+    // latter is a failure.
+    if (sourcemeta::one::HTTPServer::stop_requested()) {
+      sourcemeta::one::HTTP_LOG("The server stopped gracefully");
+      return EXIT_SUCCESS;
+    }
     sourcemeta::one::HTTP_LOG("The server could not start");
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
