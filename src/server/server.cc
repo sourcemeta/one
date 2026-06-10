@@ -10,6 +10,7 @@
 #include <chrono>      // std::chrono::steady_clock, std::chrono::milliseconds
 #include <csignal>     // std::signal, SIGINT, SIGTERM
 #include <cstdint>     // std::uint16_t
+#include <cstdio>      // std::setvbuf, stderr, _IOLBF
 #include <cstdlib>     // EXIT_FAILURE, EXIT_SUCCESS, std::exit
 #include <filesystem>  // std::filesystem
 #include <iostream>    // std::cerr
@@ -79,6 +80,11 @@ SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
 auto main(int argc, char *argv[]) noexcept -> int {
   const auto timestamp_start{std::chrono::steady_clock::now()};
   sourcemeta::core::stacktrace_on_crash();
+
+  // Default stderr is unbuffered, so every `std::print` fragment turns
+  // into its own `write` syscall. Line-buffer it so each request log
+  // line lands on stderr as one syscall instead of several.
+  std::setvbuf(stderr, nullptr, _IOLBF, 0);
 
   // Mainly for Docker Compose
   std::signal(SIGINT, terminate);
