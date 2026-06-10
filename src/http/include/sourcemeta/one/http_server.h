@@ -162,12 +162,17 @@ public:
     // and the `thread->join()` below hanging forever.
     setup_barrier.arrive_and_wait();
 
-    // Poll on this thread (the one that called the constructor) so
-    // there is no separate watcher thread to schedule. Exits when
-    // either a stop was requested or every worker has already exited
-    // on its own (e.g. nothing bound the port).
-    while (!HTTPServer::should_stop_.load(std::memory_order_acquire) &&
-           HTTPServer::workers_alive_.load(std::memory_order_acquire) > 0) {
+    // Poll on this thread so there is no separate watcher thread to
+    // schedule. Exits when a stop was requested or every worker has
+    // already exited on its own. The predicate is checked before
+    // each sleep so the failure path does not pay a poll tick.
+    while (true) {
+      if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
+        break;
+      }
+      if (HTTPServer::workers_alive_.load(std::memory_order_acquire) == 0) {
+        break;
+      }
       std::this_thread::sleep_for(std::chrono::milliseconds{50});
     }
 
