@@ -1,11 +1,21 @@
 macro(sourcemeta_one_test_cli directory program name)
   if(UNIX)
-    add_test(NAME one.${program}.${directory}.${name} COMMAND
-      "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.sh"
-      "$<TARGET_FILE:sourcemeta_one_${program}>"
-      "${ONE_EDITION}"
-      "${ONE_VERSION}"
-      WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    if("${program}" STREQUAL "server")
+      add_test(NAME one.${program}.${directory}.${name} COMMAND
+        "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.sh"
+        "$<TARGET_FILE:sourcemeta_one_${program}>"
+        "$<TARGET_FILE:sourcemeta_one_index>"
+        "${ONE_EDITION}"
+        "${ONE_VERSION}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    else()
+      add_test(NAME one.${program}.${directory}.${name} COMMAND
+        "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.sh"
+        "$<TARGET_FILE:sourcemeta_one_${program}>"
+        "${ONE_EDITION}"
+        "${ONE_VERSION}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    endif()
     set_tests_properties(one.${program}.${directory}.${name} PROPERTIES
       ENVIRONMENT "ONE_PREFIX=${ONE_PREFIX}")
   endif()
@@ -173,7 +183,7 @@ if(ONE_INDEX)
   endif()
 endif()
 
-if(ONE_SERVER)
+if(ONE_SERVER AND ONE_INDEX)
   sourcemeta_one_test_cli(common server debug-symbols)
   sourcemeta_one_test_cli(common server fail-no-arguments)
   sourcemeta_one_test_cli(common server fail-path-relative)
@@ -181,7 +191,5 @@ if(ONE_SERVER)
   sourcemeta_one_test_cli(common server fail-port-overflow)
   sourcemeta_one_test_cli(common server fail-port-trailing-garbage)
   sourcemeta_one_test_cli(common server fail-port-zero)
-  if(ONE_INDEX)
-    sourcemeta_one_test_cli(common server graceful-shutdown)
-  endif()
+  sourcemeta_one_test_cli(common server graceful-shutdown)
 endif()

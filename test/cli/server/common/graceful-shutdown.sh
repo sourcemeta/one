@@ -4,10 +4,9 @@ set -o errexit
 set -o nounset
 
 BINARY="$1"
-# `ONE_PREFIX` points at the install prefix used by the build. The
-# indexer ends up under `${ONE_PREFIX}/bin/sourcemeta-one-index`
-# in both the build tree and a real install.
-INDEXER="${ONE_PREFIX}/bin/sourcemeta-one-index"
+INDEXER="$2"
+EDITION="$3"
+VERSION="$4"
 
 TMP="$(mktemp -d)"
 clean() {
@@ -18,43 +17,28 @@ clean() {
 }
 trap clean EXIT
 
-cat << 'EOF' > "$TMP/one.json"
-{ "url": "http://localhost:8000" }
-EOF
-
+echo '{ "url": "http://localhost:8000" }' > "$TMP/one.json"
 "$INDEXER" "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
-# Pick a port deliberately far from the default so we do not collide
-# with any locally-running server. The test only cares about exit
-# code on shutdown, not about the chosen port.
 PORT=39873
-
 "$BINARY" "$TMP/output" "$PORT" > "$TMP/log.txt" 2>&1 &
 SERVER_PID="$!"
 
-# Wait for the server to bind. The log line goes out the moment the
-# listen call returns successfully, so polling the log is enough.
 WAITED=0
 until grep -q "Listening on port" "$TMP/log.txt" 2>/dev/null; do
   WAITED=$((WAITED + 1))
   if [ "$WAITED" -gt 50 ]; then
-    echo "Server failed to bind within timeout" >&2
     cat "$TMP/log.txt" >&2
     exit 1
   fi
   sleep 0.1
 done
 
-# RFC-style cooperative shutdown via SIGTERM. The process must exit
-# cleanly and within a reasonable bound. Anything longer than a few
-# seconds means the watcher thread did not see the flag or a worker
-# refused to drain its event loop.
 kill -TERM "$SERVER_PID"
 WAITED=0
 while kill -0 "$SERVER_PID" 2>/dev/null; do
   WAITED=$((WAITED + 1))
   if [ "$WAITED" -gt 50 ]; then
-    echo "Server did not exit within 5 seconds of SIGTERM" >&2
     cat "$TMP/log.txt" >&2
     exit 1
   fi
@@ -63,21 +47,22 @@ done
 
 wait "$SERVER_PID" && CODE="$?" || CODE="$?"
 SERVER_PID=""
+test "$CODE" = "0" || { cat "$TMP/log.txt" >&2; exit 1; }
 
-test "$CODE" = "0" || {
-  echo "Server exited with $CODE (expected 0)" >&2
-  cat "$TMP/log.txt" >&2
-  exit 1
-}
+# Normalize variable bits (timestamp, thread id, port, elapsed ms) and
+# collapse duplicate worker startup lines so the diff is stable across
+# scheduling and hardware concurrency.
+sed -E \
+  -e 's/\[[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT\]/[DATE]/' \
+  -e 's/0x[0-9a-f]+/0xTID/' \
+  -e "s/Listening on port $PORT in [0-9]+ ms/Listening on port PORT in MS ms/" \
+  "$TMP/log.txt" | LC_ALL=C sort -u > "$TMP/actual.txt"
 
-grep -q "Terminating on requested signal" "$TMP/log.txt" || {
-  echo "Missing async-signal-safe terminate banner" >&2
-  cat "$TMP/log.txt" >&2
-  exit 1
-}
+cat << EOF | LC_ALL=C sort -u > "$TMP/expected.txt"
+Sourcemeta One ${EDITION} v${VERSION}
+[DATE] 0xTID Listening on port PORT in MS ms
+Terminating on requested signal
+[DATE] 0xTID The server stopped gracefully
+EOF
 
-grep -q "The server stopped gracefully" "$TMP/log.txt" || {
-  echo "Missing graceful-shutdown log line" >&2
-  cat "$TMP/log.txt" >&2
-  exit 1
-}
+diff "$TMP/actual.txt" "$TMP/expected.txt"
