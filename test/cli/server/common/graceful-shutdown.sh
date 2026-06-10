@@ -20,7 +20,11 @@ trap clean EXIT
 echo '{ "url": "http://localhost:8000" }' > "$TMP/one.json"
 "$INDEXER" "$TMP/one.json" "$TMP/output" > /dev/null 2>&1
 
-PORT=39873
+# Pick a random port from the IANA dynamic range. Seeding `awk`'s
+# PRNG with `$$` keeps parallel test invocations from colliding on
+# the same number.
+PORT="$(awk 'BEGIN { srand('"$$"'); print 49152 + int(rand() * 16383) }')"
+
 "$BINARY" "$TMP/output" "$PORT" > "$TMP/log.txt" 2>&1 &
 SERVER_PID="$!"
 
