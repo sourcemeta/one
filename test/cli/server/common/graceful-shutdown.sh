@@ -55,10 +55,13 @@ test "$CODE" = "0" || { cat "$TMP/log.txt" >&2; exit 1; }
 
 # Normalize variable bits (timestamp, thread id, port, elapsed ms) and
 # collapse duplicate worker startup lines so the diff is stable across
-# scheduling and hardware concurrency.
+# scheduling and hardware concurrency. The thread id is matched
+# positionally (whatever non-space token follows `[DATE] `) because
+# its format differs across platforms — hex on macOS, decimal on
+# Linux glibc.
 sed -E \
   -e 's/\[[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT\]/[DATE]/' \
-  -e 's/0x[0-9a-f]+/0xTID/' \
+  -e 's/^\[DATE\] [^ ]+ /[DATE] 0xTID /' \
   -e "s/Listening on port $PORT in [0-9]+ ms/Listening on port PORT in MS ms/" \
   "$TMP/log.txt" | LC_ALL=C sort -u > "$TMP/actual.txt"
 

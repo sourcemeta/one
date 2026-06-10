@@ -21,6 +21,16 @@
 
 namespace sourcemeta::one {
 
+// POSIX.1-2017 §2.4.3 limits signal handlers to a fixed function set,
+// and C++ only allows `std::atomic<T>::store` from one when the type
+// is lock-free. The vast majority of targets we care about make
+// `std::atomic<bool>` lock-free, but assert it at compile time so
+// porting to anything exotic fails loud instead of silently.
+static_assert(std::atomic<bool>::is_always_lock_free,
+              "HTTPServer's signal handler stores into "
+              "std::atomic<bool>, which must be lock-free for the "
+              "store to be async-signal-safe on this target");
+
 class HTTPServer {
 public:
   template <typename RequestHandler, typename ListenCallback,
@@ -45,13 +55,36 @@ public:
     }
 
     // Take ownership of SIGINT and SIGTERM for the lifetime of this
-    // constructor. The previous dispositions are restored before
-    // returning so the process is left as we found it.
-    const auto previous_int{std::signal(SIGINT, HTTPServer::on_signal)};
-    const auto previous_term{std::signal(SIGTERM, HTTPServer::on_signal)};
+    // constructor. RAII keeps the previous dispositions restored on
+    // any exit from the scope, including an exception thrown later
+    // during thread creation.
+    class SignalGuard {
+    public:
+      SignalGuard()
+          : previous_int_{std::signal(SIGINT, HTTPServer::on_signal)},
+            previous_term_{std::signal(SIGTERM, HTTPServer::on_signal)} {}
+      ~SignalGuard() {
+        std::signal(SIGINT, this->previous_int_);
+        std::signal(SIGTERM, this->previous_term_);
+      }
+      SignalGuard(const SignalGuard &) = delete;
+      SignalGuard(SignalGuard &&) = delete;
+      auto operator=(const SignalGuard &) -> SignalGuard & = delete;
+      auto operator=(SignalGuard &&) -> SignalGuard & = delete;
 
+    private:
+      void (*previous_int_)(int);
+      void (*previous_term_)(int);
+    };
+    const SignalGuard signal_guard;
+
+    // The latch starts at `concurrency_ + 1`: each worker arrives
+    // once after publishing its `apps_[index]` pointer, and this
+    // thread also arrives so it waits until every worker has reached
+    // that point. Polling for shutdown only starts after that wait,
+    // which guarantees the close sweep below sees every app.
     std::latch setup_barrier{
-        static_cast<std::ptrdiff_t>(HTTPServer::concurrency_)};
+        static_cast<std::ptrdiff_t>(HTTPServer::concurrency_ + 1)};
     std::mutex setup_mutex;
 
     std::vector<std::unique_ptr<std::thread>> threads;
@@ -121,6 +154,14 @@ public:
           }));
     }
 
+    // Arrive on the setup barrier and wait until every worker has
+    // published its app pointer before polling for shutdown. Without
+    // this gate, a signal arriving during setup could let the close
+    // sweep run while some `apps_` slots are still nullptr, leaving
+    // the corresponding `app->run()` loops without a deferred close
+    // and the `thread->join()` below hanging forever.
+    setup_barrier.arrive_and_wait();
+
     // Poll on this thread (the one that called the constructor) so
     // there is no separate watcher thread to schedule. Exits when
     // either a stop was requested or every worker has already exited
@@ -147,9 +188,6 @@ public:
     for (auto &thread : threads) {
       thread->join();
     }
-
-    std::signal(SIGINT, previous_int);
-    std::signal(SIGTERM, previous_term);
   }
 
   // Returns true when the server exited because SIGINT or SIGTERM
