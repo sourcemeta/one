@@ -1,12 +1,18 @@
-FROM one
+FROM debian:trixie AS tests
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   nodejs npm && apt-get clean && rm -rf /var/lib/apt/lists/*
+WORKDIR /test
 COPY --from=root package.json package-lock.json ./
 RUN npm ci
-COPY one.json .
 COPY schemas schemas
 COPY test test
 RUN npx --no-install jsonschema test ./test
+
+FROM one
+COPY one.json .
+# Copying from the previous stage guarantees the schema tests run
+# as part of this build
+COPY --from=tests /test/schemas schemas
 RUN sourcemeta one.json --profile
 RUN set -e && test -d "$SOURCEMETA_ONE_WORKDIR" && \
   test -z "$(ls -A "$SOURCEMETA_ONE_WORKDIR")"
