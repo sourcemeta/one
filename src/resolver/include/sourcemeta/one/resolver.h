@@ -15,6 +15,7 @@
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::pair
+#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -76,6 +77,26 @@ private:
   std::shared_mutex mutex;
   std::string_view server_url;
   sourcemeta::core::URI server_uri;
+
+  // Schemas that act as meta-schemas of other schemas get resolved over
+  // and over again during indexing (i.e. for every schema that uses them),
+  // so we keep their materialised contents in memory. An entry without
+  // contents means we know the schema is a non-official dialect but didn't
+  // resolve it yet. As the number of distinct dialects in a registry is
+  // expected to be tiny, we use a flat structure for fast lookups. Note
+  // that readers must hold a shared lock for the entire scan: appends
+  // mutate the container internals, so element address stability alone
+  // would not make unlocked reads safe
+  auto track_dialect(const sourcemeta::core::JSON::String &dialect) -> void;
+  auto cache_dialect(const sourcemeta::core::JSON::String &uri,
+                     const sourcemeta::core::JSON &schema) const -> void;
+  [[nodiscard]] auto
+  cached_dialect(const sourcemeta::core::JSON::String &uri) const
+      -> std::optional<sourcemeta::core::JSON>;
+  mutable std::shared_mutex dialect_mutex;
+  mutable std::vector<std::pair<sourcemeta::core::JSON::String,
+                                std::optional<sourcemeta::core::JSON>>>
+      dialects;
 };
 
 } // namespace sourcemeta::one

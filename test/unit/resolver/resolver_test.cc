@@ -459,6 +459,39 @@ TEST_F(ResolverTest, example_2020_12_meta_schema) {
   })JSON");
 }
 
+TEST_F(ResolverTest, example_2020_12_meta_schema_repeated_resolution) {
+  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+  RESOLVER_IMPORT(resolver, "example", "2020-12-meta-schema.json");
+  RESOLVER_IMPORT(resolver, "example", "2020-12-meta.json");
+
+  RESOLVER_EXPECT(resolver, "http://localhost:8000/example/2020-12-meta",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-meta",
+    "$vocabulary": {
+      "https://json-schema.org/draft/2020-12/vocab/core": true
+    }
+  })JSON");
+
+  RESOLVER_EXPECT(resolver, "http://localhost:8000/example/2020-12-meta",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-meta",
+    "$vocabulary": {
+      "https://json-schema.org/draft/2020-12/vocab/core": true
+    }
+  })JSON");
+
+  RESOLVER_EXPECT(resolver, "http://localhost:8000/example/2020-12-meta",
+                  R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-meta",
+    "$vocabulary": {
+      "https://json-schema.org/draft/2020-12/vocab/core": true
+    }
+  })JSON");
+}
+
 TEST_F(ResolverTest, example_2020_12_base_with_trailing_slash) {
   sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
   RESOLVER_ADD(resolver, "example", "2020-12-base-with-trailing-slash.json",

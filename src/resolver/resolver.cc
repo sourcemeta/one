@@ -9,11 +9,12 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm>     // std::ranges::transform
+#include <algorithm>     // std::ranges::transform, std::ranges::find_if
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional, std::nullopt
+#include <shared_mutex>  // std::shared_lock
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
@@ -176,6 +177,17 @@ auto Resolver::operator()(
     return sourcemeta::blaze::schema_resolver(identifier);
   }
 
+  auto cached{this->cached_dialect(identifier)};
+  if (cached.has_value()) {
+    if (callback) {
+      callback(result->second.cache_path.has_value()
+                   ? result->second.cache_path.value()
+                   : result->second.path);
+    }
+
+    return cached;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // (2) Avoid rebasing on the fly if possible
   /////////////////////////////////////////////////////////////////////////////
@@ -192,6 +204,7 @@ auto Resolver::operator()(
       callback(result->second.cache_path.value());
     }
 
+    this->cache_dialect(identifier, schema);
     return schema;
   }
 
@@ -286,7 +299,67 @@ auto Resolver::operator()(
       },
       result->second.dialect);
 
+  this->cache_dialect(identifier, schema);
   return schema;
+}
+
+auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
+    -> void {
+  // Official dialects are resolved through the static fallback resolver
+  // rather than through this resolver, so we never get the chance to cache
+  // them anyway
+  if (sourcemeta::blaze::is_known_schema(dialect)) {
+    return;
+  }
+
+  std::unique_lock lock{this->dialect_mutex};
+  const auto match{
+      std::ranges::find_if(this->dialects, [&dialect](const auto &entry) {
+        return entry.first == dialect;
+      })};
+  if (match == this->dialects.cend()) {
+    this->dialects.emplace_back(dialect, std::nullopt);
+  }
+}
+
+auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
+                             const sourcemeta::core::JSON &schema) const
+    -> void {
+  // Most schemas are not dialects, so we first check whether there is
+  // anything to do while only holding the shared lock
+  {
+    std::shared_lock lock{this->dialect_mutex};
+    const auto match{
+        std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+          return entry.first == uri;
+        })};
+    if (match == this->dialects.cend() || match->second.has_value()) {
+      return;
+    }
+  }
+
+  std::unique_lock lock{this->dialect_mutex};
+  const auto match{
+      std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+        return entry.first == uri;
+      })};
+  if (match != this->dialects.cend() && !match->second.has_value()) {
+    match->second = schema;
+  }
+}
+
+auto Resolver::cached_dialect(const sourcemeta::core::JSON::String &uri) const
+    -> std::optional<sourcemeta::core::JSON> {
+  std::shared_lock lock{this->dialect_mutex};
+  const auto match{
+      std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+        return entry.first == uri;
+      })};
+  if (match != this->dialects.cend() && match->second.has_value()) {
+    return match->second;
+  }
+
+  return std::nullopt;
 }
 
 auto Resolver::add(const std::filesystem::path &collection_relative_path,
@@ -416,6 +489,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
           path, result.first->first,
           "Cannot register the same identifier twice");
     }
+    this->track_dialect(result.first->second.dialect);
     return {result.first->first, result.first->second};
   } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
@@ -450,6 +524,7 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
     throw sourcemeta::blaze::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
   }
+  this->track_dialect(result.first->second.dialect);
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
