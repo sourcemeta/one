@@ -335,7 +335,10 @@ TEST(Configuration_read, read_valid_006) {
         }
       },
       "here": {
-        "title": "With standard name"
+        "title": "With standard name",
+        "path": "STUB_DIRECTORY/collections/test",
+        "x-sourcemeta-one:path": "STUB_DIRECTORY/collections/test/jsonschema.json",
+        "baseUri": "http://localhost:8000"
       }
     }
   })JSON"};

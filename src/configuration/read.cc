@@ -103,6 +103,13 @@ auto dereference(const std::filesystem::path &base,
     }
     all_files.emplace(target_path.native());
     input.into(read_file(base, new_location, target_path));
+    // To match how the JSON Schema CLI interprets its configuration files,
+    // a manifest that does not declare a path refers to its own directory
+    if (input.is_object() && !input.defines("path") &&
+        !input.defines("include") && !input.defines("contents")) {
+      input.assign("path", sourcemeta::core::JSON{"."});
+    }
+
     dereference(target_path, input, new_location, visited, all_files, is_root,
                 self_path);
     visited.erase(target_path.native());

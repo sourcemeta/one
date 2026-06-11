@@ -191,6 +191,12 @@ during processing. For example:
 If a directory path is provided to the `include` property, the instance will
 look for a file called `jsonschema.json` inside such directory.
 
+If the included manifest does not declare the `path` property (nor `contents`
+or a nested `include`), the collection defaults to the directory containing
+the manifest itself, mirroring how the [JSON Schema
+CLI](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown)
+interprets such configuration files.
+
 ### Resolve
 
 The `resolve` property is an advanced feature to hook into the schema reference
