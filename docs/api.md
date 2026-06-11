@@ -149,7 +149,8 @@ schema. The instance's configured base path (see
 If the `bundle` query parameter is set, the schema references are embedded
 using the standard [JSON Schema
 Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents)
-process.
+process. Meta-schemas are not embedded, as the registry serves every
+meta-schema that a schema may declare.
 
 !!! warning "`bundle` is a presence flag, not a boolean"
 
