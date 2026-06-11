@@ -77,6 +77,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Type" not exists
 bytes count == 0
 header "Access-Control-Allow-Origin" not exists
+header "Last-Modified" exists
+header "ETag" == {{css_etag}}
 
 GET {{base}}/self/v1/static/style.min.css
 If-None-Match: W/{{css_etag}}
@@ -91,6 +93,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Type" not exists
 bytes count == 0
 header "Access-Control-Allow-Origin" not exists
+header "Last-Modified" exists
+header "ETag" == {{css_etag}}
 
 GET {{base}}/self/v1/static/style.min.css
 If-None-Match: "12345"
@@ -169,6 +173,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Type" not exists
 bytes count == 0
 header "Access-Control-Allow-Origin" not exists
+header "Last-Modified" == {{css_last_modified}}
+header "ETag" == {{css_etag}}
 
 GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: Thu, 01 Jan 2100 00:00:00 GMT
@@ -183,6 +189,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Type" not exists
 bytes count == 0
 header "Access-Control-Allow-Origin" not exists
+header "Last-Modified" == {{css_last_modified}}
+header "ETag" == {{css_etag}}
 
 GET {{base}}/self/v1/static/style.min.css
 If-Modified-Since: Thu, 01 Jan 1970 00:00:00 GMT

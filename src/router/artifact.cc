@@ -218,6 +218,18 @@ auto RouterAction::artifact_serve(
       // stale, more permissive `Cache-Control`.
       response.write_header("Cache-Control", cache_control);
       response.write_header("Vary", vary);
+      // RFC 9110 §15.4.5: "The server generating a 304 response MUST
+      // generate any of the following header fields that would have been
+      // sent in a 200 (OK) response to the same request: Cache-Control,
+      // Content-Location, Date, ETag, Expires, and Vary." Last-Modified
+      // travels too so caches refresh both validators at once.
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.5
+      response.write_header("Last-Modified", sourcemeta::core::to_imf_fixdate(
+                                                 info->last_modified));
+      response.write_header("ETag", request.response_encoding() ==
+                                            sourcemeta::one::Encoding::GZIP
+                                        ? etag_weak
+                                        : etag_strong);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -239,9 +251,15 @@ auto RouterAction::artifact_serve(
         response.write_header("Access-Control-Allow-Origin", "*");
         response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       }
-      // See the matching comment on the If-None-Match branch.
+      // See the matching comments on the If-None-Match branch.
       response.write_header("Cache-Control", cache_control);
       response.write_header("Vary", vary);
+      response.write_header("Last-Modified", sourcemeta::core::to_imf_fixdate(
+                                                 info->last_modified));
+      response.write_header("ETag", request.response_encoding() ==
+                                            sourcemeta::one::Encoding::GZIP
+                                        ? etag_weak
+                                        : etag_strong);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
