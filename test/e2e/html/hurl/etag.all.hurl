@@ -53,6 +53,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Type" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag}}
 
 # Reverse direction: strong-form ETag captured from an identity response
 # still matches when sent as If-None-Match on a gzip-encoded request.
@@ -72,6 +74,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Type" not exists
 header "Content-Encoding" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag_weak}}
 
 GET {{base}}/test/schemas/string.json
 HTTP 200
@@ -100,6 +104,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Type" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag}}
 
 GET {{base}}/test/schemas/string.json
 If-None-Match: W/{{test_schemas_string_json_etag}}
@@ -115,6 +121,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Type" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag}}
 
 GET {{base}}/test/schemas/string.json
 If-None-Match: "12345"
@@ -155,6 +163,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Type" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag}}
 
 # (2) IMS in the future (would normally return 304) + non-matching INM:
 # INM wins, response is 200 because INM did not match. The IMS that
@@ -194,3 +204,5 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "Content-Type" not exists
 bytes count == 0
+header "Last-Modified" exists
+header "ETag" == {{test_schemas_string_json_etag}}
