@@ -16,16 +16,17 @@ auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
   sourcemeta::one::Configuration::Page result;
   using namespace sourcemeta::core;
-  result.title = from_json<decltype(result.title)::value_type>(
-      input.at_or("title", JSON{nullptr}));
+  const JSON null{nullptr};
+  result.title =
+      from_json<decltype(result.title)::value_type>(input.at_or("title", null));
   result.description = from_json<decltype(result.description)::value_type>(
-      input.at_or("description", JSON{nullptr}));
-  result.email = from_json<decltype(result.email)::value_type>(
-      input.at_or("email", JSON{nullptr}));
+      input.at_or("description", null));
+  result.email =
+      from_json<decltype(result.email)::value_type>(input.at_or("email", null));
   result.github = from_json<decltype(result.github)::value_type>(
-      input.at_or("github", JSON{nullptr}));
+      input.at_or("github", null));
   result.website = from_json<decltype(result.website)::value_type>(
-      input.at_or("website", JSON{nullptr}));
+      input.at_or("website", null));
   return result;
 }
 

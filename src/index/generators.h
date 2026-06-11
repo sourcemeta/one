@@ -490,10 +490,14 @@ struct GENERATE_BUNDLE {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
-    sourcemeta::blaze::bundle(schema, sourcemeta::blaze::schema_walker,
-                              [&callback, &resolver](const auto identifier) {
-                                return resolver(identifier, callback);
-                              });
+    // The registry serves every meta-schema a schema may declare, so
+    // bundles only need to embed references and can skip meta-schemas
+    sourcemeta::blaze::bundle(
+        schema, sourcemeta::blaze::schema_walker,
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        },
+        sourcemeta::blaze::BundleMode::References);
     const auto dialect_identifier{sourcemeta::blaze::dialect(schema)};
     assert(!dialect_identifier.empty());
     sourcemeta::blaze::format(
