@@ -705,6 +705,14 @@ private:
   static constexpr std::size_t MCP_PAGE_SIZE{50};
 };
 
+// The mutable build state is only safe to read while holding its lock, as
+// these reads run concurrently with commits from sibling actions
+static auto in_overlay_synchronised(const sourcemeta::one::BuildState &state,
+                                    const std::string &key) -> bool {
+  const auto lock{state.take_lock()};
+  return state.in_overlay(key);
+}
+
 struct GENERATE_EXPLORER_DIRECTORY_LIST {
   static auto handler(const sourcemeta::one::BuildState &state,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -766,7 +774,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           dependency.parent_path().parent_path().filename().string()};
 
       if (filename == "directory.metapack") {
-        if (old_listing.has_value() && !state.in_overlay(dependency.native())) {
+        if (old_listing.has_value() &&
+            !in_overlay_synchronised(state, dependency.native())) {
           auto it = old_directory_entries.find(child_name);
           if (it != old_directory_entries.end()) {
             const auto &old_entry{*it->second};
@@ -905,7 +914,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
-        if (old_listing.has_value() && !state.in_overlay(dependency.native())) {
+        if (old_listing.has_value() &&
+            !in_overlay_synchronised(state, dependency.native())) {
           auto it = old_schema_entries.find(child_name);
           if (it != old_schema_entries.end()) {
             const auto &old_entry{*it->second};
