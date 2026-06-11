@@ -74,7 +74,10 @@ public:
 
 private:
   Views views;
-  std::shared_mutex mutex;
+  // Resolution is a const operation that runs concurrently with the
+  // writers that commit cached materialisation paths, so readers must
+  // be able to take the shared lock too
+  mutable std::shared_mutex mutex;
   std::string_view server_url;
   sourcemeta::core::URI server_uri;
 
