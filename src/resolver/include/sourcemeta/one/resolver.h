@@ -8,17 +8,14 @@
 
 #include <sourcemeta/one/resolver_error.h>
 
-#include <atomic>     // std::atomic
-#include <cstddef>    // std::size_t
-#include <deque>      // std::deque
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <functional> // std::function, std::reference_wrapper
-#include <mutex>      // std::mutex
 #include <optional>   // std::optional
 #include <shared_mutex>  // std::shared_mutex
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::pair
+#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -83,28 +80,23 @@ private:
 
   // Schemas that act as meta-schemas of other schemas get resolved over
   // and over again during indexing (i.e. for every schema that uses them),
-  // so we keep their materialised contents in memory. An entry whose `ready`
-  // flag is not set means we know the schema is a non-official dialect but
-  // didn't resolve it yet. As the number of distinct dialects in a registry
-  // is expected to be tiny, we use a flat structure for fast lookups.
-  // Lookups are lock-free: we rely on a deque (which never relocates its
-  // elements), an atomic entry count published after every append, and a
-  // per-entry atomic flag published after the contents are written. The
-  // mutex only serializes writers
-  struct DialectCacheEntry {
-    sourcemeta::core::JSON::String uri;
-    sourcemeta::core::JSON contents{nullptr};
-    std::atomic<bool> ready{false};
-  };
+  // so we keep their materialised contents in memory. An entry without
+  // contents means we know the schema is a non-official dialect but didn't
+  // resolve it yet. As the number of distinct dialects in a registry is
+  // expected to be tiny, we use a flat structure for fast lookups. Note
+  // that readers must hold a shared lock for the entire scan: appends
+  // mutate the container internals, so element address stability alone
+  // would not make unlocked reads safe
   auto track_dialect(const sourcemeta::core::JSON::String &dialect) -> void;
   auto cache_dialect(const sourcemeta::core::JSON::String &uri,
                      const sourcemeta::core::JSON &schema) const -> void;
   [[nodiscard]] auto
   cached_dialect(const sourcemeta::core::JSON::String &uri) const
       -> std::optional<sourcemeta::core::JSON>;
-  mutable std::mutex dialect_mutex;
-  mutable std::deque<DialectCacheEntry> dialects;
-  mutable std::atomic<std::size_t> dialect_count{0};
+  mutable std::shared_mutex dialect_mutex;
+  mutable std::vector<std::pair<sourcemeta::core::JSON::String,
+                                std::optional<sourcemeta::core::JSON>>>
+      dialects;
 };
 
 } // namespace sourcemeta::one
