@@ -174,9 +174,11 @@ auto Resolver::operator()(
   // The cached materialisation path is the only part of an entry that is
   // mutated after registration, and those writes happen concurrently with
   // resolution, so it must be snapshotted under the shared lock. The rest
-  // of the entry is immutable by the time concurrent resolution starts and
-  // element references remain valid as the container grows, so it can be
-  // safely referenced after releasing the lock
+  // of the entry is immutable by the time concurrent resolution starts, so
+  // it can be safely referenced after releasing the lock. Note that growing
+  // an unordered container invalidates iterators but never pointers or
+  // references to its elements, and entries are never erased, so the
+  // addresses captured here outlive concurrent registrations
   const Entry *view{nullptr};
   const sourcemeta::core::JSON::String *new_identifier{nullptr};
   std::optional<std::filesystem::path> cached_path;
