@@ -5,5 +5,6 @@ COPY benchmark/index.sh /benchmark/index.sh
 COPY benchmark/index-add-update-rebuild.sh /benchmark/index-add-update-rebuild.sh
 COPY benchmark/index-custom-meta-schema.sh /benchmark/index-custom-meta-schema.sh
 COPY benchmark/index-n.sh /benchmark/index-n.sh
+COPY benchmark/index-ref-fanout.sh /benchmark/index-ref-fanout.sh
 RUN /benchmark/index.sh /usr/bin/sourcemeta-one-index > /benchmark.json
 ENTRYPOINT [ "cat", "/benchmark.json" ]

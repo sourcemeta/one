@@ -9,12 +9,13 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm>     // std::ranges::transform, std::ranges::find_if
+#include <algorithm>     // std::ranges::transform
+#include <atomic>        // std::memory_order_acquire, std::memory_order_release
 #include <cassert>       // assert
 #include <cctype>        // std::tolower
+#include <cstddef>       // std::size_t
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional, std::nullopt
-#include <shared_mutex>  // std::shared_lock
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
@@ -177,21 +178,15 @@ auto Resolver::operator()(
     return sourcemeta::blaze::schema_resolver(identifier);
   }
 
-  {
-    std::shared_lock lock{this->dialect_mutex};
-    const auto match{
-        std::ranges::find_if(this->dialects, [&identifier](const auto &entry) {
-          return entry.first == identifier;
-        })};
-    if (match != this->dialects.cend() && match->second.has_value()) {
-      if (callback) {
-        callback(result->second.cache_path.has_value()
-                     ? result->second.cache_path.value()
-                     : result->second.path);
-      }
-
-      return match->second;
+  auto cached{this->cached_dialect(identifier)};
+  if (cached.has_value()) {
+    if (callback) {
+      callback(result->second.cache_path.has_value()
+                   ? result->second.cache_path.value()
+                   : result->second.path);
     }
+
+    return cached;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -318,27 +313,57 @@ auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
     return;
   }
 
-  std::unique_lock lock{this->dialect_mutex};
-  const auto match{
-      std::ranges::find_if(this->dialects, [&dialect](const auto &entry) {
-        return entry.first == dialect;
-      })};
-  if (match == this->dialects.cend()) {
-    this->dialects.emplace_back(dialect, std::nullopt);
+  std::lock_guard lock{this->dialect_mutex};
+  for (const auto &entry : this->dialects) {
+    if (entry.uri == dialect) {
+      return;
+    }
   }
+
+  auto &entry{this->dialects.emplace_back()};
+  entry.uri = dialect;
+  // Only publish the new entry to lock-free readers once it is complete
+  this->dialect_count.store(this->dialects.size(), std::memory_order_release);
 }
 
 auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
                              const sourcemeta::core::JSON &schema) const
     -> void {
-  std::unique_lock lock{this->dialect_mutex};
-  const auto match{
-      std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
-        return entry.first == uri;
-      })};
-  if (match != this->dialects.cend() && !match->second.has_value()) {
-    match->second = schema;
+  const auto count{this->dialect_count.load(std::memory_order_acquire)};
+  for (std::size_t index = 0; index < count; index++) {
+    auto &entry{this->dialects[index]};
+    if (entry.uri != uri) {
+      continue;
+    }
+
+    if (!entry.ready.load(std::memory_order_acquire)) {
+      std::lock_guard lock{this->dialect_mutex};
+      if (!entry.ready.load(std::memory_order_relaxed)) {
+        entry.contents = schema;
+        // Only publish the contents to lock-free readers once fully written
+        entry.ready.store(true, std::memory_order_release);
+      }
+    }
+
+    return;
   }
+}
+
+auto Resolver::cached_dialect(const sourcemeta::core::JSON::String &uri) const
+    -> std::optional<sourcemeta::core::JSON> {
+  const auto count{this->dialect_count.load(std::memory_order_acquire)};
+  for (std::size_t index = 0; index < count; index++) {
+    const auto &entry{this->dialects[index]};
+    if (entry.uri == uri) {
+      if (entry.ready.load(std::memory_order_acquire)) {
+        return entry.contents;
+      }
+
+      return std::nullopt;
+    }
+  }
+
+  return std::nullopt;
 }
 
 auto Resolver::add(const std::filesystem::path &collection_relative_path,
