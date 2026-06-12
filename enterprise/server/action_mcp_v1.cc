@@ -167,7 +167,7 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
       uri, Tree::Schemas, bundle ? "bundle" : "schema")};
   if (resolution.outcome ==
       sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-    return sourcemeta::core::jsonrpc_make_error(&id, -32001,
+    return sourcemeta::core::jsonrpc_make_error(&id, -32010,
                                                 "Authentication required");
   }
   if (resolution.outcome !=
