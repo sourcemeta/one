@@ -171,18 +171,36 @@ auto Resolver::operator()(
     ~ResolveGuard() { resolving.erase(id); }
   } resolve_guard{std::string{identifier}};
 
-  auto result{this->views.find(identifier)};
+  // The cached materialisation path is the only part of an entry that is
+  // mutated after registration, and those writes happen concurrently with
+  // resolution, so it must be snapshotted under the shared lock. The rest
+  // of the entry is immutable by the time concurrent resolution starts, so
+  // it can be safely referenced after releasing the lock. Note that growing
+  // an unordered container invalidates iterators but never pointers or
+  // references to its elements, and entries are never erased, so the
+  // addresses captured here outlive concurrent registrations
+  const Entry *view{nullptr};
+  const sourcemeta::core::JSON::String *new_identifier{nullptr};
+  std::optional<std::filesystem::path> cached_path;
+  {
+    std::shared_lock lock{this->mutex};
+    const auto result{this->views.find(identifier)};
+    if (result != this->views.cend()) {
+      view = &result->second;
+      new_identifier = &result->first;
+      cached_path = result->second.cache_path;
+    }
+  }
+
   // If we don't recognise the schema, try a fallback as a last resort
-  if (result == this->views.cend()) {
+  if (view == nullptr) {
     return sourcemeta::blaze::schema_resolver(identifier);
   }
 
   auto cached{this->cached_dialect(identifier)};
   if (cached.has_value()) {
     if (callback) {
-      callback(result->second.cache_path.has_value()
-                   ? result->second.cache_path.value()
-                   : result->second.path);
+      callback(cached_path.has_value() ? cached_path.value() : view->path);
     }
 
     return cached;
@@ -192,16 +210,16 @@ auto Resolver::operator()(
   // (2) Avoid rebasing on the fly if possible
   /////////////////////////////////////////////////////////////////////////////
 
-  if (result->second.cache_path.has_value()) {
+  if (cached_path.has_value()) {
     // We can guarantee the cached outcome is JSON, so we don't need to try
     // reading as YAML
     auto schema_option{
-        sourcemeta::one::metapack_read_json(result->second.cache_path.value())};
+        sourcemeta::one::metapack_read_json(cached_path.value())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
     assert(sourcemeta::blaze::is_schema(schema));
     if (callback) {
-      callback(result->second.cache_path.value());
+      callback(cached_path.value());
     }
 
     this->cache_dialect(identifier, schema);
@@ -212,10 +230,10 @@ auto Resolver::operator()(
   // (3) Read the original schema file
   /////////////////////////////////////////////////////////////////////////////
 
-  auto schema{sourcemeta::core::read_yaml_or_json(result->second.path)};
+  auto schema{sourcemeta::core::read_yaml_or_json(view->path)};
   assert(sourcemeta::blaze::is_schema(schema));
   if (callback) {
-    callback(result->second.path);
+    callback(view->path);
   }
 
   // If the schema is not an object schema, then we are done
@@ -229,7 +247,7 @@ auto Resolver::operator()(
 
   // Note that we have to do this before attempting to analyse the schema, so
   // we can internally resolve any potential custom meta-schema
-  schema.assign("$schema", sourcemeta::core::JSON{result->second.dialect});
+  schema.assign("$schema", sourcemeta::core::JSON{view->dialect});
 
   /////////////////////////////////////////////////////////////////////////////
   // (5) Normalise all references, if any, to match the new identifier
@@ -242,16 +260,16 @@ auto Resolver::operator()(
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
       },
-      result->second.dialect)};
+      view->dialect)};
   const auto has_identifier{!identifier_result.empty()};
   frame.analyse(
       schema, sourcemeta::blaze::schema_walker,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
       },
-      result->second.dialect,
+      view->dialect,
       // Otherwise we will loop over all locations twice
-      has_identifier ? std::string_view{} : result->second.original_identifier);
+      has_identifier ? std::string_view{} : view->original_identifier);
 
   const auto ref_hash{schema.as_object().hash("$ref")};
   const auto dynamic_ref_hash{schema.as_object().hash("$dynamicRef")};
@@ -275,11 +293,11 @@ auto Resolver::operator()(
           const sourcemeta::core::URI subschema_base{
               std::string{entry.second.base}};
           if (has_ref) {
-            normalise_ref(*result->second.collection, subschema_base, subschema,
-                          "$ref", maybe_ref->to_string(), this->server_uri);
+            normalise_ref(*view->collection, subschema_base, subschema, "$ref",
+                          maybe_ref->to_string(), this->server_uri);
           }
           if (has_dynamic_ref) {
-            normalise_ref(*result->second.collection, subschema_base, subschema,
+            normalise_ref(*view->collection, subschema_base, subschema,
                           "$dynamicRef", maybe_dynamic_ref->to_string(),
                           this->server_uri);
           }
@@ -293,11 +311,11 @@ auto Resolver::operator()(
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::blaze::reidentify(
-      schema, result->first,
+      schema, *new_identifier,
       [this](const auto subidentifier) {
         return this->operator()(subidentifier);
       },
-      result->second.dialect);
+      view->dialect);
 
   this->cache_dialect(identifier, schema);
   return schema;
