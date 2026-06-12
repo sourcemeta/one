@@ -60,9 +60,16 @@ public:
                                     : (bundle || is_deno)
                                         ? std::string_view{"bundle"}
                                         : std::string_view{"schema"}};
-    const auto path{self.artifact_resolve_path(
+    const auto resolution{self.artifact_resolve_path(
         schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
-    if (!path.has_value()) {
+    if (resolution.outcome ==
+        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      sourcemeta::one::json_error_unauthorized(request, response, error_schema,
+                                               "*");
+      return;
+    }
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -76,7 +83,7 @@ public:
     // `Accept-Encoding` axis, otherwise a cache hit from one client
     // could leak the wrong representation to another.
     self.artifact_serve(
-        path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
+        resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
         is_deno ? std::string_view{"application/json"} : std::string_view{}, {},
         {}, request, response, error_schema,
         "public, max-age=0, must-revalidate", "User-Agent, Accept-Encoding");

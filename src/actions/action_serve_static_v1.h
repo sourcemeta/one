@@ -70,9 +70,10 @@ public:
     // `immutable` extension lets browsers skip the conditional GET
     // entirely.
     this->artifact_serve(
-        this->file_root_ / matches.front(), sourcemeta::core::HTTP_STATUS_OK,
-        false, {}, {}, {}, request, response, this->error_schema_,
-        "public, max-age=31536000, immutable", "Accept-Encoding");
+        this->authorize_static(this->file_root_ / matches.front()),
+        sourcemeta::core::HTTP_STATUS_OK, false, {}, {}, {}, request, response,
+        this->error_schema_, "public, max-age=31536000, immutable",
+        "Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

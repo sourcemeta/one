@@ -59,9 +59,16 @@ public:
     }
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
-    const auto path{
+    const auto resolution{
         this->artifact_resolve_path(path_match, Tree::Explorer, "directory")};
-    if (!path.has_value()) {
+    if (resolution.outcome ==
+        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      sourcemeta::one::json_error_unauthorized(request, response,
+                                               this->error_schema_, "*");
+      return;
+    }
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -69,7 +76,7 @@ public:
       return;
     }
     this->artifact_serve(
-        path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
+        resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
         this->response_schema_, {}, request, response, this->error_schema_,
         "public, max-age=0, must-revalidate", "Accept-Encoding");
   }
@@ -89,13 +96,19 @@ public:
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
     const auto &path_arg{arguments.at_or("path", EMPTY_STRING).to_string()};
-    const auto path{
+    const auto resolution{
         this->artifact_resolve_path(path_arg, Tree::Explorer, "directory")};
-    if (!path.has_value()) {
+    if (resolution.outcome ==
+        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Authentication required");
+    }
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Directory not found");
     }
-    auto contents{this->artifact_read_json(path.value())};
+    auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Directory not found");

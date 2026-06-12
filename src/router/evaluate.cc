@@ -12,11 +12,11 @@
 
 namespace sourcemeta::one {
 
-auto Router::blaze_template(const std::filesystem::path &absolute_path)
+auto Router::blaze_template(const ResolvedArtifact &artifact)
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
-  return this->template_cache_.get_or_compute(absolute_path, [&absolute_path] {
+  return this->template_cache_.get_or_compute(artifact.path(), [&artifact] {
     const auto template_json{
-        sourcemeta::one::metapack_read_json(absolute_path)};
+        sourcemeta::one::metapack_read_json(artifact.path())};
     assert(template_json.has_value());
     auto compiled{sourcemeta::blaze::from_json(template_json.value())};
     assert(compiled.has_value());
@@ -27,12 +27,12 @@ auto Router::blaze_template(const std::filesystem::path &absolute_path)
 auto RouterAction::blaze_template(const std::string_view schema_uri,
                                   const sourcemeta::blaze::Mode mode) const
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
-  const auto template_path{this->artifact_resolve_path(
+  const auto resolution{this->artifact_resolve_path(
       schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
-  assert(template_path.has_value());
-  return this->dispatcher_.blaze_template(template_path.value());
+  assert(resolution.outcome == ArtifactResolution::Outcome::Found);
+  return this->dispatcher_.blaze_template(resolution.path.value());
 }
 
 auto RouterAction::schema_evaluate_fast(

@@ -18,13 +18,38 @@
 #include <mutex>       // std::once_flag
 #include <optional>    // std::optional
 #include <span>        // std::span
-#include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::pair
+#include <utility>     // std::move, std::pair
 
 namespace sourcemeta::one {
 
 class Router;
+class RouterAction;
+
+// Proof that a path was produced by the artifact resolver. Only the
+// action base class can mint one, so every artifact read must have
+// passed through resolution by construction
+class ResolvedArtifact {
+public:
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  friend class RouterAction;
+  explicit ResolvedArtifact(std::filesystem::path path)
+      : path_{std::move(path)} {}
+  std::filesystem::path path_;
+};
+
+// The three-outcome result of artifact resolution. Denial is distinct
+// from absence so surfaces can answer 401 versus 404. Nothing produces
+// Denied until authorisation lands in the resolver
+struct ArtifactResolution {
+  enum class Outcome : std::uint8_t { Found, NotFound, Denied };
+  Outcome outcome{Outcome::NotFound};
+  std::optional<ResolvedArtifact> path;
+};
 
 class RouterAction {
 public:
@@ -81,13 +106,12 @@ public:
 
   [[nodiscard]] auto artifact_resolve_path(std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
-      -> std::optional<std::filesystem::path>;
+      -> ArtifactResolution;
 
-  [[nodiscard]] auto
-  artifact_read_json(const std::filesystem::path &absolute_path) const
+  [[nodiscard]] auto artifact_read_json(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON>;
 
-  auto artifact_serve(const std::filesystem::path &absolute_path,
+  auto artifact_serve(const ResolvedArtifact &artifact,
                       const sourcemeta::core::HTTPStatus &status,
                       bool enable_cors, std::string_view mime,
                       std::string_view link,
@@ -109,6 +133,13 @@ public:
   [[nodiscard]] auto schema_evaluate_with_tracing(
       std::string_view schema_uri, const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
+
+protected:
+  // Escape hatch from resolution for paths that are not registry
+  // content. The only legitimate use is the compile-time static asset
+  // tree. Anything else must go through the resolver above
+  [[nodiscard]] auto authorize_static(std::filesystem::path absolute_path) const
+      -> ResolvedArtifact;
 
 private:
   [[nodiscard]] auto blaze_template(std::string_view schema_uri,
@@ -168,7 +199,7 @@ public:
              const sourcemeta::core::HTTPStatus &status, std::string_view type,
              std::string_view detail, std::string_view origin) const -> void;
 
-  [[nodiscard]] auto blaze_template(const std::filesystem::path &absolute_path)
+  [[nodiscard]] auto blaze_template(const ResolvedArtifact &artifact)
       -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
 private:

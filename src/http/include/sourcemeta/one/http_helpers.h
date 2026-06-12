@@ -166,6 +166,13 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
       status == sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED) {
     response.write_header("Allow", allow);
   }
+  // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. The
+  // machine surface authenticates with bearer credentials only, so the
+  // challenge is constant.
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
+  if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
+    response.write_header("WWW-Authenticate", "Bearer");
+  }
   if (!schema.empty()) {
     write_link_header(response, schema);
   }
@@ -173,6 +180,17 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   std::ostringstream output;
   sourcemeta::core::prettify(body, output);
   send_response(status, request, response, output.str(), Encoding::Identity);
+}
+
+// The single shape of an authentication denial on the HTTP surface, so
+// every protected resource answers identically
+inline auto json_error_unauthorized(const HTTPRequest &request,
+                                    HTTPResponse &response,
+                                    const std::string_view schema,
+                                    const std::string_view origin) -> void {
+  json_error(request, response, sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
+             "urn:sourcemeta:one:authentication-required",
+             "This resource requires authentication", schema, origin);
 }
 
 } // namespace sourcemeta::one
