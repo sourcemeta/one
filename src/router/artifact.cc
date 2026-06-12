@@ -108,9 +108,16 @@ auto RouterAction::artifact_resolve_path(
           .path = ResolvedArtifact{std::move(canonical)}};
 }
 
-auto RouterAction::authorize_static(std::filesystem::path absolute_path) const
-    -> ResolvedArtifact {
-  return ResolvedArtifact{std::move(absolute_path)};
+auto RouterAction::artifact_resolve_static(
+    const std::filesystem::path &root, const std::string_view relative) const
+    -> ArtifactResolution {
+  auto canonical{sourcemeta::core::weakly_canonical(root / relative)};
+  if (!sourcemeta::core::is_under_path(canonical, root)) {
+    return {.outcome = ArtifactResolution::Outcome::NotFound,
+            .path = std::nullopt};
+  }
+  return {.outcome = ArtifactResolution::Outcome::Found,
+          .path = ResolvedArtifact{std::move(canonical)}};
 }
 
 auto RouterAction::artifact_read_json(const ResolvedArtifact &artifact) const

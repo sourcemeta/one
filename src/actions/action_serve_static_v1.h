@@ -65,15 +65,35 @@ public:
       return;
     }
 
+    const auto resolution{
+        this->artifact_resolve_static(this->file_root_, matches.front())};
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      // A path that escapes the static asset tree behaves exactly like
+      // a missing file, including the method check coming first
+      if (request.method() != "get" && request.method() != "head") {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+            "urn:sourcemeta:one:method-not-allowed",
+            "This HTTP method is invalid for this URL", this->error_schema_, "",
+            "GET, HEAD, OPTIONS");
+        return;
+      }
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+          this->error_schema_, "");
+      return;
+    }
+
     // RFC 8246 §2: static assets are deploy-pinned (the build emits
     // them under a versioned URL), so a year-long `max-age` with the
     // `immutable` extension lets browsers skip the conditional GET
     // entirely.
     this->artifact_serve(
-        this->authorize_static(this->file_root_ / matches.front()),
-        sourcemeta::core::HTTP_STATUS_OK, false, {}, {}, {}, request, response,
-        this->error_schema_, "public, max-age=31536000, immutable",
-        "Accept-Encoding");
+        resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
+        {}, {}, request, response, this->error_schema_,
+        "public, max-age=31536000, immutable", "Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

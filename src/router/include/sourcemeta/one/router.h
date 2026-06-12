@@ -135,11 +135,15 @@ public:
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
 protected:
-  // Escape hatch from resolution for paths that are not registry
-  // content. The only legitimate use is the compile-time static asset
-  // tree. Anything else must go through the resolver above
-  [[nodiscard]] auto authorize_static(std::filesystem::path absolute_path) const
-      -> ResolvedArtifact;
+  // Resolution for trees that are not registry content, such as the
+  // compile-time static asset bundle. Same containment discipline as
+  // registry resolution, against a caller-declared root, but access to
+  // these trees is governed at the route level, as their identity is a
+  // URL rather than a registry path. Existence is left to the serving
+  // layer, which orders its method check before the existence check
+  [[nodiscard]] auto artifact_resolve_static(const std::filesystem::path &root,
+                                             std::string_view relative) const
+      -> ArtifactResolution;
 
 private:
   [[nodiscard]] auto blaze_template(std::string_view schema_uri,
