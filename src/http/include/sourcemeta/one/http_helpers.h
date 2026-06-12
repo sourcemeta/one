@@ -168,10 +168,13 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   }
   // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. The
   // machine surface authenticates with bearer credentials only, so the
-  // challenge is constant.
+  // challenge is constant. RFC 6750 §3 additionally requires the scheme
+  // to be followed by at least one auth-param, and `realm` is the
+  // conventional one.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
+  // https://datatracker.ietf.org/doc/html/rfc6750#section-3
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
-    response.write_header("WWW-Authenticate", "Bearer");
+    response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
   }
   if (!schema.empty()) {
     write_link_header(response, schema);
