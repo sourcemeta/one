@@ -95,12 +95,21 @@ public:
         this->artifact_resolve_path(schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
         schema_uri, Tree::Schemas, "blaze-exhaustive")};
-    if (!schema_present.has_value()) {
+    if (schema_present.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Denied ||
+        evaluation_enabled.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Authentication required");
+    }
+    if (schema_present.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
 
-    if (!evaluation_enabled.has_value()) {
+    if (evaluation_enabled.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       return sourcemeta::core::mcp_make_tool_error(
           request_id, "This schema was not precompiled for schema evaluation");
     }
@@ -143,10 +152,12 @@ private:
 
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
-        const auto locations_path{this->artifact_resolve_path(
+        const auto locations_resolution{this->artifact_resolve_path(
             keyword_location_string, Tree::Schemas, "locations")};
-        if (locations_path.has_value()) {
-          auto locations{this->artifact_read_json(locations_path.value())};
+        if (locations_resolution.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Found) {
+          auto locations{
+              this->artifact_read_json(locations_resolution.path.value())};
           if (locations.has_value() && locations.value().is_object() &&
               locations.value().defines("static")) {
             cached = referenced_locations
@@ -195,13 +206,14 @@ private:
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_path{
+    const auto locations_resolution{
         this->artifact_resolve_path(schema_uri, Tree::Schemas, "locations")};
-    if (!locations_path.has_value()) {
+    if (locations_resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }
     const auto locations_option{
-        this->artifact_read_json(locations_path.value())};
+        this->artifact_read_json(locations_resolution.path.value())};
     if (!locations_option.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }

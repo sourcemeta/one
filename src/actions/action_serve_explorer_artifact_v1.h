@@ -69,9 +69,16 @@ public:
 
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
-    const auto path{this->artifact_resolve_path(path_match, Tree::Explorer,
-                                                this->artifact_)};
-    if (!path.has_value()) {
+    const auto resolution{this->artifact_resolve_path(
+        path_match, Tree::Explorer, this->artifact_)};
+    if (resolution.outcome ==
+        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      sourcemeta::one::json_error_unauthorized(request, response,
+                                               this->error_schema_, "*");
+      return;
+    }
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -79,7 +86,7 @@ public:
       return;
     }
     this->artifact_serve(
-        path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
+        resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
         this->response_schema_, {}, request, response, this->error_schema_,
         "public, max-age=0, must-revalidate", "Accept-Encoding");
   }
@@ -97,13 +104,19 @@ public:
           std::move(request_output));
     }
 
-    const auto path{this->artifact_resolve_path(
+    const auto resolution{this->artifact_resolve_path(
         arguments.at("schema").to_string(), Tree::Explorer, this->artifact_)};
-    if (!path.has_value()) {
+    if (resolution.outcome ==
+        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Authentication required");
+    }
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
-    auto contents{this->artifact_read_json(path.value())};
+    auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

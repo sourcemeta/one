@@ -53,11 +53,12 @@ public:
       }
     });
 
-    const auto mcp_metadata_path{
+    const auto mcp_metadata{
         this->artifact_resolve_path("", Tree::Explorer, "mcp")};
-    assert(mcp_metadata_path.has_value());
+    assert(mcp_metadata.outcome ==
+           sourcemeta::one::ArtifactResolution::Outcome::Found);
     auto mcp_metadata_option{
-        this->artifact_read_json(mcp_metadata_path.value())};
+        this->artifact_read_json(mcp_metadata.path.value())};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
     this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();

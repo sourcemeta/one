@@ -206,6 +206,12 @@
             "code": -32008,
             "message": "Content-Type must be application/json"
           }
+        },
+        {
+          "const": {
+            "code": -32010,
+            "message": "Authentication required"
+          }
         }
       ]
     }

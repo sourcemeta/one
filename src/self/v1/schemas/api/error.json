@@ -27,6 +27,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:authentication-required",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "This resource requires authentication"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:method-not-allowed",
         "title": "Method Not Allowed",
         "status": 405,

@@ -73,8 +73,7 @@ namespace sourcemeta::one {
 
 auto RouterAction::artifact_resolve_path(
     const std::string_view input, const Tree tree,
-    const std::string_view artifact_name) const
-    -> std::optional<std::filesystem::path> {
+    const std::string_view artifact_name) const -> ArtifactResolution {
   const std::string_view tree_segment{tree == Tree::Schemas ? "schemas"
                                                             : "explorer"};
   const auto tree_root{this->index_directory_ / tree_segment};
@@ -85,7 +84,8 @@ auto RouterAction::artifact_resolve_path(
       auto stripped{sourcemeta::core::URI::strip_path_prefix(
           input, this->server_uri_base_path_)};
       if (!stripped.has_value()) {
-        return std::nullopt;
+        return {.outcome = ArtifactResolution::Outcome::NotFound,
+                .path = std::nullopt};
       }
       resolved = std::filesystem::path{std::move(stripped).value()};
     }
@@ -97,28 +97,43 @@ auto RouterAction::artifact_resolve_path(
   directory /= std::string{artifact_name} + ".metapack";
   auto canonical{sourcemeta::core::weakly_canonical(directory)};
   if (!sourcemeta::core::is_under_path(canonical, tree_root)) {
-    return std::nullopt;
+    return {.outcome = ArtifactResolution::Outcome::NotFound,
+            .path = std::nullopt};
   }
   if (!std::filesystem::exists(canonical)) {
-    return std::nullopt;
+    return {.outcome = ArtifactResolution::Outcome::NotFound,
+            .path = std::nullopt};
   }
-  return canonical;
+  return {.outcome = ArtifactResolution::Outcome::Found,
+          .path = ResolvedArtifact{std::move(canonical)}};
 }
 
-auto RouterAction::artifact_read_json(
-    const std::filesystem::path &absolute_path) const
+auto RouterAction::artifact_resolve_static(
+    const std::filesystem::path &root, const std::string_view relative) const
+    -> ArtifactResolution {
+  auto canonical{sourcemeta::core::weakly_canonical(root / relative)};
+  if (!sourcemeta::core::is_under_path(canonical, root)) {
+    return {.outcome = ArtifactResolution::Outcome::NotFound,
+            .path = std::nullopt};
+  }
+  return {.outcome = ArtifactResolution::Outcome::Found,
+          .path = ResolvedArtifact{std::move(canonical)}};
+}
+
+auto RouterAction::artifact_read_json(const ResolvedArtifact &artifact) const
     -> std::optional<sourcemeta::core::JSON> {
-  return sourcemeta::one::metapack_read_json(absolute_path);
+  return sourcemeta::one::metapack_read_json(artifact.path());
 }
 
 auto RouterAction::artifact_serve(
-    const std::filesystem::path &absolute_path,
+    const ResolvedArtifact &artifact,
     const sourcemeta::core::HTTPStatus &status, const bool enable_cors,
     const std::string_view mime, const std::string_view link,
     const BrowserSecurityHeaders &browser_security, HTTPRequest &request,
     HTTPResponse &response, const std::string_view error_schema,
     const std::string_view cache_control, const std::string_view vary) const
     -> void {
+  const auto &absolute_path{artifact.path()};
   // Caller must pick the cache scope explicitly so no surface
   // silently inherits an inappropriate default. Cacheability is a
   // per-surface policy decision (RFC 9111 §5.2.2): static assets

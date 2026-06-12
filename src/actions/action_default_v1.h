@@ -105,11 +105,19 @@ public:
           "text/html") {
         const auto root_html{
             this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
-        if (root_html.has_value()) {
+        if (root_html.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+          sourcemeta::one::json_error_unauthorized(request, response,
+                                                   this->error_schema_, "*");
+          return;
+        }
+        if (root_html.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Found) {
           this->artifact_serve(
-              root_html.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
-              {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-              "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
+              root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
+              {}, {}, HTML_BROWSER_SECURITY, request, response,
+              this->error_schema_, "public, max-age=0, must-revalidate",
+              "Accept, Accept-Encoding");
           return;
         }
       }
@@ -136,26 +144,45 @@ public:
             this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
             path, Tree::Explorer, "directory-html")};
-        if (!path.ends_with("/") && schema_html.has_value()) {
+        if (schema_html.outcome ==
+                sourcemeta::one::ArtifactResolution::Outcome::Denied ||
+            directory_html.outcome ==
+                sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+          sourcemeta::one::json_error_unauthorized(request, response,
+                                                   this->error_schema_, "*");
+          return;
+        }
+        if (!path.ends_with("/") &&
+            schema_html.outcome ==
+                sourcemeta::one::ArtifactResolution::Outcome::Found) {
           this->artifact_serve(
-              schema_html.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
-              {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-              "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
-        } else if (directory_html.has_value()) {
-          this->artifact_serve(
-              directory_html.value(), sourcemeta::core::HTTP_STATUS_OK, false,
+              schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
               {}, {}, HTML_BROWSER_SECURITY, request, response,
+              this->error_schema_, "public, max-age=0, must-revalidate",
+              "Accept, Accept-Encoding");
+        } else if (directory_html.outcome ==
+                   sourcemeta::one::ArtifactResolution::Outcome::Found) {
+          this->artifact_serve(
+              directory_html.path.value(), sourcemeta::core::HTTP_STATUS_OK,
+              false, {}, {}, HTML_BROWSER_SECURITY, request, response,
               this->error_schema_, "public, max-age=0, must-revalidate",
               "Accept, Accept-Encoding");
         } else {
           const auto not_found{
               this->artifact_resolve_path("", Tree::Explorer, "404")};
-          if (not_found.has_value()) {
+          if (not_found.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+            sourcemeta::one::json_error_unauthorized(request, response,
+                                                     this->error_schema_, "*");
+            return;
+          }
+          if (not_found.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Found) {
             // The 404 HTML page is itself an error response, so it
             // travels with the same `no-store` discipline as the
             // JSON Problem Details errors.
             this->artifact_serve(
-                not_found.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                not_found.path.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND,
                 false, {}, {}, HTML_BROWSER_SECURITY, request, response,
                 this->error_schema_, "no-store", "Accept, Accept-Encoding");
           } else {
@@ -179,9 +206,23 @@ public:
           this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
       const auto directory_html{
           this->artifact_resolve_path(path, Tree::Explorer, "directory-html")};
-      if (schema_json.has_value() ||
-          (!path.ends_with("/") && schema_html.has_value()) ||
-          directory_html.has_value()) {
+      if (schema_json.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Denied ||
+          schema_html.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Denied ||
+          directory_html.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+        sourcemeta::one::json_error_unauthorized(request, response,
+                                                 this->error_schema_, "*");
+        return;
+      }
+      if (schema_json.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Found ||
+          (!path.ends_with("/") &&
+           schema_html.outcome ==
+               sourcemeta::one::ArtifactResolution::Outcome::Found) ||
+          directory_html.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Found) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "urn:sourcemeta:one:method-not-allowed",

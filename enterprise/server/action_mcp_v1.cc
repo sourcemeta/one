@@ -163,14 +163,20 @@ auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json)
         "Resource not found");
   }
 
-  const auto schema_artifact_path{this->artifact_resolve_path(
+  const auto resolution{this->artifact_resolve_path(
       uri, Tree::Schemas, bundle ? "bundle" : "schema")};
-  if (!schema_artifact_path.has_value()) {
+  if (resolution.outcome ==
+      sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+    return sourcemeta::core::jsonrpc_make_error(&id, -32010,
+                                                "Authentication required");
+  }
+  if (resolution.outcome !=
+      sourcemeta::one::ArtifactResolution::Outcome::Found) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
         "Resource not found");
   }
-  const auto schema{this->artifact_read_json(schema_artifact_path.value())};
+  const auto schema{this->artifact_read_json(resolution.path.value())};
   if (!schema.has_value()) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
