@@ -34,7 +34,7 @@ public:
   }
 
   static auto serve(const sourcemeta::one::RouterAction &self,
-                    std::string_view schema_path,
+                    std::string_view credential, std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
                     std::string_view error_schema) -> void {
@@ -61,7 +61,8 @@ public:
                                         ? std::string_view{"bundle"}
                                         : std::string_view{"schema"}};
     const auto resolution{self.artifact_resolve_path(
-        schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
+        credential, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
+        artifact)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response, error_schema,
@@ -90,7 +91,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -98,12 +99,13 @@ public:
                                       "If-Modified-Since");
       return;
     }
-    serve(*this, matches.front(), request, response, this->error_schema_);
+    serve(*this, credential, matches.front(), request, response,
+          this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
-      -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 

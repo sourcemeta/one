@@ -53,18 +53,17 @@ public:
       }
     });
 
-    const auto mcp_metadata{
-        this->artifact_resolve_path("", Tree::Explorer, "mcp")};
-    assert(mcp_metadata.outcome ==
-           sourcemeta::one::ArtifactResolution::Outcome::Found);
+    const auto mcp_metadata_path{
+        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
+    assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
-        this->artifact_read_json(mcp_metadata.path.value())};
+        this->artifact_read_json(mcp_metadata_path.value())};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
     this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
   }
 
-  auto rest(const std::span<std::string_view>,
+  auto rest(const std::span<std::string_view>, std::string_view,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -318,8 +317,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
-      -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 

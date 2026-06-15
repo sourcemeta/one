@@ -37,7 +37,7 @@ public:
     });
   }
 
-  auto rest(const std::span<std::string_view>,
+  auto rest(const std::span<std::string_view>, std::string_view,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -66,8 +66,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
-      -> sourcemeta::core::JSON override {
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           std::string_view) -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 

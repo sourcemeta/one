@@ -8,6 +8,7 @@
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router_lru.h>
 
@@ -68,12 +69,13 @@ public:
   auto operator=(RouterAction &&) -> RouterAction & = delete;
 
   virtual auto rest(const std::span<std::string_view> matches,
-                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
+                    std::string_view credential, HTTPRequest &request,
+                    HTTPResponse &response) -> void = 0;
 
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &id,
-                   const sourcemeta::core::JSON &arguments)
-      -> sourcemeta::core::JSON = 0;
+                   const sourcemeta::core::JSON &arguments,
+                   std::string_view credential) -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
@@ -104,7 +106,8 @@ public:
     std::string_view x_frame_options{};
   };
 
-  [[nodiscard]] auto artifact_resolve_path(std::string_view input, Tree tree,
+  [[nodiscard]] auto artifact_resolve_path(std::string_view credential,
+                                           std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> ArtifactResolution;
 
@@ -122,16 +125,18 @@ public:
                       std::string_view vary) const -> void;
 
   [[nodiscard]] auto
-  schema_evaluate_fast(std::string_view schema_uri,
+  schema_evaluate_fast(std::string_view credential, std::string_view schema_uri,
                        const sourcemeta::core::JSON &instance) const -> bool;
 
-  [[nodiscard]] auto schema_evaluate(std::string_view schema_uri,
+  [[nodiscard]] auto schema_evaluate(std::string_view credential,
+                                     std::string_view schema_uri,
                                      const sourcemeta::core::JSON &instance,
                                      sourcemeta::blaze::Mode mode) const
       -> std::pair<bool, sourcemeta::core::JSON>;
 
   [[nodiscard]] auto schema_evaluate_with_tracing(
-      std::string_view schema_uri, const sourcemeta::core::JSON &instance,
+      std::string_view credential, std::string_view schema_uri,
+      const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
 protected:
@@ -145,8 +150,21 @@ protected:
                                              std::string_view relative) const
       -> ArtifactResolution;
 
+  // Escape hatch for indexer-generated infrastructure metadata read at
+  // action construction, where no request and therefore no context
+  // exists. Never use this on a request-driven path
+  [[nodiscard]] auto
+  artifact_resolve_path_unauthenticated(std::string_view input, Tree tree,
+                                        std::string_view artifact_name) const
+      -> std::optional<ResolvedArtifact>;
+
 private:
-  [[nodiscard]] auto blaze_template(std::string_view schema_uri,
+  [[nodiscard]] auto artifact_locate(std::string_view input, Tree tree,
+                                     std::string_view artifact_name) const
+      -> std::optional<std::filesystem::path>;
+
+  [[nodiscard]] auto blaze_template(std::string_view credential,
+                                    std::string_view schema_uri,
                                     sourcemeta::blaze::Mode mode) const
       -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
@@ -206,6 +224,10 @@ public:
   [[nodiscard]] auto blaze_template(const ResolvedArtifact &artifact)
       -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
+  [[nodiscard]] auto authentication() const noexcept -> const Authentication & {
+    return this->authentication_;
+  }
+
 private:
   static constexpr std::size_t TEMPLATE_CACHE_CAPACITY{50};
 
@@ -225,6 +247,7 @@ private:
   std::string_view default_error_schema_;
   RouterLRU<std::filesystem::path, sourcemeta::blaze::Template> template_cache_{
       TEMPLATE_CACHE_CAPACITY};
+  Authentication authentication_;
 };
 
 } // namespace sourcemeta::one

@@ -62,27 +62,31 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, request, response, *this, this->response_schema_,
+        matches, credential, request, response, *this, this->response_schema_,
         this->error_schema_, this->request_schema_,
-        [this](const std::string_view schema_uri,
-               const std::string &body) -> sourcemeta::core::JSON {
+        // A throw here is intended and caught by the surrounding request
+        // handler
+        // NOLINTNEXTLINE(bugprone-exception-escape)
+        [this, credential = std::string{credential}](
+            const std::string_view schema_uri,
+            const std::string &body) -> sourcemeta::core::JSON {
           sourcemeta::core::PointerPositionTracker tracker;
           sourcemeta::core::JSON instance_json{nullptr};
           sourcemeta::core::parse_json(body, instance_json, std::ref(tracker));
-          return this->trace(schema_uri, instance_json, &tracker,
+          return this->trace(credential, schema_uri, instance_json, &tracker,
                              sourcemeta::core::Pointer{});
         });
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments)
+           const sourcemeta::core::JSON &arguments, std::string_view credential)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(this->rpc_request_schema_, arguments,
+        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
                               sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
@@ -91,10 +95,10 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{
-        this->artifact_resolve_path(schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{this->artifact_resolve_path(
+        credential, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        credential, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -130,13 +134,14 @@ public:
 
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->trace(schema_uri, parsed_instance, &tracker,
+        this->trace(credential, schema_uri, parsed_instance, &tracker,
                     sourcemeta::core::Pointer{}));
   }
 
 private:
   auto
-  resolve_vocabulary(const std::string_view keyword_location,
+  resolve_vocabulary(std::string_view credential,
+                     const std::string_view keyword_location,
                      const sourcemeta::core::WeakPointer &evaluate_path,
                      const sourcemeta::core::JSON &static_locations,
                      std::unordered_map<std::string, sourcemeta::core::JSON>
@@ -153,7 +158,7 @@ private:
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
         const auto locations_resolution{this->artifact_resolve_path(
-            keyword_location_string, Tree::Schemas, "locations")};
+            credential, keyword_location_string, Tree::Schemas, "locations")};
         if (locations_resolution.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Found) {
           auto locations{
@@ -199,15 +204,15 @@ private:
     return sourcemeta::core::JSON{nullptr};
   }
 
-  auto trace(const std::string_view schema_uri,
+  auto trace(std::string_view credential, const std::string_view schema_uri,
              const sourcemeta::core::JSON &instance_json,
              const sourcemeta::core::PointerPositionTracker *tracker,
              const sourcemeta::core::Pointer &instance_prefix)
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_resolution{
-        this->artifact_resolve_path(schema_uri, Tree::Schemas, "locations")};
+    const auto locations_resolution{this->artifact_resolve_path(
+        credential, schema_uri, Tree::Schemas, "locations")};
     if (locations_resolution.outcome !=
         sourcemeta::one::ArtifactResolution::Outcome::Found) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
@@ -231,9 +236,9 @@ private:
         referenced_locations;
 
     const auto result{this->schema_evaluate_with_tracing(
-        schema_uri, instance_json,
-        [this, &steps, tracker, &instance_prefix, &static_locations,
-         &instance_json, &referenced_locations](
+        credential, schema_uri, instance_json,
+        [this, &credential, &steps, tracker, &instance_prefix,
+         &static_locations, &instance_json, &referenced_locations](
             const sourcemeta::blaze::EvaluationType type, const bool valid,
             const sourcemeta::blaze::Instruction &instruction,
             const sourcemeta::blaze::InstructionExtra &extra,
@@ -287,9 +292,9 @@ private:
           }
 
           step.assign("vocabulary",
-                      this->resolve_vocabulary(extra.keyword_location,
-                                               evaluate_path, static_locations,
-                                               referenced_locations));
+                      this->resolve_vocabulary(
+                          credential, extra.keyword_location, evaluate_path,
+                          static_locations, referenced_locations));
 
           steps.push_back(std::move(step));
         })};

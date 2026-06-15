@@ -1,3 +1,4 @@
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/one/router.h>
 
 #include <memory>  // std::make_unique
@@ -13,7 +14,8 @@ Router::Router(const std::filesystem::path &base,
     : base_{base}, router_{router}, constructors_{constructors},
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
-      slots_size_{router.size() + 1} {
+      slots_size_{router.size() + 1},
+      authentication_{base / "authentication.bin"} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -74,7 +76,9 @@ auto Router::dispatch(
     return;
   }
 
-  instance->rest(matches, request, response);
+  const auto credential{
+      sourcemeta::core::http_parse_bearer(request.header("authorization"))};
+  instance->rest(matches, credential, request, response);
 }
 
 } // namespace sourcemeta::one
