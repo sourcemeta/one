@@ -176,7 +176,8 @@ public:
       }
     }
 
-    auto result{this->search_view_.search(query, limit, scope)};
+    auto result{this->search_view_.search(
+        query, limit, scope, [](const std::string_view) { return true; })};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -272,7 +273,8 @@ public:
     }
 
     auto results{
-        this->search_view_.search(arguments.at("q").to_string(), limit, scope)};
+        this->search_view_.search(arguments.at("q").to_string(), limit, scope,
+                                  [](const std::string_view) { return true; })};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
 

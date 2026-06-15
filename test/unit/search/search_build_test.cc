@@ -1,11 +1,16 @@
 #include <sourcemeta/one/search.h>
 
+#include <sourcemeta/core/json.h>
+
 #include <gtest/gtest.h>
 
-#include <cstring> // std::memcpy
-#include <string>  // std::string
-#include <utility> // std::move
-#include <vector>  // std::vector
+#include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t
+#include <cstring>     // std::memcpy
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
+#include <vector>      // std::vector
 
 TEST(Search_build, empty) {
   std::vector<sourcemeta::one::SearchEntry> entries;
@@ -184,9 +189,10 @@ TEST(Search_build, truncates_oversized_title_with_ellipsis) {
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
 
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   const auto &title{result.at(0).at("title").to_string()};
   EXPECT_EQ(title.size(), 65535);
@@ -206,9 +212,10 @@ TEST(Search_build, truncates_oversized_description_with_ellipsis) {
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
 
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   const auto &description{result.at(0).at("description").to_string()};
   EXPECT_EQ(description.size(), 65535);
@@ -254,9 +261,9 @@ TEST(Search_build, priority_is_primary_sort_key) {
       {"/mid/rich", "http://example.com/mid/rich", "Mid Title", "Mid Desc", 90,
        50, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(), "/",
-                                            10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "/", 10, sourcemeta::one::SearchScopePath,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_EQ(result.at(0).at("path").to_string(), "/high/bare");
   EXPECT_EQ(result.at(1).at("path").to_string(), "/mid/rich");
@@ -267,9 +274,10 @@ TEST(Search_build, priority_and_health_surface_in_search_output) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", "Desc", 80, 50, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_TRUE(result.at(0).defines("priority"));
   EXPECT_EQ(result.at(0).at("priority").to_integer(), 50);

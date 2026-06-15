@@ -137,7 +137,9 @@ static auto case_insensitive_contains(const std::string_view haystack,
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query, const std::size_t limit,
-            const std::uint8_t scope) -> sourcemeta::core::JSON {
+            const std::uint8_t scope,
+            const std::function<bool(std::string_view)> &filter)
+    -> sourcemeta::core::JSON {
   assert((scope &
           ~(SearchScopePath | SearchScopeTitle | SearchScopeDescription)) == 0);
   auto result{sourcemeta::core::JSON::make_array()};
@@ -205,6 +207,13 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
                                        record_header->title_length),
         record_header->description_length};
 
+    // Filtering happens inside the scan, before ranking and the limit,
+    // so excluded entries neither consume result slots nor leak match
+    // cardinality
+    if (!filter(path)) {
+      continue;
+    }
+
     bool matched{false};
 
     if (!matched && (scope & SearchScopePath) != 0) {
@@ -262,9 +271,11 @@ SearchView::SearchView(const std::filesystem::path &path) {
 SearchView::~SearchView() = default;
 
 auto SearchView::search(const std::string_view query, const std::size_t limit,
-                        const std::uint8_t scope) -> sourcemeta::core::JSON {
+                        const std::uint8_t scope,
+                        const std::function<bool(std::string_view)> &filter)
+    -> sourcemeta::core::JSON {
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
-                                 limit, scope);
+                                 limit, scope, filter);
 }
 
 auto SearchView::count() -> std::size_t {
