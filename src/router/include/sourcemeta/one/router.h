@@ -69,14 +69,13 @@ public:
   auto operator=(RouterAction &&) -> RouterAction & = delete;
 
   virtual auto rest(const std::span<std::string_view> matches,
-                    const Authentication::Context &access, HTTPRequest &request,
+                    std::string_view credential, HTTPRequest &request,
                     HTTPResponse &response) -> void = 0;
 
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &id,
                    const sourcemeta::core::JSON &arguments,
-                   const Authentication::Context &access)
-      -> sourcemeta::core::JSON = 0;
+                   std::string_view credential) -> sourcemeta::core::JSON = 0;
 
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
@@ -107,9 +106,10 @@ public:
     std::string_view x_frame_options{};
   };
 
-  [[nodiscard]] auto artifact_resolve_path(
-      const Authentication::Context &access, std::string_view input, Tree tree,
-      std::string_view artifact_name) const -> ArtifactResolution;
+  [[nodiscard]] auto artifact_resolve_path(std::string_view credential,
+                                           std::string_view input, Tree tree,
+                                           std::string_view artifact_name) const
+      -> ArtifactResolution;
 
   [[nodiscard]] auto artifact_read_json(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON>;
@@ -125,18 +125,17 @@ public:
                       std::string_view vary) const -> void;
 
   [[nodiscard]] auto
-  schema_evaluate_fast(const Authentication::Context &access,
-                       std::string_view schema_uri,
+  schema_evaluate_fast(std::string_view credential, std::string_view schema_uri,
                        const sourcemeta::core::JSON &instance) const -> bool;
 
-  [[nodiscard]] auto schema_evaluate(const Authentication::Context &access,
+  [[nodiscard]] auto schema_evaluate(std::string_view credential,
                                      std::string_view schema_uri,
                                      const sourcemeta::core::JSON &instance,
                                      sourcemeta::blaze::Mode mode) const
       -> std::pair<bool, sourcemeta::core::JSON>;
 
   [[nodiscard]] auto schema_evaluate_with_tracing(
-      const Authentication::Context &access, std::string_view schema_uri,
+      std::string_view credential, std::string_view schema_uri,
       const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
@@ -164,7 +163,7 @@ private:
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 
-  [[nodiscard]] auto blaze_template(const Authentication::Context &access,
+  [[nodiscard]] auto blaze_template(std::string_view credential,
                                     std::string_view schema_uri,
                                     sourcemeta::blaze::Mode mode) const
       -> std::shared_ptr<const sourcemeta::blaze::Template>;

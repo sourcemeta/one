@@ -1,3 +1,4 @@
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/one/router.h>
 
 #include <memory>  // std::make_unique
@@ -75,13 +76,9 @@ auto Router::dispatch(
     return;
   }
 
-  // The Authorization header is captured here, while the underlying
-  // request is still alive, because asynchronous body-reading actions
-  // run against a snapshot without header access. This is the only
-  // place a context is built from headers
-  auto access{
-      Authentication::Context::from_header(request.header("authorization"))};
-  instance->rest(matches, access, request, response);
+  const auto credential{
+      sourcemeta::core::http_parse_bearer(request.header("authorization"))};
+  instance->rest(matches, credential, request, response);
 }
 
 } // namespace sourcemeta::one

@@ -51,19 +51,19 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            const sourcemeta::one::Authentication::Context &access,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, access, request, response, *this, this->response_schema_,
+        matches, credential, request, response, *this, this->response_schema_,
         this->error_schema_, this->request_schema_,
         // A throw here is intended and caught by the surrounding request
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
-        [this, access](const std::string_view schema_uri,
-                       const std::string &body) -> sourcemeta::core::JSON {
+        [this, credential = std::string{credential}](
+            const std::string_view schema_uri,
+            const std::string &body) -> sourcemeta::core::JSON {
           return this
-              ->schema_evaluate(access, schema_uri,
+              ->schema_evaluate(credential, schema_uri,
                                 sourcemeta::core::parse_json(body),
                                 sourcemeta::blaze::Mode::Exhaustive)
               .second;
@@ -72,11 +72,10 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Authentication::Context &access)
+           const sourcemeta::core::JSON &arguments, std::string_view credential)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(access, this->rpc_request_schema_, arguments,
+        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
                               sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
@@ -86,9 +85,9 @@ public:
 
     const auto &schema_uri{arguments.at("schema").to_string()};
     const auto schema_present{this->artifact_resolve_path(
-        access, schema_uri, Tree::Schemas, "schema")};
+        credential, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        access, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        credential, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -122,14 +121,14 @@ public:
 
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->schema_evaluate(access, schema_uri, parsed_instance,
+        this->schema_evaluate(credential, schema_uri, parsed_instance,
                               sourcemeta::blaze::Mode::Exhaustive)
             .second);
   }
 
   template <typename Perform>
   static auto serve_post(const std::span<std::string_view> matches,
-                         const sourcemeta::one::Authentication::Context &access,
+                         std::string_view credential,
                          sourcemeta::one::HTTPRequest &request,
                          sourcemeta::one::HTTPResponse &response,
                          const sourcemeta::one::RouterAction &self,
@@ -179,10 +178,10 @@ public:
     schema_uri.push_back('/');
     schema_uri.append(path);
     const auto schema_present{self.artifact_resolve_path(
-        access, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
+        credential, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
         "schema")};
     const auto evaluation_enabled{self.artifact_resolve_path(
-        access, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
+        credential, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
         "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
@@ -242,7 +241,8 @@ public:
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [response_schema, error_schema, schema_uri = std::move(schema_uri),
-         &self, request_schema, access, perform = std::move(perform)](
+         &self, request_schema, credential = std::string{credential},
+         perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) {
@@ -277,7 +277,8 @@ public:
             return;
           }
 
-          if (!self.schema_evaluate_fast(access, request_schema, instance)) {
+          if (!self.schema_evaluate_fast(credential, request_schema,
+                                         instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,

@@ -8,8 +8,6 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint64_t
 #include <filesystem>  // std::filesystem::path
-#include <optional>    // std::optional
-#include <string>      // std::string
 #include <string_view> // std::string_view
 
 namespace sourcemeta::one {
@@ -27,22 +25,6 @@ public:
 
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
-  class Context {
-  public:
-    Context() = default;
-
-    [[nodiscard]] static auto from_header(std::string_view authorization)
-        -> Context;
-
-    [[nodiscard]] auto credential() const noexcept
-        -> const std::optional<std::string> & {
-      return this->credential_;
-    }
-
-  private:
-    std::optional<std::string> credential_;
-  };
-
   // The result of validating a caller against a set of policy entries.
   // The key name is for audit logging and is empty for anonymous access
   struct Verdict {
@@ -52,13 +34,15 @@ public:
 
   explicit Authentication(const std::filesystem::path &path);
 
-  [[nodiscard]] auto active() const noexcept -> bool;
-
   [[nodiscard]] auto match(std::string_view registry_path) const noexcept
       -> PolicySet;
 
+  // The credential is the bearer token presented by the caller, empty for
+  // anonymous access. It is borrowed for the duration of the call, so a
+  // caller that validates across an asynchronous boundary must own it
   [[nodiscard]] auto admits(PolicySet policies,
-                            const Context &context) const noexcept -> Verdict;
+                            std::string_view credential) const noexcept
+      -> Verdict;
 };
 
 } // namespace sourcemeta::one

@@ -116,9 +116,8 @@ auto ActionMCP_v1::on_tools_list(
                                                 std::move(result));
 }
 
-auto ActionMCP_v1::on_resources_read(
-    const sourcemeta::core::JSON &request_json,
-    const sourcemeta::one::Authentication::Context &access) const
+auto ActionMCP_v1::on_resources_read(const sourcemeta::core::JSON &request_json,
+                                     std::string_view credential) const
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
   const auto &uri{request_json.at("params").at("uri").to_string()};
@@ -166,7 +165,7 @@ auto ActionMCP_v1::on_resources_read(
   }
 
   const auto resolution{this->artifact_resolve_path(
-      access, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
+      credential, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
   if (resolution.outcome ==
       sourcemeta::one::ArtifactResolution::Outcome::Denied) {
     return sourcemeta::core::jsonrpc_make_error(&id, -32010,
@@ -198,8 +197,7 @@ auto ActionMCP_v1::on_resources_read(
 
 auto ActionMCP_v1::on_tools_call(
     const sourcemeta::core::MCPProtocolVersion version,
-    const sourcemeta::core::JSON &request_json,
-    const sourcemeta::one::Authentication::Context &access)
+    const sourcemeta::core::JSON &request_json, std::string_view credential)
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
   const auto &name{request_json.at("params").at("name").to_string()};
@@ -223,7 +221,7 @@ auto ActionMCP_v1::on_tools_call(
   try {
     return instance->mcp(version, id,
                          arguments == nullptr ? empty_arguments : *arguments,
-                         access);
+                         credential);
   } catch (const std::exception &error) {
     return sourcemeta::core::mcp_make_tool_error(id, error.what());
   }
@@ -231,8 +229,7 @@ auto ActionMCP_v1::on_tools_call(
 
 auto ActionMCP_v1::process_one(
     const sourcemeta::core::MCPProtocolVersion version,
-    const sourcemeta::core::JSON &request_json,
-    const sourcemeta::one::Authentication::Context &access)
+    const sourcemeta::core::JSON &request_json, std::string_view credential)
     -> std::optional<sourcemeta::core::JSON> {
   if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
     return std::nullopt;
@@ -252,7 +249,7 @@ auto ActionMCP_v1::process_one(
   // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
   // follows MCP's tighter rule and rejects null-id requests here.
   // https://www.jsonrpc.org/specification (§4)
-  if (!this->schema_evaluate_fast(access, this->request_schema_,
+  if (!this->schema_evaluate_fast(credential, this->request_schema_,
                                   request_json)) {
     return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
   }
@@ -266,10 +263,10 @@ auto ActionMCP_v1::process_one(
     return this->on_resources_list(request_json);
   }
   if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
-    return this->on_resources_read(request_json, access);
+    return this->on_resources_read(request_json, credential);
   }
   if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-    return this->on_tools_call(version, request_json, access);
+    return this->on_tools_call(version, request_json, credential);
   }
   if (this->mcp_metadata_.defines(method)) {
     return sourcemeta::core::jsonrpc_make_success(
@@ -282,7 +279,7 @@ auto ActionMCP_v1::on_message(
     const sourcemeta::core::MCPProtocolVersion version,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response, std::string &&body,
-    const sourcemeta::one::Authentication::Context &access) -> void {
+    std::string_view credential) -> void {
   sourcemeta::core::JSON request_json{nullptr};
   try {
     request_json = sourcemeta::core::parse_json(body);
@@ -324,7 +321,7 @@ auto ActionMCP_v1::on_message(
         sub_id = *parsed_id;
       }
       try {
-        auto envelope{this->process_one(version, sub, access)};
+        auto envelope{this->process_one(version, sub, credential)};
         if (envelope.has_value()) {
           responses.push_back(std::move(envelope).value());
         }
@@ -357,7 +354,7 @@ auto ActionMCP_v1::on_message(
     return;
   }
 
-  auto envelope{this->process_one(version, request_json, access)};
+  auto envelope{this->process_one(version, request_json, credential)};
   if (envelope.has_value()) {
     this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                          envelope.value(), version);

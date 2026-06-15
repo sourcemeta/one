@@ -106,9 +106,8 @@ auto RouterAction::artifact_locate(const std::string_view input,
 }
 
 auto RouterAction::artifact_resolve_path(
-    const Authentication::Context &access, const std::string_view input,
-    const Tree tree, const std::string_view artifact_name) const
-    -> ArtifactResolution {
+    std::string_view credential, const std::string_view input, const Tree tree,
+    const std::string_view artifact_name) const -> ArtifactResolution {
   // The gate consults the registry path, not the filesystem, and runs
   // before the existence check so a denial reveals nothing about
   // whether the artifact exists. The relative-path computation here
@@ -131,7 +130,7 @@ auto RouterAction::artifact_resolve_path(
 
   const auto &authentication{this->dispatcher_.authentication()};
   const auto verdict{authentication.admits(
-      authentication.match(relative.generic_string()), access)};
+      authentication.match(relative.generic_string()), credential)};
   if (!verdict.allowed) {
     return {.outcome = ArtifactResolution::Outcome::Denied,
             .path = std::nullopt};

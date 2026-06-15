@@ -53,8 +53,7 @@ public:
     });
   }
 
-  auto rest(const std::span<std::string_view>,
-            const sourcemeta::one::Authentication::Context &access,
+  auto rest(const std::span<std::string_view>, std::string_view credential,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -178,9 +177,9 @@ public:
     }
 
     auto result{this->search_view_.search(
-        query, limit, scope, [this, &access](const std::string_view path) {
+        query, limit, scope, [this, &credential](const std::string_view path) {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(authentication.match(path), access)
+          return authentication.admits(authentication.match(path), credential)
               .allowed;
         })};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
@@ -205,11 +204,10 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Authentication::Context &access)
+           const sourcemeta::core::JSON &arguments, std::string_view credential)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(access, this->rpc_request_schema_, arguments,
+        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
                               sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
@@ -280,9 +278,9 @@ public:
 
     auto results{this->search_view_.search(
         arguments.at("q").to_string(), limit, scope,
-        [this, &access](const std::string_view path) {
+        [this, &credential](const std::string_view path) {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(authentication.match(path), access)
+          return authentication.admits(authentication.match(path), credential)
               .allowed;
         })};
     auto envelope{sourcemeta::core::JSON::make_object()};
