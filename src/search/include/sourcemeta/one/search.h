@@ -74,7 +74,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto search(const std::uint8_t *payload, std::size_t payload_size,
-            std::string_view query, std::size_t limit, std::uint8_t scope)
+            std::string_view query, std::size_t limit, std::uint8_t scope,
+            const std::function<bool(std::string_view)> &filter)
     -> sourcemeta::core::JSON;
 
 class SOURCEMETA_ONE_SEARCH_EXPORT SearchView {
@@ -87,7 +88,8 @@ public:
   auto operator=(const SearchView &) -> SearchView & = delete;
   auto operator=(SearchView &&) -> SearchView & = delete;
 
-  auto search(std::string_view query, std::size_t limit, std::uint8_t scope)
+  auto search(std::string_view query, std::size_t limit, std::uint8_t scope,
+              const std::function<bool(std::string_view)> &filter)
       -> sourcemeta::core::JSON;
 
   auto count() -> std::size_t;

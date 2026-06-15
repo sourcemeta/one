@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint32_t
 #include <cstring>     // std::memcpy
 #include <string>      // std::string
@@ -25,7 +26,8 @@ TEST(Search_query, empty_payload_nullptr) {
   const auto result{sourcemeta::one::search(
       nullptr, 0, "anything", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -35,7 +37,8 @@ TEST(Search_query, empty_payload_zero_size) {
   const auto result{sourcemeta::one::search(
       &byte, 0, "anything", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -48,7 +51,8 @@ TEST(Search_query, no_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "zzzzz", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -61,7 +65,8 @@ TEST(Search_query, match_in_path) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "foo", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "http://example.com/foo/bar",
                        "Title", "Desc");
@@ -75,7 +80,8 @@ TEST(Search_query, match_in_title) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Special", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "http://example.com/foo/bar",
                        "Special Title", "Desc");
@@ -89,7 +95,8 @@ TEST(Search_query, match_in_description) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Unique", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "http://example.com/foo/bar",
                        "Title", "Unique description here");
@@ -104,7 +111,8 @@ TEST(Search_query, case_insensitive) {
   const auto result_lower{sourcemeta::one::search(
       payload_lower.data(), payload_lower.size(), "hello", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result_lower.size(), 1);
   EXPECT_SEARCH_RESULT(result_lower, 0, "/foo/bar",
                        "http://example.com/foo/bar", "Hello World", "desc");
@@ -117,7 +125,8 @@ TEST(Search_query, case_insensitive) {
   const auto result_upper{sourcemeta::one::search(
       payload_upper.data(), payload_upper.size(), "HELLO", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result_upper.size(), 1);
   EXPECT_SEARCH_RESULT(result_upper, 0, "/foo/bar",
                        "http://example.com/foo/bar", "Hello World", "desc");
@@ -130,7 +139,8 @@ TEST(Search_query, case_insensitive) {
   const auto result_mixed{sourcemeta::one::search(
       payload_mixed.data(), payload_mixed.size(), "hElLo", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result_mixed.size(), 1);
   EXPECT_SEARCH_RESULT(result_mixed, 0, "/foo/bar",
                        "http://example.com/foo/bar", "Hello World", "desc");
@@ -148,7 +158,8 @@ TEST(Search_query, multiple_matches) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schema", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/address",
                        "http://example.com/schemas/address", "Address Schema",
@@ -198,7 +209,8 @@ TEST(Search_query, limit_10) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 10);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/test0",
                        "http://example.com/schemas/test0", "Test 0", "");
@@ -233,7 +245,8 @@ TEST(Search_query, round_trip_data_fidelity) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "/", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/a/b/c", "http://example.com/a/b/c",
                        "My Title", "My Description");
@@ -250,7 +263,8 @@ TEST(Search_query, single_entry_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "One", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/only", "http://example.com/only", "One",
                        "Entry");
@@ -263,7 +277,8 @@ TEST(Search_query, single_entry_no_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "nope", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -274,7 +289,8 @@ TEST(Search_query, empty_title_and_description) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "path", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/path/only", "http://example.com/path/only",
                        "", "");
@@ -292,7 +308,8 @@ TEST(Search_query, health_higher_scores_first) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Health", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/high",
                        "http://example.com/schemas/high", "High Health",
@@ -313,7 +330,8 @@ TEST(Search_query, health_100_before_50) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/alpha",
                        "http://example.com/schemas/alpha", "Alpha", "Desc");
@@ -333,7 +351,8 @@ TEST(Search_query, health_0_ranks_last) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/perfect",
                        "http://example.com/schemas/perfect", "Perfect", "Desc");
@@ -355,7 +374,8 @@ TEST(Search_query, health_same_score_sorts_by_path) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/apple",
                        "http://example.com/schemas/apple", "Apple", "Desc");
@@ -375,7 +395,8 @@ TEST(Search_query, metadata_score_beats_health) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/complete",
                        "http://example.com/schemas/complete", "Title",
@@ -394,7 +415,8 @@ TEST(Search_query, metadata_score_beats_health_title_only) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/has-title",
                        "http://example.com/schemas/has-title", "A Title", "");
@@ -414,7 +436,8 @@ TEST(Search_query, health_tiebreaker_within_same_metadata) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/high-health",
                        "http://example.com/schemas/high-health", "Title", "");
@@ -440,7 +463,8 @@ TEST(Search_query, health_fine_grained_ordering) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 5);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/a", "http://example.com/schemas/a",
                        "Title", "Desc");
@@ -470,7 +494,8 @@ TEST(Search_query, health_mixed_metadata_and_health) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 5);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/full-high",
                        "http://example.com/schemas/full-high", "Title", "Desc");
@@ -489,7 +514,8 @@ TEST(Search_query, invalid_payload_too_small_for_header) {
   const auto result{sourcemeta::one::search(
       garbage.data(), garbage.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -505,7 +531,8 @@ TEST(Search_query, invalid_payload_header_claims_too_many_entries) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -525,7 +552,8 @@ TEST(Search_query, invalid_payload_offset_points_beyond_payload) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -550,7 +578,8 @@ TEST(Search_query, invalid_payload_record_field_lengths_exceed_payload) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -565,7 +594,8 @@ TEST(Search_query, invalid_payload_zero_entry_count) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -575,7 +605,8 @@ TEST(Search_query, invalid_payload_all_zeros) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -587,7 +618,8 @@ TEST(Search_query, invalid_payload_random_garbage) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -600,7 +632,8 @@ TEST(Search_query, invalid_payload_truncated_after_header) {
   const auto result{sourcemeta::one::search(
       full_payload.data(), truncated_size, "foo", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -615,7 +648,8 @@ TEST(Search_query, invalid_payload_truncated_mid_record) {
   const auto result{sourcemeta::one::search(
       full_payload.data(), truncated_size, "foo", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_TRUE(result.is_array());
   EXPECT_EQ(result.size(), 0);
 }
@@ -632,7 +666,8 @@ TEST(Search_query, limit_1_returns_single_result) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 1,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/a", "http://example.com/schemas/a",
                        "Alpha", "Desc");
@@ -650,7 +685,8 @@ TEST(Search_query, limit_2_returns_two_results) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 2,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/a", "http://example.com/schemas/a",
                        "Alpha", "Desc");
@@ -668,7 +704,8 @@ TEST(Search_query, limit_larger_than_matches_returns_all) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 100,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/a", "http://example.com/schemas/a",
                        "Alpha", "Desc");
@@ -684,7 +721,8 @@ TEST(Search_query, limit_0_returns_empty) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 0,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -700,7 +738,8 @@ TEST(Search_query, limit_exact_match_count) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 3,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/a", "http://example.com/schemas/a",
                        "Alpha", "Desc");
@@ -722,7 +761,8 @@ TEST(Search_query, limit_respects_health_ordering) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas", 2,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/schemas/high",
                        "http://example.com/schemas/high", "High", "Desc");
@@ -735,9 +775,10 @@ TEST(Search_query, scope_path_only_matches_path) {
       {"/unique/path", "http://example.com/unique/path", "Title", "Description",
        80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "unique", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "unique", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/unique/path",
                        "http://example.com/unique/path", "Title",
@@ -749,9 +790,10 @@ TEST(Search_query, scope_path_only_misses_title) {
       {"/foo/bar", "http://example.com/foo/bar", "UniqueTitle", "Description",
        80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "UniqueTitle", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "UniqueTitle", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -760,9 +802,10 @@ TEST(Search_query, scope_path_only_misses_description) {
       {"/foo/bar", "http://example.com/foo/bar", "Title", "UniqueDesc", 80, 100,
        0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "UniqueDesc", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "UniqueDesc", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -771,9 +814,10 @@ TEST(Search_query, scope_title_only_matches_title) {
       {"/foo/bar", "http://example.com/foo/bar", "UniqueTitle", "Description",
        80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "UniqueTitle", 10,
-                                            sourcemeta::one::SearchScopeTitle)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "UniqueTitle", 10,
+                              sourcemeta::one::SearchScopeTitle,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "http://example.com/foo/bar",
                        "UniqueTitle", "Description");
@@ -784,9 +828,10 @@ TEST(Search_query, scope_title_only_misses_path) {
       {"/unique/path", "http://example.com/unique/path", "Title", "Description",
        80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "unique", 10,
-                                            sourcemeta::one::SearchScopeTitle)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "unique", 10,
+                              sourcemeta::one::SearchScopeTitle,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -797,7 +842,8 @@ TEST(Search_query, scope_description_only_matches_description) {
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "UniqueDesc", 10,
-                              sourcemeta::one::SearchScopeDescription)};
+                              sourcemeta::one::SearchScopeDescription,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
   EXPECT_SEARCH_RESULT(result, 0, "/foo/bar", "http://example.com/foo/bar",
                        "Title", "UniqueDesc");
@@ -810,7 +856,8 @@ TEST(Search_query, scope_description_only_misses_path) {
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "unique", 10,
-                              sourcemeta::one::SearchScopeDescription)};
+                              sourcemeta::one::SearchScopeDescription,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -825,7 +872,8 @@ TEST(Search_query, scope_path_and_title) {
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Needle", 10,
-      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle)};
+      sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/needle/path",
                        "http://example.com/needle/path", "Other", "Other");
@@ -845,7 +893,8 @@ TEST(Search_query, scope_title_and_description) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Needle", 10,
                               sourcemeta::one::SearchScopeTitle |
-                                  sourcemeta::one::SearchScopeDescription)};
+                                  sourcemeta::one::SearchScopeDescription,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/abc/path", "http://example.com/abc/path",
                        "Needle In Title", "Other");
@@ -865,7 +914,8 @@ TEST(Search_query, scope_path_and_description) {
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "Needle", 10,
                               sourcemeta::one::SearchScopePath |
-                                  sourcemeta::one::SearchScopeDescription)};
+                                  sourcemeta::one::SearchScopeDescription,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/def/path", "http://example.com/def/path",
                        "Other", "Needle In Desc");
@@ -879,7 +929,8 @@ TEST(Search_query, scope_0_matches_nothing) {
        100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
-      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10, 0)};
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10, 0,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -895,7 +946,8 @@ TEST(Search_query, scope_all_matches_any_field) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Unique", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 3);
   EXPECT_SEARCH_RESULT(result, 0, "/normal/path",
                        "http://example.com/normal/path", "UniqueTitle",
@@ -914,9 +966,10 @@ TEST(Search_query, scope_combined_with_limit) {
       {"/b", "http://example.com/b", "Match B", "Desc", 90, 100, 0, 0},
       {"/c", "http://example.com/c", "Match C", "Desc", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "Match", 2,
-                                            sourcemeta::one::SearchScopeTitle)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "Match", 2,
+                              sourcemeta::one::SearchScopeTitle,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 2);
   EXPECT_SEARCH_RESULT(result, 0, "/a", "http://example.com/a", "Match A",
                        "Desc");
@@ -933,7 +986,8 @@ TEST(Search_query, query_with_embedded_null_does_not_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "sche\0mas"sv, 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -945,7 +999,8 @@ TEST(Search_query, query_with_tab_does_not_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas\ttest", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -957,7 +1012,8 @@ TEST(Search_query, query_with_newline_does_not_match) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "schemas\ntest", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
 }
 
@@ -966,9 +1022,10 @@ TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
       {std::string("before\0after", 12), "http://example.com/null-path",
        "Title", "Description", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "after", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "after", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
 }
 
@@ -977,9 +1034,10 @@ TEST(Search_query, entry_with_null_in_title_found_by_path) {
       {"/schemas/test", "http://example.com/schemas/test",
        std::string("Foo\0Bar", 7), "Description", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "schemas", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "schemas", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 1);
 }
 
@@ -992,6 +1050,64 @@ TEST(Search_query, query_only_null_bytes_matches_nothing) {
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "\0\0\0"sv, 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-          sourcemeta::one::SearchScopeDescription)};
+          sourcemeta::one::SearchScopeDescription,
+      [](const std::string_view) { return true; })};
   EXPECT_EQ(result.size(), 0);
+}
+
+TEST(Search_query, filter_excludes_rejected_paths) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/public", "http://example.com/schemas/public", "Public", "Desc",
+       100, 100, 0, 0},
+      {"/schemas/private", "http://example.com/schemas/private", "Private",
+       "Desc", 90, 100, 0, 0}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "schemas", 10,
+      sourcemeta::one::SearchScopePath,
+      [](const std::string_view path) { return path != "/schemas/private"; })};
+  EXPECT_EQ(result.size(), 1);
+  EXPECT_SEARCH_RESULT(result, 0, "/schemas/public",
+                       "http://example.com/schemas/public", "Public", "Desc");
+}
+
+TEST(Search_query, filter_rejecting_all_returns_empty) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
+       0, 0},
+      {"/schemas/b", "http://example.com/schemas/b", "Beta", "Desc", 90, 100, 0,
+       0}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "schemas", 10,
+                              sourcemeta::one::SearchScopePath,
+                              [](const std::string_view) { return false; })};
+  EXPECT_EQ(result.size(), 0);
+}
+
+// Filtering happens before the limit is applied, so rejected entries must
+// not consume result slots. With the two highest-ranked entries rejected,
+// a limit of two still yields the next two allowed entries rather than
+// fewer
+TEST(Search_query, filter_excluded_entries_do_not_consume_limit) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
+       0, 0},
+      {"/schemas/b", "http://example.com/schemas/b", "Beta", "Desc", 90, 100, 0,
+       0},
+      {"/schemas/c", "http://example.com/schemas/c", "Gamma", "Desc", 80, 100,
+       0, 0},
+      {"/schemas/d", "http://example.com/schemas/d", "Delta", "Desc", 70, 100,
+       0, 0}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "schemas", 2,
+      sourcemeta::one::SearchScopePath, [](const std::string_view path) {
+        return path != "/schemas/a" && path != "/schemas/b";
+      })};
+  EXPECT_EQ(result.size(), 2);
+  EXPECT_SEARCH_RESULT(result, 0, "/schemas/c", "http://example.com/schemas/c",
+                       "Gamma", "Desc");
+  EXPECT_SEARCH_RESULT(result, 1, "/schemas/d", "http://example.com/schemas/d",
+                       "Delta", "Desc");
 }
