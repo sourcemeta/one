@@ -15,6 +15,7 @@
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <variant>       // std::variant
+#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -52,6 +53,14 @@ struct Configuration {
 
   std::optional<HTML> html;
   bool api{true};
+
+  struct AuthenticationEntry {
+    enum class Type : std::uint8_t { Public };
+    Type type;
+    std::vector<sourcemeta::core::JSON::String> paths;
+  };
+
+  std::vector<AuthenticationEntry> authentication;
 
   struct Page {
     std::optional<sourcemeta::core::JSON::String> title;

@@ -70,6 +70,12 @@ cat << EOF > "$TMP/expected.txt"
     "name": "Sourcemeta",
     "description": "The next-generation JSON Schema platform"
   },
+  "authentication": [
+    {
+      "type": "public",
+      "paths": [ "/" ]
+    }
+  ],
   "api": {}
 }
 EOF

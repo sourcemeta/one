@@ -141,6 +141,17 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
+  for (const auto &entry : data.at("authentication").as_array()) {
+    Configuration::AuthenticationEntry parsed;
+    // The schema constrains the type to the values handled here
+    assert(entry.at("type").to_string() == "public");
+    parsed.type = Configuration::AuthenticationEntry::Type::Public;
+    for (const auto &path : entry.at("paths").as_array()) {
+      parsed.paths.push_back(path.to_string());
+    }
+    result.authentication.push_back(std::move(parsed));
+  }
+
   entries_from_json(result.entries, "", data, default_base_path);
 
   return result;

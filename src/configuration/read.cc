@@ -196,6 +196,17 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
+  if (data.is_object() && !data.defines("authentication")) {
+    auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("type", sourcemeta::core::JSON{"public"});
+    auto paths{sourcemeta::core::JSON::make_array()};
+    paths.push_back(sourcemeta::core::JSON{"/"});
+    entry.assign("paths", std::move(paths));
+    auto authentication{sourcemeta::core::JSON::make_array()};
+    authentication.push_back(std::move(entry));
+    data.assign("authentication", std::move(authentication));
+  }
+
   if (data.is_object() && data.defines("api") && data.at("api").is_boolean() &&
       data.at("api").to_boolean()) {
     data.at("api").into_object();
