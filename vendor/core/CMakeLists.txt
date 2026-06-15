@@ -121,7 +121,7 @@ endif()
 
 if(SOURCEMETA_CORE_CRYPTO)
   if(SOURCEMETA_CORE_CRYPTO_USE_SYSTEM_OPENSSL)
-    find_package(OpenSSL REQUIRED)
+    find_package(OpenSSL 3.0 REQUIRED)
   endif()
   add_subdirectory(src/core/crypto)
 endif()

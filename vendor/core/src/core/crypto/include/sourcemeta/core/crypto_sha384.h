@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_CORE_CRYPTO_SHA256_H_
-#define SOURCEMETA_CORE_CRYPTO_SHA256_H_
+#ifndef SOURCEMETA_CORE_CRYPTO_SHA384_H_
+#define SOURCEMETA_CORE_CRYPTO_SHA384_H_
 
 #ifndef SOURCEMETA_CORE_CRYPTO_EXPORT
 #include <sourcemeta/core/crypto_export.h>
@@ -14,7 +14,7 @@
 namespace sourcemeta::core {
 
 /// @ingroup crypto
-/// Hash a string using SHA-256. For example:
+/// Hash a string using SHA-384. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/crypto.h>
@@ -22,37 +22,37 @@ namespace sourcemeta::core {
 /// #include <iostream>
 ///
 /// std::ostringstream result;
-/// sourcemeta::core::sha256("foo bar", result);
+/// sourcemeta::core::sha384("foo bar", result);
 /// std::cout << result.str() << "\n";
 /// ```
-auto SOURCEMETA_CORE_CRYPTO_EXPORT sha256(const std::string_view input,
+auto SOURCEMETA_CORE_CRYPTO_EXPORT sha384(const std::string_view input,
                                           std::ostream &output) -> void;
 
 /// @ingroup crypto
-/// Hash a string using SHA-256, returning the hex digest as a string.
+/// Hash a string using SHA-384, returning the hex digest as a string.
 /// For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/crypto.h>
 /// #include <iostream>
 ///
-/// std::cout << sourcemeta::core::sha256("foo bar") << "\n";
+/// std::cout << sourcemeta::core::sha384("foo bar") << "\n";
 /// ```
-auto SOURCEMETA_CORE_CRYPTO_EXPORT sha256(const std::string_view input)
+auto SOURCEMETA_CORE_CRYPTO_EXPORT sha384(const std::string_view input)
     -> std::string;
 
 /// @ingroup crypto
-/// Hash a string using SHA-256, returning the raw digest bytes. For example:
+/// Hash a string using SHA-384, returning the raw digest bytes. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/crypto.h>
 /// #include <cassert>
 ///
-/// const auto digest{sourcemeta::core::sha256_digest("foo bar")};
-/// assert(digest.size() == 32);
+/// const auto digest{sourcemeta::core::sha384_digest("foo bar")};
+/// assert(digest.size() == 48);
 /// ```
-auto SOURCEMETA_CORE_CRYPTO_EXPORT sha256_digest(const std::string_view input)
-    -> std::array<std::uint8_t, 32>;
+auto SOURCEMETA_CORE_CRYPTO_EXPORT sha384_digest(const std::string_view input)
+    -> std::array<std::uint8_t, 48>;
 
 } // namespace sourcemeta::core
 
