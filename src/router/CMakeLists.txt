@@ -2,6 +2,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME router
   PRIVATE_HEADERS lru.h
   SOURCES artifact.cc router.cc evaluate.cc)
 
+target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::one::authentication)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::mcp)
 target_link_libraries(sourcemeta_one_router PUBLIC sourcemeta::core::uritemplate)

@@ -46,12 +46,11 @@ public:
       }
     });
 
-    const auto mcp_metadata{
-        this->artifact_resolve_path("", Tree::Explorer, "mcp")};
-    assert(mcp_metadata.outcome ==
-           sourcemeta::one::ArtifactResolution::Outcome::Found);
+    const auto mcp_metadata_path{
+        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
+    assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
-        this->artifact_read_json(mcp_metadata.path.value())};
+        this->artifact_read_json(mcp_metadata_path.value())};
     assert(mcp_metadata_option.has_value());
     this->mcp_metadata_ = std::move(mcp_metadata_option.value());
     this->allowed_origin_ = this->mcp_metadata_.at("origin").to_string();
@@ -65,6 +64,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Context &access,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     // MCP Streamable HTTP transport / Security Warning:
@@ -211,7 +211,7 @@ public:
     }
 
     request.body(
-        [this, version = negotiated_version.value()](
+        [this, access, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) {
@@ -225,7 +225,7 @@ public:
             return;
           }
           this->on_message(version, callback_request, callback_response,
-                           std::move(body));
+                           std::move(body), access);
         },
         [this, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
@@ -243,7 +243,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::one::Authentication::Context &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
@@ -297,20 +298,24 @@ private:
                      const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
 
-  auto on_resources_read(const sourcemeta::core::JSON &request_json) const
-      -> sourcemeta::core::JSON;
+  auto on_resources_read(const sourcemeta::core::JSON &request_json,
+                         const sourcemeta::one::Authentication::Context &access)
+      const -> sourcemeta::core::JSON;
 
   auto on_tools_call(sourcemeta::core::MCPProtocolVersion version,
-                     const sourcemeta::core::JSON &request_json)
+                     const sourcemeta::core::JSON &request_json,
+                     const sourcemeta::one::Authentication::Context &access)
       -> sourcemeta::core::JSON;
 
   auto on_message(sourcemeta::core::MCPProtocolVersion version,
                   sourcemeta::one::HTTPRequest &request,
-                  sourcemeta::one::HTTPResponse &response, std::string &&body)
+                  sourcemeta::one::HTTPResponse &response, std::string &&body,
+                  const sourcemeta::one::Authentication::Context &access)
       -> void;
 
   auto process_one(sourcemeta::core::MCPProtocolVersion version,
-                   const sourcemeta::core::JSON &request_json)
+                   const sourcemeta::core::JSON &request_json,
+                   const sourcemeta::one::Authentication::Context &access)
       -> std::optional<sourcemeta::core::JSON>;
 
   std::string_view allowed_origin_;

@@ -54,6 +54,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Context &access,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -177,7 +178,11 @@ public:
     }
 
     auto result{this->search_view_.search(
-        query, limit, scope, [](const std::string_view) { return true; })};
+        query, limit, scope, [this, &access](const std::string_view path) {
+          const auto &authentication{this->dispatcher().authentication()};
+          return authentication.admits(authentication.match(path), access)
+              .allowed;
+        })};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -200,10 +205,11 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments)
+           const sourcemeta::core::JSON &arguments,
+           const sourcemeta::one::Authentication::Context &access)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(this->rpc_request_schema_, arguments,
+        this->schema_evaluate(access, this->rpc_request_schema_, arguments,
                               sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
@@ -272,9 +278,13 @@ public:
       }
     }
 
-    auto results{
-        this->search_view_.search(arguments.at("q").to_string(), limit, scope,
-                                  [](const std::string_view) { return true; })};
+    auto results{this->search_view_.search(
+        arguments.at("q").to_string(), limit, scope,
+        [this, &access](const std::string_view path) {
+          const auto &authentication{this->dispatcher().authentication()};
+          return authentication.admits(authentication.match(path), access)
+              .allowed;
+        })};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
 

@@ -53,6 +53,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
+            const sourcemeta::one::Authentication::Context &access,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -81,7 +82,7 @@ public:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        matches.front(), Tree::Schemas, this->metapack_)};
+        access, matches.front(), Tree::Schemas, this->metapack_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,
@@ -104,10 +105,11 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments)
+           const sourcemeta::core::JSON &arguments,
+           const sourcemeta::one::Authentication::Context &access)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(this->rpc_request_schema_, arguments,
+        this->schema_evaluate(access, this->rpc_request_schema_, arguments,
                               sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
@@ -115,8 +117,9 @@ public:
           std::move(request_output));
     }
 
-    const auto resolution{this->artifact_resolve_path(
-        arguments.at("schema").to_string(), Tree::Schemas, this->metapack_)};
+    const auto resolution{
+        this->artifact_resolve_path(access, arguments.at("schema").to_string(),
+                                    Tree::Schemas, this->metapack_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::mcp_make_tool_error(request_id,

@@ -43,6 +43,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Context &access,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -103,8 +104,8 @@ public:
       if (sourcemeta::core::http_match_accept(
               request.header("accept"), {"application/json", "text/html"}) ==
           "text/html") {
-        const auto root_html{
-            this->artifact_resolve_path("", Tree::Explorer, "directory-html")};
+        const auto root_html{this->artifact_resolve_path(
+            access, "", Tree::Explorer, "directory-html")};
         if (root_html.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied) {
           sourcemeta::one::json_error_unauthorized(request, response,
@@ -131,8 +132,8 @@ public:
     const auto stripped_json{
         sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
     if (stripped_json.size() != path.size()) {
-      ActionJSONSchemaServe_v1::serve(*this, stripped_json, request, response,
-                                      this->error_schema_);
+      ActionJSONSchemaServe_v1::serve(*this, access, stripped_json, request,
+                                      response, this->error_schema_);
       return;
     }
 
@@ -140,10 +141,10 @@ public:
       if (sourcemeta::core::http_match_accept(
               request.header("accept"), {"application/json", "text/html"}) ==
           "text/html") {
-        const auto schema_html{
-            this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
+        const auto schema_html{this->artifact_resolve_path(
+            access, path, Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
-            path, Tree::Explorer, "directory-html")};
+            access, path, Tree::Explorer, "directory-html")};
         if (schema_html.outcome ==
                 sourcemeta::one::ArtifactResolution::Outcome::Denied ||
             directory_html.outcome ==
@@ -169,7 +170,7 @@ public:
               "Accept, Accept-Encoding");
         } else {
           const auto not_found{
-              this->artifact_resolve_path("", Tree::Explorer, "404")};
+              this->artifact_resolve_path(access, "", Tree::Explorer, "404")};
           if (not_found.outcome ==
               sourcemeta::one::ArtifactResolution::Outcome::Denied) {
             sourcemeta::one::json_error_unauthorized(request, response,
@@ -193,7 +194,7 @@ public:
           }
         }
       } else {
-        ActionJSONSchemaServe_v1::serve(*this, path, request, response,
+        ActionJSONSchemaServe_v1::serve(*this, access, path, request, response,
                                         this->error_schema_);
       }
     } else {
@@ -201,11 +202,11 @@ public:
       // the response must be 405 with Allow listing what is supported.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
       const auto schema_json{
-          this->artifact_resolve_path(path, Tree::Schemas, "schema")};
-      const auto schema_html{
-          this->artifact_resolve_path(path, Tree::Explorer, "schema-html")};
-      const auto directory_html{
-          this->artifact_resolve_path(path, Tree::Explorer, "directory-html")};
+          this->artifact_resolve_path(access, path, Tree::Schemas, "schema")};
+      const auto schema_html{this->artifact_resolve_path(
+          access, path, Tree::Explorer, "schema-html")};
+      const auto directory_html{this->artifact_resolve_path(
+          access, path, Tree::Explorer, "directory-html")};
       if (schema_json.outcome ==
               sourcemeta::one::ArtifactResolution::Outcome::Denied ||
           schema_html.outcome ==
@@ -238,7 +239,8 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::one::Authentication::Context &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }

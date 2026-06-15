@@ -34,6 +34,7 @@ public:
   }
 
   static auto serve(const sourcemeta::one::RouterAction &self,
+                    const sourcemeta::one::Authentication::Context &access,
                     std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
@@ -61,7 +62,8 @@ public:
                                         ? std::string_view{"bundle"}
                                         : std::string_view{"schema"}};
     const auto resolution{self.artifact_resolve_path(
-        schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
+        access, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
+        artifact)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response, error_schema,
@@ -90,6 +92,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
+            const sourcemeta::one::Authentication::Context &access,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -98,11 +101,13 @@ public:
                                       "If-Modified-Since");
       return;
     }
-    serve(*this, matches.front(), request, response, this->error_schema_);
+    serve(*this, access, matches.front(), request, response,
+          this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &)
+           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::one::Authentication::Context &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
