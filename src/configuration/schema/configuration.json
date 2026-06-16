@@ -67,6 +67,7 @@
     },
     "authentication": {
       "type": "array",
+      "maxItems": 64,
       "minItems": 1,
       "uniqueItems": true,
       "items": {

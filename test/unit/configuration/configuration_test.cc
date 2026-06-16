@@ -794,3 +794,43 @@ TEST(Configuration, authentication_rejects_unknown_type) {
       sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
       sourcemeta::one::ConfigurationValidationError);
 }
+
+TEST(Configuration, authentication_accepts_maximum_entries) {
+  auto raw_configuration{sourcemeta::core::JSON::make_object()};
+  raw_configuration.assign("url",
+                           sourcemeta::core::JSON{"https://example.com"});
+  auto entries{sourcemeta::core::JSON::make_array()};
+  for (std::size_t index = 0; index < 64; ++index) {
+    auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("type", sourcemeta::core::JSON{"public"});
+    auto paths{sourcemeta::core::JSON::make_array()};
+    paths.push_back(sourcemeta::core::JSON{"/p" + std::to_string(index)});
+    entry.assign("paths", std::move(paths));
+    entries.push_back(std::move(entry));
+  }
+  raw_configuration.assign("authentication", std::move(entries));
+
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "one.json", ".")};
+  EXPECT_EQ(configuration.authentication.size(), 64);
+}
+
+TEST(Configuration, authentication_rejects_above_maximum_entries) {
+  auto raw_configuration{sourcemeta::core::JSON::make_object()};
+  raw_configuration.assign("url",
+                           sourcemeta::core::JSON{"https://example.com"});
+  auto entries{sourcemeta::core::JSON::make_array()};
+  for (std::size_t index = 0; index < 65; ++index) {
+    auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("type", sourcemeta::core::JSON{"public"});
+    auto paths{sourcemeta::core::JSON::make_array()};
+    paths.push_back(sourcemeta::core::JSON{"/p" + std::to_string(index)});
+    entry.assign("paths", std::move(paths));
+    entries.push_back(std::move(entry));
+  }
+  raw_configuration.assign("authentication", std::move(entries));
+
+  EXPECT_THROW(
+      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
+      sourcemeta::one::ConfigurationValidationError);
+}
