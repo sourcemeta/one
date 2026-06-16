@@ -196,17 +196,6 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
-  if (data.is_object() && !data.defines("authentication")) {
-    auto entry{sourcemeta::core::JSON::make_object()};
-    entry.assign("type", sourcemeta::core::JSON{"public"});
-    auto paths{sourcemeta::core::JSON::make_array()};
-    paths.push_back(sourcemeta::core::JSON{"/"});
-    entry.assign("paths", std::move(paths));
-    auto authentication{sourcemeta::core::JSON::make_array()};
-    authentication.push_back(std::move(entry));
-    data.assign("authentication", std::move(authentication));
-  }
-
   if (data.is_object() && data.defines("api") && data.at("api").is_boolean() &&
       data.at("api").to_boolean()) {
     data.at("api").into_object();
@@ -241,6 +230,19 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   if (data.is_object() && data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
     default_base_uri(data.at("contents"), data.at("url"));
+  }
+
+  // Applied after merging extensions so that an inherited authentication
+  // policy is not silently overridden by the public default
+  if (data.is_object() && !data.defines("authentication")) {
+    auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("type", sourcemeta::core::JSON{"public"});
+    auto paths{sourcemeta::core::JSON::make_array()};
+    paths.push_back(sourcemeta::core::JSON{"/"});
+    entry.assign("paths", std::move(paths));
+    auto authentication{sourcemeta::core::JSON::make_array()};
+    authentication.push_back(std::move(entry));
+    data.assign("authentication", std::move(authentication));
   }
 
   return data;

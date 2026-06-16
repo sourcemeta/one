@@ -712,6 +712,21 @@ TEST(Configuration, authentication_defaults_to_public_root) {
             (std::vector<sourcemeta::core::JSON::String>{"/"}));
 }
 
+TEST(Configuration, authentication_inherited_from_extends) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_authentication_extends.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).type,
+            sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
+  EXPECT_EQ(configuration.authentication.at(0).paths,
+            (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
+}
+
 TEST(Configuration, authentication_explicit_paths) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
