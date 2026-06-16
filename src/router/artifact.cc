@@ -129,8 +129,8 @@ auto RouterAction::artifact_resolve_path(
   }
 
   const auto &authentication{this->dispatcher_.authentication()};
-  const auto verdict{authentication.admits(
-      authentication.match(relative.generic_string()), credential)};
+  const auto verdict{
+      authentication.admits(relative.generic_string(), credential)};
   if (!verdict.allowed) {
     return {.outcome = ArtifactResolution::Outcome::Denied,
             .path = std::nullopt};
