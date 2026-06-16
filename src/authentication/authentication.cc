@@ -4,10 +4,9 @@
 
 #include "authentication_format.h"
 
-#include <cstddef>   // std::size_t
-#include <cstdint>   // std::uint32_t
-#include <stdexcept> // std::runtime_error
-#include <utility>   // std::move
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint32_t
+#include <utility> // std::move
 
 namespace {
 
@@ -87,17 +86,25 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
 namespace sourcemeta::one {
 
 Authentication::Authentication(const std::filesystem::path &path) {
-  // A missing artifact is the only unconfigured case, where the instance
-  // admits everyone. An artifact that exists but cannot be mapped or
-  // validated is a fatal misconfiguration: failing open would silently
-  // expose every path that the policy was meant to restrict
+  // The indexer always emits this artifact. A missing, unreadable, or
+  // malformed file means it was deleted, corrupted, or produced by an older
+  // indexer. Rather than failing open and serving every path publicly, or
+  // crashing the server into a restart loop, leave the policy denying
+  // everything: the section pointers below stay null, so matching yields the
+  // empty set and admits no one
   if (!std::filesystem::exists(path)) {
     return;
   }
 
-  auto view{std::make_unique<sourcemeta::core::FileView>(path)};
+  std::unique_ptr<sourcemeta::core::FileView> view;
+  try {
+    view = std::make_unique<sourcemeta::core::FileView>(path);
+  } catch (const sourcemeta::core::FileViewError &) {
+    return;
+  }
+
   if (!structurally_valid(*view)) {
-    throw std::runtime_error("The authentication policy artifact is malformed");
+    return;
   }
 
   const auto *header{view->as<AuthenticationHeader>()};
@@ -166,13 +173,8 @@ auto Authentication::match(const std::string_view registry_path) const noexcept
 auto Authentication::admits(const std::string_view registry_path,
                             const std::string_view) const noexcept
     -> Authentication::Verdict {
-  // An unconfigured instance admits everyone. Once configured, a path is
-  // served only when at least one policy governs it, as every policy grants
-  // anonymous public access for now
-  if (this->nodes_ == nullptr) {
-    return {.allowed = true, .key_name = {}};
-  }
-
+  // A path is served only when at least one policy governs it, as every
+  // policy grants anonymous public access for now
   return {.allowed = this->match(registry_path) != 0, .key_name = {}};
 }
 

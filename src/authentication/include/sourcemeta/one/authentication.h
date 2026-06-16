@@ -16,10 +16,10 @@
 
 namespace sourcemeta::one {
 
-// A view over the compiled authentication policy. An absent policy
-// means no authentication is configured: matching yields the empty set
-// and validation admits everyone. That is the permanent behaviour of
-// unconfigured instances, not a placeholder
+// A view over the compiled authentication policy artifact. The indexer
+// always emits the artifact; a missing, unreadable, or malformed one leaves
+// the policy denying every path, rather than failing open and admitting
+// everyone or crashing the server
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
