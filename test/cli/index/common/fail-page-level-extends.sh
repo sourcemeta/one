@@ -55,7 +55,7 @@ The object properties not covered by other adjacent object keywords were expecte
 The object value was expected to validate against the referenced schema
   at instance location "/contents"
   at evaluate path "/properties/contents/\$ref"
-The object value was expected to validate against the 5 defined properties subschemas
+The object value was expected to validate against the 6 defined properties subschemas
   at instance location ""
   at evaluate path "/properties"
 EOF

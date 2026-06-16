@@ -70,7 +70,13 @@ cat << EOF > "$TMP/expected.txt"
     "name": "Sourcemeta",
     "description": "The next-generation JSON Schema platform"
   },
-  "api": {}
+  "api": {},
+  "authentication": [
+    {
+      "type": "public",
+      "paths": [ "/" ]
+    }
+  ]
 }
 EOF
 diff "$TMP/output.txt" "$TMP/expected.txt"

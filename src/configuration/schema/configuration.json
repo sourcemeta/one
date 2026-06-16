@@ -64,6 +64,36 @@
       "x-format-assertion": true,
       "type": "string",
       "format": "uri"
+    },
+    "authentication": {
+      "type": "array",
+      "maxItems": 64,
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [ "type", "paths" ],
+            "properties": {
+              "type": {
+                "const": "public"
+              },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
     }
   },
   "additionalProperties": false,

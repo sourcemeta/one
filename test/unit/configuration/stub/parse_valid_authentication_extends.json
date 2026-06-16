@@ -1,0 +1,4 @@
+{
+  "url": "http://localhost:8000",
+  "extends": [ "./parse_valid_authentication_extends_base.json" ]
+}
