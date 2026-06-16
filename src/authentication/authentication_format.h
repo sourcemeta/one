@@ -49,6 +49,14 @@ struct AuthenticationPolicyEntry {
   std::uint8_t type;
 };
 
+// The structures are cast directly out of the memory-mapped buffer, so their
+// layout must stay fixed across edits and compilers
+static_assert(sizeof(AuthenticationHeader) == 40);
+static_assert(sizeof(AuthenticationNode) == 16);
+static_assert(alignof(AuthenticationNode) == 8);
+static_assert(sizeof(AuthenticationEdge) == 12);
+static_assert(sizeof(AuthenticationPolicyEntry) == 1);
+
 // Advance the cursor to the next non-empty path segment and return it. The
 // returned view is empty once the path is exhausted. Leading, trailing, and
 // repeated slashes are ignored, so "/a/b", "a/b", and "a/b/" all yield the

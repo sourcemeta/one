@@ -44,6 +44,24 @@ TEST(Authentication, malformed_artifact_is_rejected) {
                std::runtime_error);
 }
 
+TEST(Authentication, structurally_corrupt_artifact_is_rejected) {
+  const auto path{test_path("corrupt.bin")};
+  std::ofstream stream{path, std::ios::binary};
+  // A header whose magic and version are valid but whose node table is empty,
+  // which is structurally impossible since the root node is always present
+  std::array<char, 40> header{};
+  header[0] = 'A';
+  header[1] = 'U';
+  header[2] = 'T';
+  header[3] = 'H';
+  header[4] = 1;
+  stream.write(header.data(), header.size());
+  stream.close();
+
+  EXPECT_THROW(const sourcemeta::one::Authentication authentication{path},
+               std::runtime_error);
+}
+
 TEST(Authentication, public_root_admits_every_path) {
   const std::array<std::string_view, 1> paths{{"/"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{

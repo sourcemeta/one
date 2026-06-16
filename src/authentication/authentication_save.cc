@@ -5,11 +5,11 @@
 #include "authentication_format.h"
 
 #include <algorithm> // std::ranges::sort
-#include <cassert>   // assert
 #include <cstddef>   // std::byte, std::size_t
 #include <cstdint>   // std::uint32_t, std::uint64_t, std::uint8_t
 #include <cstring>   // std::memcpy
 #include <span>      // std::span
+#include <stdexcept> // std::runtime_error
 #include <string>    // std::string
 #include <utility>   // std::pair
 #include <vector>    // std::vector
@@ -46,7 +46,11 @@ namespace sourcemeta::one {
 
 auto Authentication::save(std::span<const Authentication::Policy> policies,
                           const std::filesystem::path &path) -> void {
-  assert(policies.size() <= Authentication::MAXIMUM_POLICIES);
+  // Each policy occupies one bit of the node masks, so exceeding the ceiling
+  // would shift past the width of a PolicySet
+  if (policies.size() > Authentication::MAXIMUM_POLICIES) {
+    throw std::runtime_error("Too many authentication policies");
+  }
 
   std::vector<BuildNode> nodes;
   nodes.emplace_back();
@@ -127,10 +131,17 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
 
   std::memcpy(buffer.data() + header.nodes_offset, serialized.data(),
               serialized.size() * sizeof(AuthenticationNode));
-  std::memcpy(buffer.data() + header.edges_offset, edges.data(),
-              edges.size() * sizeof(AuthenticationEdge));
-  std::memcpy(buffer.data() + header.strings_offset, strings.data(),
-              strings.size());
+  // The edge and string sections are empty when no policy declares a nested
+  // prefix, and an empty vector may expose a null data pointer
+  if (!edges.empty()) {
+    std::memcpy(buffer.data() + header.edges_offset, edges.data(),
+                edges.size() * sizeof(AuthenticationEdge));
+  }
+
+  if (!strings.empty()) {
+    std::memcpy(buffer.data() + header.strings_offset, strings.data(),
+                strings.size());
+  }
 
   sourcemeta::core::write_file(path, buffer);
 }
