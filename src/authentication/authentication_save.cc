@@ -4,14 +4,15 @@
 
 #include "authentication_format.h"
 
-#include <cassert> // assert
-#include <cstddef> // std::byte, std::size_t
-#include <cstdint> // std::uint32_t, std::uint64_t, std::uint8_t
-#include <cstring> // std::memcpy
-#include <span>    // std::span
-#include <string>  // std::string
-#include <utility> // std::pair
-#include <vector>  // std::vector
+#include <algorithm> // std::ranges::sort
+#include <cassert>   // assert
+#include <cstddef>   // std::byte, std::size_t
+#include <cstdint>   // std::uint32_t, std::uint64_t, std::uint8_t
+#include <cstring>   // std::memcpy
+#include <span>      // std::span
+#include <string>    // std::string
+#include <utility>   // std::pair
+#include <vector>    // std::vector
 
 namespace {
 
@@ -63,6 +64,12 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
 
       nodes[current].mask |= bit;
     }
+  }
+
+  // Sort each node's edges by segment so the matcher can binary search them
+  for (auto &node : nodes) {
+    std::ranges::sort(node.edges, {},
+                      &std::pair<std::string, std::uint32_t>::first);
   }
 
   std::string strings;

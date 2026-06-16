@@ -77,6 +77,16 @@ private:
   [[nodiscard]] auto match(std::string_view registry_path) const noexcept
       -> PolicySet;
 
+  // The trie section bases, resolved from the header once at construction so
+  // that matching never re-reads it. They are typed as the internal serialized
+  // structures and point into the memory-mapped buffer below, remaining valid
+  // for the lifetime of the view. All are null when the instance is
+  // unconfigured, and the edge and string bases are null when no policy
+  // declares a nested prefix
+  const void *nodes_{nullptr};
+  const void *edges_{nullptr};
+  const char *strings_{nullptr};
+
   std::unique_ptr<sourcemeta::core::FileView> view_;
 };
 
