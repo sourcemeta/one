@@ -37,6 +37,7 @@ find . -mindepth 1 | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected.txt"
+./authentication.bin
 ./configuration.json
 ./explorer
 ./explorer/%

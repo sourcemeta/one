@@ -7,7 +7,6 @@
 #include <filesystem>  // std::filesystem::path
 #include <fstream>     // std::ofstream
 #include <span>        // std::span
-#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
@@ -16,35 +15,27 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
 
-TEST(Authentication, absent_policy_admits_anonymous) {
+TEST(Authentication, missing_artifact_denies_everything) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}};
-  EXPECT_TRUE(authentication.admits("/acme/foo", "").allowed);
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("", "").allowed);
-  EXPECT_TRUE(authentication.admits("/acme/foo", "").key_name.empty());
+  EXPECT_FALSE(authentication.admits("/", "").allowed);
+  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits("", "").allowed);
 }
 
-TEST(Authentication, absent_policy_admits_credentialed) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}};
-  const auto verdict{authentication.admits("/acme/foo", "my-secret-key")};
-  EXPECT_TRUE(verdict.allowed);
-  EXPECT_TRUE(verdict.key_name.empty());
-}
-
-TEST(Authentication, malformed_artifact_is_rejected) {
+TEST(Authentication, malformed_artifact_denies_everything) {
   const auto path{test_path("malformed.bin")};
   std::ofstream stream{path, std::ios::binary};
   const std::array<char, 64> garbage{};
   stream.write(garbage.data(), garbage.size());
   stream.close();
 
-  EXPECT_THROW(const sourcemeta::one::Authentication authentication{path},
-               std::runtime_error);
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/", "").allowed);
+  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
 }
 
-TEST(Authentication, structurally_corrupt_artifact_is_rejected) {
+TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   const auto path{test_path("corrupt.bin")};
   std::ofstream stream{path, std::ios::binary};
   // A header whose magic and version are valid but whose node table is empty,
@@ -58,8 +49,9 @@ TEST(Authentication, structurally_corrupt_artifact_is_rejected) {
   stream.write(header.data(), header.size());
   stream.close();
 
-  EXPECT_THROW(const sourcemeta::one::Authentication authentication{path},
-               std::runtime_error);
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/", "").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
 }
 
 TEST(Authentication, public_root_admits_every_path) {

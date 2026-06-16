@@ -4,6 +4,7 @@
 #include "error.h"
 
 #include <sourcemeta/one/actions.h>
+#include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
@@ -958,6 +959,40 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
     std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::core::URITemplateRouterView::save(router, action.destination);
+  }
+};
+
+struct GENERATE_AUTHENTICATION {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    // The policy paths are borrowed by the serializer, so keep the views
+    // alive alongside the policies that reference them
+    std::vector<std::vector<std::string_view>> policy_paths;
+    policy_paths.reserve(configuration.authentication.size());
+    std::vector<sourcemeta::one::Authentication::Policy> policies;
+    policies.reserve(configuration.authentication.size());
+    for (const auto &entry : configuration.authentication) {
+      // The configuration parser constrains the type to the values handled
+      // here
+      assert(entry.type ==
+             sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
+      std::vector<std::string_view> paths;
+      paths.reserve(entry.paths.size());
+      for (const auto &path : entry.paths) {
+        paths.push_back(path);
+      }
+
+      policy_paths.push_back(std::move(paths));
+      policies.push_back(
+          {sourcemeta::one::Authentication::Type::Public, policy_paths.back()});
+    }
+
+    std::filesystem::create_directories(action.destination.parent_path());
+    sourcemeta::one::Authentication::save(policies, action.destination);
   }
 };
 

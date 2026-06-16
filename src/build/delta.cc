@@ -1262,6 +1262,22 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
          .destination = configuration_path,
          .dependencies = {},
          .data = {}});
+
+    // Globals derived purely from the configuration regenerate on every full
+    // rebuild, which is exactly when the configuration or version changes. The
+    // configuration anchor itself is already scheduled above
+    for (const auto &rule : global_rules) {
+      if (rule.trigger != GlobalTrigger::FullRebuild ||
+          rule.external_config_anchor) {
+        continue;
+      }
+
+      initialization_wave.push_back({.type = rule.action,
+                                     .destination = output / rule.filename,
+                                     .dependencies = {},
+                                     .data = {}});
+    }
+
     if (!comment.empty()) {
       initialization_wave.push_back(
           {.type = global_rules[indices.comment].action,

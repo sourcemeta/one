@@ -51,6 +51,7 @@ find . -mindepth 1 \
 cd - > /dev/null
 
 cat << 'EOF' > "$TMP/expected.txt"
+./authentication.bin
 ./configuration.json
 ./explorer
 ./explorer/%
