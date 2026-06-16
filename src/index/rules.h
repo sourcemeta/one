@@ -29,13 +29,14 @@ enum : BuildPlan::Action::Type {
   ACTION_CONFIGURATION,
   ACTION_VERSION,
   ACTION_ROUTES,
+  ACTION_AUTHENTICATION,
   ACTION_REMOVE,
   ACTION_COUNT
 };
 
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
-inline constexpr DeltaRuleSet<13, 6, 4, 2> INDEX_RULES{
+inline constexpr DeltaRuleSet<13, 6, 5, 2> INDEX_RULES{
     .leaves = {{
         {.action = ACTION_MATERIALISE,
          .base = 0,
@@ -332,6 +333,10 @@ inline constexpr DeltaRuleSet<13, 6, 4, 2> INDEX_RULES{
         {.action = ACTION_ROUTES,
          .filename = "routes.bin",
          .trigger = GlobalTrigger::OnModeChange,
+         .external_config_anchor = false},
+        {.action = ACTION_AUTHENTICATION,
+         .filename = "authentication.bin",
+         .trigger = GlobalTrigger::FullRebuild,
          .external_config_anchor = false},
     }},
     .directories = {{"schemas", "explorer"}},
