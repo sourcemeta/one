@@ -6,9 +6,15 @@
 #endif
 
 #include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint64_t
+#include <cstdint>     // std::uint64_t, std::uint8_t
 #include <filesystem>  // std::filesystem::path
+#include <memory>      // std::unique_ptr
+#include <span>        // std::span
 #include <string_view> // std::string_view
+
+namespace sourcemeta::core {
+class FileView;
+}
 
 namespace sourcemeta::one {
 
@@ -25,6 +31,18 @@ public:
 
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
+  // The kind of access a policy grants. Only anonymous public access
+  // exists for now
+  enum class Type : std::uint8_t { Public };
+
+  // A single policy as declared in the configuration. It governs every
+  // registry path nested under any of its prefixes. The paths are borrowed
+  // for the duration of the call to save, so the caller owns their storage
+  struct Policy {
+    Type type;
+    std::span<const std::string_view> paths;
+  };
+
   // The result of validating a caller against a set of policy entries.
   // The key name is for audit logging and is empty for anonymous access
   struct Verdict {
@@ -32,7 +50,20 @@ public:
     std::string_view key_name;
   };
 
+  // Compile a set of policies into a memory-mappable artifact at the given
+  // path. Entries are assigned identifiers in declaration order, so at most
+  // MAXIMUM_POLICIES may be provided
+  static auto save(std::span<const Policy> policies,
+                   const std::filesystem::path &path) -> void;
+
   explicit Authentication(const std::filesystem::path &path);
+  ~Authentication();
+
+  // The artifact is memory-mapped and owned for the lifetime of the view
+  Authentication(const Authentication &) = delete;
+  Authentication(Authentication &&) = delete;
+  auto operator=(const Authentication &) -> Authentication & = delete;
+  auto operator=(Authentication &&) -> Authentication & = delete;
 
   [[nodiscard]] auto match(std::string_view registry_path) const noexcept
       -> PolicySet;
@@ -43,6 +74,9 @@ public:
   [[nodiscard]] auto admits(PolicySet policies,
                             std::string_view credential) const noexcept
       -> Verdict;
+
+private:
+  std::unique_ptr<sourcemeta::core::FileView> view_;
 };
 
 } // namespace sourcemeta::one
