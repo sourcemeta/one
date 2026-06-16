@@ -179,8 +179,7 @@ public:
     auto result{this->search_view_.search(
         query, limit, scope, [this, &credential](const std::string_view path) {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(authentication.match(path), credential)
-              .allowed;
+          return authentication.admits(path, credential).allowed;
         })};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
@@ -280,8 +279,7 @@ public:
         arguments.at("q").to_string(), limit, scope,
         [this, &credential](const std::string_view path) {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(authentication.match(path), credential)
-              .allowed;
+          return authentication.admits(path, credential).allowed;
         })};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));

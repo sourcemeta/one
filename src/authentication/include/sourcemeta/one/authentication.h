@@ -5,16 +5,14 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <sourcemeta/core/io.h>
+
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint64_t, std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
 #include <span>        // std::span
 #include <string_view> // std::string_view
-
-namespace sourcemeta::core {
-class FileView;
-}
 
 namespace sourcemeta::one {
 
@@ -24,11 +22,6 @@ namespace sourcemeta::one {
 // unconfigured instances, not a placeholder
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
-  // A set of policy entries, one bit per entry. Entries are assigned
-  // monotonically increasing identifiers in configuration declaration
-  // order, so a governing set is a single machine word
-  using PolicySet = std::uint64_t;
-
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
   // The kind of access a policy grants. Only anonymous public access
@@ -43,8 +36,8 @@ public:
     std::span<const std::string_view> paths;
   };
 
-  // The result of validating a caller against a set of policy entries.
-  // The key name is for audit logging and is empty for anonymous access
+  // The result of validating a caller against the policies that govern a
+  // path. The key name is for audit logging and is empty for anonymous access
   struct Verdict {
     bool allowed;
     std::string_view key_name;
@@ -65,17 +58,25 @@ public:
   auto operator=(const Authentication &) -> Authentication & = delete;
   auto operator=(Authentication &&) -> Authentication & = delete;
 
-  [[nodiscard]] auto match(std::string_view registry_path) const noexcept
-      -> PolicySet;
-
-  // The credential is the bearer token presented by the caller, empty for
+  // Validate a caller against the policies that govern a registry path. The
+  // credential is the bearer token presented by the caller, empty for
   // anonymous access. It is borrowed for the duration of the call, so a
   // caller that validates across an asynchronous boundary must own it
-  [[nodiscard]] auto admits(PolicySet policies,
+  [[nodiscard]] auto admits(std::string_view registry_path,
                             std::string_view credential) const noexcept
       -> Verdict;
 
 private:
+  // A set of policy entries, one bit per entry. Entries are assigned
+  // monotonically increasing identifiers in configuration declaration
+  // order, so a governing set is a single machine word
+  using PolicySet = std::uint64_t;
+
+  // The policies that govern a registry path, accumulated from every prefix
+  // covering it. An unconfigured instance yields the empty set
+  [[nodiscard]] auto match(std::string_view registry_path) const noexcept
+      -> PolicySet;
+
   std::unique_ptr<sourcemeta::core::FileView> view_;
 };
 

@@ -83,7 +83,7 @@ auto Authentication::match(const std::string_view registry_path) const noexcept
   return result;
 }
 
-auto Authentication::admits(const Authentication::PolicySet policies,
+auto Authentication::admits(const std::string_view registry_path,
                             const std::string_view) const noexcept
     -> Authentication::Verdict {
   // An unconfigured instance admits everyone. Once configured, a path is
@@ -93,7 +93,7 @@ auto Authentication::admits(const Authentication::PolicySet policies,
     return {.allowed = true, .key_name = {}};
   }
 
-  return {.allowed = policies != 0, .key_name = {}};
+  return {.allowed = this->match(registry_path) != 0, .key_name = {}};
 }
 
 } // namespace sourcemeta::one
