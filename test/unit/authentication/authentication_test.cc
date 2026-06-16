@@ -45,7 +45,7 @@ TEST(Authentication, malformed_artifact_is_rejected) {
 }
 
 TEST(Authentication, public_root_admits_every_path) {
-  const std::array<std::string_view, 1> paths{"/"};
+  const std::array<std::string_view, 1> paths{{"/"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{sourcemeta::one::Authentication::Type::Public, paths}}};
   const auto path{test_path("public_root.bin")};
@@ -60,7 +60,7 @@ TEST(Authentication, public_root_admits_every_path) {
 }
 
 TEST(Authentication, scoped_prefix_admits_only_its_subtree) {
-  const std::array<std::string_view, 1> paths{"/internal"};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{sourcemeta::one::Authentication::Type::Public, paths}}};
   const auto path{test_path("scoped_prefix.bin")};
@@ -75,7 +75,7 @@ TEST(Authentication, scoped_prefix_admits_only_its_subtree) {
 }
 
 TEST(Authentication, scoped_prefix_matches_whole_segments_only) {
-  const std::array<std::string_view, 1> paths{"/internal"};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{sourcemeta::one::Authentication::Type::Public, paths}}};
   const auto path{test_path("segment_boundary.bin")};
@@ -88,9 +88,9 @@ TEST(Authentication, scoped_prefix_matches_whole_segments_only) {
 }
 
 TEST(Authentication, distinct_policies_each_admit_their_scope) {
-  const std::array<std::string_view, 1> alpha{"/alpha"};
-  const std::array<std::string_view, 1> beta{"/beta"};
-  const std::array<std::string_view, 1> gamma{"/gamma"};
+  const std::array<std::string_view, 1> alpha{{"/alpha"}};
+  const std::array<std::string_view, 1> beta{{"/beta"}};
+  const std::array<std::string_view, 1> gamma{{"/gamma"}};
   const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
       {{sourcemeta::one::Authentication::Type::Public, alpha},
        {sourcemeta::one::Authentication::Type::Public, beta},
@@ -106,8 +106,8 @@ TEST(Authentication, distinct_policies_each_admit_their_scope) {
 }
 
 TEST(Authentication, nested_prefixes_admit_their_subtrees) {
-  const std::array<std::string_view, 1> internal{"/internal"};
-  const std::array<std::string_view, 1> secret{"/internal/secret"};
+  const std::array<std::string_view, 1> internal{{"/internal"}};
+  const std::array<std::string_view, 1> secret{{"/internal/secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{sourcemeta::one::Authentication::Type::Public, internal},
        {sourcemeta::one::Authentication::Type::Public, secret}}};
@@ -124,7 +124,7 @@ TEST(Authentication, nested_prefixes_admit_their_subtrees) {
 }
 
 TEST(Authentication, single_policy_with_multiple_prefixes) {
-  const std::array<std::string_view, 2> paths{"/internal", "/vendor"};
+  const std::array<std::string_view, 2> paths{{"/internal", "/vendor"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{sourcemeta::one::Authentication::Type::Public, paths}}};
   const auto path{test_path("multiple_prefixes.bin")};
