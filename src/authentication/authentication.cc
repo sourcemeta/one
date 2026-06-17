@@ -4,6 +4,10 @@
 
 #include "authentication_format.h"
 
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/one/enterprise_authentication.h>
+#endif
+
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint32_t
 #include <utility> // std::move
@@ -23,8 +27,11 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   }
 
   const auto *header{view.as<AuthenticationHeader>()};
+  // The policy count must fit the bitmask width, otherwise matching would
+  // shift past the width of a PolicySet, which is undefined behavior
   if (header->magic != AUTHENTICATION_MAGIC ||
-      header->version != AUTHENTICATION_VERSION || header->node_count == 0) {
+      header->version != AUTHENTICATION_VERSION || header->node_count == 0 ||
+      header->policy_count > Authentication::MAXIMUM_POLICIES) {
     return false;
   }
 
@@ -37,6 +44,15 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   if (header->nodes_offset > size ||
       nodes_bytes > size - header->nodes_offset) {
     return false;
+  }
+
+  if (header->policy_count > 0) {
+    const auto policies_bytes{static_cast<std::size_t>(header->policy_count) *
+                              sizeof(AuthenticationPolicyEntry)};
+    if (header->policies_offset > size ||
+        policies_bytes > size - header->policies_offset) {
+      return false;
+    }
   }
 
   std::size_t strings_length{0};
@@ -117,6 +133,12 @@ Authentication::Authentication(const std::filesystem::path &path) {
     this->strings_ = view->as<char>(header->strings_offset);
   }
 
+  if (header->policy_count > 0) {
+    this->policies_ =
+        view->as<AuthenticationPolicyEntry>(header->policies_offset);
+    this->policy_count_ = header->policy_count;
+  }
+
   this->view_ = std::move(view);
 }
 
@@ -171,11 +193,35 @@ auto Authentication::match(const std::string_view registry_path) const noexcept
 }
 
 auto Authentication::admits(const std::string_view registry_path,
-                            const std::string_view) const noexcept
-    -> Authentication::Verdict {
-  // A path is served only when at least one policy governs it, as every
-  // policy grants anonymous public access for now
-  return {.allowed = this->match(registry_path) != 0};
+                            [[maybe_unused]] const std::string_view credential)
+    const -> Authentication::Verdict {
+  const auto governing{this->match(registry_path)};
+  if (governing == 0) {
+    // Unconfigured, broken, or a path that no policy governs
+    return {.allowed = false};
+  }
+
+  const auto *policies{
+      static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+  for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+    if ((governing & (PolicySet{1} << index)) == 0) {
+      continue;
+    }
+
+    if (static_cast<Type>(policies[index].type) == Type::Public) {
+      // Public policies admit anonymously
+      return {.allowed = true};
+    }
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    // Policy types beyond public are an enterprise feature
+    if (authentication_admits_enterprise(credential)) {
+      return {.allowed = true};
+    }
+#endif
+  }
+
+  return {.allowed = false};
 }
 
 } // namespace sourcemeta::one

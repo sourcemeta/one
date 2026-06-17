@@ -82,6 +82,7 @@ if(ONE_INDEX OR ONE_SERVER)
   add_subdirectory(src/router)
 
   if(ONE_ENTERPRISE)
+    add_subdirectory(enterprise/authentication)
     add_subdirectory(enterprise/server)
   endif()
 
