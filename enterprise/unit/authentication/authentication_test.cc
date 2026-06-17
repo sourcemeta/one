@@ -167,6 +167,27 @@ TEST(Authentication, single_policy_with_multiple_prefixes) {
   EXPECT_FALSE(authentication.admits("/public", "").allowed);
 }
 
+TEST(Authentication, corrupted_section_offset_denies_everything) {
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::Public, paths}}};
+  const auto path{test_path("corrupted_offset.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  // Overwrite the node section offset, the seventh 32-bit header field, with a
+  // value that aliases the header. Without a canonical layout check this would
+  // read policy masks out of unrelated bytes and admit unexpectedly
+  std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
+  stream.seekp(24);
+  const std::array<char, 4> aliased{};
+  stream.write(aliased.data(), aliased.size());
+  stream.close();
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits("/", "").allowed);
+}
+
 TEST(Authentication, supports_the_maximum_number_of_policies) {
   constexpr auto maximum{sourcemeta::one::Authentication::MAXIMUM_POLICIES};
   std::vector<std::string> path_storage;

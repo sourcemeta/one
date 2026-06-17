@@ -6,7 +6,7 @@
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint32_t, std::uint64_t
-#include <filesystem>  // std::filesystem::path, std::filesystem::exists
+#include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr, std::make_unique
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -34,42 +34,36 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
     return false;
   }
 
-  if (header->nodes_offset % alignof(AuthenticationNode) != 0) {
-    return false;
-  }
-
+  // The artifact is produced by a single serializer with a fixed section
+  // order, so recompute every offset from the counts and require the header
+  // to match exactly. This rejects a corrupted layout whose sections overlap
+  // or sit out of order, rather than reinterpreting unrelated bytes
+  const auto policies_offset{
+      static_cast<std::size_t>(sizeof(AuthenticationHeader))};
+  const auto policies_bytes{static_cast<std::size_t>(header->policy_count) *
+                            sizeof(AuthenticationPolicyEntry)};
+  const auto nodes_offset{(policies_offset + policies_bytes + 7U) &
+                          ~static_cast<std::size_t>(7U)};
   const auto nodes_bytes{static_cast<std::size_t>(header->node_count) *
                          sizeof(AuthenticationNode)};
-  if (header->nodes_offset > size ||
-      nodes_bytes > size - header->nodes_offset) {
+  const auto edges_offset{nodes_offset + nodes_bytes};
+  const auto edges_bytes{static_cast<std::size_t>(header->edge_count) *
+                         sizeof(AuthenticationEdge)};
+  const auto strings_offset{edges_offset + edges_bytes};
+  const auto strings_length{static_cast<std::size_t>(header->strings_length)};
+  if (header->policies_offset != policies_offset ||
+      header->nodes_offset != nodes_offset ||
+      header->edges_offset != edges_offset ||
+      header->strings_offset != strings_offset ||
+      strings_offset + strings_length > size) {
     return false;
   }
 
-  if (header->policy_count > 0) {
-    const auto policies_bytes{static_cast<std::size_t>(header->policy_count) *
-                              sizeof(AuthenticationPolicyEntry)};
-    if (header->policies_offset > size ||
-        policies_bytes > size - header->policies_offset) {
-      return false;
-    }
-  }
-
-  std::size_t strings_length{0};
-  if (header->edge_count > 0) {
-    if (header->edges_offset % alignof(AuthenticationEdge) != 0) {
-      return false;
-    }
-
-    const auto edges_bytes{static_cast<std::size_t>(header->edge_count) *
-                           sizeof(AuthenticationEdge)};
-    if (header->edges_offset > size ||
-        edges_bytes > size - header->edges_offset ||
-        header->strings_offset > size ||
-        header->strings_length > size - header->strings_offset) {
-      return false;
-    }
-
-    strings_length = header->strings_length;
+  // A nested prefix is stored as at least one edge labelled by a non-empty
+  // segment, so the string blob is never empty when edges are present. This
+  // also keeps the string base in bounds for the matcher
+  if (header->edge_count > 0 && strings_length == 0) {
+    return false;
   }
 
   const auto *nodes{view.as<AuthenticationNode>(header->nodes_offset)};
@@ -111,12 +105,9 @@ struct Authentication::Impl {
   // indexer. Rather than failing open and serving every path publicly, or
   // crashing the server into a restart loop, leave the policy denying
   // everything: the section pointers below stay null, so matching yields the
-  // empty set and admits no one
+  // empty set and admits no one. Opening the file covers the missing and
+  // unreadable cases without a separate, throwing existence check
   explicit Impl(const std::filesystem::path &path) {
-    if (!std::filesystem::exists(path)) {
-      return;
-    }
-
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
       view = std::make_unique<sourcemeta::core::FileView>(path);
