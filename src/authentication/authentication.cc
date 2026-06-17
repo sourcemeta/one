@@ -27,8 +27,11 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   }
 
   const auto *header{view.as<AuthenticationHeader>()};
+  // The policy count must fit the bitmask width, otherwise matching would
+  // shift past the width of a PolicySet, which is undefined behavior
   if (header->magic != AUTHENTICATION_MAGIC ||
-      header->version != AUTHENTICATION_VERSION || header->node_count == 0) {
+      header->version != AUTHENTICATION_VERSION || header->node_count == 0 ||
+      header->policy_count > Authentication::MAXIMUM_POLICIES) {
     return false;
   }
 

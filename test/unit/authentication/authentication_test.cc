@@ -54,6 +54,28 @@ TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
 }
 
+TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
+  const auto path{test_path("too-many-policies.bin")};
+  std::ofstream stream{path, std::ios::binary};
+  // A header with valid magic and version but a policy count past the bitmask
+  // width, which would shift out of range during matching
+  std::array<char, 40> header{};
+  header[0] = 'A';
+  header[1] = 'U';
+  header[2] = 'T';
+  header[3] = 'H';
+  header[4] = 1;
+  header[8] =
+      static_cast<char>(sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1);
+  header[12] = 1;
+  stream.write(header.data(), header.size());
+  stream.close();
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/", "").allowed);
+  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
+}
+
 TEST(Authentication, public_root_admits_every_path) {
   const std::array<std::string_view, 1> paths{{"/"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
