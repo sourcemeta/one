@@ -86,13 +86,13 @@ private:
   std::string value_;
 };
 
-class CustomRuleError : public std::exception {
+class EnterpriseOnlyFeatureError : public std::exception {
 public:
-  CustomRuleError(std::filesystem::path path) : path_{std::move(path)} {}
+  EnterpriseOnlyFeatureError(std::filesystem::path path, const char *message)
+      : path_{std::move(path)}, message_{message} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Custom linter rules are only available on the enterprise "
-           "edition";
+    return this->message_;
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -101,6 +101,7 @@ public:
 
 private:
   std::filesystem::path path_;
+  const char *message_;
 };
 
 } // namespace sourcemeta::one

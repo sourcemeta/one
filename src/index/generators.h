@@ -30,6 +30,7 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
+#include <algorithm>     // std::ranges::find
 #include <cassert>       // assert
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
@@ -471,7 +472,9 @@ private:
       const auto *config_path{
           configuration.extra.try_at("x-sourcemeta-one:path")};
       assert(config_path);
-      throw CustomRuleError(std::filesystem::path{config_path->to_string()});
+      throw EnterpriseOnlyFeatureError(
+          std::filesystem::path{config_path->to_string()},
+          "Custom linter rules are only available on the enterprise edition");
     }
 #endif
 
@@ -980,6 +983,17 @@ struct GENERATE_AUTHENTICATION {
       // here
       assert(entry.type ==
              sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
+#if !defined(SOURCEMETA_ONE_ENTERPRISE)
+      // The community edition only serves public access covering the whole
+      // registry, so any path other than the root is an enterprise feature
+      if (std::ranges::any_of(entry.paths,
+                              [](const auto &path) { return path != "/"; })) {
+        throw EnterpriseOnlyFeatureError(
+            configuration.path,
+            "Authentication and non-root public paths are only available on "
+            "the enterprise edition");
+      }
+#endif
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
       for (const auto &path : entry.paths) {

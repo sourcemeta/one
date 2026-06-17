@@ -96,6 +96,8 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   }
 
   Configuration result;
+  assert(configuration_path.is_absolute());
+  result.path = configuration_path;
   sourcemeta::core::URI server_url{data.at("url").to_string()};
   server_url.canonicalize();
   result.url = server_url.recompose();
