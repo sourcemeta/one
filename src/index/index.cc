@@ -720,7 +720,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::MetaschemaError &error) {
     std::print(stdout, "error: {}\n{}", error.what(), error.stacktrace());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::CustomRuleError &error) {
+  } catch (const sourcemeta::one::EnterpriseOnlyFeatureError &error) {
     std::print(stdout, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;

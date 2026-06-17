@@ -39,6 +39,8 @@ TEST(Configuration, valid_001) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
 
@@ -113,6 +115,8 @@ TEST(Configuration, valid_002) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
 
@@ -139,6 +143,8 @@ TEST(Configuration, valid_003) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
@@ -183,6 +189,8 @@ TEST(Configuration, valid_004) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
@@ -238,6 +246,8 @@ TEST(Configuration, valid_005) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
 
@@ -291,6 +301,8 @@ TEST(Configuration, valid_006) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
@@ -346,6 +358,8 @@ TEST(Configuration, valid_007) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
 
@@ -400,6 +414,8 @@ TEST(Configuration, valid_008) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_TRUE(configuration.api);
 
@@ -438,6 +454,8 @@ TEST(Configuration, base_path_none) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.base_path, "");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
@@ -449,6 +467,8 @@ TEST(Configuration, base_path_slash) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.base_path, "");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
@@ -460,6 +480,8 @@ TEST(Configuration, base_path_simple) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
@@ -471,6 +493,8 @@ TEST(Configuration, base_path_trailing_slash) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.base_path, "/v1/catalog");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
@@ -482,6 +506,8 @@ TEST(Configuration, base_path_deep) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
@@ -493,6 +519,8 @@ TEST(Configuration, origin_https_default_port) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.url, "https://example.com/schemas");
   EXPECT_EQ(configuration.base_path, "/schemas");
   EXPECT_EQ(configuration.origin, "https://example.com");
@@ -505,6 +533,8 @@ TEST(Configuration, origin_custom_port) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.url, "https://example.com:9443/api");
   EXPECT_EQ(configuration.base_path, "/api");
   EXPECT_EQ(configuration.origin, "https://example.com:9443");
@@ -517,6 +547,8 @@ TEST(Configuration, origin_with_userinfo) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
@@ -527,6 +559,8 @@ TEST(Configuration, origin_with_query) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
@@ -537,6 +571,8 @@ TEST(Configuration, origin_with_fragment) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
@@ -548,6 +584,8 @@ TEST(Configuration, origin_with_userinfo_query_fragment_port) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_EQ(configuration.origin, "http://example.com:8000");
 }
 
@@ -558,6 +596,8 @@ TEST(Configuration, is_collection_base_true) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_TRUE(configuration.is_collection_base("example/extension"));
 }
 
@@ -568,6 +608,8 @@ TEST(Configuration, is_collection_base_false_for_page) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_FALSE(configuration.is_collection_base("example"));
   EXPECT_FALSE(configuration.is_collection_base("test"));
 }
@@ -579,6 +621,8 @@ TEST(Configuration, is_collection_base_false_for_unknown) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
   EXPECT_FALSE(configuration.is_collection_base("nonexistent"));
   EXPECT_FALSE(configuration.is_collection_base("example/nonexistent"));
 }
@@ -590,6 +634,8 @@ TEST(Configuration, valid_009_api_enabled) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_EQ(configuration.base_path, "");
@@ -629,6 +675,8 @@ TEST(Configuration, valid_010_api_disabled) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.url, "http://localhost:8000");
   EXPECT_EQ(configuration.base_path, "");
   EXPECT_FALSE(configuration.api);
@@ -645,6 +693,8 @@ TEST(Configuration, valid_011_priority_explicit) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
   EXPECT_PRIORITY(configuration, "low/schemas", 0);
@@ -705,6 +755,8 @@ TEST(Configuration, authentication_defaults_to_public_root) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
+  EXPECT_EQ(configuration.path, configuration_path);
+
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).type,
             sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
@@ -719,6 +771,8 @@ TEST(Configuration, authentication_inherited_from_extends) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).type,
@@ -735,8 +789,9 @@ TEST(Configuration, authentication_explicit_paths) {
     ]
   })JSON")};
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, "one.json", ".")};
+      raw_configuration, "/tmp/one.json", ".")};
 
+  EXPECT_EQ(configuration.path, "/tmp/one.json");
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).type,
             sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
@@ -750,9 +805,9 @@ TEST(Configuration, authentication_rejects_empty_array) {
     "url": "https://example.com",
     "authentication": []
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_rejects_duplicate_entries) {
@@ -763,9 +818,9 @@ TEST(Configuration, authentication_rejects_duplicate_entries) {
       { "type": "public", "paths": [ "/" ] }
     ]
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_rejects_missing_paths) {
@@ -773,9 +828,9 @@ TEST(Configuration, authentication_rejects_missing_paths) {
     "url": "https://example.com",
     "authentication": [ { "type": "public" } ]
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_rejects_empty_path) {
@@ -783,9 +838,9 @@ TEST(Configuration, authentication_rejects_empty_path) {
     "url": "https://example.com",
     "authentication": [ { "type": "public", "paths": [ "" ] } ]
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_rejects_path_without_leading_slash) {
@@ -793,9 +848,9 @@ TEST(Configuration, authentication_rejects_path_without_leading_slash) {
     "url": "https://example.com",
     "authentication": [ { "type": "public", "paths": [ "acme" ] } ]
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_rejects_unknown_type) {
@@ -805,9 +860,9 @@ TEST(Configuration, authentication_rejects_unknown_type) {
       { "type": "apiKey", "paths": [ "/" ] }
     ]
   })JSON")};
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
 
 TEST(Configuration, authentication_accepts_maximum_entries) {
@@ -826,7 +881,8 @@ TEST(Configuration, authentication_accepts_maximum_entries) {
   raw_configuration.assign("authentication", std::move(entries));
 
   const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, "one.json", ".")};
+      raw_configuration, "/tmp/one.json", ".")};
+  EXPECT_EQ(configuration.path, "/tmp/one.json");
   EXPECT_EQ(configuration.authentication.size(), 64);
 }
 
@@ -845,7 +901,7 @@ TEST(Configuration, authentication_rejects_above_maximum_entries) {
   }
   raw_configuration.assign("authentication", std::move(entries));
 
-  EXPECT_THROW(
-      sourcemeta::one::Configuration::parse(raw_configuration, "one.json", "."),
-      sourcemeta::one::ConfigurationValidationError);
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
 }
