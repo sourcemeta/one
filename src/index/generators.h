@@ -972,10 +972,12 @@ struct GENERATE_AUTHENTICATION {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    // The policy paths are borrowed by the serializer, so keep the views
+    // The policy paths and keys are borrowed by the policies, so keep them
     // alive alongside the policies that reference them
     std::vector<std::vector<std::string_view>> policy_paths;
     policy_paths.reserve(configuration.authentication.size());
+    std::vector<std::vector<std::string_view>> policy_keys;
+    policy_keys.reserve(configuration.authentication.size());
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
@@ -988,12 +990,22 @@ struct GENERATE_AUTHENTICATION {
       policy_paths.push_back(std::move(paths));
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-      // Enterprise records every policy type
-      const auto type{entry.type == sourcemeta::one::Configuration::
-                                        AuthenticationEntry::Type::ApiKey
-                          ? sourcemeta::one::Authentication::Type::ApiKey
-                          : sourcemeta::one::Authentication::Type::Public};
-      policies.push_back({type, policy_paths.back()});
+      // Enterprise supports every policy type and any path scope
+      if (entry.type ==
+          sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey) {
+        std::vector<std::string_view> keys;
+        keys.reserve(entry.keys.size());
+        for (const auto &key : entry.keys) {
+          keys.push_back(key);
+        }
+
+        policy_keys.push_back(std::move(keys));
+        policies.push_back({sourcemeta::one::Authentication::Type::ApiKey,
+                            policy_paths.back(), policy_keys.back()});
+      } else {
+        policies.push_back({sourcemeta::one::Authentication::Type::Public,
+                            policy_paths.back()});
+      }
 #else
       // The community edition only serves public access covering the whole
       // registry, so any other type or a non-root path is an enterprise

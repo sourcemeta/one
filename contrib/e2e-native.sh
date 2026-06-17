@@ -56,6 +56,15 @@ if [ -f "$ROOT/$SANDBOX/post-index.sh" ]
 then
   "$ROOT/$SANDBOX/post-index.sh" "$OUTPUT"
 fi
+
+if [ -f "$ROOT/$SANDBOX/environment" ]
+then
+  set -a
+  # shellcheck source=/dev/null
+  . "$ROOT/$SANDBOX/environment"
+  set +a
+fi
+
 "$ROOT/build/dist/bin/sourcemeta-one-server" "$OUTPUT" "$PORT" &
 SERVER_PID="$!"
 wait_for_ready

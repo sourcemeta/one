@@ -1,0 +1,34 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Authentication Sandbox",
+    "description": "Fixtures exercising public and apiKey authentication policies"
+  },
+  "authentication": [
+    { "type": "public", "paths": [ "/self" ] },
+    { "type": "public", "paths": [ "/public" ] },
+    { "type": "public", "paths": [ "/private/open" ] },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/private", "/reports" ],
+      "keys": [
+        { "environmentVariable": "ONE_E2E_KEY_PRIMARY" },
+        { "environmentVariable": "ONE_E2E_KEY_SECONDARY" }
+      ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/internal" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_INTERNAL" } ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./schemas/public" },
+    "private": { "path": "./schemas/private" },
+    "reports": { "path": "./schemas/reports" },
+    "internal": { "path": "./schemas/internal" },
+    "orphan": { "path": "./schemas/orphan" }
+  }
+}
