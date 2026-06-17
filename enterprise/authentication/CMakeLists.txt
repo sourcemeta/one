@@ -1,4 +1,0 @@
-sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_authentication
-  SOURCES enterprise_authentication.cc)
-
-target_compile_definitions(sourcemeta_one_enterprise_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
