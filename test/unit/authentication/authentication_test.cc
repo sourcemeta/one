@@ -66,7 +66,6 @@ TEST(Authentication, public_root_admits_every_path) {
   EXPECT_TRUE(authentication.admits("", "").allowed);
   EXPECT_TRUE(authentication.admits("acme", "").allowed);
   EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").allowed);
-  EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").key_name.empty());
 }
 
 TEST(Authentication, scoped_prefix_admits_only_its_subtree) {

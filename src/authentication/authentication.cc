@@ -175,7 +175,7 @@ auto Authentication::admits(const std::string_view registry_path,
     -> Authentication::Verdict {
   // A path is served only when at least one policy governs it, as every
   // policy grants anonymous public access for now
-  return {.allowed = this->match(registry_path) != 0, .key_name = {}};
+  return {.allowed = this->match(registry_path) != 0};
 }
 
 } // namespace sourcemeta::one
