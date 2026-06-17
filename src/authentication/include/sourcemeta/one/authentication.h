@@ -36,11 +36,9 @@ public:
     std::span<const std::string_view> paths;
   };
 
-  // The result of validating a caller against the policies that govern a
-  // path. The key name is for audit logging and is empty for anonymous access
+  // The result of validating a caller against the policies that govern a path
   struct Verdict {
     bool allowed;
-    std::string_view key_name;
   };
 
   // Compile a set of policies into a memory-mappable artifact at the given
