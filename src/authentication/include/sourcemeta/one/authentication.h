@@ -61,8 +61,7 @@ public:
   // anonymous access. It is borrowed for the duration of the call, so a
   // caller that validates across an asynchronous boundary must own it
   [[nodiscard]] auto admits(std::string_view registry_path,
-                            std::string_view credential) const noexcept
-      -> Verdict;
+                            std::string_view credential) const -> Verdict;
 
 private:
   // A set of policy entries, one bit per entry. Entries are assigned
@@ -84,6 +83,12 @@ private:
   const void *nodes_{nullptr};
   const void *edges_{nullptr};
   const char *strings_{nullptr};
+
+  // The policy table, resolved once at construction, holding the type of each
+  // policy so that admits can dispatch on it. Null when the instance is
+  // unconfigured or declares no policies
+  const void *policies_{nullptr};
+  std::uint32_t policy_count_{0};
 
   std::unique_ptr<sourcemeta::core::FileView> view_;
 };
