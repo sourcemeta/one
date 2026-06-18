@@ -44,8 +44,11 @@ struct AuthenticationEdge {
 };
 
 // One entry per policy, in declaration order, mirroring the bit assigned to
-// it in the node masks
+// it in the node masks. The metadata range locates the policy's opaque blob
+// by absolute file offset, empty for public policies
 struct AuthenticationPolicyEntry {
+  std::uint32_t metadata_offset;
+  std::uint32_t metadata_length;
   std::uint8_t type;
 };
 
@@ -55,7 +58,8 @@ static_assert(sizeof(AuthenticationHeader) == 40);
 static_assert(sizeof(AuthenticationNode) == 16);
 static_assert(alignof(AuthenticationNode) == 8);
 static_assert(sizeof(AuthenticationEdge) == 12);
-static_assert(sizeof(AuthenticationPolicyEntry) == 1);
+static_assert(sizeof(AuthenticationPolicyEntry) == 12);
+static_assert(alignof(AuthenticationPolicyEntry) == 4);
 
 // Advance the cursor to the next non-empty path segment and return it. The
 // returned view is empty once the path is exhausted. Leading, trailing, and

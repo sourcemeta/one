@@ -4,12 +4,19 @@
 
 #include "authentication_format.h"
 
-#include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint32_t, std::uint64_t
-#include <filesystem>  // std::filesystem::path
-#include <memory>      // std::unique_ptr, std::make_unique
-#include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <cstddef>       // std::byte, std::size_t
+#include <cstdint>       // std::uint32_t, std::uint64_t
+#include <cstdlib>       // std::getenv
+#include <cstring>       // std::memcpy
+#include <filesystem>    // std::filesystem::path
+#include <memory>        // std::unique_ptr, std::make_unique
+#include <mutex>         // std::mutex, std::lock_guard
+#include <optional>      // std::optional
+#include <span>          // std::span
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move
 
 namespace {
 
@@ -37,7 +44,8 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   // The artifact is produced by a single serializer with a fixed section
   // order, so recompute every offset from the counts and require the header
   // to match exactly. This rejects a corrupted layout whose sections overlap
-  // or sit out of order, rather than reinterpreting unrelated bytes
+  // or sit out of order, rather than reinterpreting unrelated bytes. The
+  // per-policy metadata blob is appended after the string section
   const auto policies_offset{
       static_cast<std::size_t>(sizeof(AuthenticationHeader))};
   const auto policies_bytes{static_cast<std::size_t>(header->policy_count) *
@@ -66,6 +74,23 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
     return false;
   }
 
+  if (header->policy_count > 0) {
+    const auto *policies{
+        view.as<AuthenticationPolicyEntry>(header->policies_offset)};
+    // Each policy's metadata is appended in declaration order after the string
+    // blob, so a valid artifact lays them out contiguously from there onward
+    auto metadata_cursor{strings_offset + strings_length};
+    for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
+      const auto &entry{policies[index]};
+      if (entry.metadata_offset != metadata_cursor ||
+          entry.metadata_length > size - metadata_cursor) {
+        return false;
+      }
+
+      metadata_cursor += entry.metadata_length;
+    }
+  }
+
   const auto *nodes{view.as<AuthenticationNode>(header->nodes_offset)};
   for (std::uint32_t index{0}; index < header->node_count; index += 1) {
     const auto &node{nodes[index]};
@@ -88,6 +113,83 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   }
 
   return true;
+}
+
+auto read_u32(const std::span<const std::byte> metadata, std::size_t &cursor,
+              std::uint32_t &value) -> bool {
+  if (cursor > metadata.size() || metadata.size() - cursor < sizeof(value)) {
+    return false;
+  }
+
+  std::memcpy(&value, metadata.data() + cursor, sizeof(value));
+  cursor += sizeof(value);
+  return true;
+}
+
+auto constant_time_equal(const std::string_view left,
+                         const std::string_view right) -> bool {
+  if (left.size() != right.size()) {
+    return false;
+  }
+
+  unsigned char difference{0};
+  for (std::size_t index{0}; index < left.size(); index += 1) {
+    difference |= static_cast<unsigned char>(left[index]) ^
+                  static_cast<unsigned char>(right[index]);
+  }
+
+  return difference == 0;
+}
+
+auto resolve_environment(const std::string_view variable)
+    -> std::optional<std::string> {
+  static std::mutex mutex;
+  static std::unordered_map<std::string, std::optional<std::string>> cache;
+  const std::string name{variable};
+  const std::lock_guard<std::mutex> lock{mutex};
+  const auto existing{cache.find(name)};
+  if (existing != cache.cend()) {
+    return existing->second;
+  }
+
+  std::optional<std::string> resolved;
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  const char *value{std::getenv(name.c_str())};
+  if (value != nullptr) {
+    resolved = value;
+  }
+
+  cache.emplace(name, resolved);
+  return resolved;
+}
+
+auto admits_apikey(const std::span<const std::byte> metadata,
+                   const std::string_view credential) -> bool {
+  std::size_t cursor{0};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return false;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::uint32_t length{0};
+    if (!read_u32(metadata, cursor, length) ||
+        metadata.size() - cursor < length) {
+      return false;
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const std::string_view variable{
+        reinterpret_cast<const char *>(metadata.data() + cursor), length};
+    cursor += length;
+
+    const auto stored{resolve_environment(variable)};
+    if (stored.has_value() && constant_time_equal(credential, stored.value())) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace
@@ -188,8 +290,8 @@ struct Authentication::Impl {
     return result;
   }
 
-  [[nodiscard]] auto admits(const std::string_view registry_path) const
-      -> bool {
+  [[nodiscard]] auto admits(const std::string_view registry_path,
+                            const std::string_view credential) const -> bool {
     const auto governing{this->match(registry_path)};
     if (governing == 0) {
       // Unconfigured, broken, or a path that no policy governs
@@ -203,12 +305,21 @@ struct Authentication::Impl {
         continue;
       }
 
-      if (static_cast<Type>(policies[index].type) == Type::Public) {
+      const auto &entry{policies[index]};
+      if (static_cast<Type>(entry.type) == Type::Public) {
         // Public policies admit anonymously
         return true;
       }
 
-      // Every other policy type denies access
+      std::span<const std::byte> metadata;
+      if (entry.metadata_length > 0) {
+        metadata = {this->view_->as<std::byte>(entry.metadata_offset),
+                    entry.metadata_length};
+      }
+
+      if (admits_apikey(metadata, credential)) {
+        return true;
+      }
     }
 
     return false;
@@ -239,9 +350,9 @@ Authentication::Authentication(const std::filesystem::path &path)
 Authentication::~Authentication() = default;
 
 auto Authentication::admits(const std::string_view registry_path,
-                            [[maybe_unused]] const std::string_view credential)
-    const -> Authentication::Verdict {
-  return {.allowed = this->impl_->admits(registry_path)};
+                            const std::string_view credential) const
+    -> Authentication::Verdict {
+  return {.allowed = this->impl_->admits(registry_path, credential)};
 }
 
 } // namespace sourcemeta::one
