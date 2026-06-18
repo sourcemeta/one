@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781741536396,
+  "lastUpdate": 1781745154694,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (community)": [
@@ -37104,6 +37104,115 @@ window.BENCHMARK_DATA = {
           {
             "name": "Index 10000 schemas ($ref fan-out)",
             "value": 16633,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a5685ba3b51c42ec59c6fafc264de270d482d5ba",
+          "message": "Support `apiKey` identity authentication at the configuration level (#1068)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-06-17T20:54:45-04:00",
+          "tree_id": "2fb830ae380fd4c1366274ff59b4ef555f9da3a5",
+          "url": "https://github.com/sourcemeta/one/commit/a5685ba3b51c42ec59c6fafc264de270d482d5ba"
+        },
+        "date": 1781745153412,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 377,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 29,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 87,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 794,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 22,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 29,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 87,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 707,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 7,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 9,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 31,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 276,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 654,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 1549,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 13773,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas (custom meta-schema)",
+            "value": 15923,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas ($ref fan-out)",
+            "value": 16451,
             "unit": "ms"
           }
         ]
