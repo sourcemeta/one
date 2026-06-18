@@ -52,7 +52,8 @@ header "ETag" exists
     "token": {
       "type": "string"
     }
-  }
+  },
+  "additionalProperties": false
 }
 
 # Any key listed in the policy admits, so the secondary key works too

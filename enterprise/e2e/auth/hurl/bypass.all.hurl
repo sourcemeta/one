@@ -11,31 +11,37 @@ WWW-Authenticate: Bearer realm="registry"
 GET {{base}}//private/secret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Repeated interior slash
 GET {{base}}/private//secret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Single-dot segment
 GET {{base}}/private/./secret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Leading single-dot segment
 GET {{base}}/./private/secret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Parent traversal from a public prefix into an apiKey prefix
 GET {{base}}/public/../private/secret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Percent-encoded slash
 GET {{base}}/private%2Fsecret.json
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Parent traversal that lands back on a public prefix is still anonymous
 GET {{base}}/private/../public/string.json

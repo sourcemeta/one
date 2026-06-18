@@ -5,6 +5,7 @@ HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 public_results: body

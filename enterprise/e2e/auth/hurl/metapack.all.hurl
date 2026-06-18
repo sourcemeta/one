@@ -9,26 +9,32 @@ WWW-Authenticate: Bearer realm="registry"
 GET {{base}}/self/v1/api/schemas/dependencies/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/dependents/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/locations/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/positions/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/stats/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/metadata/private/secret
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # The same API for a public schema is anonymous, and validates against its
 # output schema
@@ -93,6 +99,7 @@ GET {{base}}/self/v1/api/schemas/health/internal/config
 Authorization: Bearer primary-secret-key
 HTTP 401
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
 
 # Evaluation of an apiKey schema is gated: anonymous evaluation is denied
 POST {{base}}/self/v1/api/schemas/evaluate/private/secret
