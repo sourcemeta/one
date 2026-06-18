@@ -3,6 +3,7 @@ if(ONE_ENTERPRISE)
     SOURCES
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc")
+  target_compile_definitions(sourcemeta_one_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     SOURCES authentication.cc)

@@ -4,15 +4,17 @@
 
 #include "authentication_format.h"
 
-#include <algorithm> // std::ranges::sort
-#include <cstddef>   // std::byte, std::size_t
-#include <cstdint>   // std::uint32_t, std::uint64_t, std::uint8_t
-#include <cstring>   // std::memcpy
-#include <span>      // std::span
-#include <stdexcept> // std::runtime_error
-#include <string>    // std::string
-#include <utility>   // std::pair
-#include <vector>    // std::vector
+#include <algorithm>   // std::ranges::sort
+#include <array>       // std::array
+#include <cstddef>     // std::byte, std::size_t
+#include <cstdint>     // std::uint32_t, std::uint64_t, std::uint8_t
+#include <cstring>     // std::memcpy
+#include <span>        // std::span
+#include <stdexcept>   // std::runtime_error
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 namespace {
 
@@ -38,6 +40,28 @@ auto find_or_create_child(std::vector<BuildNode> &nodes,
 
 auto align_to_word(const std::uint32_t offset) -> std::uint32_t {
   return (offset + 7U) & ~static_cast<std::uint32_t>(7U);
+}
+
+auto append_u32(std::vector<std::byte> &output, const std::uint32_t value)
+    -> void {
+  std::array<std::byte, sizeof(value)> bytes{};
+  std::memcpy(bytes.data(), &value, sizeof(value));
+  output.insert(output.end(), bytes.begin(), bytes.end());
+}
+
+auto encode_apikey_metadata(
+    const std::span<const std::string_view> environment_variables)
+    -> std::vector<std::byte> {
+  std::vector<std::byte> result;
+  append_u32(result, static_cast<std::uint32_t>(environment_variables.size()));
+  for (const auto variable : environment_variables) {
+    append_u32(result, static_cast<std::uint32_t>(variable.size()));
+    for (const char character : variable) {
+      result.push_back(static_cast<std::byte>(character));
+    }
+  }
+
+  return result;
 }
 
 } // namespace
@@ -121,18 +145,38 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                                                     sizeof(AuthenticationEdge));
   header.strings_length = static_cast<std::uint32_t>(strings.size());
 
-  std::vector<std::byte> buffer(header.strings_offset + header.strings_length,
-                                std::byte{0});
+  // The per-policy metadata is appended after the string blob and located by
+  // absolute offset, so the header layout stays fixed
+  const auto metadata_start{header.strings_offset + header.strings_length};
+  std::vector<AuthenticationPolicyEntry> policy_table;
+  policy_table.reserve(policies.size());
+  std::vector<std::byte> metadata;
+  for (const auto &policy : policies) {
+    const auto policy_metadata{policy.keys.empty()
+                                   ? std::vector<std::byte>{}
+                                   : encode_apikey_metadata(policy.keys)};
+    AuthenticationPolicyEntry entry{};
+    entry.metadata_offset =
+        metadata_start + static_cast<std::uint32_t>(metadata.size());
+    entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
+    entry.type = static_cast<std::uint8_t>(policy.type);
+    policy_table.push_back(entry);
+    metadata.insert(metadata.end(), policy_metadata.begin(),
+                    policy_metadata.end());
+  }
+
+  std::vector<std::byte> buffer(
+      static_cast<std::size_t>(metadata_start) + metadata.size(), std::byte{0});
   std::memcpy(buffer.data(), &header, sizeof(header));
-  for (std::size_t index{0}; index < policies.size(); index += 1) {
-    buffer[header.policies_offset + index] =
-        static_cast<std::byte>(policies[index].type);
+  // The policy table, node, edge, string, and metadata sections are each empty
+  // in some valid artifacts, and an empty vector may expose a null data pointer
+  if (!policy_table.empty()) {
+    std::memcpy(buffer.data() + header.policies_offset, policy_table.data(),
+                policy_table.size() * sizeof(AuthenticationPolicyEntry));
   }
 
   std::memcpy(buffer.data() + header.nodes_offset, serialized.data(),
               serialized.size() * sizeof(AuthenticationNode));
-  // The edge and string sections are empty when no policy declares a nested
-  // prefix, and an empty vector may expose a null data pointer
   if (!edges.empty()) {
     std::memcpy(buffer.data() + header.edges_offset, edges.data(),
                 edges.size() * sizeof(AuthenticationEdge));
@@ -141,6 +185,11 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   if (!strings.empty()) {
     std::memcpy(buffer.data() + header.strings_offset, strings.data(),
                 strings.size());
+  }
+
+  if (!metadata.empty()) {
+    std::memcpy(buffer.data() + metadata_start, metadata.data(),
+                metadata.size());
   }
 
   sourcemeta::core::write_file(path, buffer);

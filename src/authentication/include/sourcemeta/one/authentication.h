@@ -23,6 +23,7 @@ public:
   struct Policy {
     Type type;
     std::span<const std::string_view> paths;
+    std::span<const std::string_view> keys{};
   };
 
   struct Verdict {

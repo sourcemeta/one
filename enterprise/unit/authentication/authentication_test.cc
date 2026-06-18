@@ -3,9 +3,10 @@
 #include <gtest/gtest.h>
 
 #include <array>       // std::array
-#include <cstddef>     // std::size_t
+#include <cstddef>     // std::byte, std::size_t
+#include <cstdlib>     // setenv
 #include <filesystem>  // std::filesystem::path
-#include <fstream>     // std::ofstream
+#include <fstream>     // std::ofstream, std::fstream
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -45,7 +46,7 @@ TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 1;
+  header[4] = 2;
   stream.write(header.data(), header.size());
   stream.close();
 
@@ -64,7 +65,7 @@ TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 1;
+  header[4] = 2;
   header[8] =
       static_cast<char>(sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1);
   header[12] = 1;
@@ -219,30 +220,102 @@ TEST(Authentication, supports_the_maximum_number_of_policies) {
   EXPECT_FALSE(authentication.admits("/missing", "").allowed);
 }
 
-TEST(Authentication, apikey_policy_denies_every_credential) {
+TEST(Authentication, apikey_admits_matching_credential) {
+  setenv("ONE_TEST_KEY_MATCH", "secret-match", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_MATCH"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{sourcemeta::one::Authentication::Type::ApiKey, paths}}};
-  const auto path{test_path("apikey_policy.bin")};
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("apikey_match.bin")};
   sourcemeta::one::Authentication::save(policies, path);
 
   const sourcemeta::one::Authentication authentication{path};
-  EXPECT_FALSE(authentication.admits("/internal", "any-credential").allowed);
+  EXPECT_TRUE(authentication.admits("/internal/foo", "secret-match").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "wrong").allowed);
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo/bar", "secret").allowed);
+}
+
+TEST(Authentication, apikey_with_multiple_keys_admits_any) {
+  setenv("ONE_TEST_KEY_MULTI_A", "key-a", 1);
+  setenv("ONE_TEST_KEY_MULTI_B", "key-b", 1);
+  const std::array<std::string_view, 2> keys{
+      {"ONE_TEST_KEY_MULTI_A", "ONE_TEST_KEY_MULTI_B"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("apikey_multi.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.admits("/internal/foo", "key-a").allowed);
+  EXPECT_TRUE(authentication.admits("/internal/foo", "key-b").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "key-c").allowed);
+}
+
+TEST(Authentication, apikey_with_unset_variable_denies) {
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_UNSET"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("apikey_unset.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/internal/foo", "anything").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+}
+
+TEST(Authentication, apikey_denies_uncovered_path) {
+  setenv("ONE_TEST_KEY_SCOPED", "scoped-secret", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SCOPED"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("apikey_scoped.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.admits("/internal/foo", "scoped-secret").allowed);
+  EXPECT_FALSE(authentication.admits("/other", "scoped-secret").allowed);
 }
 
 TEST(Authentication, public_overrides_apikey_on_shared_path) {
+  setenv("ONE_TEST_KEY_SHARED", "shared-secret", 1);
   const std::array<std::string_view, 1> public_paths{{"/internal"}};
   const std::array<std::string_view, 1> apikey_paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHARED"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{sourcemeta::one::Authentication::Type::Public, public_paths},
-       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths}}};
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
   const auto path{test_path("apikey_shared.bin")};
   sourcemeta::one::Authentication::save(policies, path);
 
-  // The public policy admits anonymously even though an apiKey policy governs
-  // the same path
   const sourcemeta::one::Authentication authentication{path};
+  // The public policy admits anonymously even without a credential
   EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
+}
+
+TEST(Authentication, metadata_outside_its_region_denies_everything) {
+  setenv("ONE_TEST_KEY_REGION", "region-secret", 1);
+  const std::array<std::string_view, 1> public_paths{{"/public"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_REGION"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("metadata_region.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  // Point the second policy's metadata offset, the first field of its entry at
+  // byte 52, into the policy table instead of the trailing metadata region
+  std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
+  stream.seekp(52);
+  const std::array<char, 4> aliased{};
+  stream.write(aliased.data(), aliased.size());
+  stream.close();
+
+  // The whole artifact is rejected, so even the untouched public policy denies
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/public/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "region-secret").allowed);
 }
