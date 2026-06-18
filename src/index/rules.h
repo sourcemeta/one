@@ -94,8 +94,11 @@ inline constexpr DeltaRuleSet<13, 6, 5, 2> INDEX_RULES{
          .tracks_dependencies = true,
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
-                            .filename = "schema.metapack"}}},
-         .dependency_count = 1},
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::GlobalOutput,
+                            .base = 0,
+                            .filename = "authentication.bin"}}},
+         .dependency_count = 2},
 
         {.action = ACTION_STATS,
          .base = 0,

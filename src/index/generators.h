@@ -37,10 +37,13 @@
 #include <limits>        // std::numeric_limits
 #include <memory>        // std::unique_ptr
 #include <mutex>         // std::mutex, std::lock_guard
+#include <optional>      // std::optional
 #include <ostream>       // std::ostream
 #include <queue>         // std::queue
 #include <set>           // std::set
 #include <sstream>       // std::ostringstream
+#include <string>        // std::string
+#include <string_view>   // std::string_view
 #include <tuple>         // std::tuple
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
@@ -259,7 +262,7 @@ struct GENERATE_DEPENDENCIES {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
@@ -283,6 +286,23 @@ struct GENERATE_DEPENDENCIES {
         });
     // Otherwise we are returning non-sense
     assert(result.unique());
+
+    if (result.size() > 0) {
+      const sourcemeta::one::Authentication authentication{
+          action.dependencies.at(1)};
+      for (const auto &edge : result.as_array()) {
+        const auto &referrer_uri{edge.at("from").to_string()};
+        const auto &referent_uri{edge.at("to").to_string()};
+        const auto referrer{registry_path(referrer_uri, configuration.url)};
+        const auto referent{registry_path(referent_uri, configuration.url)};
+        if (referrer.has_value() && referent.has_value() &&
+            !authentication.reference_permitted(referrer.value(),
+                                                referent.value())) {
+          throw CrossPolicyReferenceError(referrer_uri, referent_uri);
+        }
+      }
+    }
+
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     sourcemeta::one::metapack_write_pretty_json(
@@ -300,6 +320,16 @@ private:
     }
 
     return sourcemeta::core::JSON{uri};
+  }
+
+  static auto registry_path(const std::string_view uri,
+                            const std::string_view base)
+      -> std::optional<std::string_view> {
+    if (!uri.starts_with(base)) {
+      return std::nullopt;
+    }
+
+    return uri.substr(base.size());
   }
 };
 

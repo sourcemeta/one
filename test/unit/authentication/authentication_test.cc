@@ -41,3 +41,12 @@ TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_TRUE(authentication.admits("/", "").allowed);
   EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
 }
+
+TEST(Authentication, permits_every_reference) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  EXPECT_TRUE(authentication.reference_permitted("/one", "/two"));
+  EXPECT_TRUE(
+      authentication.reference_permitted("/public/one", "/private/two"));
+  EXPECT_TRUE(authentication.reference_permitted("/internal/a", "/internal/a"));
+}
