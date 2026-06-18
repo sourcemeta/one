@@ -329,7 +329,13 @@ private:
       return std::nullopt;
     }
 
-    return uri.substr(base.size());
+    const auto remainder{uri.substr(base.size())};
+    if (!base.ends_with('/') && !remainder.empty() &&
+        !remainder.starts_with('/')) {
+      return std::nullopt;
+    }
+
+    return remainder;
   }
 };
 

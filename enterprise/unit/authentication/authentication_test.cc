@@ -458,6 +458,21 @@ TEST(Authentication, reference_honours_shared_environment_variable_names) {
   EXPECT_TRUE(authentication.reference_permitted("/beta/two", "/alpha/one"));
 }
 
+TEST(Authentication, reference_distinguishes_sibling_prefix_policies) {
+  const std::array<std::string_view, 1> public_paths{{"/public"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/pub"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_SIBLING_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("ref_sibling_prefix.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.reference_permitted("/public/a", "/pub/b"));
+  EXPECT_TRUE(authentication.reference_permitted("/pub/b", "/public/a"));
+}
+
 TEST(Authentication, reference_permitted_on_a_missing_artifact_is_permitted) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}};
