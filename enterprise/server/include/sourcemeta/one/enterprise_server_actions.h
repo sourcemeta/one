@@ -10,6 +10,7 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
+#include <sourcemeta/one/search.h>
 
 #include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
@@ -37,7 +38,8 @@ public:
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher} {
+                                      router.base_url(), dispatcher},
+        search_view_{base / "explorer" / "%" / "search.metapack"} {
     router.arguments(identifier, [this](const auto &key, const auto &value) {
       if (key == "responseSchema") {
         this->response_schema_ = std::get<std::string_view>(value);
@@ -287,8 +289,8 @@ private:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto on_resources_list(const sourcemeta::core::JSON &request_json) const
-      -> sourcemeta::core::JSON;
+  auto on_resources_list(const sourcemeta::core::JSON &request_json,
+                         std::string_view credential) -> sourcemeta::core::JSON;
 
   auto on_initialize(const sourcemeta::core::JSON &request_json) const
       -> sourcemeta::core::JSON;
@@ -319,6 +321,7 @@ private:
   std::string_view response_schema_;
   std::string_view request_schema_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
+  sourcemeta::one::SearchView search_view_;
 };
 
 } // namespace sourcemeta::one::enterprise

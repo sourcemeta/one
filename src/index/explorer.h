@@ -643,13 +643,10 @@ struct GENERATE_MCP {
         "schemas rather than guessing paths",
         "application/schema+json"));
 
-    auto resources{sourcemeta::core::JSON::make_object()};
     auto tools{sourcemeta::core::JSON::make_array()};
     auto tool_routes{sourcemeta::core::JSON::make_object()};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-    sourcemeta::one::generate_mcp_resources(
-        action.dependencies.front(), configuration, MCP_PAGE_SIZE, resources);
     {
       const sourcemeta::core::URITemplateRouterView router_view{
           action.dependencies.back()};
@@ -688,7 +685,6 @@ struct GENERATE_MCP {
     document.assign(
         std::string{sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
         std::move(resource_templates_response));
-    document.assign("resources", std::move(resources));
     document.assign(std::string{sourcemeta::core::MCP_METHOD_TOOLS_LIST},
                     std::move(tools));
     document.assign("toolRoutes", std::move(tool_routes));
@@ -700,9 +696,6 @@ struct GENERATE_MCP {
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }
-
-private:
-  static constexpr std::size_t MCP_PAGE_SIZE{50};
 };
 
 // The mutable build state is only safe to read while holding its lock, as
