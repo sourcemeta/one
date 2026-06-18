@@ -3,7 +3,7 @@ FROM debian:trixie AS builder
 # NodeSource provides npm >= 10, required for the "npm sbom" command
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck curl gnupg \
-  openssl libssl-dev openssl-provider-fips \
+  openssl libssl-dev openssl-provider-fips libcurl4-openssl-dev \
   && curl --fail --silent --show-error --location \
     https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
     | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg \
@@ -57,6 +57,9 @@ RUN cmake --build /build \
 RUN cmake --install /build --prefix /usr --verbose \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --component sourcemeta_one
+RUN cmake --install /build --prefix /usr --verbose \
+  --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --component sourcemeta_jsonschema
 
 # Linting
 RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
@@ -77,7 +80,7 @@ RUN mkdir -p /usr/share/sourcemeta/one \
 FROM debian:trixie-slim
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  openssl-provider-fips \
+  openssl-provider-fips libcurl4t64 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 
@@ -102,6 +105,8 @@ COPY --from=builder /usr/bin/sourcemeta-one-server \
   /usr/bin/sourcemeta-one-server
 COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
   /usr/bin/sourcemeta-one-server.debug
+COPY --from=builder /usr/bin/jsonschema \
+  /usr/bin/jsonschema
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
@@ -111,6 +116,10 @@ RUN ldd /usr/bin/sourcemeta-one-server
 
 # Verify that the index binary uses system OpenSSL for cryptography
 RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
+# Verify that the index binary links system cURL, and that such cURL
+# routes its cryptography through the same system OpenSSL FIPS provider
+RUN ldd /usr/bin/sourcemeta-one-index | grep libcurl
+RUN ldd /usr/lib/*/libcurl.so.4 | grep libcrypto
 # Verify that the OpenSSL FIPS provider is configured and present
 RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
 RUN test -f /usr/lib/*/ossl-modules/fips.so

@@ -1209,11 +1209,11 @@ the instance. Copying the schemas from the test stage is what forces that
 stage, and therefore the tests, to run as part of the build:
 
 ```docker title="Dockerfile"
-FROM node:24 AS tests
+FROM ghcr.io/sourcemeta/one:<version> AS tests
 WORKDIR /test
 COPY schemas schemas
 COPY test test
-RUN npx --yes @sourcemeta/jsonschema test ./test
+RUN jsonschema test ./test
 
 FROM ghcr.io/sourcemeta/one:<version>
 COPY one.json .

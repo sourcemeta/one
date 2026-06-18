@@ -1,12 +1,8 @@
-FROM debian:trixie AS tests
-RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  nodejs npm && apt-get clean && rm -rf /var/lib/apt/lists/*
+FROM one AS tests
 WORKDIR /test
-COPY --from=root package.json package-lock.json ./
-RUN npm ci
 COPY schemas schemas
 COPY test test
-RUN npx --no-install jsonschema test ./test
+RUN jsonschema test ./test
 
 FROM one
 COPY one.json .

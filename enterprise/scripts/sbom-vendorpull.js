@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const LICENSES = {
   "core": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "blaze": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",

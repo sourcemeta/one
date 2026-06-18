@@ -5,11 +5,12 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
 set(CONFIGURATION_SCHEMA "${CMAKE_CURRENT_SOURCE_DIR}/schema")
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/template.h"
-  COMMAND "${JSONSCHEMA_BIN}" compile
+  COMMAND "$<TARGET_FILE:jsonschema_cli>" compile
     --include CONFIGURATION
     "${CONFIGURATION_SCHEMA}/configuration.json"
     > "${CMAKE_CURRENT_BINARY_DIR}/template.h"
   DEPENDS
+    jsonschema_cli
     "${CONFIGURATION_SCHEMA}/configuration.json"
     "${CONFIGURATION_SCHEMA}/collection.json"
     "${CONFIGURATION_SCHEMA}/contents.json"

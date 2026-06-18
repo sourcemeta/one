@@ -40,9 +40,8 @@ message(STATUS "Sourcemeta One edition: ${ONE_EDITION}")
 
 find_package(Core REQUIRED)
 find_package(Blaze REQUIRED)
-find_program(JSONSCHEMA_BIN NAMES jsonschema
-  PATHS "${PROJECT_SOURCE_DIR}/node_modules/.bin"
-  NO_DEFAULT_PATH REQUIRED)
+find_package(JSONBinPack REQUIRED)
+find_package(JSONSchema REQUIRED)
 
 include(GNUInstallDirs)
 

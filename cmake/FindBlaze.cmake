@@ -1,8 +1,6 @@
 if(NOT Blaze_FOUND)
   set(BLAZE_INSTALL OFF CACHE BOOL "disable installation")
-  set(BLAZE_CODEGEN OFF CACHE BOOL "Codegen")
   set(BLAZE_DOCUMENTATION OFF CACHE BOOL "Documentation")
-  set(BLAZE_TEST OFF CACHE BOOL "Test runner")
   add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/blaze")
   set(Blaze_FOUND ON)
 endif()
