@@ -85,6 +85,7 @@ ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/path $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh enterprise/e2e/auth $(EDITION) $(SANDBOX_PORT)
 endif
 
 .PHONY: docker
@@ -101,6 +102,7 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
+	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
 endif
 
 .PHONY: docker-benchmark
