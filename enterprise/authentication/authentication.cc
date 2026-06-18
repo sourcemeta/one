@@ -4,6 +4,7 @@
 
 #include "authentication_format.h"
 
+#include <algorithm>     // std::ranges::all_of
 #include <cstddef>       // std::byte, std::size_t
 #include <cstdint>       // std::uint32_t, std::uint64_t
 #include <cstdlib>       // std::getenv
@@ -16,6 +17,7 @@
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <utility>       // std::move
 
 namespace {
@@ -192,6 +194,28 @@ auto admits_apikey(const std::span<const std::byte> metadata,
   return false;
 }
 
+auto collect_keys(const std::span<const std::byte> metadata,
+                  std::unordered_set<std::string_view> &keys) -> void {
+  std::size_t cursor{0};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::uint32_t length{0};
+    if (!read_u32(metadata, cursor, length) ||
+        metadata.size() - cursor < length) {
+      return;
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor),
+                 length);
+    cursor += length;
+  }
+}
+
 } // namespace
 
 namespace sourcemeta::one {
@@ -327,6 +351,62 @@ struct Authentication::Impl {
     return false;
   }
 
+  struct Audience {
+    bool is_public;
+    std::unordered_set<std::string_view> keys;
+  };
+
+  [[nodiscard]] auto audience(const std::string_view registry_path) const
+      -> Audience {
+    Audience result{.is_public = false, .keys = {}};
+    const auto governing{this->match(registry_path)};
+    if (governing == 0) {
+      return result;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      if ((governing & (PolicySet{1} << index)) == 0) {
+        continue;
+      }
+
+      const auto &entry{policies[index]};
+      const auto type{static_cast<Type>(entry.type)};
+      if (type == Type::Public) {
+        result.is_public = true;
+        return result;
+      }
+
+      if (type == Type::ApiKey && entry.metadata_length > 0) {
+        const std::span<const std::byte> metadata{
+            this->view_->as<std::byte>(entry.metadata_offset),
+            entry.metadata_length};
+        collect_keys(metadata, result.keys);
+      }
+    }
+
+    return result;
+  }
+
+  [[nodiscard]] auto
+  reference_permitted(const std::string_view referrer_path,
+                      const std::string_view referent_path) const -> bool {
+    const auto referent{this->audience(referent_path)};
+    if (referent.is_public) {
+      return true;
+    }
+
+    const auto referrer{this->audience(referrer_path)};
+    if (referrer.is_public) {
+      return false;
+    }
+
+    return std::ranges::all_of(referrer.keys, [&referent](const auto key) {
+      return referent.keys.contains(key);
+    });
+  }
+
   // The trie section bases, resolved from the header once at construction so
   // that matching never re-reads it. They are typed as the internal serialized
   // structures and point into the memory-mapped buffer below, remaining valid
@@ -355,6 +435,12 @@ auto Authentication::admits(const std::string_view registry_path,
                             const std::string_view credential) const
     -> Authentication::Verdict {
   return {.allowed = this->impl_->admits(registry_path, credential)};
+}
+
+auto Authentication::reference_permitted(
+    const std::string_view referrer_path,
+    const std::string_view referent_path) const -> bool {
+  return this->impl_->reference_permitted(referrer_path, referent_path);
 }
 
 } // namespace sourcemeta::one

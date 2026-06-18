@@ -104,6 +104,29 @@ private:
   const char *message_;
 };
 
+class CrossPolicyReferenceError : public std::exception {
+public:
+  CrossPolicyReferenceError(std::string referrer, std::string referent)
+      : referrer_{std::move(referrer)}, referent_{std::move(referent)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "A schema cannot reference a schema behind a stricter "
+           "authentication policy";
+  }
+
+  [[nodiscard]] auto referrer() const noexcept -> const std::string & {
+    return this->referrer_;
+  }
+
+  [[nodiscard]] auto referent() const noexcept -> const std::string & {
+    return this->referent_;
+  }
+
+private:
+  std::string referrer_;
+  std::string referent_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

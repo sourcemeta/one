@@ -28,4 +28,9 @@ auto Authentication::admits(const std::string_view,
   return {.allowed = true};
 }
 
+auto Authentication::reference_permitted(const std::string_view,
+                                         const std::string_view) const -> bool {
+  return true;
+}
+
 } // namespace sourcemeta::one

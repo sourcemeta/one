@@ -45,6 +45,10 @@ public:
   [[nodiscard]] auto admits(std::string_view registry_path,
                             std::string_view credential) const -> Verdict;
 
+  [[nodiscard]] auto reference_permitted(std::string_view referrer_path,
+                                         std::string_view referent_path) const
+      -> bool;
+
 private:
   // The implementation differs by edition and owns the memory-mapped artifact,
   // so it is hidden behind a pointer to keep the binary format out of the

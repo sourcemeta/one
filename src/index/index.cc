@@ -724,6 +724,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
+    std::print(stdout, "error: {}\n  at schema {}\n  with reference {}\n",
+               error.what(), error.referrer(), error.referent());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {
     std::print(stdout,

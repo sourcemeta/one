@@ -295,6 +295,190 @@ TEST(Authentication, public_overrides_apikey_on_shared_path) {
   EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
 }
 
+TEST(Authentication, reference_to_a_public_schema_is_permitted) {
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<std::string_view, 1> secret_paths{{"/secret"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_PUBLIC"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, open_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, secret_paths, keys}}};
+  const auto path{test_path("ref_to_public.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.reference_permitted("/secret/one", "/open/two"));
+  EXPECT_TRUE(authentication.reference_permitted("/open/one", "/open/two"));
+}
+
+TEST(Authentication, public_schema_referencing_an_apikey_schema_is_rejected) {
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<std::string_view, 1> secret_paths{{"/secret"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_LEAK"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, open_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, secret_paths, keys}}};
+  const auto path{test_path("ref_public_to_apikey.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secret/two"));
+}
+
+TEST(Authentication, reference_within_the_same_policy_is_permitted) {
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_SAME"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("ref_same_policy.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(
+      authentication.reference_permitted("/internal/one", "/internal/two"));
+  EXPECT_TRUE(
+      authentication.reference_permitted("/internal/one", "/internal/one"));
+}
+
+TEST(Authentication, reference_across_disjoint_policies_is_rejected) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> alpha_keys{{"ONE_TEST_REF_ALPHA"}};
+  const std::array<std::string_view, 1> beta_keys{{"ONE_TEST_REF_BETA"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, alpha_paths, alpha_keys},
+       {sourcemeta::one::Authentication::Type::ApiKey, beta_paths, beta_keys}}};
+  const auto path{test_path("ref_disjoint.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+}
+
+TEST(Authentication,
+     reference_from_a_narrower_to_a_wider_audience_is_permitted) {
+  const std::array<std::string_view, 1> broad_paths{{"/p"}};
+  const std::array<std::string_view, 1> nested_paths{{"/p/inner"}};
+  const std::array<std::string_view, 1> broad_keys{{"ONE_TEST_REF_BROAD"}};
+  const std::array<std::string_view, 1> nested_keys{{"ONE_TEST_REF_NESTED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, broad_paths, broad_keys},
+       {sourcemeta::one::Authentication::Type::ApiKey, nested_paths,
+        nested_keys}}};
+  const auto path{test_path("ref_narrow_to_wide.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.reference_permitted("/p/one", "/p/inner/two"));
+  EXPECT_FALSE(authentication.reference_permitted("/p/inner/two", "/p/one"));
+}
+
+TEST(Authentication, sharing_one_policy_is_insufficient) {
+  const std::array<std::string_view, 1> broad_paths{{"/p"}};
+  const std::array<std::string_view, 1> alpha_paths{{"/p/alpha"}};
+  const std::array<std::string_view, 1> gamma_paths{{"/p/gamma"}};
+  const std::array<std::string_view, 1> broad_keys{{"ONE_TEST_SHARE_BROAD"}};
+  const std::array<std::string_view, 1> alpha_keys{{"ONE_TEST_SHARE_ALPHA"}};
+  const std::array<std::string_view, 1> gamma_keys{{"ONE_TEST_SHARE_GAMMA"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, broad_paths, broad_keys},
+       {sourcemeta::one::Authentication::Type::ApiKey, alpha_paths, alpha_keys},
+       {sourcemeta::one::Authentication::Type::ApiKey, gamma_paths,
+        gamma_keys}}};
+  const auto path{test_path("ref_shared_policy.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(
+      authentication.reference_permitted("/p/alpha/one", "/p/gamma/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted("/p/gamma/two", "/p/alpha/one"));
+}
+
+TEST(Authentication, reference_from_an_ungoverned_schema_is_permitted) {
+  const std::array<std::string_view, 1> paths{{"/secret"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_UNGOVERNED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("ref_ungoverned_from.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(
+      authentication.reference_permitted("/nowhere/one", "/secret/two"));
+}
+
+TEST(Authentication, reference_to_an_ungoverned_schema_is_rejected) {
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<std::string_view, 1> secret_paths{{"/secret"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_TO_DENY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, open_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, secret_paths, keys}}};
+  const auto path{test_path("ref_to_ungoverned.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/nowhere/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted("/secret/one", "/nowhere/two"));
+}
+
+TEST(Authentication, public_carveout_under_an_apikey_prefix) {
+  const std::array<std::string_view, 1> private_paths{{"/private"}};
+  const std::array<std::string_view, 1> open_paths{{"/private/open"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_CARVEOUT"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, private_paths, keys},
+       {sourcemeta::one::Authentication::Type::Public, open_paths}}};
+  const auto path{test_path("ref_carveout.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.reference_permitted("/private/secret",
+                                                 "/private/open/shared"));
+  EXPECT_FALSE(authentication.reference_permitted("/private/open/shared",
+                                                  "/private/secret"));
+}
+
+TEST(Authentication, reference_honours_shared_environment_variable_names) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> shared_keys{{"ONE_TEST_REF_SHARED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, alpha_paths,
+        shared_keys},
+       {sourcemeta::one::Authentication::Type::ApiKey, beta_paths,
+        shared_keys}}};
+  const auto path{test_path("ref_shared_variable.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_TRUE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+}
+
+TEST(Authentication, reference_distinguishes_sibling_prefix_policies) {
+  const std::array<std::string_view, 1> public_paths{{"/public"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/pub"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_SIBLING_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("ref_sibling_prefix.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.reference_permitted("/public/a", "/pub/b"));
+  EXPECT_TRUE(authentication.reference_permitted("/pub/b", "/public/a"));
+}
+
+TEST(Authentication, reference_permitted_on_a_missing_artifact_is_permitted) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  EXPECT_TRUE(authentication.reference_permitted("/a/one", "/b/two"));
+}
+
 TEST(Authentication, metadata_outside_its_region_denies_everything) {
   setenv("ONE_TEST_KEY_REGION", "region-secret", 1);
   const std::array<std::string_view, 1> public_paths{{"/public"}};
