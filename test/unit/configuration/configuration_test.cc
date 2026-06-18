@@ -800,6 +800,80 @@ TEST(Configuration, authentication_explicit_paths) {
       (std::vector<sourcemeta::core::JSON::String>{"/internal", "/vendor"}));
 }
 
+TEST(Configuration, authentication_apikey_identity) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "paths": [ "/internal" ],
+        "keys": [
+          { "environmentVariable": "ONE_KEY_A" },
+          { "environmentVariable": "ONE_KEY_B" }
+        ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.path, "/tmp/one.json");
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).type,
+            sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey);
+  EXPECT_EQ(configuration.authentication.at(0).paths,
+            (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
+  EXPECT_EQ(
+      configuration.authentication.at(0).keys,
+      (std::vector<sourcemeta::core::JSON::String>{"ONE_KEY_A", "ONE_KEY_B"}));
+}
+
+TEST(Configuration, authentication_rejects_apikey_without_keys) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      { "type": "apiKey", "algorithm": "identity", "paths": [ "/internal" ] }
+    ]
+  })JSON")};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
+}
+
+TEST(Configuration, authentication_rejects_apikey_without_algorithm) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "apiKey",
+        "paths": [ "/internal" ],
+        "keys": [ { "environmentVariable": "ONE_KEY" } ]
+      }
+    ]
+  })JSON")};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
+}
+
+TEST(Configuration, authentication_rejects_apikey_non_identity_algorithm) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "sha256",
+        "paths": [ "/internal" ],
+        "keys": [ { "environmentVariable": "ONE_KEY" } ]
+      }
+    ]
+  })JSON")};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationValidationError);
+}
+
 TEST(Configuration, authentication_rejects_empty_array) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

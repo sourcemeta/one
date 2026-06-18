@@ -979,21 +979,6 @@ struct GENERATE_AUTHENTICATION {
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
-      // The configuration parser constrains the type to the values handled
-      // here
-      assert(entry.type ==
-             sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
-#if !defined(SOURCEMETA_ONE_ENTERPRISE)
-      // The community edition only serves public access covering the whole
-      // registry, so any path other than the root is an enterprise feature
-      if (std::ranges::any_of(entry.paths,
-                              [](const auto &path) { return path != "/"; })) {
-        throw EnterpriseOnlyFeatureError(
-            configuration.path,
-            "Authentication and non-root public paths are only available on "
-            "the enterprise edition");
-      }
-#endif
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
       for (const auto &path : entry.paths) {
@@ -1001,8 +986,36 @@ struct GENERATE_AUTHENTICATION {
       }
 
       policy_paths.push_back(std::move(paths));
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+      // Enterprise records every policy type
+      const auto type{entry.type == sourcemeta::one::Configuration::
+                                        AuthenticationEntry::Type::ApiKey
+                          ? sourcemeta::one::Authentication::Type::ApiKey
+                          : sourcemeta::one::Authentication::Type::Public};
+      policies.push_back({type, policy_paths.back()});
+#else
+      // The community edition only serves public access covering the whole
+      // registry, so any other type or a non-root path is an enterprise
+      // feature
+      if (entry.type !=
+          sourcemeta::one::Configuration::AuthenticationEntry::Type::Public) {
+        throw EnterpriseOnlyFeatureError(
+            configuration.path,
+            "Authentication is only available on the enterprise edition");
+      }
+
+      if (std::ranges::any_of(entry.paths,
+                              [](const auto &path) { return path != "/"; })) {
+        throw EnterpriseOnlyFeatureError(
+            configuration.path,
+            "Authentication and non-root public paths are only available on "
+            "the enterprise edition");
+      }
+
       policies.push_back(
           {sourcemeta::one::Authentication::Type::Public, policy_paths.back()});
+#endif
     }
 
     std::filesystem::create_directories(action.destination.parent_path());

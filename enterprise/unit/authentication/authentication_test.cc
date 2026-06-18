@@ -218,3 +218,31 @@ TEST(Authentication, supports_the_maximum_number_of_policies) {
   EXPECT_TRUE(authentication.admits("/p63/foo", "").allowed);
   EXPECT_FALSE(authentication.admits("/missing", "").allowed);
 }
+
+TEST(Authentication, apikey_policy_denies_every_credential) {
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths}}};
+  const auto path{test_path("apikey_policy.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_FALSE(authentication.admits("/internal", "any-credential").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits("/internal/foo/bar", "secret").allowed);
+}
+
+TEST(Authentication, public_overrides_apikey_on_shared_path) {
+  const std::array<std::string_view, 1> public_paths{{"/internal"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths}}};
+  const auto path{test_path("apikey_shared.bin")};
+  sourcemeta::one::Authentication::save(policies, path);
+
+  // The public policy admits anonymously even though an apiKey policy governs
+  // the same path
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
+}
