@@ -146,12 +146,23 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   if (data.defines("authentication")) {
     for (const auto &entry : data.at("authentication").as_array()) {
       Configuration::AuthenticationEntry parsed;
-      // The schema constrains the type to the values handled here
-      assert(entry.at("type").to_string() == "public");
-      parsed.type = Configuration::AuthenticationEntry::Type::Public;
+      const auto &type{entry.at("type").to_string()};
+      // The schema constrains the type and algorithm to the values handled
+      // here
+      if (type == "apiKey") {
+        parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
+        for (const auto &key : entry.at("keys").as_array()) {
+          parsed.keys.push_back(key.at("environmentVariable").to_string());
+        }
+      } else {
+        assert(type == "public");
+        parsed.type = Configuration::AuthenticationEntry::Type::Public;
+      }
+
       for (const auto &path : entry.at("paths").as_array()) {
         parsed.paths.push_back(path.to_string());
       }
+
       result.authentication.push_back(std::move(parsed));
     }
   }

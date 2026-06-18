@@ -18,7 +18,7 @@ class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
-  enum class Type : std::uint8_t { Public };
+  enum class Type : std::uint8_t { Public, ApiKey };
 
   struct Policy {
     Type type;

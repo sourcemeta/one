@@ -208,7 +208,7 @@ struct Authentication::Impl {
         return true;
       }
 
-      // Policy types beyond public are introduced in a later step
+      // Every other policy type denies access
     }
 
     return false;
