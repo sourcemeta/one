@@ -165,9 +165,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                     policy_metadata.end());
   }
 
-  std::vector<std::byte> buffer(metadata_start +
-                                    static_cast<std::uint32_t>(metadata.size()),
-                                std::byte{0});
+  std::vector<std::byte> buffer(
+      static_cast<std::size_t>(metadata_start) + metadata.size(), std::byte{0});
   std::memcpy(buffer.data(), &header, sizeof(header));
   // The policy table, node, edge, string, and metadata sections are each empty
   // in some valid artifacts, and an empty vector may expose a null data pointer

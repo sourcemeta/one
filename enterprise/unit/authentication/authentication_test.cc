@@ -46,7 +46,7 @@ TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 1;
+  header[4] = 2;
   stream.write(header.data(), header.size());
   stream.close();
 
@@ -65,7 +65,7 @@ TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 1;
+  header[4] = 2;
   header[8] =
       static_cast<char>(sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1);
   header[12] = 1;

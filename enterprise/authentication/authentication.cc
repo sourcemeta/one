@@ -306,19 +306,21 @@ struct Authentication::Impl {
       }
 
       const auto &entry{policies[index]};
-      if (static_cast<Type>(entry.type) == Type::Public) {
-        // Public policies admit anonymously
+      const auto type{static_cast<Type>(entry.type)};
+      if (type == Type::Public) {
         return true;
       }
 
-      std::span<const std::byte> metadata;
-      if (entry.metadata_length > 0) {
-        metadata = {this->view_->as<std::byte>(entry.metadata_offset),
-                    entry.metadata_length};
-      }
+      if (type == Type::ApiKey) {
+        std::span<const std::byte> metadata;
+        if (entry.metadata_length > 0) {
+          metadata = {this->view_->as<std::byte>(entry.metadata_offset),
+                      entry.metadata_length};
+        }
 
-      if (admits_apikey(metadata, credential)) {
-        return true;
+        if (admits_apikey(metadata, credential)) {
+          return true;
+        }
       }
     }
 
