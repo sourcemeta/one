@@ -132,7 +132,7 @@ auto constant_time_equal(const std::string_view left,
     return false;
   }
 
-  unsigned char difference{0};
+  int difference{0};
   for (std::size_t index{0}; index < left.size(); index += 1) {
     difference |= static_cast<unsigned char>(left[index]) ^
                   static_cast<unsigned char>(right[index]);
