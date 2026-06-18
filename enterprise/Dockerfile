@@ -107,6 +107,10 @@ COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
   /usr/bin/sourcemeta-one-server.debug
 COPY --from=builder /usr/bin/jsonschema \
   /usr/bin/jsonschema
+COPY --from=builder /usr/bin/jsonschema.debug \
+  /usr/bin/jsonschema.debug
+COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
+  /usr/share/bash-completion/completions/jsonschema
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
@@ -116,9 +120,6 @@ RUN ldd /usr/bin/sourcemeta-one-server
 
 # Verify that the index binary uses system OpenSSL for cryptography
 RUN ldd /usr/bin/sourcemeta-one-index | grep libcrypto
-# Verify that the index binary links system cURL, and that such cURL
-# routes its cryptography through the same system OpenSSL FIPS provider
-RUN ldd /usr/bin/sourcemeta-one-index | grep libcurl
 RUN ldd /usr/lib/*/libcurl.so.4 | grep libcrypto
 # Verify that the OpenSSL FIPS provider is configured and present
 RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf

@@ -45,6 +45,11 @@ find_package(JSONSchema REQUIRED)
 
 include(GNUInstallDirs)
 
+if(ONE_DEBUG_SYMBOLS)
+  sourcemeta_debug_symbols_extract(jsonschema_cli
+    COMPONENT sourcemeta_jsonschema)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(ONE_VERSION "${PROJECT_VERSION}")
 else()

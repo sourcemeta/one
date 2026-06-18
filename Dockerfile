@@ -75,6 +75,10 @@ COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
   /usr/bin/sourcemeta-one-server.debug
 COPY --from=builder /usr/bin/jsonschema \
   /usr/bin/jsonschema
+COPY --from=builder /usr/bin/jsonschema.debug \
+  /usr/bin/jsonschema.debug
+COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
+  /usr/share/bash-completion/completions/jsonschema
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
