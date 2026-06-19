@@ -1241,6 +1241,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 8
 jsonpath "$.error.code" == -32602
 jsonpath "$.result" not exists
@@ -1261,6 +1262,7 @@ Content-Type: application/json
 HTTP 200
 Content-Type: application/json
 [Asserts]
+jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 9
 jsonpath "$.error.code" == -32602
 jsonpath "$.result" not exists
