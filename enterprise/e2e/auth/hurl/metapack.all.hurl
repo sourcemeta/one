@@ -56,10 +56,12 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# With the right credential the apiKey schema's health is served and validates
+# With the right credential the apiKey schema's health is served and validates,
+# marked private so shared caches do not store it
 GET {{base}}/self/v1/api/schemas/health/private/secret
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Link: </self/v1/schemas/api/schemas/health/response>; rel="describedby"
 [Captures]
@@ -80,6 +82,7 @@ jsonpath "$.valid" == true
 GET {{base}}/self/v1/api/schemas/locations/private/secret
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Link: </self/v1/schemas/api/schemas/locations/response>; rel="describedby"
 [Captures]

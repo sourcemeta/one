@@ -129,21 +129,31 @@ auto RouterAction::artifact_resolve_path(
   }
 
   const auto &authentication{this->dispatcher_.authentication()};
-  const auto verdict{
-      authentication.admits(relative.generic_string(), credential)};
+  const auto registry_path{relative.generic_string()};
+  const auto verdict{authentication.admits(registry_path, credential)};
+  // Nothing is served on a denial or a miss, so report the path as not public
+  // and let any caller that skips the outcome check fall back to a private
+  // caching directive rather than a public one
   if (!verdict.allowed) {
     return {.outcome = ArtifactResolution::Outcome::Denied,
-            .path = std::nullopt};
+            .path = std::nullopt,
+            .is_public = false};
   }
 
   auto located{this->artifact_locate(input, tree, artifact_name)};
   if (!located.has_value()) {
     return {.outcome = ArtifactResolution::Outcome::NotFound,
-            .path = std::nullopt};
+            .path = std::nullopt,
+            .is_public = false};
   }
 
+  // An empty credential admitted here means the path is open to anonymous
+  // callers, otherwise its public reach is checked without the credential
+  const auto is_public{credential.empty() ||
+                       authentication.admits(registry_path, {}).allowed};
   return {.outcome = ArtifactResolution::Outcome::Found,
-          .path = ResolvedArtifact{std::move(located).value()}};
+          .path = ResolvedArtifact{std::move(located).value()},
+          .is_public = is_public};
 }
 
 auto RouterAction::artifact_resolve_path_unauthenticated(

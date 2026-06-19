@@ -18,11 +18,13 @@ WWW-Authenticate: Bearer realm="registry"
 xpath "string(//title)" == "Unauthorized"
 xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
 
-# apiKey schema HTML is served with the credential
+# apiKey schema HTML is served with the credential, marked private so shared
+# caches do not store it
 GET {{base}}/private/secret
 Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 

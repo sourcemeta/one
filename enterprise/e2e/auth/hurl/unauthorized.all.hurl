@@ -65,7 +65,7 @@ jsonpath "$.valid" == true
 GET {{base}}/private/secret.json
 Authorization: Bearer primary-secret-key
 HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -169,7 +169,7 @@ GET {{base}}/private/secret
 Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
