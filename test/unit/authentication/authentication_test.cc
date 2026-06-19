@@ -32,7 +32,7 @@ TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{sourcemeta::one::Authentication::Type::Public, paths}}};
   const auto path{test_path("community_public_root.bin")};
-  sourcemeta::one::Authentication::save(policies, path);
+  sourcemeta::one::Authentication::save(policies, path, path);
 
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);

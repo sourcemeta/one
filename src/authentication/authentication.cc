@@ -14,8 +14,9 @@ namespace sourcemeta::one {
 struct Authentication::Impl {};
 
 auto Authentication::save(const std::span<const Authentication::Policy>,
-                          const std::filesystem::path &path) -> void {
-  sourcemeta::core::write_file(path, std::vector<std::byte>{});
+                          const std::filesystem::path &,
+                          const std::filesystem::path &destination) -> void {
+  sourcemeta::core::write_file(destination, std::vector<std::byte>{});
 }
 
 Authentication::Authentication(const std::filesystem::path &) {}

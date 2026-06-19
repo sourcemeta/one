@@ -298,7 +298,8 @@ struct GENERATE_DEPENDENCIES {
         if (referrer.has_value() && referent.has_value() &&
             !authentication.reference_permitted(referrer.value(),
                                                 referent.value())) {
-          throw CrossPolicyReferenceError(referrer_uri, referent_uri);
+          throw CrossPolicyReferenceError(configuration.path, referrer_uri,
+                                          referent_uri);
         }
       }
     }
@@ -1066,8 +1067,18 @@ struct GENERATE_AUTHENTICATION {
 #endif
     }
 
+    for (const auto &entry : configuration.authentication) {
+      for (const auto &policy_path : entry.paths) {
+        if (!configuration.matches_entry(policy_path)) {
+          throw AuthenticationUnknownPathError(configuration.path,
+                                               std::string{policy_path});
+        }
+      }
+    }
+
     std::filesystem::create_directories(action.destination.parent_path());
-    sourcemeta::one::Authentication::save(policies, action.destination);
+    sourcemeta::one::Authentication::save(policies, configuration.path,
+                                          action.destination);
   }
 };
 

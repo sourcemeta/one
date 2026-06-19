@@ -12,6 +12,7 @@
 #include <filesystem>    // std::filesystem::path
 #include <optional>      // std::optional
 #include <string>        // std::string
+#include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <variant>       // std::variant
@@ -102,6 +103,11 @@ struct Configuration {
     return match != this->entries.cend() &&
            std::get_if<Collection>(&match->second) != nullptr;
   }
+
+  // Whether the given registry path overlaps a declared collection or page,
+  // either by governing one or by sitting within one
+  [[nodiscard]] auto matches_entry(std::string_view registry_path) const
+      -> bool;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;
