@@ -726,15 +726,19 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
-    std::print(stdout, "error: {}\n  at schema {}\n  with reference {}\n",
-               error.what(), error.referrer(), error.referent());
+    std::print(stdout,
+               "error: {}\n  at schema {}\n  with reference {}\n  at path {}\n",
+               error.what(), error.referrer(), error.referent(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationShadowedError &error) {
-    std::print(stdout, "error: {}\n  at scope {}\n  shadowed by {}\n",
-               error.what(), error.scope(), error.shadow());
+    std::print(
+        stdout, "error: {}\n  at scope {}\n  shadowed by {}\n  at path {}\n",
+        error.what(), error.scope(), error.shadow(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationUnknownPathError &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(), error.path());
+    std::print(stdout, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
+               error.scope(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {

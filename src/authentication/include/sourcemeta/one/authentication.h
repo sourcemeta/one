@@ -21,11 +21,17 @@ namespace sourcemeta::one {
 // anyone because a public policy already covers its entire scope
 class AuthenticationShadowedError : public std::exception {
 public:
-  AuthenticationShadowedError(std::string scope, std::string shadow)
-      : scope_{std::move(scope)}, shadow_{std::move(shadow)} {}
+  AuthenticationShadowedError(std::filesystem::path path, std::string scope,
+                              std::string shadow)
+      : path_{std::move(path)}, scope_{std::move(scope)},
+        shadow_{std::move(shadow)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "An apiKey authentication policy is shadowed by a public policy";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
   }
 
   [[nodiscard]] auto scope() const noexcept -> const std::string & {
@@ -37,6 +43,7 @@ public:
   }
 
 private:
+  std::filesystem::path path_;
   std::string scope_;
   std::string shadow_;
 };
@@ -58,7 +65,8 @@ public:
   };
 
   static auto save(std::span<const Policy> policies,
-                   const std::filesystem::path &path) -> void;
+                   const std::filesystem::path &configuration,
+                   const std::filesystem::path &destination) -> void;
 
   explicit Authentication(const std::filesystem::path &path);
   ~Authentication();

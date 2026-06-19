@@ -38,10 +38,11 @@ EOF
   > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
-cat << 'EOF' > "$TMP/expected.txt"
+cat << EOF > "$TMP/expected.txt"
 error: An apiKey authentication policy is shadowed by a public policy
   at scope /internal
   shadowed by /
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

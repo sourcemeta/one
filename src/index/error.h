@@ -106,12 +106,18 @@ private:
 
 class CrossPolicyReferenceError : public std::exception {
 public:
-  CrossPolicyReferenceError(std::string referrer, std::string referent)
-      : referrer_{std::move(referrer)}, referent_{std::move(referent)} {}
+  CrossPolicyReferenceError(std::filesystem::path path, std::string referrer,
+                            std::string referent)
+      : path_{std::move(path)}, referrer_{std::move(referrer)},
+        referent_{std::move(referent)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "A schema cannot reference a schema behind a stricter "
            "authentication policy";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
   }
 
   [[nodiscard]] auto referrer() const noexcept -> const std::string & {
@@ -123,24 +129,31 @@ public:
   }
 
 private:
+  std::filesystem::path path_;
   std::string referrer_;
   std::string referent_;
 };
 
 class AuthenticationUnknownPathError : public std::exception {
 public:
-  AuthenticationUnknownPathError(std::string path) : path_{std::move(path)} {}
+  AuthenticationUnknownPathError(std::filesystem::path path, std::string scope)
+      : path_{std::move(path)}, scope_{std::move(scope)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "An authentication policy path matches no collection or page";
   }
 
-  [[nodiscard]] auto path() const noexcept -> const std::string & {
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
   }
 
+  [[nodiscard]] auto scope() const noexcept -> const std::string & {
+    return this->scope_;
+  }
+
 private:
-  std::string path_;
+  std::filesystem::path path_;
+  std::string scope_;
 };
 
 } // namespace sourcemeta::one

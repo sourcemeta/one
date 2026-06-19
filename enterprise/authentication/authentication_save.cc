@@ -81,7 +81,8 @@ auto path_covers(const std::string_view ancestor,
 namespace sourcemeta::one {
 
 auto Authentication::save(std::span<const Authentication::Policy> policies,
-                          const std::filesystem::path &path) -> void {
+                          const std::filesystem::path &configuration,
+                          const std::filesystem::path &destination) -> void {
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
   if (policies.size() > Authentication::MAXIMUM_POLICIES) {
@@ -130,7 +131,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     }
 
     if (fully_shadowed) {
-      throw AuthenticationShadowedError(std::string{shadowed},
+      throw AuthenticationShadowedError(configuration, std::string{shadowed},
                                         std::string{shadow});
     }
   }
@@ -251,7 +252,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                 metadata.size());
   }
 
-  sourcemeta::core::write_file(path, buffer);
+  sourcemeta::core::write_file(destination, buffer);
 }
 
 } // namespace sourcemeta::one

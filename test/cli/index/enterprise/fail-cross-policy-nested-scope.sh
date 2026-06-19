@@ -53,6 +53,7 @@ cat << EOF > "$TMP/expected.txt"
 error: A schema cannot reference a schema behind a stricter authentication policy
   at schema http://localhost:8000/p/inner/deep
   with reference http://localhost:8000/p/shallow
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
