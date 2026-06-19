@@ -14,6 +14,7 @@
 
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t, std::ptrdiff_t
+#include <cstdint>     // std::uint64_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
 #include <iterator>    // std::ranges::distance
@@ -42,20 +43,23 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json,
     -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
 
-  std::size_t offset{0};
+  std::uint64_t offset{0};
   const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
     const auto cursor_input{params->at("cursor").to_string()};
     if (!cursor_input.empty()) {
       const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
-      if (!parsed.has_value()) {
+      // A cursor must parse and align to a page boundary. Reject before the
+      // catalog scan so a malformed cursor cannot force the O(N) walk
+      if (!parsed.has_value() ||
+          parsed.value() % MCP_RESOURCES_PAGE_SIZE != 0) {
         return sourcemeta::core::jsonrpc_make_error(
             &id, -32602, "Invalid resource list cursor",
             sourcemeta::core::JSON{
                 "Use the `nextCursor` returned by a prior resources/list "
                 "response, or omit it to start from the beginning"});
       }
-      offset = static_cast<std::size_t>(parsed.value());
+      offset = parsed.value();
     }
   }
 
@@ -64,7 +68,7 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json,
   // as the search surface does
   const auto &authentication{this->dispatcher().authentication()};
   auto resources{sourcemeta::core::JSON::make_array()};
-  std::size_t admitted{0};
+  std::uint64_t admitted{0};
   this->search_view_.for_each(
       0, this->search_view_.count(),
       [this, credential, &authentication, &resources, &admitted,
@@ -87,8 +91,10 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json,
             static_cast<double>(entry.priority) / 100.0));
       });
 
-  if (offset != 0 &&
-      (offset % MCP_RESOURCES_PAGE_SIZE != 0 || offset >= admitted)) {
+  // The alignment of a non-zero cursor is already validated above. A cursor
+  // past the end of the filtered catalog is out of range, though zero is always
+  // valid even when the catalog is empty
+  if (offset != 0 && offset >= admitted) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, -32602, "Invalid resource list cursor",
         sourcemeta::core::JSON{

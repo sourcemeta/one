@@ -1200,3 +1200,67 @@ jsonpath "$.result.resources[8].description" == "Sourcemeta One's list of MCP to
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[8].size" == 4495
 jsonpath "$.result.resources[8].annotations.priority" == 0.0
+
+# A cursor that is not aligned to a page boundary is rejected before the catalog
+# is scanned, so a malformed cursor cannot force a full scan.
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "resources/list",
+  "params": { "cursor": "7" }
+}
+```
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 7
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource list cursor"
+jsonpath "$.error.data" == "Use the `nextCursor` returned by a prior resources/list response, or omit it to start from the beginning"
+jsonpath "$.result" not exists
+
+# A page-aligned cursor past the end of the filtered catalog is out of range.
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "resources/list",
+  "params": { "cursor": "5000" }
+}
+```
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$.id" == 8
+jsonpath "$.error.code" == -32602
+jsonpath "$.result" not exists
+
+# A non-numeric cursor is rejected outright.
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "resources/list",
+  "params": { "cursor": "abc" }
+}
+```
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$.id" == 9
+jsonpath "$.error.code" == -32602
+jsonpath "$.result" not exists
