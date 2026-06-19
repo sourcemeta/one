@@ -37,6 +37,7 @@ WWW-Authenticate: Bearer realm="registry"
 GET {{base}}/self/v1/api/list/private
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
@@ -88,6 +89,7 @@ GET {{base}}/private/
 Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 

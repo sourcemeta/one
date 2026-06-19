@@ -32,11 +32,12 @@ Access-Control-Allow-Origin: *
   "detail": "This resource requires authentication"
 }
 
-# The primary key admits the apiKey schema
+# The primary key admits the apiKey schema, and the response is marked private
+# so that shared caches do not store it
 GET {{base}}/private/secret.json
 Authorization: Bearer primary-secret-key
 HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -60,6 +61,7 @@ header "ETag" exists
 GET {{base}}/private/secret.json
 Authorization: Bearer secondary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 [Asserts]
@@ -95,6 +97,7 @@ WWW-Authenticate: Bearer realm="registry"
 GET {{base}}/reports/quarterly.json
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -117,6 +120,7 @@ WWW-Authenticate: Bearer realm="registry"
 GET {{base}}/internal/config.json
 Authorization: Bearer internal-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 {
@@ -149,10 +153,12 @@ header "ETag" exists
   "type": "boolean"
 }
 
-# Public access wins even when a credential is also supplied
+# Public access wins even when a credential is also supplied, so the response
+# stays publicly cacheable
 GET {{base}}/private/open/shared.json
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
 [Asserts]
 jsonpath "$.type" == "boolean"

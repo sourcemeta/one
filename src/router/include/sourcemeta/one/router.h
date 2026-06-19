@@ -50,6 +50,9 @@ struct ArtifactResolution {
   enum class Outcome : std::uint8_t { Found, NotFound, Denied };
   Outcome outcome{Outcome::NotFound};
   std::optional<ResolvedArtifact> path;
+  // Whether the path is served to anonymous callers, as opposed to admitted
+  // only because the caller presented a matching credential
+  bool is_public{true};
 };
 
 class RouterAction {
@@ -110,6 +113,15 @@ public:
                                            std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> ArtifactResolution;
+
+  // The caching directive for served registry content. A response admitted
+  // only via a credential must not be stored by shared caches, so it is
+  // marked private rather than public
+  [[nodiscard]] static auto content_cache_control(const bool is_public) noexcept
+      -> std::string_view {
+    return is_public ? "public, max-age=0, must-revalidate"
+                     : "private, max-age=0, must-revalidate";
+  }
 
   [[nodiscard]] auto artifact_read_json(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON>;

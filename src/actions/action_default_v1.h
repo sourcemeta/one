@@ -113,11 +113,12 @@ public:
         }
         if (root_html.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Found) {
-          this->artifact_serve(
-              root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
-              {}, {}, HTML_BROWSER_SECURITY, request, response,
-              this->error_schema_, "public, max-age=0, must-revalidate",
-              "Accept, Accept-Encoding");
+          this->artifact_serve(root_html.path.value(),
+                               sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+                               HTML_BROWSER_SECURITY, request, response,
+                               this->error_schema_,
+                               this->content_cache_control(root_html.is_public),
+                               "Accept, Accept-Encoding");
           return;
         }
       }
@@ -158,14 +159,16 @@ public:
           this->artifact_serve(
               schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
               {}, {}, HTML_BROWSER_SECURITY, request, response,
-              this->error_schema_, "public, max-age=0, must-revalidate",
+              this->error_schema_,
+              this->content_cache_control(schema_html.is_public),
               "Accept, Accept-Encoding");
         } else if (directory_html.outcome ==
                    sourcemeta::one::ArtifactResolution::Outcome::Found) {
           this->artifact_serve(
               directory_html.path.value(), sourcemeta::core::HTTP_STATUS_OK,
               false, {}, {}, HTML_BROWSER_SECURITY, request, response,
-              this->error_schema_, "public, max-age=0, must-revalidate",
+              this->error_schema_,
+              this->content_cache_control(directory_html.is_public),
               "Accept, Accept-Encoding");
         } else {
           const auto not_found{this->artifact_resolve_path_unauthenticated(

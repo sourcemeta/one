@@ -95,7 +95,7 @@ public:
     this->artifact_serve(
         resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
         this->response_schema_, {}, request, response, this->error_schema_,
-        "public, max-age=0, must-revalidate", "Accept-Encoding");
+        this->content_cache_control(resolution.is_public), "Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,

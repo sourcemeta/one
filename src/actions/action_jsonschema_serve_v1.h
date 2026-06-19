@@ -87,7 +87,8 @@ public:
         resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true,
         is_deno ? std::string_view{"application/json"} : std::string_view{}, {},
         {}, request, response, error_schema,
-        "public, max-age=0, must-revalidate", "User-Agent, Accept-Encoding");
+        self.content_cache_control(resolution.is_public),
+        "User-Agent, Accept-Encoding");
   }
 
   auto rest(const std::span<std::string_view> matches,
