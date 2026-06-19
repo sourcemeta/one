@@ -82,7 +82,7 @@ Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This part of the registry requires authentication"
+xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
 
 GET {{base}}/private/
 Accept: text/html

@@ -180,8 +180,8 @@ auto RouterAction::artifact_serve(
     const std::string_view mime, const std::string_view link,
     const BrowserSecurityHeaders &browser_security, HTTPRequest &request,
     HTTPResponse &response, const std::string_view error_schema,
-    const std::string_view cache_control, const std::string_view vary,
-    const bool authentication_challenge) const -> void {
+    const std::string_view cache_control, const std::string_view vary) const
+    -> void {
   const auto &absolute_path{artifact.path()};
   // Caller must pick the cache scope explicitly so no surface
   // silently inherits an inappropriate default. Cacheability is a
@@ -333,12 +333,11 @@ auto RouterAction::artifact_serve(
 
   response.write_status(status);
 
-  // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. This serves
-  // the HTML unauthorized page, so it travels with the same bearer challenge
-  // the JSON error envelope emits. The conditional-request short-circuits above
-  // answer 304, never 401, so they need no challenge.
+  // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. The
+  // conditional-request short-circuits above answer 304, never 401, so tying
+  // the challenge to the status keeps it correct by construction.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
-  if (authentication_challenge) {
+  if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
     response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
   }
 

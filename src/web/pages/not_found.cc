@@ -1,14 +1,12 @@
 #include <sourcemeta/one/web.h>
 
-#include "../helpers.h"
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <chrono>     // std::chrono
-#include <filesystem> // std::filesystem
+#include <chrono> // std::chrono
 
 namespace sourcemeta::one {
 
@@ -20,24 +18,11 @@ auto GENERATE_WEB_NOT_FOUND::handler(
     const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto &canonical{configuration.url};
-  const auto title{"Not Found"};
-  const auto description{"What you are looking for is not here"};
   sourcemeta::core::HTMLWriter writer;
-  html::make_page(writer, configuration, canonical, title, description,
-                  [&](sourcemeta::core::HTMLWriter &w) {
-                    w.div().attribute("class", "container-fluid p-4");
-                    w.h2().attribute("class", "fw-bold");
-                    w.text("Oops! What you are looking for is not here");
-                    w.close();
-                    w.p().attribute("class", "lead");
-                    w.text("Are you sure the link you got is correct?");
-                    w.close();
-                    w.a().attribute("href", "/");
-                    w.text("Get back to the home page");
-                    w.close();
-                    w.close();
-                  });
+  html::make_error_page(writer, configuration, "Not Found",
+                        "What you are looking for is not here",
+                        "Oops! What you are looking for is not here",
+                        "Are you sure the link you got is correct?");
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
   metapack_write_text(action.destination, writer.str(),

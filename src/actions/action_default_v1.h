@@ -168,21 +168,11 @@ public:
               this->error_schema_, "public, max-age=0, must-revalidate",
               "Accept, Accept-Encoding");
         } else {
-          const auto not_found{this->artifact_resolve_path(
-              credential, "", Tree::Explorer, "404")};
-          if (not_found.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-            sourcemeta::one::json_error_unauthorized(request, response,
-                                                     this->error_schema_, "*");
-            return;
-          }
-          if (not_found.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Found) {
-            // The 404 HTML page is itself an error response, so it
-            // travels with the same `no-store` discipline as the
-            // JSON Problem Details errors.
+          const auto not_found{this->artifact_resolve_path_unauthenticated(
+              "", Tree::Explorer, "404")};
+          if (not_found.has_value()) {
             this->artifact_serve(
-                not_found.path.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+                not_found.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND,
                 false, {}, {}, HTML_BROWSER_SECURITY, request, response,
                 this->error_schema_, "no-store", "Accept, Accept-Encoding");
           } else {
@@ -244,12 +234,6 @@ public:
   }
 
 private:
-  // A denied HTML navigation is answered with the index-time 401 page rather
-  // than the JSON envelope, carrying the same `no-store` discipline and bearer
-  // challenge. The page is resolved through the unauthenticated escape, since
-  // the caller is by definition not admitted and the page itself sits at the
-  // (possibly protected) root. A headless build has no page, so fall back to
-  // the JSON error.
   auto serve_unauthorized_html(
       const sourcemeta::one::RouterAction::BrowserSecurityHeaders
           &browser_security,
@@ -261,7 +245,7 @@ private:
       this->artifact_serve(
           unauthorized.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
           false, {}, {}, browser_security, request, response,
-          this->error_schema_, "no-store", "Accept, Accept-Encoding", true);
+          this->error_schema_, "no-store", "Accept, Accept-Encoding");
       return;
     }
 
