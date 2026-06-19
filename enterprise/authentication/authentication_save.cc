@@ -1,4 +1,5 @@
 #include <sourcemeta/one/authentication.h>
+#include <sourcemeta/one/shared_path.h>
 
 #include <sourcemeta/core/io.h>
 
@@ -132,8 +133,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     for (const auto &policy_path : policies[index].paths) {
       std::uint32_t current{0};
       std::size_t cursor{0};
-      for (auto segment{next_segment(policy_path, cursor)}; !segment.empty();
-           segment = next_segment(policy_path, cursor)) {
+      for (auto segment{path_next_segment(policy_path, cursor)};
+           !segment.empty(); segment = path_next_segment(policy_path, cursor)) {
         current = find_or_create_child(nodes, current, segment);
       }
 

@@ -1069,20 +1069,7 @@ struct GENERATE_AUTHENTICATION {
 
     for (const auto &entry : configuration.authentication) {
       for (const auto &policy_path : entry.paths) {
-        bool matched{
-            sourcemeta::one::Authentication::path_covers(policy_path, "")};
-        for (const auto &content : configuration.entries) {
-          const auto target{content.first.generic_string()};
-          if (sourcemeta::one::Authentication::path_covers(policy_path,
-                                                           target) ||
-              sourcemeta::one::Authentication::path_covers(target,
-                                                           policy_path)) {
-            matched = true;
-            break;
-          }
-        }
-
-        if (!matched) {
+        if (!configuration.matches_entry(policy_path)) {
           throw AuthenticationUnknownPathError(configuration.path,
                                                std::string{policy_path});
         }

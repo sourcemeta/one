@@ -1,6 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME configuration
   PRIVATE_HEADERS error.h
-  SOURCES parse.cc read.cc resolve_schema.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
+  SOURCES parse.cc read.cc resolve_schema.cc matches_entry.cc "${CMAKE_CURRENT_BINARY_DIR}/template.h")
 
 set(CONFIGURATION_SCHEMA "${CMAKE_CURRENT_SOURCE_DIR}/schema")
 
@@ -25,3 +25,4 @@ target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_configuration PUBLIC sourcemeta::blaze::output)
 target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::blaze::evaluator)
 target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta::core::io)
+target_link_libraries(sourcemeta_one_configuration PRIVATE sourcemeta_one_shared)
