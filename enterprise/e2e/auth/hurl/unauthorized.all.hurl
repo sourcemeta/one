@@ -146,7 +146,8 @@ xpath "string(//title)" == "Unauthorized"
 xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
 xpath "string(//p[@class='lead'])" == "Present a valid credential to access it"
 
-# HTML, a credential the policy does not admit: still the 401 page
+# HTML, a credential the policy does not admit: the byte-identical 401 page, so
+# the response never reveals that a credential was presented at all
 GET {{base}}/private/secret
 Accept: text/html
 Authorization: Bearer not-the-key
@@ -154,9 +155,14 @@ HTTP 401
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept, Accept-Encoding
 [Asserts]
 xpath "string(//title)" == "Unauthorized"
 xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//p[@class='lead'])" == "Present a valid credential to access it"
 
 # HTML, with the admitting credential: the real schema page, never the 401 page
 GET {{base}}/private/secret
