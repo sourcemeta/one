@@ -64,18 +64,6 @@ auto encode_apikey_metadata(
   return result;
 }
 
-// Whether the first path equals the second or is one of its parent segments,
-// so that a policy on the first governs everything under the second
-auto path_covers(const std::string_view ancestor,
-                 const std::string_view descendant) -> bool {
-  if (ancestor == descendant || ancestor == "/") {
-    return true;
-  }
-
-  return descendant.size() > ancestor.size() &&
-         descendant.starts_with(ancestor) && descendant[ancestor.size()] == '/';
-}
-
 } // namespace
 
 namespace sourcemeta::one {
@@ -108,7 +96,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
         }
 
         for (const auto prefix : other.paths) {
-          if (path_covers(prefix, scope)) {
+          if (authentication_path_covers(prefix, scope)) {
             covering = prefix;
             break;
           }

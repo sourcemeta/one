@@ -17,9 +17,56 @@
 
 namespace sourcemeta::one {
 
+// Advance the cursor to the next non-empty path segment and return it. The
+// returned view is empty once the path is exhausted. Leading, trailing, and
+// repeated slashes are ignored, so "/a/b", "a/b", and "a/b/" all yield the
+// segments "a" then "b"
+inline auto authentication_next_segment(const std::string_view path,
+                                        std::size_t &cursor) noexcept
+    -> std::string_view {
+  while (cursor < path.size() && path[cursor] == '/') {
+    cursor += 1;
+  }
+
+  if (cursor >= path.size()) {
+    return {};
+  }
+
+  const auto start{cursor};
+  while (cursor < path.size() && path[cursor] != '/') {
+    cursor += 1;
+  }
+
+  return {path.data() + start, cursor - start};
+}
+
+// Whether the first path equals the second or is one of its parent segments,
+// so that a policy on the first governs everything under the second. The
+// comparison is segment by segment, matching how the policy trie is built, so
+// trailing or repeated slashes do not change the outcome
+inline auto
+authentication_path_covers(const std::string_view ancestor,
+                           const std::string_view descendant) noexcept -> bool {
+  std::size_t ancestor_cursor{0};
+  std::size_t descendant_cursor{0};
+  while (true) {
+    const auto ancestor_segment{
+        authentication_next_segment(ancestor, ancestor_cursor)};
+    if (ancestor_segment.empty()) {
+      return true;
+    }
+
+    if (authentication_next_segment(descendant, descendant_cursor) !=
+        ancestor_segment) {
+      return false;
+    }
+  }
+}
+
 // Raised when saving a policy set in which an apiKey policy can never deny
 // anyone because a public policy already covers its entire scope
-class AuthenticationShadowedError : public std::exception {
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationShadowedError
+    : public std::exception {
 public:
   AuthenticationShadowedError(std::filesystem::path path, std::string scope,
                               std::string shadow)
@@ -46,6 +93,31 @@ private:
   std::filesystem::path path_;
   std::string scope_;
   std::string shadow_;
+};
+
+// Raised when an authentication policy is scoped to a path that matches no
+// declared collection or page
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationUnknownPathError
+    : public std::exception {
+public:
+  AuthenticationUnknownPathError(std::filesystem::path path, std::string scope)
+      : path_{std::move(path)}, scope_{std::move(scope)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy path matches no collection or page";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto scope() const noexcept -> const std::string & {
+    return this->scope_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string scope_;
 };
 
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {

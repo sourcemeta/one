@@ -311,6 +311,19 @@ TEST(Authentication, save_rejects_apikey_fully_shadowed_by_public) {
                sourcemeta::one::AuthenticationShadowedError);
 }
 
+TEST(Authentication,
+     save_rejects_apikey_shadowed_by_public_with_trailing_slash) {
+  const std::array<std::string_view, 1> public_paths{{"/internal/"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/internal/secret"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_DEAD_SLASH"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("apikey_shadowed_slash.bin")};
+  EXPECT_THROW(sourcemeta::one::Authentication::save(policies, path, path),
+               sourcemeta::one::AuthenticationShadowedError);
+}
+
 TEST(Authentication, reference_to_a_public_schema_is_permitted) {
   const std::array<std::string_view, 1> open_paths{{"/open"}};
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};

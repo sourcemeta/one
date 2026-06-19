@@ -1,9 +1,8 @@
 #ifndef SOURCEMETA_ONE_AUTHENTICATION_FORMAT_H_
 #define SOURCEMETA_ONE_AUTHENTICATION_FORMAT_H_
 
-#include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint32_t, std::uint64_t, std::uint8_t
-#include <string_view> // std::string_view
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint32_t, std::uint64_t, std::uint8_t
 
 namespace sourcemeta::one {
 
@@ -60,29 +59,6 @@ static_assert(alignof(AuthenticationNode) == 8);
 static_assert(sizeof(AuthenticationEdge) == 12);
 static_assert(sizeof(AuthenticationPolicyEntry) == 12);
 static_assert(alignof(AuthenticationPolicyEntry) == 4);
-
-// Advance the cursor to the next non-empty path segment and return it. The
-// returned view is empty once the path is exhausted. Leading, trailing, and
-// repeated slashes are ignored, so "/a/b", "a/b", and "a/b/" all yield the
-// segments "a" then "b"
-inline auto authentication_next_segment(const std::string_view path,
-                                        std::size_t &cursor) noexcept
-    -> std::string_view {
-  while (cursor < path.size() && path[cursor] == '/') {
-    cursor += 1;
-  }
-
-  if (cursor >= path.size()) {
-    return {};
-  }
-
-  const auto start{cursor};
-  while (cursor < path.size() && path[cursor] != '/') {
-    cursor += 1;
-  }
-
-  return {path.data() + start, cursor - start};
-}
 
 } // namespace sourcemeta::one
 
