@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME shared
-  PRIVATE_HEADERS encoding.h path.h version.h
+  PRIVATE_HEADERS encoding.h version.h
   SOURCES version.cc configure.h.in)
 
 if(ONE_ENTERPRISE)
