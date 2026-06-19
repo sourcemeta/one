@@ -278,9 +278,8 @@ struct Authentication::Impl {
     PolicySet result{nodes[0].mask};
     std::uint32_t current{0};
     std::size_t cursor{0};
-    for (auto segment{authentication_next_segment(registry_path, cursor)};
-         !segment.empty();
-         segment = authentication_next_segment(registry_path, cursor)) {
+    for (auto segment{next_segment(registry_path, cursor)}; !segment.empty();
+         segment = next_segment(registry_path, cursor)) {
       const auto &node{nodes[current]};
 
       // A node's edges are serialized contiguously and sorted by segment, so

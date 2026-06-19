@@ -96,7 +96,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
         }
 
         for (const auto prefix : other.paths) {
-          if (authentication_path_covers(prefix, scope)) {
+          if (path_covers(prefix, scope)) {
             covering = prefix;
             break;
           }
@@ -132,9 +132,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     for (const auto &policy_path : policies[index].paths) {
       std::uint32_t current{0};
       std::size_t cursor{0};
-      for (auto segment{authentication_next_segment(policy_path, cursor)};
-           !segment.empty();
-           segment = authentication_next_segment(policy_path, cursor)) {
+      for (auto segment{next_segment(policy_path, cursor)}; !segment.empty();
+           segment = next_segment(policy_path, cursor)) {
         current = find_or_create_child(nodes, current, segment);
       }
 
