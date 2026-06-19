@@ -11,11 +11,11 @@ target_compile_definitions(sourcemeta_one_configuration_unit
 set(CONFIGURATION_SCHEMA "${PROJECT_SOURCE_DIR}/src/configuration/schema")
 
 add_test(NAME one.configuration.schema COMMAND
-  "${JSONSCHEMA_BIN}" test --extension .test.json
+  "$<TARGET_FILE:jsonschema_cli>" test --extension .test.json
   "${CMAKE_CURRENT_SOURCE_DIR}/configuration.test.json")
 add_test(NAME one.configuration.schema.fmt COMMAND
-  "${JSONSCHEMA_BIN}" fmt --check "${CONFIGURATION_SCHEMA}")
+  "$<TARGET_FILE:jsonschema_cli>" fmt --check "${CONFIGURATION_SCHEMA}")
 add_test(NAME one.configuration.schema.metaschema COMMAND
-  "${JSONSCHEMA_BIN}" metaschema "${CONFIGURATION_SCHEMA}")
+  "$<TARGET_FILE:jsonschema_cli>" metaschema "${CONFIGURATION_SCHEMA}")
 add_test(NAME one.configuration.schema.lint COMMAND
-  "${JSONSCHEMA_BIN}" lint "${CONFIGURATION_SCHEMA}")
+  "$<TARGET_FILE:jsonschema_cli>" lint "${CONFIGURATION_SCHEMA}")

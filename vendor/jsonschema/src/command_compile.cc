@@ -1,0 +1,210 @@
+#include <sourcemeta/blaze/bundle.h>
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/core/io.h>
+#include <sourcemeta/core/json.h>
+#include <sourcemeta/core/regex.h>
+#include <sourcemeta/core/yaml.h>
+
+#include <sourcemeta/blaze/compiler.h>
+
+#include <algorithm> // std::transform
+#include <cctype>    // std::toupper
+#include <iomanip>   // std::hex, std::setw, std::setfill
+#include <iostream>  // std::cerr, std::cout
+#include <sstream>   // std::ostringstream
+
+#include "command.h"
+#include "configuration.h"
+#include "error.h"
+#include "resolver.h"
+#include "utils.h"
+
+auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
+    -> void {
+  if (options.positional().size() < 1) {
+    throw PositionalArgumentError{"This command expects a path to a schema",
+                                  "jsonschema compile path/to/schema.json"};
+  }
+
+  validate_http_headers(options);
+
+  const auto &schema_path{options.positional().at(0)};
+  const auto configuration_path{find_configuration(schema_path)};
+  const auto &configuration{
+      read_configuration(options, configuration_path, schema_path)};
+  const auto dialect{default_dialect(options, configuration)};
+
+  auto parsed_schema{read_file(schema_path)};
+
+  if (!sourcemeta::blaze::is_schema(parsed_schema.document)) {
+    throw NotSchemaError{schema_path};
+  }
+
+  const auto &schema{parsed_schema.document};
+
+  const auto fast_mode{options.contains("fast")};
+  const auto &custom_resolver{
+      resolver(options, options.contains("http"), dialect, configuration)};
+  const auto schema_default_id{sourcemeta::jsonschema::default_id(schema_path)};
+
+  sourcemeta::blaze::Template schema_template;
+  try {
+    if (options.contains("entrypoint") && !options.at("entrypoint").empty()) {
+      const sourcemeta::core::JSON bundled{sourcemeta::blaze::bundle(
+          schema, sourcemeta::blaze::schema_walker, custom_resolver,
+          sourcemeta::blaze::BundleMode::References, dialect,
+          schema_default_id)};
+
+      sourcemeta::blaze::SchemaFrame frame{
+          sourcemeta::blaze::SchemaFrame::Mode::References};
+      frame.analyse(bundled, sourcemeta::blaze::schema_walker, custom_resolver,
+                    dialect, schema_default_id);
+
+      std::string entrypoint_uri;
+      try {
+        entrypoint_uri =
+            resolve_entrypoint(frame, options.at("entrypoint").front());
+      } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
+        throw sourcemeta::core::FileError<
+            sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_path, error);
+      }
+
+      schema_template = sourcemeta::blaze::compile(
+          bundled, sourcemeta::blaze::schema_walker, custom_resolver,
+          sourcemeta::blaze::default_schema_compiler, frame, entrypoint_uri,
+          fast_mode ? sourcemeta::blaze::Mode::FastValidation
+                    : sourcemeta::blaze::Mode::Exhaustive,
+          sourcemeta::jsonschema::format_assertion_tweaks(options));
+    } else {
+      schema_template = sourcemeta::blaze::compile(
+          schema, sourcemeta::blaze::schema_walker, custom_resolver,
+          sourcemeta::blaze::default_schema_compiler,
+          fast_mode ? sourcemeta::blaze::Mode::FastValidation
+                    : sourcemeta::blaze::Mode::Exhaustive,
+          dialect, schema_default_id, "",
+          sourcemeta::jsonschema::format_assertion_tweaks(options));
+    }
+  } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_path, error);
+  } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::CompilerInvalidRegexError>(schema_path, error);
+  } catch (
+      const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(schema_path,
+                                                                  error);
+  } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
+        schema_path, error);
+  } catch (const sourcemeta::blaze::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>(
+        schema_path, error);
+  } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaAnchorCollisionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::SchemaAnchorCollisionError>(schema_path, error);
+  } catch (
+      const sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError>(schema_path,
+                                                                    error);
+  } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaResolutionError>(
+        schema_path, error);
+  } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::SchemaUnknownBaseDialectError>(schema_path);
+  } catch (const sourcemeta::blaze::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::SchemaUnknownDialectError>(schema_path);
+  } catch (const sourcemeta::blaze::SchemaVocabularyError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaVocabularyError>(
+        schema_path, error.uri(), error.what());
+  } catch (const sourcemeta::blaze::SchemaError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaError>(
+        schema_path, error.what());
+  }
+
+  const auto template_json{sourcemeta::blaze::to_json(schema_template)};
+
+  if (options.contains("include") && !options.at("include").empty()) {
+    std::string name{options.at("include").front()};
+
+    static const auto IDENTIFIER_PATTERN{
+        sourcemeta::core::to_regex("^[A-Za-z_][A-Za-z0-9_]*$")};
+    if (!IDENTIFIER_PATTERN.has_value() ||
+        !sourcemeta::core::matches(IDENTIFIER_PATTERN.value(), name)) {
+      throw InvalidIncludeIdentifier{name};
+    }
+
+    std::transform(name.begin(), name.end(), name.begin(),
+                   [](unsigned char character) -> unsigned char {
+                     return static_cast<unsigned char>(std::toupper(character));
+                   });
+
+    std::ostringstream json_stream;
+    sourcemeta::core::stringify(template_json, json_stream);
+    const auto json_data{std::move(json_stream).str()};
+
+    constexpr auto BYTES_PER_LINE{12};
+
+    std::cout << "#ifndef SOURCEMETA_JSONSCHEMA_INCLUDE_" << name << "_H_\n";
+    std::cout << "#define SOURCEMETA_JSONSCHEMA_INCLUDE_" << name << "_H_\n";
+    std::cout << "\n";
+    std::cout << "#ifdef __cplusplus\n";
+    std::cout << "#include <cstddef>\n";
+    std::cout << "#include <string_view>\n";
+    std::cout << "#endif\n";
+    std::cout << "\n";
+    std::cout << "static const char " << name << "_DATA[] = {";
+
+    for (std::size_t index = 0; index < json_data.size(); ++index) {
+      if (index % BYTES_PER_LINE == 0) {
+        std::cout << "\n  ";
+      }
+
+      std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
+                << (static_cast<unsigned int>(
+                       static_cast<unsigned char>(json_data[index])));
+
+      std::cout << ",";
+      if ((index + 1) % BYTES_PER_LINE != 0) {
+        std::cout << " ";
+      }
+    }
+
+    if (json_data.size() % BYTES_PER_LINE != 0) {
+      std::cout << "0x00";
+    } else {
+      std::cout << "\n  0x00";
+    }
+
+    std::cout << "\n};\n";
+    std::cout << "\n";
+    std::cout << std::dec;
+    std::cout << "static const unsigned int " << name
+              << "_LENGTH = " << json_data.size() << ";\n";
+    std::cout << "\n";
+    std::cout << "#ifdef __cplusplus\n";
+    std::cout << "static constexpr std::string_view " << name << "{" << name
+              << "_DATA, " << name << "_LENGTH};\n";
+    std::cout << "#endif\n";
+    std::cout << "\n";
+    std::cout << "#endif\n";
+  } else if (options.contains("minify")) {
+    sourcemeta::core::stringify(template_json, std::cout);
+    std::cout << "\n";
+  } else {
+    sourcemeta::core::prettify(template_json, std::cout);
+    std::cout << "\n";
+  }
+}

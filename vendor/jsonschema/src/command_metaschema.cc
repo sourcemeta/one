@@ -1,0 +1,156 @@
+#include <sourcemeta/blaze/bundle.h>
+#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/core/io.h>
+#include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonpointer.h>
+
+#include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/output.h>
+
+#include <cassert>  // assert
+#include <iostream> // std::cout, std::cerr
+#include <map>      // std::map
+#include <string>   // std::string
+
+#include "command.h"
+#include "configuration.h"
+#include "error.h"
+#include "input.h"
+#include "logger.h"
+#include "resolver.h"
+#include "utils.h"
+
+auto sourcemeta::jsonschema::metaschema(
+    const sourcemeta::core::Options &options) -> void {
+  validate_http_headers(options);
+  const auto trace{options.contains("trace")};
+  const auto json_output{options.contains("json")};
+
+  bool result{true};
+  sourcemeta::blaze::Evaluator evaluator;
+
+  std::map<std::string, sourcemeta::blaze::Template> cache;
+
+  for (const auto &entry : for_each_json(options)) {
+    if (!sourcemeta::blaze::is_schema(entry.second)) {
+      throw NotSchemaError{entry.from_stdin ? stdin_path()
+                                            : entry.resolution_base};
+    }
+
+    const auto configuration_path{find_configuration(entry.resolution_base)};
+    const auto &configuration{
+        read_configuration(options, configuration_path, entry.resolution_base)};
+    const auto default_dialect_option{default_dialect(options, configuration)};
+
+    const auto &custom_resolver{resolver(options, options.contains("http"),
+                                         default_dialect_option,
+                                         configuration)};
+
+    try {
+      const auto dialect{
+          sourcemeta::blaze::dialect(entry.second, default_dialect_option)};
+      if (dialect.empty()) {
+        throw sourcemeta::core::FileError<
+            sourcemeta::blaze::SchemaUnknownBaseDialectError>(
+            entry.resolution_base);
+      }
+
+      const auto metaschema{sourcemeta::blaze::metaschema(
+          entry.second, custom_resolver, default_dialect_option)};
+      const sourcemeta::core::JSON bundled{sourcemeta::blaze::bundle(
+          metaschema, sourcemeta::blaze::schema_walker, custom_resolver,
+          sourcemeta::blaze::BundleMode::References, default_dialect_option)};
+      sourcemeta::blaze::SchemaFrame frame{
+          sourcemeta::blaze::SchemaFrame::Mode::References};
+      frame.analyse(bundled, sourcemeta::blaze::schema_walker, custom_resolver,
+                    default_dialect_option);
+
+      if (!cache.contains(std::string{dialect})) {
+        const auto metaschema_template{sourcemeta::blaze::compile(
+            bundled, sourcemeta::blaze::schema_walker, custom_resolver,
+            sourcemeta::blaze::default_schema_compiler, frame, frame.root(),
+            sourcemeta::blaze::Mode::Exhaustive,
+            sourcemeta::jsonschema::format_assertion_tweaks(options))};
+        cache.insert({std::string{dialect}, metaschema_template});
+      }
+
+      if (trace) {
+        sourcemeta::blaze::TraceOutput output{
+            sourcemeta::blaze::schema_walker, custom_resolver,
+            trace_callback(entry.positions, std::cout),
+            sourcemeta::core::empty_weak_pointer, frame};
+        result = evaluator.validate(cache.at(std::string{dialect}),
+                                    entry.second, std::ref(output));
+      } else if (json_output) {
+        // Otherwise its impossible to correlate the output
+        // when validating i.e. a directory of schemas
+        std::cerr << entry.first << "\n";
+        const auto output{sourcemeta::blaze::standard(
+            evaluator, cache.at(std::string{dialect}), entry.second,
+            sourcemeta::blaze::StandardOutput::Basic, entry.positions)};
+        assert(output.is_object());
+        assert(output.defines("valid"));
+        assert(output.at("valid").is_boolean());
+        if (!output.at("valid").to_boolean()) {
+          result = false;
+        }
+
+        sourcemeta::core::prettify(output, std::cout);
+        std::cout << "\n";
+      } else {
+        sourcemeta::blaze::SimpleOutput output{entry.second};
+        if (evaluator.validate(cache.at(std::string{dialect}), entry.second,
+                               std::ref(output))) {
+          LOG_VERBOSE(options)
+              << "ok: " << entry.first << "\n  matches " << dialect << "\n";
+        } else {
+          std::cerr << "fail: " << entry.first << "\n";
+          print(output, entry.positions, std::cerr);
+          result = false;
+        }
+      }
+    } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidRegexError>(entry.resolution_base,
+                                                        error);
+    } catch (
+        const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
+          entry.resolution_base, error);
+    } catch (const sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError
+                 &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError>(
+          entry.resolution_base, error);
+    } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaResolutionError>(entry.resolution_base,
+                                                    error);
+    } catch (const sourcemeta::blaze::SchemaVocabularyError &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaVocabularyError>(entry.resolution_base,
+                                                    error.uri(), error.what());
+    } catch (const sourcemeta::blaze::SchemaUnknownDialectError &) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaUnknownDialectError>(entry.resolution_base);
+    } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
+      const auto position{entry.positions.get(error.location())};
+      if (position.has_value()) {
+        throw PositionError<sourcemeta::core::FileError<
+            sourcemeta::blaze::SchemaAnchorCollisionError>>(
+            std::get<0>(position.value()), std::get<1>(position.value()),
+            entry.resolution_base, error);
+      }
+
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::SchemaAnchorCollisionError>(entry.resolution_base,
+                                                         error);
+    }
+  }
+
+  if (!result) {
+    throw Fail{EXIT_EXPECTED_FAILURE};
+  }
+}

@@ -39,6 +39,9 @@ RUN cmake --build /build \
 RUN cmake --install /build --prefix /usr --verbose \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --component sourcemeta_one
+RUN cmake --install /build --prefix /usr --verbose \
+  --config ${SOURCEMETA_ONE_BUILD_TYPE} \
+  --component sourcemeta_jsonschema
 
 # Linting
 RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
@@ -70,6 +73,12 @@ COPY --from=builder /usr/bin/sourcemeta-one-server \
   /usr/bin/sourcemeta-one-server
 COPY --from=builder /usr/bin/sourcemeta-one-server.debug \
   /usr/bin/sourcemeta-one-server.debug
+COPY --from=builder /usr/bin/jsonschema \
+  /usr/bin/jsonschema
+COPY --from=builder /usr/bin/jsonschema.debug \
+  /usr/bin/jsonschema.debug
+COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
+  /usr/share/bash-completion/completions/jsonschema
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 
