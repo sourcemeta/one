@@ -39,6 +39,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./configuration.json
 ./explorer
 ./explorer/%
+./explorer/%/401.metapack
 ./explorer/%/404.metapack
 ./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack

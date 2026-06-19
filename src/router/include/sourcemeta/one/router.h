@@ -121,8 +121,8 @@ public:
                       const BrowserSecurityHeaders &browser_security,
                       HTTPRequest &request, HTTPResponse &response,
                       std::string_view error_schema,
-                      std::string_view cache_control,
-                      std::string_view vary) const -> void;
+                      std::string_view cache_control, std::string_view vary,
+                      bool authentication_challenge = false) const -> void;
 
   [[nodiscard]] auto
   schema_evaluate_fast(std::string_view credential, std::string_view schema_uri,

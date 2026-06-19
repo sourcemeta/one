@@ -8,12 +8,15 @@ HTTP 200
 [Asserts]
 header "Content-Type" contains "text/html"
 
-# apiKey schema HTML is denied without a credential
+# apiKey schema HTML is denied without a credential, rendering the 401 page
 GET {{base}}/private/secret
 Accept: text/html
 HTTP 401
-Content-Type: application/problem+json
+Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+xpath "string(//title)" == "Unauthorized"
+xpath "string(//h2[@class='fw-bold'])" == "This part of the registry requires authentication"
 
 # apiKey schema HTML is served with the credential
 GET {{base}}/private/secret
@@ -30,9 +33,11 @@ HTTP 200
 [Asserts]
 header "Content-Type" contains "text/html"
 
-# A browser request (HTML preferred) for an apiKey schema is still denied
+# A browser request (HTML preferred) for an apiKey schema renders the 401 page
 GET {{base}}/private/secret
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 HTTP 401
-Content-Type: application/problem+json
+Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+xpath "string(//title)" == "Unauthorized"

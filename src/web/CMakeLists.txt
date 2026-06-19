@@ -3,7 +3,8 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME web
     pages/index.cc
     pages/directory.cc
     pages/schema.cc
-    pages/not_found.cc)
+    pages/not_found.cc
+    pages/unauthorized.cc)
 
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)

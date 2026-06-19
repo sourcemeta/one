@@ -107,8 +107,8 @@ public:
             credential, "", Tree::Explorer, "directory-html")};
         if (root_html.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-          sourcemeta::one::json_error_unauthorized(request, response,
-                                                   this->error_schema_, "*");
+          this->serve_unauthorized_html(HTML_BROWSER_SECURITY, request,
+                                        response);
           return;
         }
         if (root_html.outcome ==
@@ -148,8 +148,8 @@ public:
                 sourcemeta::one::ArtifactResolution::Outcome::Denied ||
             directory_html.outcome ==
                 sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-          sourcemeta::one::json_error_unauthorized(request, response,
-                                                   this->error_schema_, "*");
+          this->serve_unauthorized_html(HTML_BROWSER_SECURITY, request,
+                                        response);
           return;
         }
         if (!path.ends_with("/") &&
@@ -244,6 +244,31 @@ public:
   }
 
 private:
+  // A denied HTML navigation is answered with the index-time 401 page rather
+  // than the JSON envelope, carrying the same `no-store` discipline and bearer
+  // challenge. The page is resolved through the unauthenticated escape, since
+  // the caller is by definition not admitted and the page itself sits at the
+  // (possibly protected) root. A headless build has no page, so fall back to
+  // the JSON error.
+  auto serve_unauthorized_html(
+      const sourcemeta::one::RouterAction::BrowserSecurityHeaders
+          &browser_security,
+      sourcemeta::one::HTTPRequest &request,
+      sourcemeta::one::HTTPResponse &response) -> void {
+    const auto unauthorized{
+        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "401")};
+    if (unauthorized.has_value()) {
+      this->artifact_serve(
+          unauthorized.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
+          false, {}, {}, browser_security, request, response,
+          this->error_schema_, "no-store", "Accept, Accept-Encoding", true);
+      return;
+    }
+
+    sourcemeta::one::json_error_unauthorized(request, response,
+                                             this->error_schema_, "*");
+  }
+
   std::string_view error_schema_;
 };
 
