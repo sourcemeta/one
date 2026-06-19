@@ -333,6 +333,14 @@ auto RouterAction::artifact_serve(
 
   response.write_status(status);
 
+  // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. The
+  // conditional-request short-circuits above answer 304, never 401, so tying
+  // the challenge to the status keeps it correct by construction.
+  // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
+  if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
+    response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
+  }
+
   // To support requests from web browsers
   if (enable_cors) {
     response.write_header("Access-Control-Allow-Origin", "*");

@@ -10,7 +10,7 @@
 
 namespace sourcemeta::one {
 
-auto GENERATE_WEB_NOT_FOUND::handler(
+auto GENERATE_WEB_UNAUTHORIZED::handler(
     const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
@@ -19,10 +19,10 @@ auto GENERATE_WEB_NOT_FOUND::handler(
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   sourcemeta::core::HTMLWriter writer;
-  html::make_error_page(writer, configuration, "Not Found",
-                        "What you are looking for is not here",
-                        "Oops! What you are looking for is not here",
-                        "Are you sure the link you got is correct?");
+  html::make_error_page(writer, configuration, "Unauthorized",
+                        "This page requires authentication",
+                        "This page requires authentication",
+                        "Present a valid credential to access it");
   const auto timestamp_end{std::chrono::steady_clock::now()};
 
   metapack_write_text(action.destination, writer.str(),

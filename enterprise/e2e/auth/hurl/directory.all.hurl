@@ -74,12 +74,15 @@ HTTP 401
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 
-# The HTML rendering of an apiKey directory is gated just like the JSON API
+# The HTML rendering of an apiKey directory is gated, rendering the 401 page
 GET {{base}}/private/
 Accept: text/html
 HTTP 401
-Content-Type: application/problem+json
+Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+xpath "string(//title)" == "Unauthorized"
+xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
 
 GET {{base}}/private/
 Accept: text/html

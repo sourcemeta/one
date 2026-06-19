@@ -209,6 +209,28 @@ inline auto make_page(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
+inline auto make_error_page(sourcemeta::core::HTMLWriter &writer,
+                            const Configuration &configuration,
+                            const std::string &title,
+                            const std::string &description,
+                            const std::string &heading, const std::string &lead)
+    -> void {
+  make_page(writer, configuration, configuration.url, title, description,
+            [&](sourcemeta::core::HTMLWriter &body) {
+              body.div().attribute("class", "container-fluid p-4");
+              body.h2().attribute("class", "fw-bold");
+              body.text(heading);
+              body.close();
+              body.p().attribute("class", "lead");
+              body.text(lead);
+              body.close();
+              body.a().attribute("href", configuration.url);
+              body.text("Get back to the home page");
+              body.close();
+              body.close();
+            });
+}
+
 } // namespace sourcemeta::one::html
 
 #endif
