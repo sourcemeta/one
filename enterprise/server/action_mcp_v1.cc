@@ -10,9 +10,11 @@
 
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
+#include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t, std::ptrdiff_t
+#include <cstdint>     // std::uint64_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
 #include <iterator>    // std::ranges::distance
@@ -25,34 +27,74 @@
 namespace {
 
 constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{"application/schema+json"};
+constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
+
+const auto MCP_HASH_RESOURCES{
+    sourcemeta::core::JSON::Object::hash("resources")};
+const auto MCP_HASH_NEXT_CURSOR{
+    sourcemeta::core::JSON::Object::hash("nextCursor")};
 
 } // namespace
 
 namespace sourcemeta::one::enterprise {
 
-auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
-    const -> sourcemeta::core::JSON {
+auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json,
+                                     const std::string_view credential)
+    -> sourcemeta::core::JSON {
   const auto &id{request_json.at("id")};
 
-  std::string cursor_key{"0"};
+  std::uint64_t offset{0};
   const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
   if (params != nullptr && params->defines("cursor")) {
     const auto cursor_input{params->at("cursor").to_string()};
     if (!cursor_input.empty()) {
       const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
-      if (!parsed.has_value()) {
+      // A cursor must parse and align to a page boundary. Reject before the
+      // catalog scan so a malformed cursor cannot force the O(N) walk
+      if (!parsed.has_value() ||
+          parsed.value() % MCP_RESOURCES_PAGE_SIZE != 0) {
         return sourcemeta::core::jsonrpc_make_error(
             &id, -32602, "Invalid resource list cursor",
             sourcemeta::core::JSON{
                 "Use the `nextCursor` returned by a prior resources/list "
                 "response, or omit it to start from the beginning"});
       }
-      cursor_key = std::to_string(parsed.value());
+      offset = parsed.value();
     }
   }
 
-  const auto &resources{this->mcp_metadata_.at("resources")};
-  if (!resources.defines(cursor_key)) {
+  // The pages are not pre-baked: a caller only sees the schemas it is admitted
+  // to, so the list is filtered against its credential at request time, exactly
+  // as the search surface does
+  const auto &authentication{this->dispatcher().authentication()};
+  auto resources{sourcemeta::core::JSON::make_array()};
+  std::uint64_t admitted{0};
+  this->search_view_.for_each(
+      0, this->search_view_.count(),
+      [this, credential, &authentication, &resources, &admitted,
+       offset](const sourcemeta::one::SearchListEntry &entry) -> void {
+        if (!authentication.admits(entry.path, credential).allowed) {
+          return;
+        }
+
+        const auto position{admitted++};
+        if (position < offset || position >= offset + MCP_RESOURCES_PAGE_SIZE) {
+          return;
+        }
+
+        std::string uri{this->allowed_origin_};
+        uri.append(entry.path);
+        resources.push_back(sourcemeta::core::mcp_make_resource(
+            uri, entry.title.empty() ? entry.path : entry.title,
+            MCP_TEMPLATE_MIME_TYPE, entry.description,
+            static_cast<std::size_t>(entry.bytes_raw),
+            static_cast<double>(entry.priority) / 100.0));
+      });
+
+  // The alignment of a non-zero cursor is already validated above. A cursor
+  // past the end of the filtered catalog is out of range, though zero is always
+  // valid even when the catalog is empty
+  if (offset != 0 && offset >= admitted) {
     return sourcemeta::core::jsonrpc_make_error(
         &id, -32602, "Invalid resource list cursor",
         sourcemeta::core::JSON{
@@ -60,7 +102,16 @@ auto ActionMCP_v1::on_resources_list(const sourcemeta::core::JSON &request_json)
             "response, or omit it to start from the beginning"});
   }
 
-  return sourcemeta::core::jsonrpc_make_success(id, resources.at(cursor_key));
+  auto page{sourcemeta::core::JSON::make_object()};
+  page.assign_assume_new("resources", std::move(resources), MCP_HASH_RESOURCES);
+  if (offset + MCP_RESOURCES_PAGE_SIZE < admitted) {
+    page.assign_assume_new("nextCursor",
+                           sourcemeta::core::JSON{std::to_string(
+                               offset + MCP_RESOURCES_PAGE_SIZE)},
+                           MCP_HASH_NEXT_CURSOR);
+  }
+
+  return sourcemeta::core::jsonrpc_make_success(id, std::move(page));
 }
 
 auto ActionMCP_v1::on_initialize(const sourcemeta::core::JSON &request_json)
@@ -260,7 +311,7 @@ auto ActionMCP_v1::process_one(
     return this->on_tools_list(version, request_json);
   }
   if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-    return this->on_resources_list(request_json);
+    return this->on_resources_list(request_json, credential);
   }
   if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
     return this->on_resources_read(request_json, credential);

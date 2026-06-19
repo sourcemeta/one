@@ -11,7 +11,6 @@
 #include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/actions.h>
-#include <sourcemeta/one/search.h>
 
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t
@@ -57,43 +56,6 @@ auto load_custom_lint_rules(
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaUnknownBaseDialectError>(rule_path);
     }
-  }
-}
-
-auto generate_mcp_resources(const std::filesystem::path &search_metapack_path,
-                            const sourcemeta::one::Configuration &configuration,
-                            const std::size_t page_size,
-                            sourcemeta::core::JSON &resources) -> void {
-  sourcemeta::one::SearchView search_view{search_metapack_path};
-  const auto total{search_view.count()};
-  const auto page_count{total == 0 ? std::size_t{1}
-                                   : (total + page_size - 1) / page_size};
-
-  for (std::size_t page_index{0}; page_index < page_count; ++page_index) {
-    const auto offset{page_index * page_size};
-    auto page{sourcemeta::core::JSON::make_object()};
-    auto entries{sourcemeta::core::JSON::make_array()};
-
-    search_view.for_each(
-        offset, page_size,
-        [&entries, &configuration](
-            const sourcemeta::one::SearchListEntry &entry) -> void {
-          std::string uri{configuration.origin};
-          uri.append(entry.path);
-
-          entries.push_back(sourcemeta::core::mcp_make_resource(
-              uri, entry.title.empty() ? entry.path : entry.title,
-              "application/schema+json", entry.description,
-              static_cast<std::size_t>(entry.bytes_raw),
-              static_cast<double>(entry.priority) / 100.0));
-        });
-
-    page.assign("resources", std::move(entries));
-    if (page_index + 1 < page_count) {
-      page.assign("nextCursor",
-                  sourcemeta::core::JSON{std::to_string(offset + page_size)});
-    }
-    resources.assign(std::to_string(offset), std::move(page));
   }
 }
 
