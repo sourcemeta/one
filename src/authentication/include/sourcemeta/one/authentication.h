@@ -7,12 +7,39 @@
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
+#include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 
 namespace sourcemeta::one {
+
+// Raised when saving a policy set in which an apiKey policy can never deny
+// anyone because a public policy already covers its entire scope
+class AuthenticationShadowedError : public std::exception {
+public:
+  AuthenticationShadowedError(std::string scope, std::string shadow)
+      : scope_{std::move(scope)}, shadow_{std::move(shadow)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An apiKey authentication policy is shadowed by a public policy";
+  }
+
+  [[nodiscard]] auto scope() const noexcept -> const std::string & {
+    return this->scope_;
+  }
+
+  [[nodiscard]] auto shadow() const noexcept -> const std::string & {
+    return this->shadow_;
+  }
+
+private:
+  std::string scope_;
+  std::string shadow_;
+};
 
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:

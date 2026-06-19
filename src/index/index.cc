@@ -729,6 +729,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at schema {}\n  with reference {}\n",
                error.what(), error.referrer(), error.referent());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationShadowedError &error) {
+    std::print(stdout, "error: {}\n  at scope {}\n  shadowed by {}\n",
+               error.what(), error.scope(), error.shadow());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationUnknownPathError &error) {
+    std::print(stdout, "error: {}\n  at path {}\n", error.what(), error.path());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {
     std::print(stdout,

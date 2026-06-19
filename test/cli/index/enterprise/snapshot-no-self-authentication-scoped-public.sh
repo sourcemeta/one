@@ -12,7 +12,7 @@ cat << EOF > "$TMP/one.json"
   "url": "https://example.com",
   "html": {},
   "authentication": [
-    { "type": "public", "paths": [ "/internal" ] }
+    { "type": "public", "paths": [ "/test" ] }
   ],
   "contents": {
     "test": {

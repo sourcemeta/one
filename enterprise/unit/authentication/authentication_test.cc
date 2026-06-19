@@ -279,20 +279,36 @@ TEST(Authentication, apikey_denies_uncovered_path) {
   EXPECT_FALSE(authentication.admits("/other", "scoped-secret").allowed);
 }
 
-TEST(Authentication, public_overrides_apikey_on_shared_path) {
+TEST(Authentication, public_carveout_overrides_apikey) {
   setenv("ONE_TEST_KEY_SHARED", "shared-secret", 1);
-  const std::array<std::string_view, 1> public_paths{{"/internal"}};
   const std::array<std::string_view, 1> apikey_paths{{"/internal"}};
+  const std::array<std::string_view, 1> public_paths{{"/internal/open"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHARED"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
-      {{sourcemeta::one::Authentication::Type::Public, public_paths},
-       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
-  const auto path{test_path("apikey_shared.bin")};
+      {{sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys},
+       {sourcemeta::one::Authentication::Type::Public, public_paths}}};
+  const auto path{test_path("apikey_carveout.bin")};
   sourcemeta::one::Authentication::save(policies, path);
 
   const sourcemeta::one::Authentication authentication{path};
-  // The public policy admits anonymously even without a credential
-  EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
+  // The public carve-out admits anonymously on its subtree
+  EXPECT_TRUE(authentication.admits("/internal/open/foo", "").allowed);
+  // The rest of the apiKey scope still requires the credential
+  EXPECT_FALSE(authentication.admits("/internal/secret", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits("/internal/secret", "shared-secret").allowed);
+}
+
+TEST(Authentication, save_rejects_apikey_fully_shadowed_by_public) {
+  const std::array<std::string_view, 1> public_paths{{"/"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_DEAD"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("apikey_shadowed.bin")};
+  EXPECT_THROW(sourcemeta::one::Authentication::save(policies, path),
+               sourcemeta::one::AuthenticationShadowedError);
 }
 
 TEST(Authentication, reference_to_a_public_schema_is_permitted) {

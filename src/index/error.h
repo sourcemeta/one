@@ -127,6 +127,22 @@ private:
   std::string referent_;
 };
 
+class AuthenticationUnknownPathError : public std::exception {
+public:
+  AuthenticationUnknownPathError(std::string path) : path_{std::move(path)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy path matches no collection or page";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::string & {
+    return this->path_;
+  }
+
+private:
+  std::string path_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

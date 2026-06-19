@@ -64,6 +64,18 @@ auto encode_apikey_metadata(
   return result;
 }
 
+// Whether the first path equals the second or is one of its parent segments,
+// so that a policy on the first governs everything under the second
+auto path_covers(const std::string_view ancestor,
+                 const std::string_view descendant) -> bool {
+  if (ancestor == descendant || ancestor == "/") {
+    return true;
+  }
+
+  return descendant.size() > ancestor.size() &&
+         descendant.starts_with(ancestor) && descendant[ancestor.size()] == '/';
+}
+
 } // namespace
 
 namespace sourcemeta::one {
@@ -74,6 +86,53 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   // would shift past the width of a PolicySet
   if (policies.size() > Authentication::MAXIMUM_POLICIES) {
     throw std::runtime_error("Too many authentication policies");
+  }
+
+  // An apiKey policy whose entire scope is already covered by a public policy
+  // can never deny anyone, so it is unreachable configuration. A public
+  // carve-out nested deeper inside the apiKey scope is not a cover.
+  for (const auto &candidate : policies) {
+    if (candidate.type != Type::ApiKey) {
+      continue;
+    }
+
+    std::string_view shadowed;
+    std::string_view shadow;
+    bool fully_shadowed{!candidate.paths.empty()};
+    for (const auto scope : candidate.paths) {
+      std::string_view covering;
+      for (const auto &other : policies) {
+        if (other.type != Type::Public) {
+          continue;
+        }
+
+        for (const auto prefix : other.paths) {
+          if (path_covers(prefix, scope)) {
+            covering = prefix;
+            break;
+          }
+        }
+
+        if (!covering.empty()) {
+          break;
+        }
+      }
+
+      if (covering.empty()) {
+        fully_shadowed = false;
+        break;
+      }
+
+      if (shadowed.empty()) {
+        shadowed = scope;
+        shadow = covering;
+      }
+    }
+
+    if (fully_shadowed) {
+      throw AuthenticationShadowedError(std::string{shadowed},
+                                        std::string{shadow});
+    }
   }
 
   std::vector<BuildNode> nodes;

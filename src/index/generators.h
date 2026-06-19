@@ -1066,8 +1066,42 @@ struct GENERATE_AUTHENTICATION {
 #endif
     }
 
+    for (const auto &entry : configuration.authentication) {
+      for (const auto &policy_path : entry.paths) {
+        std::string_view scope{policy_path};
+        if (scope.starts_with('/')) {
+          scope.remove_prefix(1);
+        }
+
+        bool matched{scope.empty()};
+        for (const auto &content : configuration.entries) {
+          const auto target{content.first.generic_string()};
+          if (is_segment_prefix(scope, target) ||
+              is_segment_prefix(target, scope)) {
+            matched = true;
+            break;
+          }
+        }
+
+        if (!matched) {
+          throw AuthenticationUnknownPathError(std::string{policy_path});
+        }
+      }
+    }
+
     std::filesystem::create_directories(action.destination.parent_path());
     sourcemeta::one::Authentication::save(policies, action.destination);
+  }
+
+private:
+  static auto is_segment_prefix(const std::string_view prefix,
+                                const std::string_view path) -> bool {
+    if (prefix.empty() || prefix == path) {
+      return true;
+    }
+
+    return path.size() > prefix.size() && path.starts_with(prefix) &&
+           path[prefix.size()] == '/';
   }
 };
 
