@@ -111,16 +111,20 @@ Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "Content-Length" == "0"
 
-# HEAD is gated exactly like GET
+# HEAD is gated exactly like GET, and per RFC 9110 carries no body
 HEAD {{base}}/self/v1/health
 HTTP 401
 WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+bytes count == 0
 
-# HEAD admitted with the key
+# HEAD admitted with the key, still with no body
 HEAD {{base}}/self/v1/health
 Authorization: Bearer surface-secret-key
 HTTP 200
 Cache-Control: no-store
+[Asserts]
+bytes count == 0
 
 # A CORS preflight carries no credentials and is never gated
 OPTIONS {{base}}/self/v1/health

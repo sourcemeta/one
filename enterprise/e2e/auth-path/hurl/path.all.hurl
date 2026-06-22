@@ -85,17 +85,21 @@ Vary: Accept-Encoding
 header "ETag" exists
 header "Last-Modified" exists
 
-# HEAD is gated exactly like GET
+# HEAD is gated exactly like GET, and per RFC 9110 carries no body
 HEAD {{base}}/registry/self/v1/static/style.min.css
 HTTP 401
 WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+bytes count == 0
 
-# HEAD admitted with the key
+# HEAD admitted with the key, still with no body
 HEAD {{base}}/registry/self/v1/static/style.min.css
 Authorization: Bearer static-secret-key
 HTTP 200
 Content-Type: text/css
 Cache-Control: public, max-age=31536000, immutable
+[Asserts]
+bytes count == 0
 
 # A CORS preflight is never gated, even under the base path
 OPTIONS {{base}}/registry/self/v1/static/style.min.css
