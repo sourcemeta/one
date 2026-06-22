@@ -168,6 +168,148 @@ TEST(Authentication, single_policy_with_multiple_prefixes) {
   EXPECT_FALSE(authentication.admits("/public", "").allowed);
 }
 
+TEST(Authentication, extensionless_policy_covers_every_representation) {
+  const std::array<std::string_view, 1> paths{{"/secret/data"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_REPRESENTATION"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("representation_agnostic.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  setenv("ONE_TEST_KEY_REPRESENTATION", "representation-secret", 1);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // The resource, every representation of it, and its subtree are all governed
+  EXPECT_FALSE(authentication.admits("/secret/data", "").allowed);
+  EXPECT_FALSE(authentication.admits("/secret/data.json", "").allowed);
+  EXPECT_FALSE(authentication.admits("/secret/data.xml", "").allowed);
+  EXPECT_FALSE(authentication.admits("/secret/data/nested", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits("/secret/data", "representation-secret").allowed);
+  EXPECT_TRUE(
+      authentication.admits("/secret/data.json", "representation-secret")
+          .allowed);
+  EXPECT_TRUE(authentication.admits("/secret/data.xml", "representation-secret")
+                  .allowed);
+  EXPECT_TRUE(
+      authentication.admits("/secret/data/nested", "representation-secret")
+          .allowed);
+  // A sibling resource sharing a textual prefix is outside the policy, so even
+  // the key does not admit it (it is governed by no policy at all)
+  EXPECT_FALSE(
+      authentication.admits("/secret/database", "representation-secret")
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits("/secret/data2.json", "representation-secret")
+          .allowed);
+}
+
+TEST(Authentication,
+     extension_specific_policy_covers_only_that_representation) {
+  const std::array<std::string_view, 1> paths{{"/secret/data.json"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SPECIFIC"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::ApiKey, paths, keys}}};
+  const auto path{test_path("representation_specific.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  setenv("ONE_TEST_KEY_SPECIFIC", "specific-secret", 1);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // Only the named representation is gated
+  EXPECT_FALSE(authentication.admits("/secret/data.json", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits("/secret/data.json", "specific-secret").allowed);
+  EXPECT_TRUE(
+      authentication.admits("/secret/data.json/nested", "specific-secret")
+          .allowed);
+  // The bare resource and other representations are outside this policy, so
+  // the key does not admit them either
+  EXPECT_FALSE(
+      authentication.admits("/secret/data", "specific-secret").allowed);
+  EXPECT_FALSE(
+      authentication.admits("/secret/data.xml", "specific-secret").allowed);
+}
+
+TEST(Authentication, extension_handling_is_confined_to_the_terminal_segment) {
+  const std::array<std::string_view, 1> paths{{"/v1"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::Public, paths}}};
+  const auto path{test_path("intermediate_dot.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // The policy on /v1 governs its own subtree
+  EXPECT_TRUE(authentication.admits("/v1", "").allowed);
+  EXPECT_TRUE(authentication.admits("/v1/secret", "").allowed);
+  // As a terminal segment, /v1.0 is a representation of /v1 under the
+  // content-negotiation rule, the same way /person.json represents /person
+  EXPECT_TRUE(authentication.admits("/v1.0", "").allowed);
+  // But as an intermediate segment it is a distinct directory that must not
+  // descend into the /v1 subtree, so its children do not inherit the policy
+  EXPECT_FALSE(authentication.admits("/v1.0/secret", "").allowed);
+}
+
+TEST(Authentication, representation_agnostic_and_specific_policies_compose) {
+  const std::array<std::string_view, 1> resource{{"/docs/page"}};
+  const std::array<std::string_view, 1> representation{{"/docs/page.pdf"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PDF"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, resource},
+       {sourcemeta::one::Authentication::Type::ApiKey, representation, keys}}};
+  const auto path{test_path("representation_compose.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  setenv("ONE_TEST_KEY_PDF", "pdf-secret", 1);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // The public resource policy admits the resource and its representations,
+  // including the pdf, since union semantics let public win over the apiKey
+  EXPECT_TRUE(authentication.admits("/docs/page", "").allowed);
+  EXPECT_TRUE(authentication.admits("/docs/page.html", "").allowed);
+  EXPECT_TRUE(authentication.admits("/docs/page.pdf", "").allowed);
+}
+
+TEST(Authentication, base_path_is_stripped_before_matching) {
+  const std::array<std::string_view, 1> public_paths{{"/public"}};
+  const std::array<std::string_view, 1> apikey_paths{{"/private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BASE"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, public_paths},
+       {sourcemeta::one::Authentication::Type::ApiKey, apikey_paths, keys}}};
+  const auto path{test_path("base_path.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  setenv("ONE_TEST_KEY_BASE", "base-secret", 1);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // With the base path stripped, the registry path under it is matched
+  EXPECT_TRUE(authentication.admits("/registry/public/string", "", "/registry")
+                  .allowed);
+  EXPECT_FALSE(
+      authentication.admits("/registry/private/secret", "", "/registry")
+          .allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits("/registry/private/secret", "base-secret", "/registry")
+          .allowed);
+
+  // An empty base path strips nothing
+  EXPECT_TRUE(authentication.admits("/public/string", "", "").allowed);
+  EXPECT_FALSE(authentication.admits("/private/secret", "", "").allowed);
+
+  // A base path that is not a whole-segment prefix is left in place, so the
+  // path matches no policy and is denied
+  EXPECT_FALSE(
+      authentication.admits("/registryextra/public/string", "", "/registry")
+          .allowed);
+
+  // A request outside the base path is left in place and matches no policy
+  EXPECT_FALSE(
+      authentication.admits("/elsewhere/public/string", "", "/registry")
+          .allowed);
+}
+
 TEST(Authentication, corrupted_section_offset_denies_everything) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
