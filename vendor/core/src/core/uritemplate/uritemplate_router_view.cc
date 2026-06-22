@@ -162,6 +162,83 @@ inline auto binary_search_literal_children(
   return NO_CHILD;
 }
 
+enum class DescribeWalk : std::uint8_t { NoMatch, Captured, Reached };
+
+// Walk the segments of a rooted path fragment through the serialized trie,
+// starting from the given node index. On a successful walk, the node index is
+// advanced to where the fragment ends
+inline auto walk_describe_fragment(const SerializedNode *nodes,
+                                   const std::uint32_t node_count,
+                                   const char *string_table,
+                                   const std::size_t string_table_size,
+                                   std::uint32_t &current_node,
+                                   const std::string_view fragment) noexcept
+    -> DescribeWalk {
+  if (fragment.empty()) {
+    return DescribeWalk::Reached;
+  }
+
+  if (fragment.front() != '/') {
+    return DescribeWalk::NoMatch;
+  }
+
+  const char *position = fragment.data() + 1;
+  const char *const fragment_end = fragment.data() + fragment.size();
+
+  if (position >= fragment_end) {
+    return DescribeWalk::Reached;
+  }
+
+  while (true) {
+    const char *segment_start = position;
+    while (position < fragment_end && *position != '/') {
+      ++position;
+    }
+    const auto segment_length =
+        static_cast<std::uint32_t>(position - segment_start);
+
+    const auto &node = nodes[current_node];
+
+    std::uint32_t literal_match = NO_CHILD;
+    if (node.first_literal_child != NO_CHILD) {
+      if (node.first_literal_child >= node_count ||
+          node.literal_child_count > node_count - node.first_literal_child) {
+        return DescribeWalk::NoMatch;
+      }
+      literal_match = binary_search_literal_children(
+          nodes, string_table, string_table_size, node.first_literal_child,
+          node.literal_child_count, segment_start, segment_length);
+    }
+
+    if (literal_match != NO_CHILD) {
+      current_node = literal_match;
+    } else if (segment_length > 0 && node.variable_child != NO_CHILD) {
+      if (node.variable_child >= node_count) {
+        return DescribeWalk::NoMatch;
+      }
+      const auto &variable_node = nodes[node.variable_child];
+      if (variable_node.string_offset > string_table_size ||
+          variable_node.string_length >
+              string_table_size - variable_node.string_offset) {
+        return DescribeWalk::NoMatch;
+      }
+      if (is_expansion_type(variable_node.type)) {
+        return DescribeWalk::Captured;
+      }
+      current_node = node.variable_child;
+    } else {
+      return DescribeWalk::NoMatch;
+    }
+
+    if (position >= fragment_end) {
+      break;
+    }
+    ++position;
+  }
+
+  return DescribeWalk::Reached;
+}
+
 } // namespace
 
 auto URITemplateRouterView::save(const URITemplateRouter &router,
@@ -605,7 +682,8 @@ auto URITemplateRouterView::match(
 }
 
 auto URITemplateRouterView::describes(
-    const std::string_view path) const noexcept -> bool {
+    const std::string_view path,
+    const std::string_view base_path) const noexcept -> bool {
   if (this->size_ < sizeof(RouterHeader)) {
     return false;
   }
@@ -641,73 +719,35 @@ auto URITemplateRouterView::describes(
   const auto string_table_size =
       header->arguments_offset - header->string_table_offset;
 
-  const auto &root = nodes[0];
-  const bool root_describes = root.identifier != 0 ||
-                              root.first_literal_child != NO_CHILD ||
-                              root.variable_child != NO_CHILD;
-
-  if (path.empty()) {
-    return root_describes;
-  }
-
-  if (path.front() != '/') {
-    return false;
-  }
-
-  const char *position = path.data() + 1;
-  const char *const path_end = path.data() + path.size();
-
-  if (position >= path_end) {
-    return root_describes;
-  }
-
   std::uint32_t current_node = 0;
 
-  while (true) {
-    const char *segment_start = position;
-    while (position < path_end && *position != '/') {
-      ++position;
-    }
-    const auto segment_length =
-        static_cast<std::uint32_t>(position - segment_start);
-
-    const auto &node = nodes[current_node];
-
-    std::uint32_t literal_match = NO_CHILD;
-    if (node.first_literal_child != NO_CHILD) {
-      if (node.first_literal_child >= node_count ||
-          node.literal_child_count > node_count - node.first_literal_child) {
+  if (!base_path.empty()) {
+    switch (walk_describe_fragment(nodes, node_count, string_table,
+                                   string_table_size, current_node,
+                                   base_path)) {
+      case DescribeWalk::NoMatch:
         return false;
-      }
-      literal_match = binary_search_literal_children(
-          nodes, string_table, string_table_size, node.first_literal_child,
-          node.literal_child_count, segment_start, segment_length);
-    }
-
-    if (literal_match != NO_CHILD) {
-      current_node = literal_match;
-    } else if (segment_length > 0 && node.variable_child != NO_CHILD) {
-      if (node.variable_child >= node_count) {
-        return false;
-      }
-      const auto &variable_node = nodes[node.variable_child];
-      if (variable_node.string_offset > string_table_size ||
-          variable_node.string_length >
-              string_table_size - variable_node.string_offset) {
-        return false;
-      }
-      if (is_expansion_type(variable_node.type)) {
+      case DescribeWalk::Captured:
         return true;
-      }
-      current_node = node.variable_child;
-    } else {
-      return false;
+      case DescribeWalk::Reached:
+        break;
     }
+  }
 
-    if (position >= path_end) {
+  switch (walk_describe_fragment(nodes, node_count, string_table,
+                                 string_table_size, current_node, path)) {
+    case DescribeWalk::NoMatch:
+      return false;
+    case DescribeWalk::Captured:
+      return true;
+    case DescribeWalk::Reached:
       break;
-    }
-    ++position;
+  }
+
+  if (current_node == 0) {
+    const auto &root = nodes[0];
+    return root.identifier != 0 || root.first_literal_child != NO_CHILD ||
+           root.variable_child != NO_CHILD;
   }
 
   return true;

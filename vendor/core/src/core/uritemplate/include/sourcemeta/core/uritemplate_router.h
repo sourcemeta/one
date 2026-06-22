@@ -124,9 +124,12 @@ public:
   /// registered routes, as a whole-segment prefix of one or more routes, as an
   /// exact route, or as a path captured by a route expansion. The fallback
   /// registered through the catch-all is never considered. Like matching, the
-  /// path is not normalized before evaluation
-  [[nodiscard]] auto describes(const std::string_view path) const noexcept
-      -> bool;
+  /// path is not normalized before evaluation. When a base path is given, it is
+  /// evaluated as if prepended to the path, avoiding a concatenation at the
+  /// call site
+  [[nodiscard]] auto
+  describes(const std::string_view path,
+            const std::string_view base_path = {}) const noexcept -> bool;
 
   /// Access the root node of the trie
   [[nodiscard]] auto root() const noexcept -> const Node &;
@@ -215,9 +218,12 @@ public:
   /// registered routes, as a whole-segment prefix of one or more routes, as an
   /// exact route, or as a path captured by a route expansion. The fallback
   /// registered through the catch-all is never considered. Like matching, the
-  /// path is not normalized before evaluation
-  [[nodiscard]] auto describes(const std::string_view path) const noexcept
-      -> bool;
+  /// path is not normalized before evaluation. When a base path is given, it is
+  /// evaluated as if prepended to the path, avoiding a concatenation at the
+  /// call site
+  [[nodiscard]] auto
+  describes(const std::string_view path,
+            const std::string_view base_path = {}) const noexcept -> bool;
 
   /// Access the stored arguments for a given route identifier
   auto arguments(const URITemplateRouter::Identifier identifier,

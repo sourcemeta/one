@@ -5,6 +5,7 @@
 
 #include <algorithm> // std::ranges::lower_bound, std::ranges::find_if
 #include <cassert>   // assert
+#include <cstdint>   // std::uint8_t
 #include <limits>    // std::numeric_limits
 #include <tuple>     // std::get, std::make_tuple
 
@@ -47,6 +48,62 @@ auto find_or_create_literal_child(std::vector<std::unique_ptr<Node>> &literals,
 
 inline auto is_expansion_type(const NodeType type) noexcept -> bool {
   return type == NodeType::Expansion || type == NodeType::OptionalExpansion;
+}
+
+enum class DescribeWalk : std::uint8_t { NoMatch, Captured, Reached };
+
+// Walk the segments of a rooted path fragment through the trie, starting from
+// the given node. A null node means the root. On a successful walk, the node is
+// advanced to where the fragment ends
+auto walk_describe_fragment(const Node *&current, const Node &root,
+                            const std::string_view fragment) noexcept
+    -> DescribeWalk {
+  if (fragment.empty()) {
+    return DescribeWalk::Reached;
+  }
+
+  if (fragment.front() != '/') {
+    return DescribeWalk::NoMatch;
+  }
+
+  const char *position = fragment.data() + 1;
+  const char *const fragment_end = fragment.data() + fragment.size();
+
+  if (position >= fragment_end) {
+    return DescribeWalk::Reached;
+  }
+
+  while (true) {
+    const char *segment_start = position;
+    while (position < fragment_end && *position != '/') {
+      ++position;
+    }
+    const std::string_view segment{
+        segment_start, static_cast<std::size_t>(position - segment_start)};
+
+    const auto &literal_children = current ? current->literals : root.literals;
+    const auto &variable_child = current ? current->variable : root.variable;
+
+    const Node *next = find_literal_child(literal_children, segment);
+    if (next == nullptr) {
+      if (segment.empty() || !variable_child) {
+        return DescribeWalk::NoMatch;
+      }
+      if (is_expansion_type(variable_child->type)) {
+        return DescribeWalk::Captured;
+      }
+      next = variable_child.get();
+    }
+
+    current = next;
+
+    if (position >= fragment_end) {
+      break;
+    }
+    ++position;
+  }
+
+  return DescribeWalk::Reached;
 }
 
 auto find_or_create_variable_child(std::unique_ptr<Node> &variable,
@@ -547,57 +604,34 @@ auto URITemplateRouter::root() const noexcept -> const Node & {
   return this->root_;
 }
 
-auto URITemplateRouter::describes(const std::string_view path) const noexcept
-    -> bool {
-  const bool root_describes = this->root_.identifier != 0 ||
-                              !this->root_.literals.empty() ||
-                              this->root_.variable != nullptr;
+auto URITemplateRouter::describes(
+    const std::string_view path,
+    const std::string_view base_path) const noexcept -> bool {
+  const Node *current = nullptr;
 
-  if (path.empty()) {
-    return root_describes;
-  }
-
-  if (path.front() != '/') {
-    return false;
-  }
-
-  const char *position = path.data() + 1;
-  const char *const path_end = path.data() + path.size();
-
-  if (position >= path_end) {
-    return root_describes;
-  }
-
-  const std::vector<std::unique_ptr<Node>> *literal_children =
-      &this->root_.literals;
-  const std::unique_ptr<Node> *variable_child = &this->root_.variable;
-
-  while (true) {
-    const char *segment_start = position;
-    while (position < path_end && *position != '/') {
-      ++position;
-    }
-    const std::string_view segment{
-        segment_start, static_cast<std::size_t>(position - segment_start)};
-
-    const Node *current = find_literal_child(*literal_children, segment);
-    if (current == nullptr) {
-      if (segment.empty() || !*variable_child) {
+  if (!base_path.empty()) {
+    switch (walk_describe_fragment(current, this->root_, base_path)) {
+      case DescribeWalk::NoMatch:
         return false;
-      }
-      if (is_expansion_type((*variable_child)->type)) {
+      case DescribeWalk::Captured:
         return true;
-      }
-      current = variable_child->get();
+      case DescribeWalk::Reached:
+        break;
     }
+  }
 
-    literal_children = &current->literals;
-    variable_child = &current->variable;
-
-    if (position >= path_end) {
+  switch (walk_describe_fragment(current, this->root_, path)) {
+    case DescribeWalk::NoMatch:
+      return false;
+    case DescribeWalk::Captured:
+      return true;
+    case DescribeWalk::Reached:
       break;
-    }
-    ++position;
+  }
+
+  if (current == nullptr) {
+    return this->root_.identifier != 0 || !this->root_.literals.empty() ||
+           this->root_.variable != nullptr;
   }
 
   return true;
