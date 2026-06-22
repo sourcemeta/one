@@ -23,7 +23,7 @@ cat << 'EOF' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
-      "paths": [ "/internl" ],
+      "paths": [ "/self/v1/mcp/extra" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
     }
   ],
@@ -39,7 +39,7 @@ test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 error: An authentication policy matches no known route
-  at scope /internl
+  at scope /self/v1/mcp/extra
   at path $(realpath "$TMP")/one.json
 EOF
 

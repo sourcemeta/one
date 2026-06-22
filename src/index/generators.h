@@ -1067,9 +1067,21 @@ struct GENERATE_AUTHENTICATION {
 #endif
     }
 
+    // A policy path must name something real: a registered route (an API
+    // surface, matched as a whole-segment prefix, exact route, or expansion
+    // capture) or a declared content collection or page. The route table is the
+    // closed, authoritative set of API surfaces, so a `/self/` typo that
+    // resolves to no route is rejected here rather than slipping through as a
+    // descendant of the broad `self` page
+    const sourcemeta::core::URITemplateRouterView routes{
+        action.dependencies.at(0)};
     for (const auto &entry : configuration.authentication) {
       for (const auto &policy_path : entry.paths) {
-        if (!configuration.matches_entry(policy_path)) {
+        // The route table is keyed with the base path baked in, so the policy
+        // path is matched against it base-prefixed. Content entries are keyed
+        // base-relative, so they are matched against the bare policy path
+        if (!routes.describes(policy_path, configuration.base_path) &&
+            !configuration.matches_entry(policy_path)) {
           throw AuthenticationUnknownPathError(configuration.path,
                                                std::string{policy_path});
         }

@@ -50,7 +50,7 @@ private:
 };
 
 // Raised when an authentication policy is scoped to a path that matches no
-// declared collection or page
+// route served by the registry
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationUnknownPathError
     : public std::exception {
 public:
@@ -58,7 +58,7 @@ public:
       : path_{std::move(path)}, scope_{std::move(scope)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy path matches no collection or page";
+    return "An authentication policy matches no known route";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

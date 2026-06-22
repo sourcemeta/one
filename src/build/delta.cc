@@ -1265,10 +1265,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     // Globals derived purely from the configuration regenerate on every full
     // rebuild, which is exactly when the configuration or version changes. The
-    // configuration anchor itself is already scheduled above
+    // configuration anchor itself is already scheduled above. A global that
+    // depends on another global's output cannot run in this wave, so it is
+    // scheduled after the dependency below
     for (const auto &rule : global_rules) {
       if (rule.trigger != GlobalTrigger::FullRebuild ||
-          rule.external_config_anchor) {
+          rule.external_config_anchor || rule.dependency_count > 0) {
         continue;
       }
 
@@ -1312,6 +1314,46 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     if (!global_wave.empty()) {
       plan.waves.push_back(std::move(global_wave));
+    }
+  }
+
+  // Globals that depend on another global's output run after it, in their own
+  // wave between the dependency-free globals above and the per-schema work
+  // below. They regenerate on a full rebuild, when the configuration changes
+  if (is_full) {
+    std::vector<BuildPlan::Action> dependent_global_wave;
+    for (const auto &rule : global_rules) {
+      if (rule.trigger != GlobalTrigger::FullRebuild ||
+          rule.external_config_anchor || rule.dependency_count == 0) {
+        continue;
+      }
+
+      BuildPlan::Action::Dependencies dependencies;
+      dependencies.reserve(rule.dependency_count);
+      for (std::uint8_t dependency_index{0};
+           dependency_index < rule.dependency_count; dependency_index++) {
+        const auto &dependency{rule.dependencies[dependency_index]};
+        switch (dependency.source) {
+          case DependencySource::GlobalOutput:
+            dependencies.push_back(output / dependency.filename);
+            break;
+          case DependencySource::ExternalConfig:
+            dependencies.push_back(configuration_path);
+            break;
+          case DependencySource::Base:
+          case DependencySource::ExternalSource:
+            break;
+        }
+      }
+
+      dependent_global_wave.push_back({.type = rule.action,
+                                       .destination = output / rule.filename,
+                                       .dependencies = std::move(dependencies),
+                                       .data = {}});
+    }
+
+    if (!dependent_global_wave.empty()) {
+      plan.waves.push_back(std::move(dependent_global_wave));
     }
   }
 

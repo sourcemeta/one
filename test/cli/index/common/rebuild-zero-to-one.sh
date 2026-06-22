@@ -148,10 +148,10 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 96%) Resolving: self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json
 ( 98%) Resolving: self/v1/schemas/mcp/tools/list/request.json
 (100%) Resolving: self/v1/schemas/mcp/tools/list/response.json
-(  0%) Producing: authentication.bin
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  0%) Producing: routes.bin
+(  0%) Producing: authentication.bin
 (  0%) Producing: explorer/%/401.metapack
 (  0%) Producing: explorer/%/404.metapack
 (  0%) Producing: schemas/self/v1/schemas/api/error/%/schema.metapack
