@@ -604,6 +604,115 @@ auto URITemplateRouterView::match(
                         final_node.context);
 }
 
+auto URITemplateRouterView::describes(
+    const std::string_view path) const noexcept -> bool {
+  if (this->size_ < sizeof(RouterHeader)) {
+    return false;
+  }
+
+  const auto *header = reinterpret_cast<const RouterHeader *>(this->data_);
+  if (header->magic != ROUTER_MAGIC || header->version != ROUTER_VERSION) {
+    return false;
+  }
+
+  const auto node_count = header->node_count;
+  if (node_count == 0 || node_count > (this->size_ - sizeof(RouterHeader)) /
+                                          sizeof(SerializedNode)) {
+    return false;
+  }
+
+  const auto *nodes = reinterpret_cast<const SerializedNode *>(
+      this->data_ + sizeof(RouterHeader));
+  const auto nodes_size =
+      static_cast<std::size_t>(node_count) * sizeof(SerializedNode);
+  const auto expected_string_table_offset = sizeof(RouterHeader) + nodes_size;
+  if (header->string_table_offset < expected_string_table_offset ||
+      header->string_table_offset > this->size_) {
+    return false;
+  }
+
+  if (header->arguments_offset < header->string_table_offset ||
+      header->arguments_offset > this->size_) {
+    return false;
+  }
+
+  const auto *string_table =
+      reinterpret_cast<const char *>(this->data_ + header->string_table_offset);
+  const auto string_table_size =
+      header->arguments_offset - header->string_table_offset;
+
+  const auto &root = nodes[0];
+  const bool root_describes = root.identifier != 0 ||
+                              root.first_literal_child != NO_CHILD ||
+                              root.variable_child != NO_CHILD;
+
+  if (path.empty()) {
+    return root_describes;
+  }
+
+  if (path.front() != '/') {
+    return false;
+  }
+
+  const char *position = path.data() + 1;
+  const char *const path_end = path.data() + path.size();
+
+  if (position >= path_end) {
+    return root_describes;
+  }
+
+  std::uint32_t current_node = 0;
+
+  while (true) {
+    const char *segment_start = position;
+    while (position < path_end && *position != '/') {
+      ++position;
+    }
+    const auto segment_length =
+        static_cast<std::uint32_t>(position - segment_start);
+
+    const auto &node = nodes[current_node];
+
+    std::uint32_t literal_match = NO_CHILD;
+    if (node.first_literal_child != NO_CHILD) {
+      if (node.first_literal_child >= node_count ||
+          node.literal_child_count > node_count - node.first_literal_child) {
+        return false;
+      }
+      literal_match = binary_search_literal_children(
+          nodes, string_table, string_table_size, node.first_literal_child,
+          node.literal_child_count, segment_start, segment_length);
+    }
+
+    if (literal_match != NO_CHILD) {
+      current_node = literal_match;
+    } else if (segment_length > 0 && node.variable_child != NO_CHILD) {
+      if (node.variable_child >= node_count) {
+        return false;
+      }
+      const auto &variable_node = nodes[node.variable_child];
+      if (variable_node.string_offset > string_table_size ||
+          variable_node.string_length >
+              string_table_size - variable_node.string_offset) {
+        return false;
+      }
+      if (is_expansion_type(variable_node.type)) {
+        return true;
+      }
+      current_node = node.variable_child;
+    } else {
+      return false;
+    }
+
+    if (position >= path_end) {
+      break;
+    }
+    ++position;
+  }
+
+  return true;
+}
+
 auto URITemplateRouterView::arguments(
     const URITemplateRouter::Identifier identifier,
     const URITemplateRouter::ArgumentCallback &callback) const -> void {

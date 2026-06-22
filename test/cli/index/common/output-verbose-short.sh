@@ -217,10 +217,10 @@ https://sourcemeta.com/mcp/tools/call/trace-schema-evaluation/response => https:
 https://sourcemeta.com/mcp/tools/list/request => https://sourcemeta.com/self/v1/schemas/mcp/tools/list/request
 (100%) Resolving: self/v1/schemas/mcp/tools/list/response.json
 https://sourcemeta.com/mcp/tools/list/response => https://sourcemeta.com/self/v1/schemas/mcp/tools/list/response
-(  0%) Producing: authentication.bin
 (  0%) Producing: configuration.json
 (  0%) Producing: version.json
 (  0%) Producing: routes.bin
+(  0%) Producing: authentication.bin
 (  0%) Producing: explorer/%/401.metapack
 (  0%) Producing: explorer/%/404.metapack
 (  0%) Producing: schemas/example/schemas/foo/%/schema.metapack

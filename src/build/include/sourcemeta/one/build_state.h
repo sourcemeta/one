@@ -120,6 +120,8 @@ struct GlobalRule {
   const char *filename;
   GlobalTrigger trigger;
   bool external_config_anchor;
+  std::array<DependencyReference, MAX_DEPENDENCIES_PER_RULE> dependencies;
+  std::uint8_t dependency_count;
 };
 
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {

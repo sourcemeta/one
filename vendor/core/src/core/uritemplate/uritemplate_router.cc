@@ -547,6 +547,62 @@ auto URITemplateRouter::root() const noexcept -> const Node & {
   return this->root_;
 }
 
+auto URITemplateRouter::describes(const std::string_view path) const noexcept
+    -> bool {
+  const bool root_describes = this->root_.identifier != 0 ||
+                              !this->root_.literals.empty() ||
+                              this->root_.variable != nullptr;
+
+  if (path.empty()) {
+    return root_describes;
+  }
+
+  if (path.front() != '/') {
+    return false;
+  }
+
+  const char *position = path.data() + 1;
+  const char *const path_end = path.data() + path.size();
+
+  if (position >= path_end) {
+    return root_describes;
+  }
+
+  const std::vector<std::unique_ptr<Node>> *literal_children =
+      &this->root_.literals;
+  const std::unique_ptr<Node> *variable_child = &this->root_.variable;
+
+  while (true) {
+    const char *segment_start = position;
+    while (position < path_end && *position != '/') {
+      ++position;
+    }
+    const std::string_view segment{
+        segment_start, static_cast<std::size_t>(position - segment_start)};
+
+    const Node *current = find_literal_child(*literal_children, segment);
+    if (current == nullptr) {
+      if (segment.empty() || !*variable_child) {
+        return false;
+      }
+      if (is_expansion_type((*variable_child)->type)) {
+        return true;
+      }
+      current = variable_child->get();
+    }
+
+    literal_children = &current->literals;
+    variable_child = &current->variable;
+
+    if (position >= path_end) {
+      break;
+    }
+    ++position;
+  }
+
+  return true;
+}
+
 auto URITemplateRouter::arguments(const Identifier identifier,
                                   const ArgumentCallback &callback) const
     -> void {
