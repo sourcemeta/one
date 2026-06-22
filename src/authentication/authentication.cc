@@ -23,7 +23,7 @@ Authentication::Authentication(const std::filesystem::path &) {}
 
 Authentication::~Authentication() = default;
 
-auto Authentication::admits(const std::string_view,
+auto Authentication::admits(const std::string_view, const std::string_view,
                             const std::string_view) const
     -> Authentication::Verdict {
   return {.allowed = true};

@@ -103,8 +103,11 @@ public:
   auto operator=(const Authentication &) -> Authentication & = delete;
   auto operator=(Authentication &&) -> Authentication & = delete;
 
+  // A non-empty base path is stripped off the input before matching, turning a
+  // request URL path into a registry path
   [[nodiscard]] auto admits(std::string_view registry_path,
-                            std::string_view credential) const -> Verdict;
+                            std::string_view credential,
+                            std::string_view base_path = {}) const -> Verdict;
 
   [[nodiscard]] auto reference_permitted(std::string_view referrer_path,
                                          std::string_view referent_path) const

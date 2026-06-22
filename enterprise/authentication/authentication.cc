@@ -10,6 +10,7 @@
 #include <cstdlib>       // std::getenv
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem::path
+#include <limits>        // std::numeric_limits
 #include <memory>        // std::unique_ptr, std::make_unique
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional
@@ -21,6 +22,49 @@
 #include <utility>       // std::move
 
 namespace {
+
+constexpr std::uint32_t NO_CHILD{std::numeric_limits<std::uint32_t>::max()};
+
+// A base that is not a whole-segment prefix is left in place, where it matches
+// no policy and is denied
+auto strip_base_path(const std::string_view path,
+                     const std::string_view base) noexcept -> std::string_view {
+  if (base.empty() || !path.starts_with(base)) {
+    return path;
+  }
+
+  auto remainder{path};
+  remainder.remove_prefix(base.size());
+  if (remainder.empty() || base.back() == '/' || remainder.front() == '/') {
+    return remainder;
+  }
+
+  return path;
+}
+
+auto find_child(const sourcemeta::one::AuthenticationNode &node,
+                const sourcemeta::one::AuthenticationEdge *edges,
+                const char *strings, const std::string_view segment) noexcept
+    -> std::uint32_t {
+  std::uint32_t low{node.first_edge};
+  std::uint32_t high{node.first_edge + node.edge_count};
+  while (low < high) {
+    const auto middle{low + ((high - low) / 2)};
+    const auto &edge{edges[middle]};
+    const std::string_view value{strings + edge.segment_offset,
+                                 edge.segment_length};
+    const auto comparison{value.compare(segment)};
+    if (comparison == 0) {
+      return edge.child;
+    } else if (comparison < 0) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+
+  return NO_CHILD;
+}
 
 // The artifact is produced by a trusted indexer, but on-disk truncation or
 // corruption could leave a header whose magic and version still match while
@@ -283,30 +327,29 @@ struct Authentication::Impl {
          segment = authentication_next_segment(registry_path, cursor)) {
       const auto &node{nodes[current]};
 
-      // A node's edges are serialized contiguously and sorted by segment, so
-      // the matching child is found with a binary search
-      std::uint32_t low{node.first_edge};
-      std::uint32_t high{node.first_edge + node.edge_count};
-      bool descended{false};
-      while (low < high) {
-        const auto middle{low + ((high - low) / 2)};
-        const auto &edge{edges[middle]};
-        const std::string_view value{this->strings_ + edge.segment_offset,
-                                     edge.segment_length};
-        const auto comparison{value.compare(segment)};
-        if (comparison == 0) {
-          current = edge.child;
-          result |= nodes[current].mask;
-          descended = true;
-          break;
-        } else if (comparison < 0) {
-          low = middle + 1;
-        } else {
-          high = middle;
-        }
+      // An extension is content negotiation, so a representation also matches
+      // the extensionless resource policy, and union semantics admit both
+      const auto exact{find_child(node, edges, this->strings_, segment)};
+      auto stem{NO_CHILD};
+      const auto extension{segment.rfind('.')};
+      if (extension != std::string_view::npos && extension > 0) {
+        stem = find_child(node, edges, this->strings_,
+                          segment.substr(0, extension));
       }
 
-      if (!descended) {
+      if (exact != NO_CHILD) {
+        result |= nodes[exact].mask;
+      }
+
+      if (stem != NO_CHILD) {
+        result |= nodes[stem].mask;
+      }
+
+      if (exact != NO_CHILD) {
+        current = exact;
+      } else if (stem != NO_CHILD) {
+        current = stem;
+      } else {
         break;
       }
     }
@@ -432,9 +475,11 @@ Authentication::Authentication(const std::filesystem::path &path)
 Authentication::~Authentication() = default;
 
 auto Authentication::admits(const std::string_view registry_path,
-                            const std::string_view credential) const
+                            const std::string_view credential,
+                            const std::string_view base_path) const
     -> Authentication::Verdict {
-  return {.allowed = this->impl_->admits(registry_path, credential)};
+  return {.allowed = this->impl_->admits(
+              strip_base_path(registry_path, base_path), credential)};
 }
 
 auto Authentication::reference_permitted(
