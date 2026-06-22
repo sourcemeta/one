@@ -1,10 +1,8 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <memory>  // std::make_unique
-#include <mutex>   // std::call_once
-#include <string>  // std::string
-#include <utility> // std::move
+#include <memory> // std::make_unique
+#include <mutex>  // std::call_once
 
 namespace sourcemeta::one {
 
@@ -78,6 +76,20 @@ auto Router::dispatch(
 
   const auto credential{
       sourcemeta::core::http_parse_bearer(request.header("authorization"))};
+
+  // Identifier zero is the catch-all, whose content the content gate
+  // authorises after canonicalising the URL. Explicit routes are reached by
+  // exact literal match, so the surface gate authorises them on their literal
+  // path. A credential-less CORS preflight is never gated
+  if (identifier != 0 && request.method() != "options" &&
+      !this->authentication_
+           .admits(request.path(), credential, instance->server_uri_base_path())
+           .allowed) {
+    sourcemeta::one::json_error_unauthorized(request, response,
+                                             this->default_error_schema_, "*");
+    return;
+  }
+
   instance->rest(matches, credential, request, response);
 }
 

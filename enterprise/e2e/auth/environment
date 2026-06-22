@@ -1,3 +1,4 @@
 ONE_E2E_KEY_PRIMARY=primary-secret-key
 ONE_E2E_KEY_SECONDARY=secondary-secret-key
 ONE_E2E_KEY_INTERNAL=internal-secret-key
+ONE_E2E_KEY_SURFACE=surface-secret-key
