@@ -16,6 +16,7 @@
     },
     { "type": "public", "paths": [ "/public" ] },
     { "type": "public", "paths": [ "/private/open" ] },
+    { "type": "public", "paths": [ "/reports/draft" ] },
     {
       "type": "apiKey",
       "algorithm": "identity",
