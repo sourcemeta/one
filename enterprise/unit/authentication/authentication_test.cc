@@ -231,6 +231,25 @@ TEST(Authentication,
       authentication.admits("/secret/data.xml", "specific-secret").allowed);
 }
 
+TEST(Authentication, extension_handling_is_confined_to_the_terminal_segment) {
+  const std::array<std::string_view, 1> paths{{"/v1"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::Public, paths}}};
+  const auto path{test_path("intermediate_dot.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // The policy on /v1 governs its own subtree
+  EXPECT_TRUE(authentication.admits("/v1", "").allowed);
+  EXPECT_TRUE(authentication.admits("/v1/secret", "").allowed);
+  // As a terminal segment, /v1.0 is a representation of /v1 under the
+  // content-negotiation rule, the same way /person.json represents /person
+  EXPECT_TRUE(authentication.admits("/v1.0", "").allowed);
+  // But as an intermediate segment it is a distinct directory that must not
+  // descend into the /v1 subtree, so its children do not inherit the policy
+  EXPECT_FALSE(authentication.admits("/v1.0/secret", "").allowed);
+}
+
 TEST(Authentication, representation_agnostic_and_specific_policies_compose) {
   const std::array<std::string_view, 1> resource{{"/docs/page"}};
   const std::array<std::string_view, 1> representation{{"/docs/page.pdf"}};

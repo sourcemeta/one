@@ -322,19 +322,24 @@ struct Authentication::Impl {
     PolicySet result{nodes[0].mask};
     std::uint32_t current{0};
     std::size_t cursor{0};
-    for (auto segment{authentication_next_segment(registry_path, cursor)};
-         !segment.empty();
-         segment = authentication_next_segment(registry_path, cursor)) {
+    auto segment{authentication_next_segment(registry_path, cursor)};
+    while (!segment.empty()) {
+      auto lookahead{cursor};
+      const auto next{authentication_next_segment(registry_path, lookahead)};
       const auto &node{nodes[current]};
 
-      // An extension is content negotiation, so a representation also matches
-      // the extensionless resource policy, and union semantics admit both
       const auto exact{find_child(node, edges, this->strings_, segment)};
+      // An extension is content negotiation on the resource itself, so only the
+      // terminal segment also matches the extensionless resource policy, with
+      // union semantics admitting both. An intermediate dotted segment is a
+      // distinct directory and must not inherit its stem's policies
       auto stem{NO_CHILD};
-      const auto extension{segment.rfind('.')};
-      if (extension != std::string_view::npos && extension > 0) {
-        stem = find_child(node, edges, this->strings_,
-                          segment.substr(0, extension));
+      if (next.empty()) {
+        const auto extension{segment.rfind('.')};
+        if (extension != std::string_view::npos && extension > 0) {
+          stem = find_child(node, edges, this->strings_,
+                            segment.substr(0, extension));
+        }
       }
 
       if (exact != NO_CHILD) {
@@ -352,6 +357,9 @@ struct Authentication::Impl {
       } else {
         break;
       }
+
+      segment = next;
+      cursor = lookahead;
     }
 
     return result;
