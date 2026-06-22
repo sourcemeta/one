@@ -5,7 +5,15 @@
     "description": "Fixtures exercising public and apiKey authentication policies"
   },
   "authentication": [
-    { "type": "public", "paths": [ "/self" ] },
+    {
+      "type": "public",
+      "paths": [
+        "/self/v1/schemas",
+        "/self/v1/api",
+        "/self/v1/mcp",
+        "/self/v1/static"
+      ]
+    },
     { "type": "public", "paths": [ "/public" ] },
     { "type": "public", "paths": [ "/private/open" ] },
     {
@@ -22,6 +30,12 @@
       "algorithm": "identity",
       "paths": [ "/internal" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_INTERNAL" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/self/v1/health" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_SURFACE" } ]
     }
   ],
   "contents": {

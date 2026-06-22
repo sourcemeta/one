@@ -1,0 +1,35 @@
+{
+  "url": "http://localhost:8000/registry",
+  "html": {
+    "name": "Authentication Path Sandbox",
+    "description": "Authentication policies under a non-root base path, including a router-level lock on the static asset surface"
+  },
+  "authentication": [
+    {
+      "type": "public",
+      "paths": [
+        "/public",
+        "/self/v1/schemas",
+        "/self/v1/api",
+        "/self/v1/mcp",
+        "/self/v1/health"
+      ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/private" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_CONTENT" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/self/v1/static" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_STATIC" } ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./schemas/public" },
+    "private": { "path": "./schemas/private" }
+  }
+}
