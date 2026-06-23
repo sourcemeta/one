@@ -30,7 +30,9 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "self"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"

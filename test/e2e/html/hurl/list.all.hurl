@@ -21,7 +21,9 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 106
 jsonpath "$.entries" count >= 2
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "self"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
@@ -29,6 +31,7 @@ jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].schemas" == 56
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
+jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
@@ -78,22 +81,27 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 50
 jsonpath "$.entries" count == 13
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "v2.0"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].path" == "/test/v2.0/"
 jsonpath "$.entries[1].name" == "bundling"
+jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 59
 jsonpath "$.entries[1].schemas" == 2
 jsonpath "$.entries[1].path" == "/test/bundling/"
 jsonpath "$.entries[2].name" == "camelcase"
+jsonpath "$.entries[2].policies" count == 0
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 25
 jsonpath "$.entries[2].schemas" == 2
 jsonpath "$.entries[2].path" == "/test/camelcase/"
 jsonpath "$.entries[3].name" == "doc"
+jsonpath "$.entries[3].policies" count == 0
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 0
 jsonpath "$.entries[3].schemas" == 4
@@ -102,45 +110,54 @@ jsonpath "$.entries[3].title" == "A sample schema folder"
 jsonpath "$.entries[3].description" == "For **testing** purposes with a [link](https://example.com)"
 jsonpath "$.entries[3].github" == "sourcemeta/one"
 jsonpath "$.entries[4].name" == "draft3"
+jsonpath "$.entries[4].policies" count == 0
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].health" == 25
 jsonpath "$.entries[4].schemas" == 2
 jsonpath "$.entries[4].path" == "/test/draft3/"
 jsonpath "$.entries[5].name" == "extension"
+jsonpath "$.entries[5].policies" count == 0
 jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.entries[5].health" == 17
 jsonpath "$.entries[5].schemas" == 3
 jsonpath "$.entries[5].path" == "/test/extension/"
 jsonpath "$.entries[6].name" == "hyper"
+jsonpath "$.entries[6].policies" count == 0
 jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].health" == 34
 jsonpath "$.entries[6].schemas" == 1
 jsonpath "$.entries[6].path" == "/test/hyper/"
 jsonpath "$.entries[7].name" == "markdown-alert"
+jsonpath "$.entries[7].policies" count == 0
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].schemas" == 1
 jsonpath "$.entries[7].path" == "/test/markdown-alert/"
 jsonpath "$.entries[8].name" == "no-base"
+jsonpath "$.entries[8].policies" count == 0
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 0
 jsonpath "$.entries[8].schemas" == 2
 jsonpath "$.entries[8].path" == "/test/no-base/"
 jsonpath "$.entries[9].name" == "no-blaze"
+jsonpath "$.entries[9].policies" count == 0
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].health" == 0
 jsonpath "$.entries[9].schemas" == 1
 jsonpath "$.entries[9].path" == "/test/no-blaze/"
 jsonpath "$.entries[10].name" == "same"
+jsonpath "$.entries[10].policies" count == 0
 jsonpath "$.entries[10].type" == "directory"
 jsonpath "$.entries[10].health" == 0
 jsonpath "$.entries[10].schemas" == 1
 jsonpath "$.entries[10].path" == "/test/same/"
 jsonpath "$.entries[11].name" == "schemas"
+jsonpath "$.entries[11].policies" count == 0
 jsonpath "$.entries[11].type" == "directory"
 jsonpath "$.entries[11].health" == 6
 jsonpath "$.entries[11].schemas" == 29
 jsonpath "$.entries[11].path" == "/test/schemas/"
 jsonpath "$.entries[12].name" == "unsafe-alert"
+jsonpath "$.entries[12].policies" count == 0
 jsonpath "$.entries[12].type" == "directory"
 jsonpath "$.entries[12].schemas" == 1
 jsonpath "$.entries[12].path" == "/test/unsafe-alert/"
@@ -187,12 +204,14 @@ jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
 jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].bytes" == 130
 jsonpath "$.entries[0].bytesBundled" == 130
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/v2.0/schema"
 jsonpath "$.entries[0].name" == "schema"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/v2.0/schema"
@@ -242,12 +261,14 @@ jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
 jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].bytes" == 130
 jsonpath "$.entries[0].bytesBundled" == 130
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/v2.0/schema"
 jsonpath "$.entries[0].name" == "schema"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/v2.0/schema"
@@ -300,12 +321,14 @@ jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
 jsonpath "$.breadcrumb[2].name" == "versions"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/versions/"
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].bytes" == 141
 jsonpath "$.entries[0].bytesBundled" == 141
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/versions/v1.2.3"
 jsonpath "$.entries[0].name" == "v1.2.3"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/schemas/versions/v1.2.3"
@@ -360,12 +383,14 @@ jsonpath "$.breadcrumb[2].path" == "/test/schemas/clash/"
 jsonpath "$.breadcrumb[3].name" == "foo"
 jsonpath "$.breadcrumb[3].path" == "/test/schemas/clash/foo/"
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].bytes" == 124
 jsonpath "$.entries[0].bytesBundled" == 124
 jsonpath "$.entries[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[0].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/schemas/clash/foo/bar"
 jsonpath "$.entries[0].name" == "bar"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/bar"
@@ -418,12 +443,15 @@ jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
 jsonpath "$.breadcrumb[2].name" == "clash"
 jsonpath "$.breadcrumb[2].path" == "/test/schemas/clash/"
 jsonpath "$.entries" count == 2
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "foo"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/"
 jsonpath "$.entries[1].name" == "foo"
+jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].bytes" == 120
 jsonpath "$.entries[1].bytesBundled" == 120
@@ -479,12 +507,14 @@ jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "extension"
 jsonpath "$.breadcrumb[1].path" == "/test/extension/"
 jsonpath "$.entries" count == 3
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].bytes" == 172
 jsonpath "$.entries[0].bytesBundled" == 400
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/extension/to-without"
 jsonpath "$.entries[0].name" == "to-without"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].alert" == null
 jsonpath "$.entries[0].path" == "/test/extension/to-without"
@@ -497,6 +527,7 @@ jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[1].identifier" == "{{base}}/test/extension/with"
 jsonpath "$.entries[1].name" == "with"
+jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].alert" == null
 jsonpath "$.entries[1].path" == "/test/extension/with"
@@ -509,6 +540,7 @@ jsonpath "$.entries[2].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[2].identifier" == "{{base}}/test/extension/without"
 jsonpath "$.entries[2].name" == "without"
+jsonpath "$.entries[2].policies" count == 0
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].alert" == null
 jsonpath "$.entries[2].path" == "/test/extension/without"

@@ -9,7 +9,7 @@
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
-      "policies": [ "public" ],
+      "policies": [],
       "breadcrumb": [
         {
           "name": "Home",

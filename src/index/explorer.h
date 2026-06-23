@@ -119,10 +119,13 @@ static auto make_policies(const sourcemeta::one::Authentication &authentication,
   for (const auto index : authentication.governing(registry_path)) {
     assert(index < configuration.authentication.size());
     const auto &policy{configuration.authentication[index]};
-    names.emplace(policy.type == sourcemeta::one::Configuration::
-                                     AuthenticationEntry::Type::Public
-                      ? std::string_view{"public"}
-                      : std::string_view{policy.name});
+    // Public access is reachable by everyone, encoded as no governing names
+    if (policy.type ==
+        sourcemeta::one::Configuration::AuthenticationEntry::Type::Public) {
+      return sourcemeta::core::JSON::make_array();
+    }
+
+    names.emplace(policy.name);
   }
 
   auto result{sourcemeta::core::JSON::make_array()};

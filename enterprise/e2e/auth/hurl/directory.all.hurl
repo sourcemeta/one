@@ -13,10 +13,12 @@ public_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "string"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/public/string"
 jsonpath "$.entries[0].identifier" == "{{base}}/public/string"
+jsonpath "$.entries[0].policies" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{public_listing_schema}}
 ```
@@ -45,12 +47,17 @@ private_listing: body
 private_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 2
+jsonpath "$.policies" count == 1
+jsonpath "$.policies[0]" == "reports"
 jsonpath "$.entries[0].name" == "open"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/private/open/"
+jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/private/secret"
+jsonpath "$.entries[1].policies" count == 1
+jsonpath "$.entries[1].policies[0]" == "reports"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{private_listing_schema}}
 ```
@@ -66,8 +73,10 @@ HTTP 200
 Content-Type: application/json
 [Asserts]
 jsonpath "$.entries" count == 1
+jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "shared"
 jsonpath "$.entries[0].path" == "/private/open/shared"
+jsonpath "$.entries[0].policies" count == 0
 
 # The root listing is governed by the (absent) root policy, so it is denied
 GET {{base}}/self/v1/api/list
