@@ -1090,11 +1090,18 @@ struct GENERATE_AUTHENTICATION {
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     // Policy names are unique, and "public" is reserved for the public type
-    std::set<std::string_view> names{"public"};
+    std::set<std::string_view> names;
     for (const auto &entry : configuration.authentication) {
-      if (entry.type == sourcemeta::one::Configuration::AuthenticationEntry::
-                            Type::ApiKey &&
-          !names.emplace(entry.name).second) {
+      if (entry.type !=
+          sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey) {
+        continue;
+      }
+
+      if (entry.name == "public") {
+        throw AuthenticationReservedNameError(configuration.path, entry.name);
+      }
+
+      if (!names.emplace(entry.name).second) {
         throw AuthenticationDuplicateNameError(configuration.path, entry.name);
       }
     }

@@ -39,7 +39,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: An authentication policy name is used more than once
+error: An authentication policy may not use a reserved name
   at name public
   at path $(realpath "$TMP")/one.json
 EOF

@@ -98,6 +98,30 @@ private:
   std::string name_;
 };
 
+// Raised when an authentication policy takes a name reserved for a policy type
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationReservedNameError
+    : public std::exception {
+public:
+  AuthenticationReservedNameError(std::filesystem::path path, std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy may not use a reserved name";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
