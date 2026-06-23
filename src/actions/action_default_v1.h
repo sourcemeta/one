@@ -100,27 +100,32 @@ public:
             "*", "GET, HEAD, OPTIONS");
         return;
       }
-      if (sourcemeta::core::http_match_accept(
+      const auto serve_html{
+          sourcemeta::core::http_match_accept(
               request.header("accept"), {"application/json", "text/html"}) ==
-          "text/html") {
-        const auto root_html{this->artifact_resolve_path(
-            credential, "", Tree::Explorer, "directory-html")};
-        if (root_html.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+          "text/html"};
+      const auto root_html{this->artifact_resolve_path(
+          credential, "", Tree::Explorer, "directory-html")};
+      if (root_html.outcome ==
+          sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+        if (serve_html) {
           this->serve_unauthorized_html(HTML_BROWSER_SECURITY, request,
                                         response);
-          return;
+        } else {
+          sourcemeta::one::json_error_unauthorized(request, response,
+                                                   this->error_schema_, "*");
         }
-        if (root_html.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Found) {
-          this->artifact_serve(root_html.path.value(),
-                               sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
-                               HTML_BROWSER_SECURITY, request, response,
-                               this->error_schema_,
-                               this->content_cache_control(root_html.is_public),
-                               "Accept, Accept-Encoding");
-          return;
-        }
+        return;
+      }
+      if (serve_html &&
+          root_html.outcome ==
+              sourcemeta::one::ArtifactResolution::Outcome::Found) {
+        this->artifact_serve(
+            root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
+            {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
+            this->content_cache_control(root_html.is_public),
+            "Accept, Accept-Encoding");
+        return;
       }
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,

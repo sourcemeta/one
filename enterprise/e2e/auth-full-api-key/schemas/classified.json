@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Classified Acquisition Schema",
+  "description": "Internal-only structure describing a pending acquisition",
+  "type": "object",
+  "properties": { "target": { "type": "string" } },
+  "required": [ "target" ],
+  "additionalProperties": false
+}

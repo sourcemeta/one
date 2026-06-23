@@ -1,0 +1,18 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Fully Private Sandbox",
+    "description": "A registry locked in its entirety behind a single root apiKey policy"
+  },
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "paths": [ "/" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_FULL_KEY" } ]
+    }
+  ],
+  "contents": {
+    "catalog": { "path": "./schemas" }
+  }
+}
