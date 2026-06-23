@@ -108,6 +108,21 @@ jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.entries" count == 5
+jsonpath "$.result.structuredContent.policies" count == 1
+jsonpath "$.result.structuredContent.policies[0]" == "public"
+variable "text" jsonpath "$.policies" count == 1
+variable "text" jsonpath "$.policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[0].policies" count == 1
+jsonpath "$.result.structuredContent.entries[0].policies[0]" == "public"
+variable "text" jsonpath "$.entries[0].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[1].policies[0]" == "public"
+variable "text" jsonpath "$.entries[1].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[2].policies[0]" == "public"
+variable "text" jsonpath "$.entries[2].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[3].policies[0]" == "public"
+variable "text" jsonpath "$.entries[3].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[4].policies[0]" == "public"
+variable "text" jsonpath "$.entries[4].policies[0]" == "public"
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"
@@ -297,6 +312,21 @@ jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.entries" count == 5
+jsonpath "$.result.structuredContent.policies" count == 1
+jsonpath "$.result.structuredContent.policies[0]" == "public"
+variable "text" jsonpath "$.policies" count == 1
+variable "text" jsonpath "$.policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[0].policies" count == 1
+jsonpath "$.result.structuredContent.entries[0].policies[0]" == "public"
+variable "text" jsonpath "$.entries[0].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[1].policies[0]" == "public"
+variable "text" jsonpath "$.entries[1].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[2].policies[0]" == "public"
+variable "text" jsonpath "$.entries[2].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[3].policies[0]" == "public"
+variable "text" jsonpath "$.entries[3].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[4].policies[0]" == "public"
+variable "text" jsonpath "$.entries[4].policies[0]" == "public"
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"
@@ -542,6 +572,21 @@ jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.entries" count == 5
+jsonpath "$.result.structuredContent.policies" count == 1
+jsonpath "$.result.structuredContent.policies[0]" == "public"
+variable "text" jsonpath "$.policies" count == 1
+variable "text" jsonpath "$.policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[0].policies" count == 1
+jsonpath "$.result.structuredContent.entries[0].policies[0]" == "public"
+variable "text" jsonpath "$.entries[0].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[1].policies[0]" == "public"
+variable "text" jsonpath "$.entries[1].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[2].policies[0]" == "public"
+variable "text" jsonpath "$.entries[2].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[3].policies[0]" == "public"
+variable "text" jsonpath "$.entries[3].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[4].policies[0]" == "public"
+variable "text" jsonpath "$.entries[4].policies[0]" == "public"
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"
@@ -720,6 +765,21 @@ jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.entries" count == 5
 variable "text" jsonpath "$.entries" count == 5
+jsonpath "$.result.structuredContent.policies" count == 1
+jsonpath "$.result.structuredContent.policies[0]" == "public"
+variable "text" jsonpath "$.policies" count == 1
+variable "text" jsonpath "$.policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[0].policies" count == 1
+jsonpath "$.result.structuredContent.entries[0].policies[0]" == "public"
+variable "text" jsonpath "$.entries[0].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[1].policies[0]" == "public"
+variable "text" jsonpath "$.entries[1].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[2].policies[0]" == "public"
+variable "text" jsonpath "$.entries[2].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[3].policies[0]" == "public"
+variable "text" jsonpath "$.entries[3].policies[0]" == "public"
+jsonpath "$.result.structuredContent.entries[4].policies[0]" == "public"
+variable "text" jsonpath "$.entries[4].policies[0]" == "public"
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 variable "text" jsonpath "$.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].type" == "schema"

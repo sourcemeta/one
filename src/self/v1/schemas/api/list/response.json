@@ -9,6 +9,7 @@
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
+      "policies": [ "public" ],
       "breadcrumb": [
         {
           "name": "Home",
@@ -18,10 +19,27 @@
     }
   ],
   "type": "object",
-  "required": [ "health", "schemas", "entries", "path", "url", "breadcrumb" ],
+  "required": [
+    "health",
+    "schemas",
+    "entries",
+    "path",
+    "url",
+    "breadcrumb",
+    "policies"
+  ],
   "properties": {
     "title": {
       "type": "string"
+    },
+    "policies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      }
     },
     "description": {
       "type": "string"
@@ -55,13 +73,29 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [ "health", "schemas", "name", "type", "path" ],
+            "required": [
+              "health",
+              "schemas",
+              "name",
+              "type",
+              "path",
+              "policies"
+            ],
             "properties": {
               "title": {
                 "type": "string"
               },
               "description": {
                 "type": "string"
+              },
+              "policies": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                }
               },
               "type": {
                 "const": "directory"
@@ -101,13 +135,22 @@
           },
           {
             "$ref": "../schemas/metadata/response.json#base",
-            "required": [ "type", "name" ],
+            "required": [ "type", "name", "policies" ],
             "properties": {
               "type": {
                 "const": "schema"
               },
               "name": {
                 "type": "string"
+              },
+              "policies": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                }
               }
             },
             "unevaluatedProperties": false

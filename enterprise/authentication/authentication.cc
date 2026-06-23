@@ -5,6 +5,7 @@
 #include "authentication_format.h"
 
 #include <algorithm>     // std::ranges::all_of
+#include <bit>           // std::countr_zero
 #include <cstddef>       // std::byte, std::size_t
 #include <cstdint>       // std::uint32_t, std::uint64_t
 #include <cstdlib>       // std::getenv
@@ -20,6 +21,7 @@
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <utility>       // std::move
+#include <vector>        // std::vector
 
 namespace {
 
@@ -488,6 +490,19 @@ auto Authentication::admits(const std::string_view registry_path,
     -> Authentication::Verdict {
   return {.allowed = this->impl_->admits(
               strip_base_path(registry_path, base_path), credential)};
+}
+
+auto Authentication::governing(const std::string_view registry_path,
+                               const std::string_view base_path) const
+    -> std::vector<std::size_t> {
+  auto mask{this->impl_->match(strip_base_path(registry_path, base_path))};
+  std::vector<std::size_t> result;
+  while (mask != 0) {
+    result.push_back(static_cast<std::size_t>(std::countr_zero(mask)));
+    mask &= mask - 1;
+  }
+
+  return result;
 }
 
 auto Authentication::reference_permitted(

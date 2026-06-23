@@ -106,6 +106,37 @@ TEST(Authentication, scoped_prefix_admits_only_its_subtree) {
   EXPECT_FALSE(authentication.admits("/vendor", "").allowed);
 }
 
+TEST(Authentication, governing_returns_policy_indices_in_declaration_order) {
+  const std::array<std::string_view, 1> root_paths{{"/"}};
+  const std::array<std::string_view, 1> internal_paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{sourcemeta::one::Authentication::Type::Public, root_paths},
+       {sourcemeta::one::Authentication::Type::Public, internal_paths}}};
+  const auto path{test_path("governing.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_EQ(authentication.governing("/"), (std::vector<std::size_t>{0}));
+  EXPECT_EQ(authentication.governing("/vendor"), (std::vector<std::size_t>{0}));
+  EXPECT_EQ(authentication.governing("/internal"),
+            (std::vector<std::size_t>{0, 1}));
+  EXPECT_EQ(authentication.governing("/internal/foo"),
+            (std::vector<std::size_t>{0, 1}));
+}
+
+TEST(Authentication, governing_of_an_ungoverned_path_is_empty) {
+  const std::array<std::string_view, 1> internal_paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{sourcemeta::one::Authentication::Type::Public, internal_paths}}};
+  const auto path{test_path("governing_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_EQ(authentication.governing("/vendor"), (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.governing("/internal"),
+            (std::vector<std::size_t>{0}));
+}
+
 TEST(Authentication, scoped_prefix_matches_whole_segments_only) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{

@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_INDEX_EXPLORER_H_
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
+#include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
@@ -28,6 +29,7 @@
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
+#include <set>         // std::set
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -100,6 +102,35 @@ inflate_metadata(const sourcemeta::one::Configuration &configuration,
         }
       },
       match->second);
+}
+
+static auto child_registry_path(const std::string &directory_registry_path,
+                                const std::string &name) -> std::string {
+  return (directory_registry_path == "/" ? std::string{}
+                                         : directory_registry_path) +
+         "/" + name;
+}
+
+static auto make_policies(const sourcemeta::one::Authentication &authentication,
+                          const sourcemeta::one::Configuration &configuration,
+                          const std::string &registry_path)
+    -> sourcemeta::core::JSON {
+  std::set<std::string_view> names;
+  for (const auto index : authentication.governing(registry_path)) {
+    assert(index < configuration.authentication.size());
+    const auto &policy{configuration.authentication[index]};
+    names.emplace(policy.type == sourcemeta::one::Configuration::
+                                     AuthenticationEntry::Type::Public
+                      ? std::string_view{"public"}
+                      : std::string_view{policy.name});
+  }
+
+  auto result{sourcemeta::core::JSON::make_array()};
+  for (const auto name : names) {
+    result.push_back(sourcemeta::core::JSON{name});
+  }
+
+  return result;
 }
 
 namespace sourcemeta::one {
@@ -730,6 +761,12 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       current = current.parent_path();
     }
 
+    const sourcemeta::one::Authentication authentication{
+        action.dependencies.back()};
+    const std::string directory_registry_path{
+        relative_path == "." ? std::string{"/"}
+                             : "/" + relative_path.generic_string()};
+
     struct SortableEntry {
       sourcemeta::core::JSON json;
       MetapackVersionInfo version;
@@ -1008,9 +1045,17 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     std::ranges::sort(schema_entries, version_comparator);
 
     for (auto &entry : directory_entries) {
+      entry.json.assign(
+          "policies", make_policies(authentication, configuration,
+                                    child_registry_path(directory_registry_path,
+                                                        entry.name)));
       entries.push_back(std::move(entry.json));
     }
     for (auto &entry : schema_entries) {
+      entry.json.assign(
+          "policies", make_policies(authentication, configuration,
+                                    child_registry_path(directory_registry_path,
+                                                        entry.name)));
       entries.push_back(std::move(entry.json));
     }
 
@@ -1034,6 +1079,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
 
     meta.assign("entries", std::move(entries));
+    meta.assign("policies", make_policies(authentication, configuration,
+                                          directory_registry_path));
 
     if (relative_path == ".") {
       meta.assign("path",

@@ -14,6 +14,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
@@ -108,6 +109,12 @@ public:
   [[nodiscard]] auto admits(std::string_view registry_path,
                             std::string_view credential,
                             std::string_view base_path = {}) const -> Verdict;
+
+  // The configuration declaration indices of the policies that govern a path,
+  // sorted ascending
+  [[nodiscard]] auto governing(std::string_view registry_path,
+                               std::string_view base_path = {}) const
+      -> std::vector<std::size_t>;
 
   [[nodiscard]] auto reference_permitted(std::string_view referrer_path,
                                          std::string_view referent_path) const

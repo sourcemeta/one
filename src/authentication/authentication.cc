@@ -2,7 +2,7 @@
 
 #include <sourcemeta/core/io.h>
 
-#include <cstddef> // std::byte
+#include <cstddef> // std::byte, std::size_t
 #include <vector>  // std::vector
 
 namespace sourcemeta::one {
@@ -27,6 +27,12 @@ auto Authentication::admits(const std::string_view, const std::string_view,
                             const std::string_view) const
     -> Authentication::Verdict {
   return {.allowed = true};
+}
+
+auto Authentication::governing(const std::string_view,
+                               const std::string_view) const
+    -> std::vector<std::size_t> {
+  return {0};
 }
 
 auto Authentication::reference_permitted(const std::string_view,

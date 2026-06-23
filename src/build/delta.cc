@@ -955,6 +955,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                              .string()};
 
         std::vector<std::string> rule_dependencies;
+        std::size_t global_dependency_count{0};
 
         for (std::uint8_t dependency_index{0};
              dependency_index < rule.dependency_count; dependency_index++) {
@@ -1018,19 +1019,23 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
               break;
             case ContainerDependencyKind::Global:
               rule_dependencies.push_back(
-                  (output / global_rules[indices.mode_global].filename)
+                  (output / (dependency.filename != nullptr
+                                 ? dependency.filename
+                                 : global_rules[indices.mode_global].filename))
                       .lexically_normal()
                       .string());
+              global_dependency_count += 1;
               break;
           }
         }
 
+        const auto directory_entry_count{rule_dependencies.size() -
+                                         global_dependency_count};
         if (rule.action == container_rules[indices.container_list].action &&
             limits.maximum_direct_directory_entries > 0 &&
-            rule_dependencies.size() >
-                limits.maximum_direct_directory_entries) {
+            directory_entry_count > limits.maximum_direct_directory_entries) {
           throw BuildTooManyDirectoryEntriesError(directory,
-                                                  rule_dependencies.size());
+                                                  directory_entry_count);
         }
 
         declare_target(targets, rule.action, destination,
