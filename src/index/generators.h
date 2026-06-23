@@ -47,6 +47,7 @@
 #include <tuple>         // std::tuple
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
+#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -432,7 +433,8 @@ struct GENERATE_HEALTH {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     const auto &collection{*resolver.entry(action.data).collection};
-    auto &cache_entry{bundle_for(collection, resolver, callback)};
+    const BundleLease lease{collection, resolver, callback};
+    auto &cache_entry{lease.value()};
     auto errors{sourcemeta::core::JSON::make_array()};
     const auto result{cache_entry.bundle.check(
         contents, sourcemeta::blaze::schema_walker,
@@ -483,20 +485,11 @@ private:
     std::unordered_set<std::string_view> custom_names;
   };
 
-  static auto bundle_for(
+  static auto build_bundle(
       const sourcemeta::blaze::Configuration &configuration,
       [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
       [[maybe_unused]] const sourcemeta::one::BuildDynamicCallback &callback)
-      -> CacheEntry & {
-    static std::mutex cache_mutex;
-    static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
-    const auto *key{static_cast<const void *>(&configuration)};
-    std::lock_guard<std::mutex> lock{cache_mutex};
-    const auto match{cache.find(key)};
-    if (match != cache.cend()) {
-      return *match->second;
-    }
-
+      -> std::unique_ptr<CacheEntry> {
     auto entry{std::make_unique<CacheEntry>()};
     sourcemeta::blaze::add(entry->bundle,
                            sourcemeta::blaze::AlterSchemaMode::Linter);
@@ -515,8 +508,69 @@ private:
     }
 #endif
 
-    return *cache.emplace(key, std::move(entry)).first->second;
+    return entry;
   }
+
+  // A bundle carries mutable per-rule state (scratch buffers as well as
+  // resolution memoisation caches), so a given instance cannot be checked from
+  // multiple threads at once. Producing runs across a thread pool, so instead
+  // of sharing a single instance (a data race) or rebuilding one per worker, we
+  // keep a pool of reusable bundles per configuration. Each lease borrows an
+  // idle bundle, building a new one only when none are free, and returns it on
+  // destruction. We therefore build at most one bundle per concurrent user and
+  // reuse it across both threads and build waves, while the resolver
+  // memoisation caches stay warm
+  static auto bundle_pool() -> std::unordered_map<
+      const void *, std::vector<std::unique_ptr<CacheEntry>>> & {
+    static std::unordered_map<const void *,
+                              std::vector<std::unique_ptr<CacheEntry>>>
+        pool;
+    return pool;
+  }
+
+  static auto bundle_pool_mutex() -> std::mutex & {
+    static std::mutex mutex;
+    return mutex;
+  }
+
+  class BundleLease {
+  public:
+    BundleLease(const sourcemeta::blaze::Configuration &configuration,
+                const sourcemeta::one::Resolver &resolver,
+                const sourcemeta::one::BuildDynamicCallback &callback)
+        : key{static_cast<const void *>(&configuration)} {
+      {
+        const std::lock_guard<std::mutex> lock{bundle_pool_mutex()};
+        auto &available{bundle_pool()[this->key]};
+        if (!available.empty()) {
+          this->entry = std::move(available.back());
+          available.pop_back();
+        }
+      }
+
+      // Build outside the lock, as compiling custom rules is expensive and
+      // must not serialise sibling workers
+      if (!this->entry) {
+        this->entry = build_bundle(configuration, resolver, callback);
+      }
+    }
+
+    BundleLease(const BundleLease &) = delete;
+    BundleLease(BundleLease &&) = delete;
+    auto operator=(const BundleLease &) -> BundleLease & = delete;
+    auto operator=(BundleLease &&) -> BundleLease & = delete;
+
+    ~BundleLease() {
+      const std::lock_guard<std::mutex> lock{bundle_pool_mutex()};
+      bundle_pool()[this->key].push_back(std::move(this->entry));
+    }
+
+    [[nodiscard]] auto value() const -> CacheEntry & { return *this->entry; }
+
+  private:
+    const void *key;
+    std::unique_ptr<CacheEntry> entry;
+  };
 };
 
 struct GENERATE_BUNDLE {
