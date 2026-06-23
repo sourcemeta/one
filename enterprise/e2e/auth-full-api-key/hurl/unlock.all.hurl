@@ -44,13 +44,18 @@ listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 3
+jsonpath "$.policies" count == 1
+jsonpath "$.policies[0]" == "registry"
 jsonpath "$.entries[0].name" == "nested"
+jsonpath "$.entries[0].policies[0]" == "registry"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[1].name" == "classified"
+jsonpath "$.entries[1].policies[0]" == "registry"
 jsonpath "$.entries[1].title" == "Classified Acquisition Schema"
 jsonpath "$.entries[1].description" == "Internal-only structure describing a pending acquisition"
 jsonpath "$.entries[1].identifier" == "{{base}}/catalog/classified"
 jsonpath "$.entries[2].name" == "example"
+jsonpath "$.entries[2].policies[0]" == "registry"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 Authorization: Bearer full-secret-key
@@ -75,6 +80,10 @@ root_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries[*].name" includes "catalog"
 jsonpath "$.entries[*].name" includes "self"
+jsonpath "$.policies" count == 1
+jsonpath "$.policies[0]" == "registry"
+jsonpath "$.entries[?@.name=='catalog'].policies[0]" == "registry"
+jsonpath "$.entries[?@.name=='self'].policies[0]" == "registry"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 Authorization: Bearer full-secret-key

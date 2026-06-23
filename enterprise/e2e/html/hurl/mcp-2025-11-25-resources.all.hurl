@@ -450,7 +450,7 @@ jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/list/resp
 jsonpath "$.result.resources[21].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[21].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[21].size" == 3581
+jsonpath "$.result.resources[21].size" == 4176
 jsonpath "$.result.resources[21].annotations.priority" == 0
 jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Dependencies API Response"

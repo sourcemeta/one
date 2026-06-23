@@ -37,7 +37,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/"
 variable "text" jsonpath "$.path" == "/v1/catalog/"
 jsonpath "$.result.structuredContent.entries[1].name" == "example"
+jsonpath "$.result.structuredContent.entries[1].policies" count == 0
 variable "text" jsonpath "$.entries[1].name" == "example"
+variable "text" jsonpath "$.entries[1].policies" count == 0
 variable "example_path" == "/v1/catalog/example/"
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
@@ -93,7 +95,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/v1/catalog/example"
 variable "text" jsonpath "$.path" == "/v1/catalog/example"
 jsonpath "$.result.structuredContent.entries[2].name" == "full"
+jsonpath "$.result.structuredContent.entries[2].policies" count == 0
 variable "text" jsonpath "$.entries[2].name" == "full"
+variable "text" jsonpath "$.entries[2].policies" count == 0
 jsonpath "$.result.structuredContent.entries[2].type" == "schema"
 variable "text" jsonpath "$.entries[2].type" == "schema"
 variable "full_path" == "/v1/catalog/example/full"

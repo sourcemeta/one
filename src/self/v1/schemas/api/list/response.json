@@ -9,6 +9,7 @@
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
+      "policies": [],
       "breadcrumb": [
         {
           "name": "Home",
@@ -18,10 +19,21 @@
     }
   ],
   "type": "object",
-  "required": [ "health", "schemas", "entries", "path", "url", "breadcrumb" ],
+  "required": [
+    "health",
+    "schemas",
+    "entries",
+    "path",
+    "url",
+    "breadcrumb",
+    "policies"
+  ],
   "properties": {
     "title": {
       "type": "string"
+    },
+    "policies": {
+      "$ref": "#/$defs/policies"
     },
     "description": {
       "type": "string"
@@ -55,13 +67,23 @@
         "anyOf": [
           {
             "type": "object",
-            "required": [ "health", "schemas", "name", "type", "path" ],
+            "required": [
+              "health",
+              "schemas",
+              "name",
+              "type",
+              "path",
+              "policies"
+            ],
             "properties": {
               "title": {
                 "type": "string"
               },
               "description": {
                 "type": "string"
+              },
+              "policies": {
+                "$ref": "#/$defs/policies"
               },
               "type": {
                 "const": "directory"
@@ -101,13 +123,16 @@
           },
           {
             "$ref": "../schemas/metadata/response.json#base",
-            "required": [ "type", "name" ],
+            "required": [ "type", "name", "policies" ],
             "properties": {
               "type": {
                 "const": "schema"
               },
               "name": {
                 "type": "string"
+              },
+              "policies": {
+                "$ref": "#/$defs/policies"
               }
             },
             "unevaluatedProperties": false
@@ -143,5 +168,15 @@
       "format": "uri"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "policies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      }
+    }
+  }
 }

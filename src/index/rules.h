@@ -256,8 +256,10 @@ inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
          .dependencies = {{{.kind = ContainerDependencyKind::LeafMetadata,
                             .filename = nullptr},
                            {.kind = ContainerDependencyKind::ChildContainers,
-                            .filename = nullptr}}},
-         .dependency_count = 2},
+                            .filename = nullptr},
+                           {.kind = ContainerDependencyKind::Global,
+                            .filename = "authentication.bin"}}},
+         .dependency_count = 3},
 
         {.action = ACTION_SEARCH_INDEX,
          .base = 1,
