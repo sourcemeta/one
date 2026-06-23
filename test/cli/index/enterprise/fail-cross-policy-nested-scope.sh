@@ -14,12 +14,14 @@ cat << EOF > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "broad",
       "paths": [ "/p" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_BROAD" } ]
     },
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "inner",
       "paths": [ "/p/inner" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_INNER" } ]
     }

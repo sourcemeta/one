@@ -807,6 +807,7 @@ TEST(Configuration, authentication_apikey_identity) {
       {
         "type": "apiKey",
         "algorithm": "identity",
+        "name": "internal",
         "paths": [ "/internal" ],
         "keys": [
           { "environmentVariable": "ONE_KEY_A" },
@@ -822,6 +823,7 @@ TEST(Configuration, authentication_apikey_identity) {
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).type,
             sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey);
+  EXPECT_EQ(configuration.authentication.at(0).name, "internal");
   EXPECT_EQ(configuration.authentication.at(0).paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
   EXPECT_EQ(
@@ -839,6 +841,49 @@ TEST(Configuration, authentication_rejects_apikey_without_keys) {
   EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
                                                      "/tmp/one.json", "."),
                sourcemeta::one::ConfigurationValidationError);
+}
+
+TEST(Configuration, authentication_rejects_duplicate_name) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "data-team",
+        "paths": [ "/alpha" ],
+        "keys": [ { "environmentVariable": "ONE_KEY_A" } ]
+      },
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "data-team",
+        "paths": [ "/beta" ],
+        "keys": [ { "environmentVariable": "ONE_KEY_B" } ]
+      }
+    ]
+  })JSON")};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationDuplicateAuthenticationNameError);
+}
+
+TEST(Configuration, authentication_rejects_reserved_name) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "public",
+        "paths": [ "/internal" ],
+        "keys": [ { "environmentVariable": "ONE_KEY" } ]
+      }
+    ]
+  })JSON")};
+  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
+                                                     "/tmp/one.json", "."),
+               sourcemeta::one::ConfigurationReservedAuthenticationNameError);
 }
 
 TEST(Configuration, authentication_rejects_apikey_without_algorithm) {

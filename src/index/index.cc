@@ -718,6 +718,16 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at path {}\n{}", error.what(),
                error.path().string(), error.stacktrace());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
+               &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ConfigurationReservedAuthenticationNameError
+               &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::MetaschemaError &error) {
     std::print(stdout, "error: {}\n{}", error.what(), error.stacktrace());
     return EXIT_FAILURE;

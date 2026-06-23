@@ -15,6 +15,7 @@ cat << EOF > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "private",
       "paths": [ "/private" ],
       "keys": [ { "environmentVariable": "ONE_TEST_CROSS_POLICY_KEY" } ]
     }

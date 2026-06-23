@@ -81,6 +81,52 @@ private:
   std::filesystem::path target_;
 };
 
+class ConfigurationDuplicateAuthenticationNameError : public std::exception {
+public:
+  ConfigurationDuplicateAuthenticationNameError(std::filesystem::path path,
+                                                std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy name is used more than once";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
+class ConfigurationReservedAuthenticationNameError : public std::exception {
+public:
+  ConfigurationReservedAuthenticationNameError(std::filesystem::path path,
+                                               std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy may not use a reserved name";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
 class ConfigurationCyclicReferenceError : public std::exception {
 public:
   ConfigurationCyclicReferenceError(std::filesystem::path from,

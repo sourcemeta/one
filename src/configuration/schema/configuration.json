@@ -94,13 +94,17 @@
           },
           {
             "type": "object",
-            "required": [ "type", "algorithm", "paths", "keys" ],
+            "required": [ "type", "algorithm", "name", "paths", "keys" ],
             "properties": {
               "type": {
                 "const": "apiKey"
               },
               "algorithm": {
                 "const": "identity"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
               },
               "paths": {
                 "type": "array",

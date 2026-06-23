@@ -6,9 +6,11 @@
 
 #include "template.h"
 
-#include <algorithm> // std::ranges::transform
-#include <cassert>   // assert
-#include <cctype>    // std::tolower
+#include <algorithm>   // std::ranges::transform
+#include <cassert>     // assert
+#include <cctype>      // std::tolower
+#include <set>         // std::set
+#include <string_view> // std::string_view
 
 namespace {
 
@@ -151,6 +153,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       // here
       if (type == "apiKey") {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
+        parsed.name = entry.at("name").to_string();
         for (const auto &key : entry.at("keys").as_array()) {
           parsed.keys.push_back(key.at("environmentVariable").to_string());
         }
@@ -164,6 +167,24 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       }
 
       result.authentication.push_back(std::move(parsed));
+    }
+  }
+
+  // Policy names are unique, and "public" is reserved for the public type
+  std::set<std::string_view> authentication_names;
+  for (const auto &entry : result.authentication) {
+    if (entry.type != Configuration::AuthenticationEntry::Type::ApiKey) {
+      continue;
+    }
+
+    if (entry.name == "public") {
+      throw ConfigurationReservedAuthenticationNameError(configuration_path,
+                                                         entry.name);
+    }
+
+    if (!authentication_names.emplace(entry.name).second) {
+      throw ConfigurationDuplicateAuthenticationNameError(configuration_path,
+                                                          entry.name);
     }
   }
 

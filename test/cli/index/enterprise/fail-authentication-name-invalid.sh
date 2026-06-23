@@ -7,13 +7,30 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
+mkdir "$TMP/internal"
+
+cat << 'EOF' > "$TMP/internal/secret.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
 cat << 'EOF' > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
   "authentication": [
-    { "type": "apiKey", "algorithm": "identity", "name": "internal", "paths": [ "/internal" ], "keys": [] }
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "Data_Team",
+      "paths": [ "/internal" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
+    }
   ],
-  "contents": {}
+  "contents": {
+    "internal": { "path": "./internal" }
+  }
 }
 EOF
 
@@ -27,9 +44,9 @@ error: Invalid configuration
 The object value was expected to only define properties "paths", and "type", but it also defines properties "algorithm", "keys", and "name"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/0/required"
-The array value was expected to contain at least 1 item but it contained 0 items
-  at instance location "/authentication/0/keys"
-  at evaluate path "/properties/authentication/items/anyOf/1/properties/keys/minItems"
+The string value "Data_Team" was expected to match the regular expression "^[a-z0-9-]+\$"
+  at instance location "/authentication/0/name"
+  at evaluate path "/properties/authentication/items/anyOf/1/properties/name/pattern"
 The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/1/properties"

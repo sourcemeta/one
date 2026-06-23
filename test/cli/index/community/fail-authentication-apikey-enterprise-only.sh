@@ -14,6 +14,7 @@ cat << 'JSON' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "internal",
       "paths": [ "/internal" ],
       "keys": [ { "environmentVariable": "ONE_KEY" } ]
     }
