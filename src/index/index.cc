@@ -740,6 +740,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
                error.scope(), error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationDuplicateNameError &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {
     std::print(stdout,

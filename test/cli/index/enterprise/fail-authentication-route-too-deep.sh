@@ -23,6 +23,7 @@ cat << 'EOF' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "mcp",
       "paths": [ "/self/v1/mcp/extra" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
     }

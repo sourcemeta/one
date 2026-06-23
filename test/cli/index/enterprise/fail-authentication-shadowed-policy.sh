@@ -24,6 +24,7 @@ cat << 'EOF' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "internal",
       "paths": [ "/internal" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
     }

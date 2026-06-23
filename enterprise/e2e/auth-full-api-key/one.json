@@ -8,6 +8,7 @@
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "registry",
       "paths": [ "/" ],
       "keys": [ { "environmentVariable": "ONE_E2E_FULL_KEY" } ]
     }

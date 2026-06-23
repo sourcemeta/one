@@ -807,6 +807,7 @@ TEST(Configuration, authentication_apikey_identity) {
       {
         "type": "apiKey",
         "algorithm": "identity",
+        "name": "internal",
         "paths": [ "/internal" ],
         "keys": [
           { "environmentVariable": "ONE_KEY_A" },
@@ -822,6 +823,7 @@ TEST(Configuration, authentication_apikey_identity) {
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).type,
             sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey);
+  EXPECT_EQ(configuration.authentication.at(0).name, "internal");
   EXPECT_EQ(configuration.authentication.at(0).paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
   EXPECT_EQ(

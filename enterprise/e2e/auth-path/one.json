@@ -18,12 +18,14 @@
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "content",
       "paths": [ "/private" ],
       "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_CONTENT" } ]
     },
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "static",
       "paths": [ "/self/v1/static" ],
       "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_STATIC" } ]
     }

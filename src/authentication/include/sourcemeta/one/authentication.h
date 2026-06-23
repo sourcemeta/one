@@ -74,6 +74,30 @@ private:
   std::string scope_;
 };
 
+// Raised when two authentication policies share a name
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationDuplicateNameError
+    : public std::exception {
+public:
+  AuthenticationDuplicateNameError(std::filesystem::path path, std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy name is used more than once";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};

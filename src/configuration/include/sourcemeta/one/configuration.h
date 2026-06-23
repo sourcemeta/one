@@ -60,6 +60,8 @@ struct Configuration {
   struct AuthenticationEntry {
     enum class Type : std::uint8_t { Public, ApiKey };
     Type type;
+    // The policy name
+    sourcemeta::core::JSON::String name;
     std::vector<sourcemeta::core::JSON::String> paths;
     // Environment variable names holding the keys, for apiKey policies
     std::vector<sourcemeta::core::JSON::String> keys;

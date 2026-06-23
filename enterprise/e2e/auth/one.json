@@ -20,6 +20,7 @@
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "reports",
       "paths": [ "/private", "/reports" ],
       "keys": [
         { "environmentVariable": "ONE_E2E_KEY_PRIMARY" },
@@ -29,12 +30,14 @@
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "internal",
       "paths": [ "/internal" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_INTERNAL" } ]
     },
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "surface",
       "paths": [ "/self/v1/health" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_SURFACE" } ]
     }

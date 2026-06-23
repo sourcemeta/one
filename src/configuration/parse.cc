@@ -151,6 +151,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       // here
       if (type == "apiKey") {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
+        parsed.name = entry.at("name").to_string();
         for (const auto &key : entry.at("keys").as_array()) {
           parsed.keys.push_back(key.at("environmentVariable").to_string());
         }
