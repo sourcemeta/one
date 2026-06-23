@@ -33,12 +33,7 @@
       "type": "string"
     },
     "policies": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z0-9-]+$"
-      }
+      "$ref": "#/$defs/policies"
     },
     "description": {
       "type": "string"
@@ -88,12 +83,7 @@
                 "type": "string"
               },
               "policies": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9-]+$"
-                }
+                "$ref": "#/$defs/policies"
               },
               "type": {
                 "const": "directory"
@@ -142,12 +132,7 @@
                 "type": "string"
               },
               "policies": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9-]+$"
-                }
+                "$ref": "#/$defs/policies"
               }
             },
             "unevaluatedProperties": false
@@ -183,5 +168,15 @@
       "format": "uri"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "policies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      }
+    }
+  }
 }
