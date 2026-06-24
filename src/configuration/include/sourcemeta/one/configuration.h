@@ -63,7 +63,7 @@ struct Configuration {
 
     // The policy name
     sourcemeta::core::JSON::String name;
-    Algorithm algorithm;
+    Algorithm algorithm{Algorithm::Identity};
     std::vector<sourcemeta::core::JSON::String> paths;
     // Environment variable names holding the keys
     std::vector<sourcemeta::core::JSON::String> keys;
