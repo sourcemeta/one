@@ -477,9 +477,8 @@ struct Authentication::Impl {
   const void *edges_{nullptr};
   const char *strings_{nullptr};
 
-  // The policy table, resolved once at construction, holding the type of each
-  // policy so that admits can dispatch on it. Null when the instance is
-  // unconfigured or declares no policies
+  // The policy table, resolved once at construction, locating each policy's
+  // keys. Null when the instance is unconfigured or declares no policies
   const void *policies_{nullptr};
   std::uint32_t policy_count_{0};
 
