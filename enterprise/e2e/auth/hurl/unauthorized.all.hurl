@@ -182,6 +182,10 @@ HTTP 401
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept, Accept-Encoding
 [Asserts]
 xpath "string(//title)" == "Unauthorized"
 xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"

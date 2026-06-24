@@ -440,6 +440,15 @@ TEST(Authentication, governing_of_an_ungoverned_path_is_empty) {
             (std::vector<std::size_t>{0}));
 }
 
+TEST(Authentication, reference_through_a_broken_artifact_is_rejected) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/open/two"));
+  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secret/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted("/secret/one", "/secret/two"));
+}
+
 TEST(Authentication, reference_to_a_public_schema_is_permitted) {
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_PUBLIC"}};

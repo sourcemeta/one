@@ -446,6 +446,12 @@ struct Authentication::Impl {
   [[nodiscard]] auto
   reference_permitted(const std::string_view referrer_path,
                       const std::string_view referent_path) const -> bool {
+    // A missing or broken artifact denies every reference, since an empty key
+    // set would otherwise vacuously satisfy the subset check below
+    if (this->nodes_ == nullptr) {
+      return false;
+    }
+
     const auto referent{this->audience(referent_path)};
     if (referent.is_public) {
       return true;
