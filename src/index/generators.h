@@ -433,42 +433,51 @@ struct GENERATE_HEALTH {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     const auto &collection{*resolver.entry(action.data).collection};
-    const BundleLease lease{collection, resolver, callback};
-    auto &cache_entry{lease.value()};
     auto errors{sourcemeta::core::JSON::make_array()};
-    const auto result{cache_entry.bundle.check(
-        contents, sourcemeta::blaze::schema_walker,
-        [&callback, &resolver](const auto identifier) {
-          return resolver(identifier, callback);
-        },
-        [&errors, &cache_entry](const auto &pointer, const auto &name,
-                                const auto &message, const auto &outcome,
-                                const bool) {
-          auto entry{sourcemeta::core::JSON::make_object()};
-          entry.assign("name", sourcemeta::core::JSON{name});
-          entry.assign("message", sourcemeta::core::JSON{message});
-          entry.assign("description",
-                       sourcemeta::core::to_json(outcome.description));
-          entry.assign("custom", sourcemeta::core::JSON{
-                                     cache_entry.custom_names.contains(name)});
-
-          auto pointers{sourcemeta::core::JSON::make_array()};
-          if (outcome.locations.empty()) {
-            pointers.push_back(
-                sourcemeta::core::JSON{sourcemeta::core::to_string(pointer)});
-          } else {
-            for (const auto &location : outcome.locations) {
-              pointers.push_back(sourcemeta::core::JSON{
-                  sourcemeta::core::to_string(pointer.concat(location))});
-            }
-          }
-
-          entry.assign("pointers", std::move(pointers));
-          errors.push_back(std::move(entry));
-        })};
-
     auto report{sourcemeta::core::JSON::make_object()};
-    report.assign("score", sourcemeta::core::to_json(result.second));
+
+    // The bundle carries mutable per-rule state, so a single instance cannot be
+    // checked from multiple threads at once. We build one bundle per
+    // configuration, keep it warm across the whole run, and serialise the
+    // linting itself under a single lock
+    {
+      static std::mutex mutex;
+      const std::lock_guard<std::mutex> lock{mutex};
+      auto &cache_entry{bundle_for(collection, resolver, callback)};
+      const auto result{cache_entry.bundle.check(
+          contents, sourcemeta::blaze::schema_walker,
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          },
+          [&errors, &cache_entry](const auto &pointer, const auto &name,
+                                  const auto &message, const auto &outcome,
+                                  const bool) {
+            auto entry{sourcemeta::core::JSON::make_object()};
+            entry.assign("name", sourcemeta::core::JSON{name});
+            entry.assign("message", sourcemeta::core::JSON{message});
+            entry.assign("description",
+                         sourcemeta::core::to_json(outcome.description));
+            entry.assign("custom",
+                         sourcemeta::core::JSON{
+                             cache_entry.custom_names.contains(name)});
+
+            auto pointers{sourcemeta::core::JSON::make_array()};
+            if (outcome.locations.empty()) {
+              pointers.push_back(
+                  sourcemeta::core::JSON{sourcemeta::core::to_string(pointer)});
+            } else {
+              for (const auto &location : outcome.locations) {
+                pointers.push_back(sourcemeta::core::JSON{
+                    sourcemeta::core::to_string(pointer.concat(location))});
+              }
+            }
+
+            entry.assign("pointers", std::move(pointers));
+            errors.push_back(std::move(entry));
+          })};
+      report.assign("score", sourcemeta::core::to_json(result.second));
+    }
+
     report.assign("errors", std::move(errors));
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -485,11 +494,21 @@ private:
     std::unordered_set<std::string_view> custom_names;
   };
 
-  static auto build_bundle(
+  // Built once per configuration and reused across the whole run. The caller
+  // must hold the lint lock, which also serialises checks against the returned
+  // bundle's mutable per-rule state
+  static auto bundle_for(
       const sourcemeta::blaze::Configuration &configuration,
       [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
       [[maybe_unused]] const sourcemeta::one::BuildDynamicCallback &callback)
-      -> std::unique_ptr<CacheEntry> {
+      -> CacheEntry & {
+    static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
+    const auto *key{static_cast<const void *>(&configuration)};
+    const auto match{cache.find(key)};
+    if (match != cache.cend()) {
+      return *match->second;
+    }
+
     auto entry{std::make_unique<CacheEntry>()};
     sourcemeta::blaze::add(entry->bundle,
                            sourcemeta::blaze::AlterSchemaMode::Linter);
@@ -508,69 +527,8 @@ private:
     }
 #endif
 
-    return entry;
+    return *cache.emplace(key, std::move(entry)).first->second;
   }
-
-  // A bundle carries mutable per-rule state (scratch buffers as well as
-  // resolution memoisation caches), so a given instance cannot be checked from
-  // multiple threads at once. Producing runs across a thread pool, so instead
-  // of sharing a single instance (a data race) or rebuilding one per worker, we
-  // keep a pool of reusable bundles per configuration. Each lease borrows an
-  // idle bundle, building a new one only when none are free, and returns it on
-  // destruction. We therefore build at most one bundle per concurrent user and
-  // reuse it across both threads and build waves, while the resolver
-  // memoisation caches stay warm
-  static auto bundle_pool() -> std::unordered_map<
-      const void *, std::vector<std::unique_ptr<CacheEntry>>> & {
-    static std::unordered_map<const void *,
-                              std::vector<std::unique_ptr<CacheEntry>>>
-        pool;
-    return pool;
-  }
-
-  static auto bundle_pool_mutex() -> std::mutex & {
-    static std::mutex mutex;
-    return mutex;
-  }
-
-  class BundleLease {
-  public:
-    BundleLease(const sourcemeta::blaze::Configuration &configuration,
-                const sourcemeta::one::Resolver &resolver,
-                const sourcemeta::one::BuildDynamicCallback &callback)
-        : key{static_cast<const void *>(&configuration)} {
-      {
-        const std::lock_guard<std::mutex> lock{bundle_pool_mutex()};
-        auto &available{bundle_pool()[this->key]};
-        if (!available.empty()) {
-          this->entry = std::move(available.back());
-          available.pop_back();
-        }
-      }
-
-      // Build outside the lock, as compiling custom rules is expensive and
-      // must not serialise sibling workers
-      if (!this->entry) {
-        this->entry = build_bundle(configuration, resolver, callback);
-      }
-    }
-
-    BundleLease(const BundleLease &) = delete;
-    BundleLease(BundleLease &&) = delete;
-    auto operator=(const BundleLease &) -> BundleLease & = delete;
-    auto operator=(BundleLease &&) -> BundleLease & = delete;
-
-    ~BundleLease() {
-      const std::lock_guard<std::mutex> lock{bundle_pool_mutex()};
-      bundle_pool()[this->key].push_back(std::move(this->entry));
-    }
-
-    [[nodiscard]] auto value() const -> CacheEntry & { return *this->entry; }
-
-  private:
-    const void *key;
-    std::unique_ptr<CacheEntry> entry;
-  };
 };
 
 struct GENERATE_BUNDLE {
