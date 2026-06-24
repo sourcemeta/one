@@ -147,6 +147,7 @@ if(ONE_TESTS)
     add_subdirectory(test/unit/metapack)
     add_subdirectory(test/unit/router)
     add_subdirectory(test/unit/search)
+    add_subdirectory(test/unit/shared)
   endif()
 
   if(ONE_INDEX)

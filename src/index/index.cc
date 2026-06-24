@@ -728,6 +728,15 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ConfigurationNonCanonicalAuthenticationPathError
+          &error) {
+    std::print(stdout,
+               "error: {}\n  at scope {}\n  must use the canonical form {}\n  "
+               "at path {}\n",
+               error.what(), error.scope(), error.canonical(),
+               error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::MetaschemaError &error) {
     std::print(stdout, "error: {}\n{}", error.what(), error.stacktrace());
     return EXIT_FAILURE;
