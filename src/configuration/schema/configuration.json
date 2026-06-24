@@ -77,7 +77,7 @@
             "const": "apiKey"
           },
           "algorithm": {
-            "const": "identity"
+            "enum": [ "identity", "sha256" ]
           },
           "name": {
             "type": "string",

@@ -149,6 +149,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     for (const auto &entry : data.at("authentication").as_array()) {
       Configuration::AuthenticationEntry parsed;
       parsed.name = entry.at("name").to_string();
+      parsed.algorithm =
+          entry.at("algorithm").to_string() == "sha256"
+              ? Configuration::AuthenticationEntry::Algorithm::Sha256
+              : Configuration::AuthenticationEntry::Algorithm::Identity;
       for (const auto &key : entry.at("keys").as_array()) {
         parsed.keys.push_back(key.at("environmentVariable").to_string());
       }

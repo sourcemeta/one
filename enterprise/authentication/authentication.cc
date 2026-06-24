@@ -1,5 +1,6 @@
 #include <sourcemeta/one/authentication.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/io.h>
 
 #include "authentication_format.h"
@@ -131,7 +132,9 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
       if (entry.metadata_offset != metadata_cursor ||
-          entry.metadata_length > size - metadata_cursor) {
+          entry.metadata_length > size - metadata_cursor ||
+          entry.algorithm >
+              static_cast<std::uint8_t>(Authentication::Algorithm::Sha256)) {
         return false;
       }
 
@@ -212,12 +215,26 @@ auto resolve_environment(const std::string_view variable)
 }
 
 auto admits_apikey(const std::span<const std::byte> metadata,
-                   const std::string_view credential) -> bool {
+                   const std::string_view credential,
+                   const sourcemeta::one::Authentication::Algorithm algorithm)
+    -> bool {
   std::size_t cursor{0};
   std::uint32_t count{0};
   if (!read_u32(metadata, cursor, count)) {
     return false;
   }
+
+  // Identity compares the credential directly with no allocation. Every other
+  // algorithm hashes it once, and only then is a string needed to hold the
+  // digest the stored value is compared against
+  std::string hashed;
+  if (algorithm != sourcemeta::one::Authentication::Algorithm::Identity) {
+    hashed = sourcemeta::core::sha256(credential);
+  }
+  const std::string_view subject{
+      algorithm == sourcemeta::one::Authentication::Algorithm::Identity
+          ? credential
+          : std::string_view{hashed}};
 
   for (std::uint32_t index{0}; index < count; index += 1) {
     std::uint32_t length{0};
@@ -232,7 +249,7 @@ auto admits_apikey(const std::span<const std::byte> metadata,
     cursor += length;
 
     const auto stored{resolve_environment(variable)};
-    if (stored.has_value() && constant_time_equal(credential, stored.value())) {
+    if (stored.has_value() && constant_time_equal(subject, stored.value())) {
       return true;
     }
   }
@@ -395,7 +412,9 @@ struct Authentication::Impl {
                     entry.metadata_length};
       }
 
-      if (admits_apikey(metadata, credential)) {
+      if (admits_apikey(
+              metadata, credential,
+              static_cast<Authentication::Algorithm>(entry.algorithm))) {
         return true;
       }
     }

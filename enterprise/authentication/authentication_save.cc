@@ -160,6 +160,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     entry.metadata_offset =
         metadata_start + static_cast<std::uint32_t>(metadata.size());
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
+    entry.algorithm = static_cast<std::uint8_t>(policy.algorithm);
     policy_table.push_back(entry);
     metadata.insert(metadata.end(), policy_metadata.begin(),
                     policy_metadata.end());

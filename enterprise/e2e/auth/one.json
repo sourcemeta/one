@@ -28,6 +28,20 @@
       "name": "surface",
       "paths": [ "/self/v1/health" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_SURFACE" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "mixed-plain",
+      "paths": [ "/mixed" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_MIXED_PLAIN" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "sha256",
+      "name": "mixed-hashed",
+      "paths": [ "/mixed" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_MIXED_HASHED" } ]
     }
   ],
   "contents": {
@@ -35,6 +49,7 @@
     "private": { "path": "./schemas/private" },
     "reports": { "path": "./schemas/reports" },
     "internal": { "path": "./schemas/internal" },
-    "orphan": { "path": "./schemas/orphan" }
+    "orphan": { "path": "./schemas/orphan" },
+    "mixed": { "path": "./schemas/mixed" }
   }
 }
