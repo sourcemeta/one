@@ -233,13 +233,18 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
 }
 
 inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
-                                  const sourcemeta::core::JSON &entry) -> void {
+                                  const sourcemeta::core::JSON &entry,
+                                  const bool barrier) -> void {
   writer.tr();
 
   // Type column
   writer.td().attribute("class", "text-nowrap");
   if (entry.at("type").to_string() == "directory") {
-    if (entry.defines("github") && !entry.at("github").includes('/')) {
+    // A child whose governing policies differ from the directory being listed
+    // is an authentication barrier, shown with a lock instead of a folder
+    if (barrier) {
+      writer.i().attribute("class", "bi bi-lock-fill text-warning").close();
+    } else if (entry.defines("github") && !entry.at("github").includes('/')) {
       writer.img()
           .attribute("src", "https://github.com/" +
                                 entry.at("github").to_string() + ".png?size=80")
@@ -341,6 +346,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
 
   const auto self_path{base_path + "/self"};
   const auto self_path_slash{base_path + "/self/"};
+  const auto &policies{directory.at("policies")};
 
   writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
@@ -356,7 +362,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
         has_regular_entries = true;
       }
 
-      make_file_manager_row(writer, entry);
+      make_file_manager_row(writer, entry, entry.at("policies") != policies);
     }
   }
 
@@ -375,7 +381,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
           "class", "table table-bordered border-light-subtle table-light");
       make_file_manager_table_header(writer);
       writer.tbody();
-      make_file_manager_row(writer, entry);
+      make_file_manager_row(writer, entry, entry.at("policies") != policies);
       writer.close();
       writer.close();
       break;
