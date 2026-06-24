@@ -207,6 +207,9 @@ HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
+# Inside the gated collection nothing adds a new policy, so there is no further
+# barrier: the lock sits only at the boundary, never repeated within
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 
 # The HTML rendering of the nested directory is gated identically
 GET {{base}}/private/open/
@@ -226,7 +229,10 @@ Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 
-# The HTML rendering of the public root lists anonymously, never the 401 page
+# The HTML rendering of the public root lists anonymously, never the 401 page.
+# A child whose governing policies differ from the root is an authentication
+# barrier, shown with a lock instead of the plain folder icon, while a child that
+# shares the root's public scope keeps the folder
 GET {{base}}/
 Accept: text/html
 HTTP 200
@@ -234,3 +240,11 @@ Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 3
+xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
+xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-lock-fill')])" == 0
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'orphan']]//i[contains(@class, 'bi-folder-fill')])" == 1
