@@ -6,7 +6,6 @@
 #endif
 
 #include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
@@ -17,38 +16,6 @@
 #include <vector>      // std::vector
 
 namespace sourcemeta::one {
-
-// Raised when saving a policy set in which an apiKey policy can never deny
-// anyone because a public policy already covers its entire scope
-class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationShadowedError
-    : public std::exception {
-public:
-  AuthenticationShadowedError(std::filesystem::path path, std::string scope,
-                              std::string shadow)
-      : path_{std::move(path)}, scope_{std::move(scope)},
-        shadow_{std::move(shadow)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An apiKey authentication policy is shadowed by a public policy";
-  }
-
-  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
-    return this->path_;
-  }
-
-  [[nodiscard]] auto scope() const noexcept -> const std::string & {
-    return this->scope_;
-  }
-
-  [[nodiscard]] auto shadow() const noexcept -> const std::string & {
-    return this->shadow_;
-  }
-
-private:
-  std::filesystem::path path_;
-  std::string scope_;
-  std::string shadow_;
-};
 
 // Raised when an authentication policy is scoped to a path that matches no
 // route served by the registry
@@ -79,12 +46,11 @@ class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
-  enum class Type : std::uint8_t { Public, ApiKey };
-
+  // A policy gates a set of path prefixes behind a set of keys. A path covered
+  // by no policy is public
   struct Policy {
-    Type type;
     std::span<const std::string_view> paths;
-    std::span<const std::string_view> keys{};
+    std::span<const std::string_view> keys;
   };
 
   struct Verdict {

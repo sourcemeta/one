@@ -274,29 +274,31 @@ header "ETag" exists
   "additionalProperties": false
 }
 
-# An encoded slash is not a path separator: the request resolves to no servable
-# resource and is denied regardless of credential, never serving
+# An encoded slash is not a path separator: it stays a single literal segment at
+# the public root that names no resource, so it answers a 404 regardless of
+# credential rather than canonicalising into the apiKey scope
 GET {{base}}/private%2fsecret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
-slash_denied_body: body
-slash_denied_schema: header "Link" regex "<([^>]+)>"
+slash_missing_body: body
+slash_missing_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "WWW-Authenticate" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-POST {{base}}/self/v1/api/schemas/evaluate{{slash_denied_schema}}
+POST {{base}}/self/v1/api/schemas/evaluate{{slash_missing_schema}}
 ```
-{{slash_denied_body}}
+{{slash_missing_body}}
 ```
 HTTP 200
 [Asserts]
@@ -304,18 +306,17 @@ jsonpath "$.valid" == true
 
 GET {{base}}/private%2fsecret.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # A double-encoded dot is decoded only once, so %252e becomes the literal
@@ -407,8 +408,8 @@ header "ETag" exists
   "additionalProperties": false
 }
 
-# The public carve-out under the apiKey prefix cannot be a springboard:
-# traversal out of /private/open lands back in the protected /private
+# Traversal out of the nested /private/open lands back in the protected
+# /private, so it stays gated rather than escaping the scope
 GET {{base}}/private/open/../secret.json
 [Options]
 path-as-is: true

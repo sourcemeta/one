@@ -7,13 +7,30 @@ TMP="$(mktemp -d)"
 clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
+mkdir "$TMP/internal"
+
+cat << 'EOF' > "$TMP/internal/secret.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
 cat << 'EOF' > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
   "authentication": [
-    { "type": "apiKey", "algorithm": "identity", "name": "internal", "paths": [ "/internal" ], "keys": [] }
+    {
+      "type": "public",
+      "algorithm": "identity",
+      "name": "open",
+      "paths": [ "/internal/open" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_OPEN" } ]
+    }
   ],
-  "contents": {}
+  "contents": {
+    "internal": { "path": "./internal" }
+  }
 }
 EOF
 
@@ -24,9 +41,9 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: Invalid configuration
   at path $(realpath "$TMP")/one.json
-The array value was expected to contain at least 1 item but it contained 0 items
-  at instance location "/authentication/0/keys"
-  at evaluate path "/properties/authentication/items/properties/keys/minItems"
+The string value "public" was expected to equal the string constant "apiKey"
+  at instance location "/authentication/0/type"
+  at evaluate path "/properties/authentication/items/properties/type/const"
 The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/properties"

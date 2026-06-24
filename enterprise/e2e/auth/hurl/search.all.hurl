@@ -23,12 +23,37 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
+# An un-policied schema is public, so search surfaces it to anonymous callers
+GET {{base}}/self/v1/api/schemas/search?q=lonely
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$" count == 1
+jsonpath "$[0].path" == "/orphan/lonely"
+jsonpath "$[0].identifier" == "{{base}}/orphan/lonely"
+
 # Search must not leak apiKey schemas to anonymous callers
 GET {{base}}/self/v1/api/schemas/search?q=secret
 HTTP 200
 Content-Type: application/json
 [Asserts]
 jsonpath "$" count == 0
+
+# A schema nested under an apiKey prefix inherits the gate, so it stays hidden
+# anonymously and is revealed only to the governing key
+GET {{base}}/self/v1/api/schemas/search?q=shared
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$" count == 0
+
+GET {{base}}/self/v1/api/schemas/search?q=shared
+Authorization: Bearer primary-secret-key
+HTTP 200
+Content-Type: application/json
+[Asserts]
+jsonpath "$" count == 1
+jsonpath "$[0].path" == "/private/open/shared"
 
 # The same query reveals the schema once the caller is authorized for it
 GET {{base}}/self/v1/api/schemas/search?q=secret

@@ -28,12 +28,25 @@ Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 
-# The public carve-out under the apiKey prefix renders anonymously
+# A schema nested under the apiKey prefix inherits the gate, rendering the 401
+# page without a credential and the schema page with it
 GET {{base}}/private/open/shared
 Accept: text/html
+HTTP 401
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+xpath "string(//title)" == "Unauthorized"
+xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+
+GET {{base}}/private/open/shared
+Accept: text/html
+Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
+xpath "string(//title)" != "Unauthorized"
 
 # A browser request (HTML preferred) for an apiKey schema renders the 401 page
 GET {{base}}/private/secret

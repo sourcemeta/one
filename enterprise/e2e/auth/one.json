@@ -2,21 +2,9 @@
   "url": "http://localhost:8000",
   "html": {
     "name": "Authentication Sandbox",
-    "description": "Fixtures exercising public and apiKey authentication policies"
+    "description": "Fixtures exercising a public registry with apiKey-gated components"
   },
   "authentication": [
-    {
-      "type": "public",
-      "paths": [
-        "/self/v1/schemas",
-        "/self/v1/api",
-        "/self/v1/mcp",
-        "/self/v1/static"
-      ]
-    },
-    { "type": "public", "paths": [ "/public" ] },
-    { "type": "public", "paths": [ "/private/open" ] },
-    { "type": "public", "paths": [ "/reports/draft" ] },
     {
       "type": "apiKey",
       "algorithm": "identity",

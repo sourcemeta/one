@@ -41,18 +41,12 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: Invalid configuration
   at path $(realpath "$TMP")/one.json
-The object value was expected to only define properties "paths", and "type", but it also defines properties "algorithm", "keys", and "name"
-  at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/anyOf/0/required"
 The string value "" was expected to match the regular expression "^[a-z0-9-]+\$"
   at instance location "/authentication/0/name"
-  at evaluate path "/properties/authentication/items/anyOf/1/properties/name/pattern"
+  at evaluate path "/properties/authentication/items/properties/name/pattern"
 The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/anyOf/1/properties"
-The object value was expected to validate against at least one of the 2 given subschemas
-  at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/anyOf"
+  at evaluate path "/properties/authentication/items/properties"
 Every item in the array value was expected to validate against the given subschema
   at instance location "/authentication"
   at evaluate path "/properties/authentication/items"

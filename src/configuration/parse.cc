@@ -148,18 +148,9 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   if (data.defines("authentication")) {
     for (const auto &entry : data.at("authentication").as_array()) {
       Configuration::AuthenticationEntry parsed;
-      const auto &type{entry.at("type").to_string()};
-      // The schema constrains the type and algorithm to the values handled
-      // here
-      if (type == "apiKey") {
-        parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
-        parsed.name = entry.at("name").to_string();
-        for (const auto &key : entry.at("keys").as_array()) {
-          parsed.keys.push_back(key.at("environmentVariable").to_string());
-        }
-      } else {
-        assert(type == "public");
-        parsed.type = Configuration::AuthenticationEntry::Type::Public;
+      parsed.name = entry.at("name").to_string();
+      for (const auto &key : entry.at("keys").as_array()) {
+        parsed.keys.push_back(key.at("environmentVariable").to_string());
       }
 
       for (const auto &path : entry.at("paths").as_array()) {
@@ -170,13 +161,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
-  // Policy names are unique, and "public" is reserved for the public type
+  // Policy names are unique, and "public" is reserved because an empty policy
+  // array on a listing already means public
   std::set<std::string_view> authentication_names;
   for (const auto &entry : result.authentication) {
-    if (entry.type != Configuration::AuthenticationEntry::Type::ApiKey) {
-      continue;
-    }
-
     if (entry.name == "public") {
       throw ConfigurationReservedAuthenticationNameError(configuration_path,
                                                          entry.name);

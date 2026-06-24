@@ -6,16 +6,6 @@
   },
   "authentication": [
     {
-      "type": "public",
-      "paths": [
-        "/public",
-        "/self/v1/schemas",
-        "/self/v1/api",
-        "/self/v1/mcp",
-        "/self/v1/health"
-      ]
-    },
-    {
       "type": "apiKey",
       "algorithm": "identity",
       "name": "content",

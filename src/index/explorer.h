@@ -115,17 +115,12 @@ static auto make_policies(const sourcemeta::one::Authentication &authentication,
                           const sourcemeta::one::Configuration &configuration,
                           const std::string &registry_path)
     -> sourcemeta::core::JSON {
+  // The governing set holds the apiKey policies that gate the path. An empty
+  // set means the path is public
   std::set<std::string_view> names;
   for (const auto index : authentication.governing(registry_path)) {
     assert(index < configuration.authentication.size());
-    const auto &policy{configuration.authentication[index]};
-    // Public access is reachable by everyone, encoded as no governing names
-    if (policy.type ==
-        sourcemeta::one::Configuration::AuthenticationEntry::Type::Public) {
-      return sourcemeta::core::JSON::make_array();
-    }
-
-    names.emplace(policy.name);
+    names.emplace(configuration.authentication[index].name);
   }
 
   auto result{sourcemeta::core::JSON::make_array()};
