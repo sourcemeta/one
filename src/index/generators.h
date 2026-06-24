@@ -1056,7 +1056,7 @@ struct GENERATE_AUTHENTICATION {
         // path is matched against it base-prefixed. Content entries are keyed
         // base-relative, so they are matched against the bare policy path
         if (!routes.describes(policy_path, configuration.base_path) &&
-            !configuration.matches_entry(policy_path)) {
+            !configuration.covers_entry(policy_path)) {
           throw AuthenticationUnknownPathError(configuration.path,
                                                std::string{policy_path});
         }

@@ -884,6 +884,76 @@ TEST(Configuration, authentication_rejects_reserved_name) {
                sourcemeta::one::ConfigurationReservedAuthenticationNameError);
 }
 
+// A registry with a top-level collection "alpha", a page "team", and two
+// collections "team/private" and "team/public" nested under it
+static auto covers_entry_fixture() -> sourcemeta::one::Configuration {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  return sourcemeta::one::Configuration::parse(raw_configuration,
+                                               "/tmp/one.json", "/tmp");
+}
+
+TEST(Configuration, covers_entry_root_is_above_everything) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/"));
+}
+
+TEST(Configuration, covers_entry_an_exact_collection) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/alpha"));
+}
+
+TEST(Configuration, covers_entry_an_exact_page) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/team"));
+}
+
+TEST(Configuration, covers_entry_a_nested_collection) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/team/private"));
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/team/public"));
+}
+
+TEST(Configuration, covers_entry_a_namespace_above_collections) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/team"));
+}
+
+TEST(Configuration, covers_entry_ignores_a_trailing_slash) {
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/alpha/"));
+  EXPECT_TRUE(covers_entry_fixture().covers_entry("/team/private/"));
+}
+
+TEST(Configuration, covers_entry_rejects_a_path_inside_a_collection) {
+  EXPECT_FALSE(covers_entry_fixture().covers_entry("/alpha/schema"));
+  EXPECT_FALSE(covers_entry_fixture().covers_entry("/team/private/secret"));
+}
+
+TEST(Configuration, covers_entry_rejects_an_unknown_top_level_path) {
+  EXPECT_FALSE(covers_entry_fixture().covers_entry("/beta"));
+}
+
+TEST(Configuration, covers_entry_rejects_a_partial_segment) {
+  EXPECT_FALSE(covers_entry_fixture().covers_entry("/alph"));
+  EXPECT_FALSE(covers_entry_fixture().covers_entry("/team/priv"));
+}
+
+TEST(Configuration, covers_entry_with_no_entries_only_covers_the_root) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com"
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+  EXPECT_TRUE(configuration.covers_entry("/"));
+  EXPECT_FALSE(configuration.covers_entry("/alpha"));
+}
+
 TEST(Configuration, authentication_rejects_apikey_without_algorithm) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

@@ -104,10 +104,10 @@ struct Configuration {
            std::get_if<Collection>(&match->second) != nullptr;
   }
 
-  // Whether the given registry path overlaps a declared collection or page,
-  // either by governing one or by sitting within one
-  [[nodiscard]] auto matches_entry(std::string_view registry_path) const
-      -> bool;
+  // Whether the registry path is at or above a declared collection or page (the
+  // registry root is above all of them). A path inside a collection is not, so
+  // a policy gates whole collections and pages, never a path within one
+  [[nodiscard]] auto covers_entry(std::string_view registry_path) const -> bool;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
       entries;
