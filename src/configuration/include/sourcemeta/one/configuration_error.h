@@ -127,36 +127,6 @@ private:
   std::string name_;
 };
 
-class ConfigurationNonCanonicalAuthenticationPathError : public std::exception {
-public:
-  ConfigurationNonCanonicalAuthenticationPathError(std::filesystem::path path,
-                                                   std::string scope,
-                                                   std::string canonical)
-      : path_{std::move(path)}, scope_{std::move(scope)},
-        canonical_{std::move(canonical)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy path is not in canonical form";
-  }
-
-  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
-    return this->path_;
-  }
-
-  [[nodiscard]] auto scope() const noexcept -> const std::string & {
-    return this->scope_;
-  }
-
-  [[nodiscard]] auto canonical() const noexcept -> const std::string & {
-    return this->canonical_;
-  }
-
-private:
-  std::filesystem::path path_;
-  std::string scope_;
-  std::string canonical_;
-};
-
 class ConfigurationCyclicReferenceError : public std::exception {
 public:
   ConfigurationCyclicReferenceError(std::filesystem::path from,

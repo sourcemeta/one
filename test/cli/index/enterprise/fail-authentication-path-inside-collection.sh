@@ -24,7 +24,7 @@ cat << 'EOF' > "$TMP/one.json"
       "type": "apiKey",
       "algorithm": "identity",
       "name": "reports",
-      "paths": [ "/private/%73ecret" ],
+      "paths": [ "/private/secret" ],
       "keys": [ { "environmentVariable": "ONE_TEST_KEY_REPORTS" } ]
     }
   ],
@@ -35,13 +35,12 @@ cat << 'EOF' > "$TMP/one.json"
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
-  > "$TMP/output.txt" && CODE="$?" || CODE="$?"
+  > "$TMP/output.txt" 2>/dev/null && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: An authentication policy path is not in canonical form
-  at scope /private/%73ecret
-  must use the canonical form /private/secret
+error: An authentication policy matches no known route
+  at scope /private/secret
   at path $(realpath "$TMP")/one.json
 EOF
 

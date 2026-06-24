@@ -3,7 +3,6 @@
 #include <sourcemeta/core/io.h>
 
 #include <filesystem> // std::filesystem::path
-#include <variant>    // std::holds_alternative
 
 namespace sourcemeta::one {
 
@@ -22,15 +21,6 @@ auto Configuration::matches_entry(const std::string_view registry_path) const
     // The scope is at or above the entry, so it governs a namespace that
     // contains it
     if (sourcemeta::core::is_lexically_under_path(entry.first, scope)) {
-      return true;
-    }
-
-    // The scope reaches inside the entry. Only a collection is an open
-    // namespace whose schemas may not exist yet, so scoping below it is
-    // meaningful. A page is a fixed resource, and reaching below it would let a
-    // typo masquerade as a path within it
-    if (std::holds_alternative<Collection>(entry.second) &&
-        sourcemeta::core::is_lexically_under_path(scope, entry.first)) {
       return true;
     }
   }

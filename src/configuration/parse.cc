@@ -3,7 +3,6 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/uri.h>
-#include <sourcemeta/one/shared.h>
 
 #include "template.h"
 
@@ -11,42 +10,9 @@
 #include <cassert>     // assert
 #include <cctype>      // std::tolower
 #include <set>         // std::set
-#include <string>      // std::string
 #include <string_view> // std::string_view
 
 namespace {
-
-auto registry_path_segments_match(const std::string_view written,
-                                  const std::string_view canonical) -> bool {
-  std::size_t left{0};
-  std::size_t right{0};
-  while (true) {
-    while (left < written.size() && written[left] == '/') {
-      left += 1;
-    }
-    while (right < canonical.size() && canonical[right] == '/') {
-      right += 1;
-    }
-    if (left >= written.size() && right >= canonical.size()) {
-      return true;
-    }
-    if (left >= written.size() || right >= canonical.size()) {
-      return false;
-    }
-    const auto written_start{left};
-    while (left < written.size() && written[left] != '/') {
-      left += 1;
-    }
-    const auto canonical_start{right};
-    while (right < canonical.size() && canonical[right] != '/') {
-      right += 1;
-    }
-    if (written.substr(written_start, left - written_start) !=
-        canonical.substr(canonical_start, right - canonical_start)) {
-      return false;
-    }
-  }
-}
 
 auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
@@ -207,29 +173,6 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     if (!authentication_names.emplace(entry.name).second) {
       throw ConfigurationDuplicateAuthenticationNameError(configuration_path,
                                                           entry.name);
-    }
-
-    for (const auto &policy_path : entry.paths) {
-      std::string request_uri{result.url};
-      while (!request_uri.empty() && request_uri.back() == '/') {
-        request_uri.pop_back();
-      }
-      const auto server_length{request_uri.size()};
-      request_uri += policy_path;
-      while (request_uri.size() > server_length && request_uri.back() == '/') {
-        request_uri.pop_back();
-      }
-      const auto reduced{
-          sourcemeta::one::request_registry_path(request_uri, result.url)};
-      std::string canonical{"/"};
-      if (reduced.has_value()) {
-        canonical += reduced.value().generic_string();
-      }
-      if (!reduced.has_value() ||
-          !registry_path_segments_match(policy_path, canonical)) {
-        throw ConfigurationNonCanonicalAuthenticationPathError(
-            configuration_path, policy_path, canonical);
-      }
     }
   }
 
