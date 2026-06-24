@@ -1052,9 +1052,6 @@ struct GENERATE_AUTHENTICATION {
         action.dependencies.at(0)};
     for (const auto &entry : configuration.authentication) {
       for (const auto &policy_path : entry.paths) {
-        // The route table is keyed with the base path baked in, so the policy
-        // path is matched against it base-prefixed. Content entries are keyed
-        // base-relative, so they are matched against the bare policy path
         if (!routes.describes(policy_path, configuration.base_path) &&
             !configuration.covers_entry(policy_path)) {
           throw AuthenticationUnknownPathError(configuration.path,

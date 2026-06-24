@@ -961,7 +961,7 @@ TEST(Configuration, covers_entry_a_nested_collection) {
   EXPECT_TRUE(configuration.covers_entry("/team/public"));
 }
 
-TEST(Configuration, covers_entry_ignores_a_trailing_slash) {
+TEST(Configuration, covers_entry_rejects_a_trailing_slash) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -977,8 +977,8 @@ TEST(Configuration, covers_entry_ignores_a_trailing_slash) {
   })JSON")};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, "/tmp/one.json", "/tmp")};
-  EXPECT_TRUE(configuration.covers_entry("/alpha/"));
-  EXPECT_TRUE(configuration.covers_entry("/team/private/"));
+  EXPECT_FALSE(configuration.covers_entry("/alpha/"));
+  EXPECT_FALSE(configuration.covers_entry("/team/private/"));
 }
 
 TEST(Configuration, covers_entry_rejects_a_path_inside_a_collection) {

@@ -106,7 +106,8 @@ struct Configuration {
 
   // Whether the registry path is at or above a declared collection or page (the
   // registry root is above all of them). A path inside a collection is not, so
-  // a policy gates whole collections and pages, never a path within one
+  // a policy gates whole collections and pages, never a path within one. The
+  // path grammar matches the route table: no trailing slash
   [[nodiscard]] auto covers_entry(std::string_view registry_path) const -> bool;
 
   std::unordered_map<std::filesystem::path, std::variant<Page, Collection>>
