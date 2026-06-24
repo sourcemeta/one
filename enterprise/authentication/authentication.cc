@@ -369,10 +369,16 @@ struct Authentication::Impl {
 
   [[nodiscard]] auto admits(const std::string_view registry_path,
                             const std::string_view credential) const -> bool {
+    // A missing or structurally broken artifact leaves the section pointers
+    // null and denies everything. Only a valid policy fails open below
+    if (this->nodes_ == nullptr) {
+      return false;
+    }
+
     const auto governing{this->match(registry_path)};
     if (governing == 0) {
-      // Unconfigured, broken, or a path that no policy governs
-      return false;
+      // No policy covers this path, so it is public
+      return true;
     }
 
     const auto *policies{
@@ -383,21 +389,14 @@ struct Authentication::Impl {
       }
 
       const auto &entry{policies[index]};
-      const auto type{static_cast<Type>(entry.type)};
-      if (type == Type::Public) {
-        return true;
+      std::span<const std::byte> metadata;
+      if (entry.metadata_length > 0) {
+        metadata = {this->view_->as<std::byte>(entry.metadata_offset),
+                    entry.metadata_length};
       }
 
-      if (type == Type::ApiKey) {
-        std::span<const std::byte> metadata;
-        if (entry.metadata_length > 0) {
-          metadata = {this->view_->as<std::byte>(entry.metadata_offset),
-                      entry.metadata_length};
-        }
-
-        if (admits_apikey(metadata, credential)) {
-          return true;
-        }
+      if (admits_apikey(metadata, credential)) {
+        return true;
       }
     }
 
@@ -412,8 +411,16 @@ struct Authentication::Impl {
   [[nodiscard]] auto audience(const std::string_view registry_path) const
       -> Audience {
     Audience result{.is_public = false, .keys = {}};
+    // A missing or broken artifact is not public, keeping the reference check
+    // conservative
+    if (this->nodes_ == nullptr) {
+      return result;
+    }
+
     const auto governing{this->match(registry_path)};
     if (governing == 0) {
+      // No policy covers this path, so it is public
+      result.is_public = true;
       return result;
     }
 
@@ -425,13 +432,7 @@ struct Authentication::Impl {
       }
 
       const auto &entry{policies[index]};
-      const auto type{static_cast<Type>(entry.type)};
-      if (type == Type::Public) {
-        result.is_public = true;
-        return result;
-      }
-
-      if (type == Type::ApiKey && entry.metadata_length > 0) {
+      if (entry.metadata_length > 0) {
         const std::span<const std::byte> metadata{
             this->view_->as<std::byte>(entry.metadata_offset),
             entry.metadata_length};

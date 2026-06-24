@@ -69,59 +69,12 @@ auto encode_apikey_metadata(
 namespace sourcemeta::one {
 
 auto Authentication::save(std::span<const Authentication::Policy> policies,
-                          const std::filesystem::path &configuration,
+                          const std::filesystem::path &,
                           const std::filesystem::path &destination) -> void {
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
   if (policies.size() > Authentication::MAXIMUM_POLICIES) {
     throw std::runtime_error("Too many authentication policies");
-  }
-
-  // An apiKey policy whose entire scope is already covered by a public policy
-  // can never deny anyone, so it is unreachable configuration. A public
-  // carve-out nested deeper inside the apiKey scope is not a cover.
-  for (const auto &candidate : policies) {
-    if (candidate.type != Type::ApiKey) {
-      continue;
-    }
-
-    std::string_view shadowed;
-    std::string_view shadow;
-    bool fully_shadowed{!candidate.paths.empty()};
-    for (const auto scope : candidate.paths) {
-      std::string_view covering;
-      for (const auto &other : policies) {
-        if (other.type != Type::Public) {
-          continue;
-        }
-
-        for (const auto prefix : other.paths) {
-          if (sourcemeta::core::is_lexically_under_path(scope, prefix)) {
-            covering = prefix;
-            break;
-          }
-        }
-
-        if (!covering.empty()) {
-          break;
-        }
-      }
-
-      if (covering.empty()) {
-        fully_shadowed = false;
-        break;
-      }
-
-      if (shadowed.empty()) {
-        shadowed = scope;
-        shadow = covering;
-      }
-    }
-
-    if (fully_shadowed) {
-      throw AuthenticationShadowedError(configuration, std::string{shadowed},
-                                        std::string{shadow});
-    }
   }
 
   std::vector<BuildNode> nodes;
@@ -207,7 +160,6 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     entry.metadata_offset =
         metadata_start + static_cast<std::uint32_t>(metadata.size());
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
-    entry.type = static_cast<std::uint8_t>(policy.type);
     policy_table.push_back(entry);
     metadata.insert(metadata.end(), policy_metadata.begin(),
                     policy_metadata.end());

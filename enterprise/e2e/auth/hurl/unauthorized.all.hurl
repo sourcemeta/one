@@ -174,12 +174,24 @@ Cache-Control: private, max-age=0, must-revalidate
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
 
-# HTML, the public carve-out under the protected prefix: anonymous, never the
-# 401 page
+# HTML, a schema nested under the protected prefix: it inherits the gate, so an
+# anonymous caller gets the 401 page and the admitting credential the schema page
 GET {{base}}/private/open/shared
 Accept: text/html
+HTTP 401
+Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
+[Asserts]
+xpath "string(//title)" == "Unauthorized"
+xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//p[@class='lead'])" == "Present a valid credential to access it"
+
+GET {{base}}/private/open/shared
+Accept: text/html
+Authorization: Bearer primary-secret-key
 HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"

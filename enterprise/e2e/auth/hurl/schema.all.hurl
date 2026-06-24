@@ -137,10 +137,27 @@ HTTP 401
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 
-# A public prefix nested under an apiKey prefix carves out anonymous access
+# A schema nested under an apiKey prefix inherits the gate, so it is denied
+# without a credential like the rest of the scope
 GET {{base}}/private/open/shared.json
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+# The governing key admits it, marked private so shared caches do not store it
+GET {{base}}/private/open/shared.json
+Authorization: Bearer primary-secret-key
 HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
@@ -153,31 +170,30 @@ header "ETag" exists
   "type": "boolean"
 }
 
-# Public access wins even when a credential is also supplied, so the response
-# stays publicly cacheable
-GET {{base}}/private/open/shared.json
-Authorization: Bearer primary-secret-key
+# Content governed by no policy is public, so it is served anonymously
+GET {{base}}/orphan/lonely.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "boolean"
-
-# Content governed by no policy is denied even with an otherwise valid key
-GET {{base}}/orphan/lonely.json
-Authorization: Bearer internal-secret-key
-HTTP 401
-Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+header "ETag" exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/orphan/lonely",
+  "type": "null"
 }
 
-# Un-policied content is also denied anonymously
+# A credential changes nothing for un-policied content: it stays public and
+# publicly cacheable rather than being narrowed to the caller
 GET {{base}}/orphan/lonely.json
-HTTP 401
-Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+Authorization: Bearer internal-secret-key
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+[Asserts]
+jsonpath "$['$id']" == "{{base}}/orphan/lonely"
+jsonpath "$.type" == "null"

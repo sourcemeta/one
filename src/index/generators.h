@@ -1027,43 +1027,20 @@ struct GENERATE_AUTHENTICATION {
       policy_paths.push_back(std::move(paths));
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-      // Enterprise supports every policy type and any path scope
-      if (entry.type ==
-          sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey) {
-        std::vector<std::string_view> keys;
-        keys.reserve(entry.keys.size());
-        for (const auto &key : entry.keys) {
-          keys.push_back(key);
-        }
-
-        policy_keys.push_back(std::move(keys));
-        policies.push_back({sourcemeta::one::Authentication::Type::ApiKey,
-                            policy_paths.back(), policy_keys.back()});
-      } else {
-        policies.push_back({sourcemeta::one::Authentication::Type::Public,
-                            policy_paths.back()});
+      std::vector<std::string_view> keys;
+      keys.reserve(entry.keys.size());
+      for (const auto &key : entry.keys) {
+        keys.push_back(key);
       }
+
+      policy_keys.push_back(std::move(keys));
+      policies.push_back({policy_paths.back(), policy_keys.back()});
 #else
-      // The community edition only serves public access covering the whole
-      // registry, so any other type or a non-root path is an enterprise
-      // feature
-      if (entry.type !=
-          sourcemeta::one::Configuration::AuthenticationEntry::Type::Public) {
-        throw EnterpriseOnlyFeatureError(
-            configuration.path,
-            "Authentication is only available on the enterprise edition");
-      }
-
-      if (std::ranges::any_of(entry.paths,
-                              [](const auto &path) { return path != "/"; })) {
-        throw EnterpriseOnlyFeatureError(
-            configuration.path,
-            "Authentication and non-root public paths are only available on "
-            "the enterprise edition");
-      }
-
-      policies.push_back(
-          {sourcemeta::one::Authentication::Type::Public, policy_paths.back()});
+      // The community edition serves every path publicly, so any apiKey policy
+      // is an enterprise feature
+      throw EnterpriseOnlyFeatureError(
+          configuration.path,
+          "Authentication is only available on the enterprise edition");
 #endif
     }
 

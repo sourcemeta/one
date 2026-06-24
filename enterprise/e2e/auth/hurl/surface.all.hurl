@@ -292,8 +292,8 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Static assets have no content gate, so the surface carve-out is what keeps the
-# bundled web UI assets public, with their immutable caching intact
+# The static asset surface is governed by no policy, so the bundled web UI
+# assets stay public, with their immutable caching intact
 GET {{base}}/self/v1/static/style.min.css
 HTTP 200
 Cache-Control: public, max-age=31536000, immutable

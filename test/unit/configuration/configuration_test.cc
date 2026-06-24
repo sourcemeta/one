@@ -747,7 +747,7 @@ TEST(Configuration, priority_helper_defaults_when_missing_or_wrong_type) {
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 }
 
-TEST(Configuration, authentication_defaults_to_public_root) {
+TEST(Configuration, authentication_defaults_to_empty_when_absent) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -757,11 +757,8 @@ TEST(Configuration, authentication_defaults_to_public_root) {
 
   EXPECT_EQ(configuration.path, configuration_path);
 
-  EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).type,
-            sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
-  EXPECT_EQ(configuration.authentication.at(0).paths,
-            (std::vector<sourcemeta::core::JSON::String>{"/"}));
+  // Absent authentication leaves no policies
+  EXPECT_EQ(configuration.authentication.size(), 0);
 }
 
 TEST(Configuration, authentication_inherited_from_extends) {
@@ -775,8 +772,7 @@ TEST(Configuration, authentication_inherited_from_extends) {
   EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).type,
-            sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
+  EXPECT_EQ(configuration.authentication.at(0).name, "internal");
   EXPECT_EQ(configuration.authentication.at(0).paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
 }
@@ -785,7 +781,13 @@ TEST(Configuration, authentication_explicit_paths) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
-      { "type": "public", "paths": [ "/internal", "/vendor" ] }
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "internal",
+        "paths": [ "/internal", "/vendor" ],
+        "keys": [ { "environmentVariable": "ONE_KEY" } ]
+      }
     ]
   })JSON")};
   const auto configuration{sourcemeta::one::Configuration::parse(
@@ -793,8 +795,6 @@ TEST(Configuration, authentication_explicit_paths) {
 
   EXPECT_EQ(configuration.path, "/tmp/one.json");
   EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).type,
-            sourcemeta::one::Configuration::AuthenticationEntry::Type::Public);
   EXPECT_EQ(
       configuration.authentication.at(0).paths,
       (std::vector<sourcemeta::core::JSON::String>{"/internal", "/vendor"}));
@@ -821,8 +821,6 @@ TEST(Configuration, authentication_apikey_identity) {
 
   EXPECT_EQ(configuration.path, "/tmp/one.json");
   EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).type,
-            sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey);
   EXPECT_EQ(configuration.authentication.at(0).name, "internal");
   EXPECT_EQ(configuration.authentication.at(0).paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
@@ -919,22 +917,34 @@ TEST(Configuration, authentication_rejects_apikey_non_identity_algorithm) {
                sourcemeta::one::ConfigurationValidationError);
 }
 
-TEST(Configuration, authentication_rejects_empty_array) {
+TEST(Configuration, authentication_accepts_empty_array) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": []
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+  EXPECT_EQ(configuration.authentication.size(), 0);
 }
 
 TEST(Configuration, authentication_rejects_duplicate_entries) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
-      { "type": "public", "paths": [ "/" ] },
-      { "type": "public", "paths": [ "/" ] }
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "team",
+        "paths": [ "/a" ],
+        "keys": [ { "environmentVariable": "K" } ]
+      },
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "team",
+        "paths": [ "/a" ],
+        "keys": [ { "environmentVariable": "K" } ]
+      }
     ]
   })JSON")};
   EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
@@ -945,7 +955,14 @@ TEST(Configuration, authentication_rejects_duplicate_entries) {
 TEST(Configuration, authentication_rejects_missing_paths) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
-    "authentication": [ { "type": "public" } ]
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "team",
+        "keys": [ { "environmentVariable": "K" } ]
+      }
+    ]
   })JSON")};
   EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
                                                      "/tmp/one.json", "."),
@@ -955,7 +972,15 @@ TEST(Configuration, authentication_rejects_missing_paths) {
 TEST(Configuration, authentication_rejects_empty_path) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
-    "authentication": [ { "type": "public", "paths": [ "" ] } ]
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "team",
+        "paths": [ "" ],
+        "keys": [ { "environmentVariable": "K" } ]
+      }
+    ]
   })JSON")};
   EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
                                                      "/tmp/one.json", "."),
@@ -965,7 +990,15 @@ TEST(Configuration, authentication_rejects_empty_path) {
 TEST(Configuration, authentication_rejects_path_without_leading_slash) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
-    "authentication": [ { "type": "public", "paths": [ "acme" ] } ]
+    "authentication": [
+      {
+        "type": "apiKey",
+        "algorithm": "identity",
+        "name": "team",
+        "paths": [ "acme" ],
+        "keys": [ { "environmentVariable": "K" } ]
+      }
+    ]
   })JSON")};
   EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
                                                      "/tmp/one.json", "."),
@@ -991,10 +1024,18 @@ TEST(Configuration, authentication_accepts_maximum_entries) {
   auto entries{sourcemeta::core::JSON::make_array()};
   for (std::size_t index = 0; index < 64; ++index) {
     auto entry{sourcemeta::core::JSON::make_object()};
-    entry.assign("type", sourcemeta::core::JSON{"public"});
+    entry.assign("type", sourcemeta::core::JSON{"apiKey"});
+    entry.assign("algorithm", sourcemeta::core::JSON{"identity"});
+    entry.assign("name", sourcemeta::core::JSON{"p" + std::to_string(index)});
     auto paths{sourcemeta::core::JSON::make_array()};
     paths.push_back(sourcemeta::core::JSON{"/p" + std::to_string(index)});
     entry.assign("paths", std::move(paths));
+    auto keys{sourcemeta::core::JSON::make_array()};
+    auto key{sourcemeta::core::JSON::make_object()};
+    key.assign("environmentVariable",
+               sourcemeta::core::JSON{"K" + std::to_string(index)});
+    keys.push_back(std::move(key));
+    entry.assign("keys", std::move(keys));
     entries.push_back(std::move(entry));
   }
   raw_configuration.assign("authentication", std::move(entries));
@@ -1012,10 +1053,18 @@ TEST(Configuration, authentication_rejects_above_maximum_entries) {
   auto entries{sourcemeta::core::JSON::make_array()};
   for (std::size_t index = 0; index < 65; ++index) {
     auto entry{sourcemeta::core::JSON::make_object()};
-    entry.assign("type", sourcemeta::core::JSON{"public"});
+    entry.assign("type", sourcemeta::core::JSON{"apiKey"});
+    entry.assign("algorithm", sourcemeta::core::JSON{"identity"});
+    entry.assign("name", sourcemeta::core::JSON{"p" + std::to_string(index)});
     auto paths{sourcemeta::core::JSON::make_array()};
     paths.push_back(sourcemeta::core::JSON{"/p" + std::to_string(index)});
     entry.assign("paths", std::move(paths));
+    auto keys{sourcemeta::core::JSON::make_array()};
+    auto key{sourcemeta::core::JSON::make_object()};
+    key.assign("environmentVariable",
+               sourcemeta::core::JSON{"K" + std::to_string(index)});
+    keys.push_back(std::move(key));
+    entry.assign("keys", std::move(keys));
     entries.push_back(std::move(entry));
   }
   raw_configuration.assign("authentication", std::move(entries));

@@ -11,7 +11,6 @@ cat << EOF > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
   "authentication": [
-    { "type": "public", "paths": [ "/public" ] },
     {
       "type": "apiKey",
       "algorithm": "identity",

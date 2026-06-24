@@ -22,7 +22,6 @@ TEST(Configuration_read, read_valid_001) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -90,7 +89,6 @@ TEST(Configuration_read, read_valid_002) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -145,7 +143,6 @@ TEST(Configuration_read, read_valid_003) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -199,7 +196,6 @@ TEST(Configuration_read, read_valid_004) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -256,7 +252,6 @@ TEST(Configuration_read, read_valid_005) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -313,7 +308,6 @@ TEST(Configuration_read, read_valid_006) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -362,7 +356,6 @@ TEST(Configuration_read, read_valid_007) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": false,
@@ -407,7 +400,6 @@ TEST(Configuration_read, read_valid_008) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -455,7 +447,6 @@ TEST(Configuration_read, read_valid_009) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -503,7 +494,6 @@ TEST(Configuration_read, read_valid_010) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": false,
@@ -548,7 +538,6 @@ TEST(Configuration_read, read_valid_011) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "contents": {
       "self": {
         "title": "Self",
@@ -590,7 +579,6 @@ TEST(Configuration_read, read_valid_012) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -644,7 +632,6 @@ TEST(Configuration_read, read_valid_013) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -702,7 +689,6 @@ TEST(Configuration_read, read_valid_014) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -916,7 +902,6 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {
@@ -958,7 +943,6 @@ TEST(Configuration_read, read_valid_017_api_false_html_false) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": false,
     "html": false
@@ -975,7 +959,6 @@ TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
 
   std::string text{R"JSON({
-    "authentication": [ { "type": "public", "paths": [ "/" ] } ],
     "url": "http://localhost:8000",
     "api": {},
     "html": {

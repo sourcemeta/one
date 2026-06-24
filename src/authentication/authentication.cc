@@ -32,7 +32,7 @@ auto Authentication::admits(const std::string_view, const std::string_view,
 auto Authentication::governing(const std::string_view,
                                const std::string_view) const
     -> std::vector<std::size_t> {
-  return {0};
+  return {};
 }
 
 auto Authentication::reference_permitted(const std::string_view,

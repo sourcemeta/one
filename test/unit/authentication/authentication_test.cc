@@ -30,7 +30,7 @@ TEST(Authentication, admits_every_path_with_any_credential) {
 TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
   const std::array<std::string_view, 1> paths{{"/"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{sourcemeta::one::Authentication::Type::Public, paths}}};
+      {{paths, {}}}};
   const auto path{test_path("community_public_root.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
