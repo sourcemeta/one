@@ -23,9 +23,9 @@ cat << 'EOF' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
-      "name": "mcp",
-      "paths": [ "/self/v1/mcp/extra" ],
-      "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
+      "name": "reports",
+      "paths": [ "/private/secret" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_REPORTS" } ]
     }
   ],
   "contents": {
@@ -40,7 +40,7 @@ test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 error: An authentication policy matches no known collection, page, or route
-  at scope /self/v1/mcp/extra
+  at scope /private/secret
   at path $(realpath "$TMP")/one.json
 EOF
 

@@ -6,7 +6,6 @@
 
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
-#include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::seconds

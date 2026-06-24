@@ -16,6 +16,8 @@ cat << 'EOF' > "$TMP/private/secret.json"
 }
 EOF
 
+# A policy path matches the route table grammar, which has no trailing slash, so
+# even a real collection is rejected when written with one
 cat << 'EOF' > "$TMP/one.json"
 {
   "url": "http://localhost:8000",
@@ -23,9 +25,9 @@ cat << 'EOF' > "$TMP/one.json"
     {
       "type": "apiKey",
       "algorithm": "identity",
-      "name": "mcp",
-      "paths": [ "/self/v1/mcp/extra" ],
-      "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
+      "name": "reports",
+      "paths": [ "/private/" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_REPORTS" } ]
     }
   ],
   "contents": {
@@ -40,7 +42,7 @@ test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
 error: An authentication policy matches no known collection, page, or route
-  at scope /self/v1/mcp/extra
+  at scope /private/
   at path $(realpath "$TMP")/one.json
 EOF
 

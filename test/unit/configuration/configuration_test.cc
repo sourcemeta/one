@@ -884,6 +884,172 @@ TEST(Configuration, authentication_rejects_reserved_name) {
                sourcemeta::one::ConfigurationReservedAuthenticationNameError);
 }
 
+TEST(Configuration, covers_entry_root_is_above_everything) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_TRUE(configuration.covers_entry("/"));
+}
+
+TEST(Configuration, covers_entry_an_exact_collection) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_TRUE(configuration.covers_entry("/alpha"));
+}
+
+TEST(Configuration, covers_entry_an_exact_page) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_TRUE(configuration.covers_entry("/team"));
+}
+
+TEST(Configuration, covers_entry_a_nested_collection) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_TRUE(configuration.covers_entry("/team/private"));
+  EXPECT_TRUE(configuration.covers_entry("/team/public"));
+}
+
+TEST(Configuration, covers_entry_rejects_a_trailing_slash) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_FALSE(configuration.covers_entry("/alpha/"));
+  EXPECT_FALSE(configuration.covers_entry("/team/private/"));
+}
+
+TEST(Configuration, covers_entry_rejects_a_path_inside_a_collection) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_FALSE(configuration.covers_entry("/alpha/schema"));
+  EXPECT_FALSE(configuration.covers_entry("/team/private/secret"));
+}
+
+TEST(Configuration, covers_entry_rejects_an_unknown_top_level_path) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_FALSE(configuration.covers_entry("/beta"));
+}
+
+TEST(Configuration, covers_entry_rejects_a_partial_segment) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "contents": {
+      "alpha": { "path": "./alpha" },
+      "team": {
+        "title": "Team",
+        "contents": {
+          "private": { "path": "./team/private" },
+          "public": { "path": "./team/public" }
+        }
+      }
+    }
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", "/tmp")};
+  EXPECT_FALSE(configuration.covers_entry("/alph"));
+  EXPECT_FALSE(configuration.covers_entry("/team/priv"));
+}
+
+TEST(Configuration, covers_entry_with_no_entries_only_covers_the_root) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com"
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+  EXPECT_TRUE(configuration.covers_entry("/"));
+  EXPECT_FALSE(configuration.covers_entry("/alpha"));
+}
+
 TEST(Configuration, authentication_rejects_apikey_without_algorithm) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

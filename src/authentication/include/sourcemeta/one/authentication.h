@@ -17,8 +17,8 @@
 
 namespace sourcemeta::one {
 
-// Raised when an authentication policy is scoped to a path that matches no
-// route served by the registry
+// Raised when an authentication policy is scoped to a path that is neither a
+// declared collection or page (nor a namespace above one) nor a known route
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationUnknownPathError
     : public std::exception {
 public:
@@ -26,7 +26,8 @@ public:
       : path_{std::move(path)}, scope_{std::move(scope)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy matches no known route";
+    return "An authentication policy matches no known collection, page, or "
+           "route";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

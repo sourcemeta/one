@@ -39,7 +39,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: An authentication policy matches no known route
+error: An authentication policy matches no known collection, page, or route
   at scope /self/v1/mpc
   at path $(realpath "$TMP")/one.json
 EOF
