@@ -40,6 +40,14 @@ a JSON-RPC tool (not as a layer on top of REST but as a true MCP-first
 integration), helping your AI assistants get the most out of your schema single
 source of truth.
 
+## Authentication
+
+Enterprise instances can gate access behind
+[authentication](configuration.md#authentication) policies, covering anything
+from a single schema collection to the entire instance. Keep selected parts
+private while the rest stays public, or lock down everything, granting access to
+consumers through API keys. Support for OpenID Connect and JWT is planned.
+
 ## Standard Library
 
 Sourcemeta maintains a growing library of hand-crafted high-quality schemas

@@ -97,6 +97,9 @@ without building complex JSON Schema infrastructure from scratch.
   fully-featured [Model Context Protocol](api.md#model-context-protocol)
   server, letting AI tooling discover schemas as resources and call every HTTP
   API action as a JSON-RPC tool
+- :material-lock: __Access Control (Enterprise)__ Gate part of your catalog, or
+  the entire instance, behind [authentication](configuration.md#authentication)
+  policies, keeping schemas private to the consumers you choose
 
 </div>
 
