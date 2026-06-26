@@ -66,6 +66,7 @@ structuring your instance.
 | `/contents`     | Object  | No  | None | The top-level [Collections](#collections) and [Pages](#pages) that compose the instance |
 | `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. Enabling the HTML explorer implies the API must also be enabled. See the [HTML](#html) section for more details |
 | `/api`         | Object or Boolean  | No  | `{}` | Controls whether the HTTP API is accessible. If set to `false`, the JSON API is disabled. Can only be set to `false` when `/html` is also set to `false` |
+| `/authentication` (**Enterprise**) | Array  | No  | None | A list of authentication policies that govern this instance. Anything not covered by a policy remains public. See the [Authentication](#authentication) section for more details |
 
 For example, a minimal configuration that mounts a single schema collection
 (`./schemas`) at URL `https://schemas.example.com/my-first-collection` may look
@@ -315,6 +316,109 @@ contains the schema collections they own.
 | `/github`       | String  | No  | None | The GitHub organisation or `organisation/repository` identifier associated with the page |
 | `/website`      | String  | No  | None | The absolute URL to the website associated with the page |
 | `/contents`     | Object  | No  | None | The nested [Collections](#collections) and [Pages](#pages) inside this page |
+
+## Authentication
+
+!!! success "Enterprise"
+
+    Authentication is only available in the [Enterprise](commercial.md)
+    edition. Learn more about [commercial licensing](commercial.md).
+
+Authentication currently supports a single policy type, `apiKey`, where a
+consumer is granted access by presenting a pre-shared key. Support for OpenID
+Connect and JWT is planned. Anything not covered by a policy stays public, so
+the configuration only ever describes what to protect, never what to expose.
+When a path is governed by more than one policy, the policies are unioned.
+
+**The UNIX model**: Visibility and access are kept separate, following the UNIX
+filesystem model. A policy that governs a directory does not erase it from its
+parent's listing.  Just as `ls` reveals a directory you cannot `cd` into, a
+consumer browsing the instance can tell that a governed directory exists, and
+can see the names of the policies that govern it, much like UNIX shows the
+owning group of a file you are not allowed to read. What stays hidden is the
+content: the directory cannot be opened, nor its schemas read, without a valid
+key. The policy names are disclosed on purpose, so that a consumer knows who to
+ask for access. The keys themselves, and the environment variables behind them,
+are never exposed.
+
+!!! tip
+
+    If the descriptive metadata of a governed directory, such as its title and
+    description, is itself sensitive, wrap it: put the policy on a deliberately
+    generic outer container that carries little metadata, and nest the
+    sensitive directories inside it. Outsiders then see only the bland
+    container, while the inner names and descriptions stay behind the gate.
+
+A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
+above them (the instance root governs everything). It cannot gate an individual
+path inside a collection: a collection is either public or private as a whole.
+
+| Property        | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `/type`         | String  | :red_circle: **Yes** | N/A | The policy type. Currently only `apiKey` is supported |
+| `/name`         | String  | :red_circle: **Yes** | N/A | The policy name, surfaced in directory listings. Must consist of lowercase letters, digits, and hyphens. The name `public` is reserved |
+| `/algorithm`    | String  | :red_circle: **Yes** | N/A | How a presented key is compared against the stored keys. Either `identity` (the environment variable holds the key verbatim) or `sha256` (the environment variable holds the lowercase hexadecimal SHA-256 digest of the key) |
+| `/paths`        | Array   | :red_circle: **Yes** | N/A | The registry paths this policy governs, each rooted at `/`. Every path must name a known collection, page, or route |
+| `/keys`         | Array   | :red_circle: **Yes** | N/A | The keys this policy accepts, each read from an environment variable so that secrets never live in the configuration file |
+| `/keys/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the key, or its hash when `algorithm` is not `identity` |
+
+### API Key
+
+Consumers present a key through the `Authorization` header using the `Bearer`
+scheme ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)).
+
+!!! tip
+
+    To consume schemas from a gated instance in your projects, take a look at
+    our [JSON Schema CLI](https://github.com/sourcemeta/jsonschema) and its
+    [`install`](https://github.com/sourcemeta/jsonschema/blob/main/docs/install.markdown)
+    command, which supports authenticating against a registry using API keys
+    through the `--header` option.
+
+For example, the following instance keeps `/docs` public, gates `/partners`
+behind a single key, and protects `/billing` with both a plaintext key and a
+pre-hashed one:
+
+```json title="one.json"
+{
+  "url": "https://schemas.example.com",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "partners",
+      "paths": [ "/partners" ],
+      "keys": [ { "environmentVariable": "ONE_PARTNERS_KEY" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "billing-plain",
+      "paths": [ "/billing" ],
+      "keys": [ { "environmentVariable": "ONE_BILLING_KEY" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "sha256",
+      "name": "billing-hashed",
+      "paths": [ "/billing" ],
+      "keys": [ { "environmentVariable": "ONE_BILLING_HASHED_KEY" } ]
+    }
+  ],
+  "contents": {
+    "docs": { "path": "./schemas/docs" },
+    "partners": { "path": "./schemas/partners" },
+    "billing": { "path": "./schemas/billing" }
+  }
+}
+```
+
+!!! tip
+
+    For a `sha256` policy, store the lowercase hexadecimal digest of the key
+    rather than the key itself. For example, `printf '%s' "your-key" | openssl
+    dgst -sha256 | awk '{print $NF}'` prints the exact value to place in the
+    environment variable.
 
 ## Extends
 
