@@ -358,7 +358,7 @@ path inside a collection: a collection is either public or private as a whole.
 | `/type`         | String  | :red_circle: **Yes** | N/A | The policy type. Currently only `apiKey` is supported |
 | `/name`         | String  | :red_circle: **Yes** | N/A | The policy name, surfaced in directory listings. Must consist of lowercase letters, digits, and hyphens. The name `public` is reserved |
 | `/algorithm`    | String  | :red_circle: **Yes** | N/A | How a presented key is compared against the stored keys. Either `identity` (the environment variable holds the key verbatim) or `sha256` (the environment variable holds the lowercase hexadecimal SHA-256 digest of the key) |
-| `/paths`        | Array   | :red_circle: **Yes** | N/A | The registry paths this policy governs, each rooted at `/`. Every path must name a known collection, page, or route |
+| `/paths`        | Array   | :red_circle: **Yes** | N/A | The registry paths this policy governs, each rooted at `/`. Every path must be `/` itself (governing the whole instance) or name a known collection, page, or route |
 | `/keys`         | Array   | :red_circle: **Yes** | N/A | The keys this policy accepts, each read from an environment variable so that secrets never live in the configuration file |
 | `/keys/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the key, or its hash when `algorithm` is not `identity` |
 
