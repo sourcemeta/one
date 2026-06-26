@@ -1034,7 +1034,12 @@ struct GENERATE_AUTHENTICATION {
       }
 
       policy_keys.push_back(std::move(keys));
-      policies.push_back({policy_paths.back(), policy_keys.back()});
+      const auto algorithm{
+          entry.algorithm == sourcemeta::one::Configuration::
+                                 AuthenticationEntry::Algorithm::Sha256
+              ? sourcemeta::one::Authentication::Algorithm::Sha256
+              : sourcemeta::one::Authentication::Algorithm::Identity};
+      policies.push_back({policy_paths.back(), policy_keys.back(), algorithm});
 #else
       // The community edition serves every path publicly, so any apiKey policy
       // is an enterprise feature

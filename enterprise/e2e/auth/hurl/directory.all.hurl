@@ -16,37 +16,43 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 62
+jsonpath "$.schemas" == 63
 jsonpath "$.policies" count == 0
-jsonpath "$.entries" count == 6
+jsonpath "$.entries" count == 7
 jsonpath "$.entries[0].name" == "internal"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/internal/"
 jsonpath "$.entries[0].policies" count == 1
 jsonpath "$.entries[0].policies[0]" == "internal"
-jsonpath "$.entries[1].name" == "orphan"
+jsonpath "$.entries[1].name" == "mixed"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].path" == "/orphan/"
-jsonpath "$.entries[1].policies" count == 0
-jsonpath "$.entries[2].name" == "private"
+jsonpath "$.entries[1].path" == "/mixed/"
+jsonpath "$.entries[1].policies" count == 2
+jsonpath "$.entries[1].policies[0]" == "mixed-hashed"
+jsonpath "$.entries[1].policies[1]" == "mixed-plain"
+jsonpath "$.entries[2].name" == "orphan"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].path" == "/private/"
-jsonpath "$.entries[2].policies" count == 1
-jsonpath "$.entries[2].policies[0]" == "reports"
-jsonpath "$.entries[3].name" == "public"
+jsonpath "$.entries[2].path" == "/orphan/"
+jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[3].name" == "private"
 jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].path" == "/public/"
-jsonpath "$.entries[3].policies" count == 0
-jsonpath "$.entries[4].name" == "reports"
+jsonpath "$.entries[3].path" == "/private/"
+jsonpath "$.entries[3].policies" count == 1
+jsonpath "$.entries[3].policies[0]" == "reports"
+jsonpath "$.entries[4].name" == "public"
 jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].path" == "/reports/"
-jsonpath "$.entries[4].policies" count == 1
-jsonpath "$.entries[4].policies[0]" == "reports"
-jsonpath "$.entries[5].name" == "self"
+jsonpath "$.entries[4].path" == "/public/"
+jsonpath "$.entries[4].policies" count == 0
+jsonpath "$.entries[5].name" == "reports"
 jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.entries[5].path" == "/self/"
-jsonpath "$.entries[5].title" == "Self"
-jsonpath "$.entries[5].policies" count == 0
+jsonpath "$.entries[5].path" == "/reports/"
+jsonpath "$.entries[5].policies" count == 1
+jsonpath "$.entries[5].policies[0]" == "reports"
+jsonpath "$.entries[6].name" == "self"
+jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.entries[6].path" == "/self/"
+jsonpath "$.entries[6].title" == "Self"
+jsonpath "$.entries[6].policies" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -240,11 +246,12 @@ Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 3
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 4
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'mixed']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'orphan']]//i[contains(@class, 'bi-folder-fill')])" == 1

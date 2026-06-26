@@ -6,6 +6,7 @@
 #endif
 
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
@@ -47,11 +48,16 @@ class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
-  // A policy gates a set of path prefixes behind a set of keys. A path covered
-  // by no policy is public
+  // How a presented credential is compared against a policy's stored keys.
+  // Identity stores the key verbatim, every other algorithm stores it hashed
+  enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
+
+  // A policy gates a set of path prefixes behind a set of keys, each compared
+  // under the policy's algorithm. A path covered by no policy is public
   struct Policy {
     std::span<const std::string_view> paths;
     std::span<const std::string_view> keys;
+    Algorithm algorithm{Algorithm::Identity};
   };
 
   struct Verdict {

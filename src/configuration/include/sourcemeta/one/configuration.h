@@ -58,8 +58,12 @@ struct Configuration {
   bool api{true};
 
   struct AuthenticationEntry {
+    // How a presented credential is compared against the keys
+    enum class Algorithm : std::uint8_t { Identity, Sha256 };
+
     // The policy name
     sourcemeta::core::JSON::String name;
+    Algorithm algorithm{Algorithm::Identity};
     std::vector<sourcemeta::core::JSON::String> paths;
     // Environment variable names holding the keys
     std::vector<sourcemeta::core::JSON::String> keys;

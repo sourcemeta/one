@@ -8,7 +8,7 @@
 namespace sourcemeta::one {
 
 constexpr std::uint32_t AUTHENTICATION_MAGIC{0x48545541};
-constexpr std::uint32_t AUTHENTICATION_VERSION{3};
+constexpr std::uint32_t AUTHENTICATION_VERSION{4};
 
 // The artifact begins with this header. Every variable-length section is
 // located through an absolute byte offset so the matcher can address it
@@ -45,10 +45,12 @@ struct AuthenticationEdge {
 
 // One entry per policy, in declaration order, mirroring the bit assigned to
 // it in the node masks. The metadata range locates the policy's key set by
-// absolute file offset
+// absolute file offset, and the algorithm selects how a credential is compared
+// against those keys
 struct AuthenticationPolicyEntry {
   std::uint32_t metadata_offset;
   std::uint32_t metadata_length;
+  std::uint8_t algorithm;
 };
 
 // The structures are cast directly out of the memory-mapped buffer, so their
@@ -57,7 +59,7 @@ static_assert(sizeof(AuthenticationHeader) == 40);
 static_assert(sizeof(AuthenticationNode) == 16);
 static_assert(alignof(AuthenticationNode) == 8);
 static_assert(sizeof(AuthenticationEdge) == 12);
-static_assert(sizeof(AuthenticationPolicyEntry) == 8);
+static_assert(sizeof(AuthenticationPolicyEntry) == 12);
 static_assert(alignof(AuthenticationPolicyEntry) == 4);
 
 // Advance the cursor to the next non-empty path segment and return it. The

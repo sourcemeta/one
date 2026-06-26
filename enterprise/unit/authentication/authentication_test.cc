@@ -1,5 +1,7 @@
 #include <sourcemeta/one/authentication.h>
 
+#include <sourcemeta/core/crypto.h>
+
 #include <gtest/gtest.h>
 
 #include <array>       // std::array
@@ -45,7 +47,7 @@ TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 3;
+  header[4] = 4;
   stream.write(header.data(), header.size());
   stream.close();
 
@@ -63,7 +65,7 @@ TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 3;
+  header[4] = 4;
   header[8] =
       static_cast<char>(sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1);
   header[12] = 1;
@@ -373,6 +375,70 @@ TEST(Authentication, apikey_with_unset_variable_denies) {
   const sourcemeta::one::Authentication authentication{path};
   EXPECT_FALSE(authentication.admits("/internal/foo", "anything").allowed);
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+}
+
+TEST(Authentication, sha256_policy_admits_the_matching_credential) {
+  const std::string raw{"raw-secret-key"};
+  setenv("ONE_TEST_KEY_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA"}};
+  const std::array<std::string_view, 1> paths{{"/secret"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+  const auto path{test_path("sha256_match.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  EXPECT_TRUE(authentication.admits("/secret/foo", raw).allowed);
+  EXPECT_FALSE(authentication.admits("/secret/foo", "wrong").allowed);
+  EXPECT_FALSE(authentication.admits("/secret/foo", "").allowed);
+  // Presenting the stored hash itself does not authenticate
+  EXPECT_FALSE(
+      authentication.admits("/secret/foo", sourcemeta::core::sha256(raw))
+          .allowed);
+}
+
+TEST(Authentication, mixed_algorithms_admit_either_key_with_identity_first) {
+  setenv("ONE_TEST_KEY_MIXA_ID", "plain-a", 1);
+  const std::string raw{"hashed-a"};
+  setenv("ONE_TEST_KEY_MIXA_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
+  const std::array<std::string_view, 1> paths{{"/mixed"}};
+  const std::array<std::string_view, 1> identity_keys{{"ONE_TEST_KEY_MIXA_ID"}};
+  const std::array<std::string_view, 1> sha256_keys{{"ONE_TEST_KEY_MIXA_SHA"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{paths, identity_keys,
+        sourcemeta::one::Authentication::Algorithm::Identity},
+       {paths, sha256_keys,
+        sourcemeta::one::Authentication::Algorithm::Sha256}}};
+  const auto path{test_path("mixed_identity_first.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // Either key type opens the path regardless of declaration order. The sha256
+  // key must work even though the identity policy is checked first and fails
+  EXPECT_TRUE(authentication.admits("/mixed/x", "plain-a").allowed);
+  EXPECT_TRUE(authentication.admits("/mixed/x", raw).allowed);
+  EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
+}
+
+TEST(Authentication, mixed_algorithms_admit_either_key_with_sha256_first) {
+  setenv("ONE_TEST_KEY_MIXB_ID", "plain-b", 1);
+  const std::string raw{"hashed-b"};
+  setenv("ONE_TEST_KEY_MIXB_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
+  const std::array<std::string_view, 1> paths{{"/mixed"}};
+  const std::array<std::string_view, 1> identity_keys{{"ONE_TEST_KEY_MIXB_ID"}};
+  const std::array<std::string_view, 1> sha256_keys{{"ONE_TEST_KEY_MIXB_SHA"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{paths, sha256_keys, sourcemeta::one::Authentication::Algorithm::Sha256},
+       {paths, identity_keys,
+        sourcemeta::one::Authentication::Algorithm::Identity}}};
+  const auto path{test_path("mixed_sha256_first.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path};
+  // The identity key must work even though the sha256 policy is checked first
+  EXPECT_TRUE(authentication.admits("/mixed/x", raw).allowed);
+  EXPECT_TRUE(authentication.admits("/mixed/x", "plain-b").allowed);
+  EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
 }
 
 TEST(Authentication, supports_the_maximum_number_of_policies) {
