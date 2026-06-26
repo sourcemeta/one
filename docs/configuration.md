@@ -420,6 +420,24 @@ pre-hashed one:
     dgst -sha256 | awk '{print $NF}'` prints the exact value to place in the
     environment variable.
 
+!!! note
+
+    Sourcemeta One intentionally does not rate limit authentication. Provided
+    keys are high-entropy, guessing one is computationally infeasible, so
+    throttling does not meaningfully strengthen key protection, and per-client
+    counters would require the shared state that the stateless design avoids. That
+    reasoning assumes strong keys, so generate them with ample entropy. Rate
+    limiting still has real value as operational abuse control, against online
+    guessing of a weak key, resource exhaustion, or a leaked key, but it belongs
+    at the deployment edge rather than in the catalog. Comparable components take
+    the same stance: the Confluent Schema Registry ships no built-in rate limiting
+    and is [fronted by a reverse
+    proxy](https://www.networknt.com/tutorial/proxy/schema-registry/) for it, and
+    container registries throttle at the CDN edge. Put that protection in a
+    [reverse proxy, API gateway, or
+    WAF](https://www.gravitee.io/blog/rate-limiting-throttling-with-an-api-gateway-why-it-matters)
+    in front of the instance.
+
 ## Extends
 
 The `extends` property enables configuration inheritance, allowing you to build
