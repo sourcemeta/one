@@ -37,6 +37,28 @@ public:
     key_type first;
     mapped_type second;
     hash_type hash;
+
+    /// Check whether this entry's key equals the given key, comparing the
+    /// precomputed hashes first and only falling back to a string comparison
+    /// when the hash is not perfect. For example:
+    ///
+    /// ```cpp
+    /// #include <sourcemeta/core/json.h>
+    /// #include <cassert>
+    ///
+    /// const sourcemeta::core::JSON document =
+    ///   sourcemeta::core::parse_json("{ \"foo\": 1 }");
+    /// const auto &entry{*document.as_object().cbegin()};
+    /// assert(entry.key_equals(
+    ///   "foo", sourcemeta::core::JSON::Object::hash("foo")));
+    /// ```
+    [[nodiscard]] inline auto key_equals(const KeyView key,
+                                         const hash_type key_hash) const
+        -> bool {
+      assert(JSONObject::hash(key) == key_hash);
+      return this->hash == key_hash &&
+             (hasher.is_perfect(key_hash) || this->first == key);
+    }
   };
 
   using underlying_type = std::vector<Entry>;
@@ -726,7 +748,7 @@ public:
   /// Reorder object properties by keys according to a comparator function
   template <typename Compare> auto reorder(const Compare &compare) -> void {
     std::sort(this->data.begin(), this->data.end(),
-              [&compare](const auto &left, const auto &right) {
+              [&compare](const auto &left, const auto &right) -> auto {
                 return compare(left.first, right.first);
               });
   }

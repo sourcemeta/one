@@ -35,7 +35,7 @@ public:
   /// const sourcemeta::core::Pointer pointer;
   /// assert(pointer.empty());
   /// ```
-  GenericPointer() : data{} {}
+  GenericPointer() noexcept : data{} {}
 
   /// This constructor is the preferred way of creating a pointer.
   /// For example:
@@ -532,6 +532,40 @@ public:
       -> GenericPointer<PropertyT, Hash> {
     GenericPointer<PropertyT, Hash> result{*this};
     result.push_back(other);
+    return result;
+  }
+
+  /// Concatenate a JSON Pointer with a single property token, getting a new
+  /// pointer as a result. For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/jsonpointer.h>
+  /// #include <cassert>
+  ///
+  /// const sourcemeta::core::Pointer pointer{"foo"};
+  /// assert(pointer.concat("bar") == sourcemeta::core::Pointer{"foo", "bar"});
+  /// ```
+  [[nodiscard]] auto concat(const typename Token::Property &property) const
+      -> GenericPointer<PropertyT, Hash> {
+    GenericPointer<PropertyT, Hash> result{*this};
+    result.push_back(property);
+    return result;
+  }
+
+  /// Concatenate a JSON Pointer with a single index token, getting a new
+  /// pointer as a result. For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/jsonpointer.h>
+  /// #include <cassert>
+  ///
+  /// const sourcemeta::core::Pointer pointer{"foo"};
+  /// assert(pointer.concat(0) == sourcemeta::core::Pointer{"foo", 0});
+  /// ```
+  [[nodiscard]] auto concat(const typename Token::Index &index) const
+      -> GenericPointer<PropertyT, Hash> {
+    GenericPointer<PropertyT, Hash> result{*this};
+    result.push_back(index);
     return result;
   }
 

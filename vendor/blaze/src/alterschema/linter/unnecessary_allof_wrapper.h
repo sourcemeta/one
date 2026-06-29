@@ -1,5 +1,6 @@
 class UnnecessaryAllOfWrapper final : public SchemaTransformRule {
 private:
+  // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
   static inline const std::string KEYWORD{"allOf"};
 
 public:
@@ -128,7 +129,7 @@ public:
         }
 
         if (std::ranges::any_of(metadata.dependencies,
-                                [&](const auto &dependency) {
+                                [&](const auto &dependency) -> auto {
                                   return !entry.defines(dependency) &&
                                          (schema.defines(dependency) ||
                                           elevated.contains(dependency));
@@ -200,11 +201,12 @@ public:
                                  const Pointer &current) const
       -> Pointer override {
     // The rule moves keywords from /allOf/<index>/<keyword> to /<keyword>
-    const auto allof_prefix{current.concat({KEYWORD})};
+    const auto allof_prefix{current.concat(KEYWORD)};
     const auto relative{target.resolve_from(allof_prefix)};
     const auto &keyword{relative.at(1).to_property()};
-    const Pointer old_prefix{allof_prefix.concat({relative.at(0), keyword})};
-    const Pointer new_prefix{current.concat({keyword})};
+    const Pointer old_prefix{
+        allof_prefix.concat(Pointer{relative.at(0), keyword})};
+    const Pointer new_prefix{current.concat(keyword)};
     return target.rebase(old_prefix, new_prefix);
   }
 

@@ -28,6 +28,7 @@ const IGNORED = new Set([
   "pyca-cryptography",
   "wycheproof",
   "jose-cookbook",
+  "w3c-json-ld",
   "ctrf",
   "googletest",
   "googlebenchmark",

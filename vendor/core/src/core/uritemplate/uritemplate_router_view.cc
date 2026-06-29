@@ -400,7 +400,8 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
   }
 
   std::ranges::sort(
-      operation_entries, {}, [&string_table](const OperationEntry &entry) {
+      operation_entries, {},
+      [&string_table](const OperationEntry &entry) -> std::string_view {
         return std::string_view{string_table.data() + entry.string_offset,
                                 entry.string_length};
       });

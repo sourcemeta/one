@@ -1,7 +1,7 @@
 #ifndef SOURCEMETA_CORE_URI_GRAMMAR_H_
 #define SOURCEMETA_CORE_URI_GRAMMAR_H_
 
-#include <cctype> // std::isalnum, std::isalpha, std::isdigit
+#include <sourcemeta/core/text.h>
 
 namespace sourcemeta::core {
 
@@ -50,7 +50,7 @@ constexpr char URI_PERCENT = '%';
 // unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
 // See https://www.rfc-editor.org/rfc/rfc3986#section-2.3
 inline auto uri_is_unreserved(const char character) -> bool {
-  if (std::isalnum(static_cast<unsigned char>(character))) {
+  if (is_alphanum(character)) {
     return true;
   }
 
@@ -59,6 +59,23 @@ inline auto uri_is_unreserved(const char character) -> bool {
     case URI_DOT:
     case URI_UNDERSCORE:
     case URI_TILDE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// gen-delims = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+// See https://www.rfc-editor.org/rfc/rfc3986#section-2.2
+inline auto uri_is_gen_delim(const char character) -> bool {
+  switch (character) {
+    case URI_COLON:
+    case URI_SLASH:
+    case URI_QUESTION:
+    case URI_HASH:
+    case URI_OPEN_BRACKET:
+    case URI_CLOSE_BRACKET:
+    case URI_AT:
       return true;
     default:
       return false;
@@ -89,7 +106,7 @@ inline auto uri_is_sub_delim(const char character) -> bool {
 // Scheme characters: ALPHA / DIGIT / "+" / "-" / "."
 // See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
 inline auto uri_is_scheme_char(const char character) -> bool {
-  if (std::isalnum(static_cast<unsigned char>(character))) {
+  if (is_alphanum(character)) {
     return true;
   }
 

@@ -664,8 +664,9 @@ public:
   /// ```
   auto userinfo(const std::string_view userinfo) -> URI &;
 
-  /// To support equality of URIs
-  auto operator==(const URI &other) const noexcept -> bool = default;
+  /// Two URIs are equal when their components match, independent of how the
+  /// input was parsed
+  auto operator==(const URI &other) const noexcept -> bool;
 
   /// To support ordering of URIs
   auto operator<(const URI &other) const noexcept -> bool;
@@ -695,6 +696,34 @@ public:
   /// ```
   static auto from_path(const std::filesystem::path &path) -> URI;
 
+  /// Create a URI from a string that may be an Internationalized Resource
+  /// Identifier (IRI) as defined by RFC 3987, accepting the non-ASCII
+  /// characters that a plain URI does not permit. For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/uri.h>
+  /// #include <cassert>
+  ///
+  /// const auto
+  /// uri{sourcemeta::core::URI::from_iri("https://example.com/café")};
+  /// assert(uri.recompose() == "https://example.com/café");
+  /// ```
+  static auto from_iri(std::string_view input) -> URI;
+
+  /// Check whether this object holds an Internationalized Resource Identifier
+  /// (IRI) as defined by RFC 3987, rather than a plain URI. For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/uri.h>
+  /// #include <cassert>
+  ///
+  /// const auto
+  /// iri{sourcemeta::core::URI::from_iri("https://example.com/foo")};
+  /// assert(iri.is_internationalized());
+  /// assert(!sourcemeta::core::URI{"https://example.com/foo"}.is_internationalized());
+  /// ```
+  [[nodiscard]] auto is_internationalized() const noexcept -> bool;
+
   /// A convenient method to canonicalize and recompose a URI from a string. For
   /// example:
   ///
@@ -707,6 +736,31 @@ public:
   /// assert(result == "http://example.com/TEST");
   /// ```
   static auto canonicalize(std::string_view input) -> std::string;
+
+  /// Check if the given string is a valid URI scheme per RFC 3986
+  /// (`ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )`). For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/uri.h>
+  /// #include <cassert>
+  ///
+  /// assert(sourcemeta::core::URI::is_scheme("https"));
+  /// assert(!sourcemeta::core::URI::is_scheme("1https"));
+  /// assert(!sourcemeta::core::URI::is_scheme("http:"));
+  /// ```
+  [[nodiscard]] static auto is_scheme(std::string_view input) noexcept -> bool;
+
+  /// Check if the given character is a URI generic delimiter per RFC 3986
+  /// (`":" / "/" / "?" / "#" / "[" / "]" / "@"`). For example:
+  ///
+  /// ```cpp
+  /// #include <sourcemeta/core/uri.h>
+  /// #include <cassert>
+  ///
+  /// assert(sourcemeta::core::URI::is_gen_delim(':'));
+  /// assert(!sourcemeta::core::URI::is_gen_delim('a'));
+  /// ```
+  [[nodiscard]] static auto is_gen_delim(char character) noexcept -> bool;
 
   /// Check if the given string is a valid absolute URI (has a scheme) per
   /// RFC 3986 without constructing a full URI object. For example:
@@ -811,6 +865,9 @@ private:
   std::optional<std::string> fragment_{};
   std::optional<std::string> query_{};
   bool ip_literal_{false};
+  // Whether this object was parsed as an IRI (RFC 3987) rather than a URI
+  // (RFC 3986)
+  bool iri_{false};
 #if defined(_MSC_VER)
 #pragma warning(default : 4251)
 #endif

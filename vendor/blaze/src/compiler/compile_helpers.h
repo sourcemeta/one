@@ -17,9 +17,11 @@ namespace sourcemeta::blaze {
 
 // Static keyword strings for use in DynamicContext references
 static const sourcemeta::core::JSON::String KEYWORD_EMPTY{};
+// NOLINTBEGIN(bugprone-throwing-static-initialization)
 static const sourcemeta::core::JSON::String KEYWORD_PROPERTIES{"properties"};
 static const sourcemeta::core::JSON::String KEYWORD_THEN{"then"};
 static const sourcemeta::core::JSON::String KEYWORD_ELSE{"else"};
+// NOLINTEND(bugprone-throwing-static-initialization)
 
 // Helper to create a single-element WeakPointer from a property name reference
 inline auto make_weak_pointer(const std::string &property)
@@ -79,7 +81,7 @@ inline auto make_with_resource(const InstructionIndex type,
       dynamic_context.keyword.empty()
           ? to_pointer(dynamic_context.base_schema_location)
           : to_pointer(dynamic_context.base_schema_location)
-                .concat({dynamic_context.keyword})};
+                .concat(dynamic_context.keyword)};
   const auto extra_index{context.extra.size()};
   context.extra.push_back(
       {.relative_schema_location = schema_location,
@@ -113,7 +115,7 @@ inline auto make(const InstructionIndex type, const Context &context,
       dynamic_context.keyword.empty()
           ? to_pointer(dynamic_context.base_schema_location)
           : to_pointer(dynamic_context.base_schema_location)
-                .concat({dynamic_context.keyword})};
+                .concat(dynamic_context.keyword)};
   const auto extra_index{context.extra.size()};
   context.extra.push_back(
       {.relative_schema_location = schema_location,
@@ -257,7 +259,7 @@ inline auto find_adjacent(const Context &context,
         sourcemeta::core::to_uri(
             sourcemeta::core::to_pointer(
                 std::string{reference.fragment.value_or("")})
-                .concat({keyword}))
+                .concat(keyword))
             .resolve_from(sourcemeta::core::URI{reference.base})};
 
     // TODO: When this logic is used by
@@ -284,11 +286,11 @@ inline auto find_adjacent(const Context &context,
     const auto subschema_vocabularies{
         context.frame.vocabularies(frame_entry, context.resolver)};
 
-    if (std::ranges::any_of(vocabularies,
-                            [&subschema_vocabularies](const auto &vocabulary) {
-                              return subschema_vocabularies.contains(
-                                  vocabulary);
-                            }) &&
+    if (std::ranges::any_of(
+            vocabularies,
+            [&subschema_vocabularies](const auto &vocabulary) -> auto {
+              return subschema_vocabularies.contains(vocabulary);
+            }) &&
         subschema.type() == type) {
       result.emplace_back(subschema);
     }
@@ -334,6 +336,13 @@ inline auto requires_evaluation(const Context &context,
                                 const SchemaContext &schema_context) -> bool {
   const auto &entry{static_frame_entry(context, schema_context)};
   return requires_evaluation(context, entry.pointer);
+}
+
+inline auto annotations_enabled(const Context &context,
+                                const std::string_view keyword) -> bool {
+  return context.mode == Mode::Exhaustive &&
+         (!context.tweaks.annotations.has_value() ||
+          context.tweaks.annotations.value().contains(keyword));
 }
 
 // TODO: Elevate to Core and test
