@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 project(core VERSION 0.0.0 LANGUAGES C CXX ASM_MASM DESCRIPTION "Sourcemeta Core")
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -22,10 +22,12 @@ option(SOURCEMETA_CORE_IP "Build the Sourcemeta Core IP library" ON)
 option(SOURCEMETA_CORE_IDNA "Build the Sourcemeta Core IDNA library" ON)
 option(SOURCEMETA_CORE_DNS "Build the Sourcemeta Core DNS library" ON)
 option(SOURCEMETA_CORE_EMAIL "Build the Sourcemeta Core Email library" ON)
+option(SOURCEMETA_CORE_LANGTAG "Build the Sourcemeta Core LangTag library" ON)
 option(SOURCEMETA_CORE_URI "Build the Sourcemeta Core URI library" ON)
 option(SOURCEMETA_CORE_URITEMPLATE "Build the Sourcemeta Core URI Template library" ON)
 option(SOURCEMETA_CORE_JSON "Build the Sourcemeta Core JSON library" ON)
 option(SOURCEMETA_CORE_JSONPOINTER "Build the Sourcemeta Core JSON Pointer library" ON)
+option(SOURCEMETA_CORE_JSONLD "Build the Sourcemeta Core JSON-LD library" ON)
 option(SOURCEMETA_CORE_JSONL "Build the Sourcemeta Core JSONL library" ON)
 option(SOURCEMETA_CORE_YAML "Build the Sourcemeta Core YAML library" ON)
 option(SOURCEMETA_CORE_JSONRPC "Build the Sourcemeta Core JSON-RPC library" ON)
@@ -150,6 +152,10 @@ if(SOURCEMETA_CORE_EMAIL)
   add_subdirectory(src/core/email)
 endif()
 
+if(SOURCEMETA_CORE_LANGTAG)
+  add_subdirectory(src/core/langtag)
+endif()
+
 if(SOURCEMETA_CORE_URI)
   add_subdirectory(src/core/uri)
 endif()
@@ -164,6 +170,10 @@ endif()
 
 if(SOURCEMETA_CORE_JSONPOINTER)
   add_subdirectory(src/core/jsonpointer)
+endif()
+
+if(SOURCEMETA_CORE_JSONLD)
+  add_subdirectory(src/core/jsonld)
 endif()
 
 if(SOURCEMETA_CORE_GZIP)
@@ -313,6 +323,10 @@ if(SOURCEMETA_CORE_TESTS)
     add_subdirectory(test/email)
   endif()
 
+  if(SOURCEMETA_CORE_LANGTAG)
+    add_subdirectory(test/langtag)
+  endif()
+
   if(SOURCEMETA_CORE_URI)
     add_subdirectory(test/uri)
   endif()
@@ -327,6 +341,10 @@ if(SOURCEMETA_CORE_TESTS)
 
   if(SOURCEMETA_CORE_JSONPOINTER)
     add_subdirectory(test/jsonpointer)
+  endif()
+
+  if(SOURCEMETA_CORE_JSONLD)
+    add_subdirectory(test/jsonld)
   endif()
 
   if(SOURCEMETA_CORE_GZIP)

@@ -65,7 +65,7 @@ auto dereference(const std::filesystem::path &base,
       if (entry.is_string()) {
         const auto target_path{maybe_suffix(
             resolve_path(base.parent_path(), entry.to_string()), "one.json")};
-        const auto new_location{location.concat({"extends"})};
+        const auto new_location{location.concat("extends")};
         if (!visited.emplace(target_path.native()).second) {
           throw sourcemeta::one::ConfigurationCyclicReferenceError(
               base, new_location, target_path);
@@ -96,7 +96,7 @@ auto dereference(const std::filesystem::path &base,
     const auto target_path{maybe_suffix(
         resolve_path(base.parent_path(), input.at("include").to_string()),
         "jsonschema.json")};
-    const auto new_location{location.concat({"include"})};
+    const auto new_location{location.concat("include")};
     if (!visited.emplace(target_path.native()).second) {
       throw sourcemeta::one::ConfigurationCyclicReferenceError(
           base, new_location, target_path);

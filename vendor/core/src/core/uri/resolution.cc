@@ -35,6 +35,9 @@ auto merge_paths(const std::string &base_path, const std::string &ref_path,
 namespace sourcemeta::core {
 
 auto URI::resolve_from(const URI &base) -> URI & {
+  // Resolving against an IRI base, or resolving an IRI reference, yields an IRI
+  this->iri_ = this->iri_ || base.iri_;
+
   // RFC 3986 Section 5.2.2: Transform References
 
   // Reference has a scheme - use as-is (already absolute)
@@ -151,6 +154,34 @@ auto URI::relative_to(const URI &base) -> URI & {
     this->query_.reset();
     this->fragment_.reset();
     return *this;
+  }
+
+  // Both URIs share the same path and differ only in their query or fragment.
+  // An empty relative path is safe when this URI carries its own query or the
+  // base has none, since resolution then will not re-inherit the base's query.
+  // Otherwise a non-empty path is required to reset the query, which is only
+  // possible when there is a path to express.
+  if (this->path_ == base.path_) {
+    const bool empty_path_safe{this->query_.has_value() ||
+                               !base.query_.has_value()};
+    if (empty_path_safe || this->path_.has_value()) {
+      this->scheme_.reset();
+      this->userinfo_.reset();
+      this->host_.reset();
+      this->port_.reset();
+      if (empty_path_safe) {
+        this->path_.reset();
+      } else {
+        // Use the last path segment, or "./" when the path has no final segment
+        // (it ends in a slash).
+        const auto &path{this->path_.value()};
+        const auto slash{path.rfind('/')};
+        auto segment{slash == std::string::npos ? path
+                                                : path.substr(slash + 1)};
+        this->path_ = segment.empty() ? std::string{"./"} : std::move(segment);
+      }
+      return *this;
+    }
   }
 
   // If this URI doesn't have a path, we can't make it relative
@@ -329,6 +360,9 @@ auto URI::rebase(const URI &base, const URI &new_base) -> URI & {
   this->userinfo_ = new_base.userinfo_;
   this->host_ = new_base.host_;
   this->port_ = new_base.port_;
+  // The new components come from the new base, so the result is an IRI if the
+  // new base is one
+  this->iri_ = this->iri_ || new_base.iri_;
 
   std::optional<std::string> new_base_path_copy{new_base.path_};
   merge_new_base_path(this->path_, std::move(new_base_path_copy),
@@ -354,6 +388,9 @@ auto URI::rebase(const URI &base, URI &&new_base) -> URI & {
   this->userinfo_ = std::move(new_base.userinfo_);
   this->host_ = std::move(new_base.host_);
   this->port_ = new_base.port_;
+  // The new components come from the new base, so the result is an IRI if the
+  // new base is one
+  this->iri_ = this->iri_ || new_base.iri_;
 
   merge_new_base_path(this->path_, std::move(new_base.path_),
                       std::move(saved_path));

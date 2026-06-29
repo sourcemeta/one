@@ -1,5 +1,6 @@
 class UnnecessaryExtendsWrapper final : public SchemaTransformRule {
 private:
+  // NOLINTNEXTLINE(bugprone-throwing-static-initialization)
   static inline const std::string KEYWORD{"extends"};
 
 public:
@@ -84,7 +85,7 @@ public:
         }
 
         if (std::ranges::any_of(
-                metadata.dependencies, [&](const auto &dependency) {
+                metadata.dependencies, [&](const auto &dependency) -> auto {
                   return !entry.defines(std::string{dependency}) &&
                          (schema.defines(std::string{dependency}) ||
                           elevated.contains(dependency));
@@ -123,11 +124,12 @@ public:
                                  const Pointer &current) const
       -> Pointer override {
     // The rule moves keywords from /extends/<index>/<keyword> to /<keyword>
-    const auto extends_prefix{current.concat({KEYWORD})};
+    const auto extends_prefix{current.concat(KEYWORD)};
     const auto relative{target.resolve_from(extends_prefix)};
     const auto &keyword{relative.at(1).to_property()};
-    const Pointer old_prefix{extends_prefix.concat({relative.at(0), keyword})};
-    const Pointer new_prefix{current.concat({keyword})};
+    const Pointer old_prefix{
+        extends_prefix.concat(Pointer{relative.at(0), keyword})};
+    const Pointer new_prefix{current.concat(keyword)};
     return target.rebase(old_prefix, new_prefix);
   }
 
@@ -139,7 +141,7 @@ private:
     if (!type.is_array()) {
       return false;
     }
-    return std::ranges::all_of(type.as_array(), [](const auto &entry) {
+    return std::ranges::all_of(type.as_array(), [](const auto &entry) -> auto {
       return entry.is_string() && entry.to_string() != "any";
     });
   }

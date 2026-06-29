@@ -217,7 +217,7 @@ auto URITemplateRouter::context(const Identifier identifier) const
     -> Identifier {
   assert(identifier > 0);
   const auto entry = std::ranges::find_if(
-      this->entries_, [&identifier](const auto &candidate) {
+      this->entries_, [&identifier](const auto &candidate) -> bool {
         return std::get<0>(candidate) == identifier;
       });
   assert(entry != this->entries_.end());
@@ -227,7 +227,7 @@ auto URITemplateRouter::context(const Identifier identifier) const
 auto URITemplateRouter::path(const Identifier identifier) const -> std::string {
   assert(identifier > 0);
   const auto entry = std::ranges::find_if(
-      this->entries_, [&identifier](const auto &candidate) {
+      this->entries_, [&identifier](const auto &candidate) -> bool {
         return std::get<0>(candidate) == identifier;
       });
   assert(entry != this->entries_.end());
@@ -248,8 +248,8 @@ auto URITemplateRouter::operation_id(const Identifier identifier) const
   if (identifier == 0) {
     return {};
   }
-  const auto entry =
-      std::ranges::find_if(this->operations_, [&identifier](const auto &item) {
+  const auto entry = std::ranges::find_if(
+      this->operations_, [&identifier](const auto &item) -> bool {
         return item.second.first == identifier;
       });
   if (entry == this->operations_.end()) {
@@ -263,8 +263,10 @@ auto URITemplateRouter::otherwise(const Identifier context,
     -> void {
   this->otherwise_.context = context;
 
-  const auto existing = std::ranges::find_if(
-      this->arguments_, [](const auto &entry) { return entry.first == 0; });
+  const auto existing =
+      std::ranges::find_if(this->arguments_, [](const auto &entry) -> bool {
+        return entry.first == 0;
+      });
   if (existing == this->arguments_.end()) {
     if (!arguments.empty()) {
       this->arguments_.emplace_back(
@@ -334,14 +336,15 @@ auto URITemplateRouter::add(const std::string_view uri_template,
       this->entries_.emplace_back(identifier, context, uri_template);
     } else {
       const auto existing = std::ranges::find_if(
-          this->entries_, [&previous_identifier](const auto &candidate) {
+          this->entries_,
+          [&previous_identifier](const auto &candidate) -> bool {
             return std::get<0>(candidate) == previous_identifier;
           });
       if (existing != this->entries_.end()) {
         *existing = std::make_tuple(identifier, context, uri_template);
       }
       std::erase_if(this->operations_,
-                    [&previous_identifier](const auto &entry) {
+                    [&previous_identifier](const auto &entry) -> bool {
                       return entry.second.first == previous_identifier;
                     });
     }
@@ -351,7 +354,7 @@ auto URITemplateRouter::add(const std::string_view uri_template,
         operation_id, std::pair<Identifier, Identifier>{identifier, context});
     if (!arguments.empty()) {
       assert(std::ranges::none_of(this->arguments_,
-                                  [&identifier](const auto &entry) {
+                                  [&identifier](const auto &entry) -> bool {
                                     return entry.first == identifier;
                                   }));
       this->arguments_.emplace_back(
@@ -573,14 +576,15 @@ auto URITemplateRouter::add(const std::string_view uri_template,
       this->entries_.emplace_back(identifier, context, uri_template);
     } else {
       const auto existing = std::ranges::find_if(
-          this->entries_, [&previous_identifier](const auto &candidate) {
+          this->entries_,
+          [&previous_identifier](const auto &candidate) -> bool {
             return std::get<0>(candidate) == previous_identifier;
           });
       if (existing != this->entries_.end()) {
         *existing = std::make_tuple(identifier, context, uri_template);
       }
       std::erase_if(this->operations_,
-                    [&previous_identifier](const auto &entry) {
+                    [&previous_identifier](const auto &entry) -> bool {
                       return entry.second.first == previous_identifier;
                     });
     }
@@ -590,7 +594,7 @@ auto URITemplateRouter::add(const std::string_view uri_template,
         operation_id, std::pair<Identifier, Identifier>{identifier, context});
     if (!arguments.empty()) {
       assert(std::ranges::none_of(this->arguments_,
-                                  [&identifier](const auto &entry) {
+                                  [&identifier](const auto &entry) -> bool {
                                     return entry.first == identifier;
                                   }));
       this->arguments_.emplace_back(
