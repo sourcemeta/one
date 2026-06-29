@@ -47,6 +47,7 @@
 #include <tuple>         // std::tuple
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
+#include <vector>        // std::vector
 
 namespace sourcemeta::one {
 
@@ -432,41 +433,51 @@ struct GENERATE_HEALTH {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     const auto &collection{*resolver.entry(action.data).collection};
-    auto &cache_entry{bundle_for(collection, resolver, callback)};
     auto errors{sourcemeta::core::JSON::make_array()};
-    const auto result{cache_entry.bundle.check(
-        contents, sourcemeta::blaze::schema_walker,
-        [&callback, &resolver](const auto identifier) {
-          return resolver(identifier, callback);
-        },
-        [&errors, &cache_entry](const auto &pointer, const auto &name,
-                                const auto &message, const auto &outcome,
-                                const bool) {
-          auto entry{sourcemeta::core::JSON::make_object()};
-          entry.assign("name", sourcemeta::core::JSON{name});
-          entry.assign("message", sourcemeta::core::JSON{message});
-          entry.assign("description",
-                       sourcemeta::core::to_json(outcome.description));
-          entry.assign("custom", sourcemeta::core::JSON{
-                                     cache_entry.custom_names.contains(name)});
-
-          auto pointers{sourcemeta::core::JSON::make_array()};
-          if (outcome.locations.empty()) {
-            pointers.push_back(
-                sourcemeta::core::JSON{sourcemeta::core::to_string(pointer)});
-          } else {
-            for (const auto &location : outcome.locations) {
-              pointers.push_back(sourcemeta::core::JSON{
-                  sourcemeta::core::to_string(pointer.concat(location))});
-            }
-          }
-
-          entry.assign("pointers", std::move(pointers));
-          errors.push_back(std::move(entry));
-        })};
-
     auto report{sourcemeta::core::JSON::make_object()};
-    report.assign("score", sourcemeta::core::to_json(result.second));
+
+    // The bundle carries mutable per-rule state, so a single instance cannot be
+    // checked from multiple threads at once. We build one bundle per
+    // configuration, keep it warm across the whole run, and serialise the
+    // linting itself under a single lock
+    {
+      static std::mutex mutex;
+      const std::lock_guard<std::mutex> lock{mutex};
+      auto &cache_entry{bundle_for(collection, resolver, callback)};
+      const auto result{cache_entry.bundle.check(
+          contents, sourcemeta::blaze::schema_walker,
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          },
+          [&errors, &cache_entry](const auto &pointer, const auto &name,
+                                  const auto &message, const auto &outcome,
+                                  const bool) {
+            auto entry{sourcemeta::core::JSON::make_object()};
+            entry.assign("name", sourcemeta::core::JSON{name});
+            entry.assign("message", sourcemeta::core::JSON{message});
+            entry.assign("description",
+                         sourcemeta::core::to_json(outcome.description));
+            entry.assign("custom",
+                         sourcemeta::core::JSON{
+                             cache_entry.custom_names.contains(name)});
+
+            auto pointers{sourcemeta::core::JSON::make_array()};
+            if (outcome.locations.empty()) {
+              pointers.push_back(
+                  sourcemeta::core::JSON{sourcemeta::core::to_string(pointer)});
+            } else {
+              for (const auto &location : outcome.locations) {
+                pointers.push_back(sourcemeta::core::JSON{
+                    sourcemeta::core::to_string(pointer.concat(location))});
+              }
+            }
+
+            entry.assign("pointers", std::move(pointers));
+            errors.push_back(std::move(entry));
+          })};
+      report.assign("score", sourcemeta::core::to_json(result.second));
+    }
+
     report.assign("errors", std::move(errors));
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -483,15 +494,16 @@ private:
     std::unordered_set<std::string_view> custom_names;
   };
 
+  // Built once per configuration and reused across the whole run. The caller
+  // must hold the lint lock, which also serialises checks against the returned
+  // bundle's mutable per-rule state
   static auto bundle_for(
       const sourcemeta::blaze::Configuration &configuration,
       [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
       [[maybe_unused]] const sourcemeta::one::BuildDynamicCallback &callback)
       -> CacheEntry & {
-    static std::mutex cache_mutex;
     static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
     const auto *key{static_cast<const void *>(&configuration)};
-    std::lock_guard<std::mutex> lock{cache_mutex};
     const auto match{cache.find(key)};
     if (match != cache.cend()) {
       return *match->second;
