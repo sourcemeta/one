@@ -303,7 +303,7 @@ auto read_string(const std::span<const std::byte> metadata, std::size_t &cursor,
   return true;
 }
 
-struct JwtPolicy {
+struct JWTPolicy {
   std::string_view issuer;
   std::string_view audience;
   std::string_view jwks_uri;
@@ -311,7 +311,7 @@ struct JwtPolicy {
 };
 
 auto decode_jwt_metadata(const std::span<const std::byte> metadata,
-                         JwtPolicy &result) -> bool {
+                         JWTPolicy &result) -> bool {
   std::size_t cursor{0};
   if (!read_string(metadata, cursor, result.issuer) ||
       !read_string(metadata, cursor, result.audience) ||
@@ -637,7 +637,7 @@ struct Authentication::Impl {
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
                                 const sourcemeta::core::JWT &token) const
       -> bool {
-    JwtPolicy policy;
+    JWTPolicy policy;
     if (!decode_jwt_metadata(metadata, policy)) {
       return false;
     }
