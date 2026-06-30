@@ -1,10 +1,8 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/jose.h>
-#include <sourcemeta/core/text.h>
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
-#include <cstddef>     // std::size_t
 #include <memory>      // std::make_unique
 #include <mutex>       // std::call_once
 #include <optional>    // std::optional, std::nullopt
@@ -14,63 +12,6 @@
 namespace sourcemeta::one {
 
 namespace {
-
-// TODO: This reads the max-age directive from an HTTP "Cache-Control" header
-// value (RFC 9111 Section 5.2.2.1). It is a general HTTP concern that belongs
-// in sourcemeta::core::http alongside http_header_find. Move it there and call
-// it from here once upstreamed
-auto http_cache_control_max_age(const std::string_view value)
-    -> std::optional<std::chrono::seconds> {
-  // Past this any lifetime is effectively unbounded, so saturate rather than
-  // overflow on a hostile or nonsensical value
-  constexpr std::chrono::seconds::rep maximum_delta_seconds{31'536'000'000};
-  std::size_t cursor{0};
-  while (cursor < value.size()) {
-    auto stop{value.find(',', cursor)};
-    if (stop == std::string_view::npos) {
-      stop = value.size();
-    }
-
-    auto directive{value.substr(cursor, stop - cursor)};
-    cursor = stop + 1;
-    while (!directive.empty() &&
-           (directive.front() == ' ' || directive.front() == '\t')) {
-      directive.remove_prefix(1);
-    }
-    while (!directive.empty() &&
-           (directive.back() == ' ' || directive.back() == '\t')) {
-      directive.remove_suffix(1);
-    }
-
-    const auto separator{directive.find('=')};
-    if (separator == std::string_view::npos ||
-        !sourcemeta::core::equals_ignore_case(directive.substr(0, separator),
-                                              "max-age")) {
-      continue;
-    }
-
-    const auto digits{directive.substr(separator + 1)};
-    if (digits.empty()) {
-      return std::nullopt;
-    }
-
-    std::chrono::seconds::rep seconds{0};
-    for (const char character : digits) {
-      if (character < '0' || character > '9') {
-        return std::nullopt;
-      }
-
-      seconds = (seconds * 10) + (character - '0');
-      if (seconds > maximum_delta_seconds) {
-        seconds = maximum_delta_seconds;
-      }
-    }
-
-    return std::chrono::seconds{seconds};
-  }
-
-  return std::nullopt;
-}
 
 auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
   return [](const std::string_view url)
@@ -90,7 +31,7 @@ auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
       const auto header{sourcemeta::core::http_header_find(response.headers,
                                                            "cache-control")};
       if (header.has_value()) {
-        max_age = http_cache_control_max_age(header.value());
+        max_age = sourcemeta::core::http_cache_control_max_age(header.value());
       }
 
       return sourcemeta::core::JWKSProvider::FetchResult{.body = response.body,
