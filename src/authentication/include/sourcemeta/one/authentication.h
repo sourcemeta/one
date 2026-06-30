@@ -16,6 +16,12 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
+// The enterprise edition verifies JSON Web Tokens against keys fetched from the
+// issuer, so the test seam below accepts a substitute transport for those keys
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+#include <sourcemeta/core/jose.h> // sourcemeta::core::JWKSProvider
+#endif
+
 namespace sourcemeta::one {
 
 // Raised when an authentication policy is scoped to a path that is neither a
@@ -52,12 +58,24 @@ public:
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
-  // A policy gates a set of path prefixes behind a set of keys, each compared
-  // under the policy's algorithm. A path covered by no policy is public
+  // What a policy authenticates against. ApiKey compares a static credential
+  // against a set of keys, Jwt verifies a bearer token against an issuer
+  enum class Type : std::uint8_t { ApiKey = 0, Jwt = 1 };
+
+  // A policy gates a set of path prefixes. A path covered by no policy is
+  // public. An ApiKey policy admits a credential matching one of its keys under
+  // its algorithm. A Jwt policy admits a token signed by its issuer, carrying
+  // its audience, and signed with one of its allowed algorithms. The issuer's
+  // keys are discovered from the issuer unless an explicit jwks_uri is given
   struct Policy {
     std::span<const std::string_view> paths;
     std::span<const std::string_view> keys;
     Algorithm algorithm{Algorithm::Identity};
+    Type type{Type::ApiKey};
+    std::string_view issuer{};
+    std::string_view audience{};
+    std::string_view jwks_uri{};
+    std::span<const std::string_view> algorithms{};
   };
 
   struct Verdict {
@@ -69,6 +87,14 @@ public:
                    const std::filesystem::path &destination) -> void;
 
   explicit Authentication(const std::filesystem::path &path);
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+  // Test seam: construct with a substitute key set transport instead of the
+  // default one that fetches over HTTP, so the JWT path is exercised offline
+  Authentication(const std::filesystem::path &path,
+                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
+#endif
+
   ~Authentication();
 
   // The artifact is memory-mapped and owned for the lifetime of the view

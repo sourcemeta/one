@@ -9,9 +9,13 @@
 #include <cstdlib>     // setenv
 #include <filesystem>  // std::filesystem::path
 #include <fstream>     // std::ofstream, std::fstream
+#include <map>         // std::map
+#include <memory>      // std::shared_ptr, std::make_shared
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 #include <vector>      // std::vector
 
 static auto test_path(const std::string &name) -> std::filesystem::path {
@@ -584,4 +588,275 @@ TEST(Authentication,
   const sourcemeta::one::Authentication authentication{path};
   EXPECT_TRUE(authentication.reference_permitted("/p/one", "/p/inner/two"));
   EXPECT_FALSE(authentication.reference_permitted("/p/inner/two", "/p/one"));
+}
+
+// A locally signed RS256 access token (typ "at+jwt") with issuer "acme",
+// audience "client", and an expiry far in the future, alongside the key set
+// that verifies it and an unrelated key set that does not. Reused from the core
+// JOSE test vectors so no signing happens here
+static constexpr std::string_view SIGNED_TOKEN{
+    "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9."
+    "eyJpc3MiOiJhY21lIiwiYXVkIjoiY2xpZW50IiwiZXhwIjoyMDAwMDAwMDAwfQ."
+    "U3ZBo7MvSW0U099gJ_"
+    "vIA5T8HJ2XnKSzYmqkx7SDxgxQfmxQyu3QZIeKT68AAH7wQjWRvNWQ7f3Es57UUNUQAMs-"
+    "z5TWlVBKtYZf5ZcbYqc4KrQ-ApwpjoFGJxurnd1R_"
+    "tz02WssnvrZNKnxNPuGoYIkJKNCl59yLFJwRLf3nK_Jcxs-"
+    "1m2MvKsm647PuXqhYOKlZkHOvkIV0RV8cLJ56_gDVjj7TlKQgwbTdW_"
+    "71QLwLWRFGftU2EAWuqayTSpPeUA6kB4sfn7JNsweqDs7uev30m6y8BE9uzwzHuuovaN1cZz0o"
+    "TAGXcx64sfbPs6HEMp5_FoU0SccxArAbnHSjA"};
+static constexpr std::string_view SIGNED_KEYS{
+    R"JSON({ "keys": [ { "kty": "RSA", "n": "oHTpl-jfNfBuXmBp58sW8s_77UP6j2jA0mjjKjhDkxhp7Agk-xLNGgfPCS_bjdZ6YU6FGeab8uVjkSgo9_0OCJUaF4vzEGwXmNuGawANxnZtiYjWvbJlq-2mn_L7rsqGQcSkMmyM0g4aX7dF8wB6DVrXShJ78fcrNtpeoU72YGEdjehA8qVclDFwBdpCGynxxnWJePk72lQb6gkVMqKMc3jBF8GkWf8oP_sjss-fpOjSUMR1c8_0JlTYWO46KWOZa0EO2t8H1V3imMyzbhoxRd_qZHmo46gJkG-ZdebjX0vGQllaCwu0z4kLcXIfAZhqPEkdssDGhC_txwJuhaPDFQ", "e": "AQAB" } ] })JSON"};
+static constexpr std::string_view UNRELATED_KEYS{
+    R"JSON({ "keys": [ { "kty": "RSA", "n": "ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ", "e": "AQAB" } ] })JSON"};
+
+// A key set transport backed by a fixed URL-to-body table, counting calls so a
+// test can assert that an apiKey credential never reaches the network
+static auto stub_fetcher(std::map<std::string, std::string> responses,
+                         std::shared_ptr<int> calls)
+    -> sourcemeta::core::JWKSProvider::Fetcher {
+  return [responses = std::move(responses),
+          calls = std::move(calls)](const std::string_view url)
+             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
+    if (calls != nullptr) {
+      *calls += 1;
+    }
+
+    const auto match{responses.find(std::string{url})};
+    if (match == responses.cend()) {
+      return std::nullopt;
+    }
+
+    return sourcemeta::core::JWKSProvider::FetchResult{.body = match->second,
+                                                       .max_age = std::nullopt};
+  };
+}
+
+TEST(Authentication, jwt_admits_a_valid_token_and_caches_the_key_set) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_valid.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const auto calls{std::make_shared<int>(0)};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         calls)};
+  EXPECT_TRUE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(authentication.admits("/secure/x", "not-a-token").allowed);
+  EXPECT_FALSE(authentication.admits("/secure/x", "").allowed);
+  // A second valid request reuses the cached key set rather than refetching
+  EXPECT_TRUE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_EQ(*calls, 1);
+}
+
+TEST(Authentication, jwt_denies_a_token_for_the_wrong_audience) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "different",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_audience.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, jwt_denies_a_token_from_the_wrong_issuer) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "different",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_issuer.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, jwt_denies_a_disallowed_algorithm) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"ES256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_algorithm.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, jwt_denies_when_the_signing_key_is_absent) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_unknown_key.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path,
+      stub_fetcher({{"https://idp.test/jwks", std::string{UNRELATED_KEYS}}},
+                   nullptr)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, jwt_denies_when_the_key_set_cannot_be_fetched) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_fetch_fails.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, an_apikey_credential_never_triggers_a_jwt_fetch) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_no_fetch.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const auto calls{std::make_shared<int>(0)};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         calls)};
+  EXPECT_FALSE(authentication.admits("/secure/x", "static-api-key").allowed);
+  EXPECT_FALSE(authentication.admits("/secure/x", "").allowed);
+  EXPECT_EQ(*calls, 0);
+}
+
+TEST(Authentication, jwt_resolves_the_key_set_through_discovery) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  // No key set location is pinned, so it is discovered from the issuer
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "https://acme.test",
+        .audience = "client",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_discovery.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path,
+      stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
+                     R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
+                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+                   nullptr)};
+  // The issuer claim is "acme", independent of the discovery host
+  const std::array<sourcemeta::one::Authentication::Policy, 1> issuer_policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .algorithms = algorithms}}};
+  const auto issuer_path{test_path("jwt_discovery_issuer.bin")};
+  sourcemeta::one::Authentication::save(issuer_policies, issuer_path,
+                                        issuer_path);
+  const sourcemeta::one::Authentication issuer_authentication{
+      issuer_path,
+      stub_fetcher({{"acme/.well-known/openid-configuration",
+                     R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
+                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+                   nullptr)};
+  EXPECT_TRUE(issuer_authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, mixed_apikey_and_jwt_policies_admit_either_credential) {
+  setenv("ONE_TEST_KEY_BOTH", "static-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/both"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BOTH"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = paths, .keys = keys},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_mixed.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  // The static key opens the path
+  EXPECT_TRUE(authentication.admits("/both/x", "static-secret").allowed);
+  // The token opens the path
+  EXPECT_TRUE(authentication.admits("/both/x", SIGNED_TOKEN).allowed);
+  // Neither a wrong key nor a wrong token opens it
+  EXPECT_FALSE(authentication.admits("/both/x", "wrong").allowed);
+}
+
+TEST(Authentication, reference_rules_treat_a_jwt_scope_conservatively) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_reference.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  // Reference checks read only the policy, so no key set transport is needed
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A public schema may not reference one behind the token scope
+  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secure/two"));
+  // The token scope may reference a public schema, and itself
+  EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/open/two"));
+  EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/secure/two"));
 }
