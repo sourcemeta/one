@@ -73,10 +73,10 @@ auto encode_apikey_metadata(
 // The issuer, audience, and key set location are stored as length-prefixed
 // strings, followed by the allow-listed signature algorithms as one byte each.
 // An empty key set location means the location is discovered from the issuer
-auto encode_jwt_metadata(const std::string_view issuer,
-                         const std::string_view audience,
-                         const std::string_view jwks_uri,
-                         const std::span<const std::string_view> algorithms)
+auto encode_jwt_metadata(
+    const std::string_view issuer, const std::string_view audience,
+    const std::string_view jwks_uri,
+    const std::span<const sourcemeta::core::JWSAlgorithm> algorithms)
     -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
@@ -84,13 +84,8 @@ auto encode_jwt_metadata(const std::string_view issuer,
   append_string(result, jwks_uri);
   append_u32(result, static_cast<std::uint32_t>(algorithms.size()));
   for (const auto algorithm : algorithms) {
-    const auto parsed{sourcemeta::core::to_jws_algorithm(algorithm)};
-    if (!parsed.has_value()) {
-      throw std::runtime_error("Unknown JSON Web Signature algorithm");
-    }
-
     result.push_back(
-        static_cast<std::byte>(static_cast<std::uint8_t>(parsed.value())));
+        static_cast<std::byte>(static_cast<std::uint8_t>(algorithm)));
   }
 
   return result;
@@ -186,7 +181,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   std::vector<std::byte> metadata;
   for (const auto &policy : policies) {
     std::vector<std::byte> policy_metadata;
-    if (policy.type == Authentication::Type::Jwt) {
+    if (policy.type == Authentication::Type::JWT) {
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
     } else if (!policy.keys.empty()) {

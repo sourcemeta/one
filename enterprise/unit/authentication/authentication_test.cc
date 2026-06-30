@@ -633,10 +633,11 @@ static auto stub_fetcher(std::map<std::string, std::string> responses,
 
 TEST(Authentication, jwt_admits_a_valid_token_and_caches_the_key_set) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -658,10 +659,11 @@ TEST(Authentication, jwt_admits_a_valid_token_and_caches_the_key_set) {
 
 TEST(Authentication, jwt_denies_a_token_for_the_wrong_audience) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "different",
         .jwks_uri = "https://idp.test/jwks",
@@ -677,10 +679,11 @@ TEST(Authentication, jwt_denies_a_token_for_the_wrong_audience) {
 
 TEST(Authentication, jwt_denies_a_token_from_the_wrong_issuer) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "different",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -696,10 +699,11 @@ TEST(Authentication, jwt_denies_a_token_from_the_wrong_issuer) {
 
 TEST(Authentication, jwt_denies_a_disallowed_algorithm) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"ES256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -715,10 +719,11 @@ TEST(Authentication, jwt_denies_a_disallowed_algorithm) {
 
 TEST(Authentication, jwt_denies_when_the_signing_key_is_absent) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -735,10 +740,11 @@ TEST(Authentication, jwt_denies_when_the_signing_key_is_absent) {
 
 TEST(Authentication, jwt_denies_when_the_key_set_cannot_be_fetched) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -753,10 +759,11 @@ TEST(Authentication, jwt_denies_when_the_key_set_cannot_be_fetched) {
 
 TEST(Authentication, an_apikey_credential_never_triggers_a_jwt_fetch) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -775,11 +782,12 @@ TEST(Authentication, an_apikey_credential_never_triggers_a_jwt_fetch) {
 
 TEST(Authentication, jwt_resolves_the_key_set_through_discovery) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   // No key set location is pinned, so it is discovered from the issuer
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "https://acme.test",
         .audience = "client",
         .algorithms = algorithms}}};
@@ -795,7 +803,7 @@ TEST(Authentication, jwt_resolves_the_key_set_through_discovery) {
   // The issuer claim is "acme", independent of the discovery host
   const std::array<sourcemeta::one::Authentication::Policy, 1> issuer_policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .algorithms = algorithms}}};
@@ -815,11 +823,12 @@ TEST(Authentication, mixed_apikey_and_jwt_policies_admit_either_credential) {
   setenv("ONE_TEST_KEY_BOTH", "static-secret", 1);
   const std::array<std::string_view, 1> paths{{"/both"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BOTH"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{.paths = paths, .keys = keys},
        {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
@@ -840,10 +849,11 @@ TEST(Authentication, mixed_apikey_and_jwt_policies_admit_either_credential) {
 
 TEST(Authentication, reference_rules_treat_a_jwt_scope_conservatively) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
-  const std::array<std::string_view, 1> algorithms{{"RS256"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::Jwt,
+        .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",

@@ -20,6 +20,14 @@
 // issuer, so the test seam below accepts a substitute transport for those keys
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
 #include <sourcemeta/core/jose.h> // sourcemeta::core::JWKSProvider
+#else
+// The community edition never pulls in the JOSE module, but a policy still
+// names the signature algorithm type. A scoped enumeration with a fixed
+// underlying type is a complete type once forward declared, which is all this
+// needs
+namespace sourcemeta::core {
+enum class JWSAlgorithm : std::uint8_t;
+}
 #endif
 
 namespace sourcemeta::one {
@@ -59,12 +67,12 @@ public:
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
   // What a policy authenticates against. ApiKey compares a static credential
-  // against a set of keys, Jwt verifies a bearer token against an issuer
-  enum class Type : std::uint8_t { ApiKey = 0, Jwt = 1 };
+  // against a set of keys, JWT verifies a bearer token against an issuer
+  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1 };
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public. An ApiKey policy admits a credential matching one of its keys under
-  // its algorithm. A Jwt policy admits a token signed by its issuer, carrying
+  // its algorithm. A JWT policy admits a token signed by its issuer, carrying
   // its audience, and signed with one of its allowed algorithms. The issuer's
   // keys are discovered from the issuer unless an explicit jwks_uri is given
   struct Policy {
@@ -75,7 +83,7 @@ public:
     std::string_view issuer{};
     std::string_view audience{};
     std::string_view jwks_uri{};
-    std::span<const std::string_view> algorithms{};
+    std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
   };
 
   struct Verdict {

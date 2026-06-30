@@ -140,7 +140,7 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
           entry.metadata_length > size - metadata_cursor ||
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
-          entry.type > static_cast<std::uint8_t>(Authentication::Type::Jwt)) {
+          entry.type > static_cast<std::uint8_t>(Authentication::Type::JWT)) {
         return false;
       }
 
@@ -617,7 +617,7 @@ struct Authentication::Impl {
       }
 
       if (static_cast<Authentication::Type>(entry.type) ==
-          Authentication::Type::Jwt) {
+          Authentication::Type::JWT) {
         if (token.has_value() && this->admits_jwt(metadata, token.value())) {
           return true;
         }
@@ -725,7 +725,7 @@ struct Authentication::Impl {
             this->view_->as<std::byte>(entry.metadata_offset),
             entry.metadata_length};
         if (static_cast<Authentication::Type>(entry.type) ==
-            Authentication::Type::Jwt) {
+            Authentication::Type::JWT) {
           collect_jwt_audience(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
