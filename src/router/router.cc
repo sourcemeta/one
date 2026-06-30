@@ -1,90 +1,80 @@
 #include <sourcemeta/core/http.h>
+#include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/one/router.h>
 
-#include <cctype>      // std::tolower
 #include <chrono>      // std::chrono::seconds
+#include <cstddef>     // std::size_t
 #include <memory>      // std::make_unique
 #include <mutex>       // std::call_once
 #include <optional>    // std::optional, std::nullopt
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::pair
-#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
 namespace {
 
-auto parse_max_age(
-    const std::vector<std::pair<std::string, std::string>> &headers)
+// TODO: This reads the max-age directive from an HTTP "Cache-Control" header
+// value (RFC 9111 Section 5.2.2.1). It is a general HTTP concern that belongs
+// in sourcemeta::core::http alongside http_header_find. Move it there and call
+// it from here once upstreamed
+auto http_cache_control_max_age(const std::string_view value)
     -> std::optional<std::chrono::seconds> {
-  for (const auto &header : headers) {
-    if (header.first != "cache-control") {
+  // Past this any lifetime is effectively unbounded, so saturate rather than
+  // overflow on a hostile or nonsensical value
+  constexpr std::chrono::seconds::rep maximum_delta_seconds{31'536'000'000};
+  std::size_t cursor{0};
+  while (cursor < value.size()) {
+    auto stop{value.find(',', cursor)};
+    if (stop == std::string_view::npos) {
+      stop = value.size();
+    }
+
+    auto directive{value.substr(cursor, stop - cursor)};
+    cursor = stop + 1;
+    while (!directive.empty() &&
+           (directive.front() == ' ' || directive.front() == '\t')) {
+      directive.remove_prefix(1);
+    }
+    while (!directive.empty() &&
+           (directive.back() == ' ' || directive.back() == '\t')) {
+      directive.remove_suffix(1);
+    }
+
+    const auto separator{directive.find('=')};
+    if (separator == std::string_view::npos ||
+        !sourcemeta::core::equals_ignore_case(directive.substr(0, separator),
+                                              "max-age")) {
       continue;
     }
 
-    std::string value{header.second};
-    for (auto &character : value) {
-      character = static_cast<char>(
-          std::tolower(static_cast<unsigned char>(character)));
+    const auto digits{directive.substr(separator + 1)};
+    if (digits.empty()) {
+      return std::nullopt;
     }
 
-    bool no_store{false};
-    std::optional<std::chrono::seconds> max_age;
-    std::size_t start{0};
-    while (start <= value.size()) {
-      auto end{value.find(',', start)};
-      if (end == std::string::npos) {
-        end = value.size();
+    std::chrono::seconds::rep seconds{0};
+    for (const char character : digits) {
+      if (character < '0' || character > '9') {
+        return std::nullopt;
       }
 
-      auto token{std::string_view{value}.substr(start, end - start)};
-      while (!token.empty() && token.front() == ' ') {
-        token.remove_prefix(1);
+      seconds = (seconds * 10) + (character - '0');
+      if (seconds > maximum_delta_seconds) {
+        seconds = maximum_delta_seconds;
       }
-      while (!token.empty() && token.back() == ' ') {
-        token.remove_suffix(1);
-      }
-
-      if (token == "no-store" || token == "no-cache") {
-        no_store = true;
-      } else if (token.starts_with("max-age=")) {
-        token.remove_prefix(std::string_view{"max-age="}.size());
-        std::chrono::seconds::rep seconds{0};
-        bool digits{!token.empty()};
-        for (const char character : token) {
-          if (character < '0' || character > '9') {
-            digits = false;
-            break;
-          }
-
-          seconds = (seconds * 10) + (character - '0');
-          if (seconds > 100000000) {
-            seconds = 100000000;
-          }
-        }
-
-        if (digits) {
-          max_age = std::chrono::seconds{seconds};
-        }
-      }
-
-      start = end + 1;
     }
 
-    if (no_store) {
-      return std::chrono::seconds{0};
-    }
-
-    return max_age;
+    return std::chrono::seconds{seconds};
   }
 
   return std::nullopt;
 }
 
-auto default_jwks_fetcher() -> Authentication::JWKSFetcher {
+auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
   return [](const std::string_view url)
-             -> std::optional<Authentication::JWKSFetchResult> {
+             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
     try {
       sourcemeta::core::HTTPSystemRequest request{std::string{url}};
       request.connect_timeout(std::chrono::seconds{2});
@@ -96,8 +86,15 @@ auto default_jwks_fetcher() -> Authentication::JWKSFetcher {
         return std::nullopt;
       }
 
-      return Authentication::JWKSFetchResult{
-          .body = response.body, .max_age = parse_max_age(response.headers)};
+      std::optional<std::chrono::seconds> max_age;
+      const auto header{sourcemeta::core::http_header_find(response.headers,
+                                                           "cache-control")};
+      if (header.has_value()) {
+        max_age = http_cache_control_max_age(header.value());
+      }
+
+      return sourcemeta::core::JWKSProvider::FetchResult{.body = response.body,
+                                                         .max_age = max_age};
     } catch (...) {
       return std::nullopt;
     }

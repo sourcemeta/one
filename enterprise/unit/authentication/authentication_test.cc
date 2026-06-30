@@ -44,23 +44,22 @@ static constexpr std::string_view UNRELATED_KEYS{
 
 static auto stub_fetcher(std::map<std::string, std::string> responses,
                          std::shared_ptr<int> calls)
-    -> sourcemeta::one::Authentication::JWKSFetcher {
-  return
-      [responses = std::move(responses),
-       calls = std::move(calls)](const std::string_view url)
-          -> std::optional<sourcemeta::one::Authentication::JWKSFetchResult> {
-        if (calls != nullptr) {
-          *calls += 1;
-        }
+    -> sourcemeta::core::JWKSProvider::Fetcher {
+  return [responses = std::move(responses),
+          calls = std::move(calls)](const std::string_view url)
+             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
+    if (calls != nullptr) {
+      *calls += 1;
+    }
 
-        const auto match{responses.find(std::string{url})};
-        if (match == responses.cend()) {
-          return std::nullopt;
-        }
+    const auto match{responses.find(std::string{url})};
+    if (match == responses.cend()) {
+      return std::nullopt;
+    }
 
-        return sourcemeta::one::Authentication::JWKSFetchResult{
-            .body = match->second, .max_age = std::nullopt};
-      };
+    return sourcemeta::core::JWKSProvider::FetchResult{.body = match->second,
+                                                       .max_age = std::nullopt};
+  };
 }
 
 TEST(Authentication, missing_artifact_denies_everything) {

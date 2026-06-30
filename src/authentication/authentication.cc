@@ -20,7 +20,7 @@ auto Authentication::save(const std::span<const Authentication::Policy>,
 }
 
 Authentication::Authentication(const std::filesystem::path &,
-                               Authentication::JWKSFetcher) {}
+                               sourcemeta::core::JWKSProvider::Fetcher) {}
 
 Authentication::~Authentication() = default;
 

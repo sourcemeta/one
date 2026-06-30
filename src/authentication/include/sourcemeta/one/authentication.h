@@ -5,24 +5,18 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
-#include <chrono>      // std::chrono::seconds
+#include <sourcemeta/core/jose.h>
+
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
-#include <functional>  // std::function
 #include <memory>      // std::unique_ptr
-#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <vector>      // std::vector
-
-// Forward declared to keep this interface independent of the JOSE module
-namespace sourcemeta::core {
-enum class JWSAlgorithm : std::uint8_t;
-}
 
 namespace sourcemeta::one {
 
@@ -79,19 +73,12 @@ public:
     bool allowed;
   };
 
-  struct JWKSFetchResult {
-    std::string body;
-    std::optional<std::chrono::seconds> max_age;
-  };
-
-  using JWKSFetcher =
-      std::function<std::optional<JWKSFetchResult>(std::string_view url)>;
-
   static auto save(std::span<const Policy> policies,
                    const std::filesystem::path &configuration,
                    const std::filesystem::path &destination) -> void;
 
-  Authentication(const std::filesystem::path &path, JWKSFetcher fetcher);
+  Authentication(const std::filesystem::path &path,
+                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
 
   ~Authentication();
 

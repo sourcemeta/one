@@ -376,25 +376,6 @@ auto parse_jwks_uri(const std::string_view body) -> std::optional<std::string> {
   return document.value().at("jwks_uri").to_string();
 }
 
-auto adapt_fetcher(sourcemeta::one::Authentication::JWKSFetcher fetcher)
-    -> sourcemeta::core::JWKSProvider::Fetcher {
-  return [fetcher = std::move(fetcher)](const std::string_view url)
-             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
-    if (!fetcher) {
-      return std::nullopt;
-    }
-
-    auto result{fetcher(url)};
-    if (!result.has_value()) {
-      return std::nullopt;
-    }
-
-    return sourcemeta::core::JWKSProvider::FetchResult{
-        .body = std::move(result.value().body),
-        .max_age = result.value().max_age};
-  };
-}
-
 } // namespace
 
 namespace sourcemeta::one {
@@ -695,8 +676,8 @@ struct Authentication::Impl {
 };
 
 Authentication::Authentication(const std::filesystem::path &path,
-                               Authentication::JWKSFetcher fetcher)
-    : impl_{std::make_unique<Impl>(path, adapt_fetcher(std::move(fetcher)))} {}
+                               sourcemeta::core::JWKSProvider::Fetcher fetcher)
+    : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
 
 Authentication::~Authentication() = default;
 
