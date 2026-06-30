@@ -1,10 +1,110 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <memory> // std::make_unique
-#include <mutex>  // std::call_once
+#include <cctype>      // std::tolower
+#include <chrono>      // std::chrono::seconds
+#include <memory>      // std::make_unique
+#include <mutex>       // std::call_once
+#include <optional>    // std::optional, std::nullopt
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
+
+namespace {
+
+auto parse_max_age(
+    const std::vector<std::pair<std::string, std::string>> &headers)
+    -> std::optional<std::chrono::seconds> {
+  for (const auto &header : headers) {
+    if (header.first != "cache-control") {
+      continue;
+    }
+
+    std::string value{header.second};
+    for (auto &character : value) {
+      character = static_cast<char>(
+          std::tolower(static_cast<unsigned char>(character)));
+    }
+
+    bool no_store{false};
+    std::optional<std::chrono::seconds> max_age;
+    std::size_t start{0};
+    while (start <= value.size()) {
+      auto end{value.find(',', start)};
+      if (end == std::string::npos) {
+        end = value.size();
+      }
+
+      auto token{std::string_view{value}.substr(start, end - start)};
+      while (!token.empty() && token.front() == ' ') {
+        token.remove_prefix(1);
+      }
+      while (!token.empty() && token.back() == ' ') {
+        token.remove_suffix(1);
+      }
+
+      if (token == "no-store" || token == "no-cache") {
+        no_store = true;
+      } else if (token.starts_with("max-age=")) {
+        token.remove_prefix(std::string_view{"max-age="}.size());
+        std::chrono::seconds::rep seconds{0};
+        bool digits{!token.empty()};
+        for (const char character : token) {
+          if (character < '0' || character > '9') {
+            digits = false;
+            break;
+          }
+
+          seconds = (seconds * 10) + (character - '0');
+          if (seconds > 100000000) {
+            seconds = 100000000;
+          }
+        }
+
+        if (digits) {
+          max_age = std::chrono::seconds{seconds};
+        }
+      }
+
+      start = end + 1;
+    }
+
+    if (no_store) {
+      return std::chrono::seconds{0};
+    }
+
+    return max_age;
+  }
+
+  return std::nullopt;
+}
+
+auto default_jwks_fetcher() -> Authentication::JWKSFetcher {
+  return [](const std::string_view url)
+             -> std::optional<Authentication::JWKSFetchResult> {
+    try {
+      sourcemeta::core::HTTPSystemRequest request{std::string{url}};
+      request.connect_timeout(std::chrono::seconds{2});
+      request.timeout(std::chrono::seconds{5});
+      request.maximum_response_size(1024UL * 1024UL);
+      request.follow_redirects(false);
+      const auto response{request.send()};
+      if (response.status.code < 200 || response.status.code >= 300) {
+        return std::nullopt;
+      }
+
+      return Authentication::JWKSFetchResult{
+          .body = response.body, .max_age = parse_max_age(response.headers)};
+    } catch (...) {
+      return std::nullopt;
+    }
+  };
+}
+
+} // namespace
 
 Router::Router(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
@@ -13,7 +113,7 @@ Router::Router(const std::filesystem::path &base,
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
-      authentication_{base / "authentication.bin"} {
+      authentication_{base / "authentication.bin", default_jwks_fetcher()} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);

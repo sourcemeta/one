@@ -19,7 +19,8 @@ auto Authentication::save(const std::span<const Authentication::Policy>,
   sourcemeta::core::write_file(destination, std::vector<std::byte>{});
 }
 
-Authentication::Authentication(const std::filesystem::path &) {}
+Authentication::Authentication(const std::filesystem::path &,
+                               Authentication::JWKSFetcher) {}
 
 Authentication::~Authentication() = default;
 

@@ -5,30 +5,24 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <chrono>      // std::chrono::seconds
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::function
 #include <memory>      // std::unique_ptr
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
-// The enterprise edition verifies JSON Web Tokens against keys fetched from the
-// issuer, so the test seam below accepts a substitute transport for those keys
-#if defined(SOURCEMETA_ONE_ENTERPRISE)
-#include <sourcemeta/core/jose.h> // sourcemeta::core::JWKSProvider
-#else
-// The community edition never pulls in the JOSE module, but a policy still
-// names the signature algorithm type. A scoped enumeration with a fixed
-// underlying type is a complete type once forward declared, which is all this
-// needs
+// Forward declared to keep this interface independent of the JOSE module
 namespace sourcemeta::core {
 enum class JWSAlgorithm : std::uint8_t;
 }
-#endif
 
 namespace sourcemeta::one {
 
@@ -66,15 +60,10 @@ public:
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
-  // What a policy authenticates against. ApiKey compares a static credential
-  // against a set of keys, JWT verifies a bearer token against an issuer
   enum class Type : std::uint8_t { ApiKey = 0, JWT = 1 };
 
   // A policy gates a set of path prefixes. A path covered by no policy is
-  // public. An ApiKey policy admits a credential matching one of its keys under
-  // its algorithm. A JWT policy admits a token signed by its issuer, carrying
-  // its audience, and signed with one of its allowed algorithms. The issuer's
-  // keys are discovered from the issuer unless an explicit jwks_uri is given
+  // public
   struct Policy {
     std::span<const std::string_view> paths;
     std::span<const std::string_view> keys;
@@ -90,18 +79,19 @@ public:
     bool allowed;
   };
 
+  struct JWKSFetchResult {
+    std::string body;
+    std::optional<std::chrono::seconds> max_age;
+  };
+
+  using JWKSFetcher =
+      std::function<std::optional<JWKSFetchResult>(std::string_view url)>;
+
   static auto save(std::span<const Policy> policies,
                    const std::filesystem::path &configuration,
                    const std::filesystem::path &destination) -> void;
 
-  explicit Authentication(const std::filesystem::path &path);
-
-#if defined(SOURCEMETA_ONE_ENTERPRISE)
-  // Test seam: construct with a substitute key set transport instead of the
-  // default one that fetches over HTTP, so the JWT path is exercised offline
-  Authentication(const std::filesystem::path &path,
-                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
-#endif
+  Authentication(const std::filesystem::path &path, JWKSFetcher fetcher);
 
   ~Authentication();
 

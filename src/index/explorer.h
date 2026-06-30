@@ -760,7 +760,7 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     }
 
     const sourcemeta::one::Authentication authentication{
-        action.dependencies.back()};
+        action.dependencies.back(), {}};
     const std::string directory_registry_path{
         relative_path == "." ? std::string{"/"}
                              : "/" + relative_path.generic_string()};
