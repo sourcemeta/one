@@ -80,7 +80,7 @@ RUN mkdir -p /usr/share/sourcemeta/one \
 FROM debian:trixie-slim
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  openssl-provider-fips libcurl4t64 \
+  openssl-provider-fips libcurl4t64 ca-certificates \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 
