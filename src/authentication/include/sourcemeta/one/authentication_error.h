@@ -16,11 +16,11 @@ namespace sourcemeta::one {
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT EnterpriseOnlyFeatureError
     : public std::exception {
 public:
-  EnterpriseOnlyFeatureError(std::filesystem::path path, const char *message)
-      : path_{std::move(path)}, message_{message} {}
+  EnterpriseOnlyFeatureError(std::filesystem::path path, std::string message)
+      : path_{std::move(path)}, message_{std::move(message)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return this->message_;
+    return this->message_.c_str();
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -29,7 +29,7 @@ public:
 
 private:
   std::filesystem::path path_;
-  const char *message_;
+  std::string message_;
 };
 
 // Raised when an authentication policy is scoped to a path that is neither a

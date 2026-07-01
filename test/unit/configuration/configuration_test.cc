@@ -845,7 +845,7 @@ TEST(authentication_jwt) {
         "paths": [ "/internal" ],
         "issuer": "https://acme.example.com",
         "audience": "https://schemas.example.com",
-        "algorithms": [ "RS256", "ES256" ]
+        "algorithms": [ "ES256", "RS256" ]
       }
     ]
   })JSON")};
@@ -886,6 +886,7 @@ TEST(authentication_jwt_with_explicit_key_set_location) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, "/tmp/one.json", ".")};
 
+  EXPECT_EQ(configuration.authentication.size(), 1);
   const auto &entry{configuration.authentication.at(0)};
   EXPECT_TRUE(entry.jwks_uri.has_value());
   EXPECT_EQ(entry.jwks_uri.value(), "https://acme.example.com/keys");

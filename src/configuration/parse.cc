@@ -7,7 +7,7 @@
 
 #include "template.h"
 
-#include <algorithm>   // std::ranges::transform
+#include <algorithm>   // std::ranges::transform, std::ranges::sort
 #include <cassert>     // assert
 #include <cctype>      // std::tolower
 #include <set>         // std::set
@@ -167,6 +167,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
               sourcemeta::core::to_jws_algorithm(algorithm.to_string())
                   .value());
         }
+
+        // Canonicalise the allow-list so that policies with the same set of
+        // algorithms serialise identically regardless of declaration order
+        std::ranges::sort(parsed.algorithms);
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =
