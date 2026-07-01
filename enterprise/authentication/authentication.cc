@@ -2,17 +2,21 @@
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/io.h>
+#include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/json.h>
 
 #include "authentication_format.h"
 
 #include <algorithm>     // std::ranges::all_of
 #include <bit>           // std::countr_zero
+#include <chrono>        // std::chrono::system_clock, std::chrono::seconds
 #include <cstddef>       // std::byte, std::size_t
-#include <cstdint>       // std::uint32_t, std::uint64_t
+#include <cstdint>       // std::uint32_t, std::uint64_t, std::uint8_t
 #include <cstdlib>       // std::getenv
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem::path
 #include <limits>        // std::numeric_limits
+#include <map>           // std::map
 #include <memory>        // std::unique_ptr, std::make_unique
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional
@@ -21,7 +25,7 @@
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
-#include <utility>       // std::move
+#include <utility>       // std::move, std::pair
 #include <vector>        // std::vector
 
 namespace {
@@ -134,7 +138,8 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
       if (entry.metadata_offset != metadata_cursor ||
           entry.metadata_length > size - metadata_cursor ||
           entry.algorithm >
-              static_cast<std::uint8_t>(Authentication::Algorithm::Sha256)) {
+              static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
+          entry.type > static_cast<std::uint8_t>(Authentication::Type::JWT)) {
         return false;
       }
 
@@ -279,6 +284,116 @@ auto collect_keys(const std::span<const std::byte> metadata,
   }
 }
 
+constexpr std::chrono::seconds JWT_CLOCK_SKEW{60};
+
+auto read_string(const std::span<const std::byte> metadata, std::size_t &cursor,
+                 std::string_view &value) -> bool {
+  std::uint32_t length{0};
+  if (!read_u32(metadata, cursor, length) ||
+      metadata.size() - cursor < length) {
+    return false;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  value = std::string_view{
+      reinterpret_cast<const char *>(metadata.data() + cursor), length};
+  cursor += length;
+  return true;
+}
+
+struct JWTPolicy {
+  std::string_view issuer;
+  std::string_view audience;
+  std::string_view jwks_uri;
+  std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
+};
+
+auto decode_jwt_metadata(const std::span<const std::byte> metadata,
+                         JWTPolicy &result) -> bool {
+  std::size_t cursor{0};
+  if (!read_string(metadata, cursor, result.issuer) ||
+      !read_string(metadata, cursor, result.audience) ||
+      !read_string(metadata, cursor, result.jwks_uri)) {
+    return false;
+  }
+
+  std::uint32_t count{0};
+  // Each algorithm is a single byte, so a count larger than the bytes that
+  // remain is corrupt and must not drive an allocation
+  if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
+    return false;
+  }
+
+  result.algorithms.reserve(count);
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    if (cursor >= metadata.size()) {
+      return false;
+    }
+
+    const auto value{static_cast<std::uint8_t>(metadata[cursor])};
+    cursor += 1;
+    if (value >
+        static_cast<std::uint8_t>(sourcemeta::core::JWSAlgorithm::EdDSA)) {
+      return false;
+    }
+
+    result.algorithms.push_back(
+        static_cast<sourcemeta::core::JWSAlgorithm>(value));
+  }
+
+  return true;
+}
+
+// The reference check treats two JWT policies as the same scope only when every
+// parameter that decides admission matches, so the identity spans the issuer,
+// audience, key set location, and the exact allowed algorithm bytes
+auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
+                             std::unordered_set<std::string_view> &keys)
+    -> void {
+  std::size_t cursor{0};
+  std::string_view issuer;
+  std::string_view audience;
+  std::string_view jwks_uri;
+  if (!read_string(metadata, cursor, issuer) ||
+      !read_string(metadata, cursor, audience) ||
+      !read_string(metadata, cursor, jwks_uri)) {
+    return;
+  }
+
+  keys.emplace(issuer);
+  keys.emplace(audience);
+  keys.emplace(jwks_uri);
+
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
+    return;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
+}
+
+auto derive_discovery_url(const std::string_view issuer) -> std::string {
+  std::string result{issuer};
+  if (!result.empty() && result.back() == '/') {
+    result.pop_back();
+  }
+
+  result += "/.well-known/openid-configuration";
+  return result;
+}
+
+auto parse_jwks_uri(const std::string_view body) -> std::optional<std::string> {
+  const auto document{sourcemeta::core::try_parse_json(body)};
+  if (!document.has_value() || !document.value().is_object() ||
+      !document.value().defines("jwks_uri") ||
+      !document.value().at("jwks_uri").is_string()) {
+    return std::nullopt;
+  }
+
+  return document.value().at("jwks_uri").to_string();
+}
+
 } // namespace
 
 namespace sourcemeta::one {
@@ -296,7 +411,9 @@ struct Authentication::Impl {
   // everything: the section pointers below stay null, so matching yields the
   // empty set and admits no one. Opening the file covers the missing and
   // unreadable cases without a separate, throwing existence check
-  explicit Impl(const std::filesystem::path &path) {
+  Impl(const std::filesystem::path &path,
+       sourcemeta::core::JWKSProvider::Fetcher fetcher)
+      : fetcher_{std::move(fetcher)} {
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
       view = std::make_unique<sourcemeta::core::FileView>(path);
@@ -398,6 +515,8 @@ struct Authentication::Impl {
       return true;
     }
 
+    const auto token{sourcemeta::core::JWT::from(credential)};
+
     const auto *policies{
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
@@ -412,14 +531,89 @@ struct Authentication::Impl {
                     entry.metadata_length};
       }
 
-      if (admits_apikey(
-              metadata, credential,
-              static_cast<Authentication::Algorithm>(entry.algorithm))) {
+      if (static_cast<Authentication::Type>(entry.type) ==
+          Authentication::Type::JWT) {
+        if (token.has_value() && this->admits_jwt(metadata, token.value())) {
+          return true;
+        }
+      } else if (admits_apikey(
+                     metadata, credential,
+                     static_cast<Authentication::Algorithm>(entry.algorithm))) {
         return true;
       }
     }
 
     return false;
+  }
+
+  [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
+                                const sourcemeta::core::JWT &token) const
+      -> bool {
+    JWTPolicy policy;
+    if (!decode_jwt_metadata(metadata, policy)) {
+      return false;
+    }
+
+    auto *provider{this->provider_for(policy.issuer, policy.jwks_uri)};
+    if (provider == nullptr) {
+      return false;
+    }
+
+    const auto error{provider->verify(token, policy.algorithms, policy.issuer,
+                                      policy.audience)};
+    return !error.has_value();
+  }
+
+  [[nodiscard]] auto provider_for(const std::string_view issuer,
+                                  const std::string_view jwks_uri) const
+      -> sourcemeta::core::JWKSProvider * {
+    if (!this->fetcher_) {
+      return nullptr;
+    }
+
+    std::pair<std::string, std::string> key{issuer, jwks_uri};
+
+    {
+      const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+      const auto existing{this->jwks_providers_.find(key)};
+      if (existing != this->jwks_providers_.cend()) {
+        return existing->second.get();
+      }
+    }
+
+    std::string location;
+    if (jwks_uri.empty()) {
+      const auto metadata{this->fetcher_(derive_discovery_url(issuer))};
+      if (!metadata.has_value()) {
+        return nullptr;
+      }
+
+      auto resolved{parse_jwks_uri(metadata.value().body)};
+      if (!resolved.has_value()) {
+        return nullptr;
+      }
+
+      location = std::move(resolved).value();
+    } else {
+      location = jwks_uri;
+    }
+
+    sourcemeta::core::JWKSProvider::Options options;
+    options.clock_skew = JWT_CLOCK_SKEW;
+    auto provider{std::make_unique<sourcemeta::core::JWKSProvider>(
+        std::move(location), this->fetcher_, options)};
+
+    // A concurrent caller may have installed this key while the lock was
+    // released, so its provider wins and ours is discarded
+    const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+    const auto existing{this->jwks_providers_.find(key)};
+    if (existing != this->jwks_providers_.cend()) {
+      return existing->second.get();
+    }
+
+    auto *raw{provider.get()};
+    this->jwks_providers_.emplace(std::move(key), std::move(provider));
+    return raw;
   }
 
   struct Audience {
@@ -455,7 +649,12 @@ struct Authentication::Impl {
         const std::span<const std::byte> metadata{
             this->view_->as<std::byte>(entry.metadata_offset),
             entry.metadata_length};
-        collect_keys(metadata, result.keys);
+        if (static_cast<Authentication::Type>(entry.type) ==
+            Authentication::Type::JWT) {
+          collect_jwt_identifiers(metadata, result.keys);
+        } else {
+          collect_keys(metadata, result.keys);
+        }
       }
     }
 
@@ -502,10 +701,17 @@ struct Authentication::Impl {
   std::uint32_t policy_count_{0};
 
   std::unique_ptr<sourcemeta::core::FileView> view_;
+
+  sourcemeta::core::JWKSProvider::Fetcher fetcher_;
+  mutable std::mutex jwks_mutex_;
+  mutable std::map<std::pair<std::string, std::string>,
+                   std::unique_ptr<sourcemeta::core::JWKSProvider>>
+      jwks_providers_;
 };
 
-Authentication::Authentication(const std::filesystem::path &path)
-    : impl_{std::make_unique<Impl>(path)} {}
+Authentication::Authentication(const std::filesystem::path &path,
+                               sourcemeta::core::JWKSProvider::Fetcher fetcher)
+    : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
 
 Authentication::~Authentication() = default;
 

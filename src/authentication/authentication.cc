@@ -19,7 +19,10 @@ auto Authentication::save(const std::span<const Authentication::Policy>,
   sourcemeta::core::write_file(destination, std::vector<std::byte>{});
 }
 
-Authentication::Authentication(const std::filesystem::path &) {}
+// NOLINTBEGIN(performance-unnecessary-value-param)
+Authentication::Authentication(const std::filesystem::path &,
+                               sourcemeta::core::JWKSProvider::Fetcher) {}
+// NOLINTEND(performance-unnecessary-value-param)
 
 Authentication::~Authentication() = default;
 

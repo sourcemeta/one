@@ -5,6 +5,8 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <sourcemeta/core/jose.h>
+
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception
@@ -52,12 +54,19 @@ public:
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
-  // A policy gates a set of path prefixes behind a set of keys, each compared
-  // under the policy's algorithm. A path covered by no policy is public
+  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1 };
+
+  // A policy gates a set of path prefixes. A path covered by no policy is
+  // public
   struct Policy {
-    std::span<const std::string_view> paths;
-    std::span<const std::string_view> keys;
+    std::span<const std::string_view> paths{};
+    std::span<const std::string_view> keys{};
     Algorithm algorithm{Algorithm::Identity};
+    Type type{Type::ApiKey};
+    std::string_view issuer{};
+    std::string_view audience{};
+    std::string_view jwks_uri{};
+    std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
   };
 
   struct Verdict {
@@ -68,7 +77,9 @@ public:
                    const std::filesystem::path &configuration,
                    const std::filesystem::path &destination) -> void;
 
-  explicit Authentication(const std::filesystem::path &path);
+  Authentication(const std::filesystem::path &path,
+                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
+
   ~Authentication();
 
   // The artifact is memory-mapped and owned for the lifetime of the view

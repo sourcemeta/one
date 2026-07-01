@@ -1,6 +1,7 @@
 #include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/io.h>
+#include <sourcemeta/core/jose.h>
 
 #include "authentication_format.h"
 
@@ -49,16 +50,42 @@ auto append_u32(std::vector<std::byte> &output, const std::uint32_t value)
   output.insert(output.end(), bytes.begin(), bytes.end());
 }
 
+auto append_string(std::vector<std::byte> &output, const std::string_view value)
+    -> void {
+  append_u32(output, static_cast<std::uint32_t>(value.size()));
+  for (const char character : value) {
+    output.push_back(static_cast<std::byte>(character));
+  }
+}
+
 auto encode_apikey_metadata(
     const std::span<const std::string_view> environment_variables)
     -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_u32(result, static_cast<std::uint32_t>(environment_variables.size()));
   for (const auto variable : environment_variables) {
-    append_u32(result, static_cast<std::uint32_t>(variable.size()));
-    for (const char character : variable) {
-      result.push_back(static_cast<std::byte>(character));
-    }
+    append_string(result, variable);
+  }
+
+  return result;
+}
+
+// The issuer, audience, and key set location are stored as length-prefixed
+// strings, followed by the allow-listed signature algorithms as one byte each.
+// An empty key set location means the location is discovered from the issuer
+auto encode_jwt_metadata(
+    const std::string_view issuer, const std::string_view audience,
+    const std::string_view jwks_uri,
+    const std::span<const sourcemeta::core::JWSAlgorithm> algorithms)
+    -> std::vector<std::byte> {
+  std::vector<std::byte> result;
+  append_string(result, issuer);
+  append_string(result, audience);
+  append_string(result, jwks_uri);
+  append_u32(result, static_cast<std::uint32_t>(algorithms.size()));
+  for (const auto algorithm : algorithms) {
+    result.push_back(
+        static_cast<std::byte>(static_cast<std::uint8_t>(algorithm)));
   }
 
   return result;
@@ -153,14 +180,20 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   policy_table.reserve(policies.size());
   std::vector<std::byte> metadata;
   for (const auto &policy : policies) {
-    const auto policy_metadata{policy.keys.empty()
-                                   ? std::vector<std::byte>{}
-                                   : encode_apikey_metadata(policy.keys)};
+    std::vector<std::byte> policy_metadata;
+    if (policy.type == Authentication::Type::JWT) {
+      policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
+                                            policy.jwks_uri, policy.algorithms);
+    } else if (!policy.keys.empty()) {
+      policy_metadata = encode_apikey_metadata(policy.keys);
+    }
+
     AuthenticationPolicyEntry entry{};
     entry.metadata_offset =
         metadata_start + static_cast<std::uint32_t>(metadata.size());
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
     entry.algorithm = static_cast<std::uint8_t>(policy.algorithm);
+    entry.type = static_cast<std::uint8_t>(policy.type);
     policy_table.push_back(entry);
     metadata.insert(metadata.end(), policy_metadata.begin(),
                     policy_metadata.end());

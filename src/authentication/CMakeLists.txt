@@ -11,3 +11,4 @@ else()
 endif()
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
+target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::jose)

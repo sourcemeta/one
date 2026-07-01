@@ -290,7 +290,7 @@ struct GENERATE_DEPENDENCIES {
 
     if (result.size() > 0) {
       const sourcemeta::one::Authentication authentication{
-          action.dependencies.at(1)};
+          action.dependencies.at(1), {}};
       for (const auto &edge : result.as_array()) {
         const auto &referrer_uri{edge.at("from").to_string()};
         const auto &referent_uri{edge.at("to").to_string()};

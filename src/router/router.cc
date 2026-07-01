@@ -1,10 +1,48 @@
 #include <sourcemeta/core/http.h>
+#include <sourcemeta/core/jose.h>
 #include <sourcemeta/one/router.h>
 
-#include <memory> // std::make_unique
-#include <mutex>  // std::call_once
+#include <chrono>      // std::chrono::seconds
+#include <memory>      // std::make_unique
+#include <mutex>       // std::call_once
+#include <optional>    // std::optional, std::nullopt
+#include <string>      // std::string
+#include <string_view> // std::string_view
 
 namespace sourcemeta::one {
+
+namespace {
+
+auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
+  return [](const std::string_view url)
+             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
+    try {
+      sourcemeta::core::HTTPSystemRequest request{std::string{url}};
+      request.connect_timeout(std::chrono::seconds{2});
+      request.timeout(std::chrono::seconds{5});
+      request.maximum_response_size(1024UL * 1024UL);
+      request.follow_redirects(false);
+      const auto response{request.send()};
+      if (response.status.code < 200 || response.status.code >= 300) {
+        return std::nullopt;
+      }
+
+      std::optional<std::chrono::seconds> max_age;
+      const auto header{sourcemeta::core::http_header_find(response.headers,
+                                                           "cache-control")};
+      if (header.has_value()) {
+        max_age = sourcemeta::core::http_cache_control_max_age(header.value());
+      }
+
+      return sourcemeta::core::JWKSProvider::FetchResult{.body = response.body,
+                                                         .max_age = max_age};
+    } catch (...) {
+      return std::nullopt;
+    }
+  };
+}
+
+} // namespace
 
 Router::Router(const std::filesystem::path &base,
                const sourcemeta::core::URITemplateRouterView &router,
@@ -13,7 +51,7 @@ Router::Router(const std::filesystem::path &base,
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
-      authentication_{base / "authentication.bin"} {
+      authentication_{base / "authentication.bin", default_jwks_fetcher()} {
   router.arguments(0, [this](const auto &key, const auto &value) {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
