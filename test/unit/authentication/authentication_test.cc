@@ -14,7 +14,7 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
 
 TEST(Authentication, admits_every_path_without_a_credential) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}};
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.admits("/", "").allowed);
   EXPECT_TRUE(authentication.admits("", "").allowed);
   EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").allowed);
@@ -22,7 +22,7 @@ TEST(Authentication, admits_every_path_without_a_credential) {
 
 TEST(Authentication, admits_every_path_with_any_credential) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}};
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.admits("/internal", "anything").allowed);
   EXPECT_TRUE(authentication.admits("/internal/foo", "another").allowed);
 }
@@ -37,14 +37,14 @@ TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);
 
-  const sourcemeta::one::Authentication authentication{path};
+  const sourcemeta::one::Authentication authentication{path, {}};
   EXPECT_TRUE(authentication.admits("/", "").allowed);
   EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
 }
 
 TEST(Authentication, permits_every_reference) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}};
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.reference_permitted("/one", "/two"));
   EXPECT_TRUE(
       authentication.reference_permitted("/public/one", "/private/two"));

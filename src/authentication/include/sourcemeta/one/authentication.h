@@ -59,8 +59,8 @@ public:
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
   struct Policy {
-    std::span<const std::string_view> paths;
-    std::span<const std::string_view> keys;
+    std::span<const std::string_view> paths{};
+    std::span<const std::string_view> keys{};
     Algorithm algorithm{Algorithm::Identity};
     Type type{Type::ApiKey};
     std::string_view issuer{};
