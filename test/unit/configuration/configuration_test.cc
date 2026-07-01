@@ -1,3 +1,4 @@
+#include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 
@@ -832,6 +833,63 @@ TEST(authentication_apikey_identity) {
   EXPECT_EQ(
       configuration.authentication.at(0).keys,
       (std::vector<sourcemeta::core::JSON::String>{"ONE_KEY_A", "ONE_KEY_B"}));
+}
+
+TEST(authentication_jwt) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "ES256", "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  const auto &entry{configuration.authentication.at(0)};
+  EXPECT_EQ(entry.type,
+            sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT);
+  EXPECT_EQ(entry.name, "ci");
+  EXPECT_EQ(entry.paths,
+            (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
+  EXPECT_EQ(entry.issuer, "https://acme.example.com");
+  EXPECT_EQ(entry.audience, "https://schemas.example.com");
+  EXPECT_FALSE(entry.jwks_uri.has_value());
+  EXPECT_EQ(entry.algorithms, (std::vector<sourcemeta::core::JWSAlgorithm>{
+                                  sourcemeta::core::JWSAlgorithm::RS256,
+                                  sourcemeta::core::JWSAlgorithm::ES256}));
+  EXPECT_TRUE(entry.keys.empty());
+}
+
+TEST(authentication_jwt_with_explicit_key_set_location) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "jwksUri": "https://acme.example.com/keys",
+        "algorithms": [ "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  const auto &entry{configuration.authentication.at(0)};
+  EXPECT_TRUE(entry.jwks_uri.has_value());
+  EXPECT_EQ(entry.jwks_uri.value(), "https://acme.example.com/keys");
 }
 
 TEST(authentication_rejects_apikey_without_keys) {

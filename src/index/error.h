@@ -86,24 +86,6 @@ private:
   std::string value_;
 };
 
-class EnterpriseOnlyFeatureError : public std::exception {
-public:
-  EnterpriseOnlyFeatureError(std::filesystem::path path, const char *message)
-      : path_{std::move(path)}, message_{message} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return this->message_;
-  }
-
-  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
-    return this->path_;
-  }
-
-private:
-  std::filesystem::path path_;
-  const char *message_;
-};
-
 class CrossPolicyReferenceError : public std::exception {
 public:
   CrossPolicyReferenceError(std::filesystem::path path, std::string referrer,

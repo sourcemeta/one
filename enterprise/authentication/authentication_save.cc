@@ -1,7 +1,9 @@
 #include <sourcemeta/one/authentication.h>
+#include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include "authentication_format.h"
 
@@ -10,6 +12,7 @@
 #include <cstddef>     // std::byte, std::size_t
 #include <cstdint>     // std::uint32_t, std::uint64_t, std::uint8_t
 #include <cstring>     // std::memcpy
+#include <filesystem>  // std::filesystem::create_directories
 #include <span>        // std::span
 #include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
@@ -227,6 +230,73 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   }
 
   sourcemeta::core::write_file(destination, buffer);
+}
+
+auto Authentication::save(const Configuration &configuration,
+                          const sourcemeta::core::URITemplateRouterView &routes,
+                          const std::filesystem::path &destination) -> void {
+  // The policy paths and keys are borrowed by the policies, so keep them alive
+  // alongside the policies that reference them
+  std::vector<std::vector<std::string_view>> policy_paths;
+  policy_paths.reserve(configuration.authentication.size());
+  std::vector<std::vector<std::string_view>> policy_keys;
+  policy_keys.reserve(configuration.authentication.size());
+  std::vector<Authentication::Policy> policies;
+  policies.reserve(configuration.authentication.size());
+  for (const auto &entry : configuration.authentication) {
+    std::vector<std::string_view> paths;
+    paths.reserve(entry.paths.size());
+    for (const auto &path : entry.paths) {
+      paths.push_back(path);
+    }
+
+    policy_paths.push_back(std::move(paths));
+
+    if (entry.type == Configuration::AuthenticationEntry::Type::JWT) {
+      policies.push_back(
+          {.paths = policy_paths.back(),
+           .type = Authentication::Type::JWT,
+           .issuer = entry.issuer,
+           .audience = entry.audience,
+           .jwks_uri = entry.jwks_uri.has_value()
+                           ? std::string_view{entry.jwks_uri.value()}
+                           : std::string_view{},
+           .algorithms = entry.algorithms});
+    } else {
+      std::vector<std::string_view> keys;
+      keys.reserve(entry.keys.size());
+      for (const auto &key : entry.keys) {
+        keys.push_back(key);
+      }
+
+      policy_keys.push_back(std::move(keys));
+      const auto algorithm{
+          entry.algorithm ==
+                  Configuration::AuthenticationEntry::Algorithm::Sha256
+              ? Authentication::Algorithm::Sha256
+              : Authentication::Algorithm::Identity};
+      policies.push_back({.paths = policy_paths.back(),
+                          .keys = policy_keys.back(),
+                          .algorithm = algorithm});
+    }
+  }
+
+  // A policy gates a route or a declared collection or page (or a namespace
+  // above one), never a path inside a collection. Anything else, a typo, a
+  // stray extension, or a schema-level scope, names nothing the matcher would
+  // gate, which under the fail-open default would leave the target public
+  for (const auto &entry : configuration.authentication) {
+    for (const auto &policy_path : entry.paths) {
+      if (!routes.describes(policy_path, configuration.base_path) &&
+          !configuration.covers_entry(policy_path)) {
+        throw AuthenticationUnknownPathError(configuration.path,
+                                             std::string{policy_path});
+      }
+    }
+  }
+
+  std::filesystem::create_directories(destination.parent_path());
+  Authentication::save(policies, configuration.path, destination);
 }
 
 } // namespace sourcemeta::one

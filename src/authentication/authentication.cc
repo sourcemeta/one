@@ -1,9 +1,11 @@
 #include <sourcemeta/one/authentication.h>
+#include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/io.h>
 
-#include <cstddef> // std::byte, std::size_t
-#include <vector>  // std::vector
+#include <cstddef>    // std::byte, std::size_t
+#include <filesystem> // std::filesystem::create_directories
+#include <vector>     // std::vector
 
 namespace sourcemeta::one {
 
@@ -16,6 +18,19 @@ struct Authentication::Impl {};
 auto Authentication::save(const std::span<const Authentication::Policy>,
                           const std::filesystem::path &,
                           const std::filesystem::path &destination) -> void {
+  sourcemeta::core::write_file(destination, std::vector<std::byte>{});
+}
+
+auto Authentication::save(const Configuration &configuration,
+                          const sourcemeta::core::URITemplateRouterView &,
+                          const std::filesystem::path &destination) -> void {
+  if (!configuration.authentication.empty()) {
+    throw EnterpriseOnlyFeatureError(
+        configuration.path,
+        "Authentication is only available on the enterprise edition");
+  }
+
+  std::filesystem::create_directories(destination.parent_path());
   sourcemeta::core::write_file(destination, std::vector<std::byte>{});
 }
 

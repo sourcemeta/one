@@ -43,10 +43,16 @@ error: Invalid configuration
   at path $(realpath "$TMP")/one.json
 The string value "public" was expected to equal the string constant "apiKey"
   at instance location "/authentication/0/type"
-  at evaluate path "/properties/authentication/items/properties/type/const"
+  at evaluate path "/properties/authentication/items/anyOf/0/properties/type/const"
 The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/properties"
+  at evaluate path "/properties/authentication/items/anyOf/0/properties"
+The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
+  at instance location "/authentication/0"
+  at evaluate path "/properties/authentication/items/anyOf/1/required"
+The object value was expected to validate against at least one of the 2 given subschemas
+  at instance location "/authentication/0"
+  at evaluate path "/properties/authentication/items/anyOf"
 Every item in the array value was expected to validate against the given subschema
   at instance location "/authentication"
   at evaluate path "/properties/authentication/items"

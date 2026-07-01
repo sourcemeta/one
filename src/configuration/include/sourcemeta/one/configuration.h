@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_CONFIGURATION_H_
 
 #include <sourcemeta/blaze/configuration.h>
+#include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/uri.h>
 
@@ -58,15 +59,23 @@ struct Configuration {
   bool api{true};
 
   struct AuthenticationEntry {
+    // What a policy authenticates against
+    enum class Type : std::uint8_t { ApiKey, JWT };
+
     // How a presented credential is compared against the keys
     enum class Algorithm : std::uint8_t { Identity, Sha256 };
 
+    Type type{Type::ApiKey};
     // The policy name
     sourcemeta::core::JSON::String name;
-    Algorithm algorithm{Algorithm::Identity};
     std::vector<sourcemeta::core::JSON::String> paths;
+    Algorithm algorithm{Algorithm::Identity};
     // Environment variable names holding the keys
     std::vector<sourcemeta::core::JSON::String> keys;
+    sourcemeta::core::JSON::String issuer;
+    sourcemeta::core::JSON::String audience;
+    std::optional<sourcemeta::core::JSON::String> jwks_uri;
+    std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
   };
 
   std::vector<AuthenticationEntry> authentication;

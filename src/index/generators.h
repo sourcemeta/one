@@ -1021,64 +1021,9 @@ struct GENERATE_AUTHENTICATION {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    // The policy paths and keys are borrowed by the policies, so keep them
-    // alive alongside the policies that reference them
-    std::vector<std::vector<std::string_view>> policy_paths;
-    policy_paths.reserve(configuration.authentication.size());
-    std::vector<std::vector<std::string_view>> policy_keys;
-    policy_keys.reserve(configuration.authentication.size());
-    std::vector<sourcemeta::one::Authentication::Policy> policies;
-    policies.reserve(configuration.authentication.size());
-    for (const auto &entry : configuration.authentication) {
-      std::vector<std::string_view> paths;
-      paths.reserve(entry.paths.size());
-      for (const auto &path : entry.paths) {
-        paths.push_back(path);
-      }
-
-      policy_paths.push_back(std::move(paths));
-
-#if defined(SOURCEMETA_ONE_ENTERPRISE)
-      std::vector<std::string_view> keys;
-      keys.reserve(entry.keys.size());
-      for (const auto &key : entry.keys) {
-        keys.push_back(key);
-      }
-
-      policy_keys.push_back(std::move(keys));
-      const auto algorithm{
-          entry.algorithm == sourcemeta::one::Configuration::
-                                 AuthenticationEntry::Algorithm::Sha256
-              ? sourcemeta::one::Authentication::Algorithm::Sha256
-              : sourcemeta::one::Authentication::Algorithm::Identity};
-      policies.push_back({policy_paths.back(), policy_keys.back(), algorithm});
-#else
-      // The community edition serves every path publicly, so any apiKey policy
-      // is an enterprise feature
-      throw EnterpriseOnlyFeatureError(
-          configuration.path,
-          "Authentication is only available on the enterprise edition");
-#endif
-    }
-
-    // A policy gates a route or a declared collection or page (or a namespace
-    // above one), never a path inside a collection. Anything else, a typo, a
-    // stray extension, or a schema-level scope, names nothing the matcher would
-    // gate, which under the fail-open default would leave the target public
     const sourcemeta::core::URITemplateRouterView routes{
         action.dependencies.at(0)};
-    for (const auto &entry : configuration.authentication) {
-      for (const auto &policy_path : entry.paths) {
-        if (!routes.describes(policy_path, configuration.base_path) &&
-            !configuration.covers_entry(policy_path)) {
-          throw AuthenticationUnknownPathError(configuration.path,
-                                               std::string{policy_path});
-        }
-      }
-    }
-
-    std::filesystem::create_directories(action.destination.parent_path());
-    sourcemeta::one::Authentication::save(policies, configuration.path,
+    sourcemeta::one::Authentication::save(configuration, routes,
                                           action.destination);
   }
 };
