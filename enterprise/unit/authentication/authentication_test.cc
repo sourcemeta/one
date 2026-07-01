@@ -900,3 +900,92 @@ TEST(Authentication, reference_rules_treat_a_jwt_scope_conservatively) {
   EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/open/two"));
   EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/secure/two"));
 }
+
+TEST(Authentication, jwt_without_a_transport_denies_rather_than_crashes) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_no_transport.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{path, {}};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, jwt_policies_sharing_an_issuer_use_their_own_key_set) {
+  const std::array<std::string_view, 1> primary_paths{{"/primary"}};
+  const std::array<std::string_view, 1> secondary_paths{{"/secondary"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = primary_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/primary",
+        .algorithms = algorithms},
+       {.paths = secondary_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/secondary",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_shared_issuer.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher(
+                {{"https://idp.test/primary", std::string{SIGNED_KEYS}},
+                 {"https://idp.test/secondary", std::string{UNRELATED_KEYS}}},
+                nullptr)};
+  // The primary path is populated first, which under a per-issuer cache would
+  // have leaked its key set to the secondary path
+  EXPECT_TRUE(authentication.admits("/primary/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(authentication.admits("/secondary/x", SIGNED_TOKEN).allowed);
+}
+
+TEST(Authentication, reference_between_jwt_scopes_distinguishes_algorithms) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> gamma_paths{{"/gamma"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> ecdsa{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = ecdsa},
+       {.paths = gamma_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa}}};
+  const auto path{test_path("jwt_reference_algorithms.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // Same issuer, audience, and key set but a different algorithm is a different
+  // scope, so no token could satisfy the reference
+  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  // An identical policy is the same scope
+  EXPECT_TRUE(authentication.reference_permitted("/alpha/one", "/gamma/two"));
+}

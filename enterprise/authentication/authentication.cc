@@ -317,7 +317,9 @@ auto decode_jwt_metadata(const std::span<const std::byte> metadata,
   }
 
   std::uint32_t count{0};
-  if (!read_u32(metadata, cursor, count)) {
+  // Each algorithm is a single byte, so a count larger than the bytes that
+  // remain is corrupt and must not drive an allocation
+  if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
     return false;
   }
 
@@ -341,18 +343,33 @@ auto decode_jwt_metadata(const std::span<const std::byte> metadata,
   return true;
 }
 
-auto collect_jwt_audience(const std::span<const std::byte> metadata,
-                          std::unordered_set<std::string_view> &keys) -> void {
+// The reference check treats two JWT policies as the same scope only when every
+// parameter that decides admission matches, so the identity spans the issuer,
+// audience, key set location, and the exact allowed algorithm bytes
+auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
+                             std::unordered_set<std::string_view> &keys)
+    -> void {
   std::size_t cursor{0};
   std::string_view issuer;
   std::string_view audience;
+  std::string_view jwks_uri;
   if (!read_string(metadata, cursor, issuer) ||
-      !read_string(metadata, cursor, audience)) {
+      !read_string(metadata, cursor, audience) ||
+      !read_string(metadata, cursor, jwks_uri)) {
     return;
   }
 
   keys.emplace(issuer);
   keys.emplace(audience);
+  keys.emplace(jwks_uri);
+
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
+    return;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
 }
 
 auto derive_discovery_url(const std::string_view issuer) -> std::string {
@@ -549,11 +566,21 @@ struct Authentication::Impl {
   [[nodiscard]] auto provider_for(const std::string_view issuer,
                                   const std::string_view jwks_uri) const
       -> sourcemeta::core::JWKSProvider * {
-    const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
-    const std::string key{issuer};
-    const auto existing{this->jwks_providers_.find(key)};
-    if (existing != this->jwks_providers_.cend()) {
-      return existing->second.get();
+    if (!this->fetcher_) {
+      return nullptr;
+    }
+
+    // A newline cannot occur in either component, so it separates them safely
+    std::string key{issuer};
+    key.push_back('\n');
+    key.append(jwks_uri);
+
+    {
+      const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+      const auto existing{this->jwks_providers_.find(key)};
+      if (existing != this->jwks_providers_.cend()) {
+        return existing->second.get();
+      }
     }
 
     std::string location;
@@ -577,8 +604,17 @@ struct Authentication::Impl {
     options.clock_skew = JWT_CLOCK_SKEW;
     auto provider{std::make_unique<sourcemeta::core::JWKSProvider>(
         std::move(location), this->fetcher_, options)};
+
+    // A concurrent caller may have installed this key while the lock was
+    // released, so its provider wins and ours is discarded
+    const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+    const auto existing{this->jwks_providers_.find(key)};
+    if (existing != this->jwks_providers_.cend()) {
+      return existing->second.get();
+    }
+
     auto *raw{provider.get()};
-    this->jwks_providers_.emplace(key, std::move(provider));
+    this->jwks_providers_.emplace(std::move(key), std::move(provider));
     return raw;
   }
 
@@ -617,7 +653,7 @@ struct Authentication::Impl {
             entry.metadata_length};
         if (static_cast<Authentication::Type>(entry.type) ==
             Authentication::Type::JWT) {
-          collect_jwt_audience(metadata, result.keys);
+          collect_jwt_identifiers(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
         }
