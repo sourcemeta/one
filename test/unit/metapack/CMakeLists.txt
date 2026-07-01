@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME metapack
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME metapack
   SOURCES metapack_test.cc)
 
 target_link_libraries(sourcemeta_one_metapack_unit

@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/build.h>
 
 #include "test_rules.h"
@@ -12,7 +11,7 @@ static auto state_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "state" / name;
 }
 
-TEST(Build_state, round_trip_empty) {
+TEST(round_trip_empty) {
   const auto path{state_path("empty")};
   std::filesystem::create_directories(path.parent_path());
 
@@ -30,7 +29,7 @@ TEST(Build_state, round_trip_empty) {
   EXPECT_TRUE(loaded_entries.empty());
 }
 
-TEST(Build_state, round_trip_single_entry_no_deps) {
+TEST(round_trip_single_entry_no_deps) {
   const auto path{state_path("single_no_deps")};
   std::filesystem::create_directories(path.parent_path());
 
@@ -58,7 +57,7 @@ TEST(Build_state, round_trip_single_entry_no_deps) {
   EXPECT_TRUE(result->dependencies.empty());
 }
 
-TEST(Build_state, round_trip_with_file_mark) {
+TEST(round_trip_with_file_mark) {
   const auto path{state_path("with_mark")};
   std::filesystem::create_directories(path.parent_path());
 
@@ -92,7 +91,7 @@ TEST(Build_state, round_trip_with_file_mark) {
   EXPECT_EQ(original_ns, loaded_ns);
 }
 
-TEST(Build_state, round_trip_with_dependencies) {
+TEST(round_trip_with_dependencies) {
   const auto path{state_path("with_deps")};
   std::filesystem::create_directories(path.parent_path());
 
@@ -126,7 +125,7 @@ TEST(Build_state, round_trip_with_dependencies) {
   EXPECT_EQ(result->dependencies[2], "/output/schemas/qux/%/schema.metapack");
 }
 
-TEST(Build_state, round_trip_multiple_entries) {
+TEST(round_trip_multiple_entries) {
   const auto path{state_path("multiple")};
   std::filesystem::create_directories(path.parent_path());
 
@@ -163,7 +162,7 @@ TEST(Build_state, round_trip_multiple_entries) {
   EXPECT_EQ(dependencies_entry->dependencies.size(), 1);
 }
 
-TEST(Build_state, forget_removes_children) {
+TEST(forget_removes_children) {
   const auto now{std::filesystem::file_time_type::clock::now()};
   sourcemeta::one::BuildState entries;
   entries.emplace("/output/schemas/foo/%/schema.metapack",

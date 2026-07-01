@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 
 #include <string>        // std::string
@@ -15,7 +14,7 @@ auto replace_all(std::string &text, const std::string &from,
   }
 }
 
-TEST(Configuration_read, read_valid_001) {
+TEST(read_valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_001.json"};
   const auto raw_configuration{
@@ -82,7 +81,7 @@ TEST(Configuration_read, read_valid_001) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_002) {
+TEST(read_valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_002.json"};
   const auto raw_configuration{
@@ -136,7 +135,7 @@ TEST(Configuration_read, read_valid_002) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_003) {
+TEST(read_valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_003.json"};
   const auto raw_configuration{
@@ -189,7 +188,7 @@ TEST(Configuration_read, read_valid_003) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_004) {
+TEST(read_valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_004.json"};
   const auto raw_configuration{
@@ -245,7 +244,7 @@ TEST(Configuration_read, read_valid_004) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_005) {
+TEST(read_valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_005.json"};
   const auto raw_configuration{
@@ -301,7 +300,7 @@ TEST(Configuration_read, read_valid_005) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_006) {
+TEST(read_valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_006.json"};
   const auto raw_configuration{
@@ -349,7 +348,7 @@ TEST(Configuration_read, read_valid_006) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_007) {
+TEST(read_valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_007.json"};
   const auto raw_configuration{
@@ -393,7 +392,7 @@ TEST(Configuration_read, read_valid_007) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_008) {
+TEST(read_valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_008.json"};
   const auto raw_configuration{
@@ -440,7 +439,7 @@ TEST(Configuration_read, read_valid_008) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_009) {
+TEST(read_valid_009) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_009.json"};
   const auto raw_configuration{
@@ -487,7 +486,7 @@ TEST(Configuration_read, read_valid_009) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_010) {
+TEST(read_valid_010) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_010.json"};
   const auto raw_configuration{
@@ -531,7 +530,7 @@ TEST(Configuration_read, read_valid_010) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_011) {
+TEST(read_valid_011) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_011.json"};
   const auto raw_configuration{
@@ -572,7 +571,7 @@ TEST(Configuration_read, read_valid_011) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_012) {
+TEST(read_valid_012) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_012.json"};
   const auto raw_configuration{
@@ -625,7 +624,7 @@ TEST(Configuration_read, read_valid_012) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_013) {
+TEST(read_valid_013) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_013.json"};
   const auto raw_configuration{
@@ -682,7 +681,7 @@ TEST(Configuration_read, read_valid_013) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_014) {
+TEST(read_valid_014) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_014.json"};
   const auto raw_configuration{
@@ -729,7 +728,7 @@ TEST(Configuration_read, read_valid_014) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_invalid_001) {
+TEST(read_invalid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_001.json"};
 
@@ -742,13 +741,10 @@ TEST(Configuration_read, read_invalid_001) {
               std::filesystem::path{STUB_DIRECTORY} / "missing.json");
     EXPECT_EQ(sourcemeta::core::to_string(error.location()),
               "/contents/example/include");
-    SUCCEED();
-  } catch (...) {
-    FAIL();
   }
 }
 
-TEST(Configuration_read, read_valid_015_diamond_extends) {
+TEST(read_valid_015_diamond_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_015.json"};
   const auto result{
@@ -760,7 +756,7 @@ TEST(Configuration_read, read_valid_015_diamond_extends) {
   EXPECT_TRUE(result.at("contents").defines("from_c"));
 }
 
-TEST(Configuration_read, read_invalid_002_extends_at_path) {
+TEST(read_invalid_002_extends_at_path) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_002.json"};
 
@@ -770,13 +766,10 @@ TEST(Configuration_read, read_invalid_002_extends_at_path) {
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
     EXPECT_EQ(error.from(), configuration_path);
     EXPECT_EQ(sourcemeta::core::to_string(error.location()), "/extends");
-    SUCCEED();
-  } catch (...) {
-    FAIL();
   }
 }
 
-TEST(Configuration_read, read_invalid_003_include_at_path) {
+TEST(read_invalid_003_include_at_path) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_003.json"};
 
@@ -787,13 +780,10 @@ TEST(Configuration_read, read_invalid_003_include_at_path) {
     EXPECT_EQ(error.from(), configuration_path);
     EXPECT_EQ(sourcemeta::core::to_string(error.location()),
               "/contents/example/include");
-    SUCCEED();
-  } catch (...) {
-    FAIL();
   }
 }
 
-TEST(Configuration_read, read_invalid_004_circular_extends) {
+TEST(read_invalid_004_circular_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_004.json"};
 
@@ -806,12 +796,10 @@ TEST(Configuration_read, read_invalid_004_circular_extends) {
                                   "read_invalid_004.json"));
     EXPECT_EQ(sourcemeta::core::to_string(error.location()),
               "/extends/extends");
-  } catch (...) {
-    FAIL();
   }
 }
 
-TEST(Configuration_read, read_invalid_006_circular_include) {
+TEST(read_invalid_006_circular_include) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_invalid_006.json"};
 
@@ -822,12 +810,10 @@ TEST(Configuration_read, read_invalid_006_circular_include) {
     EXPECT_EQ(error.target(), std::filesystem::weakly_canonical(
                                   std::filesystem::path{STUB_DIRECTORY} /
                                   "read_invalid_006.json"));
-  } catch (...) {
-    FAIL();
   }
 }
 
-TEST(Configuration_read, read_configuration_files_no_extends_no_includes) {
+TEST(read_configuration_files_no_extends_no_includes) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_001.json"};
   std::unordered_set<std::string> configuration_files;
@@ -843,7 +829,7 @@ TEST(Configuration_read, read_configuration_files_no_extends_no_includes) {
           .native()));
 }
 
-TEST(Configuration_read, read_configuration_files_with_extends) {
+TEST(read_configuration_files_with_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_015.json"};
   std::unordered_set<std::string> configuration_files;
@@ -871,7 +857,7 @@ TEST(Configuration_read, read_configuration_files_with_extends) {
           .native()));
 }
 
-TEST(Configuration_read, read_configuration_files_with_include_chain) {
+TEST(read_configuration_files_with_include_chain) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_002.json"};
   std::unordered_set<std::string> configuration_files;
@@ -895,7 +881,7 @@ TEST(Configuration_read, read_configuration_files_with_include_chain) {
           .native()));
 }
 
-TEST(Configuration_read, read_valid_016_api_explicit_object) {
+TEST(read_valid_016_api_explicit_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_016.json"};
   const auto raw_configuration{
@@ -936,7 +922,7 @@ TEST(Configuration_read, read_valid_016_api_explicit_object) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_017_api_false_html_false) {
+TEST(read_valid_017_api_false_html_false) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_017.json"};
   const auto raw_configuration{
@@ -952,7 +938,7 @@ TEST(Configuration_read, read_valid_017_api_false_html_false) {
   EXPECT_EQ(raw_configuration, expected);
 }
 
-TEST(Configuration_read, read_valid_018_api_true_coerced_to_object) {
+TEST(read_valid_018_api_true_coerced_to_object) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "read_valid_018.json"};
   const auto raw_configuration{

@@ -1,6 +1,5 @@
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/authentication.h>
-
-#include <gtest/gtest.h>
 
 #include <array>       // std::array
 #include <filesystem>  // std::filesystem::path
@@ -12,7 +11,7 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
 
-TEST(Authentication, admits_every_path_without_a_credential) {
+TEST(admits_every_path_without_a_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.admits("/", "").allowed);
@@ -20,14 +19,14 @@ TEST(Authentication, admits_every_path_without_a_credential) {
   EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").allowed);
 }
 
-TEST(Authentication, admits_every_path_with_any_credential) {
+TEST(admits_every_path_with_any_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.admits("/internal", "anything").allowed);
   EXPECT_TRUE(authentication.admits("/internal/foo", "another").allowed);
 }
 
-TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
+TEST(save_emits_an_empty_artifact_that_admits_everything) {
   const std::array<std::string_view, 1> paths{{"/"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, {}}}};
@@ -42,7 +41,7 @@ TEST(Authentication, save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
 }
 
-TEST(Authentication, permits_every_reference) {
+TEST(permits_every_reference) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
   EXPECT_TRUE(authentication.reference_permitted("/one", "/two"));

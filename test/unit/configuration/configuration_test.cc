@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 
 #define EXPECT_PAGE(configuration, path, property, value)                      \
@@ -31,7 +30,7 @@
                     (configuration).entries.at(path))),                        \
             value);
 
-TEST(Configuration, valid_001) {
+TEST(valid_001) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -107,7 +106,7 @@ TEST(Configuration, valid_001) {
   EXPECT_PRIORITY(configuration, "example/extension", 50);
 }
 
-TEST(Configuration, valid_002) {
+TEST(valid_002) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_002.json"};
   const auto raw_configuration{
@@ -136,7 +135,7 @@ TEST(Configuration, valid_002) {
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
 }
 
-TEST(Configuration, valid_003) {
+TEST(valid_003) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_003.json"};
   const auto raw_configuration{
@@ -182,7 +181,7 @@ TEST(Configuration, valid_003) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, valid_004) {
+TEST(valid_004) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_004.json"};
   const auto raw_configuration{
@@ -238,7 +237,7 @@ TEST(Configuration, valid_004) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, valid_005) {
+TEST(valid_005) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_005.json"};
   const auto raw_configuration{
@@ -294,7 +293,7 @@ TEST(Configuration, valid_005) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, valid_006) {
+TEST(valid_006) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_006.json"};
   const auto raw_configuration{
@@ -350,7 +349,7 @@ TEST(Configuration, valid_006) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, valid_007) {
+TEST(valid_007) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_007.json"};
   const auto raw_configuration{
@@ -406,7 +405,7 @@ TEST(Configuration, valid_007) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, valid_008) {
+TEST(valid_008) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_008.json"};
   const auto raw_configuration{
@@ -447,7 +446,7 @@ TEST(Configuration, valid_008) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(Configuration, base_path_none) {
+TEST(base_path_none) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_none.json"};
   const auto raw_configuration{
@@ -460,7 +459,7 @@ TEST(Configuration, base_path_none) {
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
-TEST(Configuration, base_path_slash) {
+TEST(base_path_slash) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_slash.json"};
   const auto raw_configuration{
@@ -473,7 +472,7 @@ TEST(Configuration, base_path_slash) {
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
-TEST(Configuration, base_path_simple) {
+TEST(base_path_simple) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_simple.json"};
   const auto raw_configuration{
@@ -486,7 +485,7 @@ TEST(Configuration, base_path_simple) {
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
-TEST(Configuration, base_path_trailing_slash) {
+TEST(base_path_trailing_slash) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_trailing_slash.json"};
   const auto raw_configuration{
@@ -499,7 +498,7 @@ TEST(Configuration, base_path_trailing_slash) {
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
-TEST(Configuration, base_path_deep) {
+TEST(base_path_deep) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "base_path_deep.json"};
   const auto raw_configuration{
@@ -512,7 +511,7 @@ TEST(Configuration, base_path_deep) {
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
-TEST(Configuration, origin_https_default_port) {
+TEST(origin_https_default_port) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_https_default_port.json"};
   const auto raw_configuration{
@@ -526,7 +525,7 @@ TEST(Configuration, origin_https_default_port) {
   EXPECT_EQ(configuration.origin, "https://example.com");
 }
 
-TEST(Configuration, origin_custom_port) {
+TEST(origin_custom_port) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_custom_port.json"};
   const auto raw_configuration{
@@ -540,7 +539,7 @@ TEST(Configuration, origin_custom_port) {
   EXPECT_EQ(configuration.origin, "https://example.com:9443");
 }
 
-TEST(Configuration, origin_with_userinfo) {
+TEST(origin_with_userinfo) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_userinfo.json"};
   const auto raw_configuration{
@@ -552,7 +551,7 @@ TEST(Configuration, origin_with_userinfo) {
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
-TEST(Configuration, origin_with_query) {
+TEST(origin_with_query) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_query.json"};
   const auto raw_configuration{
@@ -564,7 +563,7 @@ TEST(Configuration, origin_with_query) {
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
-TEST(Configuration, origin_with_fragment) {
+TEST(origin_with_fragment) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_fragment.json"};
   const auto raw_configuration{
@@ -576,7 +575,7 @@ TEST(Configuration, origin_with_fragment) {
   EXPECT_EQ(configuration.origin, "http://example.com");
 }
 
-TEST(Configuration, origin_with_userinfo_query_fragment_port) {
+TEST(origin_with_userinfo_query_fragment_port) {
   const auto configuration_path{
       std::filesystem::path{STUB_DIRECTORY} /
       "origin_with_userinfo_query_fragment_port.json"};
@@ -589,7 +588,7 @@ TEST(Configuration, origin_with_userinfo_query_fragment_port) {
   EXPECT_EQ(configuration.origin, "http://example.com:8000");
 }
 
-TEST(Configuration, is_collection_base_true) {
+TEST(is_collection_base_true) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -601,7 +600,7 @@ TEST(Configuration, is_collection_base_true) {
   EXPECT_TRUE(configuration.is_collection_base("example/extension"));
 }
 
-TEST(Configuration, is_collection_base_false_for_page) {
+TEST(is_collection_base_false_for_page) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -614,7 +613,7 @@ TEST(Configuration, is_collection_base_false_for_page) {
   EXPECT_FALSE(configuration.is_collection_base("test"));
 }
 
-TEST(Configuration, is_collection_base_false_for_unknown) {
+TEST(is_collection_base_false_for_unknown) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -627,7 +626,7 @@ TEST(Configuration, is_collection_base_false_for_unknown) {
   EXPECT_FALSE(configuration.is_collection_base("example/nonexistent"));
 }
 
-TEST(Configuration, valid_009_api_enabled) {
+TEST(valid_009_api_enabled) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_009.json"};
   const auto raw_configuration{
@@ -667,7 +666,7 @@ TEST(Configuration, valid_009_api_enabled) {
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
 }
 
-TEST(Configuration, valid_010_api_disabled) {
+TEST(valid_010_api_disabled) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_010.json"};
   const auto raw_configuration{
@@ -686,7 +685,7 @@ TEST(Configuration, valid_010_api_disabled) {
   EXPECT_EQ(configuration.entries.size(), 0);
 }
 
-TEST(Configuration, valid_011_priority_explicit) {
+TEST(valid_011_priority_explicit) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_011_priority_explicit.json"};
   const auto raw_configuration{
@@ -702,29 +701,35 @@ TEST(Configuration, valid_011_priority_explicit) {
   EXPECT_PRIORITY(configuration, "high/schemas", 100);
 }
 
-TEST(Configuration, invalid_priority_above_maximum) {
+TEST(invalid_priority_above_maximum) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_invalid_priority_above.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(
-                   raw_configuration, configuration_path,
-                   configuration_path.parent_path()),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, invalid_priority_below_minimum) {
+TEST(invalid_priority_below_minimum) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_invalid_priority_below.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(
-                   raw_configuration, configuration_path,
-                   configuration_path.parent_path()),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, priority_helper_clamps_out_of_range) {
+TEST(priority_helper_clamps_out_of_range) {
   sourcemeta::one::Configuration::Collection collection;
   collection.extra.assign(
       "x-sourcemeta-one:priority",
@@ -738,7 +743,7 @@ TEST(Configuration, priority_helper_clamps_out_of_range) {
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 0);
 }
 
-TEST(Configuration, priority_helper_defaults_when_missing_or_wrong_type) {
+TEST(priority_helper_defaults_when_missing_or_wrong_type) {
   sourcemeta::one::Configuration::Collection collection;
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 
@@ -747,7 +752,7 @@ TEST(Configuration, priority_helper_defaults_when_missing_or_wrong_type) {
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 }
 
-TEST(Configuration, authentication_defaults_to_empty_when_absent) {
+TEST(authentication_defaults_to_empty_when_absent) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};
   const auto raw_configuration{
@@ -761,7 +766,7 @@ TEST(Configuration, authentication_defaults_to_empty_when_absent) {
   EXPECT_EQ(configuration.authentication.size(), 0);
 }
 
-TEST(Configuration, authentication_inherited_from_extends) {
+TEST(authentication_inherited_from_extends) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_authentication_extends.json"};
   const auto raw_configuration{
@@ -777,7 +782,7 @@ TEST(Configuration, authentication_inherited_from_extends) {
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
 }
 
-TEST(Configuration, authentication_explicit_paths) {
+TEST(authentication_explicit_paths) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -800,7 +805,7 @@ TEST(Configuration, authentication_explicit_paths) {
       (std::vector<sourcemeta::core::JSON::String>{"/internal", "/vendor"}));
 }
 
-TEST(Configuration, authentication_apikey_identity) {
+TEST(authentication_apikey_identity) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -829,19 +834,23 @@ TEST(Configuration, authentication_apikey_identity) {
       (std::vector<sourcemeta::core::JSON::String>{"ONE_KEY_A", "ONE_KEY_B"}));
 }
 
-TEST(Configuration, authentication_rejects_apikey_without_keys) {
+TEST(authentication_rejects_apikey_without_keys) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
       { "type": "apiKey", "algorithm": "identity", "paths": [ "/internal" ] }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_duplicate_name) {
+TEST(authentication_rejects_duplicate_name) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -861,12 +870,18 @@ TEST(Configuration, authentication_rejects_duplicate_name) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationDuplicateAuthenticationNameError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
+               &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy name is used more than once");
+  }
 }
 
-TEST(Configuration, authentication_rejects_reserved_name) {
+TEST(authentication_rejects_reserved_name) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -879,12 +894,18 @@ TEST(Configuration, authentication_rejects_reserved_name) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationReservedAuthenticationNameError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationReservedAuthenticationNameError
+               &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy may not use a reserved name");
+  }
 }
 
-TEST(Configuration, covers_entry_root_is_above_everything) {
+TEST(covers_entry_root_is_above_everything) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -903,7 +924,7 @@ TEST(Configuration, covers_entry_root_is_above_everything) {
   EXPECT_TRUE(configuration.covers_entry("/"));
 }
 
-TEST(Configuration, covers_entry_an_exact_collection) {
+TEST(covers_entry_an_exact_collection) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -922,7 +943,7 @@ TEST(Configuration, covers_entry_an_exact_collection) {
   EXPECT_TRUE(configuration.covers_entry("/alpha"));
 }
 
-TEST(Configuration, covers_entry_an_exact_page) {
+TEST(covers_entry_an_exact_page) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -941,7 +962,7 @@ TEST(Configuration, covers_entry_an_exact_page) {
   EXPECT_TRUE(configuration.covers_entry("/team"));
 }
 
-TEST(Configuration, covers_entry_a_nested_collection) {
+TEST(covers_entry_a_nested_collection) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -961,7 +982,7 @@ TEST(Configuration, covers_entry_a_nested_collection) {
   EXPECT_TRUE(configuration.covers_entry("/team/public"));
 }
 
-TEST(Configuration, covers_entry_rejects_a_trailing_slash) {
+TEST(covers_entry_rejects_a_trailing_slash) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -981,7 +1002,7 @@ TEST(Configuration, covers_entry_rejects_a_trailing_slash) {
   EXPECT_FALSE(configuration.covers_entry("/team/private/"));
 }
 
-TEST(Configuration, covers_entry_rejects_a_path_inside_a_collection) {
+TEST(covers_entry_rejects_a_path_inside_a_collection) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -1001,7 +1022,7 @@ TEST(Configuration, covers_entry_rejects_a_path_inside_a_collection) {
   EXPECT_FALSE(configuration.covers_entry("/team/private/secret"));
 }
 
-TEST(Configuration, covers_entry_rejects_an_unknown_top_level_path) {
+TEST(covers_entry_rejects_an_unknown_top_level_path) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -1020,7 +1041,7 @@ TEST(Configuration, covers_entry_rejects_an_unknown_top_level_path) {
   EXPECT_FALSE(configuration.covers_entry("/beta"));
 }
 
-TEST(Configuration, covers_entry_rejects_a_partial_segment) {
+TEST(covers_entry_rejects_a_partial_segment) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "contents": {
@@ -1040,7 +1061,7 @@ TEST(Configuration, covers_entry_rejects_a_partial_segment) {
   EXPECT_FALSE(configuration.covers_entry("/team/priv"));
 }
 
-TEST(Configuration, covers_entry_with_no_entries_only_covers_the_root) {
+TEST(covers_entry_with_no_entries_only_covers_the_root) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com"
   })JSON")};
@@ -1050,7 +1071,7 @@ TEST(Configuration, covers_entry_with_no_entries_only_covers_the_root) {
   EXPECT_FALSE(configuration.covers_entry("/alpha"));
 }
 
-TEST(Configuration, authentication_rejects_apikey_without_algorithm) {
+TEST(authentication_rejects_apikey_without_algorithm) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1061,12 +1082,16 @@ TEST(Configuration, authentication_rejects_apikey_without_algorithm) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_apikey_non_identity_algorithm) {
+TEST(authentication_rejects_apikey_non_identity_algorithm) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1078,12 +1103,16 @@ TEST(Configuration, authentication_rejects_apikey_non_identity_algorithm) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_accepts_empty_array) {
+TEST(authentication_accepts_empty_array) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": []
@@ -1093,7 +1122,7 @@ TEST(Configuration, authentication_accepts_empty_array) {
   EXPECT_EQ(configuration.authentication.size(), 0);
 }
 
-TEST(Configuration, authentication_rejects_duplicate_entries) {
+TEST(authentication_rejects_duplicate_entries) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1113,12 +1142,16 @@ TEST(Configuration, authentication_rejects_duplicate_entries) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_missing_paths) {
+TEST(authentication_rejects_missing_paths) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1130,12 +1163,16 @@ TEST(Configuration, authentication_rejects_missing_paths) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_empty_path) {
+TEST(authentication_rejects_empty_path) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1148,12 +1185,16 @@ TEST(Configuration, authentication_rejects_empty_path) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_path_without_leading_slash) {
+TEST(authentication_rejects_path_without_leading_slash) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -1166,24 +1207,32 @@ TEST(Configuration, authentication_rejects_path_without_leading_slash) {
       }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_rejects_unknown_type) {
+TEST(authentication_rejects_unknown_type) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
       { "type": "apiKey", "paths": [ "/" ] }
     ]
   })JSON")};
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }
 
-TEST(Configuration, authentication_accepts_maximum_entries) {
+TEST(authentication_accepts_maximum_entries) {
   auto raw_configuration{sourcemeta::core::JSON::make_object()};
   raw_configuration.assign("url",
                            sourcemeta::core::JSON{"https://example.com"});
@@ -1212,7 +1261,7 @@ TEST(Configuration, authentication_accepts_maximum_entries) {
   EXPECT_EQ(configuration.authentication.size(), 64);
 }
 
-TEST(Configuration, authentication_rejects_above_maximum_entries) {
+TEST(authentication_rejects_above_maximum_entries) {
   auto raw_configuration{sourcemeta::core::JSON::make_object()};
   raw_configuration.assign("url",
                            sourcemeta::core::JSON{"https://example.com"});
@@ -1235,7 +1284,11 @@ TEST(Configuration, authentication_rejects_above_maximum_entries) {
   }
   raw_configuration.assign("authentication", std::move(entries));
 
-  EXPECT_THROW(sourcemeta::one::Configuration::parse(raw_configuration,
-                                                     "/tmp/one.json", "."),
-               sourcemeta::one::ConfigurationValidationError);
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
 }

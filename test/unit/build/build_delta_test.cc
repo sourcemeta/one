@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/build.h>
 
 #include "build_test_utils.h"
@@ -8,7 +7,7 @@
 
 #include <filesystem> // std::filesystem::path
 
-TEST(Build_delta, full_empty_registry) {
+TEST(full_empty_registry) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas;
@@ -38,7 +37,7 @@ TEST(Build_delta, full_empty_registry) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_single_leaf) {
+TEST(full_single_leaf) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -88,7 +87,7 @@ TEST(Build_delta, full_single_leaf) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_single_leaf_headless_skips_full_only) {
+TEST(full_single_leaf_headless_skips_full_only) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -134,7 +133,7 @@ TEST(Build_delta, full_single_leaf_headless_skips_full_only) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_nested_leaf_path) {
+TEST(full_nested_leaf_path) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -197,7 +196,7 @@ TEST(Build_delta, full_nested_leaf_path) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_with_comment_emits_comment_global) {
+TEST(full_with_comment_emits_comment_global) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas;
@@ -230,7 +229,7 @@ TEST(Build_delta, full_with_comment_emits_comment_global) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_without_comment_removes_stale_comment) {
+TEST(full_without_comment_removes_stale_comment) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas;
@@ -265,7 +264,7 @@ TEST(Build_delta, full_without_comment_removes_stale_comment) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, full_multiple_leaves_emits_per_leaf_actions) {
+TEST(full_multiple_leaves_emits_per_leaf_actions) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -333,7 +332,7 @@ TEST(Build_delta, full_multiple_leaves_emits_per_leaf_actions) {
                      output / "secondary" / "%" / "listing.bin");
 }
 
-TEST(Build_delta, incremental_cached_globals_are_omitted) {
+TEST(incremental_cached_globals_are_omitted) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -377,7 +376,7 @@ TEST(Build_delta, incremental_cached_globals_are_omitted) {
                           output / "secondary" / "foo" / "%" / "metadata.bin");
 }
 
-TEST(Build_delta, incremental_new_leaf_added_alongside_existing) {
+TEST(incremental_new_leaf_added_alongside_existing) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -436,7 +435,7 @@ TEST(Build_delta, incremental_new_leaf_added_alongside_existing) {
                           output / "secondary" / "foo" / "%" / "metadata.bin");
 }
 
-TEST(Build_delta, limits_zero_disables_check) {
+TEST(limits_zero_disables_check) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -448,16 +447,14 @@ TEST(Build_delta, limits_zero_disables_check) {
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                     test_rules::RULES.sentinel);
-  EXPECT_NO_THROW({
-    const auto plan{sourcemeta::one::delta<test_rules::RULES>(
-        sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-        output, schemas, "1.0.0", false, "", "Full",
-        {.maximum_direct_directory_entries = 0})};
-    EXPECT_GT(plan.size, 0u);
-  });
+  const auto plan{sourcemeta::one::delta<test_rules::RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full",
+      {.maximum_direct_directory_entries = 0})};
+  EXPECT_EQ(plan.size, 16u);
 }
 
-TEST(Build_delta, limits_within_threshold_succeeds) {
+TEST(limits_within_threshold_succeeds) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -467,16 +464,14 @@ TEST(Build_delta, limits_within_threshold_succeeds) {
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                     test_rules::RULES.sentinel);
-  EXPECT_NO_THROW({
-    const auto plan{sourcemeta::one::delta<test_rules::RULES>(
-        sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-        output, schemas, "1.0.0", false, "", "Full",
-        {.maximum_direct_directory_entries = 5})};
-    EXPECT_GT(plan.size, 0u);
-  });
+  const auto plan{sourcemeta::one::delta<test_rules::RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full",
+      {.maximum_direct_directory_entries = 5})};
+  EXPECT_EQ(plan.size, 10u);
 }
 
-TEST(Build_delta, limits_exceeded_throws) {
+TEST(limits_exceeded_throws) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{
@@ -487,12 +482,13 @@ TEST(Build_delta, limits_exceeded_throws) {
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                     test_rules::RULES.sentinel);
-  EXPECT_THROW(
-      {
-        sourcemeta::one::delta<test_rules::RULES>(
-            sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL,
-            entries, output, schemas, "1.0.0", false, "", "Full",
-            {.maximum_direct_directory_entries = 2});
-      },
-      sourcemeta::one::BuildTooManyDirectoryEntriesError);
+  try {
+    sourcemeta::one::delta<test_rules::RULES>(
+        sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+        output, schemas, "1.0.0", false, "", "Full",
+        {.maximum_direct_directory_entries = 2});
+    FAIL();
+  } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
+    EXPECT_STREQ(error.what(), "Too many entries in a single directory");
+  }
 }

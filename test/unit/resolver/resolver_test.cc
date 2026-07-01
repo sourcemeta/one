@@ -1,31 +1,22 @@
-#include <gtest/gtest.h>
-
-#include <memory> // std::shared_ptr
-#include <vector> // std::vector
-
 #include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/blaze/frame_error.h>
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
 
-class ResolverTest : public testing::Test {
-protected:
-  static auto SetUpTestSuite() -> void {
-    const auto raw_configuration{sourcemeta::one::Configuration::read(
-        CONFIGURATION_PATH, SELF_DIRECTORY)};
-    shared_configuration = std::make_unique<sourcemeta::one::Configuration>(
-        sourcemeta::one::Configuration::parse(
-            raw_configuration, std::filesystem::path{CONFIGURATION_PATH},
-            std::filesystem::path{CONFIGURATION_PATH}.parent_path()));
-  }
+#include <vector> // std::vector
 
-  static auto TearDownTestSuite() -> void { shared_configuration.reset(); }
-
-  static std::unique_ptr<sourcemeta::one::Configuration> shared_configuration;
-};
-
-std::unique_ptr<sourcemeta::one::Configuration>
-    ResolverTest::shared_configuration{nullptr};
+namespace {
+auto shared_configuration() -> const sourcemeta::one::Configuration & {
+  static const sourcemeta::one::Configuration configuration{
+      sourcemeta::one::Configuration::parse(
+          sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
+                                               SELF_DIRECTORY),
+          std::filesystem::path{CONFIGURATION_PATH},
+          std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+  return configuration;
+}
+} // namespace
 
 #define RESOLVER_EXPECT(resolver, expected_uri, expected_schema)               \
   {                                                                            \
@@ -38,7 +29,7 @@ std::unique_ptr<sourcemeta::one::Configuration>
   (resolver).add(                                                              \
       collection_name,                                                         \
       std::get<sourcemeta::one::Configuration::Collection>(                    \
-          ResolverTest::shared_configuration->entries.at(collection_name)),    \
+          shared_configuration().entries.at(collection_name)),                 \
       std::filesystem::path{SCHEMAS_PATH} / collection_name / (relative_path), \
       std::filesystem::last_write_time(std::filesystem::path{SCHEMAS_PATH} /   \
                                        collection_name / (relative_path)))
@@ -55,8 +46,8 @@ std::unique_ptr<sourcemeta::one::Configuration>
     RESOLVER_EXPECT(resolver, (result.first.get()), (expected_schema));        \
   }
 
-TEST_F(ResolverTest, idempotent) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(idempotent) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
@@ -83,8 +74,8 @@ TEST_F(ResolverTest, idempotent) {
   })JSON");
 }
 
-TEST_F(ResolverTest, iterators) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(iterators) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -102,8 +93,8 @@ TEST_F(ResolverTest, iterators) {
   EXPECT_EQ(identifiers.at(0), "http://localhost:8000/example/2020-12-with-id");
 }
 
-TEST_F(ResolverTest, duplicate_id) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(duplicate_id) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id-json.json",
                "https://example.com/schemas/2020-12-with-id-json",
                "http://localhost:8000/example/2020-12-with-id-json",
@@ -112,13 +103,17 @@ TEST_F(ResolverTest, duplicate_id) {
     "$id": "http://localhost:8000/example/2020-12-with-id-json"
   })JSON");
 
-  EXPECT_THROW(RESOLVER_IMPORT(resolver, "example",
-                               "2020-12-with-id-json-duplicate.json"),
-               sourcemeta::blaze::SchemaFrameError);
+  try {
+    RESOLVER_IMPORT(resolver, "example", "2020-12-with-id-json-duplicate.json");
+    FAIL();
+  } catch (const sourcemeta::blaze::SchemaFrameError &error) {
+    EXPECT_EQ(error.identifier(),
+              "http://localhost:8000/example/2020-12-with-id-json");
+  }
 }
 
-TEST_F(ResolverTest, case_insensitive_lookup) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(case_insensitive_lookup) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -146,8 +141,8 @@ TEST_F(ResolverTest, case_insensitive_lookup) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_official_2020_12_meta) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_official_2020_12_meta) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   EXPECT_TRUE(
       resolver("https://json-schema.org/draft/2020-12/schema").has_value());
   EXPECT_EQ(resolver("https://json-schema.org/draft/2020-12/schema"),
@@ -155,8 +150,8 @@ TEST_F(ResolverTest, example_official_2020_12_meta) {
                 "https://json-schema.org/draft/2020-12/schema"));
 }
 
-TEST_F(ResolverTest, example_2020_12_with_id) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_with_id) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -166,8 +161,8 @@ TEST_F(ResolverTest, example_2020_12_with_id) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_with_id_json) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_with_id_json) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id-json.json",
                "https://example.com/schemas/2020-12-with-id-json",
                "http://localhost:8000/example/2020-12-with-id-json",
@@ -177,8 +172,8 @@ TEST_F(ResolverTest, example_2020_12_with_id_json) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_with_id_schema_json) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_with_id_schema_json) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-with-id.schema.json",
                "https://example.com/schemas/2020-12-with-id",
                "http://localhost:8000/example/2020-12-with-id",
@@ -188,8 +183,8 @@ TEST_F(ResolverTest, example_2020_12_with_id_schema_json) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_without_id_schema_json) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_without_id_schema_json) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-without-id.schema.json",
                "https://example.com/schemas/2020-12-without-id",
                "http://localhost:8000/example/2020-12-without-id",
@@ -199,8 +194,8 @@ TEST_F(ResolverTest, example_2020_12_without_id_schema_json) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_schema_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_schema_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-extension.json",
                "https://example.com/schemas/schema-extension",
                "http://localhost:8000/example/schema-extension",
@@ -210,8 +205,8 @@ TEST_F(ResolverTest, example_2020_12_schema_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_yaml_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_yaml_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-yaml-extension.json",
                "https://example.com/schemas/yaml-extension",
                "http://localhost:8000/example/yaml-extension",
@@ -221,8 +216,8 @@ TEST_F(ResolverTest, example_2020_12_yaml_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_yml_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_yml_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-yml-extension.json",
                "https://example.com/schemas/yml-extension",
                "http://localhost:8000/example/yml-extension",
@@ -232,8 +227,8 @@ TEST_F(ResolverTest, example_2020_12_yml_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_schema_yaml_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_schema_yaml_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-yaml-extension.json",
                "https://example.com/schemas/schema-yaml-extension",
                "http://localhost:8000/example/schema-yaml-extension",
@@ -243,8 +238,8 @@ TEST_F(ResolverTest, example_2020_12_schema_yaml_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_schema_yml_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_schema_yml_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-schema-yml-extension.json",
                "https://example.com/schemas/schema-yml-extension",
                "http://localhost:8000/example/schema-yml-extension",
@@ -254,8 +249,8 @@ TEST_F(ResolverTest, example_2020_12_schema_yml_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_yaml_json_mix_extension) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_yaml_json_mix_extension) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-yaml-json-mix-extension.json",
                "https://example.com/schemas/yaml-json-mix-extension",
                "http://localhost:8000/example/yaml-json-mix-extension",
@@ -265,8 +260,8 @@ TEST_F(ResolverTest, example_2020_12_yaml_json_mix_extension) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_semver) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_semver) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-semver.json",
                "https://example.com/schemas/semver/v1.2.3",
                "http://localhost:8000/example/semver/v1.2.3",
@@ -276,8 +271,8 @@ TEST_F(ResolverTest, example_2020_12_semver) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_pointer_ref_casing_relative) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_pointer_ref_casing_relative) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(
       resolver, "example", "2020-12-pointer-ref-casing-relative.json",
       "https://example.com/schemas/2020-12-pointer-ref-casing-relative",
@@ -295,8 +290,8 @@ TEST_F(ResolverTest, example_2020_12_pointer_ref_casing_relative) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_only_id) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_only_id) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "only-id.json",
                "https://example.com/schemas/only-id",
                "http://localhost:8000/example/only-id",
@@ -306,8 +301,8 @@ TEST_F(ResolverTest, example_only_id) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_anonymous) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_anonymous) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-anonymous.json",
                "https://example.com/schemas/2020-12-anonymous",
                "http://localhost:8000/example/2020-12-anonymous",
@@ -317,8 +312,8 @@ TEST_F(ResolverTest, example_2020_12_anonymous) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_embedded_resource) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_embedded_resource) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-embedded-resource.json",
                "https://example.com/schemas/2020-12-embedded-resource",
                "http://localhost:8000/example/2020-12-embedded-resource",
@@ -339,8 +334,8 @@ TEST_F(ResolverTest, example_2020_12_embedded_resource) {
       resolver("http://localhost:8000/example/string.json").has_value());
 }
 
-TEST_F(ResolverTest, example_2020_12_absolute_ref) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_absolute_ref) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   // We expect absolute references to be made relative
   RESOLVER_ADD(resolver, "example", "2020-12-absolute-ref.json",
@@ -353,8 +348,8 @@ TEST_F(ResolverTest, example_2020_12_absolute_ref) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_relative_id) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_relative_id) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-relative-id.json",
                "https://example.com/schemas/2020-12-relative-id",
@@ -365,8 +360,8 @@ TEST_F(ResolverTest, example_2020_12_relative_id) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_ref_with_casing) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_ref_with_casing) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   RESOLVER_ADD(resolver, "example", "2020-12-ref-with-casing.json",
                "https://example.com/schemas/2020-12-ref-with-casing",
@@ -378,8 +373,8 @@ TEST_F(ResolverTest, example_2020_12_ref_with_casing) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_id_with_casing) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_id_with_casing) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-id-with-casing.json",
                "https://example.com/schemas/2020-12-id-with-casing",
                "http://localhost:8000/example/2020-12-id-with-casing",
@@ -403,8 +398,8 @@ TEST_F(ResolverTest, example_2020_12_id_with_casing) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_ref_needs_rebase) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_ref_needs_rebase) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-ref-needs-rebase.json",
                "https://example.com/schemas/2020-12-ref-needs-rebase",
                "http://localhost:8000/example/2020-12-ref-needs-rebase",
@@ -415,8 +410,8 @@ TEST_F(ResolverTest, example_2020_12_ref_needs_rebase) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_meta) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_meta) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-meta.json",
                "https://example.com/schemas/2020-12-meta",
                "http://localhost:8000/example/2020-12-meta",
@@ -429,8 +424,8 @@ TEST_F(ResolverTest, example_2020_12_meta) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_circular) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_circular) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-circular.json",
                "https://example.com/schemas/2020-12-circular",
                "http://localhost:8000/example/2020-12-circular",
@@ -441,14 +436,18 @@ TEST_F(ResolverTest, example_2020_12_circular) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_meta_schema) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_meta_schema) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   const auto schema_result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-meta-schema.json")};
 
   // We can't resolve it yet until we first satisfy the metaschema
-  EXPECT_THROW(resolver(schema_result.first.get()),
-               sourcemeta::blaze::SchemaResolutionError);
+  try {
+    resolver(schema_result.first.get());
+    FAIL();
+  } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+    EXPECT_EQ(error.identifier(), "http://localhost:8000/example/2020-12-meta");
+  }
 
   // Note we add the metaschema AFTER the schema
   RESOLVER_IMPORT(resolver, "example", "2020-12-meta.json");
@@ -459,8 +458,8 @@ TEST_F(ResolverTest, example_2020_12_meta_schema) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_meta_schema_repeated_resolution) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_meta_schema_repeated_resolution) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_IMPORT(resolver, "example", "2020-12-meta-schema.json");
   RESOLVER_IMPORT(resolver, "example", "2020-12-meta.json");
 
@@ -492,8 +491,8 @@ TEST_F(ResolverTest, example_2020_12_meta_schema_repeated_resolution) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2020_12_base_with_trailing_slash) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2020_12_base_with_trailing_slash) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-base-with-trailing-slash.json",
                "https://example.com/schemas/2020-12-base-with-trailing-slash",
                "http://localhost:8000/example/2020-12-base-with-trailing-slash",
@@ -503,8 +502,8 @@ TEST_F(ResolverTest, example_2020_12_base_with_trailing_slash) {
   })JSON");
 }
 
-TEST_F(ResolverTest, base_slash_2020_12_equal_to_base) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(base_slash_2020_12_equal_to_base) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "base-slash", "2020-12-equal-to-base.json",
                "https://example.com/slash/2020-12-equal-to-base",
                "http://localhost:8000/base-slash/2020-12-equal-to-base",
@@ -514,8 +513,8 @@ TEST_F(ResolverTest, base_slash_2020_12_equal_to_base) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_2019_09_recursive_ref) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_2019_09_recursive_ref) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2019-09-recursive-ref.json",
                "https://example.com/schemas/2019-09-recursive-ref",
                "http://localhost:8000/example/2019-09-recursive-ref",
@@ -529,8 +528,8 @@ TEST_F(ResolverTest, example_2019_09_recursive_ref) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_draft4_internal_ref) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_draft4_internal_ref) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "draft4-internal-ref.json",
                "https://example.com/schemas/draft4-internal-ref",
                "http://localhost:8000/example/draft4-internal-ref",
@@ -546,8 +545,8 @@ TEST_F(ResolverTest, example_draft4_internal_ref) {
   })JSON");
 }
 
-TEST_F(ResolverTest, example_draft4_trailing_hash_with_ref) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(example_draft4_trailing_hash_with_ref) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "draft4-trailing-hash-with-ref.json",
                "https://example.com/schemas/draft4-trailing-hash-with-ref",
                "http://localhost:8000/example/draft4-trailing-hash-with-ref",
@@ -561,8 +560,8 @@ TEST_F(ResolverTest, example_draft4_trailing_hash_with_ref) {
   })JSON");
 }
 
-TEST_F(ResolverTest, meta_draft4_override) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(meta_draft4_override) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "meta-draft4", "draft4-override.json",
                "http://json-schema.org/draft-04/schema",
                "http://localhost:8000/meta-draft4/schema",
@@ -572,8 +571,8 @@ TEST_F(ResolverTest, meta_draft4_override) {
   })JSON");
 }
 
-TEST_F(ResolverTest, entry_lookup) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(entry_lookup) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
 
   const auto &entry{
@@ -584,8 +583,8 @@ TEST_F(ResolverTest, entry_lookup) {
             "https://example.com/schemas/2020-12-with-id");
 }
 
-TEST_F(ResolverTest, non_schema_file) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(non_schema_file) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   try {
     RESOLVER_IMPORT(resolver, "example", "non-schema-array.json");
     FAIL();
@@ -594,22 +593,30 @@ TEST_F(ResolverTest, non_schema_file) {
   }
 }
 
-TEST_F(ResolverTest, no_dialect) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
-  EXPECT_THROW(RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json"),
-               sourcemeta::blaze::SchemaUnknownDialectError);
+TEST(no_dialect) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  try {
+    RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json");
+    FAIL();
+  } catch (const sourcemeta::blaze::SchemaUnknownDialectError &error) {
+    EXPECT_STREQ(error.what(), "Could not determine the dialect of the schema");
+  }
 }
 
-TEST_F(ResolverTest, non_string_ref_no_crash) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(non_string_ref_no_crash) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "non-string-ref.json")};
-  EXPECT_THROW(resolver(result.first.get()),
-               sourcemeta::blaze::SchemaReferenceObjectResourceError);
+  try {
+    resolver(result.first.get());
+    FAIL();
+  } catch (const sourcemeta::blaze::SchemaReferenceObjectResourceError &error) {
+    EXPECT_EQ(error.identifier(), result.first.get());
+  }
 }
 
-TEST_F(ResolverTest, no_base_anonymous) {
-  sourcemeta::one::Resolver resolver{ResolverTest::shared_configuration->url};
+TEST(no_base_anonymous) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "no-base", "anonymous.json",
                "http://localhost:8000/anonymous",
                "http://localhost:8000/no-base/anonymous",
@@ -619,7 +626,7 @@ TEST_F(ResolverTest, no_base_anonymous) {
   })JSON");
 }
 
-TEST_F(ResolverTest, path_url_with_id) {
+TEST(path_url_with_id) {
   sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
@@ -635,7 +642,7 @@ TEST_F(ResolverTest, path_url_with_id) {
   })JSON");
 }
 
-TEST_F(ResolverTest, path_url_anonymous) {
+TEST(path_url_anonymous) {
   sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-anonymous.json")};
@@ -651,7 +658,7 @@ TEST_F(ResolverTest, path_url_anonymous) {
   })JSON");
 }
 
-TEST_F(ResolverTest, path_url_ref_needs_rebase) {
+TEST(path_url_ref_needs_rebase) {
   sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
   RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
   const auto result{
@@ -671,7 +678,7 @@ TEST_F(ResolverTest, path_url_ref_needs_rebase) {
   })JSON");
 }
 
-TEST_F(ResolverTest, path_url_absolute_ref) {
+TEST(path_url_absolute_ref) {
   sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-absolute-ref.json")};

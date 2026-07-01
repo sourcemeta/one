@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME resolver
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME resolver
   SOURCES resolver_test.cc)
 
 target_link_libraries(sourcemeta_one_resolver_unit

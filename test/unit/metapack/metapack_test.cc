@@ -2,8 +2,7 @@
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
-
-#include <gtest/gtest.h>
+#include <sourcemeta/core/test.h>
 
 #include <chrono>     // std::chrono
 #include <cstring>    // std::memcpy
@@ -17,7 +16,7 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{METAPACK_TEST_DIRECTORY} / name;
 }
 
-TEST(Metapack, write_and_read_json_identity) {
+TEST(write_and_read_json_identity) {
   const auto path{test_path("identity.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("hello", sourcemeta::core::JSON{"world"});
@@ -32,7 +31,7 @@ TEST(Metapack, write_and_read_json_identity) {
   EXPECT_EQ(result.at("hello").to_string(), "world");
 }
 
-TEST(Metapack, write_and_read_json_gzip) {
+TEST(write_and_read_json_gzip) {
   const auto path{test_path("gzip.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("foo", sourcemeta::core::JSON{42});
@@ -47,7 +46,7 @@ TEST(Metapack, write_and_read_json_gzip) {
   EXPECT_EQ(result.at("foo").to_integer(), 42);
 }
 
-TEST(Metapack, write_and_read_pretty_json) {
+TEST(write_and_read_pretty_json) {
   const auto path{test_path("pretty.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("key", sourcemeta::core::JSON{"value"});
@@ -61,7 +60,7 @@ TEST(Metapack, write_and_read_pretty_json) {
   EXPECT_EQ(result.at("key").to_string(), "value");
 }
 
-TEST(Metapack, binary_header_magic_and_version) {
+TEST(binary_header_magic_and_version) {
   const auto path{test_path("header.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
 
@@ -78,7 +77,7 @@ TEST(Metapack, binary_header_magic_and_version) {
   EXPECT_EQ(header->encoding, sourcemeta::one::MetapackEncoding::Identity);
 }
 
-TEST(Metapack, no_extension) {
+TEST(no_extension) {
   const auto path{test_path("no_ext.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
 
@@ -99,7 +98,7 @@ struct TestExtension {
 };
 #pragma pack(pop)
 
-TEST(Metapack, write_and_read_extension) {
+TEST(write_and_read_extension) {
   const auto path{test_path("with_ext.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
 
@@ -142,7 +141,7 @@ TEST(Metapack, write_and_read_extension) {
   EXPECT_TRUE(result.is_object());
 }
 
-TEST(Metapack, extension_nullptr_when_too_small) {
+TEST(extension_nullptr_when_too_small) {
   const auto path{test_path("small_ext.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
 
@@ -162,7 +161,7 @@ TEST(Metapack, extension_nullptr_when_too_small) {
   EXPECT_EQ(read_extension, nullptr);
 }
 
-TEST(Metapack, write_and_read_text_identity) {
+TEST(write_and_read_text_identity) {
   const auto path{test_path("text_identity.metapack")};
 
   sourcemeta::one::metapack_write_text(
@@ -175,7 +174,7 @@ TEST(Metapack, write_and_read_text_identity) {
   EXPECT_EQ(result.value(), "Hello, world!\n");
 }
 
-TEST(Metapack, write_and_read_text_gzip) {
+TEST(write_and_read_text_gzip) {
   const auto path{test_path("text_gzip.metapack")};
 
   sourcemeta::one::metapack_write_text(path, "Compressed text content",
@@ -188,7 +187,7 @@ TEST(Metapack, write_and_read_text_gzip) {
   EXPECT_EQ(result.value(), "Compressed text content\n");
 }
 
-TEST(Metapack, write_and_read_text_identity_with_extension) {
+TEST(write_and_read_text_identity_with_extension) {
   const auto path{test_path("text_identity_ext.metapack")};
 
   std::vector<std::uint8_t> extension_bytes;
@@ -213,7 +212,7 @@ TEST(Metapack, write_and_read_text_identity_with_extension) {
   EXPECT_EQ(result.value(), "Text with extension\n");
 }
 
-TEST(Metapack, write_and_read_text_gzip_with_extension) {
+TEST(write_and_read_text_gzip_with_extension) {
   const auto path{test_path("text_gzip_ext.metapack")};
 
   std::vector<std::uint8_t> extension_bytes;
@@ -238,7 +237,7 @@ TEST(Metapack, write_and_read_text_gzip_with_extension) {
   EXPECT_EQ(result.value(), "Compressed text with extension\n");
 }
 
-TEST(Metapack, write_and_read_json_gzip_large) {
+TEST(write_and_read_json_gzip_large) {
   const auto path{test_path("gzip_large.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   for (int index = 0; index < 200; index++) {
@@ -257,7 +256,7 @@ TEST(Metapack, write_and_read_json_gzip_large) {
   EXPECT_EQ(result.value().at("key_199").to_string(), "value_199");
 }
 
-TEST(Metapack, write_and_read_text_gzip_large) {
+TEST(write_and_read_text_gzip_large) {
   const auto path{test_path("text_gzip_large.metapack")};
   std::string large_text;
   for (int index = 0; index < 200; index++) {
@@ -273,7 +272,7 @@ TEST(Metapack, write_and_read_text_gzip_large) {
   EXPECT_EQ(result.value(), large_text + "\n");
 }
 
-TEST(Metapack, compressed_bytes_matches_payload_for_gzip_encoding) {
+TEST(compressed_bytes_matches_payload_for_gzip_encoding) {
   const auto path{test_path("compressed_bytes_gzip.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("hello", sourcemeta::core::JSON{"world"});
@@ -292,7 +291,7 @@ TEST(Metapack, compressed_bytes_matches_payload_for_gzip_encoding) {
   EXPECT_EQ(info.compressed_bytes, payload_size);
 }
 
-TEST(Metapack, compressed_bytes_populated_for_identity_encoding) {
+TEST(compressed_bytes_populated_for_identity_encoding) {
   const auto path{test_path("compressed_bytes_identity.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("hello", sourcemeta::core::JSON{"world"});
@@ -309,7 +308,7 @@ TEST(Metapack, compressed_bytes_populated_for_identity_encoding) {
   EXPECT_NE(info.compressed_bytes, info.content_bytes);
 }
 
-TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
+TEST(read_text_nullopt_when_content_bytes_exceeds_payload) {
   const auto path{test_path("bad_content_bytes.metapack")};
 
   sourcemeta::one::metapack_write_text(
@@ -319,7 +318,7 @@ TEST(Metapack, read_text_nullopt_when_content_bytes_exceeds_payload) {
   // Corrupt the header to advertise more payload than actually exists
   {
     std::fstream file{path, std::ios::binary | std::ios::in | std::ios::out};
-    ASSERT_TRUE(file.good());
+    EXPECT_TRUE(file.good());
     const std::uint64_t bad_content_bytes{999999};
     file.seekp(offsetof(sourcemeta::one::MetapackHeader, content_bytes),
                std::ios::beg);

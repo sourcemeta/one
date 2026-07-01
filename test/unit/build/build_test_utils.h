@@ -1,8 +1,7 @@
 #ifndef SOURCEMETA_ONE_BUILD_TEST_UTILS_H_
 #define SOURCEMETA_ONE_BUILD_TEST_UTILS_H_
 
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/build.h>
 
 #include "test_rules.h"
@@ -71,10 +70,7 @@ __check_no_intra_wave_dependencies(const sourcemeta::one::BuildPlan &plan)
 
     for (const auto &action : plan.waves[wave_index]) {
       for (const auto &dependency : action.dependencies) {
-        EXPECT_FALSE(destinations.contains(dependency.string()))
-            << "Wave " << wave_index << ": action "
-            << action.destination.string() << " depends on "
-            << dependency.string() << " which is produced in the same wave";
+        EXPECT_FALSE(destinations.contains(dependency.string()));
       }
     }
   }
@@ -95,10 +91,7 @@ __check_no_forward_dependencies(const sourcemeta::one::BuildPlan &plan)
 
     for (const auto &action : plan.waves[wave_index]) {
       for (const auto &dependency : action.dependencies) {
-        EXPECT_FALSE(future_destinations.contains(dependency.string()))
-            << "Wave " << wave_index << ": action "
-            << action.destination.string() << " depends on "
-            << dependency.string() << " which is produced in a future wave";
+        EXPECT_FALSE(future_destinations.contains(dependency.string()));
       }
     }
   }
@@ -130,15 +123,10 @@ __check_no_removed_references(const sourcemeta::one::BuildPlan &plan) -> void {
       }
 
       for (const auto *remove_path : remove_destinations) {
-        EXPECT_FALSE(__is_under(action.destination, *remove_path))
-            << "Action " << action.destination.string()
-            << " has destination under removed path " << remove_path->string();
+        EXPECT_FALSE(__is_under(action.destination, *remove_path));
 
         for (const auto &dependency : action.dependencies) {
-          EXPECT_FALSE(__is_under(dependency, *remove_path))
-              << "Action " << action.destination.string() << " depends on "
-              << dependency.string() << " which is under removed path "
-              << remove_path->string();
+          EXPECT_FALSE(__is_under(dependency, *remove_path));
         }
       }
     }
@@ -167,11 +155,7 @@ __check_dependencies_resolvable(const sourcemeta::one::BuildPlan &plan,
         }
 
         EXPECT_TRUE(prior_destinations.contains(dependency_string) ||
-                    entries.contains(dependency_string))
-            << "Wave " << wave_index << ": action "
-            << action.destination.string() << " depends on "
-            << dependency_string << " which is not produced by a previous wave"
-            << " and not in entries";
+                    entries.contains(dependency_string));
       }
     }
   }
@@ -184,8 +168,7 @@ __check_no_duplicate_destinations(const sourcemeta::one::BuildPlan &plan)
   for (const auto &wave : plan.waves) {
     for (const auto &action : wave) {
       const auto &destination_string{action.destination.string()};
-      EXPECT_FALSE(all_destinations.contains(destination_string))
-          << "Duplicate destination: " << destination_string;
+      EXPECT_FALSE(all_destinations.contains(destination_string));
       all_destinations.insert(destination_string);
     }
   }

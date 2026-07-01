@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME actions
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME actions
   SOURCES
     actions_descriptions_test.cc)
 

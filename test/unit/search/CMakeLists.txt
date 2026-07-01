@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME search
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME search
   SOURCES search_build_test.cc search_query_test.cc search_view_test.cc
           search_view_for_each_test.cc)
 

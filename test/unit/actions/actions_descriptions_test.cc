@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/actions.h>
@@ -7,60 +6,60 @@
 #include <limits>      // std::numeric_limits
 #include <string_view> // std::string_view
 
-TEST(Actions_description, default_v1) {
+TEST(default_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_DEFAULT_V1),
             std::string_view{"Default fallback action for unmatched URIs"});
 }
 
-TEST(Actions_description, health_check_v1) {
+TEST(health_check_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_HEALTH_CHECK_V1),
             std::string_view{"Report the server's health status"});
 }
 
-TEST(Actions_description, not_found_v1) {
+TEST(not_found_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1),
             std::string_view{"Return a 404 Not Found response"});
 }
 
-TEST(Actions_description, schema_artifact_v1) {
+TEST(schema_artifact_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_SCHEMA_ARTIFACT_V1),
             std::string_view{"Look up a precomputed artifact about a "
                              "specific schema by its absolute URI"});
 }
 
-TEST(Actions_description, explorer_artifact_v1) {
+TEST(explorer_artifact_v1) {
   EXPECT_EQ(
       sourcemeta::one::action_description(
           sourcemeta::one::ACTION_TYPE_EXPLORER_ARTIFACT_V1),
       std::string_view{"Read a navigation artifact for browsing schemas"});
 }
 
-TEST(Actions_description, list_directory_v1) {
+TEST(list_directory_v1) {
   EXPECT_EQ(
       sourcemeta::one::action_description(
           sourcemeta::one::ACTION_TYPE_LIST_DIRECTORY_V1),
       std::string_view{"List the contents of a directory in the catalog"});
 }
 
-TEST(Actions_description, dependency_tree_v1) {
+TEST(dependency_tree_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_DEPENDENCY_TREE_V1),
             std::string_view{"Look up the dependency graph of a specific "
                              "schema (incoming or outgoing)"});
 }
 
-TEST(Actions_description, jsonschema_evaluate_v1) {
+TEST(jsonschema_evaluate_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1),
             std::string_view{"Validate a JSON instance against a schema and "
                              "return whether it is valid plus any errors"});
 }
 
-TEST(Actions_description, jsonschema_trace_v1) {
+TEST(jsonschema_trace_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1),
             std::string_view{
@@ -71,14 +70,14 @@ TEST(Actions_description, jsonschema_trace_v1) {
                 "per-step detail is required"});
 }
 
-TEST(Actions_description, get_schema_health_v1) {
+TEST(get_schema_health_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_HEALTH_V1),
             std::string_view{"Return the lint health score (0 to 100) and "
                              "any lint findings for a schema in the catalog"});
 }
 
-TEST(Actions_description, get_schema_locations_v1) {
+TEST(get_schema_locations_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_LOCATIONS_V1),
             std::string_view{
@@ -89,14 +88,14 @@ TEST(Actions_description, get_schema_locations_v1) {
                 "expected for large schemas"});
 }
 
-TEST(Actions_description, get_schema_positions_v1) {
+TEST(get_schema_positions_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1),
             std::string_view{"Return the source line and column position of "
                              "every JSON Pointer inside a schema"});
 }
 
-TEST(Actions_description, get_schema_stats_v1) {
+TEST(get_schema_stats_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_STATS_V1),
             std::string_view{
@@ -105,7 +104,7 @@ TEST(Actions_description, get_schema_stats_v1) {
                 "keywords the schema relies on and how often each appears"});
 }
 
-TEST(Actions_description, get_schema_metadata_v1) {
+TEST(get_schema_metadata_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_METADATA_V1),
             std::string_view{
@@ -114,7 +113,7 @@ TEST(Actions_description, get_schema_metadata_v1) {
                 "dependency count, and breadcrumb path"});
 }
 
-TEST(Actions_description, get_schema_dependencies_v1) {
+TEST(get_schema_dependencies_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1),
             std::string_view{
@@ -122,7 +121,7 @@ TEST(Actions_description, get_schema_dependencies_v1) {
                 "references, the outgoing edges of the dependency graph"});
 }
 
-TEST(Actions_description, get_schema_dependents_v1) {
+TEST(get_schema_dependents_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1),
             std::string_view{
@@ -130,33 +129,32 @@ TEST(Actions_description, get_schema_dependents_v1) {
                 "this schema, the incoming edges of the dependency graph"});
 }
 
-TEST(Actions_description, schema_search_v1) {
+TEST(schema_search_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1),
             std::string_view{"Search for schemas by query term"});
 }
 
-TEST(Actions_description, serve_static_v1) {
+TEST(serve_static_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
                 sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1),
             std::string_view{"Serve a static asset bundled with the server"});
 }
 
-TEST(Actions_description, mcp_v1) {
+TEST(mcp_v1) {
   EXPECT_EQ(
       sourcemeta::one::action_description(sourcemeta::one::ACTION_TYPE_MCP_V1),
       std::string_view{"Handle Model Context Protocol JSON-RPC requests"});
 }
 
-TEST(Actions_description, every_action_has_a_non_empty_description) {
+TEST(every_action_has_a_non_empty_description) {
   for (sourcemeta::core::URITemplateRouter::Identifier context{0};
        context < sourcemeta::one::ACTION_TYPE_COUNT; ++context) {
-    EXPECT_FALSE(sourcemeta::one::action_description(context).empty())
-        << "Action context " << context << " has an empty description";
+    EXPECT_FALSE(sourcemeta::one::action_description(context).empty());
   }
 }
 
-TEST(Actions_description, out_of_range_returns_empty) {
+TEST(out_of_range_returns_empty) {
   EXPECT_TRUE(
       sourcemeta::one::action_description(sourcemeta::one::ACTION_TYPE_COUNT)
           .empty());
