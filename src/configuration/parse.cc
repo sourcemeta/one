@@ -2,6 +2,7 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
+#include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/uri.h>
 
 #include "template.h"
@@ -149,16 +150,32 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     for (const auto &entry : data.at("authentication").as_array()) {
       Configuration::AuthenticationEntry parsed;
       parsed.name = entry.at("name").to_string();
-      parsed.algorithm =
-          entry.at("algorithm").to_string() == "sha256"
-              ? Configuration::AuthenticationEntry::Algorithm::Sha256
-              : Configuration::AuthenticationEntry::Algorithm::Identity;
-      for (const auto &key : entry.at("keys").as_array()) {
-        parsed.keys.push_back(key.at("environmentVariable").to_string());
-      }
-
       for (const auto &path : entry.at("paths").as_array()) {
         parsed.paths.push_back(path.to_string());
+      }
+
+      if (entry.at("type").to_string() == "jwt") {
+        parsed.type = Configuration::AuthenticationEntry::Type::JWT;
+        parsed.issuer = entry.at("issuer").to_string();
+        parsed.audience = entry.at("audience").to_string();
+        if (entry.defines("jwksUri")) {
+          parsed.jwks_uri = entry.at("jwksUri").to_string();
+        }
+
+        for (const auto &algorithm : entry.at("algorithms").as_array()) {
+          parsed.algorithms.push_back(
+              sourcemeta::core::to_jws_algorithm(algorithm.to_string())
+                  .value());
+        }
+      } else {
+        parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
+        parsed.algorithm =
+            entry.at("algorithm").to_string() == "sha256"
+                ? Configuration::AuthenticationEntry::Algorithm::Sha256
+                : Configuration::AuthenticationEntry::Algorithm::Identity;
+        for (const auto &key : entry.at("keys").as_array()) {
+          parsed.keys.push_back(key.at("environmentVariable").to_string());
+        }
       }
 
       result.authentication.push_back(std::move(parsed));

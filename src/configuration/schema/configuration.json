@@ -70,47 +70,113 @@
       "maxItems": 64,
       "uniqueItems": true,
       "items": {
-        "type": "object",
-        "required": [ "type", "algorithm", "name", "paths", "keys" ],
-        "properties": {
-          "type": {
-            "const": "apiKey"
-          },
-          "algorithm": {
-            "enum": [ "identity", "sha256" ]
-          },
-          "name": {
-            "type": "string",
-            "pattern": "^[a-z0-9-]+$"
-          },
-          "paths": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": {
-              "type": "string",
-              "pattern": "^/",
-              "minLength": 1
-            }
-          },
-          "keys": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": {
-              "type": "object",
-              "required": [ "environmentVariable" ],
-              "properties": {
-                "environmentVariable": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [ "type", "algorithm", "name", "paths", "keys" ],
+            "properties": {
+              "type": {
+                "const": "apiKey"
+              },
+              "algorithm": {
+                "enum": [ "identity", "sha256" ]
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
                   "type": "string",
+                  "pattern": "^/",
                   "minLength": 1
                 }
               },
-              "additionalProperties": false
-            }
+              "keys": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "required": [ "environmentVariable" ],
+                  "properties": {
+                    "environmentVariable": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "name",
+              "paths",
+              "issuer",
+              "audience",
+              "algorithms"
+            ],
+            "properties": {
+              "type": {
+                "const": "jwt"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 1
+                }
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1
+              },
+              "audience": {
+                "type": "string",
+                "minLength": 1
+              },
+              "jwksUri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "algorithms": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "RS256",
+                    "RS384",
+                    "RS512",
+                    "PS256",
+                    "PS384",
+                    "PS512",
+                    "ES256",
+                    "ES384",
+                    "ES512",
+                    "EdDSA"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
           }
-        },
-        "additionalProperties": false
+        ]
       }
     }
   },

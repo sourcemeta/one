@@ -1,5 +1,6 @@
 if(ONE_ENTERPRISE)
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
+    PRIVATE_HEADERS error.h
     SOURCES
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc")
@@ -7,8 +8,11 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
+    PRIVATE_HEADERS error.h
     SOURCES authentication.cc)
 endif()
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::jose)
+target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::one::configuration)
+target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::uritemplate)

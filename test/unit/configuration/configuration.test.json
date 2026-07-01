@@ -413,6 +413,57 @@
           }
         }
       }
+    },
+    {
+      "description": "A JWT authentication policy is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication policy without an issuer is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication policy with apiKey keys is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "keys": [ { "environmentVariable": "ONE_KEY" } ]
+          }
+        ]
+      }
     }
   ]
 }

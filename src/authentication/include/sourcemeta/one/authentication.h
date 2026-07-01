@@ -5,46 +5,21 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <sourcemeta/one/authentication_error.h>
+#include <sourcemeta/one/configuration.h>
+
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
-#include <exception>   // std::exception
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
 #include <span>        // std::span
-#include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move
 #include <vector>      // std::vector
 
 namespace sourcemeta::one {
-
-// Raised when an authentication policy is scoped to a path that is neither a
-// declared collection or page (nor a namespace above one) nor a known route
-class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationUnknownPathError
-    : public std::exception {
-public:
-  AuthenticationUnknownPathError(std::filesystem::path path, std::string scope)
-      : path_{std::move(path)}, scope_{std::move(scope)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy matches no known collection, page, or "
-           "route";
-  }
-
-  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
-    return this->path_;
-  }
-
-  [[nodiscard]] auto scope() const noexcept -> const std::string & {
-    return this->scope_;
-  }
-
-private:
-  std::filesystem::path path_;
-  std::string scope_;
-};
 
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
@@ -75,6 +50,10 @@ public:
 
   static auto save(std::span<const Policy> policies,
                    const std::filesystem::path &configuration,
+                   const std::filesystem::path &destination) -> void;
+
+  static auto save(const Configuration &configuration,
+                   const sourcemeta::core::URITemplateRouterView &routes,
                    const std::filesystem::path &destination) -> void;
 
   Authentication(const std::filesystem::path &path,
