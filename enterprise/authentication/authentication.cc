@@ -16,6 +16,7 @@
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem::path
 #include <limits>        // std::numeric_limits
+#include <map>           // std::map
 #include <memory>        // std::unique_ptr, std::make_unique
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional
@@ -24,7 +25,7 @@
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
-#include <utility>       // std::move
+#include <utility>       // std::move, std::pair
 #include <vector>        // std::vector
 
 namespace {
@@ -570,10 +571,7 @@ struct Authentication::Impl {
       return nullptr;
     }
 
-    // A newline cannot occur in either component, so it separates them safely
-    std::string key{issuer};
-    key.push_back('\n');
-    key.append(jwks_uri);
+    std::pair<std::string, std::string> key{issuer, jwks_uri};
 
     {
       const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
@@ -706,8 +704,8 @@ struct Authentication::Impl {
 
   sourcemeta::core::JWKSProvider::Fetcher fetcher_;
   mutable std::mutex jwks_mutex_;
-  mutable std::unordered_map<std::string,
-                             std::unique_ptr<sourcemeta::core::JWKSProvider>>
+  mutable std::map<std::pair<std::string, std::string>,
+                   std::unique_ptr<sourcemeta::core::JWKSProvider>>
       jwks_providers_;
 };
 
