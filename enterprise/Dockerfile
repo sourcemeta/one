@@ -126,8 +126,9 @@ RUN grep -q 'fips = fips_sect' /etc/ssl/openssl.cnf
 RUN test -f /usr/lib/*/ossl-modules/fips.so
 
 # Remove packages not needed at runtime to reduce the image attack surface.
-# We keep debconf and perl-base as ca-certificates depends on them, and its
-# removal would wipe the CA bundle that cURL needs to verify TLS certificates
+# We keep debconf and perl-base because ca-certificates depends on debconf,
+# which in turn requires perl-base. Purging either removes ca-certificates and
+# wipes the CA bundle that cURL needs to verify TLS certificates
 RUN cp /bin/mount /bin/umount /tmp/ \
   && apt-get --yes update \
   && apt-get --yes purge --allow-remove-essential \
