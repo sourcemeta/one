@@ -2,8 +2,7 @@
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/jose.h>
-
-#include <gtest/gtest.h>
+#include <sourcemeta/core/test.h>
 
 #include <array>       // std::array
 #include <cstddef>     // std::byte, std::size_t
@@ -62,7 +61,7 @@ static auto stub_fetcher(std::map<std::string, std::string> responses,
   };
 }
 
-TEST(Authentication, missing_artifact_denies_everything) {
+TEST(missing_artifact_denies_everything) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"},
       stub_fetcher({}, nullptr)};
@@ -71,7 +70,7 @@ TEST(Authentication, missing_artifact_denies_everything) {
   EXPECT_FALSE(authentication.admits("", "").allowed);
 }
 
-TEST(Authentication, malformed_artifact_denies_everything) {
+TEST(malformed_artifact_denies_everything) {
   const auto path{test_path("malformed.bin")};
   std::ofstream stream{path, std::ios::binary};
   const std::array<char, 64> garbage{};
@@ -84,7 +83,7 @@ TEST(Authentication, malformed_artifact_denies_everything) {
   EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
 }
 
-TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
+TEST(structurally_corrupt_artifact_denies_everything) {
   const auto path{test_path("corrupt.bin")};
   std::ofstream stream{path, std::ios::binary};
   // A valid header over an empty node table
@@ -103,7 +102,7 @@ TEST(Authentication, structurally_corrupt_artifact_denies_everything) {
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
 }
 
-TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
+TEST(artifact_exceeding_the_policy_ceiling_denies_everything) {
   const auto path{test_path("too-many-policies.bin")};
   std::ofstream stream{path, std::ios::binary};
   // A valid header declaring a policy count past the supported maximum
@@ -125,7 +124,7 @@ TEST(Authentication, artifact_exceeding_the_policy_ceiling_denies_everything) {
   EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
 }
 
-TEST(Authentication, corrupted_section_offset_denies_everything) {
+TEST(corrupted_section_offset_denies_everything) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_OFFSET"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -146,7 +145,7 @@ TEST(Authentication, corrupted_section_offset_denies_everything) {
   EXPECT_FALSE(authentication.admits("/", "").allowed);
 }
 
-TEST(Authentication, zero_policies_admits_every_path) {
+TEST(zero_policies_admits_every_path) {
   const std::array<sourcemeta::one::Authentication::Policy, 0> policies{};
   const auto path{test_path("zero_policies.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
@@ -160,7 +159,7 @@ TEST(Authentication, zero_policies_admits_every_path) {
   EXPECT_EQ(authentication.governing("/acme"), (std::vector<std::size_t>{}));
 }
 
-TEST(Authentication, uncovered_paths_are_public_around_a_gated_scope) {
+TEST(uncovered_paths_are_public_around_a_gated_scope) {
   setenv("ONE_TEST_KEY_SCOPE", "scope-secret", 1);
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SCOPE"}};
@@ -182,7 +181,7 @@ TEST(Authentication, uncovered_paths_are_public_around_a_gated_scope) {
   EXPECT_TRUE(authentication.admits("/vendor/foo", "").allowed);
 }
 
-TEST(Authentication, scope_matches_whole_segments_only) {
+TEST(scope_matches_whole_segments_only) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SEGMENT"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -201,7 +200,7 @@ TEST(Authentication, scope_matches_whole_segments_only) {
   EXPECT_TRUE(authentication.admits("/internal-team", "").allowed);
 }
 
-TEST(Authentication, distinct_policies_each_gate_their_scope) {
+TEST(distinct_policies_each_gate_their_scope) {
   const std::array<std::string_view, 1> alpha{{"/alpha"}};
   const std::array<std::string_view, 1> beta{{"/beta"}};
   const std::array<std::string_view, 1> gamma{{"/gamma"}};
@@ -222,7 +221,7 @@ TEST(Authentication, distinct_policies_each_gate_their_scope) {
   EXPECT_TRUE(authentication.admits("/delta", "").allowed);
 }
 
-TEST(Authentication, nested_prefixes_gate_their_subtrees) {
+TEST(nested_prefixes_gate_their_subtrees) {
   const std::array<std::string_view, 1> internal{{"/internal"}};
   const std::array<std::string_view, 1> secret{{"/internal/secret"}};
   const std::array<std::string_view, 1> internal_keys{{"ONE_TEST_KEY_NI"}};
@@ -242,7 +241,7 @@ TEST(Authentication, nested_prefixes_gate_their_subtrees) {
   EXPECT_TRUE(authentication.admits("/public", "").allowed);
 }
 
-TEST(Authentication, nested_inner_key_widens_access) {
+TEST(nested_inner_key_widens_access) {
   setenv("ONE_TEST_KEY_WI", "wi-secret", 1);
   setenv("ONE_TEST_KEY_WO", "wo-secret", 1);
   const std::array<std::string_view, 1> outer{{"/internal"}};
@@ -264,7 +263,7 @@ TEST(Authentication, nested_inner_key_widens_access) {
   EXPECT_FALSE(authentication.admits("/internal/other", "wi-secret").allowed);
 }
 
-TEST(Authentication, single_policy_with_multiple_prefixes) {
+TEST(single_policy_with_multiple_prefixes) {
   const std::array<std::string_view, 2> paths{{"/internal", "/vendor"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_MP"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -279,7 +278,7 @@ TEST(Authentication, single_policy_with_multiple_prefixes) {
   EXPECT_TRUE(authentication.admits("/public", "").allowed);
 }
 
-TEST(Authentication, extensionless_policy_gates_every_representation) {
+TEST(extensionless_policy_gates_every_representation) {
   setenv("ONE_TEST_KEY_REPRESENTATION", "representation-secret", 1);
   const std::array<std::string_view, 1> paths{{"/secret/data"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_REPRESENTATION"}};
@@ -310,7 +309,7 @@ TEST(Authentication, extensionless_policy_gates_every_representation) {
   EXPECT_TRUE(authentication.admits("/secret/data2.json", "").allowed);
 }
 
-TEST(Authentication, extension_specific_policy_gates_only_that_representation) {
+TEST(extension_specific_policy_gates_only_that_representation) {
   setenv("ONE_TEST_KEY_SPECIFIC", "specific-secret", 1);
   const std::array<std::string_view, 1> paths{{"/secret/data.json"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SPECIFIC"}};
@@ -333,7 +332,7 @@ TEST(Authentication, extension_specific_policy_gates_only_that_representation) {
   EXPECT_TRUE(authentication.admits("/secret/data.xml", "").allowed);
 }
 
-TEST(Authentication, extension_handling_is_confined_to_the_terminal_segment) {
+TEST(extension_handling_is_confined_to_the_terminal_segment) {
   const std::array<std::string_view, 1> paths{{"/v1"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_V1"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -354,7 +353,7 @@ TEST(Authentication, extension_handling_is_confined_to_the_terminal_segment) {
   EXPECT_TRUE(authentication.admits("/v1.0/secret", "").allowed);
 }
 
-TEST(Authentication, base_path_is_stripped_before_matching) {
+TEST(base_path_is_stripped_before_matching) {
   setenv("ONE_TEST_KEY_BASE", "base-secret", 1);
   const std::array<std::string_view, 1> apikey_paths{{"/private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BASE"}};
@@ -392,7 +391,7 @@ TEST(Authentication, base_path_is_stripped_before_matching) {
                   .allowed);
 }
 
-TEST(Authentication, apikey_admits_matching_credential) {
+TEST(apikey_admits_matching_credential) {
   setenv("ONE_TEST_KEY_MATCH", "secret-match", 1);
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_MATCH"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
@@ -408,7 +407,7 @@ TEST(Authentication, apikey_admits_matching_credential) {
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
 }
 
-TEST(Authentication, apikey_with_multiple_keys_admits_any) {
+TEST(apikey_with_multiple_keys_admits_any) {
   setenv("ONE_TEST_KEY_MULTI_A", "key-a", 1);
   setenv("ONE_TEST_KEY_MULTI_B", "key-b", 1);
   const std::array<std::string_view, 2> keys{
@@ -426,7 +425,7 @@ TEST(Authentication, apikey_with_multiple_keys_admits_any) {
   EXPECT_FALSE(authentication.admits("/internal/foo", "key-c").allowed);
 }
 
-TEST(Authentication, apikey_with_unset_variable_denies) {
+TEST(apikey_with_unset_variable_denies) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_UNSET"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -440,7 +439,7 @@ TEST(Authentication, apikey_with_unset_variable_denies) {
   EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
 }
 
-TEST(Authentication, sha256_policy_admits_the_matching_credential) {
+TEST(sha256_policy_admits_the_matching_credential) {
   const std::string raw{"raw-secret-key"};
   setenv("ONE_TEST_KEY_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA"}};
@@ -461,7 +460,7 @@ TEST(Authentication, sha256_policy_admits_the_matching_credential) {
           .allowed);
 }
 
-TEST(Authentication, mixed_algorithms_admit_either_key_with_identity_first) {
+TEST(mixed_algorithms_admit_either_key_with_identity_first) {
   setenv("ONE_TEST_KEY_MIXA_ID", "plain-a", 1);
   const std::string raw{"hashed-a"};
   setenv("ONE_TEST_KEY_MIXA_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
@@ -485,7 +484,7 @@ TEST(Authentication, mixed_algorithms_admit_either_key_with_identity_first) {
   EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
 }
 
-TEST(Authentication, mixed_algorithms_admit_either_key_with_sha256_first) {
+TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
   setenv("ONE_TEST_KEY_MIXB_ID", "plain-b", 1);
   const std::string raw{"hashed-b"};
   setenv("ONE_TEST_KEY_MIXB_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
@@ -507,7 +506,7 @@ TEST(Authentication, mixed_algorithms_admit_either_key_with_sha256_first) {
   EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
 }
 
-TEST(Authentication, supports_the_maximum_number_of_policies) {
+TEST(supports_the_maximum_number_of_policies) {
   constexpr auto maximum{sourcemeta::one::Authentication::MAXIMUM_POLICIES};
   std::vector<std::string> path_storage;
   path_storage.reserve(maximum);
@@ -540,7 +539,7 @@ TEST(Authentication, supports_the_maximum_number_of_policies) {
   EXPECT_TRUE(authentication.admits("/missing", "").allowed);
 }
 
-TEST(Authentication, governing_returns_policy_indices_in_declaration_order) {
+TEST(governing_returns_policy_indices_in_declaration_order) {
   const std::array<std::string_view, 1> root_paths{{"/"}};
   const std::array<std::string_view, 1> internal_paths{{"/internal"}};
   const std::array<std::string_view, 1> root_keys{{"ONE_TEST_KEY_GR"}};
@@ -560,7 +559,7 @@ TEST(Authentication, governing_returns_policy_indices_in_declaration_order) {
             (std::vector<std::size_t>{0, 1}));
 }
 
-TEST(Authentication, governing_of_an_ungoverned_path_is_empty) {
+TEST(governing_of_an_ungoverned_path_is_empty) {
   const std::array<std::string_view, 1> internal_paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_GE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -575,7 +574,7 @@ TEST(Authentication, governing_of_an_ungoverned_path_is_empty) {
             (std::vector<std::size_t>{0}));
 }
 
-TEST(Authentication, reference_through_a_broken_artifact_is_rejected) {
+TEST(reference_through_a_broken_artifact_is_rejected) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"},
       stub_fetcher({}, nullptr)};
@@ -585,7 +584,7 @@ TEST(Authentication, reference_through_a_broken_artifact_is_rejected) {
       authentication.reference_permitted("/secret/one", "/secret/two"));
 }
 
-TEST(Authentication, reference_to_a_public_schema_is_permitted) {
+TEST(reference_to_a_public_schema_is_permitted) {
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_PUBLIC"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -599,7 +598,7 @@ TEST(Authentication, reference_to_a_public_schema_is_permitted) {
   EXPECT_TRUE(authentication.reference_permitted("/open/one", "/open/two"));
 }
 
-TEST(Authentication, public_schema_referencing_an_apikey_schema_is_rejected) {
+TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_LEAK"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -612,7 +611,7 @@ TEST(Authentication, public_schema_referencing_an_apikey_schema_is_rejected) {
   EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secret/two"));
 }
 
-TEST(Authentication, reference_within_the_same_policy_is_permitted) {
+TEST(reference_within_the_same_policy_is_permitted) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_SAME"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -628,7 +627,7 @@ TEST(Authentication, reference_within_the_same_policy_is_permitted) {
       authentication.reference_permitted("/internal/one", "/internal/one"));
 }
 
-TEST(Authentication, reference_across_disjoint_policies_is_rejected) {
+TEST(reference_across_disjoint_policies_is_rejected) {
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   const std::array<std::string_view, 1> alpha_keys{{"ONE_TEST_REF_ALPHA"}};
@@ -644,8 +643,7 @@ TEST(Authentication, reference_across_disjoint_policies_is_rejected) {
   EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
 }
 
-TEST(Authentication,
-     reference_from_a_narrower_to_a_wider_audience_is_permitted) {
+TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
   const std::array<std::string_view, 1> broad_paths{{"/p"}};
   const std::array<std::string_view, 1> nested_paths{{"/p/inner"}};
   const std::array<std::string_view, 1> broad_keys{{"ONE_TEST_REF_BROAD"}};
@@ -661,7 +659,7 @@ TEST(Authentication,
   EXPECT_FALSE(authentication.reference_permitted("/p/inner/two", "/p/one"));
 }
 
-TEST(Authentication, jwt_admits_a_valid_token_and_caches_the_key_set) {
+TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -687,7 +685,7 @@ TEST(Authentication, jwt_admits_a_valid_token_and_caches_the_key_set) {
   EXPECT_EQ(*calls, 1);
 }
 
-TEST(Authentication, jwt_denies_a_token_for_the_wrong_audience) {
+TEST(jwt_denies_a_token_for_the_wrong_audience) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -707,7 +705,7 @@ TEST(Authentication, jwt_denies_a_token_for_the_wrong_audience) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, jwt_denies_a_token_from_the_wrong_issuer) {
+TEST(jwt_denies_a_token_from_the_wrong_issuer) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -727,7 +725,7 @@ TEST(Authentication, jwt_denies_a_token_from_the_wrong_issuer) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, jwt_denies_a_disallowed_algorithm) {
+TEST(jwt_denies_a_disallowed_algorithm) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::ES256}};
@@ -747,7 +745,7 @@ TEST(Authentication, jwt_denies_a_disallowed_algorithm) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, jwt_denies_when_the_signing_key_is_absent) {
+TEST(jwt_denies_when_the_signing_key_is_absent) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -768,7 +766,7 @@ TEST(Authentication, jwt_denies_when_the_signing_key_is_absent) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, jwt_denies_when_the_key_set_cannot_be_fetched) {
+TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -787,7 +785,7 @@ TEST(Authentication, jwt_denies_when_the_key_set_cannot_be_fetched) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, an_apikey_credential_never_triggers_a_jwt_fetch) {
+TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -810,7 +808,7 @@ TEST(Authentication, an_apikey_credential_never_triggers_a_jwt_fetch) {
   EXPECT_EQ(*calls, 0);
 }
 
-TEST(Authentication, jwt_resolves_the_key_set_through_discovery) {
+TEST(jwt_resolves_the_key_set_through_discovery) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -849,7 +847,7 @@ TEST(Authentication, jwt_resolves_the_key_set_through_discovery) {
   EXPECT_TRUE(issuer_authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, mixed_apikey_and_jwt_policies_admit_either_credential) {
+TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
   setenv("ONE_TEST_KEY_BOTH", "static-secret", 1);
   const std::array<std::string_view, 1> paths{{"/both"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BOTH"}};
@@ -877,7 +875,7 @@ TEST(Authentication, mixed_apikey_and_jwt_policies_admit_either_credential) {
   EXPECT_FALSE(authentication.admits("/both/x", "wrong").allowed);
 }
 
-TEST(Authentication, reference_rules_treat_a_jwt_scope_conservatively) {
+TEST(reference_rules_treat_a_jwt_scope_conservatively) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -901,7 +899,7 @@ TEST(Authentication, reference_rules_treat_a_jwt_scope_conservatively) {
   EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/secure/two"));
 }
 
-TEST(Authentication, jwt_without_a_transport_denies_rather_than_crashes) {
+TEST(jwt_without_a_transport_denies_rather_than_crashes) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
@@ -919,7 +917,7 @@ TEST(Authentication, jwt_without_a_transport_denies_rather_than_crashes) {
   EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, jwt_policies_sharing_an_issuer_use_their_own_key_set) {
+TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
   const std::array<std::string_view, 1> primary_paths{{"/primary"}};
   const std::array<std::string_view, 1> secondary_paths{{"/secondary"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
@@ -951,7 +949,7 @@ TEST(Authentication, jwt_policies_sharing_an_issuer_use_their_own_key_set) {
   EXPECT_FALSE(authentication.admits("/secondary/x", SIGNED_TOKEN).allowed);
 }
 
-TEST(Authentication, reference_between_jwt_scopes_distinguishes_algorithms) {
+TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   const std::array<std::string_view, 1> gamma_paths{{"/gamma"}};

@@ -1,8 +1,7 @@
 #include <sourcemeta/one/search.h>
 
 #include <sourcemeta/core/json.h>
-
-#include <gtest/gtest.h>
+#include <sourcemeta/core/test.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint32_t
@@ -22,7 +21,7 @@
   EXPECT_EQ((result).at(index).at("description").to_string(),                  \
             (expected_description));
 
-TEST(Search_query, empty_payload_nullptr) {
+TEST(empty_payload_nullptr) {
   const auto result{sourcemeta::one::search(
       nullptr, 0, "anything", 10,
       sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
@@ -32,7 +31,7 @@ TEST(Search_query, empty_payload_nullptr) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, empty_payload_zero_size) {
+TEST(empty_payload_zero_size) {
   const std::uint8_t byte{0};
   const auto result{sourcemeta::one::search(
       &byte, 0, "anything", 10,
@@ -43,7 +42,7 @@ TEST(Search_query, empty_payload_zero_size) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, no_match) {
+TEST(no_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title", "Desc", 80, 100, 0,
        0}};
@@ -57,7 +56,7 @@ TEST(Search_query, no_match) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, match_in_path) {
+TEST(match_in_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title", "Desc", 80, 100, 0,
        0}};
@@ -72,7 +71,7 @@ TEST(Search_query, match_in_path) {
                        "Title", "Desc");
 }
 
-TEST(Search_query, match_in_title) {
+TEST(match_in_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Special Title", "Desc", 80,
        100, 0, 0}};
@@ -87,7 +86,7 @@ TEST(Search_query, match_in_title) {
                        "Special Title", "Desc");
 }
 
-TEST(Search_query, match_in_description) {
+TEST(match_in_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title",
        "Unique description here", 80, 100, 0, 0}};
@@ -102,7 +101,7 @@ TEST(Search_query, match_in_description) {
                        "Title", "Unique description here");
 }
 
-TEST(Search_query, case_insensitive) {
+TEST(case_insensitive) {
   std::vector<sourcemeta::one::SearchEntry> entries_lower{
       {"/foo/bar", "http://example.com/foo/bar", "Hello World", "desc", 80, 100,
        0, 0}};
@@ -146,7 +145,7 @@ TEST(Search_query, case_insensitive) {
                        "http://example.com/foo/bar", "Hello World", "desc");
 }
 
-TEST(Search_query, multiple_matches) {
+TEST(multiple_matches) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/address", "http://example.com/schemas/address",
        "Address Schema", "For addresses", 80, 100, 0, 0},
@@ -172,7 +171,7 @@ TEST(Search_query, multiple_matches) {
                        "For people");
 }
 
-TEST(Search_query, limit_10) {
+TEST(limit_10) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test0", "http://example.com/schemas/test0", "Test 0", "", 80,
        100, 0, 0},
@@ -234,7 +233,7 @@ TEST(Search_query, limit_10) {
                        "http://example.com/schemas/test4", "Test 4", "");
 }
 
-TEST(Search_query, round_trip_data_fidelity) {
+TEST(round_trip_data_fidelity) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/a/b/c", "http://example.com/a/b/c", "My Title", "My Description", 80,
        100, 0, 0},
@@ -256,7 +255,7 @@ TEST(Search_query, round_trip_data_fidelity) {
                        "Only description");
 }
 
-TEST(Search_query, single_entry_match) {
+TEST(single_entry_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/only", "http://example.com/only", "One", "Entry", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -270,7 +269,7 @@ TEST(Search_query, single_entry_match) {
                        "Entry");
 }
 
-TEST(Search_query, single_entry_no_match) {
+TEST(single_entry_no_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/only", "http://example.com/only", "One", "Entry", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -282,7 +281,7 @@ TEST(Search_query, single_entry_no_match) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, empty_title_and_description) {
+TEST(empty_title_and_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/path/only", "http://example.com/path/only", "", "", 80, 100, 0, 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -296,7 +295,7 @@ TEST(Search_query, empty_title_and_description) {
                        "", "");
 }
 
-TEST(Search_query, health_higher_scores_first) {
+TEST(health_higher_scores_first) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/low", "http://example.com/schemas/low", "Low Health", "Desc",
        20, 100, 0, 0},
@@ -320,7 +319,7 @@ TEST(Search_query, health_higher_scores_first) {
                        "http://example.com/schemas/low", "Low Health", "Desc");
 }
 
-TEST(Search_query, health_100_before_50) {
+TEST(health_100_before_50) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/beta", "http://example.com/schemas/beta", "Beta", "Desc", 50,
        100, 0, 0},
@@ -339,7 +338,7 @@ TEST(Search_query, health_100_before_50) {
                        "http://example.com/schemas/beta", "Beta", "Desc");
 }
 
-TEST(Search_query, health_0_ranks_last) {
+TEST(health_0_ranks_last) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/zero", "http://example.com/schemas/zero", "Zero", "Desc", 0,
        100, 0, 0},
@@ -362,7 +361,7 @@ TEST(Search_query, health_0_ranks_last) {
                        "http://example.com/schemas/zero", "Zero", "Desc");
 }
 
-TEST(Search_query, health_same_score_sorts_by_path) {
+TEST(health_same_score_sorts_by_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/zebra", "http://example.com/schemas/zebra", "Zebra", "Desc",
        75, 100, 0, 0},
@@ -385,7 +384,7 @@ TEST(Search_query, health_same_score_sorts_by_path) {
                        "http://example.com/schemas/zebra", "Zebra", "Desc");
 }
 
-TEST(Search_query, metadata_score_beats_health) {
+TEST(metadata_score_beats_health) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/healthy", "http://example.com/schemas/healthy", "", "", 100,
        100, 0, 0},
@@ -405,7 +404,7 @@ TEST(Search_query, metadata_score_beats_health) {
                        "http://example.com/schemas/healthy", "", "");
 }
 
-TEST(Search_query, metadata_score_beats_health_title_only) {
+TEST(metadata_score_beats_health_title_only) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/no-meta", "http://example.com/schemas/no-meta", "", "", 100,
        100, 0, 0},
@@ -424,7 +423,7 @@ TEST(Search_query, metadata_score_beats_health_title_only) {
                        "http://example.com/schemas/no-meta", "", "");
 }
 
-TEST(Search_query, health_tiebreaker_within_same_metadata) {
+TEST(health_tiebreaker_within_same_metadata) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/low-health", "http://example.com/schemas/low-health", "Title",
        "", 25, 100, 0, 0},
@@ -447,7 +446,7 @@ TEST(Search_query, health_tiebreaker_within_same_metadata) {
                        "http://example.com/schemas/low-health", "Title", "");
 }
 
-TEST(Search_query, health_fine_grained_ordering) {
+TEST(health_fine_grained_ordering) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/d", "http://example.com/schemas/d", "Title", "Desc", 70, 100,
        0, 0},
@@ -478,7 +477,7 @@ TEST(Search_query, health_fine_grained_ordering) {
                        "Title", "Desc");
 }
 
-TEST(Search_query, health_mixed_metadata_and_health) {
+TEST(health_mixed_metadata_and_health) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/full-low", "http://example.com/schemas/full-low", "Title",
        "Desc", 30, 100, 0, 0},
@@ -509,7 +508,7 @@ TEST(Search_query, health_mixed_metadata_and_health) {
                        "http://example.com/schemas/none-perfect", "", "");
 }
 
-TEST(Search_query, invalid_payload_too_small_for_header) {
+TEST(invalid_payload_too_small_for_header) {
   const std::vector<std::uint8_t> garbage{0x01, 0x02, 0x03};
   const auto result{sourcemeta::one::search(
       garbage.data(), garbage.size(), "test", 10,
@@ -520,7 +519,7 @@ TEST(Search_query, invalid_payload_too_small_for_header) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_header_claims_too_many_entries) {
+TEST(invalid_payload_header_claims_too_many_entries) {
   sourcemeta::one::SearchIndexHeader header{};
   header.entry_count = 1000;
   header.records_offset =
@@ -537,7 +536,7 @@ TEST(Search_query, invalid_payload_header_claims_too_many_entries) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_offset_points_beyond_payload) {
+TEST(invalid_payload_offset_points_beyond_payload) {
   sourcemeta::one::SearchIndexHeader header{};
   header.entry_count = 1;
   header.records_offset =
@@ -558,7 +557,7 @@ TEST(Search_query, invalid_payload_offset_points_beyond_payload) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_record_field_lengths_exceed_payload) {
+TEST(invalid_payload_record_field_lengths_exceed_payload) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", "Desc", 80, 100, 0, 0}};
   auto payload{sourcemeta::one::make_search(std::move(entries))};
@@ -584,7 +583,7 @@ TEST(Search_query, invalid_payload_record_field_lengths_exceed_payload) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_zero_entry_count) {
+TEST(invalid_payload_zero_entry_count) {
   sourcemeta::one::SearchIndexHeader header{};
   header.entry_count = 0;
   header.records_offset = sizeof(sourcemeta::one::SearchIndexHeader);
@@ -600,7 +599,7 @@ TEST(Search_query, invalid_payload_zero_entry_count) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_all_zeros) {
+TEST(invalid_payload_all_zeros) {
   const std::vector<std::uint8_t> payload(64, 0);
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "test", 10,
@@ -611,7 +610,7 @@ TEST(Search_query, invalid_payload_all_zeros) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_random_garbage) {
+TEST(invalid_payload_random_garbage) {
   const std::vector<std::uint8_t> payload{0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA,
                                           0xF9, 0xF8, 0xF7, 0xF6, 0xF5, 0xF4,
                                           0xF3, 0xF2, 0xF1, 0xF0};
@@ -624,7 +623,7 @@ TEST(Search_query, invalid_payload_random_garbage) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_truncated_after_header) {
+TEST(invalid_payload_truncated_after_header) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", "Desc", 80, 100, 0, 0}};
   const auto full_payload{sourcemeta::one::make_search(std::move(entries))};
@@ -638,7 +637,7 @@ TEST(Search_query, invalid_payload_truncated_after_header) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, invalid_payload_truncated_mid_record) {
+TEST(invalid_payload_truncated_mid_record) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo", "http://example.com/foo", "Title", "Desc", 80, 100, 0, 0}};
   const auto full_payload{sourcemeta::one::make_search(std::move(entries))};
@@ -654,7 +653,7 @@ TEST(Search_query, invalid_payload_truncated_mid_record) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, limit_1_returns_single_result) {
+TEST(limit_1_returns_single_result) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},
@@ -673,7 +672,7 @@ TEST(Search_query, limit_1_returns_single_result) {
                        "Alpha", "Desc");
 }
 
-TEST(Search_query, limit_2_returns_two_results) {
+TEST(limit_2_returns_two_results) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},
@@ -694,7 +693,7 @@ TEST(Search_query, limit_2_returns_two_results) {
                        "Beta", "Desc");
 }
 
-TEST(Search_query, limit_larger_than_matches_returns_all) {
+TEST(limit_larger_than_matches_returns_all) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},
@@ -713,7 +712,7 @@ TEST(Search_query, limit_larger_than_matches_returns_all) {
                        "Beta", "Desc");
 }
 
-TEST(Search_query, limit_0_returns_empty) {
+TEST(limit_0_returns_empty) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0}};
@@ -726,7 +725,7 @@ TEST(Search_query, limit_0_returns_empty) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, limit_exact_match_count) {
+TEST(limit_exact_match_count) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},
@@ -749,7 +748,7 @@ TEST(Search_query, limit_exact_match_count) {
                        "Gamma", "Desc");
 }
 
-TEST(Search_query, limit_respects_health_ordering) {
+TEST(limit_respects_health_ordering) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/low", "http://example.com/schemas/low", "Low", "Desc", 20, 100,
        0, 0},
@@ -770,7 +769,7 @@ TEST(Search_query, limit_respects_health_ordering) {
                        "http://example.com/schemas/mid", "Mid", "Desc");
 }
 
-TEST(Search_query, scope_path_only_matches_path) {
+TEST(scope_path_only_matches_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/unique/path", "http://example.com/unique/path", "Title", "Description",
        80, 100, 0, 0}};
@@ -785,7 +784,7 @@ TEST(Search_query, scope_path_only_matches_path) {
                        "Description");
 }
 
-TEST(Search_query, scope_path_only_misses_title) {
+TEST(scope_path_only_misses_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "UniqueTitle", "Description",
        80, 100, 0, 0}};
@@ -797,7 +796,7 @@ TEST(Search_query, scope_path_only_misses_title) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, scope_path_only_misses_description) {
+TEST(scope_path_only_misses_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title", "UniqueDesc", 80, 100,
        0, 0}};
@@ -809,7 +808,7 @@ TEST(Search_query, scope_path_only_misses_description) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, scope_title_only_matches_title) {
+TEST(scope_title_only_matches_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "UniqueTitle", "Description",
        80, 100, 0, 0}};
@@ -823,7 +822,7 @@ TEST(Search_query, scope_title_only_matches_title) {
                        "UniqueTitle", "Description");
 }
 
-TEST(Search_query, scope_title_only_misses_path) {
+TEST(scope_title_only_misses_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/unique/path", "http://example.com/unique/path", "Title", "Description",
        80, 100, 0, 0}};
@@ -835,7 +834,7 @@ TEST(Search_query, scope_title_only_misses_path) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, scope_description_only_matches_description) {
+TEST(scope_description_only_matches_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title", "UniqueDesc", 80, 100,
        0, 0}};
@@ -849,7 +848,7 @@ TEST(Search_query, scope_description_only_matches_description) {
                        "Title", "UniqueDesc");
 }
 
-TEST(Search_query, scope_description_only_misses_path) {
+TEST(scope_description_only_misses_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/unique/path", "http://example.com/unique/path", "Title", "Description",
        80, 100, 0, 0}};
@@ -861,7 +860,7 @@ TEST(Search_query, scope_description_only_misses_path) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, scope_path_and_title) {
+TEST(scope_path_and_title) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/xyz/path", "http://example.com/xyz/path", "Needle In Title", "Other",
        80, 100, 0, 0},
@@ -881,7 +880,7 @@ TEST(Search_query, scope_path_and_title) {
                        "Needle In Title", "Other");
 }
 
-TEST(Search_query, scope_title_and_description) {
+TEST(scope_title_and_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/abc/path", "http://example.com/abc/path", "Needle In Title", "Other",
        80, 100, 0, 0},
@@ -902,7 +901,7 @@ TEST(Search_query, scope_title_and_description) {
                        "Other", "Needle In Desc");
 }
 
-TEST(Search_query, scope_path_and_description) {
+TEST(scope_path_and_description) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/needle/path", "http://example.com/needle/path", "Other", "Other", 80,
        100, 0, 0},
@@ -923,7 +922,7 @@ TEST(Search_query, scope_path_and_description) {
                        "http://example.com/needle/path", "Other", "Other");
 }
 
-TEST(Search_query, scope_0_matches_nothing) {
+TEST(scope_0_matches_nothing) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/foo/bar", "http://example.com/foo/bar", "Title", "Description", 80,
        100, 0, 0}};
@@ -934,7 +933,7 @@ TEST(Search_query, scope_0_matches_nothing) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, scope_all_matches_any_field) {
+TEST(scope_all_matches_any_field) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/unique/path", "http://example.com/unique/path", "NormalTitle",
        "NormalDesc", 80, 100, 0, 0},
@@ -960,7 +959,7 @@ TEST(Search_query, scope_all_matches_any_field) {
                        "NormalDesc");
 }
 
-TEST(Search_query, scope_combined_with_limit) {
+TEST(scope_combined_with_limit) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/a", "http://example.com/a", "Match A", "Desc", 100, 100, 0, 0},
       {"/b", "http://example.com/b", "Match B", "Desc", 90, 100, 0, 0},
@@ -977,7 +976,7 @@ TEST(Search_query, scope_combined_with_limit) {
                        "Desc");
 }
 
-TEST(Search_query, query_with_embedded_null_does_not_match) {
+TEST(query_with_embedded_null_does_not_match) {
   using namespace std::string_view_literals;
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test", "http://example.com/schemas/test", "Title",
@@ -991,7 +990,7 @@ TEST(Search_query, query_with_embedded_null_does_not_match) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, query_with_tab_does_not_match) {
+TEST(query_with_tab_does_not_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test", "http://example.com/schemas/test", "Title",
        "Description", 80, 100, 0, 0}};
@@ -1004,7 +1003,7 @@ TEST(Search_query, query_with_tab_does_not_match) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, query_with_newline_does_not_match) {
+TEST(query_with_newline_does_not_match) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test", "http://example.com/schemas/test", "Title",
        "Description", 80, 100, 0, 0}};
@@ -1017,7 +1016,7 @@ TEST(Search_query, query_with_newline_does_not_match) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
+TEST(entry_with_null_in_path_found_by_other_content) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {std::string("before\0after", 12), "http://example.com/null-path",
        "Title", "Description", 80, 100, 0, 0}};
@@ -1029,7 +1028,7 @@ TEST(Search_query, entry_with_null_in_path_found_by_other_content) {
   EXPECT_EQ(result.size(), 1);
 }
 
-TEST(Search_query, entry_with_null_in_title_found_by_path) {
+TEST(entry_with_null_in_title_found_by_path) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test", "http://example.com/schemas/test",
        std::string("Foo\0Bar", 7), "Description", 80, 100, 0, 0}};
@@ -1041,7 +1040,7 @@ TEST(Search_query, entry_with_null_in_title_found_by_path) {
   EXPECT_EQ(result.size(), 1);
 }
 
-TEST(Search_query, query_only_null_bytes_matches_nothing) {
+TEST(query_only_null_bytes_matches_nothing) {
   using namespace std::string_view_literals;
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/test", "http://example.com/schemas/test", "Title",
@@ -1055,7 +1054,7 @@ TEST(Search_query, query_only_null_bytes_matches_nothing) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(Search_query, filter_excludes_rejected_paths) {
+TEST(filter_excludes_rejected_paths) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/public", "http://example.com/schemas/public", "Public", "Desc",
        100, 100, 0, 0},
@@ -1071,7 +1070,7 @@ TEST(Search_query, filter_excludes_rejected_paths) {
                        "http://example.com/schemas/public", "Public", "Desc");
 }
 
-TEST(Search_query, filter_rejecting_all_returns_empty) {
+TEST(filter_rejecting_all_returns_empty) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},
@@ -1089,7 +1088,7 @@ TEST(Search_query, filter_rejecting_all_returns_empty) {
 // not consume result slots. With the two highest-ranked entries rejected,
 // a limit of two still yields the next two allowed entries rather than
 // fewer
-TEST(Search_query, filter_excluded_entries_do_not_consume_limit) {
+TEST(filter_excluded_entries_do_not_consume_limit) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {"/schemas/a", "http://example.com/schemas/a", "Alpha", "Desc", 100, 100,
        0, 0},

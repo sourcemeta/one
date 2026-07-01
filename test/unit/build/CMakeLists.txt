@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME build
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME build
   SOURCES
     build_test_utils.h
     test_rules.h

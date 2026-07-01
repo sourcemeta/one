@@ -1,7 +1,6 @@
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
-
-#include <gtest/gtest.h>
 
 #include <chrono>      // std::chrono
 #include <cstdint>     // std::uint32_t, std::uint64_t
@@ -74,7 +73,7 @@ static auto collect(sourcemeta::one::SearchView &view, std::size_t offset,
   return visited;
 }
 
-TEST(Search_view_for_each, visits_full_range) {
+TEST(visits_full_range) {
   const auto path{test_path("for_each_full.metapack")};
   write_search_file(path, {{"/zebra", "http://example.com/zebra", "Zebra Title",
                             "Zebra Desc", 80, 100, 11, 22},
@@ -104,7 +103,7 @@ TEST(Search_view_for_each, visits_full_range) {
                                       .bytes_bundled = 22}}));
 }
 
-TEST(Search_view_for_each, visits_subset_with_offset) {
+TEST(visits_subset_with_offset) {
   const auto path{test_path("for_each_offset.metapack")};
   write_search_file(
       path,
@@ -128,7 +127,7 @@ TEST(Search_view_for_each, visits_subset_with_offset) {
                                         .bytes_bundled = 6}}));
 }
 
-TEST(Search_view_for_each, clamps_count_to_total) {
+TEST(clamps_count_to_total) {
   const auto path{test_path("for_each_clamp.metapack")};
   write_search_file(
       path,
@@ -144,7 +143,7 @@ TEST(Search_view_for_each, clamps_count_to_total) {
                                         .bytes_bundled = 4}}));
 }
 
-TEST(Search_view_for_each, skips_when_offset_at_end) {
+TEST(skips_when_offset_at_end) {
   const auto path{test_path("for_each_end.metapack")};
   write_search_file(
       path,
@@ -154,7 +153,7 @@ TEST(Search_view_for_each, skips_when_offset_at_end) {
   EXPECT_EQ(collect(view, 2, 10), std::vector<VisitedEntry>{});
 }
 
-TEST(Search_view_for_each, skips_when_offset_past_end) {
+TEST(skips_when_offset_past_end) {
   const auto path{test_path("for_each_past_end.metapack")};
   write_search_file(path, {{"/a", "http://example.com/a", "A Title", "A Desc",
                             80, 100, 1, 2}});
@@ -162,7 +161,7 @@ TEST(Search_view_for_each, skips_when_offset_past_end) {
   EXPECT_EQ(collect(view, 99, 10), std::vector<VisitedEntry>{});
 }
 
-TEST(Search_view_for_each, skips_when_count_zero) {
+TEST(skips_when_count_zero) {
   const auto path{test_path("for_each_zero.metapack")};
   write_search_file(
       path,
@@ -172,7 +171,7 @@ TEST(Search_view_for_each, skips_when_count_zero) {
   EXPECT_EQ(collect(view, 0, 0), std::vector<VisitedEntry>{});
 }
 
-TEST(Search_view_for_each, visit_order_matches_at) {
+TEST(visit_order_matches_at) {
   const auto path{test_path("for_each_matches_at.metapack")};
   write_search_file(
       path, {{"/zebra", "http://example.com/zebra", "", "", 80, 100, 11, 22},
@@ -193,7 +192,7 @@ TEST(Search_view_for_each, visit_order_matches_at) {
   EXPECT_EQ(from_for_each, from_at);
 }
 
-TEST(Search_view_for_each, empty_strings_for_empty_metadata) {
+TEST(empty_strings_for_empty_metadata) {
   const auto path{test_path("for_each_empty_meta.metapack")};
   write_search_file(path, {{"/only/path", "http://example.com/only/path", "",
                             "", 80, 100, 7, 8}});
@@ -208,7 +207,7 @@ TEST(Search_view_for_each, empty_strings_for_empty_metadata) {
                                   .bytes_bundled = 8}}));
 }
 
-TEST(Search_view_for_each, count_size_max_does_not_overflow) {
+TEST(count_size_max_does_not_overflow) {
   const auto path{test_path("for_each_count_max.metapack")};
   write_search_file(
       path,
@@ -230,7 +229,7 @@ TEST(Search_view_for_each, count_size_max_does_not_overflow) {
                                         .bytes_bundled = 4}}));
 }
 
-TEST(Search_view_for_each, count_size_max_with_offset_does_not_overflow) {
+TEST(count_size_max_with_offset_does_not_overflow) {
   const auto path{test_path("for_each_count_max_offset.metapack")};
   write_search_file(
       path,
@@ -246,7 +245,7 @@ TEST(Search_view_for_each, count_size_max_with_offset_does_not_overflow) {
                                         .bytes_bundled = 4}}));
 }
 
-TEST(Search_view_for_each, malformed_offset_table_too_large_returns_nothing) {
+TEST(malformed_offset_table_too_large_returns_nothing) {
   const auto path{test_path("for_each_malformed_offset_table.metapack")};
   sourcemeta::one::SearchIndexHeader header{};
   header.entry_count = 1000;
@@ -262,7 +261,7 @@ TEST(Search_view_for_each, malformed_offset_table_too_large_returns_nothing) {
   EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
 }
 
-TEST(Search_view_for_each, malformed_record_offset_out_of_bounds_stops) {
+TEST(malformed_record_offset_out_of_bounds_stops) {
   const auto path{test_path("for_each_malformed_record_offset.metapack")};
   sourcemeta::one::SearchIndexHeader header{};
   header.entry_count = 1;
@@ -281,7 +280,7 @@ TEST(Search_view_for_each, malformed_record_offset_out_of_bounds_stops) {
   EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
 }
 
-TEST(Search_view_for_each, malformed_record_field_lengths_stops) {
+TEST(malformed_record_field_lengths_stops) {
   const auto path{test_path("for_each_malformed_record_field.metapack")};
   auto payload{sourcemeta::one::make_search(
       {{"/foo", "http://example.com/foo", "Title", "Desc", 80, 100, 1, 2}})};

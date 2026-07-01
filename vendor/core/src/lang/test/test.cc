@@ -2,15 +2,16 @@
 #include <sourcemeta/core/stacktrace.h>
 #include <sourcemeta/core/test.h>
 
-#include <cstddef>    // std::size_t
-#include <cstdlib>    // EXIT_SUCCESS, EXIT_FAILURE
-#include <exception>  // std::exception
-#include <filesystem> // std::filesystem::path
-#include <functional> // std::function
-#include <iostream>   // std::cout
-#include <string>     // std::string
-#include <utility>    // std::move
-#include <vector>     // std::vector
+#include <cstddef>         // std::size_t
+#include <cstdlib>         // EXIT_SUCCESS, EXIT_FAILURE
+#include <exception>       // std::exception
+#include <filesystem>      // std::filesystem::path
+#include <functional>      // std::function
+#include <iostream>        // std::cout
+#include <source_location> // std::source_location
+#include <string>          // std::string
+#include <utility>         // std::move
+#include <vector>          // std::vector
 
 namespace {
 
@@ -70,6 +71,13 @@ auto test_register(std::string_view suite, std::string_view name,
                         .line = line,
                         .body = std::move(body)});
   return 0;
+}
+
+auto test_register(std::string_view name, std::function<void()> body,
+                   std::source_location location) -> int {
+  return test_register(test_suite_from_path(location.file_name()), name,
+                       location.file_name(), static_cast<int>(location.line()),
+                       std::move(body));
 }
 
 [[noreturn]] auto test_report_failure(std::string_view file, int line,

@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME configuration
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME configuration
   SOURCES configuration_read_test.cc configuration_test.cc configuration_resolve_schema_test.cc)
 
 target_link_libraries(sourcemeta_one_configuration_unit

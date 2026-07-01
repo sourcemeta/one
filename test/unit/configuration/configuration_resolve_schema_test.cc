@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-
+#include <sourcemeta/core/test.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/one/configuration.h>
 
@@ -12,7 +11,7 @@ static auto make_collection(const std::filesystem::path &absolute_path,
   return collection;
 }
 
-TEST(Configuration_resolve_schema, absolute_uri_matching_collection) {
+TEST(absolute_uri_matching_collection) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -25,8 +24,7 @@ TEST(Configuration_resolve_schema, absolute_uri_matching_collection) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo/bar.json");
 }
 
-TEST(Configuration_resolve_schema,
-     absolute_uri_matching_collection_trailing_slash) {
+TEST(absolute_uri_matching_collection_trailing_slash) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com/";
   configuration.entries.emplace(
@@ -39,7 +37,7 @@ TEST(Configuration_resolve_schema,
   EXPECT_EQ(result.value(), "/tmp/schemas/foo/bar.json");
 }
 
-TEST(Configuration_resolve_schema, path_with_leading_slash) {
+TEST(path_with_leading_slash) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -51,7 +49,7 @@ TEST(Configuration_resolve_schema, path_with_leading_slash) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo/bar.json");
 }
 
-TEST(Configuration_resolve_schema, path_without_leading_slash) {
+TEST(path_without_leading_slash) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -63,7 +61,7 @@ TEST(Configuration_resolve_schema, path_without_leading_slash) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo/bar.json");
 }
 
-TEST(Configuration_resolve_schema, no_matching_collection) {
+TEST(no_matching_collection) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -74,7 +72,7 @@ TEST(Configuration_resolve_schema, no_matching_collection) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, wrong_origin) {
+TEST(wrong_origin) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -85,7 +83,7 @@ TEST(Configuration_resolve_schema, wrong_origin) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, nested_collection_key) {
+TEST(nested_collection_key) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -97,7 +95,7 @@ TEST(Configuration_resolve_schema, nested_collection_key) {
   EXPECT_EQ(result.value(), "/tmp/nested/baz.json");
 }
 
-TEST(Configuration_resolve_schema, key_is_string_prefix_not_path_prefix) {
+TEST(key_is_string_prefix_not_path_prefix) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -108,7 +106,7 @@ TEST(Configuration_resolve_schema, key_is_string_prefix_not_path_prefix) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, collection_root_exact) {
+TEST(collection_root_exact) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -119,7 +117,7 @@ TEST(Configuration_resolve_schema, collection_root_exact) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, collection_root_trailing_slash) {
+TEST(collection_root_trailing_slash) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -130,7 +128,7 @@ TEST(Configuration_resolve_schema, collection_root_trailing_slash) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, multiple_collections_matches_correct_one) {
+TEST(multiple_collections_matches_correct_one) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -144,7 +142,7 @@ TEST(Configuration_resolve_schema, multiple_collections_matches_correct_one) {
   EXPECT_EQ(result.value(), "/tmp/beta/test.json");
 }
 
-TEST(Configuration_resolve_schema, page_entry_is_not_matched) {
+TEST(page_entry_is_not_matched) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   sourcemeta::one::Configuration::Page page;
@@ -156,7 +154,7 @@ TEST(Configuration_resolve_schema, page_entry_is_not_matched) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, empty_path_from_url) {
+TEST(empty_path_from_url) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -167,7 +165,7 @@ TEST(Configuration_resolve_schema, empty_path_from_url) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, empty_path_from_url_trailing_slash) {
+TEST(empty_path_from_url_trailing_slash) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com/";
   configuration.entries.emplace(
@@ -178,7 +176,7 @@ TEST(Configuration_resolve_schema, empty_path_from_url_trailing_slash) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, deeply_nested_file) {
+TEST(deeply_nested_file) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -190,7 +188,7 @@ TEST(Configuration_resolve_schema, deeply_nested_file) {
   EXPECT_EQ(result.value(), "/tmp/schemas/a/b/c/d.json");
 }
 
-TEST(Configuration_resolve_schema, no_entries) {
+TEST(no_entries) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
 
@@ -199,8 +197,7 @@ TEST(Configuration_resolve_schema, no_entries) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema,
-     page_and_collection_only_matches_collection) {
+TEST(page_and_collection_only_matches_collection) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   sourcemeta::one::Configuration::Page page;
@@ -215,7 +212,7 @@ TEST(Configuration_resolve_schema,
   EXPECT_EQ(result.value(), "/tmp/schemas/test.json");
 }
 
-TEST(Configuration_resolve_schema, absolute_uri_collection_root) {
+TEST(absolute_uri_collection_root) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -226,7 +223,7 @@ TEST(Configuration_resolve_schema, absolute_uri_collection_root) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, different_scheme) {
+TEST(different_scheme) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -237,7 +234,7 @@ TEST(Configuration_resolve_schema, different_scheme) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, url_with_port) {
+TEST(url_with_port) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "http://localhost:8000";
   configuration.entries.emplace(
@@ -249,7 +246,7 @@ TEST(Configuration_resolve_schema, url_with_port) {
   EXPECT_EQ(result.value(), "/tmp/schemas/test.json");
 }
 
-TEST(Configuration_resolve_schema, url_with_port_wrong_port) {
+TEST(url_with_port_wrong_port) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "http://localhost:8000";
   configuration.entries.emplace(
@@ -260,7 +257,7 @@ TEST(Configuration_resolve_schema, url_with_port_wrong_port) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, multiple_collections_first_match) {
+TEST(multiple_collections_first_match) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -276,7 +273,7 @@ TEST(Configuration_resolve_schema, multiple_collections_first_match) {
   EXPECT_EQ(result.value(), "/tmp/alpha/test.json");
 }
 
-TEST(Configuration_resolve_schema, multiple_collections_no_match) {
+TEST(multiple_collections_no_match) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -289,7 +286,7 @@ TEST(Configuration_resolve_schema, multiple_collections_no_match) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, multiple_collections_similar_names) {
+TEST(multiple_collections_similar_names) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -304,7 +301,7 @@ TEST(Configuration_resolve_schema, multiple_collections_similar_names) {
   EXPECT_EQ(result.value(), "/tmp/schemas-v2/test.json");
 }
 
-TEST(Configuration_resolve_schema, multiple_collections_similar_names_shorter) {
+TEST(multiple_collections_similar_names_shorter) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -319,7 +316,7 @@ TEST(Configuration_resolve_schema, multiple_collections_similar_names_shorter) {
   EXPECT_EQ(result.value(), "/tmp/schemas/test.json");
 }
 
-TEST(Configuration_resolve_schema, nested_collection_deeper_path) {
+TEST(nested_collection_deeper_path) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -331,7 +328,7 @@ TEST(Configuration_resolve_schema, nested_collection_deeper_path) {
   EXPECT_EQ(result.value(), "/tmp/deep/x/y.json");
 }
 
-TEST(Configuration_resolve_schema, nested_collection_exact_match) {
+TEST(nested_collection_exact_match) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -342,7 +339,7 @@ TEST(Configuration_resolve_schema, nested_collection_exact_match) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, nested_collection_partial_key_no_match) {
+TEST(nested_collection_partial_key_no_match) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -353,7 +350,7 @@ TEST(Configuration_resolve_schema, nested_collection_partial_key_no_match) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, nested_and_flat_collections_nested_wins) {
+TEST(nested_and_flat_collections_nested_wins) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -368,7 +365,7 @@ TEST(Configuration_resolve_schema, nested_and_flat_collections_nested_wins) {
   EXPECT_EQ(result.value(), "/tmp/api/endpoint.json");
 }
 
-TEST(Configuration_resolve_schema, nested_page_does_not_shadow_collection) {
+TEST(nested_page_does_not_shadow_collection) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   sourcemeta::one::Configuration::Page page;
@@ -382,8 +379,7 @@ TEST(Configuration_resolve_schema, nested_page_does_not_shadow_collection) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema,
-     multiple_collections_absolute_uri_matches_correct) {
+TEST(multiple_collections_absolute_uri_matches_correct) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -400,7 +396,7 @@ TEST(Configuration_resolve_schema,
   EXPECT_EQ(result.value(), "/tmp/gamma/deep/file.json");
 }
 
-TEST(Configuration_resolve_schema, longest_prefix_wins_over_shorter) {
+TEST(longest_prefix_wins_over_shorter) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -414,7 +410,7 @@ TEST(Configuration_resolve_schema, longest_prefix_wins_over_shorter) {
   EXPECT_EQ(result.value(), "/tmp/schemas-v2/test.json");
 }
 
-TEST(Configuration_resolve_schema, path_traversal_dot_dot_rejected) {
+TEST(path_traversal_dot_dot_rejected) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -425,7 +421,7 @@ TEST(Configuration_resolve_schema, path_traversal_dot_dot_rejected) {
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(Configuration_resolve_schema, appends_json_when_no_extension) {
+TEST(appends_json_when_no_extension) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -437,7 +433,7 @@ TEST(Configuration_resolve_schema, appends_json_when_no_extension) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo.json");
 }
 
-TEST(Configuration_resolve_schema, appends_json_after_non_json_extension) {
+TEST(appends_json_after_non_json_extension) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -449,7 +445,7 @@ TEST(Configuration_resolve_schema, appends_json_after_non_json_extension) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo.schema.json");
 }
 
-TEST(Configuration_resolve_schema, appends_json_after_yaml_extension) {
+TEST(appends_json_after_yaml_extension) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -461,7 +457,7 @@ TEST(Configuration_resolve_schema, appends_json_after_yaml_extension) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo.yaml.json");
 }
 
-TEST(Configuration_resolve_schema, appends_json_for_dotted_version_name) {
+TEST(appends_json_for_dotted_version_name) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -473,7 +469,7 @@ TEST(Configuration_resolve_schema, appends_json_for_dotted_version_name) {
   EXPECT_EQ(result.value(), "/tmp/schemas/v1.2.3.json");
 }
 
-TEST(Configuration_resolve_schema, does_not_append_json_when_already_present) {
+TEST(does_not_append_json_when_already_present) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(
@@ -485,7 +481,7 @@ TEST(Configuration_resolve_schema, does_not_append_json_when_already_present) {
   EXPECT_EQ(result.value(), "/tmp/schemas/foo.json");
 }
 
-TEST(Configuration_resolve_schema, does_not_match_collection_root_directory) {
+TEST(does_not_match_collection_root_directory) {
   sourcemeta::one::Configuration configuration;
   configuration.url = "https://sourcemeta.com";
   configuration.entries.emplace(

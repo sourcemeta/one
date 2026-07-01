@@ -1,4 +1,4 @@
-sourcemeta_googletest(NAMESPACE sourcemeta PROJECT one NAME enterprise_authentication
+sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME enterprise_authentication
   SOURCES authentication_test.cc)
 
 target_link_libraries(sourcemeta_one_enterprise_authentication_unit
