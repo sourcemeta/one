@@ -42,6 +42,31 @@
       "name": "mixed-hashed",
       "paths": [ "/mixed" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_MIXED_HASHED" } ]
+    },
+    {
+      "type": "jwt",
+      "name": "machine",
+      "paths": [ "/machine" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "telemetry",
+      "paths": [ "/telemetry" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://reports.example.com",
+      "jwksUri": "http://hydra:4444/.well-known/jwks.json",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "strict",
+      "paths": [ "/strict" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "ES256" ]
     }
   ],
   "contents": {
@@ -50,6 +75,9 @@
     "reports": { "path": "./schemas/reports" },
     "internal": { "path": "./schemas/internal" },
     "orphan": { "path": "./schemas/orphan" },
-    "mixed": { "path": "./schemas/mixed" }
+    "mixed": { "path": "./schemas/mixed" },
+    "machine": { "path": "./schemas/machine" },
+    "telemetry": { "path": "./schemas/telemetry" },
+    "strict": { "path": "./schemas/strict" }
   }
 }

@@ -2,7 +2,7 @@
   "url": "http://localhost:8000",
   "html": {
     "name": "Fully Private Sandbox",
-    "description": "A registry locked in its entirety behind a single root apiKey policy"
+    "description": "A registry locked in its entirety, opened by either an apiKey or a JWT"
   },
   "authentication": [
     {
@@ -11,6 +11,14 @@
       "name": "registry",
       "paths": [ "/" ],
       "keys": [ { "environmentVariable": "ONE_E2E_FULL_KEY" } ]
+    },
+    {
+      "type": "jwt",
+      "name": "machine",
+      "paths": [ "/" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
     }
   ],
   "contents": {

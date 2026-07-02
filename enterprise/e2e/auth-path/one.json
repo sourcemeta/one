@@ -18,10 +18,29 @@
       "name": "static",
       "paths": [ "/self/v1/static" ],
       "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_STATIC" } ]
+    },
+    {
+      "type": "jwt",
+      "name": "machine",
+      "paths": [ "/machine" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "foreign",
+      "paths": [ "/foreign" ],
+      "issuer": "https://foreign.example.com",
+      "audience": "https://schemas.example.com",
+      "jwksUri": "http://hydra:4444/.well-known/jwks.json",
+      "algorithms": [ "RS256" ]
     }
   ],
   "contents": {
     "public": { "path": "./schemas/public" },
-    "private": { "path": "./schemas/private" }
+    "private": { "path": "./schemas/private" },
+    "machine": { "path": "./schemas/machine" },
+    "foreign": { "path": "./schemas/foreign" }
   }
 }
