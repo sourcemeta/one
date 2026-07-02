@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": [ "identifier" ],
+  "required": [ "token" ],
   "properties": {
-    "identifier": {
+    "token": {
       "type": "string"
     }
   },

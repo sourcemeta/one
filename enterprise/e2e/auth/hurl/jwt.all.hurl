@@ -55,8 +55,8 @@ Vary: User-Agent, Accept-Encoding
   "type": "string"
 }
 
-# The internal schema is denied without a credential, with the canonical shape
-GET {{base}}/internal/config.json
+# The machine schema is denied without a credential, with the canonical shape
+GET {{base}}/machine/config.json
 HTTP 401
 Content-Type: application/problem+json
 Cache-Control: no-store
@@ -90,9 +90,9 @@ Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 jsonpath "$.valid" == true
 
-# A token verified against the issuer's published key set admits the internal
+# A token verified against the issuer's published key set admits the machine
 # schema, and the response is marked private so shared caches do not store it
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: Bearer {{access_token}}
 HTTP 200
 Content-Type: application/schema+json
@@ -107,7 +107,7 @@ header "Last-Modified" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/internal/config",
+  "$id": "{{base}}/machine/config",
   "type": "object",
   "required": [ "token" ],
   "properties": {
@@ -120,7 +120,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 # The bearer scheme is matched case-insensitively per RFC 6750, so a lowercase
 # scheme admits the same schema
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: bearer {{access_token}}
 HTTP 200
 Content-Type: application/schema+json
@@ -131,7 +131,7 @@ Access-Control-Expose-Headers: Link, ETag
 Vary: User-Agent, Accept-Encoding
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/internal/config",
+  "$id": "{{base}}/machine/config",
   "type": "object",
   "required": [ "token" ],
   "properties": {
@@ -143,7 +143,7 @@ Vary: User-Agent, Accept-Encoding
 }
 
 # A verified token admits a HEAD request too, and the response carries no body
-HEAD {{base}}/internal/config.json
+HEAD {{base}}/machine/config.json
 Authorization: Bearer {{access_token}}
 HTTP 200
 Content-Type: application/schema+json
@@ -153,7 +153,7 @@ Access-Control-Allow-Origin: *
 bytes count == 0
 
 # A bearer value that is not a token is denied identically
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: Bearer not-a-token
 HTTP 401
 Content-Type: application/problem+json
@@ -170,7 +170,7 @@ Access-Control-Expose-Headers: Link, ETag
 }
 
 # A credential presented without the bearer scheme is denied
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: {{access_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -187,7 +187,7 @@ Access-Control-Expose-Headers: Link, ETag
 }
 
 # A valid token presented under a non-bearer scheme is denied
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: Basic {{access_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -205,7 +205,7 @@ Access-Control-Expose-Headers: Link, ETag
 
 # A token whose signature has been tampered with fails verification against the
 # issuer's key set and is denied
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: Bearer {{access_token}}tampered
 HTTP 401
 Content-Type: application/problem+json
@@ -233,7 +233,7 @@ HTTP 200
 [Captures]
 wrong_audience_token: jsonpath "$.access_token"
 
-GET {{base}}/internal/config.json
+GET {{base}}/machine/config.json
 Authorization: Bearer {{wrong_audience_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -251,7 +251,7 @@ Access-Control-Expose-Headers: Link, ETag
 
 # A verified token discloses that a resource under the gated prefix does not
 # exist, returning a not found rather than an authentication challenge
-GET {{base}}/internal/ghost.json
+GET {{base}}/machine/ghost.json
 Authorization: Bearer {{access_token}}
 HTTP 404
 Content-Type: application/problem+json
@@ -268,7 +268,7 @@ Access-Control-Expose-Headers: Link, ETag
 
 # Without a credential the same missing path denies identically to a real one,
 # so existence under the gated prefix is not probeable
-GET {{base}}/internal/ghost.json
+GET {{base}}/machine/ghost.json
 HTTP 401
 Content-Type: application/problem+json
 Cache-Control: no-store

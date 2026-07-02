@@ -9,11 +9,17 @@ services:
       - URLS_SELF_ISSUER=http://hydra:4444
     ports:
       - "4444:4444"
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:4444/health/ready" ]
+      interval: 1s
+      timeout: 2s
+      retries: 30
 
   hydra-provision:
     image: oryd/hydra:v2.2.0
     depends_on:
-      - hydra
+      hydra:
+        condition: service_healthy
     restart: "no"
     entrypoint: [ "/bin/sh", "/provision.sh" ]
     volumes:
@@ -30,6 +36,8 @@ services:
     env_file:
       - environment
     depends_on:
+      hydra:
+        condition: service_healthy
       hydra-provision:
         condition: service_completed_successfully
     ports:

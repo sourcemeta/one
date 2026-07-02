@@ -123,16 +123,10 @@ jobs:
           path: enterprise/e2e/auth-path
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
-      - name: E2E (enterprise/auth-full-api-key)
+      - name: E2E (enterprise/auth-closed)
         uses: ./.github/actions/e2e
         with:
-          path: enterprise/e2e/auth-full-api-key
-          edition: ${{ matrix.edition.name }}
-        if: matrix.edition.name == 'enterprise'
-      - name: E2E (enterprise/auth-jwt)
-        uses: ./.github/actions/e2e
-        with:
-          path: enterprise/e2e/auth-jwt
+          path: enterprise/e2e/auth-closed
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
 

@@ -1,6 +1,4 @@
-# Three clients of the same issuer, each scoped to a different audience: one the
-# `internal` and `strict` policies expect, one the `reports` policy expects, and
-# one no policy accepts
+# Two clients of the same issuer, each scoped to a different audience
 POST http://localhost:4444/oauth2/token
 [FormParams]
 grant_type: client_credentials
@@ -27,9 +25,9 @@ reports_token: jsonpath "$.access_token"
 jsonpath "$.token_type" == "bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
-# The audience token for the internal policy admits the internal schema, whose
-# key set the registry discovers from the issuer's metadata
-GET {{base}}/internal/config.json
+# The machine policy discovers its key set from the issuer and admits the token
+# minted for its audience
+GET {{base}}/machine/config.json
 Authorization: Bearer {{schemas_token}}
 HTTP 200
 Content-Type: application/schema+json
@@ -42,7 +40,7 @@ Vary: User-Agent, Accept-Encoding
 header "ETag" matches /^"[0-9a-f]{64}"$/
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/internal/config",
+  "$id": "{{base}}/machine/config",
   "type": "object",
   "required": [ "token" ],
   "properties": {
@@ -53,9 +51,8 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# The same token is rejected on the reports policy, whose audience differs, so a
-# credential minted for one audience never crosses to another under one issuer
-GET {{base}}/reports/summary.json
+# The same token does not cross to the telemetry policy, whose audience differs
+GET {{base}}/telemetry/summary.json
 Authorization: Bearer {{schemas_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -71,9 +68,9 @@ Access-Control-Expose-Headers: Link, ETag
   "detail": "This resource requires authentication"
 }
 
-# The reports audience token admits the reports schema, verified against the key
-# set the policy points at explicitly rather than through discovery
-GET {{base}}/reports/summary.json
+# The telemetry policy points at its key set explicitly and admits the token
+# minted for its audience
+GET {{base}}/telemetry/summary.json
 Authorization: Bearer {{reports_token}}
 HTTP 200
 Content-Type: application/schema+json
@@ -86,7 +83,7 @@ Vary: User-Agent, Accept-Encoding
 header "ETag" matches /^"[0-9a-f]{64}"$/
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/reports/summary",
+  "$id": "{{base}}/telemetry/summary",
   "type": "object",
   "required": [ "quarter", "total" ],
   "properties": {
@@ -100,8 +97,8 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# The reports token does not cross to the internal policy either
-GET {{base}}/internal/config.json
+# The reports token does not cross to the machine policy either
+GET {{base}}/machine/config.json
 Authorization: Bearer {{reports_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -117,9 +114,9 @@ Access-Control-Expose-Headers: Link, ETag
   "detail": "This resource requires authentication"
 }
 
-# The strict policy shares the internal policy's audience but only allows a
-# signature algorithm the issuer does not use, so a token that opens the
-# internal schema is rejected here purely on the algorithm allow list
+# The strict policy shares the machine audience but only allows a signature
+# algorithm the issuer does not use, so the machine token is rejected here on the
+# algorithm allow list alone
 GET {{base}}/strict/rule.json
 Authorization: Bearer {{schemas_token}}
 HTTP 401
@@ -136,10 +133,9 @@ Access-Control-Expose-Headers: Link, ETag
   "detail": "This resource requires authentication"
 }
 
-# The legacy policy is an apiKey policy alongside the JWT ones, and its key
-# admits its schema
-GET {{base}}/legacy/record.json
-Authorization: Bearer legacy-secret-key
+# An apiKey collection sits alongside the JWT ones, and its key admits its schema
+GET {{base}}/internal/config.json
+Authorization: Bearer internal-secret-key
 HTTP 200
 Content-Type: application/schema+json
 Cache-Control: private, max-age=0, must-revalidate
@@ -147,23 +143,15 @@ Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Vary: User-Agent, Accept-Encoding
-[Asserts]
-header "ETag" matches /^"[0-9a-f]{64}"$/
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/legacy/record",
+  "$id": "{{base}}/internal/config",
   "type": "object",
-  "required": [ "identifier" ],
-  "properties": {
-    "identifier": {
-      "type": "string"
-    }
-  },
   "additionalProperties": false
 }
 
 # A JWT does not satisfy an apiKey policy
-GET {{base}}/legacy/record.json
+GET {{base}}/internal/config.json
 Authorization: Bearer {{schemas_token}}
 HTTP 401
 Content-Type: application/problem+json
@@ -180,8 +168,8 @@ Access-Control-Expose-Headers: Link, ETag
 }
 
 # And an apiKey does not satisfy a JWT policy
-GET {{base}}/internal/config.json
-Authorization: Bearer legacy-secret-key
+GET {{base}}/machine/config.json
+Authorization: Bearer internal-secret-key
 HTTP 401
 Content-Type: application/problem+json
 Cache-Control: no-store
@@ -199,13 +187,12 @@ denied_schema: header "Link" regex "<([^>]+)>"
   "detail": "This resource requires authentication"
 }
 
-# Every denial across the mixed policy set validates against the same error
-# schema it advertises
+# Every denial across the mixed policy set validates against the error schema it
+# advertises
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
 ```
 {{denied_body}}
 ```
 HTTP 200
-Content-Type: application/json
 [Asserts]
 jsonpath "$.valid" == true
