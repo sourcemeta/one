@@ -27,6 +27,8 @@ services:
         SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
     environment:
       - SOURCEMETA_ONE_PORT=8001
+    env_file:
+      - environment
     depends_on:
       hydra-provision:
         condition: service_completed_successfully
