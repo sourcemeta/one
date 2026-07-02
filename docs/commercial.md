@@ -46,7 +46,8 @@ Enterprise instances can gate access behind
 [authentication](configuration.md#authentication) policies, covering anything
 from a single schema collection to the entire instance. Keep selected parts
 private while the rest stays public, or lock down everything, granting access to
-consumers through API keys. Support for OpenID Connect and JWT is planned.
+consumers through API keys or JSON Web Tokens issued by your OAuth 2.0 or OpenID
+Connect provider.
 
 ## Standard Library
 
