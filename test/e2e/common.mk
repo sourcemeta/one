@@ -22,7 +22,7 @@ all:
 .PHONY: up
 up: $(COMPOSE)
 	$(DOCKER) compose --progress plain --file $< build
-	$(DOCKER) compose --progress plain --file $< up --detach --wait
+	$(DOCKER) compose --progress plain --file $< up --detach --wait --wait-timeout 120
 
 # Note we run the tests multiple times to have a higher
 # chance of catching any potential flakiness

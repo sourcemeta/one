@@ -18,7 +18,6 @@ register() {
 }
 
 CI_SERVICE='{"client_id":"ci-service","client_secret":"ci-service-secret","grant_types":["client_credentials"],"response_types":[],"token_endpoint_auth_method":"client_secret_post","audience":["https://schemas.example.com"]}'
-CI_REPORTS='{"client_id":"ci-reports","client_secret":"ci-reports-secret","grant_types":["client_credentials"],"response_types":[],"token_endpoint_auth_method":"client_secret_post","audience":["https://reports.example.com"]}'
 CI_WRONG='{"client_id":"ci-wrong","client_secret":"ci-wrong-secret","grant_types":["client_credentials"],"response_types":[],"token_endpoint_auth_method":"client_secret_post","audience":["https://other.example.com"]}'
 
 # The admin API is not ready the instant the container starts, so retry the
@@ -35,5 +34,4 @@ do
   sleep 1
 done
 
-register "$CI_REPORTS"
 register "$CI_WRONG"

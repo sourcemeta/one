@@ -1,6 +1,4 @@
-# The registry is closed in its entirety by two policies at the root, an apiKey
-# and a JWT. A verified token opens it just as the key does, proving the two
-# credential types are unioned rather than one shadowing the other.
+# A token opens the closed registry just as the root key does
 POST http://localhost:4444/oauth2/token
 [FormParams]
 grant_type: client_credentials
@@ -34,8 +32,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "type": "string"
 }
 
-# The listing is enumerable with a token, and every node reports both governing
-# policy names in canonical order
+# The listing enumerates with a token, reporting both governing policy names
 GET {{base}}/self/v1/api/list/catalog
 Authorization: Bearer {{access_token}}
 HTTP 200
@@ -82,14 +79,22 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-{
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
-}
+[Captures]
+wrong_audience_denied: body
+[Asserts]
+jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+jsonpath "$.status" == 401
 
-# A tampered token fails verification against the issuer's key set and is denied
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+Authorization: Bearer {{access_token}}
+```
+{{wrong_audience_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A tampered token fails signature verification
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{access_token}}tampered
 HTTP 401
@@ -99,9 +104,17 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-{
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
-}
+[Captures]
+tampered_denied: body
+[Asserts]
+jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+jsonpath "$.status" == 401
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+Authorization: Bearer {{access_token}}
+```
+{{tampered_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

@@ -25,8 +25,7 @@ reports_token: jsonpath "$.access_token"
 jsonpath "$.token_type" == "bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
-# The machine policy discovers its key set from the issuer and admits the token
-# minted for its audience
+# The machine policy discovers its key set and admits its audience's token
 GET {{base}}/machine/config.json
 Authorization: Bearer {{schemas_token}}
 HTTP 200
@@ -51,7 +50,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# The same token does not cross to the telemetry policy, whose audience differs
+# The same token does not cross to the telemetry policy's audience
 GET {{base}}/telemetry/summary.json
 Authorization: Bearer {{schemas_token}}
 HTTP 401
@@ -61,6 +60,8 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Captures]
+machine_on_telemetry: body
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
@@ -68,8 +69,15 @@ Access-Control-Expose-Headers: Link, ETag
   "detail": "This resource requires authentication"
 }
 
-# The telemetry policy points at its key set explicitly and admits the token
-# minted for its audience
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{machine_on_telemetry}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The telemetry policy points at its key set explicitly and admits its token
 GET {{base}}/telemetry/summary.json
 Authorization: Bearer {{reports_token}}
 HTTP 200
@@ -107,6 +115,8 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Captures]
+reports_on_machine: body
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
@@ -114,9 +124,16 @@ Access-Control-Expose-Headers: Link, ETag
   "detail": "This resource requires authentication"
 }
 
-# The strict policy shares the machine audience but only allows a signature
-# algorithm the issuer does not use, so the machine token is rejected here on the
-# algorithm allow list alone
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{reports_on_machine}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The strict policy allows only an algorithm the issuer does not use, so the
+# token is denied on the algorithm allow list
 GET {{base}}/strict/rule.json
 Authorization: Bearer {{schemas_token}}
 HTTP 401
@@ -126,12 +143,22 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Captures]
+strict_denied: body
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{strict_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # An apiKey collection sits alongside the JWT ones, and its key admits its schema
 GET {{base}}/internal/config.json
@@ -143,6 +170,8 @@ Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Vary: User-Agent, Accept-Encoding
+[Asserts]
+header "ETag" matches /^"[0-9a-f]{64}"$/
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/internal/config",
@@ -160,12 +189,22 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Captures]
+jwt_on_apikey: body
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{jwt_on_apikey}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # And an apiKey does not satisfy a JWT policy
 GET {{base}}/machine/config.json
@@ -178,8 +217,7 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
-denied_body: body
-denied_schema: header "Link" regex "<([^>]+)>"
+apikey_on_jwt: body
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
@@ -187,11 +225,9 @@ denied_schema: header "Link" regex "<([^>]+)>"
   "detail": "This resource requires authentication"
 }
 
-# Every denial across the mixed policy set validates against the error schema it
-# advertises
-POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 ```
-{{denied_body}}
+{{apikey_on_jwt}}
 ```
 HTTP 200
 [Asserts]

@@ -1,5 +1,4 @@
-# A JWT policy under a non-root base path is matched with the base path stripped,
-# just like the apiKey policies. A token opens the machine collection.
+# A JWT policy under a base path is matched with the base path stripped
 POST http://localhost:4444/oauth2/token
 [FormParams]
 grant_type: client_credentials
@@ -42,8 +41,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A verified token admits the machine schema, whose identity is rebased onto the
-# registry URL including the base path, and the response is marked private
+# A verified token admits the machine schema, rebased under the base path
 GET {{base}}/registry/machine/config.json
 Authorization: Bearer {{access_token}}
 HTTP 200
@@ -88,9 +86,41 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-{
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
-}
+[Captures]
+wrong_audience_denied: body
+[Asserts]
+jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+jsonpath "$.status" == 401
+
+POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{wrong_audience_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The foreign policy expects a different issuer, so a valid-signature token is
+# denied on the issuer claim
+GET {{base}}/registry/foreign/record.json
+Authorization: Bearer {{access_token}}
+HTTP 401
+Content-Type: application/problem+json
+Cache-Control: no-store
+WWW-Authenticate: Bearer realm="registry"
+Link: </registry/self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+issuer_mismatch_denied: body
+[Asserts]
+jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+jsonpath "$.status" == 401
+
+POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{issuer_mismatch_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
