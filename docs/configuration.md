@@ -459,7 +459,7 @@ instance verifies each token against the public key set that issuer publishes,
 fetched over HTTP at request time and cached.
 
 A token is admitted only when its signature verifies against the issuer's key
-set, its `iss` claim matches the policy's `issuer`, its `aud` claim matches the
+set, its `iss` claim matches the policy's `issuer`, its `aud` claim includes the
 policy's `audience`, its signature algorithm is one the policy allows, and it is
 within its validity period. A token that fails any of these is denied, with the
 same response as any other unauthenticated request.
@@ -467,7 +467,7 @@ same response as any other unauthenticated request.
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
 | `/issuer`       | String  | :red_circle: **Yes** | N/A | The token issuer to trust, matched against the `iss` claim |
-| `/audience`     | String  | :red_circle: **Yes** | N/A | The audience this instance identifies as, matched against the `aud` claim. A token must be minted for this audience |
+| `/audience`     | String  | :red_circle: **Yes** | N/A | The audience this instance identifies as. A token is accepted when its `aud` claim includes this value, so a token minted for several audiences at once is accepted as long as this one is among them |
 | `/algorithms`   | Array   | :red_circle: **Yes** | N/A | The JSON Web Signature algorithms the policy accepts. One or more of `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`, `ES256`, `ES384`, `ES512`, and `EdDSA` |
 | `/jwksUri`      | String  | No | Discovered from the issuer | The URL of the issuer's JSON Web Key Set. When omitted, it is discovered from the issuer's OpenID Connect metadata at `{issuer}/.well-known/openid-configuration` |
 
