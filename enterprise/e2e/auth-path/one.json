@@ -35,12 +35,21 @@
       "audience": "https://schemas.example.com",
       "jwksUri": "http://hydra:4444/.well-known/jwks.json",
       "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "unreachable",
+      "paths": [ "/unreachable" ],
+      "issuer": "https://unreachable.example.invalid",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
     }
   ],
   "contents": {
     "public": { "path": "./schemas/public" },
     "private": { "path": "./schemas/private" },
     "machine": { "path": "./schemas/machine" },
-    "foreign": { "path": "./schemas/foreign" }
+    "foreign": { "path": "./schemas/foreign" },
+    "unreachable": { "path": "./schemas/unreachable" }
   }
 }

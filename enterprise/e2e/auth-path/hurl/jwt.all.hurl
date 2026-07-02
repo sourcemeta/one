@@ -124,3 +124,28 @@ POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# The unreachable policy has no explicit key set, so its issuer's discovery
+# endpoint is fetched and fails, denying rather than admitting on the failure
+GET {{base}}/registry/unreachable/record.json
+Authorization: Bearer {{access_token}}
+HTTP 401
+Content-Type: application/problem+json
+Cache-Control: no-store
+WWW-Authenticate: Bearer realm="registry"
+Link: </registry/self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+discovery_failure_denied: body
+[Asserts]
+jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+jsonpath "$.status" == 401
+
+POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{discovery_failure_denied}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
