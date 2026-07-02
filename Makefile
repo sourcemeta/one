@@ -107,6 +107,9 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-full-api-key EDITION=$(EDITION)
+	# Stands up an identity provider alongside the registry, so it only runs
+	# under Docker Compose and never through the native e2e path
+	$(MAKE) -C enterprise/e2e/auth-jwt EDITION=$(EDITION)
 endif
 
 .PHONY: docker-benchmark

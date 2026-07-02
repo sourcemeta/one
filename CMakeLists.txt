@@ -131,6 +131,7 @@ sourcemeta_target_shellcheck(SOURCES
   test/*.sh
   docker/*.sh
   enterprise/scripts/*.sh
+  enterprise/e2e/*/*.sh
   benchmark/*.sh)
 
 if(ONE_TESTS)

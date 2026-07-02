@@ -1,0 +1,48 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "JWT Authentication Sandbox",
+    "description": "Fixtures exercising JWT machine authentication against a real identity provider"
+  },
+  "authentication": [
+    {
+      "type": "jwt",
+      "name": "internal",
+      "paths": [ "/internal" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "reports",
+      "paths": [ "/reports" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://reports.example.com",
+      "jwksUri": "http://hydra:4444/.well-known/jwks.json",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
+      "name": "strict",
+      "paths": [ "/strict" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "ES256" ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "legacy",
+      "paths": [ "/legacy" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_LEGACY" } ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./schemas/public" },
+    "internal": { "path": "./schemas/internal" },
+    "reports": { "path": "./schemas/reports" },
+    "strict": { "path": "./schemas/strict" },
+    "legacy": { "path": "./schemas/legacy" }
+  }
+}
