@@ -1,0 +1,21 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "JWT Authentication Sandbox",
+    "description": "Fixtures exercising JWT machine authentication against a real identity provider"
+  },
+  "authentication": [
+    {
+      "type": "jwt",
+      "name": "internal",
+      "paths": [ "/internal" ],
+      "issuer": "http://hydra:4444",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./schemas/public" },
+    "internal": { "path": "./schemas/internal" }
+  }
+}

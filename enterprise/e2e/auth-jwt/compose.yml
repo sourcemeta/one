@@ -1,0 +1,34 @@
+services:
+  hydra:
+    image: oryd/hydra:v2.2.0
+    command: serve all --dev
+    environment:
+      - DSN=memory
+      - SECRETS_SYSTEM=insecure-e2e-system-secret-000000
+      - STRATEGIES_ACCESS_TOKEN=jwt
+      - URLS_SELF_ISSUER=http://hydra:4444
+    ports:
+      - "4444:4444"
+
+  hydra-provision:
+    image: oryd/hydra:v2.2.0
+    depends_on:
+      - hydra
+    restart: "no"
+    entrypoint: [ "/bin/sh", "/provision.sh" ]
+    volumes:
+      - ./provision.sh:/provision.sh:ro
+
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
+    environment:
+      - SOURCEMETA_ONE_PORT=8001
+    depends_on:
+      hydra-provision:
+        condition: service_completed_successfully
+    ports:
+      - "${PORT}:8001"
