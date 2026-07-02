@@ -324,11 +324,12 @@ contains the schema collections they own.
     Authentication is only available in the [Enterprise](commercial.md)
     edition. Learn more about [commercial licensing](commercial.md).
 
-Authentication currently supports a single policy type, `apiKey`, where a
-consumer is granted access by presenting a pre-shared key. Support for OpenID
-Connect and JWT is planned. Anything not covered by a policy stays public, so
-the configuration only ever describes what to protect, never what to expose.
-When a path is governed by more than one policy, the policies are unioned.
+Authentication supports two policy types. An `apiKey` policy grants access to a
+consumer that presents a pre-shared key, and a `jwt` policy grants access to a
+consumer that presents a signed JSON Web Token, verified against the issuer's
+published key set. Anything not covered by a policy stays public, so the
+configuration only ever describes what to protect, never what to expose. When a
+path is governed by more than one policy, the policies are unioned.
 
 **The UNIX model**: Visibility and access are kept separate, following the UNIX
 filesystem model. A policy that governs a directory does not erase it from its
@@ -353,19 +354,27 @@ A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
 above them (the instance root governs everything). It cannot gate an individual
 path inside a collection: a collection is either public or private as a whole.
 
+Every policy declares its `type`, a `name`, and the `paths` it governs,
+regardless of type:
+
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/type`         | String  | :red_circle: **Yes** | N/A | The policy type. Currently only `apiKey` is supported |
+| `/type`         | String  | :red_circle: **Yes** | N/A | The policy type, either `apiKey` or `jwt` |
 | `/name`         | String  | :red_circle: **Yes** | N/A | The policy name, surfaced in directory listings. Must consist of lowercase letters, digits, and hyphens. The name `public` is reserved |
-| `/algorithm`    | String  | :red_circle: **Yes** | N/A | How a presented key is compared against the stored keys. Either `identity` (the environment variable holds the key verbatim) or `sha256` (the environment variable holds the lowercase hexadecimal SHA-256 digest of the key) |
 | `/paths`        | Array   | :red_circle: **Yes** | N/A | The registry paths this policy governs, each rooted at `/`. Every path must be `/` itself (governing the whole instance) or name a known collection, page, or route |
-| `/keys`         | Array   | :red_circle: **Yes** | N/A | The keys this policy accepts, each read from an environment variable so that secrets never live in the configuration file |
-| `/keys/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the key, or its hash when `algorithm` is not `identity` |
 
 ### API Key
 
 Consumers present a key through the `Authorization` header using the `Bearer`
 scheme ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)).
+
+An `apiKey` policy declares the following additional properties:
+
+| Property        | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `/algorithm`    | String  | :red_circle: **Yes** | N/A | How a presented key is compared against the stored keys. Either `identity` (the environment variable holds the key verbatim) or `sha256` (the environment variable holds the lowercase hexadecimal SHA-256 digest of the key) |
+| `/keys`         | Array   | :red_circle: **Yes** | N/A | The keys this policy accepts, each read from an environment variable so that secrets never live in the configuration file |
+| `/keys/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the key, or its hash when `algorithm` is not `identity` |
 
 !!! tip
 
@@ -437,6 +446,69 @@ pre-hashed one:
     [reverse proxy, API gateway, or
     WAF](https://www.gravitee.io/blog/rate-limiting-throttling-with-an-api-gateway-why-it-matters)
     in front of the instance.
+
+### JWT
+
+A `jwt` policy grants access to machine consumers that present a signed JSON Web
+Token ([RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519)) through the
+`Authorization` header using the `Bearer` scheme ([RFC
+6750](https://datatracker.ietf.org/doc/html/rfc6750)), as issued by an OAuth 2.0
+or OpenID Connect provider. Unlike an `apiKey` policy, no shared secret lives in
+the configuration or the instance: the policy names a trusted issuer, and the
+instance verifies each token against the public key set that issuer publishes,
+fetched over HTTP at request time and cached.
+
+A token is admitted only when its signature verifies against the issuer's key
+set, its `iss` claim matches the policy's `issuer`, its `aud` claim includes the
+policy's `audience`, its signature algorithm is one the policy allows, and it is
+within its validity period. A token that fails any of these is denied, with the
+same response as any other unauthenticated request.
+
+| Property        | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `/issuer`       | String  | :red_circle: **Yes** | N/A | The token issuer to trust, matched against the `iss` claim |
+| `/audience`     | String  | :red_circle: **Yes** | N/A | The audience this instance identifies as. A token is accepted when its `aud` claim includes this value, so a token minted for several audiences at once is accepted as long as this one is among them |
+| `/algorithms`   | Array   | :red_circle: **Yes** | N/A | The JSON Web Signature algorithms the policy accepts. One or more of `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`, `ES256`, `ES384`, `ES512`, and `EdDSA` |
+| `/jwksUri`      | String  | No | Discovered from the issuer | The URL of the issuer's JSON Web Key Set. When omitted, it is discovered from the issuer's OpenID Connect metadata at `{issuer}/.well-known/openid-configuration` |
+
+For example, the following instance keeps `/docs` public, gates `/partners`
+behind an API key, and protects `/internal` with a JWT policy that trusts a
+single issuer and audience:
+
+```json title="one.json"
+{
+  "url": "https://schemas.example.com",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "partners",
+      "paths": [ "/partners" ],
+      "keys": [ { "environmentVariable": "ONE_PARTNERS_KEY" } ]
+    },
+    {
+      "type": "jwt",
+      "name": "internal",
+      "paths": [ "/internal" ],
+      "issuer": "https://accounts.example.com",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ]
+    }
+  ],
+  "contents": {
+    "docs": { "path": "./schemas/docs" },
+    "partners": { "path": "./schemas/partners" },
+    "internal": { "path": "./schemas/internal" }
+  }
+}
+```
+
+!!! note
+
+    The key set is fetched from the issuer over HTTP and cached as soft state,
+    honouring the response's `Cache-Control` and refreshed when a token presents
+    an unrecognised key identifier, so that issuer key rotation is picked up
+    without restarting the instance.
 
 ## Extends
 
