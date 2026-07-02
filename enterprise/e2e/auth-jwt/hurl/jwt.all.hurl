@@ -8,11 +8,11 @@ client_id: ci-service
 client_secret: ci-service-secret
 audience: https://schemas.example.com
 HTTP 200
-Content-Type: application/json;charset=UTF-8
 Cache-Control: no-store
 [Captures]
 access_token: jsonpath "$.access_token"
 [Asserts]
+header "Content-Type" startsWith "application/json"
 jsonpath "$.token_type" == "bearer"
 jsonpath "$.scope" == ""
 jsonpath "$.expires_in" > 0

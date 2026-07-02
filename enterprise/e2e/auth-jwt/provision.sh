@@ -11,7 +11,7 @@ set -o nounset
 ADMIN="http://hydra:4445/admin/clients"
 
 register() {
-  wget --quiet --output-document - \
+  wget --output-document - \
     --header "Content-Type: application/json" \
     --post-data "$1" \
     "$ADMIN"
