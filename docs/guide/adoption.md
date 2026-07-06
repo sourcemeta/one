@@ -59,8 +59,12 @@ Before extracting anything, verify the spec actually reflects what the API
 does. [APIContext's
 research](https://apicontext.com/resources/api-drift-white-paper/), based on
 validating billions of API calls, found **75% of production APIs have variances
-from their published OpenAPI specifications**. Extracting schemas from a spec
-that does not match reality means canonicalising fiction.
+from their published OpenAPI specifications**. A generated spec that nobody
+ever opens means [governance runs on fiction, linting a document that does not
+faithfully describe the thing it claims to
+describe](https://apievangelist.com/2026/06/29/design-first-or-code-first-pick-and-know-the-cost/).
+Extracting schemas from a spec that does not match reality means canonicalising
+that fiction.
 
 We recommend you add one of the following tools to your workflow:
 

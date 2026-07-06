@@ -82,7 +82,10 @@ chapter _Strategy 12, "Implementing Incremental Schema Governance,"_ prescribes
 a central Git repository of contracts, CI-enforced validation, federated review
 via pull requests, and a human-friendly event catalog on top. The pattern is
 the same whether the contracts are JSON Schemas powering REST APIs or AsyncAPI
-files powering event streams.
+files powering event streams. This convergence is no accident: REST contracts,
+event contracts, and message payloads [all bottom out at the same schema
+layer](https://apievangelist.com/2026/06/26/json-schema-governs-the-shape-of-your-data/),
+so governing the shape of the data once governs it across every protocol.
 
 In [Crafting Great APIs with Domain-Driven
 Design](https://www.amazon.com/Crafting-Great-APIs-Domain-Driven-Design/dp/B0DYNMWP67)
