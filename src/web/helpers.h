@@ -7,6 +7,7 @@
 #include <sourcemeta/one/shared.h>
 
 #include <cassert>     // assert
+#include <cctype>      // std::toupper
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
@@ -130,7 +131,8 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
   // Capitalize first character
   std::string display_name = short_name;
   if (!display_name.empty()) {
-    display_name[0] = static_cast<char>(std::toupper(display_name[0]));
+    display_name[0] = static_cast<char>(
+        std::toupper(static_cast<unsigned char>(display_name[0])));
   }
 
   writer.a()

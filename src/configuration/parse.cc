@@ -3,13 +3,13 @@
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include "template.h"
 
-#include <algorithm>   // std::ranges::transform, std::ranges::sort
+#include <algorithm>   // std::ranges::sort
 #include <cassert>     // assert
-#include <cctype>      // std::tolower
 #include <set>         // std::set
 #include <string_view> // std::string_view
 
@@ -60,11 +60,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
           collection_input, base_path)};
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
-      std::ranges::transform(collection.base, collection.base.begin(),
-                             [](const auto character) -> char {
-                               return static_cast<char>(
-                                   std::tolower(character));
-                             });
+      sourcemeta::core::to_lowercase(collection.base);
       // This URI is guaranteed to be canonicalised by the collection parser
       assert(collection.base ==
              sourcemeta::core::URI::canonicalize(collection.base));
