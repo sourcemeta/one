@@ -13,6 +13,7 @@
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 
 // Refuse to compile on big-endian hosts so silent magic-mismatch failures
 // cannot ship.
@@ -43,13 +44,7 @@ static auto write_binary_header(std::ostream &output,
   header.compressed_bytes = compressed_size;
   header.duration = duration.count();
 
-  const auto hex_string{sourcemeta::core::sha256(payload)};
-  for (std::size_t index{0}; index < 32 && index * 2 + 1 < hex_string.size();
-       index++) {
-    const auto byte_string{hex_string.substr(index * 2, 2)};
-    header.checksum[index] =
-        static_cast<std::uint8_t>(std::stoul(byte_string, nullptr, 16));
-  }
+  header.checksum = sourcemeta::core::sha256_digest(payload);
 
   assert(mime.size() <= UINT16_MAX);
   header.mime_length = static_cast<std::uint16_t>(mime.size());
@@ -105,7 +100,7 @@ auto metapack_write_json(const std::filesystem::path &destination,
   std::ostringstream buffer;
   sourcemeta::core::stringify(document, buffer);
   write_metapack(destination, mime, encoding, extension, duration,
-                 buffer.str());
+                 std::move(buffer).str());
 }
 
 auto metapack_write_pretty_json(const std::filesystem::path &destination,
@@ -118,7 +113,7 @@ auto metapack_write_pretty_json(const std::filesystem::path &destination,
   std::ostringstream buffer;
   sourcemeta::core::prettify(document, buffer);
   write_metapack(destination, mime, encoding, extension, duration,
-                 buffer.str());
+                 std::move(buffer).str());
 }
 
 auto metapack_write_text(const std::filesystem::path &destination,

@@ -261,8 +261,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         continue;
       }
 
-      const auto *new_entry{entries.entry(std::string{key})};
-      const auto *old_entry{entries.disk_entry(std::string{key})};
+      const auto *new_entry{entries.entry(key)};
+      const auto *old_entry{entries.disk_entry(key)};
 
       const auto owner_sentinel{key.find(sentinel_separator, owner_start)};
       if (owner_sentinel == std::string_view::npos) {
@@ -333,8 +333,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        const auto *dependency_entry{
-            entries.entry(std::string{dependency_key})};
+        const auto *dependency_entry{entries.entry(dependency_key)};
         if (dependency_entry == nullptr) {
           continue;
         }
@@ -950,7 +949,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       }
 
       for (const auto &directory : affected_directories) {
-        const auto relative{std::filesystem::relative(directory, primary_path)};
+        const auto relative{directory.lexically_relative(primary_path)};
         const auto is_root_directory{relative == "."};
 
         if (rule.scope == ContainerScope::RootOnly && !is_root_directory) {
@@ -990,7 +989,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             case ContainerDependencyKind::ChildContainers:
               for (const auto &other_directory : affected_directories) {
                 auto other_relative{
-                    std::filesystem::relative(other_directory, primary_path)};
+                    other_directory.lexically_relative(primary_path)};
                 if (other_relative == relative) {
                   continue;
                 }
@@ -1012,7 +1011,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             case ContainerDependencyKind::AllContainerListings:
               for (const auto &any_directory : all_directories) {
                 const auto directory_relative{
-                    std::filesystem::relative(any_directory, primary_path)};
+                    any_directory.lexically_relative(primary_path)};
                 rule_dependencies.push_back(
                     (directory_relative == "."
                          ? secondary_path / sentinel /
@@ -1406,14 +1405,13 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     deduplicated_removals.reserve(remove_wave.size());
     for (auto &entry : remove_wave) {
       const auto &path{entry.destination.string()};
+      // The wave is sorted and kept entries form an antichain, so a child's
+      // only possible kept ancestor is the most recently kept entry
       bool is_child{false};
-      for (const auto &kept : deduplicated_removals) {
-        const auto &parent{kept.destination.string()};
-        if (path.size() > parent.size() && path[parent.size()] == '/' &&
-            path.starts_with(parent)) {
-          is_child = true;
-          break;
-        }
+      if (!deduplicated_removals.empty()) {
+        const auto &parent{deduplicated_removals.back().destination.string()};
+        is_child = path.size() > parent.size() && path[parent.size()] == '/' &&
+                   path.starts_with(parent);
       }
 
       if (!is_child) {

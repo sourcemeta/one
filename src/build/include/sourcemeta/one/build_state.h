@@ -159,10 +159,10 @@ public:
   [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
   [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
 
-  [[nodiscard]] auto contains(const std::string &key) const -> bool;
-  [[nodiscard]] auto entry(const std::string &key) const -> const Entry *;
+  [[nodiscard]] auto contains(std::string_view key) const -> bool;
+  [[nodiscard]] auto entry(std::string_view key) const -> const Entry *;
   [[nodiscard]] auto
-  is_stale(const std::string &key,
+  is_stale(std::string_view key,
            std::filesystem::file_time_type source_mtime) const -> bool;
   auto commit(const std::filesystem::path &path,
               std::vector<std::filesystem::path> dependencies) -> void;
@@ -175,9 +175,9 @@ public:
                              std::filesystem::file_time_type mtime) const
       -> const ResolverEntry *;
 
-  [[nodiscard]] auto in_overlay(const std::string &key) const -> bool;
-  [[nodiscard]] auto disk_entry(const std::string &key) const -> const Entry *;
-  [[nodiscard]] auto raw_disk_entry(const std::string &key) const
+  [[nodiscard]] auto in_overlay(std::string_view key) const -> bool;
+  [[nodiscard]] auto disk_entry(std::string_view key) const -> const Entry *;
+  [[nodiscard]] auto raw_disk_entry(std::string_view key) const
       -> const Entry *;
 
   struct TransparentHash {

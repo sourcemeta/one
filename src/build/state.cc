@@ -310,7 +310,7 @@ auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
   return cached;
 }
 
-auto BuildState::contains(const std::string &key) const -> bool {
+auto BuildState::contains(std::string_view key) const -> bool {
   if (this->overlay.contains(key)) {
     return true;
   }
@@ -322,7 +322,7 @@ auto BuildState::contains(const std::string &key) const -> bool {
   return this->probe_slot(key, KIND_OUTPUT) != nullptr;
 }
 
-auto BuildState::entry(const std::string &key) const -> const Entry * {
+auto BuildState::entry(std::string_view key) const -> const Entry * {
   const auto overlay_match{this->overlay.find(key)};
   if (overlay_match != this->overlay.end()) {
     return &overlay_match->second;
@@ -341,7 +341,7 @@ auto BuildState::entry(const std::string &key) const -> const Entry * {
 }
 
 auto BuildState::is_stale(
-    const std::string &key,
+    std::string_view key,
     const std::filesystem::file_time_type source_mtime) const -> bool {
   const auto overlay_match{this->overlay.find(key)};
   if (overlay_match != this->overlay.end()) {
@@ -515,11 +515,11 @@ auto BuildState::commit(const std::string &source_path, ResolverEntry entry)
   this->dirty = true;
 }
 
-auto BuildState::in_overlay(const std::string &key) const -> bool {
+auto BuildState::in_overlay(std::string_view key) const -> bool {
   return this->overlay.contains(key);
 }
 
-auto BuildState::disk_entry(const std::string &key) const -> const Entry * {
+auto BuildState::disk_entry(std::string_view key) const -> const Entry * {
   if (this->deleted.contains(key)) {
     return nullptr;
   }
@@ -532,7 +532,7 @@ auto BuildState::disk_entry(const std::string &key) const -> const Entry * {
   return &this->parse_slot_entry(slot);
 }
 
-auto BuildState::raw_disk_entry(const std::string &key) const -> const Entry * {
+auto BuildState::raw_disk_entry(std::string_view key) const -> const Entry * {
   const auto *slot{this->probe_slot(key, KIND_OUTPUT)};
   if (slot == nullptr) {
     return nullptr;
