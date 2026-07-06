@@ -15,7 +15,7 @@
 #include <chrono>      // std::chrono::system_clock
 #include <cstddef>     // std::size_t
 #include <format>      // std::format
-#include <mutex>       // std::mutex, std::lock_guard
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <print>       // std::print
 #include <sstream>     // std::ostringstream
@@ -27,7 +27,7 @@ namespace sourcemeta::one {
 
 inline auto HTTP_LOG(const std::string_view message) -> void {
   static std::mutex log_mutex;
-  std::lock_guard<std::mutex> guard{log_mutex};
+  std::scoped_lock guard{log_mutex};
   std::print(stderr, "[{}] {} {}\n",
              sourcemeta::core::to_imf_fixdate(std::chrono::system_clock::now()),
              std::this_thread::get_id(), message);
@@ -51,7 +51,7 @@ inline auto expect_header_unrecognised(const HTTPRequest &request) -> bool {
   const auto expect{request.header("expect")};
   return !expect.empty() &&
          !std::ranges::equal(expect, std::string_view{"100-continue"},
-                             [](const char left, const char right) {
+                             [](const char left, const char right) -> bool {
                                return sourcemeta::core::to_lowercase(left) ==
                                       right;
                              });

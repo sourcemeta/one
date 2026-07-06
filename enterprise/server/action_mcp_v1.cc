@@ -29,10 +29,12 @@ namespace {
 constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{"application/schema+json"};
 constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
 
+constexpr std::string_view MCP_KEY_RESOURCES{"resources"};
+constexpr std::string_view MCP_KEY_NEXT_CURSOR{"nextCursor"};
 const auto MCP_HASH_RESOURCES{
-    sourcemeta::core::JSON::Object::hash("resources")};
+    sourcemeta::core::JSON::Object::hash(MCP_KEY_RESOURCES)};
 const auto MCP_HASH_NEXT_CURSOR{
-    sourcemeta::core::JSON::Object::hash("nextCursor")};
+    sourcemeta::core::JSON::Object::hash(MCP_KEY_NEXT_CURSOR)};
 
 } // namespace
 

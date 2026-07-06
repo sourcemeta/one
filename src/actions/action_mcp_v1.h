@@ -47,11 +47,12 @@ public:
                sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          }
+        });
 
     const auto mcp_metadata_path{
         this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};

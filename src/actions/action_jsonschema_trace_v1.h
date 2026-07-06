@@ -46,19 +46,20 @@ public:
       sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "requestSchema") {
-        this->request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpRequestSchema") {
-        this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        this->rpc_response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "requestSchema") {
+            this->request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
   auto rest(const std::span<std::string_view> matches,
@@ -244,7 +245,7 @@ private:
             const sourcemeta::blaze::InstructionExtra &extra,
             const sourcemeta::core::WeakPointer &evaluate_path,
             const sourcemeta::core::WeakPointer &instance_location,
-            const sourcemeta::core::JSON &annotation) {
+            const sourcemeta::core::JSON &annotation) -> void {
           auto step{sourcemeta::core::JSON::make_object()};
 
           if (type == sourcemeta::blaze::EvaluationType::Pre) {

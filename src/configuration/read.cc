@@ -137,9 +137,9 @@ auto dereference(const std::filesystem::path &base,
     // TODO: All of this dance because we can't get mutable iterators out of
     // objects
     std::vector<sourcemeta::core::JSON::String> keys;
-    std::ranges::transform(input.at("contents").as_object(),
-                           std::back_inserter(keys),
-                           [](const auto &entry) { return entry.first; });
+    std::ranges::transform(
+        input.at("contents").as_object(), std::back_inserter(keys),
+        [](const auto &entry) -> auto { return entry.first; });
     for (const auto &key : keys) {
       dereference(base, input.at("contents").at(key),
                   location.concat({"contents", key}), visited, all_files, false,
@@ -153,7 +153,7 @@ auto default_base_uri(sourcemeta::core::JSON &contents,
   assert(contents.is_object());
   std::vector<sourcemeta::core::JSON::String> keys;
   std::ranges::transform(contents.as_object(), std::back_inserter(keys),
-                         [](const auto &entry) { return entry.first; });
+                         [](const auto &entry) -> auto { return entry.first; });
   for (const auto &key : keys) {
     if (!contents.at(key).is_object()) {
       continue;

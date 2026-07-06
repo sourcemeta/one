@@ -132,7 +132,7 @@ template <const auto &RuleSet>
 template <const auto &RuleSet>
 [[nodiscard]] consteval auto rules_fingerprint() -> std::uint32_t {
   std::uint32_t hash{0x811c9dc5U};
-  const auto mix = [&hash](const std::uint8_t byte) {
+  const auto mix = [&hash](const std::uint8_t byte) -> void {
     hash ^= byte;
     hash *= 0x01000193U;
   };

@@ -35,21 +35,22 @@ public:
       sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "direction") {
-        this->metapack_ = std::get<std::string_view>(value) == "in"
-                              ? "dependents"
-                              : "dependencies";
-      } else if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpRequestSchema") {
-        this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        this->rpc_response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "direction") {
+            this->metapack_ = std::get<std::string_view>(value) == "in"
+                                  ? "dependents"
+                                  : "dependencies";
+          } else if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
   auto rest(const std::span<std::string_view> matches,
@@ -173,17 +174,18 @@ protected:
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
     this->metapack_ = metapack;
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpRequestSchema") {
-        this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        this->rpc_response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
 private:

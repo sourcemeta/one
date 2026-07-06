@@ -81,7 +81,7 @@ static auto write_metapack(const std::filesystem::path &destination,
   // disk. For Identity storage only the size is kept.
   const auto compressed{sourcemeta::core::gzip(
       reinterpret_cast<const std::uint8_t *>(content.data()), content.size())};
-  sourcemeta::core::write_file(destination, [&](std::ostream &output) {
+  sourcemeta::core::write_file(destination, [&](std::ostream &output) -> void {
     write_binary_header(output, mime, encoding, extension, duration, content,
                         content.size(), compressed.size());
 

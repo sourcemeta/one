@@ -170,16 +170,18 @@ static auto collect_affected_directories(
     result.emplace_back(entry);
   }
 
-  std::ranges::sort(result, [](const std::filesystem::path &left,
-                               const std::filesystem::path &right) {
-    const auto left_depth{std::distance(left.begin(), left.end())};
-    const auto right_depth{std::distance(right.begin(), right.end())};
-    if (left_depth == right_depth) {
-      return left < right;
-    }
+  std::ranges::sort(
+      result,
+      [](const std::filesystem::path &left,
+         const std::filesystem::path &right) -> bool {
+        const auto left_depth{std::distance(left.begin(), left.end())};
+        const auto right_depth{std::distance(right.begin(), right.end())};
+        if (left_depth == right_depth) {
+          return left < right;
+        }
 
-    return left_depth > right_depth;
-  });
+        return left_depth > right_depth;
+      });
 
   return result;
 }
@@ -199,7 +201,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                   const BuildPlan::Type full_mode,
                   const DeltaRuleIndices &indices) -> BuildPlan {
   assert(output.is_absolute());
-  assert(std::ranges::all_of(leaves, [](const auto &entry) {
+  assert(std::ranges::all_of(leaves, [](const auto &entry) -> bool {
     return entry.second.path->is_absolute() &&
            !entry.second.relative_path->is_absolute();
   }));
@@ -386,15 +388,18 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           }
         }
 
-        dependents_wave.push_back({leaf_rules[indices.dependents].action,
-                                   std::move(destination),
-                                   std::move(action_dependencies), uri});
+        dependents_wave.push_back(
+            {.type = leaf_rules[indices.dependents].action,
+             .destination = std::move(destination),
+             .dependencies = std::move(action_dependencies),
+             .data = uri});
       }
 
-      std::ranges::sort(dependents_wave, [](const BuildPlan::Action &left,
-                                            const BuildPlan::Action &right) {
-        return left.destination < right.destination;
-      });
+      std::ranges::sort(dependents_wave,
+                        [](const BuildPlan::Action &left,
+                           const BuildPlan::Action &right) -> bool {
+                          return left.destination < right.destination;
+                        });
       plan.size = dependents_wave.size();
       plan.waves.push_back(std::move(dependents_wave));
     }
@@ -610,8 +615,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                            configuration_string, uri, phase, leaf_rules);
     }
 
-    active_leaves.push_back({uri, &info, std::move(primary_base),
-                             std::move(secondary_base), std::move(root_path)});
+    active_leaves.push_back({.uri = uri,
+                             .info = &info,
+                             .primary_base = std::move(primary_base),
+                             .secondary_base = std::move(secondary_base),
+                             .root_path = std::move(root_path)});
   }
 
   std::unordered_set<std::string_view> force_dirty;
@@ -1078,9 +1086,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         action_dependencies.emplace_back(std::move(dependency));
       }
 
-      dag_waves[wave].push_back({target.action,
-                                 std::filesystem::path{target_path},
-                                 std::move(action_dependencies), target.data});
+      dag_waves[wave].push_back(
+          {.type = target.action,
+           .destination = std::filesystem::path{target_path},
+           .dependencies = std::move(action_dependencies),
+           .data = target.data});
     }
   }
 
@@ -1102,10 +1112,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                                                : leaf.secondary_base};
         auto target_path{append_filename(target_base, rule.filename)};
         if (entries.contains(target_path)) {
-          remove_wave.push_back({remove_action,
-                                 std::filesystem::path{std::move(target_path)},
-                                 {},
-                                 {}});
+          remove_wave.push_back(
+              {.type = remove_action,
+               .destination = std::filesystem::path{std::move(target_path)},
+               .dependencies = {},
+               .data = {}});
         }
       }
     }
@@ -1190,8 +1201,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
 
     for (auto &root : stale_roots) {
-      remove_wave.push_back(
-          {remove_action, std::filesystem::path{root}, {}, {}});
+      remove_wave.push_back({.type = remove_action,
+                             .destination = std::filesystem::path{root},
+                             .dependencies = {},
+                             .data = {}});
     }
   }
 
@@ -1223,8 +1236,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       const std::string_view filename{entry_path.data() + last_slash + 1,
                                       entry_path.size() - last_slash - 1};
       if (mode_only_filenames.contains(filename)) {
-        remove_wave.push_back(
-            {remove_action, std::filesystem::path{entry_path}, {}, {}});
+        remove_wave.push_back({.type = remove_action,
+                               .destination = std::filesystem::path{entry_path},
+                               .dependencies = {},
+                               .data = {}});
         mode_removed = true;
       }
     }
@@ -1292,7 +1307,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
            .dependencies = {},
            .data = comment});
     } else if (entries.contains(comment_string)) {
-      remove_wave.push_back({remove_action, comment_path, {}, {}});
+      remove_wave.push_back({.type = remove_action,
+                             .destination = comment_path,
+                             .dependencies = {},
+                             .data = {}});
     }
     plan.waves.push_back(std::move(initialization_wave));
   } else if (!comment.empty()) {
@@ -1301,7 +1319,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                            .dependencies = {},
                            .data = comment}});
   } else if (entries.contains(comment_string)) {
-    remove_wave.push_back({remove_action, comment_path, {}, {}});
+    remove_wave.push_back({.type = remove_action,
+                           .destination = comment_path,
+                           .dependencies = {},
+                           .data = {}});
   }
 
   if (is_full || mode_added || mode_removed) {
@@ -1311,10 +1332,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         continue;
       }
 
-      global_wave.push_back({rule.action,
-                             output / rule.filename,
-                             {configuration_path},
-                             mode_label});
+      global_wave.push_back({.type = rule.action,
+                             .destination = output / rule.filename,
+                             .dependencies = {configuration_path},
+                             .data = mode_label});
     }
 
     if (!global_wave.empty()) {
@@ -1369,10 +1390,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   }
 
   if (!remove_wave.empty()) {
-    std::ranges::sort(remove_wave, [](const BuildPlan::Action &left,
-                                      const BuildPlan::Action &right) {
-      return left.destination < right.destination;
-    });
+    std::ranges::sort(remove_wave,
+                      [](const BuildPlan::Action &left,
+                         const BuildPlan::Action &right) -> bool {
+                        return left.destination < right.destination;
+                      });
     std::vector<BuildPlan::Action> deduplicated_removals;
     deduplicated_removals.reserve(remove_wave.size());
     for (auto &entry : remove_wave) {
@@ -1396,10 +1418,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   }
 
   for (auto &wave : plan.waves) {
-    std::ranges::sort(wave, [](const BuildPlan::Action &left,
-                               const BuildPlan::Action &right) {
-      return left.destination < right.destination;
-    });
+    std::ranges::sort(wave,
+                      [](const BuildPlan::Action &left,
+                         const BuildPlan::Action &right) -> bool {
+                        return left.destination < right.destination;
+                      });
     plan.size += wave.size();
   }
 

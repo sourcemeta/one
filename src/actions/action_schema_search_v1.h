@@ -40,17 +40,18 @@ public:
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpRequestSchema") {
-        this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        this->rpc_response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
   auto rest(const std::span<std::string_view>, std::string_view credential,
@@ -177,7 +178,8 @@ public:
     }
 
     auto result{this->search_view_.search(
-        query, limit, scope, [this, &credential](const std::string_view path) {
+        query, limit, scope,
+        [this, &credential](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
           return authentication.admits(path, credential).allowed;
         })};
@@ -277,7 +279,7 @@ public:
 
     auto results{this->search_view_.search(
         arguments.at("q").to_string(), limit, scope,
-        [this, &credential](const std::string_view path) {
+        [this, &credential](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
           return authentication.admits(path, credential).allowed;
         })};

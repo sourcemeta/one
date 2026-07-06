@@ -49,11 +49,12 @@ namespace sourcemeta::one {
 #define SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY(Name, Class)                     \
   table[ACTION_TYPE_##Name] = &make_router_action<Class>;
 
-const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{[] {
-  std::array<RouterActionConstructor, ACTION_TYPE_COUNT> table{};
-  SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY)
-  return table;
-}()};
+const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{
+    []() noexcept -> std::array<RouterActionConstructor, ACTION_TYPE_COUNT> {
+      std::array<RouterActionConstructor, ACTION_TYPE_COUNT> table{};
+      SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY)
+      return table;
+    }()};
 
 #undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
 

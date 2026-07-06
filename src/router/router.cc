@@ -52,7 +52,7 @@ Router::Router(const std::filesystem::path &base,
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
       authentication_{base / "authentication.bin", default_jwks_fetcher()} {
-  router.arguments(0, [this](const auto &key, const auto &value) {
+  router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
     }
@@ -78,7 +78,7 @@ auto Router::action(
   }
 
   auto &slot{this->slots_[identifier]};
-  std::call_once(slot.flag, [this, &slot, context, identifier] {
+  std::call_once(slot.flag, [this, &slot, context, identifier]() -> void {
     slot.instance = this->constructors_[context](this->base_, this->router_,
                                                  identifier, *this);
   });

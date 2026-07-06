@@ -13,7 +13,7 @@
 #include <cstdint>     // std::uint16_t
 #include <latch>       // std::latch
 #include <memory>      // std::unique_ptr, std::make_unique
-#include <mutex>       // std::mutex, std::lock_guard
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <string_view> // std::string_view
 #include <thread>      // std::thread, std::thread::hardware_concurrency
 #include <unistd.h>    // write, STDERR_FILENO
@@ -92,7 +92,7 @@ public:
     for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
       threads.emplace_back(std::make_unique<std::thread>(
           [index, port, &on_request, &on_listen, &on_error, &setup_barrier,
-           &setup_mutex]() {
+           &setup_mutex]() -> void {
             // uWS provides slow-loris protection out of the box, so
             // we don't have to configure any of it ourselves.
             uWS::SocketContextOptions options{};
@@ -115,7 +115,7 @@ public:
                 });
 
             {
-              std::lock_guard<std::mutex> guard{setup_mutex};
+              std::scoped_lock guard{setup_mutex};
               app->listen(
                   static_cast<int>(port),
                   [port, &on_listen,
@@ -185,7 +185,7 @@ public:
         auto *app{HTTPServer::apps_[index].load(std::memory_order_acquire)};
         if (app != nullptr) {
           // `us_socket_context_close` must run on the loop's thread.
-          app->getLoop()->defer([app]() { app->close(); });
+          app->getLoop()->defer([app]() -> void { app->close(); });
         }
       }
     }
@@ -229,7 +229,7 @@ private:
         HTTPServer::apps_[target].load(std::memory_order_acquire)};
     if (receiving_app) {
       receiving_app->getLoop()->defer(
-          [fd, receiving_app]() { receiving_app->adoptSocket(fd); });
+          [fd, receiving_app]() -> void { receiving_app->adoptSocket(fd); });
     }
     return static_cast<LIBUS_SOCKET_DESCRIPTOR>(-1);
   }

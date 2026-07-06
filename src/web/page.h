@@ -216,7 +216,7 @@ inline auto make_error_page(sourcemeta::core::HTMLWriter &writer,
                             const std::string &heading, const std::string &lead)
     -> void {
   make_page(writer, configuration, configuration.url, title, description,
-            [&](sourcemeta::core::HTMLWriter &body) {
+            [&](sourcemeta::core::HTMLWriter &body) -> void {
               body.div().attribute("class", "container-fluid p-4");
               body.h2().attribute("class", "fw-bold");
               body.text(heading);

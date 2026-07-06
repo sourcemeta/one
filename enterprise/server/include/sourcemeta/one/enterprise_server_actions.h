@@ -40,13 +40,14 @@ public:
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "requestSchema") {
-        this->request_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "requestSchema") {
+            this->request_schema_ = std::get<std::string_view>(value);
+          }
+        });
 
     const auto mcp_metadata_path{
         this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
