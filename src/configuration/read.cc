@@ -181,14 +181,21 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
     -> sourcemeta::core::JSON {
   auto data{sourcemeta::core::read_json(configuration_path)};
 
-  if (data.is_object() && data.defines("html") &&
-      data.at("html").is_boolean() && data.at("html").to_boolean()) {
+  // Every normalisation step below assumes an object root. Reporting a
+  // non-object configuration is the schema validator's job, so return the
+  // document untouched and let validation fail with a proper error
+  if (!data.is_object()) {
+    return data;
+  }
+
+  if (data.defines("html") && data.at("html").is_boolean() &&
+      data.at("html").to_boolean()) {
     data.at("html").into_object();
   } else if (!data.defines("html")) {
     data.assign("html", sourcemeta::core::JSON::make_object());
   }
 
-  if (data.is_object() && data.defines("html") && data.at("html").is_object()) {
+  if (data.defines("html") && data.at("html").is_object()) {
     data.at("html").assign_if_missing("name",
                                       sourcemeta::core::JSON{"Sourcemeta"});
     data.at("html").assign_if_missing(
@@ -196,7 +203,7 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
         sourcemeta::core::JSON{"The next-generation JSON Schema platform"});
   }
 
-  if (data.is_object() && data.defines("api") && data.at("api").is_boolean() &&
+  if (data.defines("api") && data.at("api").is_boolean() &&
       data.at("api").to_boolean()) {
     data.at("api").into_object();
   } else if (!data.defines("api")) {
@@ -207,7 +214,10 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
     data.assign("extends", sourcemeta::core::JSON::make_array());
   }
 
-  if (!(data.at("api").is_boolean() && !data.at("api").to_boolean())) {
+  // A non-array `extends` is invalid and reported by schema validation. Only
+  // the array form can carry the implicit self configuration reference
+  if (data.at("extends").is_array() &&
+      !(data.at("api").is_boolean() && !data.at("api").to_boolean())) {
     const auto self_one_path{
         std::filesystem::weakly_canonical(self_path / "v1" / "one.json")};
     auto extends_copy{sourcemeta::core::JSON::make_array()};
@@ -227,7 +237,7 @@ auto Configuration::read(const std::filesystem::path &configuration_path,
   dereference(configuration_path, data, {}, visited, configuration_files, true,
               self_path);
 
-  if (data.is_object() && data.defines("url") && data.defines("contents") &&
+  if (data.defines("url") && data.defines("contents") &&
       data.at("contents").is_object()) {
     default_base_uri(data.at("contents"), data.at("url"));
   }

@@ -1,5 +1,6 @@
 #include <sourcemeta/one/configuration.h>
 
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/uri.h>
 
 namespace sourcemeta::one {
@@ -39,6 +40,13 @@ auto Configuration::resolve_schema(const sourcemeta::core::URI &input) const
 
         if (result.extension() != ".json") {
           result += ".json";
+        }
+
+        // A percent-encoded traversal in the input could otherwise resolve to
+        // a path outside the collection directory
+        if (!sourcemeta::core::is_under_path(result,
+                                             collection->absolute_path)) {
+          return std::nullopt;
         }
 
         return result;
