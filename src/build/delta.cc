@@ -744,7 +744,14 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    for (const auto &dirty_path : dirty_set) {
+    // Snapshot the dirty set before propagating: inserting into an
+    // unordered_set while range-iterating it invalidates the iterator on
+    // rehash. This mirrors the one-level propagation the removed-entries pass
+    // below performs, while the transitive closure over the current plan's
+    // graph happens in the worklist that follows
+    const std::vector<std::string> dirty_snapshot{dirty_set.begin(),
+                                                  dirty_set.end()};
+    for (const auto &dirty_path : dirty_snapshot) {
       const auto match{reverse_state_dependencies.find(dirty_path)};
       if (match != reverse_state_dependencies.end()) {
         for (const auto &dependent : match->second) {
