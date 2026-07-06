@@ -6,7 +6,6 @@
 
 #include <algorithm>   // std::min, std::ranges::search
 #include <cassert>     // assert
-#include <cctype>      // std::tolower
 #include <cstring>     // std::memcpy
 #include <functional>  // std::function
 #include <limits>      // std::numeric_limits
@@ -126,13 +125,21 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
 static auto case_insensitive_contains(const std::string_view haystack,
                                       const std::string_view needle) -> bool {
-  return !std::ranges::search(
-              haystack, needle,
-              [](const auto left, const auto right) -> bool {
-                return std::tolower(static_cast<unsigned char>(left)) ==
-                       std::tolower(static_cast<unsigned char>(right));
-              })
+  return !std::ranges::search(haystack, needle,
+                              [](const auto left, const auto right) -> bool {
+                                return sourcemeta::core::to_lowercase(left) ==
+                                       sourcemeta::core::to_lowercase(right);
+                              })
               .empty();
+}
+
+// The number of offset-table entries that fit after the header. Dividing the
+// available bytes keeps the bound from overflowing size_t on a 32-bit build,
+// which multiplying a corrupt entry count could otherwise wrap past the guard.
+// The caller must have already ensured the header itself fits
+static auto maximum_offset_table_entries(const std::size_t payload_size)
+    -> std::size_t {
+  return (payload_size - sizeof(SearchIndexHeader)) / sizeof(std::uint32_t);
 }
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
@@ -155,10 +162,7 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     return result;
   }
 
-  const auto offset_table_end{sizeof(SearchIndexHeader) +
-                              static_cast<std::size_t>(header->entry_count) *
-                                  sizeof(std::uint32_t)};
-  if (offset_table_end > payload_size) {
+  if (header->entry_count > maximum_offset_table_entries(payload_size)) {
     return result;
   }
 
@@ -276,15 +280,6 @@ auto SearchView::search(const std::string_view query, const std::size_t limit,
     -> sourcemeta::core::JSON {
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
                                  limit, scope, filter);
-}
-
-// The number of offset-table entries that fit after the header. Dividing the
-// available bytes keeps the bound from overflowing size_t on a 32-bit build,
-// which multiplying a corrupt entry count could otherwise wrap past the guard.
-// The caller must have already ensured the header itself fits
-static auto maximum_offset_table_entries(const std::size_t payload_size)
-    -> std::size_t {
-  return (payload_size - sizeof(SearchIndexHeader)) / sizeof(std::uint32_t);
 }
 
 auto SearchView::count() -> std::size_t {

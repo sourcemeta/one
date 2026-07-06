@@ -14,6 +14,7 @@
 #include <cstdint>    // std::uint8_t, std::uint32_t, std::uint64_t, std::size_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <functional> // std::function
+#include <limits>     // std::numeric_limits
 #include <span>       // std::span
 #include <string>     // std::string
 #include <string_view> // std::string_view
@@ -40,6 +41,10 @@ using LeafSet = std::span<const std::pair<std::string_view, LeafView>>;
 
 template <std::size_t S, std::size_t D, std::size_t G, std::size_t B>
 struct DeltaRuleSet {
+  // Each leaf rule's index is shifted into a std::uint16_t target bitmap, so
+  // more rules than the bitmap has bits would silently truncate 1 << index
+  static_assert(S <= std::numeric_limits<std::uint16_t>::digits,
+                "Too many leaf rules for the target bitmap width");
   std::array<LeafRule, S> leaves;
   std::array<ContainerRule, D> containers;
   std::array<GlobalRule, G> globals;

@@ -6,12 +6,12 @@
 #include <sourcemeta/blaze/frame.h>
 #include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/error.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
-#include <algorithm>     // std::ranges::transform, std::ranges::find_if
+#include <algorithm>     // std::ranges::find_if
 #include <cassert>       // assert
-#include <cctype>        // std::tolower
 #include <mutex>         // std::mutex, std::lock_guard
 #include <optional>      // std::optional, std::nullopt
 #include <shared_mutex>  // std::shared_lock
@@ -59,10 +59,7 @@ static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
 static auto normalise_identifier(const std::string_view identifier)
     -> std::string {
   std::string lowercase{identifier};
-  std::ranges::transform(lowercase, lowercase.begin(),
-                         [](const auto character) -> char {
-                           return static_cast<char>(std::tolower(character));
-                         });
+  sourcemeta::core::to_lowercase(lowercase);
 
   while (true) {
     if (lowercase.ends_with("#")) {

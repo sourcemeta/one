@@ -10,8 +10,6 @@
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
-#include <algorithm>   // std::ranges::transform
-#include <cctype>      // std::tolower
 #include <filesystem>  // std::filesystem
 #include <span>        // std::span
 #include <string>      // std::string
