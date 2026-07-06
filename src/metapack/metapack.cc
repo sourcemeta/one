@@ -7,6 +7,7 @@
 #include <bit>         // std::endian
 #include <cassert>     // assert
 #include <cstring>     // std::memcpy
+#include <exception>   // std::exception
 #include <optional>    // std::optional, std::nullopt
 #include <ostream>     // std::ostream
 #include <sstream>     // std::ostringstream
@@ -234,10 +235,21 @@ auto metapack_read_json(const std::filesystem::path &path)
       return std::nullopt;
     }
 
-    const auto decompressed{
-        sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
-                                 payload_data_size, header->content_bytes)};
-    return sourcemeta::core::parse_json(decompressed);
+    try {
+      const auto decompressed{
+          sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
+                                   payload_data_size, header->content_bytes)};
+      // The header records the exact uncompressed size, so a payload that
+      // inflates to a different size is corrupt or a decompression bomb whose
+      // small declared size slipped past the ratio guard
+      if (decompressed.size() != header->content_bytes) {
+        return std::nullopt;
+      }
+
+      return sourcemeta::core::parse_json(decompressed);
+    } catch (const std::exception &) {
+      return std::nullopt;
+    }
   }
 
   if (header->content_bytes > payload_data_size) {
@@ -248,7 +260,11 @@ auto metapack_read_json(const std::filesystem::path &path)
   const auto *payload_data{
       reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
   const std::string payload_string{payload_data, header->content_bytes};
-  return sourcemeta::core::parse_json(payload_string);
+  try {
+    return sourcemeta::core::parse_json(payload_string);
+  } catch (const std::exception &) {
+    return std::nullopt;
+  }
 }
 
 auto metapack_read_text(const std::filesystem::path &path)
@@ -290,8 +306,21 @@ auto metapack_read_text(const std::filesystem::path &path)
       return std::nullopt;
     }
 
-    return sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
-                                    payload_data_size, header->content_bytes);
+    try {
+      auto decompressed{
+          sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
+                                   payload_data_size, header->content_bytes)};
+      // The header records the exact uncompressed size, so a payload that
+      // inflates to a different size is corrupt or a decompression bomb whose
+      // small declared size slipped past the ratio guard
+      if (decompressed.size() != header->content_bytes) {
+        return std::nullopt;
+      }
+
+      return decompressed;
+    } catch (const std::exception &) {
+      return std::nullopt;
+    }
   }
 
   if (header->content_bytes > payload_data_size) {

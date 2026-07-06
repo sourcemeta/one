@@ -287,26 +287,58 @@ auto SearchView::count() -> std::size_t {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *header{
       reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
-  return header->entry_count;
+  const auto total{static_cast<std::size_t>(header->entry_count)};
+
+  // A corrupt index can claim more entries than its offset table can hold, so
+  // report none unless the whole table fits within the payload
+  const auto offset_table_end{sizeof(SearchIndexHeader) +
+                              total * sizeof(std::uint32_t)};
+  if (offset_table_end > this->payload_size_) {
+    return 0;
+  }
+
+  return total;
 }
 
 auto SearchView::at(const std::size_t index) -> SearchListEntry {
-  assert(this->payload_ != nullptr);
-  assert(this->payload_size_ >= sizeof(SearchIndexHeader));
-  assert(
-      index <
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const SearchIndexHeader *>(this->payload_)->entry_count);
+  if (this->payload_ == nullptr ||
+      this->payload_size_ < sizeof(SearchIndexHeader)) {
+    return {};
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  const auto *header{
+      reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
+  const auto total{static_cast<std::size_t>(header->entry_count)};
+  const auto offset_table_end{sizeof(SearchIndexHeader) +
+                              total * sizeof(std::uint32_t)};
+  // A corrupt index can lie about its entry count or point a record past the
+  // payload. Every field length below is trusted only after it is checked to
+  // fit, matching the validation the streaming iterator performs
+  if (index >= total || offset_table_end > this->payload_size_) {
+    return {};
+  }
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
       this->payload_ + sizeof(SearchIndexHeader))};
   const auto record_offset{offset_table[index]};
+  if (record_offset + sizeof(SearchRecordHeader) > this->payload_size_) {
+    return {};
+  }
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   const auto *record_header{reinterpret_cast<const SearchRecordHeader *>(
       this->payload_ + record_offset)};
   const auto field_data_offset{record_offset + sizeof(SearchRecordHeader)};
+  const auto total_field_length{
+      static_cast<std::size_t>(record_header->path_length) +
+      record_header->identifier_length + record_header->title_length +
+      record_header->description_length};
+  if (field_data_offset + total_field_length > this->payload_size_) {
+    return {};
+  }
+
   const auto *field_data{this->payload_ + field_data_offset};
 
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

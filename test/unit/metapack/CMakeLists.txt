@@ -1,5 +1,5 @@
 sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME metapack
-  SOURCES metapack_test.cc)
+  SOURCES metapack_test.cc metapack_corrupt_test.cc)
 
 target_link_libraries(sourcemeta_one_metapack_unit
   PRIVATE sourcemeta::one::metapack)

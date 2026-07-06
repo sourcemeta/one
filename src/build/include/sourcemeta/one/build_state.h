@@ -212,6 +212,15 @@ public:
       -> std::vector<std::string>;
 
 private:
+  auto reset_loaded_state() -> void;
+  auto index_leaf_target(std::filesystem::file_time_type mtime,
+                         bool is_explorer, std::string_view relative_path,
+                         std::string_view filename) const -> void;
+  auto flag_cross_leaf_dependencies(
+      std::string_view owner_relative,
+      const std::vector<std::filesystem::path> &dependencies,
+      std::string_view primary_prefix, std::string_view secondary_prefix) const
+      -> void;
   auto build_leaf_index(const std::string &output) const -> void;
   auto probe_slot(std::string_view key, std::uint8_t kind) const
       -> const std::uint8_t *;

@@ -2,13 +2,16 @@
 
 #include <sourcemeta/core/io.h>
 
+#include <bit>     // std::has_single_bit
 #include <cassert> // assert
 #include <chrono>  // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint> // std::int64_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <cstring> // std::memcpy, std::memcmp
 #include <ostream> // std::ostream
 #include <string>  // std::string
-#include <vector>  // std::vector
+#include <string_view> // std::string_view
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 namespace {
 
@@ -90,6 +93,34 @@ auto append_pool_string(std::string &pool, const std::string &value) -> void {
   pool.append(value);
 }
 
+auto is_key_or_descendant(std::string_view candidate, std::string_view key,
+                          std::string_view child_prefix) -> bool {
+  return candidate == key || candidate.starts_with(child_prefix);
+}
+
+auto split_leaf_base(std::string_view key, std::string_view primary_prefix,
+                     std::string_view secondary_prefix,
+                     std::string_view sentinel_separator)
+    -> std::pair<std::string_view, std::string_view> {
+  std::string_view prefix;
+  if (key.starts_with(primary_prefix)) {
+    prefix = primary_prefix;
+  } else if (key.starts_with(secondary_prefix)) {
+    prefix = secondary_prefix;
+  } else {
+    return {{}, {}};
+  }
+
+  const auto after_prefix{key.substr(prefix.size())};
+  const auto sentinel_position{after_prefix.find(sentinel_separator)};
+  if (sentinel_position == std::string_view::npos) {
+    return {{}, {}};
+  }
+
+  return {after_prefix.substr(0, sentinel_position),
+          after_prefix.substr(sentinel_position + sentinel_separator.size())};
+}
+
 } // anonymous namespace
 
 namespace sourcemeta::one {
@@ -108,6 +139,16 @@ auto BuildState::configure(std::span<const LeafRule> rules,
   this->sentinel_separator = std::string{"/"} + std::string{sentinel} + "/";
 }
 
+auto BuildState::reset_loaded_state() -> void {
+  this->table_capacity = 0;
+  this->table_slots = nullptr;
+  this->string_pool = nullptr;
+  this->view.reset();
+  this->view_data = nullptr;
+  this->entry_count = 0;
+  this->resolver_entry_count = 0;
+}
+
 auto BuildState::load(const std::filesystem::path &path,
                       std::span<const LeafRule> rules,
                       std::uint32_t fingerprint, std::string_view sentinel)
@@ -118,22 +159,22 @@ auto BuildState::load(const std::filesystem::path &path,
     return;
   }
 
+  // The state file is only an incremental-build cache. Any failure to read or
+  // validate it must degrade to a full rebuild rather than abort, so every
+  // failure path below discards the mapping and starts from an empty state
   try {
     this->loaded_path = path;
-    this->view = std::make_unique<sourcemeta::core::FileView>(path);
-    this->view_data = this->view->as<std::uint8_t>();
-    const auto file_size{this->view->size()};
 
+    // Mapping a zero-length file fails, and a file shorter than the header
+    // cannot describe a valid table, so both start fresh without mapping
+    const auto file_size{std::filesystem::file_size(path)};
     if (file_size < HEADER_SIZE) {
-      this->table_capacity = 0;
-      this->table_slots = nullptr;
-      this->string_pool = nullptr;
-      this->view.reset();
-      this->view_data = nullptr;
-      this->entry_count = 0;
-      this->resolver_entry_count = 0;
+      this->reset_loaded_state();
       return;
     }
+
+    this->view = std::make_unique<sourcemeta::core::FileView>(path);
+    this->view_data = this->view->as<std::uint8_t>();
 
     sourcemeta::core::BinaryReader header_reader{*this->view};
     const auto magic{header_reader.get_dword()};
@@ -141,29 +182,34 @@ auto BuildState::load(const std::filesystem::path &path,
     const auto on_disk_fingerprint{header_reader.get_dword()};
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
         on_disk_fingerprint != fingerprint) {
-      this->table_capacity = 0;
-      this->table_slots = nullptr;
-      this->string_pool = nullptr;
-      this->view.reset();
-      this->view_data = nullptr;
-      this->entry_count = 0;
-      this->resolver_entry_count = 0;
+      this->reset_loaded_state();
       return;
     }
 
-    this->table_capacity = header_reader.get_dword();
-    this->entry_count = header_reader.get_dword();
+    const auto capacity{header_reader.get_dword()};
+    const auto entries{header_reader.get_dword()};
     const auto pool_size_value{header_reader.get_dword()};
-    this->resolver_entry_count = header_reader.get_dword();
-    this->table_slots = this->view_data + HEADER_SIZE;
-    this->string_pool =
-        this->table_slots +
-        static_cast<std::size_t>(this->table_capacity) * SLOT_SIZE;
+    const auto resolver_entries{header_reader.get_dword()};
 
-    const auto leaf_table_start{HEADER_SIZE +
-                                static_cast<std::size_t>(this->table_capacity) *
-                                    SLOT_SIZE +
-                                pool_size_value};
+    // A truncated or corrupted body can leave the header intact while its
+    // sizes point past the end of the file or break the power-of-two probe
+    // mask. Recompute the layout and require it to fit before trusting any
+    // offset, otherwise treat the whole file as a cache miss
+    const auto slots_bytes{static_cast<std::size_t>(capacity) * SLOT_SIZE};
+    if (!std::has_single_bit(capacity) ||
+        static_cast<std::size_t>(entries) + resolver_entries > capacity ||
+        HEADER_SIZE + slots_bytes + pool_size_value > file_size) {
+      this->reset_loaded_state();
+      return;
+    }
+
+    this->table_capacity = capacity;
+    this->entry_count = entries;
+    this->resolver_entry_count = resolver_entries;
+    this->table_slots = this->view_data + HEADER_SIZE;
+    this->string_pool = this->table_slots + slots_bytes;
+
+    const auto leaf_table_start{HEADER_SIZE + slots_bytes + pool_size_value};
     if (leaf_table_start + sizeof(std::uint32_t) * 2 <= file_size &&
         read_field<std::uint32_t>(this->view_data, leaf_table_start) ==
             LEAF_INDEX_MAGIC) {
@@ -173,14 +219,7 @@ auto BuildState::load(const std::filesystem::path &path,
           this->view_data + leaf_table_start + sizeof(std::uint32_t) * 2;
     }
   } catch (...) {
-    this->table_capacity = 0;
-    this->table_slots = nullptr;
-    this->string_pool = nullptr;
-    this->view.reset();
-    this->view_data = nullptr;
-    this->entry_count = 0;
-    this->resolver_entry_count = 0;
-    throw;
+    this->reset_loaded_state();
   }
 }
 
@@ -349,15 +388,12 @@ auto BuildState::commit(const std::filesystem::path &path,
 
 auto BuildState::forget(const std::string &key) -> void {
   const auto child_prefix{key + "/"};
-  auto matches{[&](std::string_view candidate) -> bool {
-    return candidate == key || candidate.starts_with(child_prefix);
-  }};
 
   std::unordered_set<std::string, TransparentHash, TransparentEqual>
       removed_from_overlay;
   for (auto iterator = this->overlay.begin();
        iterator != this->overlay.end();) {
-    if (matches(iterator->first)) {
+    if (is_key_or_descendant(iterator->first, key, child_prefix)) {
       removed_from_overlay.insert(iterator->first);
       iterator = this->overlay.erase(iterator);
       this->entry_count--;
@@ -374,7 +410,8 @@ auto BuildState::forget(const std::string &key) -> void {
     }
 
     const auto key_sv{slot_key(slot, this->string_pool)};
-    if (matches(key_sv) && !this->deleted.contains(key_sv)) {
+    if (is_key_or_descendant(key_sv, key, child_prefix) &&
+        !this->deleted.contains(key_sv)) {
       this->deleted.emplace(key_sv);
       this->lazy_cache.erase(std::string{key_sv});
       if (!removed_from_overlay.contains(key_sv)) {
@@ -509,6 +546,42 @@ auto BuildState::deleted_keys() const -> const
   return this->deleted;
 }
 
+auto BuildState::index_leaf_target(std::filesystem::file_time_type mtime,
+                                   bool is_explorer,
+                                   std::string_view relative_path,
+                                   std::string_view filename) const -> void {
+  auto &leaf_entry{this->leaf_index_cache[std::string{relative_path}]};
+
+  for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
+       rule_index++) {
+    const auto &rule{this->leaf_rules[rule_index]};
+    if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
+      leaf_entry.target_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
+      if (rule.is_root) {
+        leaf_entry.root_mtime = mtime;
+      }
+      break;
+    }
+  }
+}
+
+auto BuildState::flag_cross_leaf_dependencies(
+    std::string_view owner_relative,
+    const std::vector<std::filesystem::path> &dependencies,
+    std::string_view primary_prefix, std::string_view secondary_prefix) const
+    -> void {
+  for (const auto &dependency : dependencies) {
+    const auto [dep_relative, dep_filename] =
+        split_leaf_base(dependency.native(), primary_prefix, secondary_prefix,
+                        this->sentinel_separator);
+    if (!dep_relative.empty() && dep_relative != owner_relative) {
+      this->leaf_index_cache[std::string{owner_relative}].has_cross_leaf_deps =
+          true;
+      return;
+    }
+  }
+}
+
 auto BuildState::build_leaf_index(const std::string &output) const -> void {
   this->leaf_index_cache.clear();
   this->leaf_index_output = output;
@@ -539,60 +612,6 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
   const auto primary_prefix{output + "/schemas/"};
   const auto secondary_prefix{output + "/explorer/"};
 
-  auto extract_primary_base = [&](std::string_view key)
-      -> std::pair<std::string_view, std::string_view> {
-    std::string_view prefix;
-    if (key.starts_with(primary_prefix)) {
-      prefix = primary_prefix;
-    } else if (key.starts_with(secondary_prefix)) {
-      prefix = secondary_prefix;
-    } else {
-      return {{}, {}};
-    }
-
-    const auto after_prefix{key.substr(prefix.size())};
-    const auto sentinel_pos{after_prefix.find(this->sentinel_separator)};
-    if (sentinel_pos == std::string_view::npos) {
-      return {{}, {}};
-    }
-
-    return {
-        after_prefix.substr(0, sentinel_pos),
-        after_prefix.substr(sentinel_pos + this->sentinel_separator.size())};
-  };
-
-  auto process_key = [&](std::filesystem::file_time_type mtime,
-                         bool is_explorer, std::string_view relative_path,
-                         std::string_view filename) -> void {
-    auto &leaf_entry{this->leaf_index_cache[std::string{relative_path}]};
-
-    for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
-         rule_index++) {
-      const auto &rule{this->leaf_rules[rule_index]};
-      if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-        leaf_entry.target_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
-        if (rule.is_root) {
-          leaf_entry.root_mtime = mtime;
-        }
-        break;
-      }
-    }
-  };
-
-  auto check_cross_leaf_deps =
-      [&](std::string_view owner_relative,
-          const std::vector<std::filesystem::path> &dependencies) -> void {
-    for (const auto &dependency : dependencies) {
-      const auto [dep_relative, dep_filename] =
-          extract_primary_base(dependency.native());
-      if (!dep_relative.empty() && dep_relative != owner_relative) {
-        auto &leaf_entry{this->leaf_index_cache[std::string{owner_relative}]};
-        leaf_entry.has_cross_leaf_deps = true;
-        return;
-      }
-    }
-  };
-
   for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
        ++slot_index) {
     const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
@@ -605,7 +624,8 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
       continue;
     }
 
-    const auto [relative_path, filename] = extract_primary_base(key);
+    const auto [relative_path, filename] = split_leaf_base(
+        key, primary_prefix, secondary_prefix, this->sentinel_separator);
     if (relative_path.empty()) {
       continue;
     }
@@ -616,7 +636,7 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
     const auto mtime{file_time{std::chrono::duration_cast<file_time::duration>(
         std::chrono::nanoseconds{nanoseconds})}};
 
-    process_key(mtime, is_explorer, relative_path, filename);
+    this->index_leaf_target(mtime, is_explorer, relative_path, filename);
 
     const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
     if (data_count > 0) {
@@ -626,7 +646,8 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
            ++dependency_index) {
         const auto dependency_path{read_pool_string(this->string_pool, offset)};
         const auto [dep_relative, dep_filename] =
-            extract_primary_base(dependency_path);
+            split_leaf_base(dependency_path, primary_prefix, secondary_prefix,
+                            this->sentinel_separator);
         if (!dep_relative.empty() && dep_relative != relative_path) {
           this->leaf_index_cache[std::string{relative_path}]
               .has_cross_leaf_deps = true;
@@ -637,15 +658,18 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
   }
 
   for (const auto &[entry_path, entry_value] : this->overlay) {
-    const auto [relative_path, filename] = extract_primary_base(entry_path);
+    const auto [relative_path, filename] = split_leaf_base(
+        entry_path, primary_prefix, secondary_prefix, this->sentinel_separator);
     if (relative_path.empty()) {
       continue;
     }
 
     const bool is_explorer{
         std::string_view{entry_path}.starts_with(secondary_prefix)};
-    process_key(entry_value.file_mark, is_explorer, relative_path, filename);
-    check_cross_leaf_deps(relative_path, entry_value.dependencies);
+    this->index_leaf_target(entry_value.file_mark, is_explorer, relative_path,
+                            filename);
+    this->flag_cross_leaf_dependencies(relative_path, entry_value.dependencies,
+                                       primary_prefix, secondary_prefix);
   }
 
   this->leaf_index_stale = false;
