@@ -137,7 +137,12 @@ looks like. What an `Invoice` contains. What an `Address` requires. In fact,
 specification](https://www.sourcemeta.com/blog/json-schema-dominates-openapi/)*.
 The implication runs all the way up to public policy: [national OpenAPI
 mandates are, implicitly, JSON Schema
-mandates](https://www.sourcemeta.com/blog/g7-runs-on-json-schema/).
+mandates](https://www.sourcemeta.com/blog/g7-runs-on-json-schema/). Veteran
+governance practitioners have arrived at the same conclusion: [JSON Schema is
+the part of the contract that people actually go to war
+over](https://apievangelist.com/2026/06/26/json-schema-governs-the-shape-of-your-data/),
+because the property names, types, and formats defined there are the decisions
+that ripple out across every consumer for years.
 
 And nobody talked about sharing that layer.
 
@@ -154,7 +159,11 @@ Domain-Driven
 Design](https://www.amazon.com/Crafting-Great-APIs-Domain-Driven-Design/dp/B0DYNMWP67)
 (Apress, 2025), code-first specifications are typically difficult to read
 because they are generated out of quite technical code, making it harder to
-involve stakeholders, testers, and technical writers.
+involve stakeholders, testers, and technical writers. Designing first also
+means [catching problems while they are still
+cheap](https://apievangelist.com/2026/06/29/design-first-or-code-first-pick-and-know-the-cost/),
+when changing a decision still means changing a document rather than a
+deployed system that consumers already depend on.
 
 But API spec first still takes the OpenAPI specification as its
 atom, which means the schemas inside it remain ungoverned, uninventoried, and
