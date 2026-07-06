@@ -60,7 +60,7 @@ static auto normalise_identifier(const std::string_view identifier)
     -> std::string {
   std::string lowercase{identifier};
   std::ranges::transform(lowercase, lowercase.begin(),
-                         [](const auto character) {
+                         [](const auto character) -> char {
                            return static_cast<char>(std::tolower(character));
                          });
 
@@ -257,14 +257,16 @@ auto Resolver::operator()(
       sourcemeta::blaze::SchemaFrame::Mode::Locations};
   const auto identifier_result{sourcemeta::blaze::identify(
       schema,
-      [this](const auto subidentifier) {
+      [this](
+          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);
       },
       view->dialect)};
   const auto has_identifier{!identifier_result.empty()};
   frame.analyse(
       schema, sourcemeta::blaze::schema_walker,
-      [this](const auto subidentifier) {
+      [this](
+          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);
       },
       view->dialect,
@@ -312,7 +314,8 @@ auto Resolver::operator()(
 
   sourcemeta::blaze::reidentify(
       schema, *new_identifier,
-      [this](const auto subidentifier) {
+      [this](
+          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);
       },
       view->dialect);
@@ -331,10 +334,10 @@ auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
   }
 
   std::unique_lock lock{this->dialect_mutex};
-  const auto match{
-      std::ranges::find_if(this->dialects, [&dialect](const auto &entry) {
-        return entry.first == dialect;
-      })};
+  const auto match{std::ranges::find_if(this->dialects,
+                                        [&dialect](const auto &entry) -> bool {
+                                          return entry.first == dialect;
+                                        })};
   if (match == this->dialects.cend()) {
     this->dialects.emplace_back(dialect, std::nullopt);
   }
@@ -348,7 +351,7 @@ auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
   {
     std::shared_lock lock{this->dialect_mutex};
     const auto match{
-        std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+        std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
           return entry.first == uri;
         })};
     if (match == this->dialects.cend() || match->second.has_value()) {
@@ -358,7 +361,7 @@ auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
 
   std::unique_lock lock{this->dialect_mutex};
   const auto match{
-      std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+      std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
         return entry.first == uri;
       })};
   if (match != this->dialects.cend() && !match->second.has_value()) {
@@ -370,7 +373,7 @@ auto Resolver::cached_dialect(const sourcemeta::core::JSON::String &uri) const
     -> std::optional<sourcemeta::core::JSON> {
   std::shared_lock lock{this->dialect_mutex};
   const auto match{
-      std::ranges::find_if(this->dialects, [&uri](const auto &entry) {
+      std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
         return entry.first == uri;
       })};
   if (match != this->dialects.cend() && match->second.has_value()) {
@@ -411,7 +414,8 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     sourcemeta::core::URI identifier_uri{
         normalise_identifier(sourcemeta::blaze::identify(
             schema,
-            [this, &collection](const auto subidentifier) {
+            [this, &collection](const auto subidentifier)
+                -> std::optional<sourcemeta::core::JSON> {
               const auto rewritten{
                   pre_resolve(collection, subidentifier, this->server_uri)};
               if (rewritten.has_value()) {

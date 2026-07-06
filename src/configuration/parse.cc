@@ -60,10 +60,11 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
           collection_input, base_path)};
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
-      std::ranges::transform(
-          collection.base, collection.base.begin(), [](const auto character) {
-            return static_cast<char>(std::tolower(character));
-          });
+      std::ranges::transform(collection.base, collection.base.begin(),
+                             [](const auto character) -> char {
+                               return static_cast<char>(
+                                   std::tolower(character));
+                             });
       // This URI is guaranteed to be canonicalised by the collection parser
       assert(collection.base ==
              sourcemeta::core::URI::canonicalize(collection.base));

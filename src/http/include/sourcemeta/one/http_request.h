@@ -122,12 +122,13 @@ public:
     auto buffer = std::make_shared<std::string>();
     auto completed = std::make_shared<bool>(false);
 
-    raw_response->onAborted([completed]() mutable { *completed = true; });
+    raw_response->onAborted(
+        [completed]() mutable -> void { *completed = true; });
 
     raw_response->onData(
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [raw_response, snapshot, buffer, completed, max_size, callback,
-         on_error](std::string_view chunk, bool is_last) mutable {
+         on_error](std::string_view chunk, bool is_last) mutable -> void {
           if (*completed) {
             return;
           }

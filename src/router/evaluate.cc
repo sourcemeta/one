@@ -14,14 +14,15 @@ namespace sourcemeta::one {
 
 auto Router::blaze_template(const ResolvedArtifact &artifact)
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
-  return this->template_cache_.get_or_compute(artifact.path(), [&artifact] {
-    const auto template_json{
-        sourcemeta::one::metapack_read_json(artifact.path())};
-    assert(template_json.has_value());
-    auto compiled{sourcemeta::blaze::from_json(template_json.value())};
-    assert(compiled.has_value());
-    return std::move(compiled).value();
-  });
+  return this->template_cache_.get_or_compute(
+      artifact.path(), [&artifact]() -> sourcemeta::blaze::Template {
+        const auto template_json{
+            sourcemeta::one::metapack_read_json(artifact.path())};
+        assert(template_json.has_value());
+        auto compiled{sourcemeta::blaze::from_json(template_json.value())};
+        assert(compiled.has_value());
+        return std::move(compiled).value();
+      });
 }
 
 auto RouterAction::blaze_template(std::string_view credential,

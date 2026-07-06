@@ -26,11 +26,12 @@ public:
       sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
   static auto serve(const sourcemeta::one::RouterAction &self,

@@ -18,7 +18,7 @@
 #include <limits>        // std::numeric_limits
 #include <map>           // std::map
 #include <memory>        // std::unique_ptr, std::make_unique
-#include <mutex>         // std::mutex, std::lock_guard
+#include <mutex>         // std::mutex, std::scoped_lock
 #include <optional>      // std::optional
 #include <span>          // std::span
 #include <string>        // std::string
@@ -202,7 +202,7 @@ auto resolve_environment(const std::string_view variable)
   static std::mutex mutex;
   static std::unordered_map<std::string, std::optional<std::string>> cache;
   const std::string name{variable};
-  const std::lock_guard<std::mutex> lock{mutex};
+  const std::scoped_lock lock{mutex};
   const auto existing{cache.find(name)};
   if (existing != cache.cend()) {
     return existing->second;
@@ -473,8 +473,9 @@ struct Authentication::Impl {
       if (next.empty()) {
         const auto extension{segment.rfind('.')};
         if (extension != std::string_view::npos && extension > 0) {
-          stem = find_child(node, edges, this->strings_,
-                            segment.substr(0, extension));
+          stem = find_child(
+              node, edges, this->strings_,
+              std::string_view{segment.begin(), segment.begin() + extension});
         }
       }
 
@@ -574,7 +575,7 @@ struct Authentication::Impl {
     std::pair<std::string, std::string> key{issuer, jwks_uri};
 
     {
-      const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+      const std::scoped_lock lock{this->jwks_mutex_};
       const auto existing{this->jwks_providers_.find(key)};
       if (existing != this->jwks_providers_.cend()) {
         return existing->second.get();
@@ -605,7 +606,7 @@ struct Authentication::Impl {
 
     // A concurrent caller may have installed this key while the lock was
     // released, so its provider wins and ours is discarded
-    const std::lock_guard<std::mutex> lock{this->jwks_mutex_};
+    const std::scoped_lock lock{this->jwks_mutex_};
     const auto existing{this->jwks_providers_.find(key)};
     if (existing != this->jwks_providers_.cend()) {
       return existing->second.get();
@@ -680,9 +681,10 @@ struct Authentication::Impl {
       return false;
     }
 
-    return std::ranges::all_of(referrer.keys, [&referent](const auto key) {
-      return referent.keys.contains(key);
-    });
+    return std::ranges::all_of(referrer.keys,
+                               [&referent](const auto key) -> bool {
+                                 return referent.keys.contains(key);
+                               });
   }
 
   // The trie section bases, resolved from the header once at construction so

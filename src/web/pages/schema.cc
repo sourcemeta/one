@@ -43,7 +43,7 @@ auto GENERATE_WEB_SCHEMA::handler(
   sourcemeta::core::HTMLWriter writer;
   html::make_page(
       writer, configuration, canonical, title, description,
-      [&](sourcemeta::core::HTMLWriter &w) {
+      [&](sourcemeta::core::HTMLWriter &w) -> void {
         html::make_breadcrumb(w, meta.at("breadcrumb"),
                               configuration.base_path);
 

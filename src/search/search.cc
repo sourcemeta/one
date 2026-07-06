@@ -17,26 +17,26 @@ namespace sourcemeta::one {
 
 auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
-  std::ranges::sort(entries, [](const SearchEntry &left,
-                                const SearchEntry &right) {
-    if (left.priority != right.priority) {
-      return left.priority > right.priority;
-    }
+  std::ranges::sort(
+      entries, [](const SearchEntry &left, const SearchEntry &right) -> bool {
+        if (left.priority != right.priority) {
+          return left.priority > right.priority;
+        }
 
-    const auto left_metadata =
-        (!left.title.empty() ? 1 : 0) + (!left.description.empty() ? 1 : 0);
-    const auto right_metadata =
-        (!right.title.empty() ? 1 : 0) + (!right.description.empty() ? 1 : 0);
-    if (left_metadata != right_metadata) {
-      return left_metadata > right_metadata;
-    }
+        const auto left_metadata =
+            (!left.title.empty() ? 1 : 0) + (!left.description.empty() ? 1 : 0);
+        const auto right_metadata = (!right.title.empty() ? 1 : 0) +
+                                    (!right.description.empty() ? 1 : 0);
+        if (left_metadata != right_metadata) {
+          return left_metadata > right_metadata;
+        }
 
-    if (left.health != right.health) {
-      return left.health > right.health;
-    }
+        if (left.health != right.health) {
+          return left.health > right.health;
+        }
 
-    return left.path < right.path;
-  });
+        return left.path < right.path;
+      });
 
   constexpr auto MAX_FIELD_LENGTH{
       static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
@@ -49,7 +49,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
                                MAX_FIELD_LENGTH - TRUNCATION_MARKER.size(),
                                TRUNCATION_MARKER);
   }
-  std::erase_if(entries, [](const SearchEntry &entry) {
+  std::erase_if(entries, [](const SearchEntry &entry) -> bool {
     return entry.path.size() > MAX_FIELD_LENGTH ||
            entry.identifier.size() > MAX_FIELD_LENGTH;
   });
@@ -128,7 +128,7 @@ static auto case_insensitive_contains(const std::string_view haystack,
                                       const std::string_view needle) -> bool {
   return !std::ranges::search(
               haystack, needle,
-              [](const auto left, const auto right) {
+              [](const auto left, const auto right) -> bool {
                 return std::tolower(static_cast<unsigned char>(left)) ==
                        std::tolower(static_cast<unsigned char>(right));
               })

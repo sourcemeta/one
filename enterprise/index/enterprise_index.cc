@@ -36,7 +36,8 @@ auto load_custom_lint_rules(
     try {
       custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
           rule_schema, sourcemeta::blaze::schema_walker,
-          [&callback, &resolver](const auto identifier) {
+          [&callback, &resolver](
+              const auto identifier) -> std::optional<sourcemeta::core::JSON> {
             return resolver(identifier, callback);
           },
           sourcemeta::blaze::default_schema_compiler, default_dialect));
@@ -70,14 +71,16 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
 
     std::string_view rpc_request_schema;
     std::string_view rpc_response_schema;
-    router.arguments(identifier, [&rpc_request_schema, &rpc_response_schema](
-                                     const auto &key, const auto &value) {
-      if (key == "mcpRequestSchema") {
-        rpc_request_schema = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        rpc_response_schema = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(identifier,
+                     [&rpc_request_schema, &rpc_response_schema](
+                         const auto &key, const auto &value) -> void {
+                       if (key == "mcpRequestSchema") {
+                         rpc_request_schema = std::get<std::string_view>(value);
+                       } else if (key == "mcpResponseSchema") {
+                         rpc_response_schema =
+                             std::get<std::string_view>(value);
+                       }
+                     });
 
     // TODO: Don't infer tool-eligibility from the presence of an
     // `mcpRequestSchema` argument. The action system itself should expose

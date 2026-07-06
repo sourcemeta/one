@@ -46,7 +46,7 @@ auto GENERATE_WEB_INDEX::handler(
   const auto &description{configuration.html->description};
   sourcemeta::core::HTMLWriter writer;
   html::make_page(writer, configuration, canonical, title, description,
-                  [&](sourcemeta::core::HTMLWriter &w) {
+                  [&](sourcemeta::core::HTMLWriter &w) -> void {
                     make_hero(w, configuration);
                     html::make_file_manager(w, directory,
                                             configuration.base_path);

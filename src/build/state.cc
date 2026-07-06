@@ -563,7 +563,7 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
 
   auto process_key = [&](std::filesystem::file_time_type mtime,
                          bool is_explorer, std::string_view relative_path,
-                         std::string_view filename) {
+                         std::string_view filename) -> void {
     auto &leaf_entry{this->leaf_index_cache[std::string{relative_path}]};
 
     for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
@@ -581,18 +581,17 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
 
   auto check_cross_leaf_deps =
       [&](std::string_view owner_relative,
-          const std::vector<std::filesystem::path> &dependencies) {
-        for (const auto &dependency : dependencies) {
-          const auto [dep_relative, dep_filename] =
-              extract_primary_base(dependency.native());
-          if (!dep_relative.empty() && dep_relative != owner_relative) {
-            auto &leaf_entry{
-                this->leaf_index_cache[std::string{owner_relative}]};
-            leaf_entry.has_cross_leaf_deps = true;
-            return;
-          }
-        }
-      };
+          const std::vector<std::filesystem::path> &dependencies) -> void {
+    for (const auto &dependency : dependencies) {
+      const auto [dep_relative, dep_filename] =
+          extract_primary_base(dependency.native());
+      if (!dep_relative.empty() && dep_relative != owner_relative) {
+        auto &leaf_entry{this->leaf_index_cache[std::string{owner_relative}]};
+        leaf_entry.has_cross_leaf_deps = true;
+        return;
+      }
+    }
+  };
 
   for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
        ++slot_index) {
@@ -850,7 +849,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
   auto write_new_slot{[&](std::string_view entry_key, std::int64_t timestamp,
                           std::uint32_t data_pool_offset,
                           std::uint16_t data_count, std::uint8_t kind,
-                          bool is_update) {
+                          bool is_update) -> void {
     const auto hash{fnv1a(entry_key.data(), entry_key.size())};
     std::uint32_t index;
 
@@ -1222,32 +1221,34 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       leaf_index_buffer.append(relative_path);
     }
 
-    sourcemeta::core::atomic_write_file(path, [&](std::ostream &stream) {
-      sourcemeta::core::BinaryWriter writer{stream};
-      writer.put_dword(STATE_MAGIC);
-      writer.put_dword(STATE_VERSION);
-      writer.put_dword(this->rules_fingerprint);
-      writer.put_dword(capacity);
-      writer.put_dword(output_count);
-      writer.put_dword(total_pool_size);
-      writer.put_dword(resolver_count);
+    sourcemeta::core::atomic_write_file(
+        path, [&](std::ostream &stream) -> void {
+          sourcemeta::core::BinaryWriter writer{stream};
+          writer.put_dword(STATE_MAGIC);
+          writer.put_dword(STATE_VERSION);
+          writer.put_dword(this->rules_fingerprint);
+          writer.put_dword(capacity);
+          writer.put_dword(output_count);
+          writer.put_dword(total_pool_size);
+          writer.put_dword(resolver_count);
 
-      writer.put_bytes(reinterpret_cast<const std::byte *>(slots.data()),
-                       slots.size());
+          writer.put_bytes(reinterpret_cast<const std::byte *>(slots.data()),
+                           slots.size());
 
-      if (can_patch && old_pool_size > 0) {
-        writer.put_bytes(reinterpret_cast<const std::byte *>(this->string_pool),
-                         old_pool_size);
-      }
-      if (!pool.empty()) {
-        writer.put_bytes(reinterpret_cast<const std::byte *>(pool.data()),
-                         pool.size());
-      }
+          if (can_patch && old_pool_size > 0) {
+            writer.put_bytes(
+                reinterpret_cast<const std::byte *>(this->string_pool),
+                old_pool_size);
+          }
+          if (!pool.empty()) {
+            writer.put_bytes(reinterpret_cast<const std::byte *>(pool.data()),
+                             pool.size());
+          }
 
-      writer.put_bytes(
-          reinterpret_cast<const std::byte *>(leaf_index_buffer.data()),
-          leaf_index_buffer.size());
-    });
+          writer.put_bytes(
+              reinterpret_cast<const std::byte *>(leaf_index_buffer.data()),
+              leaf_index_buffer.size());
+        });
   }
 }
 

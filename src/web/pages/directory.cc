@@ -33,7 +33,7 @@ auto GENERATE_WEB_DIRECTORY::handler(
           : ("Schemas located at " + directory.at("path").to_string())};
   sourcemeta::core::HTMLWriter writer;
   html::make_page(writer, configuration, canonical, title, description,
-                  [&](sourcemeta::core::HTMLWriter &w) {
+                  [&](sourcemeta::core::HTMLWriter &w) -> void {
                     html::make_breadcrumb(w, directory.at("breadcrumb"),
                                           configuration.base_path);
                     html::make_directory_header(w, directory);

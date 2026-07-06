@@ -35,19 +35,20 @@ public:
       sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_path(),
                                       router.base_url(), dispatcher} {
-    router.arguments(identifier, [this](const auto &key, const auto &value) {
-      if (key == "requestSchema") {
-        this->request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "responseSchema") {
-        this->response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpRequestSchema") {
-        this->rpc_request_schema_ = std::get<std::string_view>(value);
-      } else if (key == "mcpResponseSchema") {
-        this->rpc_response_schema_ = std::get<std::string_view>(value);
-      } else if (key == "errorSchema") {
-        this->error_schema_ = std::get<std::string_view>(value);
-      }
-    });
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "requestSchema") {
+            this->request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
   }
 
   auto rest(const std::span<std::string_view> matches,
@@ -245,7 +246,7 @@ public:
          perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
-            std::string &&body, bool too_big) {
+            std::string &&body, bool too_big) -> void {
           if (too_big) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
@@ -317,7 +318,7 @@ public:
         },
         [error_schema](sourcemeta::one::HTTPRequest &callback_request,
                        sourcemeta::one::HTTPResponse &callback_response,
-                       const std::exception_ptr &error) {
+                       const std::exception_ptr &error) -> void {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &exception) {

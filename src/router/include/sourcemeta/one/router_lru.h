@@ -5,7 +5,7 @@
 #include <functional>    // std::equal_to, std::hash
 #include <list>          // std::list
 #include <memory>        // std::make_shared, std::shared_ptr
-#include <mutex>         // std::lock_guard, std::mutex
+#include <mutex>         // std::scoped_lock, std::mutex
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::pair
 
@@ -37,7 +37,7 @@ public:
 
     auto computed{std::make_shared<const Value>(factory())};
 
-    const std::lock_guard<std::mutex> guard{this->mutex_};
+    const std::scoped_lock guard{this->mutex_};
     const auto found{this->index_.find(key)};
     if (found != this->index_.end()) {
       this->entries_.splice(this->entries_.begin(), this->entries_,
@@ -62,7 +62,7 @@ public:
   }
 
   [[nodiscard]] auto try_get(const Key &key) -> value_handle {
-    const std::lock_guard<std::mutex> guard{this->mutex_};
+    const std::scoped_lock guard{this->mutex_};
     const auto found{this->index_.find(key)};
     if (found == this->index_.end()) {
       return nullptr;
@@ -73,7 +73,7 @@ public:
   }
 
   [[nodiscard]] auto size() const -> std::size_t {
-    const std::lock_guard<std::mutex> guard{this->mutex_};
+    const std::scoped_lock guard{this->mutex_};
     return this->entries_.size();
   }
 
@@ -82,7 +82,7 @@ public:
   }
 
   auto clear() -> void {
-    const std::lock_guard<std::mutex> guard{this->mutex_};
+    const std::scoped_lock guard{this->mutex_};
     this->index_.clear();
     this->entries_.clear();
   }
