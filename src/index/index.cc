@@ -107,19 +107,19 @@ static auto parse_numeric_option(const sourcemeta::core::Options &app,
   }
 }
 
-static auto print_progress(std::mutex &mutex, const std::size_t threads,
+static auto print_progress(const std::size_t threads,
                            const std::string_view title,
                            const std::string_view prefix,
                            const std::size_t current, const std::size_t total)
     -> void {
   const auto percentage{current * 100 / total};
-  std::lock_guard<std::mutex> lock{mutex};
+  // `std::print` writes the whole line under the stream lock, so no extra
+  // mutex is needed to keep lines from interleaving
   std::print(stderr, "({:3}%) {}: {} [{}/{}]\n", static_cast<int>(percentage),
              title, prefix, std::this_thread::get_id(), threads);
 }
 
-static auto execute_plan(std::mutex &mutex,
-                         sourcemeta::one::BuildState &entries,
+static auto execute_plan(sourcemeta::one::BuildState &entries,
                          const std::filesystem::path &canonical_output,
                          sourcemeta::one::Resolver &resolver,
                          const sourcemeta::one::Configuration &configuration,
@@ -142,7 +142,7 @@ static auto execute_plan(std::mutex &mutex,
               destination_view.substr(canonical_output.native().size() + 1)};
 
           if (action.type == sourcemeta::one::ACTION_REMOVE) {
-            print_progress(mutex, threads, "Disposing", relative_path, current,
+            print_progress(threads, "Disposing", relative_path, current,
                            plan.size);
             std::filesystem::remove_all(action.destination);
             const auto lock{entries.take_lock()};
@@ -150,8 +150,7 @@ static auto execute_plan(std::mutex &mutex,
             return;
           }
 
-          print_progress(mutex, threads, label, relative_path, current,
-                         plan.size);
+          print_progress(threads, label, relative_path, current, plan.size);
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
           try {
@@ -436,14 +435,17 @@ static auto index_main(const std::string_view &program,
         continue;
       }
 
-      if (configuration_files.contains(
-              std::filesystem::weakly_canonical(entry.path()).native())) {
-        continue;
-      }
-
       const auto extension{entry.path().extension()};
       // TODO: Allow the configuration file to override this
       if (extension != ".yaml" && extension != ".yml" && extension != ".json") {
+        continue;
+      }
+
+      // Only schema-extension files can be configuration files, so the
+      // canonicalisation (per-component syscalls) is deferred until after the
+      // cheap extension filter has rejected everything else
+      if (configuration_files.contains(
+              std::filesystem::weakly_canonical(entry.path()).native())) {
         continue;
       }
 
@@ -521,7 +523,7 @@ static auto index_main(const std::string_view &program,
       [&resolver, &mutex, &entries, &uncached_schemas,
        &app](const auto &detected_ref, const auto threads, const auto cursor) {
         const auto &detected{detected_ref.get()};
-        print_progress(mutex, threads, "Resolving",
+        print_progress(threads, "Resolving",
                        (detected.collection_relative_path /
                         detected.path.lexically_relative(
                             detected.collection.get().absolute_path))
@@ -583,7 +585,7 @@ static auto index_main(const std::string_view &program,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
       limits)};
   PROFILE_END(profiling, "Producing (Delta)");
-  execute_plan(mutex, entries, canonical_output, resolver, configuration,
+  execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
   PROFILE_END(profiling, "Producing (Build)");
 
@@ -592,7 +594,7 @@ static auto index_main(const std::string_view &program,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
       limits)};
   PROFILE_END(profiling, "Combining (Delta)");
-  execute_plan(mutex, entries, canonical_output, resolver, configuration,
+  execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");
   PROFILE_END(profiling, "Combining (Build)");
 

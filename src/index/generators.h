@@ -30,21 +30,22 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
-#include <algorithm>     // std::ranges::find
-#include <cassert>       // assert
-#include <cstring>       // std::memcpy
-#include <filesystem>    // std::filesystem
-#include <limits>        // std::numeric_limits
-#include <memory>        // std::unique_ptr
-#include <mutex>         // std::mutex, std::lock_guard
-#include <optional>      // std::optional
-#include <ostream>       // std::ostream
-#include <queue>         // std::queue
-#include <set>           // std::set
-#include <sstream>       // std::ostringstream
-#include <string>        // std::string
-#include <string_view>   // std::string_view
-#include <tuple>         // std::tuple
+#include <algorithm>    // std::ranges::find
+#include <cassert>      // assert
+#include <cstring>      // std::memcpy
+#include <filesystem>   // std::filesystem
+#include <limits>       // std::numeric_limits
+#include <memory>       // std::unique_ptr, std::make_unique
+#include <mutex>        // std::once_flag, std::call_once
+#include <optional>     // std::optional
+#include <ostream>      // std::ostream
+#include <queue>        // std::queue
+#include <set>          // std::set
+#include <shared_mutex> // std::shared_mutex, std::shared_lock, std::unique_lock
+#include <sstream>      // std::ostringstream
+#include <string>       // std::string
+#include <string_view>  // std::string_view
+#include <tuple>        // std::tuple
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
 #include <vector>        // std::vector
@@ -178,21 +179,45 @@ private:
                       const sourcemeta::core::JSON &schema,
                       const sourcemeta::one::Resolver &resolver)
       -> const sourcemeta::blaze::Template & {
-    static std::mutex mutex;
-    static std::unordered_map<std::string, sourcemeta::blaze::Template> cache;
-    std::lock_guard<std::mutex> lock{mutex};
-    const auto match{cache.find(cache_key)};
-    if (match == cache.cend()) {
-      auto schema_template{sourcemeta::blaze::compile(
+    struct Slot {
+      std::once_flag flag;
+      sourcemeta::blaze::Template value;
+    };
+
+    // Wave 0 is exclusively schema materialisation, so a single lock across the
+    // exhaustive compile would serialise every worker. A shared lock lets cache
+    // hits proceed without contending, and a per-dialect `once_flag` compiles
+    // each dialect exactly once while distinct dialects compile concurrently
+    static std::shared_mutex mutex;
+    static std::unordered_map<std::string, std::unique_ptr<Slot>> cache;
+
+    Slot *slot{nullptr};
+    {
+      const std::shared_lock lock{mutex};
+      const auto match{cache.find(cache_key)};
+      if (match != cache.cend()) {
+        slot = match->second.get();
+      }
+    }
+
+    if (slot == nullptr) {
+      const std::unique_lock lock{mutex};
+      auto &entry{cache[cache_key]};
+      if (!entry) {
+        entry = std::make_unique<Slot>();
+      }
+      slot = entry.get();
+    }
+
+    std::call_once(slot->flag, [&] {
+      slot->value = sourcemeta::blaze::compile(
           schema, sourcemeta::blaze::schema_walker,
           [&resolver](const auto identifier) { return resolver(identifier); },
           sourcemeta::blaze::default_schema_compiler,
           // The point of this class is to show nice errors to the user
-          sourcemeta::blaze::Mode::Exhaustive)};
-      return cache.emplace(cache_key, std::move(schema_template)).first->second;
-    } else {
-      return match->second;
-    }
+          sourcemeta::blaze::Mode::Exhaustive);
+    });
+    return slot->value;
   }
 };
 
@@ -369,45 +394,41 @@ struct GENERATE_DEPENDENTS {
       }
     }
 
-    using TransitiveMap = std::unordered_map<
-        sourcemeta::core::JSON::String,
-        std::set<std::tuple<sourcemeta::core::JSON::String,
-                            sourcemeta::core::JSON::String,
-                            sourcemeta::core::JSON::String>>>;
-    TransitiveMap transitive;
-    for (const auto &[target, _] : direct) {
-      auto &edges{transitive[target]};
-      std::unordered_set<sourcemeta::core::JSON::StringView> visited;
-      visited.emplace(target);
-      std::queue<sourcemeta::core::JSON::String> queue;
-      queue.emplace(target);
-      while (!queue.empty()) {
-        const auto current{std::move(queue.front())};
-        queue.pop();
-        const auto match{direct.find(current)};
-        if (match == direct.cend()) {
-          continue;
-        }
+    // Only this leaf's transitive dependents are needed, so traverse the
+    // reverse graph from it alone rather than computing the closure for every
+    // node and discarding all but one
+    std::set<std::tuple<sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String>>
+        edges;
+    const sourcemeta::core::JSON::String origin{action.data};
+    std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+    visited.emplace(origin);
+    std::queue<sourcemeta::core::JSON::String> queue;
+    queue.emplace(origin);
+    while (!queue.empty()) {
+      const auto current{std::move(queue.front())};
+      queue.pop();
+      const auto match{direct.find(current)};
+      if (match == direct.cend()) {
+        continue;
+      }
 
-        for (const auto &[dependent, at] : match->second) {
-          edges.emplace(dependent, current, at);
-          if (visited.emplace(dependent).second) {
-            queue.emplace(dependent);
-          }
+      for (const auto &[dependent, at] : match->second) {
+        edges.emplace(dependent, current, at);
+        if (visited.emplace(dependent).second) {
+          queue.emplace(dependent);
         }
       }
     }
 
     auto result{sourcemeta::core::JSON::make_array()};
-    const auto match{transitive.find(std::string{action.data})};
-    if (match != transitive.cend()) {
-      for (const auto &[from, to, at] : match->second) {
-        auto object{sourcemeta::core::JSON::make_object()};
-        object.assign("from", sourcemeta::core::JSON{from});
-        object.assign("to", sourcemeta::core::JSON{to});
-        object.assign("at", sourcemeta::core::JSON{at});
-        result.push_back(std::move(object));
-      }
+    for (const auto &[from, to, at] : edges) {
+      auto object{sourcemeta::core::JSON::make_object()};
+      object.assign("from", sourcemeta::core::JSON{from});
+      object.assign("to", sourcemeta::core::JSON{to});
+      object.assign("at", sourcemeta::core::JSON{at});
+      result.push_back(std::move(object));
     }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
@@ -437,12 +458,10 @@ struct GENERATE_HEALTH {
     auto report{sourcemeta::core::JSON::make_object()};
 
     // The bundle carries mutable per-rule state, so a single instance cannot be
-    // checked from multiple threads at once. We build one bundle per
-    // configuration, keep it warm across the whole run, and serialise the
-    // linting itself under a single lock
+    // checked from multiple threads at once. Rather than serialise the whole
+    // health wave behind one lock, keep a bundle per worker thread so linting
+    // runs concurrently
     {
-      static std::mutex mutex;
-      const std::lock_guard<std::mutex> lock{mutex};
       auto &cache_entry{bundle_for(collection, resolver, callback)};
       const auto result{cache_entry.bundle.check(
           contents, sourcemeta::blaze::schema_walker,
@@ -494,15 +513,16 @@ private:
     std::unordered_set<std::string_view> custom_names;
   };
 
-  // Built once per configuration and reused across the whole run. The caller
-  // must hold the lint lock, which also serialises checks against the returned
-  // bundle's mutable per-rule state
+  // Built once per configuration per worker thread. Each thread owns its bundle
+  // so checks against the bundle's mutable per-rule state never race, which
+  // lets the health wave run concurrently rather than behind a single lock
   static auto bundle_for(
       const sourcemeta::blaze::Configuration &configuration,
       [[maybe_unused]] const sourcemeta::one::Resolver &resolver,
       [[maybe_unused]] const sourcemeta::one::BuildDynamicCallback &callback)
       -> CacheEntry & {
-    static std::unordered_map<const void *, std::unique_ptr<CacheEntry>> cache;
+    thread_local std::unordered_map<const void *, std::unique_ptr<CacheEntry>>
+        cache;
     const auto *key{static_cast<const void *>(&configuration)};
     const auto match{cache.find(key)};
     if (match != cache.cend()) {
