@@ -278,6 +278,15 @@ auto SearchView::search(const std::string_view query, const std::size_t limit,
                                  limit, scope, filter);
 }
 
+// The number of offset-table entries that fit after the header. Dividing the
+// available bytes keeps the bound from overflowing size_t on a 32-bit build,
+// which multiplying a corrupt entry count could otherwise wrap past the guard.
+// The caller must have already ensured the header itself fits
+static auto maximum_offset_table_entries(const std::size_t payload_size)
+    -> std::size_t {
+  return (payload_size - sizeof(SearchIndexHeader)) / sizeof(std::uint32_t);
+}
+
 auto SearchView::count() -> std::size_t {
   if (this->payload_ == nullptr ||
       this->payload_size_ < sizeof(SearchIndexHeader)) {
@@ -291,9 +300,7 @@ auto SearchView::count() -> std::size_t {
 
   // A corrupt index can claim more entries than its offset table can hold, so
   // report none unless the whole table fits within the payload
-  const auto offset_table_end{sizeof(SearchIndexHeader) +
-                              total * sizeof(std::uint32_t)};
-  if (offset_table_end > this->payload_size_) {
+  if (total > maximum_offset_table_entries(this->payload_size_)) {
     return 0;
   }
 
@@ -310,12 +317,11 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
   const auto *header{
       reinterpret_cast<const SearchIndexHeader *>(this->payload_)};
   const auto total{static_cast<std::size_t>(header->entry_count)};
-  const auto offset_table_end{sizeof(SearchIndexHeader) +
-                              total * sizeof(std::uint32_t)};
   // A corrupt index can lie about its entry count or point a record past the
   // payload. Every field length below is trusted only after it is checked to
   // fit, matching the validation the streaming iterator performs
-  if (index >= total || offset_table_end > this->payload_size_) {
+  if (index >= total ||
+      total > maximum_offset_table_entries(this->payload_size_)) {
     return {};
   }
 
@@ -386,9 +392,7 @@ auto SearchView::for_each(
     return;
   }
 
-  const auto offset_table_end{sizeof(SearchIndexHeader) +
-                              total * sizeof(std::uint32_t)};
-  if (offset_table_end > this->payload_size_) {
+  if (total > maximum_offset_table_entries(this->payload_size_)) {
     return;
   }
 

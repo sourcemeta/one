@@ -49,6 +49,18 @@ TEST_F(SearchCorruption, count_rejects_oversized_entry_count) {
   EXPECT_EQ(view.count(), 0);
 }
 
+TEST_F(SearchCorruption, count_rejects_entry_count_that_overflows_table_size) {
+  // 2^30 entries times the 4-byte offset size wraps a 32-bit size_t back to
+  // zero, so the bound must be checked without that multiplication
+  std::vector<std::uint8_t> payload;
+  append_u32(payload, 0x40000000);
+  append_u32(payload, 8);
+  const auto path{test_path("corrupt_overflow_count.metapack")};
+  write_raw_search_file(path, payload);
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(view.count(), 0);
+}
+
 TEST_F(SearchCorruption, at_rejects_oversized_entry_count) {
   std::vector<std::uint8_t> payload;
   append_u32(payload, 1000);
