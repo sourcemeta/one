@@ -79,6 +79,19 @@ test "$CODE" = "0" || exit 1
 # A build from scratch of the final sources must produce the same catalog
 "$1" --skip-banner "$TMP/one.json" "$TMP/scratch" > /dev/null 2>&1
 
+# The full expected catalog, so an empty or truncated extraction fails rather
+# than silently matching another empty extraction
+{
+  echo "/example/schemas/common"
+  index=1
+  while [ "$index" -le 20 ]; do
+    echo "/example/schemas/dependent-$index"
+    index=$((index + 1))
+  done
+} | LC_ALL=C sort -u > "$TMP/expected.txt"
+
 extract_search_paths "$TMP/output" > "$TMP/incremental.txt"
+diff "$TMP/incremental.txt" "$TMP/expected.txt"
+
 extract_search_paths "$TMP/scratch" > "$TMP/scratch.txt"
-diff "$TMP/incremental.txt" "$TMP/scratch.txt"
+diff "$TMP/scratch.txt" "$TMP/expected.txt"
