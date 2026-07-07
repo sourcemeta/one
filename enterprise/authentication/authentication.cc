@@ -19,7 +19,7 @@
 #include <map>           // std::map
 #include <memory>        // std::unique_ptr, std::make_unique
 #include <mutex>         // std::mutex, std::scoped_lock
-#include <optional>      // std::optional
+#include <optional>      // std::optional, std::nullopt
 #include <span>          // std::span
 #include <string>        // std::string
 #include <string_view>   // std::string_view
@@ -182,21 +182,6 @@ auto read_u32(const std::span<const std::byte> metadata, std::size_t &cursor,
   return true;
 }
 
-auto constant_time_equal(const std::string_view left,
-                         const std::string_view right) -> bool {
-  if (left.size() != right.size()) {
-    return false;
-  }
-
-  int difference{0};
-  for (std::size_t index{0}; index < left.size(); index += 1) {
-    difference |= static_cast<unsigned char>(left[index]) ^
-                  static_cast<unsigned char>(right[index]);
-  }
-
-  return difference == 0;
-}
-
 auto resolve_environment(const std::string_view variable)
     -> std::optional<std::string> {
   static std::mutex mutex;
@@ -254,7 +239,8 @@ auto admits_apikey(const std::span<const std::byte> metadata,
     cursor += length;
 
     const auto stored{resolve_environment(variable)};
-    if (stored.has_value() && constant_time_equal(subject, stored.value())) {
+    if (stored.has_value() &&
+        sourcemeta::core::secure_equals(subject, stored.value())) {
       return true;
     }
   }
@@ -503,17 +489,18 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto admits(const std::string_view registry_path,
-                            const std::string_view credential) const -> bool {
+                            const std::string_view credential) const
+      -> Authentication::Verdict {
     // A missing or structurally broken artifact leaves the section pointers
     // null and denies everything. Only a valid policy fails open below
     if (this->nodes_ == nullptr) {
-      return false;
+      return {.allowed = false, .principal = std::nullopt};
     }
 
     const auto governing{this->match(registry_path)};
     if (governing == 0) {
-      // No policy covers this path, so it is public
-      return true;
+      // No policy covers this path, so it is public and the caller anonymous
+      return {.allowed = true, .principal = std::nullopt};
     }
 
     const auto token{sourcemeta::core::JWT::from(credential)};
@@ -532,19 +519,23 @@ struct Authentication::Impl {
                     entry.metadata_length};
       }
 
-      if (static_cast<Authentication::Type>(entry.type) ==
-          Authentication::Type::JWT) {
+      const auto type{static_cast<Authentication::Type>(entry.type)};
+      if (type == Authentication::Type::JWT) {
         if (token.has_value() && this->admits_jwt(metadata, token.value())) {
-          return true;
+          return {.allowed = true,
+                  .principal = Authentication::Principal{
+                      .type = type, .policy = static_cast<std::size_t>(index)}};
         }
       } else if (admits_apikey(
                      metadata, credential,
                      static_cast<Authentication::Algorithm>(entry.algorithm))) {
-        return true;
+        return {.allowed = true,
+                .principal = Authentication::Principal{
+                    .type = type, .policy = static_cast<std::size_t>(index)}};
       }
     }
 
-    return false;
+    return {.allowed = false, .principal = std::nullopt};
   }
 
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
@@ -721,8 +712,8 @@ auto Authentication::admits(const std::string_view registry_path,
                             const std::string_view credential,
                             const std::string_view base_path) const
     -> Authentication::Verdict {
-  return {.allowed = this->impl_->admits(
-              strip_base_path(registry_path, base_path), credential)};
+  return this->impl_->admits(strip_base_path(registry_path, base_path),
+                             credential);
 }
 
 auto Authentication::governing(const std::string_view registry_path,

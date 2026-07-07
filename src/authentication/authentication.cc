@@ -5,6 +5,7 @@
 
 #include <cstddef>    // std::byte, std::size_t
 #include <filesystem> // std::filesystem::create_directories
+#include <optional>   // std::nullopt
 #include <vector>     // std::vector
 
 namespace sourcemeta::one {
@@ -44,7 +45,7 @@ Authentication::~Authentication() = default;
 auto Authentication::admits(const std::string_view, const std::string_view,
                             const std::string_view) const
     -> Authentication::Verdict {
-  return {.allowed = true};
+  return {.allowed = true, .principal = std::nullopt};
 }
 
 auto Authentication::governing(const std::string_view,
