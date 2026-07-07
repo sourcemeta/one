@@ -190,7 +190,7 @@ public:
         [this, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
-            std::string &&body, bool too_big) {
+            std::string &&body, bool too_big) -> void {
           if (too_big) {
             this->write_envelope(
                 callback_request, callback_response,
@@ -305,7 +305,7 @@ public:
         [this, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
-            const std::exception_ptr &error) {
+            const std::exception_ptr &error) -> void {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &) {

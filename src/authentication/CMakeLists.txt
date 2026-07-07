@@ -9,8 +9,8 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
-    PRIVATE_HEADERS error.h
-    SOURCES authentication.cc)
+    PRIVATE_HEADERS error.h session.h
+    SOURCES authentication.cc session.cc)
 endif()
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
