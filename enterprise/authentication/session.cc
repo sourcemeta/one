@@ -2,6 +2,7 @@
 
 #include <sourcemeta/core/crypto.h>
 
+#include <algorithm>   // std::max
 #include <array>       // std::array
 #include <charconv>    // std::from_chars, std::errc
 #include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
@@ -20,6 +21,11 @@ namespace {
 constexpr std::string_view SESSION_VERSION{"1"};
 
 constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
+
+// The canonical unpadded encoding of a signature has exactly one length, so
+// anything else is rejected before it is even decoded
+constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
+    ((SESSION_SIGNATURE_LENGTH * 4) + 2) / 3};
 
 auto digest_view(const std::array<std::uint8_t, 32> &digest)
     -> std::string_view {
@@ -55,7 +61,10 @@ auto session_seal(const std::string_view payload, const std::string_view secret,
                   const std::chrono::sys_seconds expiry) -> std::string {
   std::string result{SESSION_VERSION};
   result += '.';
-  result += std::to_string(expiry.time_since_epoch().count());
+  // A pre-epoch expiry is clamped so that every sealed value is well-formed,
+  // remaining expired from the moment it is produced
+  result += std::to_string(std::max(std::chrono::seconds::rep{0},
+                                    expiry.time_since_epoch().count()));
   result += '.';
   result += sourcemeta::core::base64url_encode(payload);
   const auto digest{sourcemeta::core::hmac_sha256_digest(secret, result)};
@@ -95,6 +104,10 @@ auto session_open(const std::string_view value,
   const auto expiry{parse_expiry(
       value.substr(version_end + 1, expiry_end - version_end - 1))};
   if (!expiry.has_value()) {
+    return std::nullopt;
+  }
+
+  if (signature.size() != SESSION_SIGNATURE_ENCODED_LENGTH) {
     return std::nullopt;
   }
 

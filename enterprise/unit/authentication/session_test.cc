@@ -133,6 +133,21 @@ TEST(session_denies_a_truncated_signature) {
       sourcemeta::one::session_open(truncated, SECRETS, NOW).has_value());
 }
 
+TEST(session_denies_a_lengthened_signature) {
+  const auto value{
+      sourcemeta::one::session_seal("the-payload", "session-secret", LATER)};
+  const auto lengthened{value + "AA"};
+  EXPECT_FALSE(
+      sourcemeta::one::session_open(lengthened, SECRETS, NOW).has_value());
+}
+
+TEST(session_denies_a_value_sealed_with_a_pre_epoch_expiry) {
+  const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
+  const auto value{sourcemeta::one::session_seal(
+      "the-payload", "session-secret", before_epoch)};
+  EXPECT_FALSE(sourcemeta::one::session_open(value, SECRETS, NOW).has_value());
+}
+
 TEST(session_denies_malformed_values) {
   EXPECT_FALSE(sourcemeta::one::session_open("", SECRETS, NOW).has_value());
   EXPECT_FALSE(sourcemeta::one::session_open(".", SECRETS, NOW).has_value());
