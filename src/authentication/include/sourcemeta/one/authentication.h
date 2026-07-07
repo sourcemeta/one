@@ -54,8 +54,8 @@ public:
 
   struct Verdict {
     bool allowed;
-    // Present when a policy admitted the caller, absent when the path is
-    // public and the caller is anonymous
+    // Present only when a policy admitted the caller. An anonymous caller on
+    // a public path and a denied caller both carry none
     std::optional<Principal> principal;
   };
 
