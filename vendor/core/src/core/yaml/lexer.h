@@ -888,7 +888,16 @@ private:
                            "Invalid hex escape sequence"};
     }
 
-    return codepoint_to_utf8(static_cast<char32_t>(codepoint));
+    // YAML 1.2.2 Section 5.7: an escape names a Unicode scalar value, so a
+    // surrogate or out-of-range code point is rejected rather than encoded as
+    // malformed UTF-8
+    const auto character{static_cast<char32_t>(codepoint)};
+    if (!is_valid_codepoint(character)) [[unlikely]] {
+      throw YAMLParseError{this->line_, this->column_,
+                           "Invalid Unicode escape sequence"};
+    }
+
+    return codepoint_to_utf8(character);
   }
 
   [[nodiscard]] auto calculate_parent_indentation(

@@ -18,6 +18,38 @@ namespace sourcemeta::core {
 // the range of valid key sizes
 inline constexpr std::size_t MAXIMUM_KEY_BYTES{512};
 
+// Overwrite a buffer that held secret material so it does not linger in freed
+// memory. The volatile access stops the compiler from eliding the write as a
+// dead store
+inline auto secure_zero(void *const data, const std::size_t size) noexcept
+    -> void {
+  if (data == nullptr) {
+    return;
+  }
+
+  auto *pointer{static_cast<volatile unsigned char *>(data)};
+  for (std::size_t index{0}; index < size; index += 1) {
+    pointer[index] = 0;
+  }
+}
+
+inline auto secure_zero(std::string &value) noexcept -> void {
+  secure_zero(value.data(), value.size());
+}
+
+// Overwrite the referenced buffer when leaving the current scope, so secret
+// material a local holds is wiped across every return path without threading a
+// manual call through each one
+struct SecureScope {
+  explicit SecureScope(std::string &value) noexcept : target{value} {}
+  SecureScope(const SecureScope &) = delete;
+  auto operator=(const SecureScope &) -> SecureScope & = delete;
+  SecureScope(SecureScope &&) = delete;
+  auto operator=(SecureScope &&) -> SecureScope & = delete;
+  ~SecureScope() { secure_zero(this->target); }
+  std::string &target;
+};
+
 // Whether a signature representative, as a big-endian integer, is strictly
 // less than the modulus. RFC 8017 Section 5.2.2 requires this range check, so
 // that an unreduced signature, which an attacker forges by adding the modulus
@@ -92,40 +124,6 @@ inline auto digest_message(const SignatureHashFunction hash,
   }
 
   std::unreachable();
-}
-
-inline auto der_append_length(std::string &output, const std::size_t length)
-    -> void {
-  if (length < 128) {
-    output.push_back(static_cast<char>(length));
-  } else if (length < 256) {
-    output.push_back('\x81');
-    output.push_back(static_cast<char>(length));
-  } else {
-    output.push_back('\x82');
-    output.push_back(static_cast<char>((length >> 8u) & 0xffu));
-    output.push_back(static_cast<char>(length & 0xffu));
-  }
-}
-
-inline auto der_append_unsigned_integer(std::string &output,
-                                        std::string_view value) -> void {
-  while (!value.empty() && value.front() == '\x00') {
-    value.remove_prefix(1);
-  }
-
-  // A leading zero byte keeps the value positive when its high bit is set,
-  // and represents the value zero when nothing remains
-  const auto needs_zero_prefix{
-      value.empty() ||
-      (static_cast<unsigned char>(value.front()) & 0x80u) != 0};
-  output.push_back('\x02');
-  der_append_length(output, value.size() + (needs_zero_prefix ? 1 : 0));
-  if (needs_zero_prefix) {
-    output.push_back('\x00');
-  }
-
-  output.append(value);
 }
 
 } // namespace sourcemeta::core
