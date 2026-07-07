@@ -1,17 +1,16 @@
 # A token opens the closed registry just as the root key does
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
 client_secret: ci-service-secret
-audience: https://schemas.example.com
 HTTP 200
 Cache-Control: no-store
 [Captures]
 access_token: jsonpath "$.access_token"
 [Asserts]
 header "Content-Type" startsWith "application/json"
-jsonpath "$.token_type" == "bearer"
+jsonpath "$.token_type" == "Bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
 # A schema that denies anonymously is served with a token, marked private
@@ -60,12 +59,11 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # A token minted for a different audience opens nothing
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-wrong
 client_secret: ci-wrong-secret
-audience: https://other.example.com
 HTTP 200
 [Captures]
 wrong_audience_token: jsonpath "$.access_token"

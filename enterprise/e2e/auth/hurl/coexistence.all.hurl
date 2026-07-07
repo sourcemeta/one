@@ -1,28 +1,26 @@
 # Two clients of the same issuer, each scoped to a different audience
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
 client_secret: ci-service-secret
-audience: https://schemas.example.com
 HTTP 200
 [Captures]
 schemas_token: jsonpath "$.access_token"
 [Asserts]
-jsonpath "$.token_type" == "bearer"
+jsonpath "$.token_type" == "Bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-reports
 client_secret: ci-reports-secret
-audience: https://reports.example.com
 HTTP 200
 [Captures]
 reports_token: jsonpath "$.access_token"
 [Asserts]
-jsonpath "$.token_type" == "bearer"
+jsonpath "$.token_type" == "Bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
 # The machine policy discovers its key set and admits its audience's token

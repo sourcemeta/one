@@ -1,17 +1,16 @@
 # The provider issues a signed JWT via the client_credentials grant
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
 client_secret: ci-service-secret
-audience: https://schemas.example.com
 HTTP 200
 Cache-Control: no-store
 [Captures]
 access_token: jsonpath "$.access_token"
 [Asserts]
 header "Content-Type" startsWith "application/json"
-jsonpath "$.token_type" == "bearer"
+jsonpath "$.token_type" == "Bearer"
 jsonpath "$.scope" == ""
 jsonpath "$.expires_in" > 0
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
@@ -249,7 +248,7 @@ jsonpath "$.valid" == true
 
 # An unsigned alg:none token is denied, never admitted on the empty signature
 GET {{base}}/machine/config.json
-Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vaHlkcmE6NDQ0NCIsImF1ZCI6Imh0dHBzOi8vc2NoZW1hcy5leGFtcGxlLmNvbSIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxMDAwMDAwMDAwfQ.
+Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8va2V5Y2xvYWs6ODA4MC9yZWFsbXMvbWFpbiIsImF1ZCI6Imh0dHBzOi8vc2NoZW1hcy5leGFtcGxlLmNvbSIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxMDAwMDAwMDAwfQ.
 HTTP 401
 Content-Type: application/problem+json
 Cache-Control: no-store
@@ -275,12 +274,11 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # A correctly signed token minted for a different audience is denied
-POST http://localhost:4444/oauth2/token
+POST http://localhost:8080/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-wrong
 client_secret: ci-wrong-secret
-audience: https://other.example.com
 HTTP 200
 [Captures]
 wrong_audience_token: jsonpath "$.access_token"

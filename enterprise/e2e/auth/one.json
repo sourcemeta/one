@@ -47,7 +47,7 @@
       "type": "jwt",
       "name": "machine",
       "paths": [ "/machine" ],
-      "issuer": "http://hydra:4444",
+      "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "RS256" ]
     },
@@ -55,16 +55,16 @@
       "type": "jwt",
       "name": "telemetry",
       "paths": [ "/telemetry" ],
-      "issuer": "http://hydra:4444",
+      "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://reports.example.com",
-      "jwksUri": "http://hydra:4444/.well-known/jwks.json",
+      "jwksUri": "http://keycloak:8080/realms/main/protocol/openid-connect/certs",
       "algorithms": [ "RS256" ]
     },
     {
       "type": "jwt",
       "name": "strict",
       "paths": [ "/strict" ],
-      "issuer": "http://hydra:4444",
+      "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "ES256" ]
     }

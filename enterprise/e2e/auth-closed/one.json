@@ -16,7 +16,7 @@
       "type": "jwt",
       "name": "machine",
       "paths": [ "/" ],
-      "issuer": "http://hydra:4444",
+      "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "RS256" ]
     }
