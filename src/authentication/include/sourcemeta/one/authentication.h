@@ -15,6 +15,7 @@
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
@@ -44,8 +45,18 @@ public:
     std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
   };
 
+  // The identity of an admitted caller: the type of credential it presented
+  // and the declaration index of the policy that admitted it
+  struct Principal {
+    Type type{Type::ApiKey};
+    std::size_t policy{0};
+  };
+
   struct Verdict {
     bool allowed;
+    // Present only when a policy admitted the caller. An anonymous caller on
+    // a public path and a denied caller both carry none
+    std::optional<Principal> principal;
   };
 
   static auto save(std::span<const Policy> policies,

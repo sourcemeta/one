@@ -875,6 +875,119 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
   EXPECT_FALSE(authentication.admits("/both/x", "wrong").allowed);
 }
 
+TEST(admission_by_an_apikey_policy_identifies_the_principal) {
+  setenv("ONE_TEST_KEY_PRINCIPAL", "principal-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PRINCIPAL"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("principal_apikey.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto verdict{
+      authentication.admits("/internal/foo", "principal-secret")};
+  EXPECT_TRUE(verdict.allowed);
+  EXPECT_TRUE(verdict.principal.has_value());
+  EXPECT_EQ(verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(verdict.principal.value().policy, std::size_t{0});
+}
+
+TEST(admission_by_a_jwt_policy_identifies_the_principal) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("principal_jwt.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  const auto verdict{authentication.admits("/secure/foo", SIGNED_TOKEN)};
+  EXPECT_TRUE(verdict.allowed);
+  EXPECT_TRUE(verdict.principal.has_value());
+  EXPECT_EQ(verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::JWT);
+  EXPECT_EQ(verdict.principal.value().policy, std::size_t{0});
+}
+
+TEST(principal_identifies_the_admitting_policy_among_several) {
+  setenv("ONE_TEST_KEY_PRINCIPAL_MIXED", "principal-mixed", 1);
+  const std::array<std::string_view, 1> paths{{"/both"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PRINCIPAL_MIXED"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = paths, .keys = keys},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("principal_mixed.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+
+  const auto apikey_verdict{
+      authentication.admits("/both/x", "principal-mixed")};
+  EXPECT_TRUE(apikey_verdict.allowed);
+  EXPECT_TRUE(apikey_verdict.principal.has_value());
+  EXPECT_EQ(apikey_verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(apikey_verdict.principal.value().policy, std::size_t{0});
+
+  const auto jwt_verdict{authentication.admits("/both/x", SIGNED_TOKEN)};
+  EXPECT_TRUE(jwt_verdict.allowed);
+  EXPECT_TRUE(jwt_verdict.principal.has_value());
+  EXPECT_EQ(jwt_verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::JWT);
+  EXPECT_EQ(jwt_verdict.principal.value().policy, std::size_t{1});
+}
+
+TEST(anonymous_and_denied_verdicts_carry_no_principal) {
+  setenv("ONE_TEST_KEY_PRINCIPAL_NONE", "principal-none", 1);
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PRINCIPAL_NONE"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("principal_none.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+
+  // An uncovered path admits an anonymous caller
+  const auto anonymous_verdict{authentication.admits("/open/foo", "")};
+  EXPECT_TRUE(anonymous_verdict.allowed);
+  EXPECT_FALSE(anonymous_verdict.principal.has_value());
+
+  // A denial identifies nobody
+  const auto denied_verdict{authentication.admits("/internal/foo", "wrong")};
+  EXPECT_FALSE(denied_verdict.allowed);
+  EXPECT_FALSE(denied_verdict.principal.has_value());
+
+  // A broken artifact denies with no principal either
+  const sourcemeta::one::Authentication missing{
+      std::filesystem::path{"/no/such/authentication.bin"},
+      stub_fetcher({}, nullptr)};
+  const auto missing_verdict{missing.admits("/internal/foo", "principal-none")};
+  EXPECT_FALSE(missing_verdict.allowed);
+  EXPECT_FALSE(missing_verdict.principal.has_value());
+}
+
 TEST(reference_rules_treat_a_jwt_scope_conservatively) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
