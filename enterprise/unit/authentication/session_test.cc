@@ -146,6 +146,16 @@ TEST(session_denies_a_value_sealed_with_a_pre_epoch_expiry) {
   const auto value{sourcemeta::one::session_seal(
       "the-payload", "session-secret", before_epoch)};
   EXPECT_FALSE(sourcemeta::one::session_open(value, SECRETS, NOW).has_value());
+  EXPECT_FALSE(
+      sourcemeta::one::session_open(value, SECRETS, before_epoch).has_value());
+}
+
+TEST(session_denies_everything_under_a_pre_epoch_clock) {
+  const auto value{
+      sourcemeta::one::session_seal("the-payload", "session-secret", LATER)};
+  const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
+  EXPECT_FALSE(
+      sourcemeta::one::session_open(value, SECRETS, before_epoch).has_value());
 }
 
 TEST(session_denies_malformed_values) {

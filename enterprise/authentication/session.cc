@@ -77,6 +77,12 @@ auto session_open(const std::string_view value,
                   const std::span<const std::string_view> secrets,
                   const std::chrono::sys_seconds now)
     -> std::optional<std::string> {
+  // Expiry comparisons are meaningless under a clock that reads before the
+  // epoch, so such a clock validates nothing
+  if (now.time_since_epoch().count() < 0) {
+    return std::nullopt;
+  }
+
   const auto version_end{value.find('.')};
   if (version_end == std::string_view::npos) {
     return std::nullopt;
