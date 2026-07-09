@@ -18,17 +18,11 @@ namespace sourcemeta::core {
 auto hmac_sha256_digest(const std::string_view key,
                         const std::string_view message)
     -> std::array<std::uint8_t, 32> {
-  BCRYPT_ALG_HANDLE algorithm{nullptr};
-  if (!BCRYPT_SUCCESS(
-          BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM,
-                                      nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG))) {
-    throw std::runtime_error("Could not open the CNG HMAC-SHA256 provider");
-  }
-
   // A key longer than the block size is hashed first (RFC 2104 Section 2),
   // which also keeps the key length within the CNG length parameter. The
-  // secret interface is not const-qualified but never writes through the
-  // pointer
+  // prehash runs before the provider is opened so that a throwing digest cannot
+  // leak the handle. The secret interface is not const-qualified but never
+  // writes through the pointer
   constexpr std::size_t block_size{64};
   std::array<std::uint8_t, 32> key_digest{};
   auto *secret{
@@ -38,6 +32,13 @@ auto hmac_sha256_digest(const std::string_view key,
     key_digest = sha256_digest(key);
     secret = key_digest.data();
     secret_size = key_digest.size();
+  }
+
+  BCRYPT_ALG_HANDLE algorithm{nullptr};
+  if (!BCRYPT_SUCCESS(
+          BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM,
+                                      nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG))) {
+    throw std::runtime_error("Could not open the CNG HMAC-SHA256 provider");
   }
 
   BCRYPT_HASH_HANDLE hash{nullptr};

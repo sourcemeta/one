@@ -16,7 +16,6 @@
 #include <map>     // std::map
 #include <ostream> // std::ostream
 #include <string>  // std::string
-#include <tuple>   // std::tie
 #include <utility> // std::pair
 #include <vector>  // std::vector
 
@@ -83,6 +82,14 @@ public:
     std::reference_wrapper<const std::string> schema_location;
   };
 
+  /// A single collected annotation, in evaluation order
+  struct AnnotationEntry {
+    sourcemeta::core::WeakPointer instance_location;
+    sourcemeta::core::WeakPointer evaluate_path;
+    std::reference_wrapper<const std::string> schema_location;
+    sourcemeta::core::JSON value;
+  };
+
   auto operator()(const EvaluationType type, const bool result,
                   const Instruction &step,
                   const InstructionExtra &step_metadata,
@@ -97,28 +104,25 @@ public:
   [[nodiscard]] auto cbegin() const -> const_iterator;
   [[nodiscard]] auto cend() const -> const_iterator;
 
-  /// Access annotations that were collected during evaluation, indexed by
-  /// instance location and evaluation path
+  /// Move out the collected error entries, leaving this output empty. Useful to
+  /// take ownership of the trace without copying when the output is no longer
+  /// needed
+  [[nodiscard]] auto release() && -> container_type {
+    auto result{std::move(this->output)};
+    // A moved-from container is left in a valid but unspecified state, so
+    // clear it to honor the documented empty postcondition portably
+    this->output.clear();
+    return result;
+  }
+
+  /// Access the annotations collected during evaluation, as a flat log in
+  /// evaluation order. The log records every emission as-is, so a location may
+  /// repeat and hold the same value more than once. Consumers that need them
+  /// grouped by location, or collapsed to distinct values, index this log
+  /// themselves
   [[nodiscard]] auto annotations() const -> const auto & {
     return this->annotations_;
   }
-
-  // NOLINTNEXTLINE(bugprone-exception-escape)
-  struct Location {
-    auto operator<(const Location &other) const noexcept -> bool {
-      // Perform a lexicographical comparison
-      return std::tie(this->instance_location, this->evaluate_path,
-                      this->schema_location.get()) <
-             std::tie(other.instance_location, other.evaluate_path,
-                      other.schema_location.get());
-    }
-
-    // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-    const sourcemeta::core::WeakPointer instance_location;
-    const sourcemeta::core::WeakPointer evaluate_path;
-    const std::reference_wrapper<const std::string> schema_location;
-    // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-  };
 
 private:
 // Exporting symbols that depends on the standard C++ library is considered
@@ -137,7 +141,7 @@ private:
       std::pair<sourcemeta::core::WeakPointer, sourcemeta::core::WeakPointer>,
       std::vector<Entry>>
       masked_traces;
-  std::map<Location, std::vector<sourcemeta::core::JSON>> annotations_;
+  std::vector<AnnotationEntry> annotations_;
 #if defined(_MSC_VER)
 #pragma warning(default : 4251)
 #endif
