@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema Output Error",
+  "description": "A single entry of the standard JSON Schema output format that describes why an instance does not conform to a schema",
+  "examples": [
+    {
+      "absoluteKeywordLocation": "https://example.com/schema.json#/type",
+      "error": "Expected string but got integer",
+      "instanceLocation": "/name",
+      "keywordLocation": "/type"
+    }
+  ],
+  "type": "object",
+  "required": [
+    "absoluteKeywordLocation",
+    "error",
+    "instanceLocation",
+    "keywordLocation"
+  ],
+  "properties": {
+    "absoluteKeywordLocation": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "uri"
+    },
+    "error": {
+      "type": "string"
+    },
+    "instanceLocation": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "json-pointer"
+    },
+    "keywordLocation": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "json-pointer"
+    }
+  },
+  "additionalProperties": false
+}

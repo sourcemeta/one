@@ -50,34 +50,7 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "type": "object",
-            "required": [
-              "absoluteKeywordLocation",
-              "error",
-              "instanceLocation",
-              "keywordLocation"
-            ],
-            "properties": {
-              "absoluteKeywordLocation": {
-                "x-format-assertion": true,
-                "type": "string",
-                "format": "uri"
-              },
-              "error": {
-                "type": "string"
-              },
-              "instanceLocation": {
-                "x-format-assertion": true,
-                "type": "string",
-                "format": "json-pointer"
-              },
-              "keywordLocation": {
-                "x-format-assertion": true,
-                "type": "string",
-                "format": "json-pointer"
-              }
-            },
-            "additionalProperties": false
+            "$ref": "../../../../api/schemas/output-error.json"
           }
         },
         "valid": {

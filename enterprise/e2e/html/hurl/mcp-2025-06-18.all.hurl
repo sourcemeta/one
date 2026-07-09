@@ -361,8 +361,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 130
-variable "text" jsonpath "$.schemas" == 130
+jsonpath "$.result.structuredContent.schemas" == 131
+variable "text" jsonpath "$.schemas" == 131
 jsonpath "$.result.structuredContent.entries" count == 3
 jsonpath "$.result.structuredContent.policies" count == 0
 variable "text" jsonpath "$.entries" count == 3
@@ -379,8 +379,8 @@ jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 100
 variable "text" jsonpath "$.entries[0].health" == 100
-jsonpath "$.result.structuredContent.entries[0].schemas" == 60
-variable "text" jsonpath "$.entries[0].schemas" == 60
+jsonpath "$.result.structuredContent.entries[0].schemas" == 61
+variable "text" jsonpath "$.entries[0].schemas" == 61
 jsonpath "$.result.structuredContent.entries[0].path" == "/self/"
 variable "text" jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[1].name" == "test"

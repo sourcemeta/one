@@ -16,7 +16,7 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 70
+jsonpath "$.schemas" == 71
 jsonpath "$.policies" count == 0
 jsonpath "$.entries" count == 10
 jsonpath "$.entries[0].name" == "internal"
