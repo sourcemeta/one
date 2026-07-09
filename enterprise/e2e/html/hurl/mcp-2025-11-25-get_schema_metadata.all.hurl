@@ -267,9 +267,9 @@ jsonpath "$.id" == 802
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.title" == "Sourcemeta One MCP Response"
-jsonpath "$.result.structuredContent.dependencies" == 9
+jsonpath "$.result.structuredContent.dependencies" == 10
 variable "text" jsonpath "$.title" == "Sourcemeta One MCP Response"
-variable "text" jsonpath "$.dependencies" == 9
+variable "text" jsonpath "$.dependencies" == 10
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
