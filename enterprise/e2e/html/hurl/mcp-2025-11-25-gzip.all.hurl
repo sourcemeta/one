@@ -459,9 +459,9 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-identity"
-jsonpath "$.result.resources" count == 26
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Evaluate RPC Input"
+jsonpath "$.result.resources" count == 31
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/request"
+jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Resources Templates List Request"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 
@@ -511,9 +511,9 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "rlist-gzip"
-jsonpath "$.result.resources" count == 26
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Evaluate RPC Input"
+jsonpath "$.result.resources" count == 31
+jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/request"
+jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Resources Templates List Request"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.nextCursor" not exists
 

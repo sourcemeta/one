@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema RDF API Request",
+  "description": "The JSON instance to promote to JSON-LD against a schema in the catalog, along with the desired output form",
+  "examples": [
+    {
+      "instance": {
+        "name": "Alice",
+        "age": 30
+      }
+    },
+    {
+      "instance": {
+        "name": "Alice",
+        "age": 30
+      },
+      "flatten": true
+    },
+    {
+      "instance": {
+        "name": "Alice",
+        "age": 30
+      },
+      "context": {
+        "@context": {
+          "@vocab": "https://schema.org/"
+        }
+      }
+    },
+    {
+      "instance": {
+        "name": "Alice",
+        "age": 30
+      },
+      "flatten": true,
+      "context": {
+        "@context": {
+          "@vocab": "https://schema.org/"
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [ "instance" ],
+  "properties": {
+    "instance": {
+      "description": "The JSON value to validate against the schema and promote to JSON-LD"
+    },
+    "flatten": {
+      "description": "Whether to flatten the resulting JSON-LD document",
+      "default": false,
+      "type": "boolean"
+    },
+    "context": {
+      "description": "A JSON-LD context to compact the resulting document against",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

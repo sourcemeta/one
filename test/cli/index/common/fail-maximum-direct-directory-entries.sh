@@ -56,7 +56,7 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: Too many entries in a single directory
   at path $(realpath "$TMP")/output/schemas/self/v1/schemas/mcp/tools/call
-  with count 13
+  with count 14
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"
@@ -67,8 +67,8 @@ rm -rf "$TMP/output"
 
 # It should succeed when total schemas exceed the limit but are spread
 # across a directory hierarchy where no single directory has more than the limit.
-# The limit must be above 13 since self/v1's mcp/tools/call directory has 13 entries
-# (11 per-tool subdirectories plus the generic request and response schemas)
+# The limit must be above 14 since self/v1's mcp/tools/call directory has 14 entries
+# (12 per-tool subdirectories plus the generic request and response schemas)
 rm -rf "$TMP/output"
 rm -rf "$TMP/schemas"
 mkdir -p "$TMP/schemas/a" "$TMP/schemas/b"
@@ -95,4 +95,4 @@ cat << 'EOF' > "$TMP/schemas/b/three.json"
 EOF
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" \
-  --maximum-direct-directory-entries 14
+  --maximum-direct-directory-entries 15

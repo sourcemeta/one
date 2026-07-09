@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema RDF RPC Input",
+  "description": "Validate a JSON instance against a schema in the catalog and promote it to JSON-LD using the x-jsonld-* annotations of the schema",
+  "examples": [
+    {
+      "schema": "https://example.com/foo",
+      "stringifiedInstance": "{ \"name\": \"Alice\" }"
+    },
+    {
+      "schema": "https://example.com/foo",
+      "stringifiedInstance": "{ \"name\": \"Alice\" }",
+      "flatten": true,
+      "stringifiedContext": "{ \"@context\": { \"@vocab\": \"https://schema.org/\" } }"
+    }
+  ],
+  "type": "object",
+  "required": [ "schema", "stringifiedInstance" ],
+  "properties": {
+    "schema": {
+      "description": "Absolute URI of a JSON Schema in this catalog",
+      "x-format-assertion": true,
+      "type": "string",
+      "pattern": "^[^#?]*$",
+      "format": "uri"
+    },
+    "stringifiedInstance": {
+      "description": "The JSON value to promote to JSON-LD, encoded as a string of valid JSON. The server parses this string before evaluation, so non-string MCP clients can still send objects, numbers, booleans, null, or arrays without losing the JSON type",
+      "$comment": "Accepting the instance as a JSON-encoded string is a workaround for MCP clients that stringify non-string tool arguments before sending them. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
+      "type": "string",
+      "contentEncoding": "identity",
+      "contentMediaType": "application/json"
+    },
+    "flatten": {
+      "description": "Whether to flatten the resulting JSON-LD document",
+      "default": false,
+      "type": "boolean"
+    },
+    "stringifiedContext": {
+      "description": "A JSON-LD context to compact the resulting document against, encoded as a string of valid JSON. The server parses this string before compacting, so non-string MCP clients can still send the context object without losing the JSON type",
+      "$comment": "Accepting the context as a JSON-encoded string is a workaround for MCP clients that stringify non-string tool arguments before sending them. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
+      "type": "string",
+      "contentEncoding": "identity",
+      "contentMediaType": "application/json"
+    }
+  },
+  "additionalProperties": false
+}
