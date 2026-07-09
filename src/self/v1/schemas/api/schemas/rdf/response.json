@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema RDF API Response",
+  "description": "The instance promoted to JSON-LD, in expanded, flattened, or compacted form",
+  "$comment": "TODO: Reference a complete JSON-LD schema instead of this loose approximation",
+  "examples": [
+    [
+      {
+        "@type": [ "https://schema.org/Person" ],
+        "https://schema.org/name": [
+          {
+            "@value": "Alice"
+          }
+        ]
+      }
+    ],
+    {
+      "@context": {
+        "@vocab": "https://schema.org/"
+      },
+      "@type": "Person",
+      "name": "Alice"
+    }
+  ],
+  "anyOf": [
+    {
+      "type": "array"
+    },
+    {
+      "type": "object"
+    }
+  ]
+}

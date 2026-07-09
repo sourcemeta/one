@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Schema RDF RPC Output",
+  "description": "Validate a JSON instance against a schema in the catalog and promote it to JSON-LD using the x-jsonld-* annotations of the schema",
+  "examples": [
+    {
+      "valid": true,
+      "document": [
+        {
+          "@type": [ "https://schema.org/Person" ],
+          "https://schema.org/name": [
+            {
+              "@value": "Alice"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "valid": false,
+      "errors": [
+        {
+          "absoluteKeywordLocation": "https://example.com/schema.json#/type",
+          "error": "Expected string but got integer",
+          "instanceLocation": "/name",
+          "keywordLocation": "/type"
+        }
+      ]
+    }
+  ],
+  "anyOf": [
+    {
+      "type": "object",
+      "required": [ "valid", "document" ],
+      "properties": {
+        "document": {
+          "$ref": "../../../../api/schemas/rdf/response.json"
+        },
+        "valid": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [ "valid", "errors" ],
+      "properties": {
+        "errors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "absoluteKeywordLocation",
+              "error",
+              "instanceLocation",
+              "keywordLocation"
+            ],
+            "properties": {
+              "absoluteKeywordLocation": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "uri"
+              },
+              "error": {
+                "type": "string"
+              },
+              "instanceLocation": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "json-pointer"
+              },
+              "keywordLocation": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "json-pointer"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "valid": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
