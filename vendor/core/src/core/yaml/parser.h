@@ -276,9 +276,24 @@ private:
                (content[cursor] == ' ' || content[cursor] == '\t')) {
           cursor++;
         }
+        const auto version_start{cursor};
         while (cursor < content.size() && content[cursor] != ' ' &&
-               content[cursor] != '\t' && content[cursor] != '#') {
+               content[cursor] != '\t') {
           cursor++;
+        }
+        const auto version{
+            content.substr(version_start, cursor - version_start)};
+        // YAML 1.2.2 Section 6.8.1: the version is a major and a minor decimal
+        // number joined by a dot, so any other character (such as a comment
+        // sign without a preceding separation space) is invalid
+        const auto version_dot{version.find('.')};
+        if (version_dot == std::string_view::npos || version_dot == 0 ||
+            version_dot + 1 == version.size() ||
+            version.find_first_not_of("0123456789") != version_dot ||
+            version.find_first_not_of("0123456789", version_dot + 1) !=
+                std::string_view::npos) [[unlikely]] {
+          throw YAMLParseError{token.line, token.column,
+                               "Invalid version in %YAML directive"};
         }
         while (cursor < content.size() &&
                (content[cursor] == ' ' || content[cursor] == '\t')) {
@@ -1229,9 +1244,14 @@ private:
       result.push_back(std::move(value));
       element_index++;
       token = this->next_token();
-    } else if (token.has_value() &&
-               token->type == TokenType::BlockSequenceEntry &&
-               token->column == base_column) {
+    } else if (!token.has_value() ||
+               (token->type == TokenType::BlockSequenceEntry &&
+                token->column == base_column) ||
+               token->type == TokenType::StreamEnd ||
+               token->type == TokenType::DocumentEnd ||
+               token->type == TokenType::DocumentStart) {
+      // The single entry has no value on this line (a sibling entry follows or
+      // the stream or document ends), so it is a null entry rather than dropped
       result.push_back(JSON{nullptr});
       element_index++;
     }
@@ -1267,7 +1287,8 @@ private:
           (token->type == TokenType::BlockSequenceEntry &&
            token->column == base_column) ||
           token->type == TokenType::StreamEnd ||
-          token->type == TokenType::DocumentEnd) {
+          token->type == TokenType::DocumentEnd ||
+          token->type == TokenType::DocumentStart) {
         result.push_back(JSON{nullptr});
       } else {
         auto value{this->parse_value(token.value(), JSON::ParseContext::Index,
