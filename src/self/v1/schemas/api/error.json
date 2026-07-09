@@ -123,6 +123,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:jsonld-unsupported-dialect",
+        "title": "Unprocessable Content",
+        "status": 422,
+        "detail": "This schema does not declare JSON Schema 2019-09 or newer"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:cannot-satisfy-content-encoding",
         "title": "Not Acceptable",
         "status": 406,
@@ -160,6 +168,100 @@
         "status": 501,
         "detail": "This version does not implement such action handler for this URL"
       }
+    },
+    {
+      "type": "object",
+      "required": [ "type", "title", "status", "detail", "errors" ],
+      "properties": {
+        "type": {
+          "const": "urn:sourcemeta:one:invalid-instance"
+        },
+        "title": {
+          "const": "Unprocessable Content"
+        },
+        "status": {
+          "const": 422
+        },
+        "detail": {
+          "const": "The instance does not conform to the schema"
+        },
+        "errors": {
+          "description": "The standard JSON Schema output errors describing why the instance does not conform",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "./schemas/output-error.json"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "facet",
+        "instanceLocation"
+      ],
+      "properties": {
+        "type": {
+          "const": "urn:sourcemeta:one:jsonld-resolution-error"
+        },
+        "title": {
+          "const": "Unprocessable Content"
+        },
+        "status": {
+          "const": 422
+        },
+        "detail": {
+          "description": "The message describing why the JSON-LD annotations cannot be resolved",
+          "type": "string"
+        },
+        "facet": {
+          "description": "The JSON-LD annotation facet that the resolution error is about",
+          "enum": [
+            "type",
+            "predicate",
+            "datatype",
+            "language",
+            "direction",
+            "graph",
+            "json",
+            "container",
+            "self"
+          ]
+        },
+        "instanceLocation": {
+          "description": "The instance location where the resolution stopped",
+          "x-format-assertion": true,
+          "type": "string",
+          "format": "json-pointer"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [ "type", "title", "status", "detail" ],
+      "properties": {
+        "type": {
+          "const": "urn:sourcemeta:one:invalid-context"
+        },
+        "title": {
+          "const": "Bad Request"
+        },
+        "status": {
+          "const": 400
+        },
+        "detail": {
+          "description": "The message describing why the context cannot be processed",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     {
       "type": "object",

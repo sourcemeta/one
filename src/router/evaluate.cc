@@ -7,6 +7,7 @@
 
 #include <cassert>     // assert
 #include <memory>      // std::make_shared, std::shared_ptr
+#include <optional>    // std::optional, std::nullopt
 #include <string_view> // std::string_view
 #include <utility>     // std::move, std::pair
 
@@ -71,6 +72,36 @@ auto RouterAction::schema_evaluate_with_tracing(
       credential, schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
   sourcemeta::blaze::Evaluator evaluator;
   return evaluator.validate(*schema_template, instance, callback);
+}
+
+auto RouterAction::schema_jsonld(std::string_view credential,
+                                 const std::string_view schema_uri,
+                                 const sourcemeta::core::JSON &instance) const
+    -> sourcemeta::blaze::JSONLDOutcome {
+  const auto schema_template{this->blaze_template(
+      credential, schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
+  sourcemeta::blaze::Evaluator evaluator;
+  return sourcemeta::blaze::jsonld(evaluator, *schema_template, instance);
+}
+
+auto RouterAction::schema_base_dialect(std::string_view credential,
+                                       const std::string_view schema_uri) const
+    -> std::optional<sourcemeta::core::JSON::String> {
+  const auto resolution{this->artifact_resolve_path(credential, schema_uri,
+                                                    Tree::Explorer, "schema")};
+  if (resolution.outcome != ArtifactResolution::Outcome::Found) {
+    return std::nullopt;
+  }
+
+  const auto metadata{
+      sourcemeta::one::metapack_read_json(resolution.path.value().path())};
+  if (!metadata.has_value() || !metadata.value().is_object() ||
+      !metadata.value().defines("baseDialect") ||
+      !metadata.value().at("baseDialect").is_string()) {
+    return std::nullopt;
+  }
+
+  return metadata.value().at("baseDialect").to_string();
 }
 
 } // namespace sourcemeta::one

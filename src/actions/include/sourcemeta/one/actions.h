@@ -25,6 +25,7 @@ namespace sourcemeta::one {
   X(GET_SCHEMA_DEPENDENCIES_V1, ActionGetSchemaDependencies_v1)                \
   X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependents_v1)                    \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
+  X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDF_v1)                                 \
   X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTrace_v1)                             \
   X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \
   X(SERVE_STATIC_V1, ActionServeStatic_v1)                                     \

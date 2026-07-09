@@ -3,6 +3,7 @@
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
@@ -150,6 +151,15 @@ public:
       std::string_view credential, std::string_view schema_uri,
       const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
+
+  [[nodiscard]] auto schema_jsonld(std::string_view credential,
+                                   std::string_view schema_uri,
+                                   const sourcemeta::core::JSON &instance) const
+      -> sourcemeta::blaze::JSONLDOutcome;
+
+  [[nodiscard]] auto schema_base_dialect(std::string_view credential,
+                                         std::string_view schema_uri) const
+      -> std::optional<sourcemeta::core::JSON::String>;
 
 protected:
   // Resolution for trees that are not registry content, such as the
