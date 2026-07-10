@@ -335,6 +335,7 @@ jsonpath "$.result.tools[5].title" not exists
 jsonpath "$.result.tools[6].title" not exists
 jsonpath "$.result.tools[7].title" not exists
 jsonpath "$.result.tools[8].title" not exists
+jsonpath "$.result.tools[9].title" not exists
 jsonpath "$.result.tools[10].title" not exists
 jsonpath "$.result.tools[11].title" not exists
 # Added in 2025-11-25 (SEP-973)
