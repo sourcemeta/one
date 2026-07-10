@@ -444,7 +444,7 @@ jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[20].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 5693
+jsonpath "$.result.resources[20].size" == 8155
 jsonpath "$.result.resources[20].annotations.priority" == 0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One List API Response"

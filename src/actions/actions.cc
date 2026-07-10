@@ -14,6 +14,7 @@
 #include "action_get_schema_stats_v1.h"
 #include "action_health_check_v1.h"
 #include "action_jsonschema_evaluate_v1.h"
+#include "action_jsonschema_rdf_v1.h"
 #include "action_jsonschema_trace_v1.h"
 #include "action_list_directory_v1.h"
 #include "action_mcp_v1.h"

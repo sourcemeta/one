@@ -19,7 +19,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 111
+jsonpath "$.schemas" == 116
 jsonpath "$.entries" count >= 2
 jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "self"
@@ -35,8 +35,8 @@ jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 13
-jsonpath "$.entries[1].schemas" == 50
+jsonpath "$.entries[1].health" == 14
+jsonpath "$.entries[1].schemas" == 55
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -79,8 +79,8 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.schemas" == 50
-jsonpath "$.entries" count == 13
+jsonpath "$.schemas" == 55
+jsonpath "$.entries" count == 14
 jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].policies" count == 0
@@ -127,40 +127,46 @@ jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].health" == 34
 jsonpath "$.entries[6].schemas" == 1
 jsonpath "$.entries[6].path" == "/test/hyper/"
-jsonpath "$.entries[7].name" == "markdown-alert"
+jsonpath "$.entries[7].name" == "jsonld"
 jsonpath "$.entries[7].policies" count == 0
 jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].schemas" == 1
-jsonpath "$.entries[7].path" == "/test/markdown-alert/"
-jsonpath "$.entries[8].name" == "no-base"
+jsonpath "$.entries[7].health" == 35
+jsonpath "$.entries[7].schemas" == 4
+jsonpath "$.entries[7].path" == "/test/jsonld/"
+jsonpath "$.entries[8].name" == "markdown-alert"
 jsonpath "$.entries[8].policies" count == 0
 jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].health" == 0
-jsonpath "$.entries[8].schemas" == 2
-jsonpath "$.entries[8].path" == "/test/no-base/"
-jsonpath "$.entries[9].name" == "no-blaze"
+jsonpath "$.entries[8].schemas" == 1
+jsonpath "$.entries[8].path" == "/test/markdown-alert/"
+jsonpath "$.entries[9].name" == "no-base"
 jsonpath "$.entries[9].policies" count == 0
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].health" == 0
-jsonpath "$.entries[9].schemas" == 1
-jsonpath "$.entries[9].path" == "/test/no-blaze/"
-jsonpath "$.entries[10].name" == "same"
+jsonpath "$.entries[9].schemas" == 2
+jsonpath "$.entries[9].path" == "/test/no-base/"
+jsonpath "$.entries[10].name" == "no-blaze"
 jsonpath "$.entries[10].policies" count == 0
 jsonpath "$.entries[10].type" == "directory"
 jsonpath "$.entries[10].health" == 0
-jsonpath "$.entries[10].schemas" == 1
-jsonpath "$.entries[10].path" == "/test/same/"
-jsonpath "$.entries[11].name" == "schemas"
+jsonpath "$.entries[10].schemas" == 2
+jsonpath "$.entries[10].path" == "/test/no-blaze/"
+jsonpath "$.entries[11].name" == "same"
 jsonpath "$.entries[11].policies" count == 0
 jsonpath "$.entries[11].type" == "directory"
-jsonpath "$.entries[11].health" == 6
-jsonpath "$.entries[11].schemas" == 29
-jsonpath "$.entries[11].path" == "/test/schemas/"
-jsonpath "$.entries[12].name" == "unsafe-alert"
+jsonpath "$.entries[11].health" == 0
+jsonpath "$.entries[11].schemas" == 1
+jsonpath "$.entries[11].path" == "/test/same/"
+jsonpath "$.entries[12].name" == "schemas"
 jsonpath "$.entries[12].policies" count == 0
 jsonpath "$.entries[12].type" == "directory"
-jsonpath "$.entries[12].schemas" == 1
-jsonpath "$.entries[12].path" == "/test/unsafe-alert/"
+jsonpath "$.entries[12].health" == 6
+jsonpath "$.entries[12].schemas" == 29
+jsonpath "$.entries[12].path" == "/test/schemas/"
+jsonpath "$.entries[13].name" == "unsafe-alert"
+jsonpath "$.entries[13].policies" count == 0
+jsonpath "$.entries[13].type" == "directory"
+jsonpath "$.entries[13].schemas" == 1
+jsonpath "$.entries[13].path" == "/test/unsafe-alert/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

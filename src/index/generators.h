@@ -766,6 +766,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto evaluate_response_schema{
         configuration.base_path +
         "/self/v1/schemas/api/schemas/evaluate/response"};
+    const auto rdf_request_schema{configuration.base_path +
+                                  "/self/v1/schemas/api/schemas/rdf/request"};
+    const auto rdf_response_schema{configuration.base_path +
+                                   "/self/v1/schemas/api/schemas/rdf/response"};
     const auto trace_request_schema{
         configuration.base_path + "/self/v1/schemas/api/schemas/trace/request"};
     const auto trace_response_schema{
@@ -963,6 +967,14 @@ struct GENERATE_URITEMPLATE_ROUTES {
       router.add("/self/v1/api/schemas/evaluate/{+schema}", "evaluate_schema",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
                  evaluate_arguments);
+
+      const sourcemeta::core::URITemplateRouter::Argument rdf_arguments[] = {
+          {"requestSchema", std::string_view{rdf_request_schema}},
+          {"responseSchema", std::string_view{rdf_response_schema}},
+          {"errorSchema", std::string_view{error_schema}}};
+      router.add("/self/v1/api/schemas/rdf/{+schema}", "instance_to_rdf",
+                 next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_RDF_V1,
+                 rdf_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
           {"requestSchema", std::string_view{trace_request_schema}},
