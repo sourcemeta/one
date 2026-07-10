@@ -58,12 +58,17 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
   elseif(UNIX)
     message(STATUS "Extracting debug symbols (.debug) for: ${TARGET_NAME}")
+    # Stripping happens on a copy that atomically replaces the binary.
+    # Rewriting the binary in place races against concurrent build steps
+    # that execute it, such as code generation, failing with ETXTBSY
     add_custom_command(OUTPUT "${BINARY_PATH}.debug"
       COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug
               "${BINARY_INPUT}" "${BINARY_PATH}.debug"
-      COMMAND "${CMAKE_OBJCOPY}" --strip-debug "${BINARY_INPUT}"
-      COMMAND "${CMAKE_OBJCOPY}"
-              "--add-gnu-debuglink=${BINARY_PATH}.debug" "${BINARY_INPUT}"
+      COMMAND "${CMAKE_OBJCOPY}" --strip-debug
+              "--add-gnu-debuglink=${BINARY_PATH}.debug"
+              "${BINARY_INPUT}" "${BINARY_PATH}.stripped"
+      COMMAND "${CMAKE_COMMAND}" -E rename
+              "${BINARY_PATH}.stripped" "${BINARY_PATH}"
       DEPENDS "${TARGET_NAME}"
       VERBATIM)
     add_custom_target("${TARGET_NAME}_debug_symbols" ALL
