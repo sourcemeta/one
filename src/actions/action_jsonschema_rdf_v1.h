@@ -9,6 +9,7 @@
 #include <sourcemeta/core/jsonld.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
@@ -48,6 +49,10 @@ public:
             this->request_schema_ = std::get<std::string_view>(value);
           } else if (key == "responseSchema") {
             this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
           } else if (key == "errorSchema") {
             this->error_schema_ = std::get<std::string_view>(value);
           }
@@ -323,11 +328,114 @@ public:
         });
   }
 
-  auto mcp(const sourcemeta::core::MCPProtocolVersion,
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &, std::string_view)
+           const sourcemeta::core::JSON &arguments, std::string_view credential)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
+    auto [request_valid, request_output]{
+        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
+    if (!request_valid) {
+      return sourcemeta::core::jsonrpc_make_error(
+          &request_id, -32602, "Params fail against the tool request schema",
+          std::move(request_output));
+    }
+
+    const auto &schema_uri{arguments.at("schema").to_string()};
+    const auto schema_present{this->artifact_resolve_path(
+        credential, schema_uri, Tree::Schemas, "schema")};
+    const auto evaluation_enabled{this->artifact_resolve_path(
+        credential, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+    if (schema_present.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Denied ||
+        evaluation_enabled.outcome ==
+            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Authentication required");
+    }
+    if (schema_present.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      return sourcemeta::core::mcp_make_tool_error(request_id,
+                                                   "Schema not found");
+    }
+
+    if (evaluation_enabled.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "This schema was not precompiled for schema evaluation");
+    }
+
+    sourcemeta::core::JSON instance{nullptr};
+    try {
+      instance = sourcemeta::core::parse_json(
+          arguments.at("stringifiedInstance").to_string());
+    } catch (const std::exception &) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    } catch (...) {
+      return sourcemeta::core::mcp_make_tool_error(
+          request_id, "The instance is not valid JSON");
+    }
+
+    sourcemeta::core::JSON context{nullptr};
+    const auto with_context{arguments.defines("stringifiedContext")};
+    if (with_context) {
+      try {
+        context = sourcemeta::core::parse_json(
+            arguments.at("stringifiedContext").to_string());
+      } catch (const std::exception &) {
+        return sourcemeta::core::mcp_make_tool_error(
+            request_id, "The context is not valid JSON");
+      } catch (...) {
+        return sourcemeta::core::mcp_make_tool_error(
+            request_id, "The context is not valid JSON");
+      }
+    }
+
+    const auto flatten{arguments.defines("flatten") &&
+                       arguments.at("flatten").to_boolean()};
+    const auto schema_template{
+        this->dispatcher().blaze_template(evaluation_enabled.path.value())};
+    sourcemeta::blaze::Evaluator evaluator;
+    auto outcome{
+        sourcemeta::blaze::jsonld(evaluator, *schema_template, instance)};
+
+    if (std::holds_alternative<sourcemeta::blaze::JSONLDInvalid>(outcome)) {
+      auto payload{sourcemeta::core::JSON::make_object()};
+      payload.assign("valid", sourcemeta::core::JSON{false});
+      payload.assign("errors",
+                     this->schema_evaluate(credential, schema_uri, instance,
+                                           sourcemeta::blaze::Mode::Exhaustive)
+                         .second.at("errors"));
+      return sourcemeta::core::mcp_make_tool_success(version, request_id,
+                                                     std::move(payload));
+    }
+
+    if (std::holds_alternative<sourcemeta::blaze::JSONLDResolutionError>(
+            outcome)) {
+      const auto &error{
+          std::get<sourcemeta::blaze::JSONLDResolutionError>(outcome)};
+      return sourcemeta::core::mcp_make_tool_error(request_id, error.message);
+    }
+
+    auto document{std::get<sourcemeta::core::JSON>(std::move(outcome))};
+    if (with_context) {
+      try {
+        document = flatten
+                       ? sourcemeta::core::jsonld_flatten(document, context)
+                       : sourcemeta::core::jsonld_compact(document, context);
+      } catch (const sourcemeta::core::JSONLDError &error) {
+        return sourcemeta::core::mcp_make_tool_error(request_id, error.what());
+      }
+    } else if (flatten) {
+      document = sourcemeta::core::jsonld_flatten(document);
+    }
+
+    auto payload{sourcemeta::core::JSON::make_object()};
+    payload.assign("valid", sourcemeta::core::JSON{true});
+    payload.assign("document", std::move(document));
+    return sourcemeta::core::mcp_make_tool_success(version, request_id,
+                                                   std::move(payload));
   }
 
 private:
@@ -375,6 +483,8 @@ private:
 
   std::string_view request_schema_;
   std::string_view response_schema_;
+  std::string_view rpc_request_schema_;
+  std::string_view rpc_response_schema_;
   std::string_view error_schema_;
 };
 

@@ -230,19 +230,19 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "tools-identity"
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 12
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[0].annotations.destructiveHint" == false
 jsonpath "$.result.tools[0].annotations.idempotentHint" == true
 jsonpath "$.result.tools[0].annotations.openWorldHint" == false
-jsonpath "$.result.tools[10].name" == "search_schemas"
-jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
-jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[10].annotations.destructiveHint" == false
-jsonpath "$.result.tools[10].annotations.idempotentHint" == true
-jsonpath "$.result.tools[10].annotations.openWorldHint" == false
+jsonpath "$.result.tools[11].name" == "search_schemas"
+jsonpath "$.result.tools[11].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[11].annotations.destructiveHint" == false
+jsonpath "$.result.tools[11].annotations.idempotentHint" == true
+jsonpath "$.result.tools[11].annotations.openWorldHint" == false
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -285,19 +285,19 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "tools-gzip"
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 12
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].annotations.title" == "List Directory"
 jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[0].annotations.destructiveHint" == false
 jsonpath "$.result.tools[0].annotations.idempotentHint" == true
 jsonpath "$.result.tools[0].annotations.openWorldHint" == false
-jsonpath "$.result.tools[10].name" == "search_schemas"
-jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
-jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[10].annotations.destructiveHint" == false
-jsonpath "$.result.tools[10].annotations.idempotentHint" == true
-jsonpath "$.result.tools[10].annotations.openWorldHint" == false
+jsonpath "$.result.tools[11].name" == "search_schemas"
+jsonpath "$.result.tools[11].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[11].annotations.destructiveHint" == false
+jsonpath "$.result.tools[11].annotations.idempotentHint" == true
+jsonpath "$.result.tools[11].annotations.openWorldHint" == false
 
 POST {{base}}/v1/catalog/self/v1/api/schemas/evaluate{{schema_path}}
 ```

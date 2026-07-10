@@ -232,7 +232,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 5
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 12
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/list-directory/request"
@@ -361,8 +361,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 131
-variable "text" jsonpath "$.schemas" == 131
+jsonpath "$.result.structuredContent.schemas" == 133
+variable "text" jsonpath "$.schemas" == 133
 jsonpath "$.result.structuredContent.entries" count == 3
 jsonpath "$.result.structuredContent.policies" count == 0
 variable "text" jsonpath "$.entries" count == 3
@@ -389,10 +389,10 @@ variable "text" jsonpath "$.entries[1].name" == "test"
 variable "text" jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 15
-variable "text" jsonpath "$.entries[1].health" == 15
-jsonpath "$.result.structuredContent.entries[1].schemas" == 68
-variable "text" jsonpath "$.entries[1].schemas" == 68
+jsonpath "$.result.structuredContent.entries[1].health" == 20
+variable "text" jsonpath "$.entries[1].health" == 20
+jsonpath "$.result.structuredContent.entries[1].schemas" == 70
+variable "text" jsonpath "$.entries[1].schemas" == 70
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/"
 variable "text" jsonpath "$.entries[1].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[2].name" == "twins"

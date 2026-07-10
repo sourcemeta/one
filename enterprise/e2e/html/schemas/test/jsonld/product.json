@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product",
+  "description": "A product annotated with JSON-LD mappings",
+  "x-jsonld-type": "https://schema.org/Product",
+  "type": "object",
+  "required": [ "sku", "name" ],
+  "properties": {
+    "sku": {
+      "x-jsonld-id": "https://schema.org/sku",
+      "type": "string"
+    },
+    "name": {
+      "x-jsonld-id": "https://schema.org/name",
+      "type": "string"
+    },
+    "releaseDate": {
+      "x-jsonld-datatype": "http://www.w3.org/2001/XMLSchema#date",
+      "x-jsonld-id": "https://schema.org/releaseDate",
+      "type": "string"
+    },
+    "keywords": {
+      "x-jsonld-container": "@list",
+      "x-jsonld-id": "https://schema.org/keywords",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "manufacturer": {
+      "x-jsonld-id": "https://schema.org/manufacturer",
+      "x-jsonld-type": "https://schema.org/Organization",
+      "type": "object",
+      "properties": {
+        "name": {
+          "x-jsonld-id": "https://schema.org/name",
+          "type": "string"
+        },
+        "url": {
+          "x-jsonld-id": "https://schema.org/sameAs",
+          "x-jsonld-self": "{+this}",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

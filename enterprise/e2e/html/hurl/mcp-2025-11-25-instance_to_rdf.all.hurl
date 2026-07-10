@@ -1,90 +1,11 @@
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "ping-identity", "method": "ping" }
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "ping-identity"
-jsonpath "$.result" isObject
-jsonpath "$.result" isEmpty
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "ping-gzip", "method": "ping" }
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Content-Encoding: gzip
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "ping-gzip"
-jsonpath "$.result" isObject
-jsonpath "$.result" isEmpty
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
+# Resolve the tool's `outputSchema.$ref` once via `tools/list`. Every
+# successful `tools/call` below validates its `structuredContent` against
+# this schema so the advertised output shape and the actual one stay in lockstep.
+#
+# TODO: Drop the `structured_content` body-regex captures in favour of a plain
+# `jsonpath "$.result.structuredContent"` once hurl can inline a captured JSON
+# object as a request body. Tracked upstream at
+# https://github.com/Orange-OpenSource/hurl/issues/2152
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -92,226 +13,21 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "init-identity",
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2025-11-25",
-    "capabilities": {},
-    "clientInfo": { "name": "hurl", "version": "1.0.0" }
-  }
+  "id": 0,
+  "method": "tools/list"
 }
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
 [Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
+output_schema_path: jsonpath "$.result.tools[?@.name=='instance_to_rdf'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "init-identity"
-jsonpath "$.result.protocolVersion" == "2025-11-25"
-jsonpath "$.result.capabilities.resources" isObject
-jsonpath "$.result.capabilities.resources" isEmpty
-jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
-jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
-jsonpath "$.result.serverInfo.version" matches "^.+$"
-jsonpath "$.result.serverInfo.description" == "The next-generation JSON Schema platform"
-jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}"
-jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": "init-gzip",
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2025-11-25",
-    "capabilities": {},
-    "clientInfo": { "name": "hurl", "version": "1.0.0" }
-  }
-}
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Content-Encoding: gzip
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "init-gzip"
-jsonpath "$.result.protocolVersion" == "2025-11-25"
-jsonpath "$.result.capabilities.resources" isObject
-jsonpath "$.result.capabilities.resources" isEmpty
-jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
-jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
-jsonpath "$.result.serverInfo.version" matches "^.+$"
-jsonpath "$.result.serverInfo.description" == "The next-generation JSON Schema platform"
-jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}"
-jsonpath "$.result.instructions" matches "^This is an instance of Sourcemeta One"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "tools-identity", "method": "tools/list" }
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "tools-identity"
-jsonpath "$.result.tools" count == 12
-jsonpath "$.result.tools[0].name" == "list_directory"
-jsonpath "$.result.tools[0].annotations.title" == "List Directory"
-jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[0].annotations.destructiveHint" == false
-jsonpath "$.result.tools[0].annotations.idempotentHint" == true
-jsonpath "$.result.tools[0].annotations.openWorldHint" == false
-jsonpath "$.result.tools[11].name" == "search_schemas"
-jsonpath "$.result.tools[11].annotations.title" == "Search Schemas"
-jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[11].annotations.destructiveHint" == false
-jsonpath "$.result.tools[11].annotations.idempotentHint" == true
-jsonpath "$.result.tools[11].annotations.openWorldHint" == false
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "tools-gzip", "method": "tools/list" }
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Content-Encoding: gzip
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "tools-gzip"
-jsonpath "$.result.tools" count == 12
-jsonpath "$.result.tools[0].name" == "list_directory"
-jsonpath "$.result.tools[0].annotations.title" == "List Directory"
-jsonpath "$.result.tools[0].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[0].annotations.destructiveHint" == false
-jsonpath "$.result.tools[0].annotations.idempotentHint" == true
-jsonpath "$.result.tools[0].annotations.openWorldHint" == false
-jsonpath "$.result.tools[11].name" == "search_schemas"
-jsonpath "$.result.tools[11].annotations.title" == "Search Schemas"
-jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[11].annotations.destructiveHint" == false
-jsonpath "$.result.tools[11].annotations.idempotentHint" == true
-jsonpath "$.result.tools[11].annotations.openWorldHint" == false
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
+jsonpath "$.result.tools[?@.name=='instance_to_rdf'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
@@ -320,11 +36,11 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "call-identity",
+  "id": 950,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_health",
-    "arguments": { "schema": "{{base}}/test/bare/01" }
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": \"ABC-123\", \"name\": \"Vacuum Robot\" }" }
   }
 }
 ```
@@ -339,22 +55,34 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "call-identity"
+jsonpath "$.id" == 950
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent.score" == 0
-jsonpath "$.result.structuredContent.errors" count == 3
-variable "text" jsonpath "$.score" == 0
-variable "text" jsonpath "$.errors" count == 3
+jsonpath "$.result.structuredContent.valid" == true
+variable "text" jsonpath "$.valid" == true
+jsonpath "$.result.structuredContent.document" count == 1
+variable "text" jsonpath "$.document" count == 1
+jsonpath "$.result.structuredContent.document[0]['@type']" count == 1
+variable "text" jsonpath "$.document[0]['@type']" count == 1
+jsonpath "$.result.structuredContent.document[0]['@type'][0]" == "https://schema.org/Product"
+variable "text" jsonpath "$.document[0]['@type'][0]" == "https://schema.org/Product"
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/name']" count == 1
+variable "text" jsonpath "$.document[0]['https://schema.org/name']" count == 1
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/name'][0]['@value']" == "Vacuum Robot"
+variable "text" jsonpath "$.document[0]['https://schema.org/name'][0]['@value']" == "Vacuum Robot"
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/sku']" count == 1
+variable "text" jsonpath "$.document[0]['https://schema.org/sku']" count == 1
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/sku'][0]['@value']" == "ABC-123"
+variable "text" jsonpath "$.document[0]['https://schema.org/sku'][0]['@value']" == "ABC-123"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -370,26 +98,38 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
 Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "call-gzip",
+  "id": 951,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_health",
-    "arguments": { "schema": "{{base}}/test/bare/01" }
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": \"ABC-123\", \"name\": \"Vacuum Robot\" }", "flatten": true }
   }
 }
 ```
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
-Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
@@ -398,6 +138,7 @@ MCP-Protocol-Version: 2025-11-25
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -405,14 +146,334 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "call-gzip"
+jsonpath "$.id" == 951
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent.score" == 0
-jsonpath "$.result.structuredContent.errors" count == 3
-variable "text" jsonpath "$.score" == 0
-variable "text" jsonpath "$.errors" count == 3
+jsonpath "$.result.structuredContent.valid" == true
+variable "text" jsonpath "$.valid" == true
+jsonpath "$.result.structuredContent.document" count == 1
+variable "text" jsonpath "$.document" count == 1
+jsonpath "$.result.structuredContent.document[0]['@id']" == "_:b0"
+variable "text" jsonpath "$.document[0]['@id']" == "_:b0"
+jsonpath "$.result.structuredContent.document[0]['@type']" count == 1
+variable "text" jsonpath "$.document[0]['@type']" count == 1
+jsonpath "$.result.structuredContent.document[0]['@type'][0]" == "https://schema.org/Product"
+variable "text" jsonpath "$.document[0]['@type'][0]" == "https://schema.org/Product"
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/name'][0]['@value']" == "Vacuum Robot"
+variable "text" jsonpath "$.document[0]['https://schema.org/name'][0]['@value']" == "Vacuum Robot"
+jsonpath "$.result.structuredContent.document[0]['https://schema.org/sku'][0]['@value']" == "ABC-123"
+variable "text" jsonpath "$.document[0]['https://schema.org/sku'][0]['@value']" == "ABC-123"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 952,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": \"ABC-123\", \"name\": \"Vacuum Robot\" }", "stringifiedContext": "{ \"@context\": { \"@vocab\": \"https://schema.org/\" } }" }
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 952
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.valid" == true
+variable "text" jsonpath "$.valid" == true
+jsonpath "$.result.structuredContent.document['@type']" == "Product"
+variable "text" jsonpath "$.document['@type']" == "Product"
+jsonpath "$.result.structuredContent.document.name" == "Vacuum Robot"
+variable "text" jsonpath "$.document.name" == "Vacuum Robot"
+jsonpath "$.result.structuredContent.document.sku" == "ABC-123"
+variable "text" jsonpath "$.document.sku" == "ABC-123"
+jsonpath "$.result.structuredContent.document['@context']['@vocab']" == "https://schema.org/"
+variable "text" jsonpath "$.document['@context']['@vocab']" == "https://schema.org/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 953,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": \"ABC-123\", \"name\": \"Vacuum Robot\" }", "flatten": true, "stringifiedContext": "{ \"@context\": { \"@vocab\": \"https://schema.org/\" } }" }
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 953
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.valid" == true
+variable "text" jsonpath "$.valid" == true
+jsonpath "$.result.structuredContent.document['@id']" == "_:b0"
+variable "text" jsonpath "$.document['@id']" == "_:b0"
+jsonpath "$.result.structuredContent.document['@type']" == "Product"
+variable "text" jsonpath "$.document['@type']" == "Product"
+jsonpath "$.result.structuredContent.document.name" == "Vacuum Robot"
+variable "text" jsonpath "$.document.name" == "Vacuum Robot"
+jsonpath "$.result.structuredContent.document.sku" == "ABC-123"
+variable "text" jsonpath "$.document.sku" == "ABC-123"
+jsonpath "$.result.structuredContent.document['@context']['@vocab']" == "https://schema.org/"
+variable "text" jsonpath "$.document['@context']['@vocab']" == "https://schema.org/"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 954,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": 42, \"name\": \"Vacuum Robot\" }" }
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+text: jsonpath "$.result.content[0].text"
+structured_content: body regex "(?s)\"structuredContent\": ((?:\\{.*?\n    \\})|(?:\\[.*?\n    \\]))"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 954
+jsonpath "$.result.isError" == false
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.structuredContent.valid" == false
+variable "text" jsonpath "$.valid" == false
+jsonpath "$.result.structuredContent.errors" count == 2
+variable "text" jsonpath "$.errors" count == 2
+jsonpath "$.result.structuredContent.errors[0].keywordLocation" == "/properties/sku/type"
+variable "text" jsonpath "$.errors[0].keywordLocation" == "/properties/sku/type"
+jsonpath "$.result.structuredContent.errors[0].absoluteKeywordLocation" == "{{base}}/test/jsonld/product#/properties/sku/type"
+variable "text" jsonpath "$.errors[0].absoluteKeywordLocation" == "{{base}}/test/jsonld/product#/properties/sku/type"
+jsonpath "$.result.structuredContent.errors[0].instanceLocation" == "/sku"
+variable "text" jsonpath "$.errors[0].instanceLocation" == "/sku"
+jsonpath "$.result.structuredContent.errors[0].error" == "The value was expected to be of type string but it was of type integer"
+variable "text" jsonpath "$.errors[0].error" == "The value was expected to be of type string but it was of type integer"
+jsonpath "$.result.structuredContent.errors[1].keywordLocation" == "/properties"
+variable "text" jsonpath "$.errors[1].keywordLocation" == "/properties"
+jsonpath "$.result.structuredContent.errors[1].absoluteKeywordLocation" == "{{base}}/test/jsonld/product#/properties"
+variable "text" jsonpath "$.errors[1].absoluteKeywordLocation" == "{{base}}/test/jsonld/product#/properties"
+jsonpath "$.result.structuredContent.errors[1].instanceLocation" == ""
+variable "text" jsonpath "$.errors[1].instanceLocation" == ""
+jsonpath "$.result.structuredContent.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
+variable "text" jsonpath "$.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
+```
+{{structured_content}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A valid instance whose JSON-LD annotations cannot resolve
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 955,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/conflict", "stringifiedInstance": "{}" }
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 955
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "A JSON-LD predicate cannot be assigned to the document root"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -435,9 +496,12 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "rlist-identity",
-  "method": "resources/list",
-  "params": { "cursor": "100" }
+  "id": 956,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ not json" }
+  }
 }
 ```
 HTTP 200
@@ -456,14 +520,12 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "rlist-identity"
-jsonpath "$.result.resources" count == 33
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/request"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Resources Read Request"
-jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.nextCursor" not exists
+jsonpath "$.id" == 956
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The instance is not valid JSON"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -478,70 +540,6 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": "rlist-gzip",
-  "method": "resources/list",
-  "params": { "cursor": "100" }
-}
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Content-Encoding: gzip
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "rlist-gzip"
-jsonpath "$.result.resources" count == 33
-jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/request"
-jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Resources Read Request"
-jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.nextCursor" not exists
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-GET {{base}}/test/object
-HTTP 200
-Cache-Control: public, max-age=0, must-revalidate
-[Captures]
-schema_text: body
-[Asserts]
-header "Vary" == "User-Agent, Accept-Encoding"
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
@@ -550,9 +548,12 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "rread-identity",
-  "method": "resources/read",
-  "params": { "uri": "{{base}}/test/object" }
+  "id": 957,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{}", "stringifiedContext": "{ not json" }
+  }
 }
 ```
 HTTP 200
@@ -571,13 +572,12 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "rread-identity"
-jsonpath "$.result.contents" count == 1
-jsonpath "$.result.contents[0].uri" == "{{base}}/test/object"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{{schema_text}}"
+jsonpath "$.id" == 957
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "The context is not valid JSON"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -593,23 +593,25 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# A context that references a remote document cannot be processed
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
 Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": "rread-gzip",
-  "method": "resources/read",
-  "params": { "uri": "{{base}}/test/object" }
+  "id": 958,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product", "stringifiedInstance": "{ \"sku\": \"ABC-123\", \"name\": \"Vacuum Robot\" }", "stringifiedContext": "{ \"@context\": \"https://remote.example.com/context\" }" }
+  }
 }
 ```
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
-Content-Encoding: gzip
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
@@ -624,11 +626,11 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "rread-gzip"
-jsonpath "$.result.contents" count == 1
-jsonpath "$.result.contents[0].uri" == "{{base}}/test/object"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{{schema_text}}"
+jsonpath "$.id" == 958
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "Loading remote context failed"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -649,7 +651,15 @@ Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
-{ "jsonrpc": "2.0", "id": "tlist-identity", "method": "resources/templates/list" }
+{
+  "jsonrpc": "2.0",
+  "id": 959,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/does-not-exist", "stringifiedInstance": "1" }
+  }
+}
 ```
 HTTP 200
 Cache-Control: no-store
@@ -667,14 +677,12 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "tlist-identity"
-jsonpath "$.result.resourceTemplates" count == 1
-jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
-jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
-jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
-jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
+jsonpath "$.id" == 959
+jsonpath "$.result.isError" == true
+jsonpath "$.result.content" count == 1
+jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[0].text" == "Schema not found"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -690,60 +698,21 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# The tool request schema rejects calls without a stringified instance
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip
 Content-Type: application/json
 ```
-{ "jsonrpc": "2.0", "id": "tlist-gzip", "method": "resources/templates/list" }
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-Content-Encoding: gzip
-Access-Control-Allow-Origin: {{base}}
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2025-11-25
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "tlist-gzip"
-jsonpath "$.result.resourceTemplates" count == 1
-jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
-jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
-jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
-jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: gzip;q=0
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "neg-gzip-q0", "method": "ping" }
+{
+  "jsonrpc": "2.0",
+  "id": 960,
+  "method": "tools/call",
+  "params": {
+    "name": "instance_to_rdf",
+    "arguments": { "schema": "{{base}}/test/jsonld/product" }
+  }
+}
 ```
 HTTP 200
 Cache-Control: no-store
@@ -761,11 +730,17 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-header "Content-Encoding" not exists
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == "neg-gzip-q0"
-jsonpath "$.result" isObject
-jsonpath "$.result" isEmpty
+jsonpath "$.id" == 960
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Params fail against the tool request schema"
+jsonpath "$.error.data.valid" == false
+jsonpath "$.error.data.errors" count == 1
+jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/request#/required"
+jsonpath "$.error.data.errors[0].instanceLocation" == ""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines properties \"schema\", and \"stringifiedInstance\""
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -780,24 +755,3 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
-
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Accept-Encoding: identity;q=0
-Content-Type: application/json
-```
-{ "jsonrpc": "2.0", "id": "neg-identity-q0", "method": "ping" }
-```
-HTTP 406
-Cache-Control: no-store
-Content-Type: application/problem+json
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 406
-jsonpath "$.type" == "urn:sourcemeta:one:cannot-satisfy-content-encoding"
-jsonpath "$.title" == "Not Acceptable"

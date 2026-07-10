@@ -81,7 +81,7 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-object_path: jsonpath "$.result.structuredContent.entries[5].path"
+object_path: jsonpath "$.result.structuredContent.entries[6].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
@@ -94,12 +94,12 @@ jsonpath "$.id" == 1201
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
-jsonpath "$.result.structuredContent.entries[5].name" == "object"
-jsonpath "$.result.structuredContent.entries[5].policies" count == 0
-variable "text" jsonpath "$.entries[5].name" == "object"
-variable "text" jsonpath "$.entries[5].policies" count == 0
-jsonpath "$.result.structuredContent.entries[5].type" == "schema"
-variable "text" jsonpath "$.entries[5].type" == "schema"
+jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[6].policies" count == 0
+variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].policies" count == 0
+jsonpath "$.result.structuredContent.entries[6].type" == "schema"
+variable "text" jsonpath "$.entries[6].type" == "schema"
 variable "object_path" == "/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

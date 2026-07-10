@@ -27,7 +27,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 12
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/list-directory/request"
@@ -127,28 +127,39 @@ jsonpath "$.result.tools[8].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[8].annotations.destructiveHint" == false
 jsonpath "$.result.tools[8].annotations.idempotentHint" == true
 jsonpath "$.result.tools[8].annotations.openWorldHint" == false
-jsonpath "$.result.tools[9].name" == "trace_schema_evaluation"
-jsonpath "$.result.tools[9].description" == "Validate a JSON instance against a schema and return a step-by-step trace of the evaluation. The trace can be substantial, so prefer non-tracing evaluation when only a valid or invalid verdict is needed and use this when per-step detail is required"
-jsonpath "$.result.tools[9].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"
+jsonpath "$.result.tools[9].name" == "instance_to_rdf"
+jsonpath "$.result.tools[9].description" == "Validate a JSON instance against a schema in the catalog and promote it to JSON-LD using the x-jsonld-* annotations of the schema"
+jsonpath "$.result.tools[9].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/request"
 jsonpath "$.result.tools[9].inputSchema.type" == "object"
-jsonpath "$.result.tools[9].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response"
+jsonpath "$.result.tools[9].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"
 jsonpath "$.result.tools[9].outputSchema.type" == "object"
-jsonpath "$.result.tools[9].annotations.title" == "Trace Schema Evaluation"
+jsonpath "$.result.tools[9].annotations.title" == "Instance To Rdf"
 jsonpath "$.result.tools[9].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[9].annotations.destructiveHint" == false
 jsonpath "$.result.tools[9].annotations.idempotentHint" == true
 jsonpath "$.result.tools[9].annotations.openWorldHint" == false
-jsonpath "$.result.tools[10].name" == "search_schemas"
-jsonpath "$.result.tools[10].description" == "Search for schemas by query term"
-jsonpath "$.result.tools[10].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.tools[10].name" == "trace_schema_evaluation"
+jsonpath "$.result.tools[10].description" == "Validate a JSON instance against a schema and return a step-by-step trace of the evaluation. The trace can be substantial, so prefer non-tracing evaluation when only a valid or invalid verdict is needed and use this when per-step detail is required"
+jsonpath "$.result.tools[10].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"
 jsonpath "$.result.tools[10].inputSchema.type" == "object"
-jsonpath "$.result.tools[10].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.tools[10].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response"
 jsonpath "$.result.tools[10].outputSchema.type" == "object"
-jsonpath "$.result.tools[10].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[10].annotations.title" == "Trace Schema Evaluation"
 jsonpath "$.result.tools[10].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[10].annotations.destructiveHint" == false
 jsonpath "$.result.tools[10].annotations.idempotentHint" == true
 jsonpath "$.result.tools[10].annotations.openWorldHint" == false
+jsonpath "$.result.tools[11].name" == "search_schemas"
+jsonpath "$.result.tools[11].description" == "Search for schemas by query term"
+jsonpath "$.result.tools[11].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.tools[11].inputSchema.type" == "object"
+jsonpath "$.result.tools[11].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.tools[11].outputSchema.type" == "object"
+jsonpath "$.result.tools[11].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[11].annotations.destructiveHint" == false
+jsonpath "$.result.tools[11].annotations.idempotentHint" == true
+jsonpath "$.result.tools[11].annotations.openWorldHint" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
