@@ -52,10 +52,6 @@
           "baseUri": "https://example.com/hyper",
           "path": "./schemas/test/hyper"
         },
-        "jsonld": {
-          "baseUri": "https://example.com/jsonld",
-          "path": "./schemas/test/jsonld"
-        },
         "same": {
           "baseUri": "http://localhost:8000/same",
           "path": "./schemas/test/same"

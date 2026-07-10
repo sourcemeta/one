@@ -11,6 +11,10 @@
       "title": "Twins",
       "description": "Schemas whose base name collides with a sibling directory",
       "path": "./schemas/twins"
+    },
+    "no-blaze": {
+      "path": "./schemas/no-blaze",
+      "x-sourcemeta-one:evaluate": false
     }
   }
 }

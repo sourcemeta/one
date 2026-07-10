@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTIONS_H_
 #define SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTIONS_H_
 
+#include <sourcemeta/blaze/output.h>
+
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
@@ -323,6 +325,65 @@ private:
   std::string_view request_schema_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
   sourcemeta::one::SearchView search_view_;
+};
+
+class ActionJSONSchemaRDF_v1 : public sourcemeta::one::RouterAction {
+public:
+  static constexpr std::string_view DESCRIPTION{
+      "Validate a JSON instance against a schema in the catalog and "
+      "promote it to JSON-LD using the x-jsonld-* annotations of the "
+      "schema"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
+
+  ActionJSONSchemaRDF_v1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      sourcemeta::one::Router &dispatcher)
+      : sourcemeta::one::RouterAction{base, router.base_path(),
+                                      router.base_url(), dispatcher} {
+    router.arguments(
+        identifier, [this](const auto &key, const auto &value) -> void {
+          if (key == "requestSchema") {
+            this->request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpRequestSchema") {
+            this->rpc_request_schema_ = std::get<std::string_view>(value);
+          } else if (key == "mcpResponseSchema") {
+            this->rpc_response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "errorSchema") {
+            this->error_schema_ = std::get<std::string_view>(value);
+          }
+        });
+  }
+
+  auto rest(const std::span<std::string_view> matches,
+            std::string_view credential, sourcemeta::one::HTTPRequest &request,
+            sourcemeta::one::HTTPResponse &response) -> void override;
+
+  auto mcp(const sourcemeta::core::MCPProtocolVersion version,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &arguments, std::string_view credential)
+      -> sourcemeta::core::JSON override;
+
+private:
+  static auto facet_name(const sourcemeta::blaze::JSONLDFacet facet)
+      -> std::string_view;
+
+  auto send_problem(sourcemeta::one::HTTPRequest &request,
+                    sourcemeta::one::HTTPResponse &response,
+                    const sourcemeta::core::HTTPStatus &status,
+                    sourcemeta::core::JSON &&payload) const -> void;
+
+  std::string_view request_schema_;
+  std::string_view response_schema_;
+  std::string_view rpc_request_schema_;
+  std::string_view rpc_response_schema_;
+  std::string_view error_schema_;
 };
 
 } // namespace sourcemeta::one::enterprise

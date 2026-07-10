@@ -1,6 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_server
   PRIVATE_HEADERS actions.h
-  SOURCES action_mcp_v1.cc)
+  SOURCES action_mcp_v1.cc action_jsonschema_rdf_v1.cc)
 
 target_compile_definitions(sourcemeta_one_enterprise_server PUBLIC SOURCEMETA_ONE_ENTERPRISE)
 
@@ -18,3 +18,4 @@ target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core:
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::text)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::one::metapack)
 target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::blaze::output)
+target_link_libraries(sourcemeta_one_enterprise_server PRIVATE sourcemeta::core::jsonld)

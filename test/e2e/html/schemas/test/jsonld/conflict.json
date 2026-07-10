@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/jsonld/conflict",
-  "title": "Conflicting Mapping",
-  "description": "A schema whose JSON-LD annotations cannot resolve",
-  "x-jsonld-id": "https://schema.org/name",
-  "type": "object"
-}

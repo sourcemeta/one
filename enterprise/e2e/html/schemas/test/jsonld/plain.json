@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/jsonld/plain",
   "title": "Plain",
   "description": "A schema without JSON-LD annotations",
   "type": "object"
