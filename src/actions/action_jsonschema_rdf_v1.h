@@ -5,9 +5,6 @@
 
 #include <sourcemeta/one/enterprise_server.h>
 
-using ActionJSONSchemaRDF_v1 =
-    sourcemeta::one::enterprise::ActionJSONSchemaRDF_v1;
-
 #else
 
 #include <sourcemeta/core/http.h>
