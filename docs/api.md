@@ -276,8 +276,9 @@ insight into the validation engine's behavior and logic flow.
     This endpoint is only available in the [Enterprise](commercial.md)
     edition. Learn more about [commercial licensing](commercial.md).
 
-*This endpoint takes a JSON instance as a request body, validates it against
-the JSON Schema located at the `{path}` parameter, and promotes it to
+*This endpoint takes a JSON object wrapping an instance as its request body,
+validates the instance against the JSON Schema located at the `{path}`
+parameter, and promotes it to
 [JSON-LD](https://www.w3.org/TR/json-ld11/) (and therefore RDF) using the
 schema's `x-jsonld-*` annotations.*
 
@@ -294,6 +295,9 @@ A schema without such annotations (including schemas on dialects older than
 JSON-LD document. Availability follows the evaluate flag: schemas excluded
 from evaluation in the [configuration file](configuration.md) cannot be
 promoted.
+
+Unlike the evaluate and trace endpoints, the request body is not the bare
+instance, but a JSON object with the following properties:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
