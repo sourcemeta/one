@@ -12,13 +12,11 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem::path
-#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -133,18 +131,6 @@ public:
           "urn:sourcemeta:one:no-schema-template",
           "This schema was not precompiled for schema evaluation",
           this->error_schema_, "*", "OPTIONS");
-      return;
-    }
-
-    const auto base_dialect{this->base_dialect(credential, schema_uri)};
-    if (!base_dialect.has_value() ||
-        !supports_annotations(base_dialect.value())) {
-      sourcemeta::one::json_error(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_UNPROCESSABLE_CONTENT,
-          "urn:sourcemeta:one:jsonld-unsupported-dialect",
-          "This schema does not declare JSON Schema 2019-09 or newer",
-          this->error_schema_, "*");
       return;
     }
 
@@ -345,36 +331,6 @@ public:
   }
 
 private:
-  [[nodiscard]] auto base_dialect(std::string_view credential,
-                                  const std::string &schema_uri) const
-      -> std::optional<sourcemeta::core::JSON::String> {
-    const auto resolution{this->artifact_resolve_path(
-        credential, schema_uri, Tree::Explorer, "schema")};
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
-      return std::nullopt;
-    }
-
-    const auto metadata{
-        sourcemeta::one::metapack_read_json(resolution.path.value().path())};
-    if (!metadata.has_value() || !metadata.value().is_object() ||
-        !metadata.value().defines("baseDialect") ||
-        !metadata.value().at("baseDialect").is_string()) {
-      return std::nullopt;
-    }
-
-    return metadata.value().at("baseDialect").to_string();
-  }
-
-  static auto supports_annotations(
-      const sourcemeta::core::JSON::String &base_dialect) noexcept -> bool {
-    return base_dialect == "https://json-schema.org/draft/2020-12/schema" ||
-           base_dialect ==
-               "https://json-schema.org/draft/2020-12/hyper-schema" ||
-           base_dialect == "https://json-schema.org/draft/2019-09/schema" ||
-           base_dialect == "https://json-schema.org/draft/2019-09/hyper-schema";
-  }
-
   static auto facet_name(const sourcemeta::blaze::JSONLDFacet facet)
       -> std::string_view {
     switch (facet) {

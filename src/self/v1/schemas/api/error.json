@@ -123,14 +123,6 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:jsonld-unsupported-dialect",
-        "title": "Unprocessable Content",
-        "status": 422,
-        "detail": "This schema does not declare JSON Schema 2019-09 or newer"
-      }
-    },
-    {
-      "const": {
         "type": "urn:sourcemeta:one:cannot-satisfy-content-encoding",
         "title": "Not Acceptable",
         "status": 406,
