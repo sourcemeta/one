@@ -93,10 +93,14 @@ without building complex JSON Schema infrastructure from scratch.
   performance with minimal compute resources. Run instances on modest hardware,
   reducing infrastructure costs while maintaining enterprise-scale throughput
   with a stateless horizontally-scalable design
-- :material-robot: __MCP Server (Enterprise Only)__ Every instance doubles as a
+- :material-robot: __MCP Server (Enterprise)__ Every instance doubles as a
   fully-featured [Model Context Protocol](api.md#model-context-protocol)
   server, letting AI tooling discover schemas as resources and call every HTTP
   API action as a JSON-RPC tool
+- :material-graph: __Linked Data Bridge (Enterprise)__ Promote validated
+  JSON instances to [JSON-LD/RDF](api.md#rdf) using annotations on the very
+  schemas that validate them, turning the catalog into a bridge between your
+  JSON data and knowledge graphs
 - :material-lock: __Access Control (Enterprise)__ Gate part of your catalog, or
   the entire instance, behind [authentication](configuration.md#authentication)
   policies, keeping schemas private to the consumers you choose

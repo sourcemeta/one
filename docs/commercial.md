@@ -40,6 +40,18 @@ a JSON-RPC tool (not as a layer on top of REST but as a true MCP-first
 integration), helping your AI assistants get the most out of your schema single
 source of truth.
 
+## Linked Data (RDF)
+
+Enterprise instances can promote JSON instances to
+[JSON-LD](https://www.w3.org/TR/json-ld11/) (and therefore RDF) through the
+[RDF endpoint](api.md#rdf) and the equivalent MCP tool. The mapping is
+declared through `x-jsonld-*` annotations on the very schemas that validate
+the data (see the [JSON Schema CLI RDF
+documentation](https://github.com/sourcemeta/jsonschema/blob/main/docs/rdf.markdown)),
+so the same single source of truth governs both validation and semantics,
+letting you feed knowledge graphs and semantic tooling straight from your
+schema catalog.
+
 ## Authentication
 
 Enterprise instances can gate access behind

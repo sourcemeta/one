@@ -269,6 +269,86 @@ insight into the validation engine's behavior and logic flow.
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
 
+### RDF
+
+!!! success "Enterprise"
+
+    This endpoint is only available in the [Enterprise](commercial.md)
+    edition. Learn more about [commercial licensing](commercial.md).
+
+*This endpoint takes a JSON object wrapping an instance as its request body,
+validates the instance against the JSON Schema located at the `{path}`
+parameter, and promotes it to
+[JSON-LD](https://www.w3.org/TR/json-ld11/) (and therefore RDF) using the
+schema's `x-jsonld-*` annotations.*
+
+```
+POST /self/v1/api/schemas/rdf/{path}
+```
+
+The same schema that validates the instance declares how it maps to Linked
+Data, keeping a single source of truth for both concerns. The annotation
+vocabulary is documented in the [JSON Schema CLI RDF
+documentation](https://github.com/sourcemeta/jsonschema/blob/main/docs/rdf.markdown).
+A schema without such annotations (including schemas on dialects older than
+2019-09, which do not support annotation collection) produces an empty
+JSON-LD document. Availability follows the evaluate flag: schemas excluded
+from evaluation in the [configuration file](configuration.md) cannot be
+promoted.
+
+Unlike the evaluate and trace endpoints, the request body is not the bare
+instance, but a JSON object with the following properties:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `/instance` | JSON | Yes | The instance to validate and promote |
+| `/flatten` | Boolean | No | Whether to flatten the resulting document. Defaults to `false` |
+| `/context` | Object | No | A JSON-LD context to compact (or, with `flatten`, flatten) the resulting document against |
+
+Without a `context`, the response is the document in [expanded
+form](https://www.w3.org/TR/json-ld11/#expanded-document-form) (or [flattened
+form](https://www.w3.org/TR/json-ld11/#flattened-document-form) with
+`flatten`). With a `context`, the response is in [compacted
+form](https://www.w3.org/TR/json-ld11/#compacted-document-form). Remote
+contexts are not fetched.
+
+=== "200"
+
+    The instance promoted to JSON-LD, served as `application/ld+json`.
+
+=== "400"
+
+    You must pass a request body that matches the request schema, or the
+    provided `context` cannot be processed (for example because it references
+    a remote context).
+
+=== "404"
+
+    The schema does not exist.
+
+=== "405"
+
+    The [configuration file](configuration.md) excludes evaluation for this
+    schema, or the [configuration file](configuration.md) marks the schema
+    collection as listed but not served.
+
+=== "413"
+
+    The request body is too large. See [RFC 9110 §15.5.14](https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.14).
+
+=== "417"
+
+    The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
+
+=== "422"
+
+    The instance does not conform to the schema (the problem details carry
+    the standard [JSON Schema output
+    errors](https://json-schema.org/draft/2020-12/json-schema-core#name-output-structure)),
+    or the schema's JSON-LD annotations cannot be resolved for this instance
+    (the problem details carry the offending annotation facet and instance
+    location).
+
 ### Metadata
 
 *This endpoint retrieves metadata information about the JSON Schema located at
