@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://other.com/jsonld.json",
   "x-jsonld-type": "https://schema.org/Thing",
   "type": "object"
 }

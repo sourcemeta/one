@@ -19,30 +19,36 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 133
-jsonpath "$.entries" count == 3
+jsonpath "$.schemas" == 137
+jsonpath "$.entries" count == 4
 jsonpath "$.policies" count == 0
-jsonpath "$.entries[0].name" == "self"
+jsonpath "$.entries[0].name" == "no-blaze"
 jsonpath "$.entries[0].policies" count == 0
-jsonpath "$.entries[0].title" == "Self"
-jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 100
-jsonpath "$.entries[0].schemas" == 61
-jsonpath "$.entries[0].path" == "/self/"
-jsonpath "$.entries[1].name" == "test"
+jsonpath "$.entries[0].health" == 0
+jsonpath "$.entries[0].schemas" == 2
+jsonpath "$.entries[0].path" == "/no-blaze/"
+jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].title" == "Self"
+jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 20
-jsonpath "$.entries[1].schemas" == 70
-jsonpath "$.entries[1].path" == "/test/"
-jsonpath "$.entries[2].name" == "twins"
+jsonpath "$.entries[1].health" == 100
+jsonpath "$.entries[1].schemas" == 61
+jsonpath "$.entries[1].path" == "/self/"
+jsonpath "$.entries[2].name" == "test"
 jsonpath "$.entries[2].policies" count == 0
-jsonpath "$.entries[2].title" == "Twins"
-jsonpath "$.entries[2].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].schemas" == 2
-jsonpath "$.entries[2].path" == "/twins/"
+jsonpath "$.entries[2].health" == 18
+jsonpath "$.entries[2].schemas" == 72
+jsonpath "$.entries[2].path" == "/test/"
+jsonpath "$.entries[3].name" == "twins"
+jsonpath "$.entries[3].policies" count == 0
+jsonpath "$.entries[3].title" == "Twins"
+jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.entries[3].type" == "directory"
+jsonpath "$.entries[3].schemas" == 2
+jsonpath "$.entries[3].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

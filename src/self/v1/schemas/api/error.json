@@ -35,6 +35,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:enterprise-required",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "This feature is only available in the Enterprise edition"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:method-not-allowed",
         "title": "Method Not Allowed",
         "status": 405,

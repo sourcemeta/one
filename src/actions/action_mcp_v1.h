@@ -5,8 +5,6 @@
 
 #include <sourcemeta/one/enterprise_server.h>
 
-using ActionMCP_v1 = sourcemeta::one::enterprise::ActionMCP_v1;
-
 #else
 
 #include <sourcemeta/core/json.h>
