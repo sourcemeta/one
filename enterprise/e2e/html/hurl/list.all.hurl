@@ -19,7 +19,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 131
+jsonpath "$.schemas" == 133
 jsonpath "$.entries" count == 3
 jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "self"
@@ -33,8 +33,8 @@ jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
 jsonpath "$.entries[1].policies" count == 0
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 15
-jsonpath "$.entries[1].schemas" == 68
+jsonpath "$.entries[1].health" == 20
+jsonpath "$.entries[1].schemas" == 70
 jsonpath "$.entries[1].path" == "/test/"
 jsonpath "$.entries[2].name" == "twins"
 jsonpath "$.entries[2].policies" count == 0

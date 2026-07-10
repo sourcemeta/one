@@ -832,6 +832,12 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto evaluate_schema_response_schema{
         configuration.base_path +
         "/self/v1/schemas/mcp/tools/call/evaluate-schema/response"};
+    const auto instance_to_rdf_request_schema{
+        configuration.base_path +
+        "/self/v1/schemas/mcp/tools/call/instance-to-rdf/request"};
+    const auto instance_to_rdf_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"};
     const auto trace_schema_evaluation_request_schema{
         configuration.base_path +
         "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"};
@@ -971,6 +977,10 @@ struct GENERATE_URITEMPLATE_ROUTES {
       const sourcemeta::core::URITemplateRouter::Argument rdf_arguments[] = {
           {"requestSchema", std::string_view{rdf_request_schema}},
           {"responseSchema", std::string_view{rdf_response_schema}},
+          {"mcpRequestSchema",
+           std::string_view{instance_to_rdf_request_schema}},
+          {"mcpResponseSchema",
+           std::string_view{instance_to_rdf_response_schema}},
           {"errorSchema", std::string_view{error_schema}}};
       router.add("/self/v1/api/schemas/rdf/{+schema}", "instance_to_rdf",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_RDF_V1,
