@@ -1,6 +1,9 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_RDF_V1_H
 #define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_RDF_V1_H
 
+#include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/output.h>
+
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonld.h>
@@ -9,11 +12,13 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -131,7 +136,7 @@ public:
       return;
     }
 
-    const auto base_dialect{this->schema_base_dialect(credential, schema_uri)};
+    const auto base_dialect{this->base_dialect(credential, schema_uri)};
     if (!base_dialect.has_value() ||
         !supports_annotations(base_dialect.value())) {
       sourcemeta::one::json_error(
@@ -165,11 +170,14 @@ public:
       return;
     }
 
+    const auto schema_template{
+        this->dispatcher().blaze_template(evaluation_enabled.path.value())};
+
     request.body(
         // A throw here is intended and caught by the surrounding error
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
-        [this, schema_uri = std::move(schema_uri),
+        [this, schema_template, schema_uri = std::move(schema_uri),
          credential = std::string{credential}](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -223,7 +231,9 @@ public:
               envelope.defines("context") ? &envelope.at("context") : nullptr};
 
           try {
-            auto outcome{this->schema_jsonld(credential, schema_uri, instance)};
+            sourcemeta::blaze::Evaluator evaluator;
+            auto outcome{sourcemeta::blaze::jsonld(evaluator, *schema_template,
+                                                   instance)};
 
             if (std::holds_alternative<sourcemeta::blaze::JSONLDInvalid>(
                     outcome)) {
@@ -335,6 +345,27 @@ public:
   }
 
 private:
+  [[nodiscard]] auto base_dialect(std::string_view credential,
+                                  const std::string &schema_uri) const
+      -> std::optional<sourcemeta::core::JSON::String> {
+    const auto resolution{this->artifact_resolve_path(
+        credential, schema_uri, Tree::Explorer, "schema")};
+    if (resolution.outcome !=
+        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      return std::nullopt;
+    }
+
+    const auto metadata{
+        sourcemeta::one::metapack_read_json(resolution.path.value().path())};
+    if (!metadata.has_value() || !metadata.value().is_object() ||
+        !metadata.value().defines("baseDialect") ||
+        !metadata.value().at("baseDialect").is_string()) {
+      return std::nullopt;
+    }
+
+    return metadata.value().at("baseDialect").to_string();
+  }
+
   static auto supports_annotations(
       const sourcemeta::core::JSON::String &base_dialect) noexcept -> bool {
     return base_dialect == "https://json-schema.org/draft/2020-12/schema" ||
