@@ -50,7 +50,9 @@ the data (see the [JSON Schema CLI RDF
 documentation](https://github.com/sourcemeta/jsonschema/blob/main/docs/rdf.markdown)),
 so the same single source of truth governs both validation and semantics,
 letting you feed knowledge graphs and semantic tooling straight from your
-schema catalog.
+schema catalog. Learn more about this approach in [Fully solving JSON Schema
+and JSON-LD
+interoperability](https://www.sourcemeta.com/blog/json-schema-jsonld-interoperability/).
 
 ## Authentication
 

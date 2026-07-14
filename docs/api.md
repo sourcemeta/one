@@ -287,8 +287,10 @@ POST /self/v1/api/schemas/rdf/{path}
 ```
 
 The same schema that validates the instance declares how it maps to Linked
-Data, keeping a single source of truth for both concerns. The annotation
-vocabulary is documented in the [JSON Schema CLI RDF
+Data, keeping a single source of truth for both concerns. Learn more about
+this approach in [Fully solving JSON Schema and JSON-LD
+interoperability](https://www.sourcemeta.com/blog/json-schema-jsonld-interoperability/).
+The annotation vocabulary is documented in the [JSON Schema CLI RDF
 documentation](https://github.com/sourcemeta/jsonschema/blob/main/docs/rdf.markdown).
 A schema without such annotations (including schemas on dialects older than
 2019-09, which do not support annotation collection) produces an empty
