@@ -1,4 +1,4 @@
-#include <sourcemeta/one/authentication_session.h>
+#include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/test.h>
 

@@ -5,7 +5,9 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <sourcemeta/one/authentication_discovery.h>
 #include <sourcemeta/one/authentication_error.h>
+#include <sourcemeta/one/authentication_session.h>
 #include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/jose.h>
