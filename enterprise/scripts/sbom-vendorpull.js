@@ -27,6 +27,7 @@ const IGNORED = new Set([
   "uritemplate-test",
   "pyca-cryptography",
   "aws-sig-v4-test-suite",
+  "jsonpath-compliance-test-suite",
   "wycheproof",
   "jose-cookbook",
   "w3c-json-ld",
