@@ -359,27 +359,6 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
   keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
 }
 
-auto derive_discovery_url(const std::string_view issuer) -> std::string {
-  std::string result{issuer};
-  if (!result.empty() && result.back() == '/') {
-    result.pop_back();
-  }
-
-  result += "/.well-known/openid-configuration";
-  return result;
-}
-
-auto parse_jwks_uri(const std::string_view body) -> std::optional<std::string> {
-  const auto document{sourcemeta::core::try_parse_json(body)};
-  if (!document.has_value() || !document.value().is_object() ||
-      !document.value().defines("jwks_uri") ||
-      !document.value().at("jwks_uri").is_string()) {
-    return std::nullopt;
-  }
-
-  return document.value().at("jwks_uri").to_string();
-}
-
 } // namespace
 
 namespace sourcemeta::one {
@@ -575,17 +554,17 @@ struct Authentication::Impl {
 
     std::string location;
     if (jwks_uri.empty()) {
-      const auto metadata{this->fetcher_(derive_discovery_url(issuer))};
+      const auto metadata{this->fetcher_(discovery_url(issuer))};
       if (!metadata.has_value()) {
         return nullptr;
       }
 
-      auto resolved{parse_jwks_uri(metadata.value().body)};
-      if (!resolved.has_value()) {
+      auto document{discovery_parse(metadata.value().body)};
+      if (!document.has_value() || !document.value().jwks_uri.has_value()) {
         return nullptr;
       }
 
-      location = std::move(resolved).value();
+      location = std::move(document.value().jwks_uri).value();
     } else {
       location = jwks_uri;
     }

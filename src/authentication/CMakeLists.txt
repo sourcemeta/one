@@ -1,16 +1,17 @@
 if(ONE_ENTERPRISE)
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
-    PRIVATE_HEADERS error.h session.h
+    PRIVATE_HEADERS error.h session.h discovery.h
     SOURCES
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc"
-      "${PROJECT_SOURCE_DIR}/enterprise/authentication/session.cc")
+      "${PROJECT_SOURCE_DIR}/enterprise/authentication/session.cc"
+      "${PROJECT_SOURCE_DIR}/enterprise/authentication/discovery.cc")
   target_compile_definitions(sourcemeta_one_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
-    PRIVATE_HEADERS error.h session.h
-    SOURCES authentication.cc session.cc)
+    PRIVATE_HEADERS error.h session.h discovery.h
+    SOURCES authentication.cc session.cc discovery.cc)
 endif()
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
