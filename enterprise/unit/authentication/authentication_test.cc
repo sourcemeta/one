@@ -5,6 +5,7 @@
 #include <sourcemeta/core/test.h>
 
 #include <array>       // std::array
+#include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
 #include <cstddef>     // std::byte, std::size_t
 #include <cstdlib>     // setenv
 #include <filesystem>  // std::filesystem::path
@@ -40,6 +41,12 @@ static constexpr std::string_view SIGNED_KEYS{
     R"JSON({ "keys": [ { "kty": "RSA", "n": "oHTpl-jfNfBuXmBp58sW8s_77UP6j2jA0mjjKjhDkxhp7Agk-xLNGgfPCS_bjdZ6YU6FGeab8uVjkSgo9_0OCJUaF4vzEGwXmNuGawANxnZtiYjWvbJlq-2mn_L7rsqGQcSkMmyM0g4aX7dF8wB6DVrXShJ78fcrNtpeoU72YGEdjehA8qVclDFwBdpCGynxxnWJePk72lQb6gkVMqKMc3jBF8GkWf8oP_sjss-fpOjSUMR1c8_0JlTYWO46KWOZa0EO2t8H1V3imMyzbhoxRd_qZHmo46gJkG-ZdebjX0vGQllaCwu0z4kLcXIfAZhqPEkdssDGhC_txwJuhaPDFQ", "e": "AQAB" } ] })JSON"};
 static constexpr std::string_view UNRELATED_KEYS{
     R"JSON({ "keys": [ { "kty": "RSA", "n": "ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ", "e": "AQAB" } ] })JSON"};
+
+// A session expiry far enough in the future to outlive any test run
+static constexpr std::chrono::sys_seconds SESSION_EXPIRY{
+    std::chrono::seconds{2000000000}};
+
+static const std::array<std::string, 1> SESSION_SECRETS{{"session-secret"}};
 
 static auto stub_fetcher(std::map<std::string, std::string> responses,
                          std::shared_ptr<int> calls)
@@ -366,14 +373,15 @@ TEST(base_path_is_stripped_before_matching) {
       path, stub_fetcher({}, nullptr)};
   // With the base path stripped, the registry path under it is matched. The
   // uncovered public path is admitted, the covered one is gated
-  EXPECT_TRUE(authentication.admits("/registry/public/string", "", "/registry")
-                  .allowed);
+  EXPECT_TRUE(
+      authentication.admits("/registry/public/string", "", {}, "/registry")
+          .allowed);
   EXPECT_FALSE(
-      authentication.admits("/registry/private/secret", "", "/registry")
+      authentication.admits("/registry/private/secret", "", {}, "/registry")
           .allowed);
   EXPECT_TRUE(
       authentication
-          .admits("/registry/private/secret", "base-secret", "/registry")
+          .admits("/registry/private/secret", "base-secret", {}, "/registry")
           .allowed);
 
   // An empty base path strips nothing
@@ -383,12 +391,13 @@ TEST(base_path_is_stripped_before_matching) {
   // A base path that is not a whole-segment prefix is left in place, so the
   // path is covered by no policy and is public
   EXPECT_TRUE(
-      authentication.admits("/registryextra/public/string", "", "/registry")
+      authentication.admits("/registryextra/public/string", "", {}, "/registry")
           .allowed);
 
   // A request outside the base path is left in place and covered by no policy
-  EXPECT_TRUE(authentication.admits("/elsewhere/public/string", "", "/registry")
-                  .allowed);
+  EXPECT_TRUE(
+      authentication.admits("/elsewhere/public/string", "", {}, "/registry")
+          .allowed);
 }
 
 TEST(apikey_admits_matching_credential) {
@@ -940,6 +949,261 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
   const auto token_verdict{authentication.admits("/both/x", SIGNED_TOKEN)};
   EXPECT_FALSE(token_verdict.allowed);
   EXPECT_FALSE(token_verdict.principal.has_value());
+}
+
+TEST(oidc_policy_admits_its_session_cookie) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SESSION",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const auto calls{std::make_shared<int>(0)};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, calls), SESSION_SECRETS};
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
+      "session-secret", SESSION_EXPIRY)};
+  const std::string cookies{"theme=dark; sourcemeta_one_session_okta=" +
+                            sealed};
+
+  const auto verdict{authentication.admits("/portal/x", "", cookies)};
+  EXPECT_TRUE(verdict.allowed);
+  EXPECT_TRUE(verdict.principal.has_value());
+  EXPECT_EQ(verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::OIDC);
+  EXPECT_EQ(verdict.principal.value().policy, std::size_t{0});
+  EXPECT_EQ(*calls, 0);
+
+  const auto anonymous_verdict{authentication.admits("/portal/x", "")};
+  EXPECT_FALSE(anonymous_verdict.allowed);
+  EXPECT_FALSE(anonymous_verdict.principal.has_value());
+}
+
+TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_BIND_A",
+        .name = "okta"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_BIND_B",
+        .name = "google"}}};
+  const auto path{test_path("oidc_session_bound.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+
+  // The session opens the path its policy governs
+  const std::string okta_cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_TRUE(authentication.admits("/alpha/x", "", okta_cookies).allowed);
+
+  // The same session does not open a path governed by another policy
+  EXPECT_FALSE(authentication.admits("/beta/x", "", okta_cookies).allowed);
+
+  // Nor does re-presenting the value under the other policy's cookie name
+  const std::string renamed_cookies{"sourcemeta_one_session_google=" + sealed};
+  EXPECT_FALSE(authentication.admits("/beta/x", "", renamed_cookies).allowed);
+}
+
+TEST(expired_session_cookie_is_denied) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_EXPIRED",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_expired.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  const std::chrono::sys_seconds past{std::chrono::seconds{1000}};
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", past)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+}
+
+TEST(forged_session_cookie_is_denied) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_FORGED",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_forged.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  // A value sealed under a secret this instance does not hold
+  const auto foreign{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "other-secret", SESSION_EXPIRY)};
+  const std::string foreign_cookies{"sourcemeta_one_session_okta=" + foreign};
+  EXPECT_FALSE(authentication.admits("/portal/x", "", foreign_cookies).allowed);
+
+  // A value whose signature no longer matches its contents
+  auto tampered{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+  tampered.back() = tampered.back() == 'A' ? 'B' : 'A';
+  const std::string tampered_cookies{"sourcemeta_one_session_okta=" + tampered};
+  EXPECT_FALSE(
+      authentication.admits("/portal/x", "", tampered_cookies).allowed);
+
+  // A value that is not a sealed session at all
+  EXPECT_FALSE(
+      authentication
+          .admits("/portal/x", "", "sourcemeta_one_session_okta=garbage")
+          .allowed);
+}
+
+TEST(session_payload_must_declare_its_policy) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_PAYLOAD",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_payload.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  const std::array<std::string_view, 4> payloads{
+      {"not json", "[ 1, 2 ]", R"JSON({ "subject": "jane" })JSON",
+       R"JSON({ "policy": "google" })JSON"}};
+  for (const auto payload : payloads) {
+    const auto sealed{sourcemeta::one::session_seal(payload, "session-secret",
+                                                    SESSION_EXPIRY)};
+    const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+    EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+  }
+}
+
+TEST(session_cookie_without_configured_secrets_is_denied) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_NO_SECRETS",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_no_secrets.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+}
+
+TEST(session_admitted_under_a_rotated_secret) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_ROTATED",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_rotated.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const std::array<std::string, 2> rotated{{"new-secret", "old-secret"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), rotated};
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "old-secret", SESSION_EXPIRY)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_TRUE(authentication.admits("/portal/x", "", cookies).allowed);
+}
+
+TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
+  setenv("ONE_TEST_KEY_SESSION_UNION", "union-key", 1);
+  const std::array<std::string_view, 1> paths{{"/both"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SESSION_UNION"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = paths, .keys = keys},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SESSION_UNION",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_union.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  const auto key_verdict{authentication.admits("/both/x", "union-key")};
+  EXPECT_TRUE(key_verdict.allowed);
+  EXPECT_TRUE(key_verdict.principal.has_value());
+  EXPECT_EQ(key_verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(key_verdict.principal.value().policy, std::size_t{0});
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  const auto session_verdict{authentication.admits("/both/x", "", cookies)};
+  EXPECT_TRUE(session_verdict.allowed);
+  EXPECT_TRUE(session_verdict.principal.has_value());
+  EXPECT_EQ(session_verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::OIDC);
+  EXPECT_EQ(session_verdict.principal.value().policy, std::size_t{1});
+
+  EXPECT_FALSE(authentication.admits("/both/x", "").allowed);
+}
+
+TEST(session_cookie_does_not_open_an_apikey_path) {
+  setenv("ONE_TEST_KEY_NO_SESSION", "key-only", 1);
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NO_SESSION"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("oidc_session_apikey.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), SESSION_SECRETS};
+
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_FALSE(authentication.admits("/internal/x", "", cookies).allowed);
 }
 
 TEST(reference_within_the_same_oidc_scope_is_permitted) {

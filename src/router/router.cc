@@ -121,7 +121,8 @@ auto Router::dispatch(
   // path. A credential-less CORS preflight is never gated
   if (identifier != 0 && request.method() != "options" &&
       !this->authentication_
-           .admits(request.path(), credential, instance->server_uri_base_path())
+           .admits(request.path(), credential, request.header("cookie"),
+                   instance->server_uri_base_path())
            .allowed) {
     sourcemeta::one::json_error_unauthorized(request, response,
                                              this->default_error_schema_, "*");
