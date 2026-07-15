@@ -48,6 +48,9 @@ public:
     std::string_view client_id{};
     // The environment variable name holding the client secret
     std::string_view client_secret_variable{};
+    // The policy name, which interactive policies carry so their session
+    // cookies can be recognised at the gate
+    std::string_view name{};
   };
 
   // The identity of an admitted caller: the type of credential it presented
@@ -72,8 +75,12 @@ public:
                    const sourcemeta::core::URITemplateRouterView &routes,
                    const std::filesystem::path &destination) -> void;
 
+  // The session secrets verify the cookies that interactive logins mint. An
+  // instance given none never admits a session. The secrets are copied, so
+  // the caller's storage only needs to outlive this constructor
   Authentication(const std::filesystem::path &path,
-                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
+                 sourcemeta::core::JWKSProvider::Fetcher fetcher,
+                 std::span<const std::string_view> session_secrets = {});
 
   ~Authentication();
 
@@ -84,9 +91,12 @@ public:
   auto operator=(Authentication &&) -> Authentication & = delete;
 
   // A non-empty base path is stripped off the input before matching, turning a
-  // request URL path into a registry path
+  // request URL path into a registry path. The credential is a presented
+  // bearer value and the cookies are the raw request cookie header, either of
+  // which may admit the caller under a covering policy
   [[nodiscard]] auto admits(std::string_view registry_path,
                             std::string_view credential,
+                            std::string_view cookies = {},
                             std::string_view base_path = {}) const -> Verdict;
 
   // The configuration declaration indices of the policies that govern a path,

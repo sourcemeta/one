@@ -3,10 +3,12 @@
 
 #include <sourcemeta/core/io.h>
 
-#include <cstddef>    // std::byte, std::size_t
-#include <filesystem> // std::filesystem::create_directories
-#include <optional>   // std::nullopt
-#include <vector>     // std::vector
+#include <cstddef>     // std::byte, std::size_t
+#include <filesystem>  // std::filesystem::create_directories
+#include <optional>    // std::nullopt
+#include <span>        // std::span
+#include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
@@ -37,12 +39,14 @@ auto Authentication::save(const Configuration &configuration,
 
 // NOLINTBEGIN(performance-unnecessary-value-param)
 Authentication::Authentication(const std::filesystem::path &,
-                               sourcemeta::core::JWKSProvider::Fetcher) {}
+                               sourcemeta::core::JWKSProvider::Fetcher,
+                               const std::span<const std::string_view>) {}
 // NOLINTEND(performance-unnecessary-value-param)
 
 Authentication::~Authentication() = default;
 
 auto Authentication::admits(const std::string_view, const std::string_view,
+                            const std::string_view,
                             const std::string_view) const
     -> Authentication::Verdict {
   return {.allowed = true, .principal = std::nullopt};

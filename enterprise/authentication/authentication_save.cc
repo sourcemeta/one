@@ -73,16 +73,20 @@ auto encode_apikey_metadata(
   return result;
 }
 
-// The issuer, client identifier, and the name of the environment variable
-// holding the client secret are stored as length-prefixed strings
+// The issuer, client identifier, the name of the environment variable
+// holding the client secret, and the policy name are stored as
+// length-prefixed strings. The policy name comes last so that the leading
+// bytes keep spanning exactly the provider client identity
 auto encode_oidc_metadata(const std::string_view issuer,
                           const std::string_view client_id,
-                          const std::string_view client_secret_variable)
+                          const std::string_view client_secret_variable,
+                          const std::string_view name)
     -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
   append_string(result, client_id);
   append_string(result, client_secret_variable);
+  append_string(result, name);
   return result;
 }
 
@@ -201,8 +205,16 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
     } else if (policy.type == Authentication::Type::OIDC) {
-      policy_metadata = encode_oidc_metadata(policy.issuer, policy.client_id,
-                                             policy.client_secret_variable);
+      // A nameless interactive policy could never match a session cookie, so
+      // it fails loudly here rather than silently denying at the gate
+      if (policy.name.empty()) {
+        throw std::runtime_error(
+            "Interactive authentication policies require a name");
+      }
+
+      policy_metadata =
+          encode_oidc_metadata(policy.issuer, policy.client_id,
+                               policy.client_secret_variable, policy.name);
     } else if (!policy.keys.empty()) {
       policy_metadata = encode_apikey_metadata(policy.keys);
     }

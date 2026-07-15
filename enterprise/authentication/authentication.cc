@@ -1,6 +1,7 @@
 #include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/crypto.h>
+#include <sourcemeta/core/http.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
@@ -398,8 +399,23 @@ struct Authentication::Impl {
   // empty set and admits no one. Opening the file covers the missing and
   // unreadable cases without a separate, throwing existence check
   Impl(const std::filesystem::path &path,
-       sourcemeta::core::JWKSProvider::Fetcher fetcher)
+       sourcemeta::core::JWKSProvider::Fetcher fetcher,
+       const std::span<const std::string_view> session_secrets)
       : fetcher_{std::move(fetcher)} {
+    // A blank secret would let anyone mint valid sessions, so it is
+    // discarded rather than trusted
+    this->session_secrets_.reserve(session_secrets.size());
+    for (const auto secret : session_secrets) {
+      if (!secret.empty()) {
+        this->session_secrets_.emplace_back(secret);
+      }
+    }
+
+    this->session_secret_views_.reserve(this->session_secrets_.size());
+    for (const auto &secret : this->session_secrets_) {
+      this->session_secret_views_.emplace_back(secret);
+    }
+
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
       view = std::make_unique<sourcemeta::core::FileView>(path);
@@ -489,7 +505,8 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto admits(const std::string_view registry_path,
-                            const std::string_view credential) const
+                            const std::string_view credential,
+                            const std::string_view cookies) const
       -> Authentication::Verdict {
     // A missing or structurally broken artifact leaves the section pointers
     // null and denies everything. Only a valid policy fails open below
@@ -527,10 +544,13 @@ struct Authentication::Impl {
                       .type = type, .policy = static_cast<std::size_t>(index)}};
         }
       } else if (type == Authentication::Type::OIDC) {
-        // An interactive policy authenticates a person through a browser
-        // login, never a presented credential, so it can never open a path
-        // here
-        continue;
+        // An interactive policy authenticates a person through the session
+        // its browser login established, never a presented credential
+        if (this->admits_session(metadata, cookies)) {
+          return {.allowed = true,
+                  .principal = Authentication::Principal{
+                      .type = type, .policy = static_cast<std::size_t>(index)}};
+        }
       } else if (admits_apikey(
                      metadata, credential,
                      static_cast<Authentication::Algorithm>(entry.algorithm))) {
@@ -559,6 +579,61 @@ struct Authentication::Impl {
     const auto error{provider->verify(token, policy.algorithms, policy.issuer,
                                       policy.audience)};
     return !error.has_value();
+  }
+
+  [[nodiscard]] auto admits_session(const std::span<const std::byte> metadata,
+                                    const std::string_view cookies) const
+      -> bool {
+    if (this->session_secret_views_.empty() || cookies.empty()) {
+      return false;
+    }
+
+    std::size_t cursor{0};
+    std::string_view issuer;
+    std::string_view client_id;
+    std::string_view client_secret_variable;
+    std::string_view policy_name;
+    if (!read_string(metadata, cursor, issuer) ||
+        !read_string(metadata, cursor, client_id) ||
+        !read_string(metadata, cursor, client_secret_variable) ||
+        !read_string(metadata, cursor, policy_name) || policy_name.empty()) {
+      return false;
+    }
+
+    std::string cookie_name{sourcemeta::one::SESSION_COOKIE_PREFIX};
+    cookie_name += policy_name;
+    std::string_view sealed;
+    sourcemeta::core::http_parse_cookies(
+        cookies,
+        [&cookie_name, &sealed](const std::string_view name,
+                                const std::string_view value) -> void {
+          if (name == cookie_name) {
+            sealed = value;
+          }
+        });
+    if (sealed.empty()) {
+      return false;
+    }
+
+    const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now())};
+    const auto payload{sourcemeta::one::session_open(
+        sealed, this->session_secret_views_, now)};
+    if (!payload.has_value()) {
+      return false;
+    }
+
+    // Cookie names travel outside the signature, so the sealed payload
+    // itself declares the policy it was minted for, and a value re-presented
+    // under another policy's cookie name is rejected
+    const auto document{sourcemeta::core::try_parse_json(payload.value())};
+    if (!document.has_value() || !document.value().is_object()) {
+      return false;
+    }
+
+    const auto *minted_for{document.value().try_at("policy")};
+    return minted_for != nullptr && minted_for->is_string() &&
+           minted_for->to_string() == policy_name;
   }
 
   [[nodiscard]] auto provider_for(const std::string_view issuer,
@@ -703,24 +778,30 @@ struct Authentication::Impl {
   std::unique_ptr<sourcemeta::core::FileView> view_;
 
   sourcemeta::core::JWKSProvider::Fetcher fetcher_;
+  std::vector<std::string> session_secrets_;
+  std::vector<std::string_view> session_secret_views_;
   mutable std::mutex jwks_mutex_;
   mutable std::map<std::pair<std::string, std::string>,
                    std::unique_ptr<sourcemeta::core::JWKSProvider>>
       jwks_providers_;
 };
 
-Authentication::Authentication(const std::filesystem::path &path,
-                               sourcemeta::core::JWKSProvider::Fetcher fetcher)
-    : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
+Authentication::Authentication(
+    const std::filesystem::path &path,
+    sourcemeta::core::JWKSProvider::Fetcher fetcher,
+    const std::span<const std::string_view> session_secrets)
+    : impl_{std::make_unique<Impl>(path, std::move(fetcher), session_secrets)} {
+}
 
 Authentication::~Authentication() = default;
 
 auto Authentication::admits(const std::string_view registry_path,
                             const std::string_view credential,
+                            const std::string_view cookies,
                             const std::string_view base_path) const
     -> Authentication::Verdict {
   return this->impl_->admits(strip_base_path(registry_path, base_path),
-                             credential);
+                             credential, cookies);
 }
 
 auto Authentication::governing(const std::string_view registry_path,

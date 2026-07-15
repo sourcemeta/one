@@ -8,6 +8,7 @@ if(ONE_ENTERPRISE)
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/discovery.cc")
   target_compile_definitions(sourcemeta_one_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
+  target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::http)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h session.h discovery.h
