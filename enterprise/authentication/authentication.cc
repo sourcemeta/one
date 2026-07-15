@@ -360,8 +360,9 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
 }
 
 // The reference check treats two interactive policies as the same scope only
-// when they authenticate against the same provider client, so the identity
-// spans the issuer and the client identifier
+// when they authenticate against the same provider client, so the issuer and
+// client identifier count as one indivisible identity, never as separate
+// keys that several policies could satisfy piecewise or in swapped roles
 auto collect_oidc_identifiers(const std::span<const std::byte> metadata,
                               std::unordered_set<std::string_view> &keys)
     -> void {
@@ -373,8 +374,10 @@ auto collect_oidc_identifiers(const std::span<const std::byte> metadata,
     return;
   }
 
-  keys.emplace(issuer);
-  keys.emplace(client_id);
+  // The serialized pair itself is the key. Its length prefixes keep the two
+  // fields delimited, so exactly the equal pairs compare equal
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor);
 }
 
 } // namespace
