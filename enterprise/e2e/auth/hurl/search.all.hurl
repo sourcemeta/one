@@ -50,6 +50,7 @@ jsonpath "$" count == 0
 GET {{base}}/self/v1/api/schemas/search?q=shared
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=60
 Content-Type: application/json
 [Asserts]
 jsonpath "$" count == 1
@@ -59,6 +60,7 @@ jsonpath "$[0].path" == "/private/open/shared"
 GET {{base}}/self/v1/api/schemas/search?q=secret
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=60
 Content-Type: application/json
 [Asserts]
 jsonpath "$" count == 1
@@ -69,6 +71,7 @@ jsonpath "$[0].path" == "/private/secret"
 GET {{base}}/self/v1/api/schemas/search?q=config
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=60
 Content-Type: application/json
 [Asserts]
 jsonpath "$" count == 0
@@ -76,6 +79,7 @@ jsonpath "$" count == 0
 GET {{base}}/self/v1/api/schemas/search?q=config
 Authorization: Bearer internal-secret-key
 HTTP 200
+Cache-Control: private, max-age=60
 Content-Type: application/json
 [Asserts]
 jsonpath "$" count == 1

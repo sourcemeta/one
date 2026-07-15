@@ -191,8 +191,12 @@ public:
     // Search results are query-dependent and the corpus shifts as
     // the catalog grows; 60 seconds is a freshness window that
     // amortises full-text cost across typing-into-a-search-box
-    // bursts without serving stale ranking long-term.
-    response.write_header("Cache-Control", "public, max-age=60");
+    // bursts without serving stale ranking long-term. A result set
+    // filtered by presented credentials is specific to the caller,
+    // so only the anonymous view may enter shared caches
+    response.write_header("Cache-Control", credential.empty() && cookies.empty()
+                                               ? "public, max-age=60"
+                                               : "private, max-age=60");
     // RFC 9110 §12.5.5: the gzip negotiation axis applies, no other
     // request-shaping axis selects the representation on this surface.
     response.write_header("Vary", "Accept-Encoding");
