@@ -360,6 +360,22 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
   keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
 }
 
+struct OIDCPolicyMetadata {
+  std::string_view issuer;
+  std::string_view client_id;
+  std::string_view client_secret_variable;
+  std::string_view name;
+};
+
+auto decode_oidc_metadata(const std::span<const std::byte> metadata,
+                          OIDCPolicyMetadata &result) -> bool {
+  std::size_t cursor{0};
+  return read_string(metadata, cursor, result.issuer) &&
+         read_string(metadata, cursor, result.client_id) &&
+         read_string(metadata, cursor, result.client_secret_variable) &&
+         read_string(metadata, cursor, result.name);
+}
+
 // The reference check treats two interactive policies as the same scope only
 // when they authenticate against the same provider client, so the issuer and
 // client identifier count as one indivisible identity, never as separate
@@ -588,19 +604,16 @@ struct Authentication::Impl {
       return false;
     }
 
-    std::size_t cursor{0};
-    std::string_view issuer;
-    std::string_view client_id;
-    std::string_view client_secret_variable;
-    std::string_view policy_name;
-    if (!read_string(metadata, cursor, issuer) ||
-        !read_string(metadata, cursor, client_id) ||
-        !read_string(metadata, cursor, client_secret_variable) ||
-        !read_string(metadata, cursor, policy_name) || policy_name.empty()) {
+    OIDCPolicyMetadata decoded;
+    if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
       return false;
     }
+    const auto policy_name{decoded.name};
 
-    std::string cookie_name{sourcemeta::one::SESSION_COOKIE_PREFIX};
+    std::string cookie_name;
+    cookie_name.reserve(sourcemeta::one::SESSION_COOKIE_PREFIX.size() +
+                        policy_name.size());
+    cookie_name += sourcemeta::one::SESSION_COOKIE_PREFIX;
     cookie_name += policy_name;
     std::string_view sealed;
     sourcemeta::core::http_parse_cookies(
@@ -615,10 +628,7 @@ struct Authentication::Impl {
       return false;
     }
 
-    const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now())};
-    const auto payload{sourcemeta::one::session_open(
-        sealed, this->session_secret_views_, now)};
+    const auto payload{this->open(sealed)};
     if (!payload.has_value()) {
       return false;
     }
@@ -634,6 +644,56 @@ struct Authentication::Impl {
     const auto *minted_for{document.value().try_at("policy")};
     return minted_for != nullptr && minted_for->is_string() &&
            minted_for->to_string() == policy_name;
+  }
+
+  [[nodiscard]] auto interactive(const std::string_view name) const
+      -> std::optional<Authentication::InteractivePolicy> {
+    if (this->policy_count_ == 0 || name.empty()) {
+      return std::nullopt;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          this->view_->as<std::byte>(entry.metadata_offset),
+          entry.metadata_length};
+      OIDCPolicyMetadata decoded;
+      if (decode_oidc_metadata(metadata, decoded) && decoded.name == name) {
+        return Authentication::InteractivePolicy{
+            .issuer = decoded.issuer,
+            .client_id = decoded.client_id,
+            .client_secret_variable = decoded.client_secret_variable};
+      }
+    }
+
+    return std::nullopt;
+  }
+
+  [[nodiscard]] auto seal(const std::string_view payload,
+                          const std::chrono::sys_seconds expiry) const
+      -> std::optional<std::string> {
+    if (this->session_secret_views_.empty()) {
+      return std::nullopt;
+    }
+
+    return sourcemeta::one::session_seal(
+        payload, this->session_secret_views_.front(), expiry);
+  }
+
+  [[nodiscard]] auto open(const std::string_view value) const
+      -> std::optional<std::string> {
+    const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now())};
+    return sourcemeta::one::session_open(value, this->session_secret_views_,
+                                         now);
   }
 
   [[nodiscard]] auto provider_for(const std::string_view issuer,
@@ -802,6 +862,22 @@ auto Authentication::admits(const std::string_view registry_path,
     -> Authentication::Verdict {
   return this->impl_->admits(strip_base_path(registry_path, base_path),
                              credential, cookies);
+}
+
+auto Authentication::interactive(const std::string_view name) const
+    -> std::optional<Authentication::InteractivePolicy> {
+  return this->impl_->interactive(name);
+}
+
+auto Authentication::seal(const std::string_view payload,
+                          const std::chrono::sys_seconds expiry) const
+    -> std::optional<std::string> {
+  return this->impl_->seal(payload, expiry);
+}
+
+auto Authentication::open(const std::string_view value) const
+    -> std::optional<std::string> {
+  return this->impl_->open(value);
 }
 
 auto Authentication::governing(const std::string_view registry_path,

@@ -100,7 +100,7 @@ Allow: GET, HEAD, OPTIONS
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
+error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Set-Cookie" not exists
 header "Vary" not exists
@@ -115,7 +115,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "detail": "This HTTP method is invalid for this URL"
 }
 
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
 ```
 {{last_response}}
 ```
