@@ -72,6 +72,15 @@ public:
       return;
     }
 
+    if (matches.empty()) {
+      sourcemeta::one::json_error(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          "urn:sourcemeta:one:missing-policy-match",
+          "This action requires a policy name match", this->error_schema_, "*");
+      return;
+    }
+
     // An unknown or non-interactive policy name reveals nothing
     const auto policy_name{matches.front()};
     const auto &authentication{this->dispatcher().authentication()};
@@ -153,8 +162,6 @@ public:
                                                  .redirect_uri = redirect_uri},
                                                 "openid", transaction)};
 
-    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-
     std::string cookie_name;
     cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
                         policy_name.size());
@@ -170,10 +177,20 @@ public:
          .http_only = true,
          .secure = this->server_uri().starts_with("https"),
          .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (cookie.has_value()) {
-      response.write_header("Set-Cookie", cookie.value());
+    // A redirect without the transaction cookie could never complete at the
+    // callback, so it is not worth sending
+    if (!cookie.has_value()) {
+      sourcemeta::one::json_error(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          "urn:sourcemeta:one:auth-misconfigured",
+          "The login transaction could not be established", this->error_schema_,
+          "*");
+      return;
     }
 
+    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+    response.write_header("Set-Cookie", cookie.value());
     response.write_header("Location", url);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
