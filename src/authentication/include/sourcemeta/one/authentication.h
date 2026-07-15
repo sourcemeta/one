@@ -14,12 +14,14 @@
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <memory>      // std::unique_ptr
 #include <optional>    // std::optional
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
@@ -113,6 +115,33 @@ public:
   [[nodiscard]] auto governing(std::string_view registry_path,
                                std::string_view base_path = {}) const
       -> std::vector<std::size_t>;
+
+  // What an interactive policy declares about its provider client. The views
+  // point into the artifact and remain valid for the lifetime of this
+  // instance
+  struct InteractivePolicy {
+    std::string_view issuer{};
+    std::string_view client_id{};
+    // The environment variable name holding the client secret
+    std::string_view client_secret_variable{};
+  };
+
+  // The interactive policy declared under the given name, if any
+  [[nodiscard]] auto interactive(std::string_view name) const
+      -> std::optional<InteractivePolicy>;
+
+  // Seal a payload under the newest session secret, producing a value that
+  // the gate and this instance's replicas accept until the expiry. Nothing
+  // is produced when no session secret is configured
+  [[nodiscard]] auto seal(std::string_view payload,
+                          std::chrono::sys_seconds expiry) const
+      -> std::optional<std::string>;
+
+  // Recover the payload of a value sealed by this instance or one of its
+  // replicas, returning nothing for a value that does not verify or has
+  // expired
+  [[nodiscard]] auto open(std::string_view value) const
+      -> std::optional<std::string>;
 
   [[nodiscard]] auto reference_permitted(std::string_view referrer_path,
                                          std::string_view referent_path) const

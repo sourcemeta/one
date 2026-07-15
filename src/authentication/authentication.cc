@@ -3,10 +3,12 @@
 
 #include <sourcemeta/core/io.h>
 
+#include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::byte, std::size_t
 #include <filesystem>  // std::filesystem::create_directories
-#include <optional>    // std::nullopt
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
@@ -56,6 +58,22 @@ auto Authentication::governing(const std::string_view,
                                const std::string_view) const
     -> std::vector<std::size_t> {
   return {};
+}
+
+auto Authentication::interactive(const std::string_view) const
+    -> std::optional<Authentication::InteractivePolicy> {
+  return std::nullopt;
+}
+
+auto Authentication::seal(const std::string_view,
+                          const std::chrono::sys_seconds) const
+    -> std::optional<std::string> {
+  return std::nullopt;
+}
+
+auto Authentication::open(const std::string_view) const
+    -> std::optional<std::string> {
+  return std::nullopt;
 }
 
 auto Authentication::reference_permitted(const std::string_view,
