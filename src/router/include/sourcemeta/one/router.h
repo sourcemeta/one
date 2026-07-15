@@ -109,7 +109,7 @@ public:
     std::string_view x_frame_options{};
   };
 
-  [[nodiscard]] auto artifact_resolve_path(std::string_view credential,
+  [[nodiscard]] auto artifact_resolve_path(Credentials credentials,
                                            std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> ArtifactResolution;
@@ -137,17 +137,17 @@ public:
                       std::string_view vary) const -> void;
 
   [[nodiscard]] auto
-  schema_evaluate_fast(std::string_view credential, std::string_view schema_uri,
+  schema_evaluate_fast(Credentials credentials, std::string_view schema_uri,
                        const sourcemeta::core::JSON &instance) const -> bool;
 
-  [[nodiscard]] auto schema_evaluate(std::string_view credential,
+  [[nodiscard]] auto schema_evaluate(Credentials credentials,
                                      std::string_view schema_uri,
                                      const sourcemeta::core::JSON &instance,
                                      sourcemeta::blaze::Mode mode) const
       -> std::pair<bool, sourcemeta::core::JSON>;
 
   [[nodiscard]] auto schema_evaluate_with_tracing(
-      std::string_view credential, std::string_view schema_uri,
+      Credentials credentials, std::string_view schema_uri,
       const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
@@ -175,7 +175,7 @@ private:
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 
-  [[nodiscard]] auto blaze_template(std::string_view credential,
+  [[nodiscard]] auto blaze_template(Credentials credentials,
                                     std::string_view schema_uri,
                                     sourcemeta::blaze::Mode mode) const
       -> std::shared_ptr<const sourcemeta::blaze::Template>;

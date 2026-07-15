@@ -106,9 +106,11 @@ public:
     schema_uri.push_back('/');
     schema_uri.append(path);
     const auto schema_present{this->artifact_resolve_path(
-        credential, schema_uri, Tree::Schemas, "schema")};
+        {.bearer = credential, .cookies = request.header("cookie")}, schema_uri,
+        Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        credential, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        {.bearer = credential, .cookies = request.header("cookie")}, schema_uri,
+        Tree::Schemas, "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -170,7 +172,8 @@ public:
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [this, schema_template, schema_uri = std::move(schema_uri),
-         credential = std::string{credential}](
+         bearer = std::string{credential},
+         cookies = std::string{request.header("cookie")}](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) -> void {
@@ -205,8 +208,9 @@ public:
             return;
           }
 
-          if (!this->schema_evaluate_fast(credential, this->request_schema_,
-                                          envelope)) {
+          if (!this->schema_evaluate_fast(
+                  {.bearer = bearer, .cookies = cookies}, this->request_schema_,
+                  envelope)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -236,7 +240,8 @@ public:
                    .detail = "The instance does not conform to the schema"})};
               payload.assign(
                   "errors",
-                  this->schema_evaluate(credential, schema_uri, instance,
+                  this->schema_evaluate({.bearer = bearer, .cookies = cookies},
+                                        schema_uri, instance,
                                         sourcemeta::blaze::Mode::Exhaustive)
                       .second.at("errors"));
               this->send_problem(
@@ -335,8 +340,8 @@ public:
            const std::string_view credential)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
-                              sourcemeta::blaze::Mode::Exhaustive)};
+        this->schema_evaluate({.bearer = credential}, this->rpc_request_schema_,
+                              arguments, sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
@@ -345,9 +350,9 @@ public:
 
     const auto &schema_uri{arguments.at("schema").to_string()};
     const auto schema_present{this->artifact_resolve_path(
-        credential, schema_uri, Tree::Schemas, "schema")};
+        {.bearer = credential}, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        credential, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        {.bearer = credential}, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -406,7 +411,8 @@ public:
       auto payload{sourcemeta::core::JSON::make_object()};
       payload.assign("valid", sourcemeta::core::JSON{false});
       payload.assign("errors",
-                     this->schema_evaluate(credential, schema_uri, instance,
+                     this->schema_evaluate({.bearer = credential}, schema_uri,
+                                           instance,
                                            sourcemeta::blaze::Mode::Exhaustive)
                          .second.at("errors"));
       return sourcemeta::core::mcp_make_tool_success(version, request_id,

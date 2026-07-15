@@ -25,12 +25,12 @@ auto Router::blaze_template(const ResolvedArtifact &artifact)
       });
 }
 
-auto RouterAction::blaze_template(std::string_view credential,
+auto RouterAction::blaze_template(const Credentials credentials,
                                   const std::string_view schema_uri,
                                   const sourcemeta::blaze::Mode mode) const
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
   const auto resolution{this->artifact_resolve_path(
-      credential, schema_uri, Tree::Schemas,
+      credentials, schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
   assert(resolution.outcome == ArtifactResolution::Outcome::Found);
@@ -38,21 +38,21 @@ auto RouterAction::blaze_template(std::string_view credential,
 }
 
 auto RouterAction::schema_evaluate_fast(
-    std::string_view credential, const std::string_view schema_uri,
+    const Credentials credentials, const std::string_view schema_uri,
     const sourcemeta::core::JSON &instance) const -> bool {
   const auto schema_template{this->blaze_template(
-      credential, schema_uri, sourcemeta::blaze::Mode::FastValidation)};
+      credentials, schema_uri, sourcemeta::blaze::Mode::FastValidation)};
   sourcemeta::blaze::Evaluator evaluator;
   return evaluator.validate(*schema_template, instance);
 }
 
-auto RouterAction::schema_evaluate(std::string_view credential,
+auto RouterAction::schema_evaluate(const Credentials credentials,
                                    const std::string_view schema_uri,
                                    const sourcemeta::core::JSON &instance,
                                    const sourcemeta::blaze::Mode mode) const
     -> std::pair<bool, sourcemeta::core::JSON> {
   const auto schema_template{
-      this->blaze_template(credential, schema_uri, mode)};
+      this->blaze_template(credentials, schema_uri, mode)};
   sourcemeta::blaze::Evaluator evaluator;
   auto result{
       sourcemeta::blaze::standard(evaluator, *schema_template, instance,
@@ -64,11 +64,11 @@ auto RouterAction::schema_evaluate(std::string_view credential,
 }
 
 auto RouterAction::schema_evaluate_with_tracing(
-    std::string_view credential, const std::string_view schema_uri,
+    const Credentials credentials, const std::string_view schema_uri,
     const sourcemeta::core::JSON &instance,
     const sourcemeta::blaze::Callback &callback) const -> bool {
   const auto schema_template{this->blaze_template(
-      credential, schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
+      credentials, schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
   sourcemeta::blaze::Evaluator evaluator;
   return evaluator.validate(*schema_template, instance, callback);
 }

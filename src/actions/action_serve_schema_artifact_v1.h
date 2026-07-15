@@ -78,7 +78,8 @@ public:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        credential, matches.front(), Tree::Schemas, this->artifact_)};
+        {.bearer = credential, .cookies = request.header("cookie")},
+        matches.front(), Tree::Schemas, this->artifact_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,
@@ -104,8 +105,8 @@ public:
            const sourcemeta::core::JSON &arguments, std::string_view credential)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(credential, this->rpc_request_schema_, arguments,
-                              sourcemeta::blaze::Mode::Exhaustive)};
+        this->schema_evaluate({.bearer = credential}, this->rpc_request_schema_,
+                              arguments, sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
@@ -113,8 +114,8 @@ public:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        credential, arguments.at("schema").to_string(), Tree::Schemas,
-        this->artifact_)};
+        {.bearer = credential}, arguments.at("schema").to_string(),
+        Tree::Schemas, this->artifact_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::mcp_make_tool_error(request_id,

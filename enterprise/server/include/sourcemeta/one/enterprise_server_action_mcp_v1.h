@@ -483,8 +483,9 @@ private:
           "Resource not found");
     }
 
-    const auto resolution{this->artifact_resolve_path(
-        credential, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
+    const auto resolution{
+        this->artifact_resolve_path({.bearer = credential}, uri, Tree::Schemas,
+                                    bundle ? "bundle" : "schema")};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::jsonrpc_make_error(&id, -32010,
@@ -665,8 +666,8 @@ private:
     // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
     // follows MCP's tighter rule and rejects null-id requests here.
     // https://www.jsonrpc.org/specification (§4)
-    if (!this->schema_evaluate_fast(credential, this->request_schema_,
-                                    request_json)) {
+    if (!this->schema_evaluate_fast({.bearer = credential},
+                                    this->request_schema_, request_json)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
     }
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {

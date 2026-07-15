@@ -24,6 +24,14 @@
 
 namespace sourcemeta::one {
 
+// Everything a request presented for authentication: the bearer value from
+// the authorization header and the raw request cookie header, either of
+// which may admit the caller under a covering policy
+struct Credentials {
+  std::string_view bearer{};
+  std::string_view cookies{};
+};
+
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
