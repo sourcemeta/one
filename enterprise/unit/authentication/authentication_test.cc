@@ -875,6 +875,177 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
   EXPECT_FALSE(authentication.admits("/both/x", "wrong").allowed);
 }
 
+TEST(oidc_policy_admits_no_presented_credential) {
+  setenv("ONE_TEST_OIDC_DENY", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_DENY"}}};
+  const auto path{test_path("oidc_deny.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  // The provider is reachable and would verify the token, yet no presented
+  // credential opens the path, not even one the equivalent token policy
+  // would accept, and the provider is never contacted
+  const auto calls{std::make_shared<int>(0)};
+  const sourcemeta::one::Authentication authentication{
+      path,
+      stub_fetcher({{"acme/.well-known/openid-configuration",
+                     R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
+                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+                   calls)};
+
+  const auto empty_verdict{authentication.admits("/portal/x", "")};
+  EXPECT_FALSE(empty_verdict.allowed);
+  EXPECT_FALSE(empty_verdict.principal.has_value());
+
+  const auto secret_verdict{authentication.admits("/portal/x", "confidential")};
+  EXPECT_FALSE(secret_verdict.allowed);
+  EXPECT_FALSE(secret_verdict.principal.has_value());
+
+  const auto token_verdict{authentication.admits("/portal/x", SIGNED_TOKEN)};
+  EXPECT_FALSE(token_verdict.allowed);
+  EXPECT_FALSE(token_verdict.principal.has_value());
+
+  EXPECT_EQ(*calls, 0);
+}
+
+TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
+  setenv("ONE_TEST_KEY_OIDC_UNION", "union-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/both"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_OIDC_UNION"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = paths, .keys = keys},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_KEY_OIDC_UNION"}}};
+  const auto path{test_path("oidc_union.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+
+  const auto key_verdict{authentication.admits("/both/x", "union-secret")};
+  EXPECT_TRUE(key_verdict.allowed);
+  EXPECT_TRUE(key_verdict.principal.has_value());
+  EXPECT_EQ(key_verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(key_verdict.principal.value().policy, std::size_t{0});
+
+  const auto token_verdict{authentication.admits("/both/x", SIGNED_TOKEN)};
+  EXPECT_FALSE(token_verdict.allowed);
+  EXPECT_FALSE(token_verdict.principal.has_value());
+}
+
+TEST(reference_within_the_same_oidc_scope_is_permitted) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  // The two policies name different environment variables for the secret,
+  // which does not affect who can authenticate, so the scopes stay equal
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME_OTHER"}}};
+  const auto path{test_path("oidc_ref_same.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_TRUE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+}
+
+TEST(reference_across_distinct_oidc_clients_is_rejected) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_ALPHA"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_BETA"}}};
+  const auto path{test_path("oidc_ref_distinct.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+}
+
+TEST(reference_across_swapped_oidc_identities_is_rejected) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  // One policy's issuer is the other's client identifier and vice versa, so
+  // the scopes share both strings yet denote different provider clients
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_ALPHA"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "registry",
+        .client_id = "https://login.test",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_BETA"}}};
+  const auto path{test_path("oidc_ref_swapped.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+}
+
+TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
+  const std::array<std::string_view, 1> source_paths{{"/source"}};
+  const std::array<std::string_view, 1> target_paths{{"/target"}};
+  // The referrer pairs an issuer and a client identifier that the referent
+  // only carries through two different policies, so no single referent scope
+  // matches and the reference must not slip through their union
+  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
+      {{.paths = source_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://alpha.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_SOURCE"},
+       {.paths = target_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://alpha.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_ONE"},
+       {.paths = target_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://beta.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_TWO"}}};
+  const auto path{test_path("oidc_ref_mixed.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted("/source/one", "/target/two"));
+}
+
 TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   setenv("ONE_TEST_KEY_PRINCIPAL", "principal-secret", 1);
   const std::array<std::string_view, 1> paths{{"/internal"}};

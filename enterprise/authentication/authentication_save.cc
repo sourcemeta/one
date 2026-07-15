@@ -73,6 +73,19 @@ auto encode_apikey_metadata(
   return result;
 }
 
+// The issuer, client identifier, and the name of the environment variable
+// holding the client secret are stored as length-prefixed strings
+auto encode_oidc_metadata(const std::string_view issuer,
+                          const std::string_view client_id,
+                          const std::string_view client_secret_variable)
+    -> std::vector<std::byte> {
+  std::vector<std::byte> result;
+  append_string(result, issuer);
+  append_string(result, client_id);
+  append_string(result, client_secret_variable);
+  return result;
+}
+
 // The issuer, audience, and key set location are stored as length-prefixed
 // strings, followed by the allow-listed signature algorithms as one byte each.
 // An empty key set location means the location is discovered from the issuer
@@ -187,6 +200,9 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     if (policy.type == Authentication::Type::JWT) {
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
+    } else if (policy.type == Authentication::Type::OIDC) {
+      policy_metadata = encode_oidc_metadata(policy.issuer, policy.client_id,
+                                             policy.client_secret_variable);
     } else if (!policy.keys.empty()) {
       policy_metadata = encode_apikey_metadata(policy.keys);
     }

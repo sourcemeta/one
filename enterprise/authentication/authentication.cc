@@ -139,7 +139,7 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
           entry.metadata_length > size - metadata_cursor ||
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
-          entry.type > static_cast<std::uint8_t>(Authentication::Type::JWT)) {
+          entry.type > static_cast<std::uint8_t>(Authentication::Type::OIDC)) {
         return false;
       }
 
@@ -359,6 +359,27 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
   keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
 }
 
+// The reference check treats two interactive policies as the same scope only
+// when they authenticate against the same provider client, so the issuer and
+// client identifier count as one indivisible identity, never as separate
+// keys that several policies could satisfy piecewise or in swapped roles
+auto collect_oidc_identifiers(const std::span<const std::byte> metadata,
+                              std::unordered_set<std::string_view> &keys)
+    -> void {
+  std::size_t cursor{0};
+  std::string_view issuer;
+  std::string_view client_id;
+  if (!read_string(metadata, cursor, issuer) ||
+      !read_string(metadata, cursor, client_id)) {
+    return;
+  }
+
+  // The serialized pair itself is the key. Its length prefixes keep the two
+  // fields delimited, so exactly the equal pairs compare equal
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor);
+}
+
 } // namespace
 
 namespace sourcemeta::one {
@@ -505,6 +526,11 @@ struct Authentication::Impl {
                   .principal = Authentication::Principal{
                       .type = type, .policy = static_cast<std::size_t>(index)}};
         }
+      } else if (type == Authentication::Type::OIDC) {
+        // An interactive policy authenticates a person through a browser
+        // login, never a presented credential, so it can never open a path
+        // here
+        continue;
       } else if (admits_apikey(
                      metadata, credential,
                      static_cast<Authentication::Algorithm>(entry.algorithm))) {
@@ -620,9 +646,11 @@ struct Authentication::Impl {
         const std::span<const std::byte> metadata{
             this->view_->as<std::byte>(entry.metadata_offset),
             entry.metadata_length};
-        if (static_cast<Authentication::Type>(entry.type) ==
-            Authentication::Type::JWT) {
+        const auto type{static_cast<Authentication::Type>(entry.type)};
+        if (type == Authentication::Type::JWT) {
           collect_jwt_identifiers(metadata, result.keys);
+        } else if (type == Authentication::Type::OIDC) {
+          collect_oidc_identifiers(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
         }

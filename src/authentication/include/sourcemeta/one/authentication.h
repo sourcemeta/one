@@ -32,7 +32,7 @@ public:
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
-  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1 };
+  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1, OIDC = 2 };
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
@@ -45,6 +45,9 @@ public:
     std::string_view audience{};
     std::string_view jwks_uri{};
     std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
+    std::string_view client_id{};
+    // The environment variable name holding the client secret
+    std::string_view client_secret_variable{};
   };
 
   // The identity of an admitted caller: the type of credential it presented
