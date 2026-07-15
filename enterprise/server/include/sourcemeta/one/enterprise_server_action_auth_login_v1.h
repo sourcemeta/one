@@ -111,11 +111,14 @@ public:
     const auto transaction{sourcemeta::one::oidc_transaction()};
 
     auto payload{sourcemeta::core::JSON::make_object()};
-    payload.assign("policy", sourcemeta::core::JSON{std::string{policy_name}});
-    payload.assign("state", sourcemeta::core::JSON{transaction.state});
-    payload.assign("nonce", sourcemeta::core::JSON{transaction.nonce});
-    payload.assign("verifier",
-                   sourcemeta::core::JSON{transaction.code_verifier});
+    payload.assign_assume_new("policy",
+                              sourcemeta::core::JSON{std::string{policy_name}});
+    payload.assign_assume_new("state",
+                              sourcemeta::core::JSON{transaction.state});
+    payload.assign_assume_new("nonce",
+                              sourcemeta::core::JSON{transaction.nonce});
+    payload.assign_assume_new(
+        "verifier", sourcemeta::core::JSON{transaction.code_verifier});
     std::ostringstream payload_text;
     sourcemeta::core::stringify(payload, payload_text);
 
@@ -135,8 +138,12 @@ public:
 
     // The callback URL is pinned from the configured public URL, never
     // inferred from the incoming request
-    std::string redirect_uri{this->server_uri()};
-    redirect_uri += "/self/v1/auth/callback/";
+    constexpr std::string_view CALLBACK_PATH{"/self/v1/auth/callback/"};
+    std::string redirect_uri;
+    redirect_uri.reserve(this->server_uri().size() + CALLBACK_PATH.size() +
+                         policy_name.size());
+    redirect_uri += this->server_uri();
+    redirect_uri += CALLBACK_PATH;
     redirect_uri += policy_name;
 
     const auto url{
@@ -148,7 +155,10 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
 
-    std::string cookie_name{sourcemeta::one::TRANSACTION_COOKIE_PREFIX};
+    std::string cookie_name;
+    cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
+                        policy_name.size());
+    cookie_name += sourcemeta::one::TRANSACTION_COOKIE_PREFIX;
     cookie_name += policy_name;
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};

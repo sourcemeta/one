@@ -610,7 +610,10 @@ struct Authentication::Impl {
     }
     const auto policy_name{decoded.name};
 
-    std::string cookie_name{sourcemeta::one::SESSION_COOKIE_PREFIX};
+    std::string cookie_name;
+    cookie_name.reserve(sourcemeta::one::SESSION_COOKIE_PREFIX.size() +
+                        policy_name.size());
+    cookie_name += sourcemeta::one::SESSION_COOKIE_PREFIX;
     cookie_name += policy_name;
     std::string_view sealed;
     sourcemeta::core::http_parse_cookies(
