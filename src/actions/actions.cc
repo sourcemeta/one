@@ -3,6 +3,7 @@
 #include <cassert>     // assert
 #include <string_view> // std::string_view
 
+#include "action_auth_logout_v1.h"
 #include "action_default_v1.h"
 #include "action_dependency_tree_v1.h"
 #include "action_get_schema_dependencies_v1.h"

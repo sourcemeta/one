@@ -13,6 +13,17 @@
 
 namespace sourcemeta::one {
 
+// A session cookie is named per policy under this common prefix, so a browser
+// holds one session per interactive policy and any holder can be recognised
+// and cleared without knowing which policies exist
+inline constexpr std::string_view SESSION_COOKIE_PREFIX{
+    "sourcemeta_one_session_"};
+
+// A login transaction cookie follows the same shape for the short window
+// between the login redirect and the callback
+inline constexpr std::string_view TRANSACTION_COOKIE_PREFIX{
+    "sourcemeta_one_transaction_"};
+
 // Bind a payload and an expiry under a keyed signature, producing a value that
 // is safe to transport as a cookie. Only a holder of the secret can produce or
 // alter such a value, though anyone can read its contents
