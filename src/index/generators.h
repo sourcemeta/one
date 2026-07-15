@@ -1030,6 +1030,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_V1,
                  auth_login_arguments);
 
+      const sourcemeta::core::URITemplateRouter::Argument
+          auth_callback_arguments[] = {
+              {"errorSchema", std::string_view{error_schema}}};
+      router.add("/self/v1/auth/callback/{policy}", "auth_callback", next_id++,
+                 sourcemeta::one::ACTION_TYPE_AUTH_CALLBACK_V1,
+                 auth_callback_arguments);
+
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
           {"responseSchema", std::string_view{mcp_response_schema}}};
