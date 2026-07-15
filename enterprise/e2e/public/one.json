@@ -32,6 +32,14 @@
               "path": "../../../vendor/collections/sourcemeta/std/v0/schemas/2020-12"
             }
           }
+        },
+        "extension": {
+          "title": "The Sourcemeta Extension vocabulary",
+          "description": "Vocabulary and dialect meta-schemas for our custom JSON Schema extensions",
+          "email": "hello@sourcemeta.com",
+          "github": "sourcemeta/blaze",
+          "website": "https://www.sourcemeta.com",
+          "path": "../../../vendor/blaze/schemas/sourcemeta-extension"
         }
       }
     },
