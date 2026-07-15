@@ -23,7 +23,8 @@ struct OIDCTransaction {
 };
 
 // The relying party half of an interactive policy, as registered at the
-// provider
+// provider. The fields borrow from the caller, so an instance is only valid
+// while the strings it points into remain alive
 struct OIDCClient {
   std::string_view client_id{};
   std::string_view client_secret{};

@@ -125,6 +125,19 @@ auto oidc_validate(
     return std::nullopt;
   }
 
+  // The provider check confirms this relying party is among the audiences. A
+  // token naming several audiences was minted primarily for someone else,
+  // and no additional audience is trusted here
+  const auto *audience{token.value().payload().try_at("aud")};
+  if (audience == nullptr || (audience->is_array() && audience->size() != 1)) {
+    return std::nullopt;
+  }
+
+  // An identity token always declares when it was issued
+  if (!token.value().issued_at().has_value()) {
+    return std::nullopt;
+  }
+
   const auto *nonce_claim{token.value().payload().try_at("nonce")};
   if (nonce_claim == nullptr || !nonce_claim->is_string() ||
       nonce_claim->to_string() != nonce) {

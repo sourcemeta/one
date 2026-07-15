@@ -185,6 +185,7 @@ TEST(oidc_validate_accepts_a_valid_identity_token) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce",
     "sub": "jane@acme.test"
   })JSON")};
@@ -204,6 +205,7 @@ TEST(oidc_validate_binds_the_token_to_the_transaction) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce",
     "sub": "jane@acme.test"
   })JSON")};
@@ -220,6 +222,7 @@ TEST(oidc_validate_binds_the_token_to_the_transaction) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "sub": "jane@acme.test"
   })JSON")};
   EXPECT_FALSE(sourcemeta::one::oidc_validate(
@@ -234,6 +237,7 @@ TEST(oidc_validate_denies_a_token_for_another_issuer_or_client) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce",
     "sub": "jane@acme.test"
   })JSON")};
@@ -255,6 +259,7 @@ TEST(oidc_validate_denies_expired_and_forged_tokens) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 1000,
+    "iat": 500,
     "nonce": "the-nonce",
     "sub": "jane@acme.test"
   })JSON")};
@@ -267,6 +272,7 @@ TEST(oidc_validate_denies_expired_and_forged_tokens) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce",
     "sub": "jane@acme.test"
   })JSON")};
@@ -282,12 +288,61 @@ TEST(oidc_validate_denies_expired_and_forged_tokens) {
                    .has_value());
 }
 
+TEST(oidc_validate_rejects_tokens_for_additional_audiences) {
+  auto provider{test_provider()};
+
+  // A token addressed to this relying party alone is accepted whether the
+  // audience is a string or a single-element array
+  const auto single{sign_id_token(R"JSON({
+    "iss": "https://login.test",
+    "aud": [ "registry" ],
+    "exp": 2000000000,
+    "iat": 1700000000,
+    "nonce": "the-nonce",
+    "sub": "jane@acme.test"
+  })JSON")};
+  EXPECT_TRUE(sourcemeta::one::oidc_validate(
+                  provider, single, OIDC_TEST_ALGORITHMS, "https://login.test",
+                  {.client_id = "registry"}, "the-nonce")
+                  .has_value());
+
+  // A token naming several audiences was minted primarily for someone else
+  const auto shared{sign_id_token(R"JSON({
+    "iss": "https://login.test",
+    "aud": [ "registry", "dashboard" ],
+    "exp": 2000000000,
+    "iat": 1700000000,
+    "nonce": "the-nonce",
+    "sub": "jane@acme.test"
+  })JSON")};
+  EXPECT_FALSE(sourcemeta::one::oidc_validate(
+                   provider, shared, OIDC_TEST_ALGORITHMS, "https://login.test",
+                   {.client_id = "registry"}, "the-nonce")
+                   .has_value());
+}
+
+TEST(oidc_validate_requires_an_issue_time) {
+  auto provider{test_provider()};
+  const auto token{sign_id_token(R"JSON({
+    "iss": "https://login.test",
+    "aud": "registry",
+    "exp": 2000000000,
+    "nonce": "the-nonce",
+    "sub": "jane@acme.test"
+  })JSON")};
+  EXPECT_FALSE(sourcemeta::one::oidc_validate(
+                   provider, token, OIDC_TEST_ALGORITHMS, "https://login.test",
+                   {.client_id = "registry"}, "the-nonce")
+                   .has_value());
+}
+
 TEST(oidc_validate_requires_a_subject) {
   auto provider{test_provider()};
   const auto token{sign_id_token(R"JSON({
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce"
   })JSON")};
   EXPECT_FALSE(sourcemeta::one::oidc_validate(
@@ -299,6 +354,7 @@ TEST(oidc_validate_requires_a_subject) {
     "iss": "https://login.test",
     "aud": "registry",
     "exp": 2000000000,
+    "iat": 1700000000,
     "nonce": "the-nonce",
     "sub": ""
   })JSON")};
