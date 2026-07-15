@@ -14,6 +14,7 @@
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
+#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -893,7 +894,8 @@ TEST(oidc_policy_admits_no_presented_credential) {
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "acme",
         .client_id = "client",
-        .client_secret_variable = "ONE_TEST_OIDC_DENY"}}};
+        .client_secret_variable = "ONE_TEST_OIDC_DENY",
+        .name = "okta"}}};
   const auto path{test_path("oidc_deny.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
@@ -933,7 +935,8 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "acme",
         .client_id = "client",
-        .client_secret_variable = "ONE_TEST_KEY_OIDC_UNION"}}};
+        .client_secret_variable = "ONE_TEST_KEY_OIDC_UNION",
+        .name = "okta"}}};
   const auto path{test_path("oidc_union.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
@@ -1151,6 +1154,53 @@ TEST(session_admitted_under_a_rotated_secret) {
   EXPECT_TRUE(authentication.admits("/portal/x", "", cookies).allowed);
 }
 
+TEST(blank_session_secrets_are_discarded) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_BLANK",
+        .name = "okta"}}};
+  const auto path{test_path("oidc_session_blank.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const std::array<std::string_view, 2> secrets{{"", "session-secret"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr), secrets};
+
+  // A value sealed under the blank entry never verifies
+  const auto forged{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "", SESSION_EXPIRY)};
+  const std::string forged_cookies{"sourcemeta_one_session_okta=" + forged};
+  EXPECT_FALSE(authentication.admits("/portal/x", "", forged_cookies).allowed);
+
+  // The non-blank entry still admits
+  const auto sealed{sourcemeta::one::session_seal(
+      R"JSON({ "policy": "okta" })JSON", "session-secret", SESSION_EXPIRY)};
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
+  EXPECT_TRUE(authentication.admits("/portal/x", "", cookies).allowed);
+}
+
+TEST(save_rejects_a_nameless_interactive_policy) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_NAMELESS"}}};
+  const auto path{test_path("oidc_nameless.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path);
+    FAIL();
+  } catch (const std::runtime_error &error) {
+    EXPECT_STREQ(error.what(),
+                 "Interactive authentication policies require a name");
+  }
+}
+
 TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
   setenv("ONE_TEST_KEY_SESSION_UNION", "union-key", 1);
   const std::array<std::string_view, 1> paths{{"/both"}};
@@ -1210,19 +1260,22 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
 TEST(reference_within_the_same_oidc_scope_is_permitted) {
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
-  // The two policies name different environment variables for the secret,
-  // which does not affect who can authenticate, so the scopes stay equal
+  // The two policies differ in name and in the environment variable holding
+  // the secret, neither of which affects who can authenticate, so the scopes
+  // stay equal
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{.paths = alpha_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://login.test",
         .client_id = "registry",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME"},
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME",
+        .name = "alpha"},
        {.paths = beta_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://login.test",
         .client_id = "registry",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME_OTHER"}}};
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SAME_OTHER",
+        .name = "beta"}}};
   const auto path{test_path("oidc_ref_same.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
@@ -1240,12 +1293,14 @@ TEST(reference_across_distinct_oidc_clients_is_rejected) {
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://login.test",
         .client_id = "registry",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_ALPHA"},
+        .client_secret_variable = "ONE_TEST_OIDC_REF_ALPHA",
+        .name = "alpha"},
        {.paths = beta_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://login.test",
         .client_id = "dashboard",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_BETA"}}};
+        .client_secret_variable = "ONE_TEST_OIDC_REF_BETA",
+        .name = "beta"}}};
   const auto path{test_path("oidc_ref_distinct.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
@@ -1265,12 +1320,14 @@ TEST(reference_across_swapped_oidc_identities_is_rejected) {
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://login.test",
         .client_id = "registry",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_ALPHA"},
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_ALPHA",
+        .name = "alpha"},
        {.paths = beta_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "registry",
         .client_id = "https://login.test",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_BETA"}}};
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SWAP_BETA",
+        .name = "beta"}}};
   const auto path{test_path("oidc_ref_swapped.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
@@ -1291,17 +1348,20 @@ TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://alpha.test",
         .client_id = "dashboard",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_SOURCE"},
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_SOURCE",
+        .name = "source"},
        {.paths = target_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://alpha.test",
         .client_id = "registry",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_ONE"},
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_ONE",
+        .name = "target-one"},
        {.paths = target_paths,
         .type = sourcemeta::one::Authentication::Type::OIDC,
         .issuer = "https://beta.test",
         .client_id = "dashboard",
-        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_TWO"}}};
+        .client_secret_variable = "ONE_TEST_OIDC_REF_MIX_TWO",
+        .name = "target-two"}}};
   const auto path{test_path("oidc_ref_mixed.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 

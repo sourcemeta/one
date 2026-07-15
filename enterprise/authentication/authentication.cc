@@ -401,8 +401,16 @@ struct Authentication::Impl {
   Impl(const std::filesystem::path &path,
        sourcemeta::core::JWKSProvider::Fetcher fetcher,
        const std::span<const std::string_view> session_secrets)
-      : fetcher_{std::move(fetcher)},
-        session_secrets_{session_secrets.begin(), session_secrets.end()} {
+      : fetcher_{std::move(fetcher)} {
+    // A blank secret would let anyone mint valid sessions, so it is
+    // discarded rather than trusted
+    this->session_secrets_.reserve(session_secrets.size());
+    for (const auto secret : session_secrets) {
+      if (!secret.empty()) {
+        this->session_secrets_.emplace_back(secret);
+      }
+    }
+
     this->session_secret_views_.reserve(this->session_secrets_.size());
     for (const auto &secret : this->session_secrets_) {
       this->session_secret_views_.emplace_back(secret);

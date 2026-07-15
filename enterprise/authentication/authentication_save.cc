@@ -205,6 +205,13 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
     } else if (policy.type == Authentication::Type::OIDC) {
+      // A nameless interactive policy could never match a session cookie, so
+      // it fails loudly here rather than silently denying at the gate
+      if (policy.name.empty()) {
+        throw std::runtime_error(
+            "Interactive authentication policies require a name");
+      }
+
       policy_metadata =
           encode_oidc_metadata(policy.issuer, policy.client_id,
                                policy.client_secret_variable, policy.name);
