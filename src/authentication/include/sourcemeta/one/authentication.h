@@ -19,7 +19,6 @@
 #include <memory>      // std::unique_ptr
 #include <optional>    // std::optional
 #include <span>        // std::span
-#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
 
@@ -77,10 +76,11 @@ public:
                    const std::filesystem::path &destination) -> void;
 
   // The session secrets verify the cookies that interactive logins mint. An
-  // instance given none never admits a session
+  // instance given none never admits a session. The secrets are copied, so
+  // the caller's storage only needs to outlive this constructor
   Authentication(const std::filesystem::path &path,
                  sourcemeta::core::JWKSProvider::Fetcher fetcher,
-                 std::span<const std::string> session_secrets = {});
+                 std::span<const std::string_view> session_secrets = {});
 
   ~Authentication();
 

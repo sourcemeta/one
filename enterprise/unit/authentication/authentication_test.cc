@@ -46,7 +46,8 @@ static constexpr std::string_view UNRELATED_KEYS{
 static constexpr std::chrono::sys_seconds SESSION_EXPIRY{
     std::chrono::seconds{2000000000}};
 
-static const std::array<std::string, 1> SESSION_SECRETS{{"session-secret"}};
+static constexpr std::array<std::string_view, 1> SESSION_SECRETS{
+    {"session-secret"}};
 
 static auto stub_fetcher(std::map<std::string, std::string> responses,
                          std::shared_ptr<int> calls)
@@ -1140,7 +1141,7 @@ TEST(session_admitted_under_a_rotated_secret) {
   const auto path{test_path("oidc_session_rotated.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
-  const std::array<std::string, 2> rotated{{"new-secret", "old-secret"}};
+  const std::array<std::string_view, 2> rotated{{"new-secret", "old-secret"}};
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr), rotated};
 

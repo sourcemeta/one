@@ -400,7 +400,7 @@ struct Authentication::Impl {
   // unreadable cases without a separate, throwing existence check
   Impl(const std::filesystem::path &path,
        sourcemeta::core::JWKSProvider::Fetcher fetcher,
-       const std::span<const std::string> session_secrets)
+       const std::span<const std::string_view> session_secrets)
       : fetcher_{std::move(fetcher)},
         session_secrets_{session_secrets.begin(), session_secrets.end()} {
     this->session_secret_views_.reserve(this->session_secrets_.size());
@@ -781,7 +781,7 @@ struct Authentication::Impl {
 Authentication::Authentication(
     const std::filesystem::path &path,
     sourcemeta::core::JWKSProvider::Fetcher fetcher,
-    const std::span<const std::string> session_secrets)
+    const std::span<const std::string_view> session_secrets)
     : impl_{std::make_unique<Impl>(path, std::move(fetcher), session_secrets)} {
 }
 
