@@ -66,13 +66,16 @@ public:
 
     // Logout is local: expire every session and login-transaction cookie the
     // request carries, and there is no server-side state to destroy. The
-    // attributes must mirror the ones the cookies are minted under, so the
-    // browser replaces rather than shadows them
+    // attributes must mirror the ones the cookies are minted under, scoped to
+    // the instance rather than the whole host, so the browser replaces the
+    // cookies rather than shadowing them
     const auto secure{this->server_uri().starts_with("https")};
+    const auto base{this->server_uri_base_path()};
+    const auto scope{base.empty() ? std::string_view{"/"} : base};
     sourcemeta::core::http_parse_cookies(
         request.header("cookie"),
-        [&response, secure](const std::string_view name,
-                            const std::string_view) -> void {
+        [&response, secure, scope](const std::string_view name,
+                                   const std::string_view) -> void {
           if (!name.starts_with(sourcemeta::one::SESSION_COOKIE_PREFIX) &&
               !name.starts_with(sourcemeta::one::TRANSACTION_COOKIE_PREFIX)) {
             return;
@@ -83,7 +86,7 @@ public:
           const auto cookie{sourcemeta::core::http_serialize_cookie(
               {.name = name,
                .value = "",
-               .path = "/",
+               .path = scope,
                .max_age = std::chrono::seconds{0},
                .http_only = true,
                .secure = secure,
@@ -93,8 +96,7 @@ public:
           }
         });
 
-    const auto base{this->server_uri_base_path()};
-    response.write_header("Location", base.empty() ? "/" : base);
+    response.write_header("Location", scope);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
