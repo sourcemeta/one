@@ -105,8 +105,9 @@ auto RouterAction::artifact_locate(const std::string_view input,
 }
 
 auto RouterAction::artifact_resolve_path(
-    std::string_view credential, const std::string_view input, const Tree tree,
-    const std::string_view artifact_name) const -> ArtifactResolution {
+    const Credentials credentials, const std::string_view input,
+    const Tree tree, const std::string_view artifact_name) const
+    -> ArtifactResolution {
   // The gate consults the registry path, not the filesystem, and runs
   // before the existence check so a denial reveals nothing about
   // whether the artifact exists. The relative-path computation here
@@ -129,7 +130,8 @@ auto RouterAction::artifact_resolve_path(
 
   const auto &authentication{this->dispatcher_.authentication()};
   const auto registry_path{relative.generic_string()};
-  const auto verdict{authentication.admits(registry_path, credential)};
+  const auto verdict{authentication.admits(registry_path, credentials.bearer,
+                                           credentials.cookies)};
   // Nothing is served on a denial or a miss, so report the path as not public
   // and let any caller that skips the outcome check fall back to a private
   // caching directive rather than a public one
@@ -146,10 +148,13 @@ auto RouterAction::artifact_resolve_path(
             .is_public = false};
   }
 
-  // An empty credential admitted here means the path is open to anonymous
-  // callers, otherwise its public reach is checked without the credential
-  const auto is_public{credential.empty() ||
-                       authentication.admits(registry_path, {}).allowed};
+  // A caller that presented nothing and was admitted means the path is open
+  // to anonymous callers, otherwise its public reach is checked with nothing
+  // presented, so a response admitted through a session is never marked
+  // public for shared caches
+  const auto is_public{
+      (credentials.bearer.empty() && credentials.cookies.empty()) ||
+      authentication.admits(registry_path, {}).allowed};
   return {.outcome = ArtifactResolution::Outcome::Found,
           .path = ResolvedArtifact{std::move(located).value()},
           .is_public = is_public};

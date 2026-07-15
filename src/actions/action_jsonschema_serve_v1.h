@@ -60,8 +60,8 @@ public:
                                         ? std::string_view{"bundle"}
                                         : std::string_view{"schema"}};
     const auto resolution{self.artifact_resolve_path(
-        credential, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
-        artifact)};
+        {.bearer = credential, .cookies = request.header("cookie")},
+        schema_path, sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response, error_schema,
