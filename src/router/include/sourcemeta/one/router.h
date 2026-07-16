@@ -80,6 +80,14 @@ public:
                    const sourcemeta::core::JSON &arguments,
                    std::string_view credential) -> sourcemeta::core::JSON = 0;
 
+  // Whether this route stays reachable no matter which policies cover its path.
+  // A route that a caller must reach in order to establish authentication
+  // cannot itself sit behind that authentication, so it opts out of the gate
+  // and guards itself instead. The default denies the exemption
+  [[nodiscard]] virtual auto is_authentication_exempt() const noexcept -> bool {
+    return false;
+  }
+
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
   }
