@@ -92,8 +92,9 @@ public:
     // trigger an error on a person's behalf, per RFC 6749 section 4.1.2.1
     const auto sealed{this->transaction_cookie(request, policy_name)};
     const auto &authentication{this->dispatcher().authentication()};
-    const auto opened{sealed.empty() ? std::optional<std::string>{std::nullopt}
-                                     : authentication.open(sealed)};
+    const auto opened{sealed.empty()
+                          ? std::optional<std::string>{std::nullopt}
+                          : authentication.open(policy_name, sealed)};
     const auto transaction{
         opened.has_value()
             ? sourcemeta::core::try_parse_json(opened.value())
@@ -205,7 +206,8 @@ public:
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       SESSION_LIFETIME};
-    const auto session{authentication.seal(payload_text.str(), expiry)};
+    const auto session{
+        authentication.seal(policy_name, payload_text.str(), expiry)};
     if (!session.has_value()) {
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,

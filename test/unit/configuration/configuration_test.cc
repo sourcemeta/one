@@ -892,6 +892,64 @@ TEST(authentication_jwt_with_explicit_key_set_location) {
   EXPECT_EQ(entry.jwks_uri.value(), "https://acme.example.com/keys");
 }
 
+TEST(authentication_oidc) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "oidc",
+        "name": "employees",
+        "paths": [ "/internal" ],
+        "issuer": "https://login.example.com",
+        "clientId": "registry",
+        "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
+        "sessionSecret": { "environmentVariable": "ONE_OIDC_SESSION_SECRET" }
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  const auto &entry{configuration.authentication.at(0)};
+  EXPECT_EQ(entry.type,
+            sourcemeta::one::Configuration::AuthenticationEntry::Type::OIDC);
+  EXPECT_EQ(entry.name, "employees");
+  EXPECT_EQ(entry.paths,
+            (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
+  EXPECT_EQ(entry.issuer, "https://login.example.com");
+  EXPECT_EQ(entry.client_id, "registry");
+  EXPECT_EQ(entry.client_secret_variable, "ONE_OIDC_CLIENT_SECRET");
+  EXPECT_EQ(entry.session_secret_variable, "ONE_OIDC_SESSION_SECRET");
+  EXPECT_TRUE(entry.keys.empty());
+  EXPECT_TRUE(entry.algorithms.empty());
+  EXPECT_TRUE(entry.audience.empty());
+  EXPECT_FALSE(entry.jwks_uri.has_value());
+}
+
+TEST(authentication_rejects_oidc_without_session_secret) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "oidc",
+        "name": "employees",
+        "paths": [ "/internal" ],
+        "issuer": "https://login.example.com",
+        "clientId": "registry",
+        "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" }
+      }
+    ]
+  })JSON")};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
 TEST(authentication_rejects_apikey_without_keys) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

@@ -41,8 +41,7 @@ auto Authentication::save(const Configuration &configuration,
 
 // NOLINTBEGIN(performance-unnecessary-value-param)
 Authentication::Authentication(const std::filesystem::path &,
-                               sourcemeta::core::JWKSProvider::Fetcher,
-                               const std::span<const std::string_view>) {}
+                               sourcemeta::core::JWKSProvider::Fetcher) {}
 // NOLINTEND(performance-unnecessary-value-param)
 
 Authentication::~Authentication() = default;
@@ -65,13 +64,13 @@ auto Authentication::interactive(const std::string_view) const
   return std::nullopt;
 }
 
-auto Authentication::seal(const std::string_view,
+auto Authentication::seal(const std::string_view, const std::string_view,
                           const std::chrono::sys_seconds) const
     -> std::optional<std::string> {
   return std::nullopt;
 }
 
-auto Authentication::open(const std::string_view) const
+auto Authentication::open(const std::string_view, const std::string_view) const
     -> std::optional<std::string> {
   return std::nullopt;
 }

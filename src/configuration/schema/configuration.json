@@ -175,6 +175,68 @@
               }
             },
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "name",
+              "paths",
+              "issuer",
+              "clientId",
+              "clientSecret",
+              "sessionSecret"
+            ],
+            "properties": {
+              "type": {
+                "const": "oidc"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 1
+                }
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1
+              },
+              "clientId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "clientSecret": {
+                "type": "object",
+                "required": [ "environmentVariable" ],
+                "properties": {
+                  "environmentVariable": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sessionSecret": {
+                "type": "object",
+                "required": [ "environmentVariable" ],
+                "properties": {
+                  "environmentVariable": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
           }
         ]
       }

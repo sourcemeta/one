@@ -8,7 +8,7 @@
 namespace sourcemeta::one {
 
 constexpr std::uint32_t AUTHENTICATION_MAGIC{0x48545541};
-constexpr std::uint32_t AUTHENTICATION_VERSION{7};
+constexpr std::uint32_t AUTHENTICATION_VERSION{8};
 
 // The artifact begins with this header. Every variable-length section is
 // located through an absolute byte offset so the matcher can address it

@@ -168,6 +168,14 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         // Canonicalise the allow-list so that policies with the same set of
         // algorithms serialise identically regardless of declaration order
         std::ranges::sort(parsed.algorithms);
+      } else if (entry.at("type").to_string() == "oidc") {
+        parsed.type = Configuration::AuthenticationEntry::Type::OIDC;
+        parsed.issuer = entry.at("issuer").to_string();
+        parsed.client_id = entry.at("clientId").to_string();
+        parsed.client_secret_variable =
+            entry.at("clientSecret").at("environmentVariable").to_string();
+        parsed.session_secret_variable =
+            entry.at("sessionSecret").at("environmentVariable").to_string();
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =

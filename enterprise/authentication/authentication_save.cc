@@ -73,20 +73,22 @@ auto encode_apikey_metadata(
   return result;
 }
 
-// The issuer, client identifier, the name of the environment variable
-// holding the client secret, and the policy name are stored as
-// length-prefixed strings. The policy name comes last so that the leading
-// bytes keep spanning exactly the provider client identity
+// The issuer, client identifier, the names of the environment variables
+// holding the client secret and the session secret, and the policy name are
+// stored as length-prefixed strings. The issuer and client identifier lead so
+// that their bytes keep spanning exactly the provider client identity
 auto encode_oidc_metadata(const std::string_view issuer,
                           const std::string_view client_id,
                           const std::string_view client_secret_variable,
-                          const std::string_view name)
+                          const std::string_view name,
+                          const std::string_view session_secret_variable)
     -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
   append_string(result, client_id);
   append_string(result, client_secret_variable);
   append_string(result, name);
+  append_string(result, session_secret_variable);
   return result;
 }
 
@@ -205,16 +207,22 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
     } else if (policy.type == Authentication::Type::OIDC) {
-      // A nameless interactive policy could never match a session cookie, so
-      // it fails loudly here rather than silently denying at the gate
+      // A nameless interactive policy could never match a session cookie, and
+      // one without a session secret could never mint or verify one, so both
+      // fail loudly here rather than silently denying every login at runtime
       if (policy.name.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a name");
       }
 
-      policy_metadata =
-          encode_oidc_metadata(policy.issuer, policy.client_id,
-                               policy.client_secret_variable, policy.name);
+      if (policy.session_secret_variable.empty()) {
+        throw std::runtime_error(
+            "Interactive authentication policies require a session secret");
+      }
+
+      policy_metadata = encode_oidc_metadata(
+          policy.issuer, policy.client_id, policy.client_secret_variable,
+          policy.name, policy.session_secret_variable);
     } else if (!policy.keys.empty()) {
       policy_metadata = encode_apikey_metadata(policy.keys);
     }
@@ -290,6 +298,15 @@ auto Authentication::save(const Configuration &configuration,
                            ? std::string_view{entry.jwks_uri.value()}
                            : std::string_view{},
            .algorithms = entry.algorithms});
+    } else if (entry.type == Configuration::AuthenticationEntry::Type::OIDC) {
+      policies.push_back(
+          {.paths = policy_paths.back(),
+           .type = Authentication::Type::OIDC,
+           .issuer = entry.issuer,
+           .client_id = entry.client_id,
+           .client_secret_variable = entry.client_secret_variable,
+           .name = entry.name,
+           .session_secret_variable = entry.session_secret_variable});
     } else {
       std::vector<std::string_view> keys;
       keys.reserve(entry.keys.size());
