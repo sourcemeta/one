@@ -109,11 +109,11 @@ public:
     const auto authorization_endpoint{
         this->discover_authorization_endpoint(policy->issuer)};
     if (!authorization_endpoint.has_value()) {
-      sourcemeta::one::json_error(request, response,
-                                  sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                                  "urn:sourcemeta:one:provider-unreachable",
-                                  "The identity provider could not be reached",
-                                  this->error_schema_, "*");
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
+          "urn:sourcemeta:one:auth-provider-unreachable",
+          "The identity provider could not be reached", this->error_schema_,
+          "*");
       return;
     }
 

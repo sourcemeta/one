@@ -100,7 +100,7 @@ public:
             : std::optional<sourcemeta::core::JSON>{std::nullopt}};
     if (!transaction.has_value() || !transaction.value().is_object()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
+                 "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
       return;
     }
@@ -116,7 +116,7 @@ public:
         nonce == nullptr || !nonce->is_string() || verifier == nullptr ||
         !verifier->is_string()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
+                 "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
       return;
     }
@@ -126,7 +126,7 @@ public:
     // code, and a success without a code is malformed
     if (request.has_query("error")) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-                 "urn:sourcemeta:one:login-declined",
+                 "urn:sourcemeta:one:auth-login-declined",
                  "The identity provider declined the login", policy_name);
       return;
     }
@@ -134,7 +134,7 @@ public:
     const auto code{request.query("code")};
     if (code.empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
+                 "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
       return;
     }
@@ -162,7 +162,7 @@ public:
     if (!metadata.has_value() || !metadata.value().token_endpoint.has_value() ||
         !metadata.value().jwks_uri.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:provider-unreachable",
+                 "urn:sourcemeta:one:auth-provider-unreachable",
                  "The identity provider could not be reached", policy_name);
       return;
     }
@@ -178,7 +178,7 @@ public:
                                        client, code, verifier->to_string())};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:exchange-failed",
+                 "urn:sourcemeta:one:auth-exchange-failed",
                  "The authorization code could not be redeemed", policy_name);
       return;
     }
@@ -189,7 +189,7 @@ public:
         nonce->to_string())};
     if (!identity.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:invalid-identity",
+                 "urn:sourcemeta:one:auth-invalid-identity",
                  "The identity token could not be validated", policy_name);
       return;
     }

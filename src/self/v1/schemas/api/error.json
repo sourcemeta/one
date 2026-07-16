@@ -187,7 +187,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:provider-unreachable",
+        "type": "urn:sourcemeta:one:auth-provider-unreachable",
         "title": "Bad Gateway",
         "status": 502,
         "detail": "The identity provider could not be reached"
@@ -195,7 +195,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:exchange-failed",
+        "type": "urn:sourcemeta:one:auth-exchange-failed",
         "title": "Bad Gateway",
         "status": 502,
         "detail": "The authorization code could not be redeemed"
@@ -203,7 +203,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:invalid-identity",
+        "type": "urn:sourcemeta:one:auth-invalid-identity",
         "title": "Bad Gateway",
         "status": 502,
         "detail": "The identity token could not be validated"
@@ -211,7 +211,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:login-declined",
+        "type": "urn:sourcemeta:one:auth-login-declined",
         "title": "Forbidden",
         "status": 403,
         "detail": "The identity provider declined the login"
@@ -219,7 +219,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:invalid-callback",
+        "type": "urn:sourcemeta:one:auth-invalid-callback",
         "title": "Bad Request",
         "status": 400,
         "detail": "The login could not be completed"
