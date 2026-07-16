@@ -118,9 +118,9 @@ auto Router::dispatch(
   // Identifier zero is the catch-all, whose content the content gate
   // authorises after canonicalising the URL. Explicit routes are reached by
   // exact literal match, so the surface gate authorises them on their literal
-  // path. A credential-less CORS preflight is never gated, and neither is a
-  // route that must stay reachable to establish authentication in the first
-  // place, which vouches for itself instead
+  // path. A CORS preflight is never gated, and neither is a route that must
+  // stay reachable to establish authentication in the first place, which
+  // vouches for itself instead
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
       !this->authentication_

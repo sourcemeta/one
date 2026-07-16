@@ -109,6 +109,8 @@ WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 health_body: body
+[Asserts]
+header "Set-Cookie" not exists
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
