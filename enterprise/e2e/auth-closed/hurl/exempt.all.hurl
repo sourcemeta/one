@@ -7,19 +7,9 @@
 # whose session already passes the gate, is not exempt and rides the gate like
 # any other route, as does every non-authentication surface.
 
-# The login endpoint is reachable through the root gate and initiates the flow,
-# redirecting to the provider with a transaction cookie, rather than denying 401
-GET {{base}}/self/v1/auth/login/keycloak
-HTTP 303
-Cache-Control: no-store
-[Asserts]
-header "Location" startsWith "http://keycloak:8080/realms/main/protocol/openid-connect/auth?"
-header "Location" contains "client_id=registry"
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
-header "WWW-Authenticate" not exists
-
-# The callback is reachable too, and with no transaction cookie to vouch for the
-# response it fails its own validation instead of the root's authentication gate
+# The callback is reachable, and running first, before any login has set a
+# transaction cookie, it has nothing to vouch for the response, so it fails its
+# own validation instead of the root's authentication gate
 GET {{base}}/self/v1/auth/callback/keycloak?code=the-code&state=the-state
 HTTP 400
 Cache-Control: no-store
@@ -48,6 +38,17 @@ Authorization: Bearer full-secret-key
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# The login endpoint is reachable through the root gate and initiates the flow,
+# redirecting to the provider with a transaction cookie, rather than denying 401
+GET {{base}}/self/v1/auth/login/keycloak
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" startsWith "http://keycloak:8080/realms/main/protocol/openid-connect/auth?"
+header "Location" contains "client_id=registry"
+header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "WWW-Authenticate" not exists
 
 # Logout is not exempt: a session that could log out would itself pass the gate,
 # so anonymous here the route denies like any other, leaking no session cookie
