@@ -83,8 +83,47 @@ public:
       return;
     }
     const auto policy_name{matches.front()};
+    const auto state{request.query("state")};
 
-    // The provider declines a login by returning an error instead of a code
+    // The transaction cookie is the only proof that this response belongs to
+    // a login this instance started, and the state it carries must match the
+    // one the provider echoes back. This gate runs before either the success
+    // or the decline is honoured, so a cross-site callback cannot even
+    // trigger an error on a person's behalf, per RFC 6749 section 4.1.2.1
+    const auto sealed{this->transaction_cookie(request, policy_name)};
+    const auto &authentication{this->dispatcher().authentication()};
+    const auto opened{sealed.empty() ? std::optional<std::string>{std::nullopt}
+                                     : authentication.open(sealed)};
+    const auto transaction{
+        opened.has_value()
+            ? sourcemeta::core::try_parse_json(opened.value())
+            : std::optional<sourcemeta::core::JSON>{std::nullopt}};
+    if (!transaction.has_value() || !transaction.value().is_object()) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                 "urn:sourcemeta:one:invalid-callback",
+                 "The login could not be completed", policy_name);
+      return;
+    }
+
+    const auto *sealed_policy{transaction.value().try_at("policy")};
+    const auto *sealed_state{transaction.value().try_at("state")};
+    const auto *nonce{transaction.value().try_at("nonce")};
+    const auto *verifier{transaction.value().try_at("verifier")};
+    if (state.empty() || sealed_policy == nullptr ||
+        !sealed_policy->is_string() ||
+        sealed_policy->to_string() != policy_name || sealed_state == nullptr ||
+        !sealed_state->is_string() || sealed_state->to_string() != state ||
+        nonce == nullptr || !nonce->is_string() || verifier == nullptr ||
+        !verifier->is_string()) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                 "urn:sourcemeta:one:invalid-callback",
+                 "The login could not be completed", policy_name);
+      return;
+    }
+
+    // Only once the callback is proven to belong to a real login is the
+    // provider's outcome honoured: a decline returns an error instead of a
+    // code, and a success without a code is malformed
     if (request.has_query("error")) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
                  "urn:sourcemeta:one:login-declined",
@@ -93,53 +132,10 @@ public:
     }
 
     const auto code{request.query("code")};
-    const auto state{request.query("state")};
-    if (code.empty() || state.empty()) {
+    if (code.empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:invalid-callback",
-                 "The callback is missing the authorization code or state",
-                 policy_name);
-      return;
-    }
-
-    // The transaction cookie is the only proof that this response belongs to
-    // a login this instance started, so a missing or unopenable one is
-    // rejected before anything is exchanged
-    const auto sealed{this->transaction_cookie(request, policy_name)};
-    const auto &authentication{this->dispatcher().authentication()};
-    const auto opened{sealed.empty() ? std::optional<std::string>{std::nullopt}
-                                     : authentication.open(sealed)};
-    if (!opened.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
-                 "The login transaction is missing or has expired",
-                 policy_name);
-      return;
-    }
-
-    const auto transaction{sourcemeta::core::try_parse_json(opened.value())};
-    if (!transaction.has_value() || !transaction.value().is_object()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
-                 "The login transaction is malformed", policy_name);
-      return;
-    }
-
-    // The transaction is bound to this policy and carries the state that must
-    // match the one the provider echoes back, defeating a cross-site forgery
-    const auto *sealed_policy{transaction.value().try_at("policy")};
-    const auto *sealed_state{transaction.value().try_at("state")};
-    const auto *nonce{transaction.value().try_at("nonce")};
-    const auto *verifier{transaction.value().try_at("verifier")};
-    if (sealed_policy == nullptr || !sealed_policy->is_string() ||
-        sealed_policy->to_string() != policy_name || sealed_state == nullptr ||
-        !sealed_state->is_string() || sealed_state->to_string() != state ||
-        nonce == nullptr || !nonce->is_string() || verifier == nullptr ||
-        !verifier->is_string()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:invalid-callback",
-                 "The login transaction does not match the callback",
-                 policy_name);
+                 "The login could not be completed", policy_name);
       return;
     }
 
@@ -158,7 +154,7 @@ public:
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
-                 "The policy client secret is not configured", policy_name);
+                 "The authentication configuration is incomplete", policy_name);
       return;
     }
 
@@ -214,7 +210,7 @@ public:
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
-                 "The instance has no session secret configured", policy_name);
+                 "The authentication configuration is incomplete", policy_name);
       return;
     }
 
@@ -234,7 +230,7 @@ public:
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
-                 "The session could not be established", policy_name);
+                 "The authentication configuration is incomplete", policy_name);
       return;
     }
 

@@ -23,7 +23,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "type": "urn:sourcemeta:one:invalid-callback",
   "title": "Bad Request",
   "status": 400,
-  "detail": "The login transaction is missing or has expired"
+  "detail": "The login could not be completed"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -64,7 +64,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "type": "urn:sourcemeta:one:invalid-callback",
   "title": "Bad Request",
   "status": 400,
-  "detail": "The login transaction is missing or has expired"
+  "detail": "The login could not be completed"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -82,7 +82,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# A callback with no authorization code or state is malformed
+# A callback carrying neither a code nor a state cannot satisfy the
+# transaction gate either
 GET {{base}}/self/v1/auth/callback/okta
 HTTP 400
 Cache-Control: no-store
@@ -104,7 +105,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "type": "urn:sourcemeta:one:invalid-callback",
   "title": "Bad Request",
   "status": 400,
-  "detail": "The callback is missing the authorization code or state"
+  "detail": "The login could not be completed"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -122,9 +123,11 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# A provider that declines the login returns an error instead of a code
-GET {{base}}/self/v1/auth/callback/okta?error=access_denied
-HTTP 403
+# A declined login is honoured only once it proves it came from a real
+# transaction, so a cross-site error callback with no transaction is rejected
+# the same way as any other unproven callback, per RFC 6749 section 4.1.2.1
+GET {{base}}/self/v1/auth/callback/okta?error=access_denied&state=the-state
+HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -141,10 +144,10 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 {
-  "type": "urn:sourcemeta:one:login-declined",
-  "title": "Forbidden",
-  "status": 403,
-  "detail": "The identity provider declined the login"
+  "type": "urn:sourcemeta:one:invalid-callback",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "The login could not be completed"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

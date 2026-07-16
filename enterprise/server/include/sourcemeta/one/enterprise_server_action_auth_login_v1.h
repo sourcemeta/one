@@ -101,7 +101,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The policy client secret is not configured", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
@@ -140,7 +140,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The instance has no session secret configured", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
@@ -184,7 +184,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The login transaction could not be established", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
