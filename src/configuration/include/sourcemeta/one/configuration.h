@@ -60,7 +60,7 @@ struct Configuration {
 
   struct AuthenticationEntry {
     // What a policy authenticates against
-    enum class Type : std::uint8_t { ApiKey, JWT };
+    enum class Type : std::uint8_t { ApiKey, JWT, OIDC };
 
     // How a presented credential is compared against the keys
     enum class Algorithm : std::uint8_t { Identity, Sha256 };
@@ -76,6 +76,11 @@ struct Configuration {
     sourcemeta::core::JSON::String audience;
     std::optional<sourcemeta::core::JSON::String> jwks_uri;
     std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
+    sourcemeta::core::JSON::String client_id;
+    // The environment variable name holding the client secret
+    sourcemeta::core::JSON::String client_secret_variable;
+    // The environment variable name holding the session signing secret
+    sourcemeta::core::JSON::String session_secret_variable;
   };
 
   std::vector<AuthenticationEntry> authentication;

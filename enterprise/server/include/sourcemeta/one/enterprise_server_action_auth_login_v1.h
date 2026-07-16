@@ -134,7 +134,8 @@ public:
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       TRANSACTION_LIFETIME};
-    const auto sealed{authentication.seal(payload_text.str(), expiry)};
+    const auto sealed{
+        authentication.seal(policy_name, payload_text.str(), expiry)};
     if (!sealed.has_value()) {
       sourcemeta::one::json_error(
           request, response,

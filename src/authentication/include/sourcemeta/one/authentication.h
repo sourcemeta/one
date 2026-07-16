@@ -62,6 +62,9 @@ public:
     // The policy name, which interactive policies carry so their session
     // cookies can be recognised at the gate
     std::string_view name{};
+    // The environment variable name holding the secret that signs this
+    // policy's session and transaction cookies
+    std::string_view session_secret_variable{};
   };
 
   // The identity of an admitted caller: the type of credential it presented
@@ -86,12 +89,8 @@ public:
                    const sourcemeta::core::URITemplateRouterView &routes,
                    const std::filesystem::path &destination) -> void;
 
-  // The session secrets verify the cookies that interactive logins mint. An
-  // instance given none never admits a session. The secrets are copied, so
-  // the caller's storage only needs to outlive this constructor
   Authentication(const std::filesystem::path &path,
-                 sourcemeta::core::JWKSProvider::Fetcher fetcher,
-                 std::span<const std::string_view> session_secrets = {});
+                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
 
   ~Authentication();
 
@@ -130,17 +129,18 @@ public:
   [[nodiscard]] auto interactive(std::string_view name) const
       -> std::optional<InteractivePolicy>;
 
-  // Seal a payload under the newest session secret, producing a value that
-  // the gate and this instance's replicas accept until the expiry. Nothing
-  // is produced when no session secret is configured
-  [[nodiscard]] auto seal(std::string_view payload,
+  // Seal a payload under the named interactive policy's session secret,
+  // producing a value that the gate and this instance's replicas accept until
+  // the expiry. Nothing is produced when the policy is unknown or its session
+  // secret is not configured in the environment
+  [[nodiscard]] auto seal(std::string_view policy, std::string_view payload,
                           std::chrono::sys_seconds expiry) const
       -> std::optional<std::string>;
 
-  // Recover the payload of a value sealed by this instance or one of its
-  // replicas, returning nothing for a value that does not verify or has
-  // expired
-  [[nodiscard]] auto open(std::string_view value) const
+  // Recover the payload of a value sealed under the named policy by this
+  // instance or one of its replicas, returning nothing for a value that does
+  // not verify or has expired
+  [[nodiscard]] auto open(std::string_view policy, std::string_view value) const
       -> std::optional<std::string>;
 
   [[nodiscard]] auto reference_permitted(std::string_view referrer_path,

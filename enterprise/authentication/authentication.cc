@@ -9,6 +9,7 @@
 #include "authentication_format.h"
 
 #include <algorithm>     // std::ranges::all_of
+#include <array>         // std::array
 #include <bit>           // std::countr_zero
 #include <chrono>        // std::chrono::system_clock, std::chrono::seconds
 #include <cstddef>       // std::byte, std::size_t
@@ -365,6 +366,7 @@ struct OIDCPolicyMetadata {
   std::string_view client_id;
   std::string_view client_secret_variable;
   std::string_view name;
+  std::string_view session_secret_variable;
 };
 
 auto decode_oidc_metadata(const std::span<const std::byte> metadata,
@@ -373,7 +375,8 @@ auto decode_oidc_metadata(const std::span<const std::byte> metadata,
   return read_string(metadata, cursor, result.issuer) &&
          read_string(metadata, cursor, result.client_id) &&
          read_string(metadata, cursor, result.client_secret_variable) &&
-         read_string(metadata, cursor, result.name);
+         read_string(metadata, cursor, result.name) &&
+         read_string(metadata, cursor, result.session_secret_variable);
 }
 
 // The reference check treats two interactive policies as the same scope only
@@ -415,23 +418,8 @@ struct Authentication::Impl {
   // empty set and admits no one. Opening the file covers the missing and
   // unreadable cases without a separate, throwing existence check
   Impl(const std::filesystem::path &path,
-       sourcemeta::core::JWKSProvider::Fetcher fetcher,
-       const std::span<const std::string_view> session_secrets)
+       sourcemeta::core::JWKSProvider::Fetcher fetcher)
       : fetcher_{std::move(fetcher)} {
-    // A blank secret would let anyone mint valid sessions, so it is
-    // discarded rather than trusted
-    this->session_secrets_.reserve(session_secrets.size());
-    for (const auto secret : session_secrets) {
-      if (!secret.empty()) {
-        this->session_secrets_.emplace_back(secret);
-      }
-    }
-
-    this->session_secret_views_.reserve(this->session_secrets_.size());
-    for (const auto &secret : this->session_secrets_) {
-      this->session_secret_views_.emplace_back(secret);
-    }
-
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
       view = std::make_unique<sourcemeta::core::FileView>(path);
@@ -600,7 +588,7 @@ struct Authentication::Impl {
   [[nodiscard]] auto admits_session(const std::span<const std::byte> metadata,
                                     const std::string_view cookies) const
       -> bool {
-    if (this->session_secret_views_.empty() || cookies.empty()) {
+    if (cookies.empty()) {
       return false;
     }
 
@@ -628,7 +616,8 @@ struct Authentication::Impl {
       return false;
     }
 
-    const auto payload{this->open(sealed)};
+    const auto payload{
+        this->session_open(decoded.session_secret_variable, sealed)};
     if (!payload.has_value()) {
       return false;
     }
@@ -646,10 +635,13 @@ struct Authentication::Impl {
            minted_for->to_string() == policy_name;
   }
 
-  [[nodiscard]] auto interactive(const std::string_view name) const
-      -> std::optional<Authentication::InteractivePolicy> {
+  // The decoded metadata of the OIDC policy declared under the given name,
+  // scanned out of the artifact
+  [[nodiscard]] auto find_interactive(const std::string_view name,
+                                      OIDCPolicyMetadata &result) const
+      -> bool {
     if (this->policy_count_ == 0 || name.empty()) {
-      return std::nullopt;
+      return false;
     }
 
     const auto *policies{
@@ -665,35 +657,91 @@ struct Authentication::Impl {
       const std::span<const std::byte> metadata{
           this->view_->as<std::byte>(entry.metadata_offset),
           entry.metadata_length};
-      OIDCPolicyMetadata decoded;
-      if (decode_oidc_metadata(metadata, decoded) && decoded.name == name) {
-        return Authentication::InteractivePolicy{
-            .issuer = decoded.issuer,
-            .client_id = decoded.client_id,
-            .client_secret_variable = decoded.client_secret_variable};
+      if (decode_oidc_metadata(metadata, result) && result.name == name) {
+        return true;
       }
     }
 
-    return std::nullopt;
+    return false;
   }
 
-  [[nodiscard]] auto seal(const std::string_view payload,
-                          const std::chrono::sys_seconds expiry) const
-      -> std::optional<std::string> {
-    if (this->session_secret_views_.empty()) {
+  [[nodiscard]] auto interactive(const std::string_view name) const
+      -> std::optional<Authentication::InteractivePolicy> {
+    OIDCPolicyMetadata decoded;
+    if (!this->find_interactive(name, decoded)) {
       return std::nullopt;
     }
 
-    return sourcemeta::one::session_seal(
-        payload, this->session_secret_views_.front(), expiry);
+    return Authentication::InteractivePolicy{
+        .issuer = decoded.issuer,
+        .client_id = decoded.client_id,
+        .client_secret_variable = decoded.client_secret_variable};
   }
 
-  [[nodiscard]] auto open(const std::string_view value) const
+  // A blank secret would let anyone mint valid sessions, so it never signs
+  [[nodiscard]] static auto session_secret(const std::string_view variable)
       -> std::optional<std::string> {
+    if (variable.empty()) {
+      return std::nullopt;
+    }
+
+    auto resolved{resolve_environment(variable)};
+    if (!resolved.has_value() || resolved.value().empty()) {
+      return std::nullopt;
+    }
+
+    return resolved;
+  }
+
+  [[nodiscard]] auto
+  session_seal(const std::string_view session_secret_variable,
+               const std::string_view payload,
+               const std::chrono::sys_seconds expiry) const
+      -> std::optional<std::string> {
+    const auto secret{session_secret(session_secret_variable)};
+    if (!secret.has_value()) {
+      return std::nullopt;
+    }
+
+    return sourcemeta::one::session_seal(payload, secret.value(), expiry);
+  }
+
+  [[nodiscard]] auto
+  session_open(const std::string_view session_secret_variable,
+               const std::string_view value) const
+      -> std::optional<std::string> {
+    const auto secret{session_secret(session_secret_variable)};
+    if (!secret.has_value()) {
+      return std::nullopt;
+    }
+
+    const std::array<std::string_view, 1> secrets{{secret.value()}};
     const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
-    return sourcemeta::one::session_open(value, this->session_secret_views_,
-                                         now);
+    return sourcemeta::one::session_open(value, secrets, now);
+  }
+
+  [[nodiscard]] auto seal(const std::string_view policy,
+                          const std::string_view payload,
+                          const std::chrono::sys_seconds expiry) const
+      -> std::optional<std::string> {
+    OIDCPolicyMetadata decoded;
+    if (!this->find_interactive(policy, decoded)) {
+      return std::nullopt;
+    }
+
+    return this->session_seal(decoded.session_secret_variable, payload, expiry);
+  }
+
+  [[nodiscard]] auto open(const std::string_view policy,
+                          const std::string_view value) const
+      -> std::optional<std::string> {
+    OIDCPolicyMetadata decoded;
+    if (!this->find_interactive(policy, decoded)) {
+      return std::nullopt;
+    }
+
+    return this->session_open(decoded.session_secret_variable, value);
   }
 
   [[nodiscard]] auto provider_for(const std::string_view issuer,
@@ -838,20 +886,15 @@ struct Authentication::Impl {
   std::unique_ptr<sourcemeta::core::FileView> view_;
 
   sourcemeta::core::JWKSProvider::Fetcher fetcher_;
-  std::vector<std::string> session_secrets_;
-  std::vector<std::string_view> session_secret_views_;
   mutable std::mutex jwks_mutex_;
   mutable std::map<std::pair<std::string, std::string>,
                    std::unique_ptr<sourcemeta::core::JWKSProvider>>
       jwks_providers_;
 };
 
-Authentication::Authentication(
-    const std::filesystem::path &path,
-    sourcemeta::core::JWKSProvider::Fetcher fetcher,
-    const std::span<const std::string_view> session_secrets)
-    : impl_{std::make_unique<Impl>(path, std::move(fetcher), session_secrets)} {
-}
+Authentication::Authentication(const std::filesystem::path &path,
+                               sourcemeta::core::JWKSProvider::Fetcher fetcher)
+    : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
 
 Authentication::~Authentication() = default;
 
@@ -869,15 +912,17 @@ auto Authentication::interactive(const std::string_view name) const
   return this->impl_->interactive(name);
 }
 
-auto Authentication::seal(const std::string_view payload,
+auto Authentication::seal(const std::string_view policy,
+                          const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
     -> std::optional<std::string> {
-  return this->impl_->seal(payload, expiry);
+  return this->impl_->seal(policy, payload, expiry);
 }
 
-auto Authentication::open(const std::string_view value) const
+auto Authentication::open(const std::string_view policy,
+                          const std::string_view value) const
     -> std::optional<std::string> {
-  return this->impl_->open(value);
+  return this->impl_->open(policy, value);
 }
 
 auto Authentication::governing(const std::string_view registry_path,
