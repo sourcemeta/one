@@ -9,7 +9,6 @@
 #include "authentication_format.h"
 
 #include <algorithm>     // std::ranges::all_of
-#include <array>         // std::array
 #include <bit>           // std::countr_zero
 #include <chrono>        // std::chrono::system_clock, std::chrono::seconds
 #include <cstddef>       // std::byte, std::size_t
@@ -678,44 +677,72 @@ struct Authentication::Impl {
         .client_secret_variable = decoded.client_secret_variable};
   }
 
-  // A blank secret would let anyone mint valid sessions, so it never signs
-  [[nodiscard]] static auto session_secret(const std::string_view variable)
-      -> std::optional<std::string> {
-    if (variable.empty()) {
-      return std::nullopt;
+  // Split a secret variable's value into one secret per non-blank line. The
+  // resulting views borrow from the given value, so it must outlive them, and
+  // blank lines are skipped so a stray one cannot become a forgeable empty key
+  static auto session_secrets(const std::string_view value,
+                              std::vector<std::string_view> &out) -> void {
+    std::string_view rest{value};
+    while (!rest.empty()) {
+      const auto newline{rest.find('\n')};
+      const auto line{
+          newline == std::string_view::npos ? rest : rest.substr(0, newline)};
+      if (!line.empty()) {
+        out.push_back(line);
+      }
+      if (newline == std::string_view::npos) {
+        break;
+      }
+      rest.remove_prefix(newline + 1);
     }
-
-    auto resolved{resolve_environment(variable)};
-    if (!resolved.has_value() || resolved.value().empty()) {
-      return std::nullopt;
-    }
-
-    return resolved;
   }
 
+  // The variable holds one secret per line, newest first, so a secret can be
+  // rotated by prepending the new one and dropping the old once every value
+  // signed under it has expired
   [[nodiscard]] auto
   session_seal(const std::string_view session_secret_variable,
                const std::string_view payload,
                const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
-    const auto secret{session_secret(session_secret_variable)};
-    if (!secret.has_value()) {
+    if (session_secret_variable.empty()) {
       return std::nullopt;
     }
 
-    return sourcemeta::one::session_seal(payload, secret.value(), expiry);
+    // The resolved value backs the secret views, so keep it alive alongside
+    const auto resolved{resolve_environment(session_secret_variable)};
+    if (!resolved.has_value()) {
+      return std::nullopt;
+    }
+
+    std::vector<std::string_view> secrets;
+    session_secrets(resolved.value(), secrets);
+    if (secrets.empty()) {
+      return std::nullopt;
+    }
+
+    return sourcemeta::one::session_seal(payload, secrets.front(), expiry);
   }
 
   [[nodiscard]] auto
   session_open(const std::string_view session_secret_variable,
                const std::string_view value) const
       -> std::optional<std::string> {
-    const auto secret{session_secret(session_secret_variable)};
-    if (!secret.has_value()) {
+    if (session_secret_variable.empty()) {
       return std::nullopt;
     }
 
-    const std::array<std::string_view, 1> secrets{{secret.value()}};
+    const auto resolved{resolve_environment(session_secret_variable)};
+    if (!resolved.has_value()) {
+      return std::nullopt;
+    }
+
+    std::vector<std::string_view> secrets;
+    session_secrets(resolved.value(), secrets);
+    if (secrets.empty()) {
+      return std::nullopt;
+    }
+
     const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
     return sourcemeta::one::session_open(value, secrets, now);

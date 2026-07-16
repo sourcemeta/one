@@ -207,11 +207,17 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms);
     } else if (policy.type == Authentication::Type::OIDC) {
-      // A nameless interactive policy could never match a session cookie, so
-      // it fails loudly here rather than silently denying at the gate
+      // A nameless interactive policy could never match a session cookie, and
+      // one without a session secret could never mint or verify one, so both
+      // fail loudly here rather than silently denying every login at runtime
       if (policy.name.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a name");
+      }
+
+      if (policy.session_secret_variable.empty()) {
+        throw std::runtime_error(
+            "Interactive authentication policies require a session secret");
       }
 
       policy_metadata = encode_oidc_metadata(
