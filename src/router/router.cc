@@ -127,12 +127,42 @@ auto Router::dispatch(
            .admits(request.path(), credential, request.header("cookie"),
                    instance->server_uri_base_path())
            .allowed) {
+    if (instance->redirect_to_login(request, response)) {
+      return;
+    }
+
     sourcemeta::one::json_error_unauthorized(request, response,
                                              this->default_error_schema_, "*");
     return;
   }
 
   instance->rest(matches, credential, request, response);
+}
+
+auto RouterAction::redirect_to_login(
+    sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response) const -> bool {
+  if ((request.method() != "get" && request.method() != "head") ||
+      !sourcemeta::one::prefers_html(request.header("accept"))) {
+    return false;
+  }
+
+  const auto challenges{
+      this->dispatcher().authentication().interactive_challenges(
+          request.path(), this->server_uri_base_path())};
+  if (challenges.size() != 1) {
+    return false;
+  }
+
+  std::string location{this->server_uri_base_path()};
+  location += "/self/v1/auth/login/";
+  location += challenges.front();
+  response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+  response.write_header("Location", location);
+  response.write_header("Cache-Control", "no-store");
+  sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
+                                 request, response);
+  return true;
 }
 
 } // namespace sourcemeta::one

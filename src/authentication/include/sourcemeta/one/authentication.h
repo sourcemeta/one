@@ -115,6 +115,15 @@ public:
                                std::string_view base_path = {}) const
       -> std::vector<std::size_t>;
 
+  // The names of the interactive policies that govern a path, in declaration
+  // order. An unauthenticated browser that a policy would otherwise deny can be
+  // sent to begin a login when exactly one such policy covers the path. The
+  // views point into the artifact and outlive the call
+  [[nodiscard]] auto
+  interactive_challenges(std::string_view registry_path,
+                         std::string_view base_path = {}) const
+      -> std::vector<std::string_view>;
+
   // What an interactive policy declares about its provider client. The views
   // point into the artifact and remain valid for the lifetime of this
   // instance

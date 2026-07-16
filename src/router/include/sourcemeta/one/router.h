@@ -88,6 +88,13 @@ public:
     return false;
   }
 
+  // Send an unauthenticated browser navigating to a path that exactly one
+  // interactive policy governs to begin a login, returning true when it wrote
+  // the redirect so the caller stops. Machines, non-navigations, and paths
+  // with no or several interactive policies fall through to the plain denial
+  [[nodiscard]] auto redirect_to_login(HTTPRequest &request,
+                                       HTTPResponse &response) const -> bool;
+
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
   }

@@ -129,24 +129,23 @@ Access-Control-Allow-Origin: *
   "detail": "This resource requires authentication"
 }
 
-# The human directory pages render the 401 page rather than any listing
+# A browser navigating to a gated page is sent to begin a login rather than
+# shown a denial, since a single interactive policy governs the whole registry
 GET {{base}}/
 Accept: text/html
-HTTP 401
-Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
+HTTP 303
+Location: /self/v1/auth/login/keycloak
+Cache-Control: no-store
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+header "Set-Cookie" not exists
 
 GET {{base}}/catalog/
 Accept: text/html
-HTTP 401
-Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
+HTTP 303
+Location: /self/v1/auth/login/keycloak
+Cache-Control: no-store
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+header "Set-Cookie" not exists
 
 # The same directories requested as JSON deny identically, the root included
 GET {{base}}/

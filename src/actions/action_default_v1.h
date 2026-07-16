@@ -102,9 +102,7 @@ public:
         return;
       }
       const auto serve_html{
-          sourcemeta::core::http_match_accept(
-              request.header("accept"), {"application/json", "text/html"}) ==
-          "text/html"};
+          sourcemeta::one::prefers_html(request.header("accept"))};
       const auto root_html{this->artifact_resolve_path(
           {.bearer = credential, .cookies = request.header("cookie")}, "",
           Tree::Explorer, "directory-html")};
@@ -145,9 +143,7 @@ public:
     }
 
     if (request.method() == "get" || request.method() == "head") {
-      if (sourcemeta::core::http_match_accept(
-              request.header("accept"), {"application/json", "text/html"}) ==
-          "text/html") {
+      if (sourcemeta::one::prefers_html(request.header("accept"))) {
         const auto schema_html{this->artifact_resolve_path(
             {.bearer = credential, .cookies = request.header("cookie")}, path,
             Tree::Explorer, "schema-html")};
@@ -254,6 +250,12 @@ private:
           &browser_security,
       sourcemeta::one::HTTPRequest &request,
       sourcemeta::one::HTTPResponse &response) -> void {
+    // A browser denied a page is sent to begin a login when a single
+    // interactive policy governs the path, rather than shown the denial page
+    if (this->redirect_to_login(request, response)) {
+      return;
+    }
+
     const auto unauthorized{
         this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "401")};
     if (unauthorized.has_value()) {

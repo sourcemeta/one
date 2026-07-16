@@ -521,8 +521,9 @@ An `oidc` policy grants access to a user who signs in through an OpenID Connect
 provider in the browser. Where an `apiKey` or `jwt` policy admits a machine that
 presents a credential on every request, an `oidc` policy authenticates a user
 once at their provider and then relies on a session the instance establishes and
-signs itself. Until that session exists, a browser that reaches a governed path
-is denied like any other unauthenticated request.
+signs itself. Until that session exists, a browser that navigates to a governed
+page is sent to begin a login, while a request for the raw schema, or from a
+machine, is denied like any other unauthenticated request.
 
 The instance registers with the provider as a client, identified by its
 `clientId` and the client secret shared with it. It trusts the `issuer` both as

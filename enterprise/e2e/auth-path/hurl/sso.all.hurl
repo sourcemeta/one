@@ -57,6 +57,16 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
+# A browser navigating to the console page under the base path is sent to begin
+# a login, its redirect target rooted at the base path like every other link
+GET {{base}}/registry/console/
+Accept: text/html
+HTTP 303
+Location: /registry/self/v1/auth/login/keycloak
+Cache-Control: no-store
+[Asserts]
+header "Set-Cookie" not exists
+
 # Starting a login redirects to the real provider, carrying a transaction cookie
 # scoped to the base path
 GET {{base}}/registry/self/v1/auth/login/keycloak
