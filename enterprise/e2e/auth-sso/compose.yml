@@ -1,0 +1,32 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6
+    command: start-dev --import-realm
+    environment:
+      - KC_HEALTH_ENABLED=true
+      - KC_HOSTNAME=http://keycloak:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\r\nHost: 127.0.0.1:9000\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3" ]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
+    environment:
+      - SOURCEMETA_ONE_PORT=8001
+    env_file:
+      - environment
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "${PORT}:8001"

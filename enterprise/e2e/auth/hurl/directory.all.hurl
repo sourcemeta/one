@@ -16,58 +16,64 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 71
+jsonpath "$.schemas" == 72
 jsonpath "$.policies" count == 0
-jsonpath "$.entries" count == 10
-jsonpath "$.entries[0].name" == "internal"
+jsonpath "$.entries" count == 11
+jsonpath "$.entries[0].name" == "console"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].path" == "/internal/"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0]" == "internal"
-jsonpath "$.entries[1].name" == "machine"
+jsonpath "$.entries[0].path" == "/console/"
+jsonpath "$.entries[0].policies" count == 2
+jsonpath "$.entries[0].policies[0]" == "console"
+jsonpath "$.entries[0].policies[1]" == "keycloak"
+jsonpath "$.entries[1].name" == "internal"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].path" == "/machine/"
+jsonpath "$.entries[1].path" == "/internal/"
 jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0]" == "machine"
-jsonpath "$.entries[2].name" == "mixed"
+jsonpath "$.entries[1].policies[0]" == "internal"
+jsonpath "$.entries[2].name" == "machine"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].path" == "/mixed/"
-jsonpath "$.entries[2].policies" count == 2
-jsonpath "$.entries[2].policies[0]" == "mixed-hashed"
-jsonpath "$.entries[2].policies[1]" == "mixed-plain"
-jsonpath "$.entries[3].name" == "orphan"
+jsonpath "$.entries[2].path" == "/machine/"
+jsonpath "$.entries[2].policies" count == 1
+jsonpath "$.entries[2].policies[0]" == "machine"
+jsonpath "$.entries[3].name" == "mixed"
 jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].path" == "/orphan/"
-jsonpath "$.entries[3].policies" count == 0
-jsonpath "$.entries[4].name" == "private"
+jsonpath "$.entries[3].path" == "/mixed/"
+jsonpath "$.entries[3].policies" count == 2
+jsonpath "$.entries[3].policies[0]" == "mixed-hashed"
+jsonpath "$.entries[3].policies[1]" == "mixed-plain"
+jsonpath "$.entries[4].name" == "orphan"
 jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].path" == "/private/"
-jsonpath "$.entries[4].policies" count == 1
-jsonpath "$.entries[4].policies[0]" == "reports"
-jsonpath "$.entries[5].name" == "public"
+jsonpath "$.entries[4].path" == "/orphan/"
+jsonpath "$.entries[4].policies" count == 0
+jsonpath "$.entries[5].name" == "private"
 jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.entries[5].path" == "/public/"
-jsonpath "$.entries[5].policies" count == 0
-jsonpath "$.entries[6].name" == "reports"
+jsonpath "$.entries[5].path" == "/private/"
+jsonpath "$.entries[5].policies" count == 1
+jsonpath "$.entries[5].policies[0]" == "reports"
+jsonpath "$.entries[6].name" == "public"
 jsonpath "$.entries[6].type" == "directory"
-jsonpath "$.entries[6].path" == "/reports/"
-jsonpath "$.entries[6].policies" count == 1
-jsonpath "$.entries[6].policies[0]" == "reports"
-jsonpath "$.entries[7].name" == "self"
+jsonpath "$.entries[6].path" == "/public/"
+jsonpath "$.entries[6].policies" count == 0
+jsonpath "$.entries[7].name" == "reports"
 jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].path" == "/self/"
-jsonpath "$.entries[7].title" == "Self"
-jsonpath "$.entries[7].policies" count == 0
-jsonpath "$.entries[8].name" == "strict"
+jsonpath "$.entries[7].path" == "/reports/"
+jsonpath "$.entries[7].policies" count == 1
+jsonpath "$.entries[7].policies[0]" == "reports"
+jsonpath "$.entries[8].name" == "self"
 jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].path" == "/strict/"
-jsonpath "$.entries[8].policies" count == 1
-jsonpath "$.entries[8].policies[0]" == "strict"
-jsonpath "$.entries[9].name" == "telemetry"
+jsonpath "$.entries[8].path" == "/self/"
+jsonpath "$.entries[8].title" == "Self"
+jsonpath "$.entries[8].policies" count == 0
+jsonpath "$.entries[9].name" == "strict"
 jsonpath "$.entries[9].type" == "directory"
-jsonpath "$.entries[9].path" == "/telemetry/"
+jsonpath "$.entries[9].path" == "/strict/"
 jsonpath "$.entries[9].policies" count == 1
-jsonpath "$.entries[9].policies[0]" == "telemetry"
+jsonpath "$.entries[9].policies[0]" == "strict"
+jsonpath "$.entries[10].name" == "telemetry"
+jsonpath "$.entries[10].type" == "directory"
+jsonpath "$.entries[10].path" == "/telemetry/"
+jsonpath "$.entries[10].policies" count == 1
+jsonpath "$.entries[10].policies[0]" == "telemetry"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -261,8 +267,9 @@ Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 7
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 8
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
+xpath "count(//tr[.//a[normalize-space(.) = 'console']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1

@@ -108,6 +108,7 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-closed EDITION=$(EDITION)
+	$(MAKE) -C enterprise/e2e/auth-sso EDITION=$(EDITION)
 endif
 
 .PHONY: docker-benchmark

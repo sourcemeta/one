@@ -1,7 +1,29 @@
 {
   "realm": "main",
   "enabled": true,
+  "sslRequired": "none",
   "clients": [
+    {
+      "clientId": "registry",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "registry-client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8000/registry/self/v1/auth/callback/keycloak"
+      ],
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [ "basic" ],
+      "optionalClientScopes": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
     {
       "clientId": "ci-service",
       "enabled": true,
@@ -55,6 +77,23 @@
             "access.token.claim": "true",
             "id.token.claim": "false"
           }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "jane",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "jane@acme.test",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "jane-password",
+          "temporary": false
         }
       ]
     }

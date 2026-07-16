@@ -43,6 +43,26 @@
       "issuer": "https://unreachable.example.invalid",
       "audience": "https://schemas.example.com",
       "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "console",
+      "paths": [ "/console" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_PATH_KEY_CONSOLE" } ]
+    },
+    {
+      "type": "oidc",
+      "name": "keycloak",
+      "paths": [ "/console" ],
+      "issuer": "http://keycloak:8080/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+      }
     }
   ],
   "contents": {
@@ -50,6 +70,7 @@
     "private": { "path": "./schemas/private" },
     "machine": { "path": "./schemas/machine" },
     "foreign": { "path": "./schemas/foreign" },
-    "unreachable": { "path": "./schemas/unreachable" }
+    "unreachable": { "path": "./schemas/unreachable" },
+    "console": { "path": "./schemas/console" }
   }
 }

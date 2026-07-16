@@ -2,7 +2,7 @@
   "url": "http://localhost:8000",
   "html": {
     "name": "Fully Private Sandbox",
-    "description": "A registry locked in its entirety, opened by either an apiKey or a JWT"
+    "description": "A registry locked in its entirety, opened by an apiKey, a JWT, or an interactive session"
   },
   "authentication": [
     {
@@ -19,6 +19,19 @@
       "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "oidc",
+      "name": "keycloak",
+      "paths": [ "/" ],
+      "issuer": "http://keycloak:8080/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+      }
     }
   ],
   "contents": {

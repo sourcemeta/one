@@ -67,6 +67,26 @@
       "issuer": "http://keycloak:8080/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "ES256" ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "console",
+      "paths": [ "/console" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_CONSOLE" } ]
+    },
+    {
+      "type": "oidc",
+      "name": "keycloak",
+      "paths": [ "/console" ],
+      "issuer": "http://keycloak:8080/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+      }
     }
   ],
   "contents": {
@@ -78,6 +98,7 @@
     "mixed": { "path": "./schemas/mixed" },
     "machine": { "path": "./schemas/machine" },
     "telemetry": { "path": "./schemas/telemetry" },
-    "strict": { "path": "./schemas/strict" }
+    "strict": { "path": "./schemas/strict" },
+    "console": { "path": "./schemas/console" }
   }
 }
