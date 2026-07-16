@@ -525,14 +525,15 @@ signs itself. Until that session exists, a browser that reaches a governed path
 is denied like any other unauthenticated request.
 
 The instance registers with the provider as a client, identified by its
-`clientId` and the client secret shared with it, and verifies the identity token
-the provider returns against the key set published at the `issuer`. The session
-that follows is signed with a secret of the instance's own, unrelated to the
-provider.
+`clientId` and the client secret shared with it. It trusts the `issuer` both as
+the value of the token's `iss` claim and as the source of the provider's OpenID
+Connect metadata at `{issuer}/.well-known/openid-configuration`, from which it
+discovers the signing key set that verifies each identity token. The session that
+follows is signed with a secret of the instance's own, unrelated to the provider.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's endpoints |
+| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens |
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
