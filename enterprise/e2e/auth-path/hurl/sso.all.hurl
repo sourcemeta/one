@@ -62,7 +62,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 GET {{base}}/registry/console/
 Accept: text/html
 HTTP 303
-Location: /registry/self/v1/auth/login/keycloak
+Location: /registry/self/v1/auth/login/keycloak?to=%2Fregistry%2Fconsole%2F
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" not exists

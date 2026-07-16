@@ -4,7 +4,7 @@
 GET {{base}}/private/
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login/keycloak
+Location: /self/v1/auth/login/keycloak?to=%2Fprivate%2F
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" not exists
@@ -13,14 +13,14 @@ header "Set-Cookie" not exists
 HEAD {{base}}/private/
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login/keycloak
+Location: /self/v1/auth/login/keycloak?to=%2Fprivate%2F
 Cache-Control: no-store
 
-# The extensionless schema page redirects the same way
+# The extensionless schema page redirects the same way, carrying its own path
 GET {{base}}/private/secret
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login/keycloak
+Location: /self/v1/auth/login/keycloak?to=%2Fprivate%2Fsecret
 Cache-Control: no-store
 
 # A public page is served, never redirected, so the login only fronts what is
