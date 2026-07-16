@@ -58,6 +58,16 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
+# A browser navigating to the console page is sent to begin a login, while the
+# machine key above keeps working: one path, two audiences
+GET {{base}}/console/
+Accept: text/html
+HTTP 303
+Location: /self/v1/auth/login/keycloak
+Cache-Control: no-store
+[Asserts]
+header "Set-Cookie" not exists
+
 # Starting a login redirects to the real provider with the transaction cookie
 GET {{base}}/self/v1/auth/login/keycloak
 HTTP 303

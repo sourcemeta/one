@@ -185,6 +185,15 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   send_response(status, request, response, output.str(), Encoding::Identity);
 }
 
+// Whether the caller prefers an HTML representation over JSON. The Accept
+// header is negotiated with quality values rather than matched literally, so a
+// browser presenting its full Accept list is recognised, while a client that
+// asks for JSON, or asks for nothing, is not
+[[nodiscard]] inline auto prefers_html(const std::string_view accept) -> bool {
+  return sourcemeta::core::http_match_accept(
+             accept, {"application/json", "text/html"}) == "text/html";
+}
+
 // The single shape of an authentication denial on the HTTP surface, so
 // every protected resource answers identically
 inline auto json_error_unauthorized(const HTTPRequest &request,
