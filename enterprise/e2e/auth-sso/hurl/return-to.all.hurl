@@ -1,8 +1,9 @@
 # A login started with a return target sends the browser back to that exact
 # page once the session is established, rather than to the instance root. This
 # is the far end of the gate redirect: the gate hands the login a "to", the
-# login seals it, and the callback honours it.
-GET {{base}}/self/v1/auth/login/keycloak?to=%2Fprivate%2Fsecret
+# login seals it, and the callback honours it. The target carries a query
+# string, which survives the round trip intact.
+GET {{base}}/self/v1/auth/login/keycloak?to=%2Fprivate%2Fsecret%3Fview%3Draw
 HTTP 303
 Cache-Control: no-store
 [Captures]
@@ -27,10 +28,11 @@ callback_url: header "Location"
 [Asserts]
 header "Location" contains "code="
 
-# The callback establishes the session and returns to the sealed page
+# The callback establishes the session and returns to the sealed page, its
+# query string preserved
 GET {{callback_url}}
 HTTP 303
-Location: /private/secret
+Location: /private/secret?view=raw
 Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_keycloak" exists

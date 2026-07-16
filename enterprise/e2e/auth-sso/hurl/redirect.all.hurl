@@ -23,6 +23,14 @@ HTTP 303
 Location: /self/v1/auth/login/keycloak?to=%2Fprivate%2Fsecret
 Cache-Control: no-store
 
+# The query string of the denied page is preserved in the return target, so a
+# page whose state lives in its query comes back whole
+GET {{base}}/private/?view=raw&page=2
+Accept: text/html
+HTTP 303
+Location: /self/v1/auth/login/keycloak?to=%2Fprivate%2F%3Fview%3Draw%26page%3D2
+Cache-Control: no-store
+
 # A public page is served, never redirected, so the login only fronts what is
 # actually gated
 GET {{base}}/public/

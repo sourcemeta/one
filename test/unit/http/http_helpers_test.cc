@@ -21,9 +21,10 @@ TEST(is_local_path_rejects_protocol_relative_and_backslash_forms) {
   EXPECT_FALSE(sourcemeta::one::is_local_path("/foo\\bar"));
 }
 
-TEST(is_local_path_rejects_control_characters) {
+TEST(is_local_path_rejects_control_characters_and_spaces) {
   EXPECT_FALSE(sourcemeta::one::is_local_path("/foo\nbar"));
   EXPECT_FALSE(sourcemeta::one::is_local_path("/foo\tbar"));
   EXPECT_FALSE(sourcemeta::one::is_local_path("/foo\rbar"));
   EXPECT_FALSE(sourcemeta::one::is_local_path("/foo\x7f"));
+  EXPECT_FALSE(sourcemeta::one::is_local_path("/foo bar"));
 }
