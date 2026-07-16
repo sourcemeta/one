@@ -4,3 +4,6 @@ ONE_E2E_KEY_INTERNAL=internal-secret-key
 ONE_E2E_KEY_SURFACE=surface-secret-key
 ONE_E2E_KEY_MIXED_PLAIN=mixed-plain-key
 ONE_E2E_KEY_MIXED_HASHED=2508e2ba355946ba6065f01eb183424aaea10ddaf7bbff90e38f3b702e89e23d
+ONE_E2E_KEY_CONSOLE=console-secret-key
+ONE_E2E_OIDC_CLIENT_SECRET=registry-client-secret
+ONE_E2E_OIDC_SESSION_SECRET=a-session-signing-secret-for-the-auth-sandbox

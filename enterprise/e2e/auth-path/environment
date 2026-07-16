@@ -1,2 +1,5 @@
 ONE_E2E_PATH_KEY_CONTENT=content-secret-key
 ONE_E2E_PATH_KEY_STATIC=static-secret-key
+ONE_E2E_PATH_KEY_CONSOLE=console-secret-key
+ONE_E2E_OIDC_CLIENT_SECRET=registry-client-secret
+ONE_E2E_OIDC_SESSION_SECRET=a-session-signing-secret-for-the-auth-path-sandbox

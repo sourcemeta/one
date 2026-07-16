@@ -43,11 +43,13 @@ listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 3
-jsonpath "$.policies" count == 2
-jsonpath "$.policies[0]" == "machine"
-jsonpath "$.policies[1]" == "registry"
-jsonpath "$.entries[0].policies[0]" == "machine"
-jsonpath "$.entries[0].policies[1]" == "registry"
+jsonpath "$.policies" count == 3
+jsonpath "$.policies[0]" == "keycloak"
+jsonpath "$.policies[1]" == "machine"
+jsonpath "$.policies[2]" == "registry"
+jsonpath "$.entries[0].policies[0]" == "keycloak"
+jsonpath "$.entries[0].policies[1]" == "machine"
+jsonpath "$.entries[0].policies[2]" == "registry"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 Authorization: Bearer {{access_token}}
