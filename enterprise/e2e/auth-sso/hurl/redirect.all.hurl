@@ -65,8 +65,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # The data representation stays JSON even for a browser: an explicit ".json"
-# asks for the schema, not the page, so it is denied rather than redirected, the
-# body byte-identical to the machine denial above
+# asks for the schema, not the page, so it is denied rather than redirected
 GET {{base}}/private/secret.json
 Accept: text/html
 HTTP 401
@@ -74,6 +73,8 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+browser_json_denied: body
 [Asserts]
 header "Location" not exists
 {
@@ -82,3 +83,13 @@ header "Location" not exists
   "status": 401,
   "detail": "This resource requires authentication"
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{browser_json_denied}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
