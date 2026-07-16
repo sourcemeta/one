@@ -31,7 +31,8 @@ namespace sourcemeta::one {
   X(SERVE_STATIC_V1, ActionServeStatic_v1)                                     \
   X(MCP_V1, ActionMCP_v1)                                                      \
   X(AUTH_LOGOUT_V1, ActionAuthLogout_v1)                                       \
-  X(AUTH_LOGIN_V1, ActionAuthLogin_v1)
+  X(AUTH_LOGIN_V1, ActionAuthLogin_v1)                                         \
+  X(AUTH_CALLBACK_V1, ActionAuthCallback_v1)
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class) ACTION_TYPE_##Name,
 

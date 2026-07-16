@@ -170,6 +170,62 @@
       }
     },
     {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-missing-policy-match",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "This action requires a policy name match"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-misconfigured",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "The authentication configuration is incomplete"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-provider-unreachable",
+        "title": "Bad Gateway",
+        "status": 502,
+        "detail": "The identity provider could not be reached"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-exchange-failed",
+        "title": "Bad Gateway",
+        "status": 502,
+        "detail": "The authorization code could not be redeemed"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-invalid-identity",
+        "title": "Bad Gateway",
+        "status": 502,
+        "detail": "The identity token could not be validated"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-login-declined",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "The identity provider declined the login"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:auth-invalid-callback",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "The login could not be completed"
+      }
+    },
+    {
       "type": "object",
       "required": [ "type", "title", "status", "detail", "errors" ],
       "properties": {

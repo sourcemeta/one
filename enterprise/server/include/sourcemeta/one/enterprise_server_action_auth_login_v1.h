@@ -76,7 +76,7 @@ public:
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:missing-policy-match",
+          "urn:sourcemeta:one:auth-missing-policy-match",
           "This action requires a policy name match", this->error_schema_, "*");
       return;
     }
@@ -101,7 +101,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The policy client secret is not configured", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
@@ -109,11 +109,11 @@ public:
     const auto authorization_endpoint{
         this->discover_authorization_endpoint(policy->issuer)};
     if (!authorization_endpoint.has_value()) {
-      sourcemeta::one::json_error(request, response,
-                                  sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                                  "urn:sourcemeta:one:provider-unreachable",
-                                  "The identity provider could not be reached",
-                                  this->error_schema_, "*");
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
+          "urn:sourcemeta:one:auth-provider-unreachable",
+          "The identity provider could not be reached", this->error_schema_,
+          "*");
       return;
     }
 
@@ -140,7 +140,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The instance has no session secret configured", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
@@ -184,7 +184,7 @@ public:
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
           "urn:sourcemeta:one:auth-misconfigured",
-          "The login transaction could not be established", this->error_schema_,
+          "The authentication configuration is incomplete", this->error_schema_,
           "*");
       return;
     }
