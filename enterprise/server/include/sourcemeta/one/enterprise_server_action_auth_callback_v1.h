@@ -78,7 +78,7 @@ public:
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:missing-policy-match",
+          "urn:sourcemeta:one:auth-missing-policy-match",
           "This action requires a policy name match", this->error_schema_, "*");
       return;
     }

@@ -171,7 +171,7 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:missing-policy-match",
+        "type": "urn:sourcemeta:one:auth-missing-policy-match",
         "title": "Internal Server Error",
         "status": 500,
         "detail": "This action requires a policy name match"
