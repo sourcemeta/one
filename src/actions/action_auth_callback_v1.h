@@ -45,6 +45,11 @@ public:
         });
   }
 
+  [[nodiscard]] auto is_authentication_exempt() const noexcept
+      -> bool override {
+    return true;
+  }
+
   auto rest(const std::span<std::string_view>, std::string_view,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
