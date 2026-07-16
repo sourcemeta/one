@@ -102,6 +102,10 @@ Authorization: Bearer full-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "ETag" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/catalog/example",
@@ -117,8 +121,31 @@ Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" startsWith "sourcemeta_one_session_keycloak="
 
-# With the session gone the catalog is locked to the browser again
+# With the session gone the catalog is locked to the browser again, the denial
+# byte-identical to the anonymous one at the top
 GET {{base}}/catalog/example.json
 HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Captures]
+locked_again: body
 [Asserts]
-jsonpath "$.status" == 401
+header "Set-Cookie" not exists
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+Authorization: Bearer full-secret-key
+```
+{{locked_again}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

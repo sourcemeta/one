@@ -1,18 +1,50 @@
 # The public catalog is served to everyone, no login required
 GET {{base}}/public/string.json
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "string"
+header "Vary" == "User-Agent, Accept-Encoding"
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/public/string",
+  "type": "string"
+}
 
-# The private catalog denies an anonymous caller
+# The private catalog denies an anonymous caller, and the denial validates
+# against its error schema
 GET {{base}}/private/secret.json
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Captures]
+anonymous_denied: body
+error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.status" == 401
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
+header "Set-Cookie" not exists
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{anonymous_denied}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # Starting a login discovers the real provider endpoint and redirects there,
 # carrying the transaction cookie and the authorization request parameters
@@ -64,12 +96,23 @@ cookie "sourcemeta_one_session_keycloak[HttpOnly]" exists
 cookie "sourcemeta_one_session_keycloak[SameSite]" == "Lax"
 cookie "sourcemeta_one_transaction_keycloak[Max-Age]" == 0
 
-# The session now opens the private catalog that was denied before
+# The session now opens the private catalog that was denied before, served
+# private so a shared cache cannot retain it
 GET {{base}}/private/secret.json
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "object"
+header "Vary" == "User-Agent, Accept-Encoding"
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/private/secret",
+  "type": "object"
+}
 
 # Logging out clears the session
 GET {{base}}/self/v1/auth/logout
@@ -79,8 +122,31 @@ Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" startsWith "sourcemeta_one_session_keycloak="
 
-# And the private catalog is gated again
+# And the private catalog is gated again, the denial byte-identical to the first
 GET {{base}}/private/secret.json
 HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Captures]
+final_denied: body
 [Asserts]
-jsonpath "$.status" == 401
+header "Set-Cookie" not exists
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{final_denied}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

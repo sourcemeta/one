@@ -4,11 +4,14 @@ GET {{base}}/registry/console/dashboard.json
 HTTP 401
 Content-Type: application/problem+json
 Cache-Control: no-store
+WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
 anonymous_denied: body
+[Asserts]
+header "Set-Cookie" not exists
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
@@ -21,6 +24,8 @@ POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 {{anonymous_denied}}
 ```
 HTTP 200
+Cache-Control: no-store
+Link: </registry/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -138,15 +143,60 @@ Cache-Control: no-store
 header "Set-Cookie" startsWith "sourcemeta_one_session_keycloak="
 header "Set-Cookie" contains "Path=/registry;"
 
-# The browser is gated again, but the machine key still opens the console
+# The browser is gated again, the denial byte-identical to the anonymous one
 GET {{base}}/registry/console/dashboard.json
 HTTP 401
+Content-Type: application/problem+json
+Cache-Control: no-store
+WWW-Authenticate: Bearer realm="registry"
+Link: </registry/self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+gated_again: body
 [Asserts]
-jsonpath "$.status" == 401
+header "Set-Cookie" not exists
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
 
+POST {{base}}/registry/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
+{{gated_again}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </registry/self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# But the machine key still opens the very same console the human just left
 GET {{base}}/registry/console/dashboard.json
 Authorization: Bearer console-secret-key
 HTTP 200
 Content-Type: application/schema+json
+Cache-Control: private, max-age=0, must-revalidate
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "object"
+header "Vary" == "User-Agent, Accept-Encoding"
+header "ETag" matches /^"[0-9a-f]{64}"$/
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/registry/console/dashboard",
+  "type": "object",
+  "required": [ "widgets" ],
+  "properties": {
+    "widgets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
