@@ -1177,15 +1177,18 @@ TEST(session_admitted_under_a_rotated_secret) {
           .admits("/portal/x", "", "sourcemeta_one_session_okta=" + old_sealed)
           .allowed);
 
-  // As is one signed under the newest secret, which is what a fresh login
-  // mints
+  // A fresh login mints under the newest secret alone, so the minted value
+  // verifies under a new-only secret set and not under an old-only one
   const auto minted{authentication.seal(
       "okta", R"JSON({ "policy": "okta" })JSON", SESSION_EXPIRY)};
   EXPECT_TRUE(minted.has_value());
-  EXPECT_TRUE(authentication
-                  .admits("/portal/x", "",
-                          "sourcemeta_one_session_okta=" + minted.value())
-                  .allowed);
+  const std::chrono::sys_seconds now{std::chrono::seconds{1000000}};
+  const std::array<std::string_view, 1> new_only{{"new-secret"}};
+  EXPECT_TRUE(
+      sourcemeta::one::session_open(minted.value(), new_only, now).has_value());
+  const std::array<std::string_view, 1> old_only{{"old-secret"}};
+  EXPECT_FALSE(
+      sourcemeta::one::session_open(minted.value(), old_only, now).has_value());
 
   // A secret no longer in the set is rejected
   const auto retired{sourcemeta::one::session_seal(
