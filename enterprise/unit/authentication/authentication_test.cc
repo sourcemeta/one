@@ -1386,15 +1386,40 @@ TEST(interactive_returns_the_policy_by_name) {
   EXPECT_EQ(okta.value().issuer, "https://login.test");
   EXPECT_EQ(okta.value().client_id, "registry");
   EXPECT_EQ(okta.value().client_secret_variable, "ONE_TEST_OIDC_LOOKUP_A");
+  EXPECT_EQ(okta.value().default_path, "/alpha");
 
   const auto google{authentication.interactive("google")};
   EXPECT_TRUE(google.has_value());
   EXPECT_EQ(google.value().issuer, "https://accounts.test");
   EXPECT_EQ(google.value().client_id, "dashboard");
   EXPECT_EQ(google.value().client_secret_variable, "ONE_TEST_OIDC_LOOKUP_B");
+  EXPECT_EQ(google.value().default_path, "/beta");
 
   EXPECT_FALSE(authentication.interactive("github").has_value());
   EXPECT_FALSE(authentication.interactive("").has_value());
+}
+
+TEST(interactive_default_path_is_the_first_path_declared) {
+  // Declared out of alphabetical order, so that the first declared path wins
+  // rather than the first sorted one
+  const std::array<std::string_view, 2> paths{{"/zeta", "/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_MULTI",
+        .name = "okta",
+        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
+  const auto path{test_path("oidc_default_path.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+
+  const auto okta{authentication.interactive("okta")};
+  EXPECT_TRUE(okta.has_value());
+  EXPECT_EQ(okta.value().default_path, "/zeta");
 }
 
 TEST(interactive_through_a_broken_artifact_is_empty) {

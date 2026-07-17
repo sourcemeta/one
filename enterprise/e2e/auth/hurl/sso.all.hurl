@@ -103,10 +103,11 @@ header "Location" startsWith "http://localhost:8000/self/v1/auth/callback/keyclo
 header "Location" contains "code="
 header "Location" contains "state="
 
-# The callback establishes the session and clears the transaction
+# The callback establishes the session and clears the transaction. This login
+# named no target, so it lands on what the policy governs
 GET {{callback_url}}
 HTTP 303
-Location: /
+Location: /console
 Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_keycloak" exists

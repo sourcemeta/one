@@ -132,6 +132,8 @@ public:
     std::string_view client_id{};
     // The environment variable name holding the client secret
     std::string_view client_secret_variable{};
+    // The first registry path the policy governs
+    std::string_view default_path{};
   };
 
   // The interactive policy declared under the given name, if any

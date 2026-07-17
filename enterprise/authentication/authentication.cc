@@ -366,6 +366,7 @@ struct OIDCPolicyMetadata {
   std::string_view client_secret_variable;
   std::string_view name;
   std::string_view session_secret_variable;
+  std::string_view default_path;
 };
 
 auto decode_oidc_metadata(const std::span<const std::byte> metadata,
@@ -375,7 +376,8 @@ auto decode_oidc_metadata(const std::span<const std::byte> metadata,
          read_string(metadata, cursor, result.client_id) &&
          read_string(metadata, cursor, result.client_secret_variable) &&
          read_string(metadata, cursor, result.name) &&
-         read_string(metadata, cursor, result.session_secret_variable);
+         read_string(metadata, cursor, result.session_secret_variable) &&
+         read_string(metadata, cursor, result.default_path);
 }
 
 // The reference check treats two interactive policies as the same scope only
@@ -674,7 +676,8 @@ struct Authentication::Impl {
     return Authentication::InteractivePolicy{
         .issuer = decoded.issuer,
         .client_id = decoded.client_id,
-        .client_secret_variable = decoded.client_secret_variable};
+        .client_secret_variable = decoded.client_secret_variable,
+        .default_path = decoded.default_path};
   }
 
   [[nodiscard]] auto

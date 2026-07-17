@@ -104,10 +104,12 @@ header "Location" startsWith "http://localhost:8000/registry/self/v1/auth/callba
 header "Location" contains "code="
 header "Location" contains "state="
 
-# The callback establishes the session and clears the transaction
+# The callback establishes the session and clears the transaction. This login
+# named no target, so it lands on what the policy governs, rooted at the base
+# path
 GET {{callback_url}}
 HTTP 303
-Location: /registry
+Location: /registry/console
 Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_keycloak" exists
