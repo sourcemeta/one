@@ -38,24 +38,29 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/%/404.metapack
 ./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack
+./explorer/%/login-html.metapack
 ./explorer/%/mcp.metapack
 ./explorer/%/search.metapack
 ./explorer/self
 ./explorer/self/%
 ./explorer/self/%/directory-html.metapack
 ./explorer/self/%/directory.metapack
+./explorer/self/%/login-html.metapack
 ./explorer/self/v1
 ./explorer/self/v1/%
 ./explorer/self/v1/%/directory-html.metapack
 ./explorer/self/v1/%/directory.metapack
+./explorer/self/v1/%/login-html.metapack
 ./explorer/self/v1/schemas
 ./explorer/self/v1/schemas/%
 ./explorer/self/v1/schemas/%/directory-html.metapack
 ./explorer/self/v1/schemas/%/directory.metapack
+./explorer/self/v1/schemas/%/login-html.metapack
 ./explorer/self/v1/schemas/api
 ./explorer/self/v1/schemas/api/%
 ./explorer/self/v1/schemas/api/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/%/directory.metapack
+./explorer/self/v1/schemas/api/%/login-html.metapack
 ./explorer/self/v1/schemas/api/error
 ./explorer/self/v1/schemas/api/error/%
 ./explorer/self/v1/schemas/api/error/%/schema-html.metapack
@@ -64,6 +69,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/list/%
 ./explorer/self/v1/schemas/api/list/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/list/%/directory.metapack
+./explorer/self/v1/schemas/api/list/%/login-html.metapack
 ./explorer/self/v1/schemas/api/list/response
 ./explorer/self/v1/schemas/api/list/response/%
 ./explorer/self/v1/schemas/api/list/response/%/schema-html.metapack
@@ -72,10 +78,12 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/%
 ./explorer/self/v1/schemas/api/schemas/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies
 ./explorer/self/v1/schemas/api/schemas/dependencies/%
 ./explorer/self/v1/schemas/api/schemas/dependencies/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/dependencies/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema-html.metapack
@@ -84,6 +92,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/dependents/%
 ./explorer/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/dependents/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/response
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
@@ -92,6 +101,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/evaluate/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/evaluate/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/request
 ./explorer/self/v1/schemas/api/schemas/evaluate/request/%
 ./explorer/self/v1/schemas/api/schemas/evaluate/request/%/schema-html.metapack
@@ -104,6 +114,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/health/%
 ./explorer/self/v1/schemas/api/schemas/health/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/health/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/health/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/health/response
 ./explorer/self/v1/schemas/api/schemas/health/response/%
 ./explorer/self/v1/schemas/api/schemas/health/response/%/schema-html.metapack
@@ -112,6 +123,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/locations/%
 ./explorer/self/v1/schemas/api/schemas/locations/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/locations/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/response
 ./explorer/self/v1/schemas/api/schemas/locations/response/%
 ./explorer/self/v1/schemas/api/schemas/locations/response/%/schema-html.metapack
@@ -120,6 +132,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/metadata/%
 ./explorer/self/v1/schemas/api/schemas/metadata/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/metadata/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/response
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%/schema-html.metapack
@@ -136,6 +149,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/positions/%
 ./explorer/self/v1/schemas/api/schemas/positions/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/positions/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/response
 ./explorer/self/v1/schemas/api/schemas/positions/response/%
 ./explorer/self/v1/schemas/api/schemas/positions/response/%/schema-html.metapack
@@ -144,6 +158,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/rdf/%
 ./explorer/self/v1/schemas/api/schemas/rdf/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/rdf/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/request
 ./explorer/self/v1/schemas/api/schemas/rdf/request/%
 ./explorer/self/v1/schemas/api/schemas/rdf/request/%/schema-html.metapack
@@ -156,6 +171,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/search/%
 ./explorer/self/v1/schemas/api/schemas/search/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/search/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/search/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/search/response
 ./explorer/self/v1/schemas/api/schemas/search/response/%
 ./explorer/self/v1/schemas/api/schemas/search/response/%/schema-html.metapack
@@ -164,6 +180,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/stats/%
 ./explorer/self/v1/schemas/api/schemas/stats/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/stats/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/response
 ./explorer/self/v1/schemas/api/schemas/stats/response/%
 ./explorer/self/v1/schemas/api/schemas/stats/response/%/schema-html.metapack
@@ -172,6 +189,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/api/schemas/trace/%
 ./explorer/self/v1/schemas/api/schemas/trace/%/directory-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/%/directory.metapack
+./explorer/self/v1/schemas/api/schemas/trace/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/request
 ./explorer/self/v1/schemas/api/schemas/trace/request/%
 ./explorer/self/v1/schemas/api/schemas/trace/request/%/schema-html.metapack
@@ -184,6 +202,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/%
 ./explorer/self/v1/schemas/mcp/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/%/directory.metapack
+./explorer/self/v1/schemas/mcp/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/error
 ./explorer/self/v1/schemas/mcp/error/%
 ./explorer/self/v1/schemas/mcp/error/%/schema-html.metapack
@@ -192,6 +211,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/initialize/%
 ./explorer/self/v1/schemas/mcp/initialize/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/initialize/%/directory.metapack
+./explorer/self/v1/schemas/mcp/initialize/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/initialize/request
 ./explorer/self/v1/schemas/mcp/initialize/request/%
 ./explorer/self/v1/schemas/mcp/initialize/request/%/schema-html.metapack
@@ -204,6 +224,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/notifications/%
 ./explorer/self/v1/schemas/mcp/notifications/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/notifications/%/directory.metapack
+./explorer/self/v1/schemas/mcp/notifications/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/notifications/cancelled
 ./explorer/self/v1/schemas/mcp/notifications/cancelled/%
 ./explorer/self/v1/schemas/mcp/notifications/cancelled/%/schema-html.metapack
@@ -216,6 +237,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/ping/%
 ./explorer/self/v1/schemas/mcp/ping/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/%/directory.metapack
+./explorer/self/v1/schemas/mcp/ping/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/request
 ./explorer/self/v1/schemas/mcp/ping/request/%
 ./explorer/self/v1/schemas/mcp/ping/request/%/schema-html.metapack
@@ -232,10 +254,12 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/%
 ./explorer/self/v1/schemas/mcp/resources/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/%/directory.metapack
+./explorer/self/v1/schemas/mcp/resources/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list
 ./explorer/self/v1/schemas/mcp/resources/list/%
 ./explorer/self/v1/schemas/mcp/resources/list/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/%/directory.metapack
+./explorer/self/v1/schemas/mcp/resources/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/request
 ./explorer/self/v1/schemas/mcp/resources/list/request/%
 ./explorer/self/v1/schemas/mcp/resources/list/request/%/schema-html.metapack
@@ -248,6 +272,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/read/%
 ./explorer/self/v1/schemas/mcp/resources/read/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/%/directory.metapack
+./explorer/self/v1/schemas/mcp/resources/read/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/request
 ./explorer/self/v1/schemas/mcp/resources/read/request/%
 ./explorer/self/v1/schemas/mcp/resources/read/request/%/schema-html.metapack
@@ -260,10 +285,12 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/templates/%
 ./explorer/self/v1/schemas/mcp/resources/templates/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/%/directory.metapack
+./explorer/self/v1/schemas/mcp/resources/templates/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list
 ./explorer/self/v1/schemas/mcp/resources/templates/list/%
 ./explorer/self/v1/schemas/mcp/resources/templates/list/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/%/directory.metapack
+./explorer/self/v1/schemas/mcp/resources/templates/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request/%
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request/%/schema-html.metapack
@@ -280,14 +307,17 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/%
 ./explorer/self/v1/schemas/mcp/tools/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call
 ./explorer/self/v1/schemas/mcp/tools/call/%
 ./explorer/self/v1/schemas/mcp/tools/call/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/%
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/schema-html.metapack
@@ -300,6 +330,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/schema-html.metapack
@@ -312,6 +343,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/schema-html.metapack
@@ -324,6 +356,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/schema-html.metapack
@@ -336,6 +369,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/schema-html.metapack
@@ -348,6 +382,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/schema-html.metapack
@@ -360,6 +395,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/schema-html.metapack
@@ -372,6 +408,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/schema-html.metapack
@@ -384,6 +421,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/%
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/schema-html.metapack
@@ -396,6 +434,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/%
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/list-directory/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%/schema-html.metapack
@@ -416,6 +455,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/%
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/search-schemas/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%/schema-html.metapack
@@ -428,6 +468,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/schema-html.metapack
@@ -440,6 +481,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/list/%
 ./explorer/self/v1/schemas/mcp/tools/list/%/directory-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/%/directory.metapack
+./explorer/self/v1/schemas/mcp/tools/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/request
 ./explorer/self/v1/schemas/mcp/tools/list/request/%
 ./explorer/self/v1/schemas/mcp/tools/list/request/%/schema-html.metapack
