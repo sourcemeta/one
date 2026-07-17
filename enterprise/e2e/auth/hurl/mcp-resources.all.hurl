@@ -50,7 +50,7 @@ jsonpath "$.result.resources[3].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[3].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[3].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[3].size" == 4176
+jsonpath "$.result.resources[3].size" == 4627
 jsonpath "$.result.resources[3].annotations.priority" == 0
 jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[4].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -492,7 +492,7 @@ jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[6].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[6].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[6].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[6].size" == 4176
+jsonpath "$.result.resources[6].size" == 4627
 jsonpath "$.result.resources[6].annotations.priority" == 0
 jsonpath "$.result.resources[7].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[7].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -917,7 +917,7 @@ jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[4].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[4].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 4176
+jsonpath "$.result.resources[4].size" == 4627
 jsonpath "$.result.resources[4].annotations.priority" == 0
 jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One Schema Dependencies API Response"

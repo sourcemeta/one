@@ -29,7 +29,6 @@
 #include <limits>      // std::numeric_limits
 #include <numeric>     // std::accumulate
 #include <optional>    // std::optional
-#include <set>         // std::set
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -111,21 +110,34 @@ static auto child_registry_path(const std::string &directory_registry_path,
          "/" + name;
 }
 
+static auto policy_type_name(
+    const sourcemeta::one::Configuration::AuthenticationEntry::Type type)
+    -> std::string_view {
+  switch (type) {
+    case sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT:
+      return "jwt";
+    case sourcemeta::one::Configuration::AuthenticationEntry::Type::OIDC:
+      return "oidc";
+    default:
+      return "apiKey";
+  }
+}
+
 static auto make_policies(const sourcemeta::one::Authentication &authentication,
                           const sourcemeta::one::Configuration &configuration,
                           const std::string &registry_path)
     -> sourcemeta::core::JSON {
-  // The governing set holds the apiKey policies that gate the path. An empty
-  // set means the path is public
-  std::set<std::string_view> names;
+  // The policies that gate the path, in declaration order. An empty set means
+  // the path is public
+  auto result{sourcemeta::core::JSON::make_array()};
   for (const auto index : authentication.governing(registry_path)) {
     assert(index < configuration.authentication.size());
-    names.emplace(configuration.authentication[index].name);
-  }
-
-  auto result{sourcemeta::core::JSON::make_array()};
-  for (const auto name : names) {
-    result.push_back(sourcemeta::core::JSON{name});
+    const auto &entry{configuration.authentication[index]};
+    auto policy{sourcemeta::core::JSON::make_object()};
+    policy.assign("name", sourcemeta::core::JSON{entry.name});
+    policy.assign("title", sourcemeta::core::JSON{entry.title});
+    policy.assign("type", sourcemeta::core::JSON{policy_type_name(entry.type)});
+    result.push_back(std::move(policy));
   }
 
   return result;

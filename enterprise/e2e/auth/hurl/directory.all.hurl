@@ -23,24 +23,36 @@ jsonpath "$.entries[0].name" == "console"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/console/"
 jsonpath "$.entries[0].policies" count == 2
-jsonpath "$.entries[0].policies[0]" == "console"
-jsonpath "$.entries[0].policies[1]" == "keycloak"
+jsonpath "$.entries[0].policies[0].name" == "console"
+jsonpath "$.entries[0].policies[0].title" == "console"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].policies[1].name" == "keycloak"
+jsonpath "$.entries[0].policies[1].title" == "keycloak"
+jsonpath "$.entries[0].policies[1].type" == "oidc"
 jsonpath "$.entries[1].name" == "internal"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/internal/"
 jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0]" == "internal"
+jsonpath "$.entries[1].policies[0].name" == "internal"
+jsonpath "$.entries[1].policies[0].title" == "internal"
+jsonpath "$.entries[1].policies[0].type" == "apiKey"
 jsonpath "$.entries[2].name" == "machine"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/machine/"
 jsonpath "$.entries[2].policies" count == 1
-jsonpath "$.entries[2].policies[0]" == "machine"
+jsonpath "$.entries[2].policies[0].name" == "machine"
+jsonpath "$.entries[2].policies[0].title" == "machine"
+jsonpath "$.entries[2].policies[0].type" == "jwt"
 jsonpath "$.entries[3].name" == "mixed"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].path" == "/mixed/"
 jsonpath "$.entries[3].policies" count == 2
-jsonpath "$.entries[3].policies[0]" == "mixed-hashed"
-jsonpath "$.entries[3].policies[1]" == "mixed-plain"
+jsonpath "$.entries[3].policies[0].name" == "mixed-plain"
+jsonpath "$.entries[3].policies[0].title" == "mixed-plain"
+jsonpath "$.entries[3].policies[0].type" == "apiKey"
+jsonpath "$.entries[3].policies[1].name" == "mixed-hashed"
+jsonpath "$.entries[3].policies[1].title" == "mixed-hashed"
+jsonpath "$.entries[3].policies[1].type" == "apiKey"
 jsonpath "$.entries[4].name" == "orphan"
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].path" == "/orphan/"
@@ -49,7 +61,9 @@ jsonpath "$.entries[5].name" == "private"
 jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.entries[5].path" == "/private/"
 jsonpath "$.entries[5].policies" count == 1
-jsonpath "$.entries[5].policies[0]" == "reports"
+jsonpath "$.entries[5].policies[0].name" == "reports"
+jsonpath "$.entries[5].policies[0].title" == "reports"
+jsonpath "$.entries[5].policies[0].type" == "apiKey"
 jsonpath "$.entries[6].name" == "public"
 jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].path" == "/public/"
@@ -58,7 +72,9 @@ jsonpath "$.entries[7].name" == "reports"
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].path" == "/reports/"
 jsonpath "$.entries[7].policies" count == 1
-jsonpath "$.entries[7].policies[0]" == "reports"
+jsonpath "$.entries[7].policies[0].name" == "reports"
+jsonpath "$.entries[7].policies[0].title" == "reports"
+jsonpath "$.entries[7].policies[0].type" == "apiKey"
 jsonpath "$.entries[8].name" == "self"
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].path" == "/self/"
@@ -68,12 +84,16 @@ jsonpath "$.entries[9].name" == "strict"
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].path" == "/strict/"
 jsonpath "$.entries[9].policies" count == 1
-jsonpath "$.entries[9].policies[0]" == "strict"
+jsonpath "$.entries[9].policies[0].name" == "strict"
+jsonpath "$.entries[9].policies[0].title" == "strict"
+jsonpath "$.entries[9].policies[0].type" == "jwt"
 jsonpath "$.entries[10].name" == "telemetry"
 jsonpath "$.entries[10].type" == "directory"
 jsonpath "$.entries[10].path" == "/telemetry/"
 jsonpath "$.entries[10].policies" count == 1
-jsonpath "$.entries[10].policies[0]" == "telemetry"
+jsonpath "$.entries[10].policies[0].name" == "telemetry"
+jsonpath "$.entries[10].policies[0].title" == "telemetry"
+jsonpath "$.entries[10].policies[0].type" == "jwt"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -161,17 +181,23 @@ private_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 2
 jsonpath "$.policies" count == 1
-jsonpath "$.policies[0]" == "reports"
+jsonpath "$.policies[0].name" == "reports"
+jsonpath "$.policies[0].title" == "reports"
+jsonpath "$.policies[0].type" == "apiKey"
 jsonpath "$.entries[0].name" == "open"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/private/open/"
 jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0]" == "reports"
+jsonpath "$.entries[0].policies[0].name" == "reports"
+jsonpath "$.entries[0].policies[0].title" == "reports"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/private/secret"
 jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0]" == "reports"
+jsonpath "$.entries[1].policies[0].name" == "reports"
+jsonpath "$.entries[1].policies[0].title" == "reports"
+jsonpath "$.entries[1].policies[0].type" == "apiKey"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{private_listing_schema}}
 ```
@@ -200,14 +226,18 @@ nested_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.path" == "/private/open"
 jsonpath "$.policies" count == 1
-jsonpath "$.policies[0]" == "reports"
+jsonpath "$.policies[0].name" == "reports"
+jsonpath "$.policies[0].title" == "reports"
+jsonpath "$.policies[0].type" == "apiKey"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "shared"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/private/open/shared"
 jsonpath "$.entries[0].identifier" == "{{base}}/private/open/shared"
 jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0]" == "reports"
+jsonpath "$.entries[0].policies[0].name" == "reports"
+jsonpath "$.entries[0].policies[0].title" == "reports"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{nested_listing_schema}}
 ```
