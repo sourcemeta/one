@@ -484,7 +484,7 @@ jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/api/list/resp
 jsonpath "$.result.resources[27].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[27].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[27].size" == 4176
+jsonpath "$.result.resources[27].size" == 4627
 jsonpath "$.result.resources[27].annotations.priority" == 0
 jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -1234,7 +1234,7 @@ jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/api/list/resp
 jsonpath "$.result.resources[27].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[27].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[27].size" == 4176
+jsonpath "$.result.resources[27].size" == 4627
 jsonpath "$.result.resources[27].annotations.priority" == 0
 jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One Schema Dependencies API Response"

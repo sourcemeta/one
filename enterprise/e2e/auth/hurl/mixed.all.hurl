@@ -171,14 +171,22 @@ listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.policies" count == 2
-jsonpath "$.policies[0]" == "mixed-hashed"
-jsonpath "$.policies[1]" == "mixed-plain"
+jsonpath "$.policies[0].name" == "mixed-plain"
+jsonpath "$.policies[0].title" == "mixed-plain"
+jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.policies[1].name" == "mixed-hashed"
+jsonpath "$.policies[1].title" == "mixed-hashed"
+jsonpath "$.policies[1].type" == "apiKey"
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].path" == "/mixed/thing"
 jsonpath "$.entries[0].policies" count == 2
-jsonpath "$.entries[0].policies[0]" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1]" == "mixed-plain"
+jsonpath "$.entries[0].policies[0].name" == "mixed-plain"
+jsonpath "$.entries[0].policies[0].title" == "mixed-plain"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].policies[1].name" == "mixed-hashed"
+jsonpath "$.entries[0].policies[1].title" == "mixed-hashed"
+jsonpath "$.entries[0].policies[1].type" == "apiKey"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```

@@ -80,12 +80,18 @@ navigation and discovery purposes.
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
-    | `/policies` | Array | Yes | The names of the authentication policies that govern this directory |
+    | `/policies` | Array | Yes | The authentication policies that govern this directory |
+    | `/policies/*/name` | String | Yes | The policy name |
+    | `/policies/*/title` | String | Yes | The human readable version of the policy name |
+    | `/policies/*/type` | String | Yes | The policy type (`apiKey`, `jwt`, or `oidc`) |
     | `/entries` | Array | Yes | The entries inside the directory |
     | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
     | `/entries/*/name` | String | Yes | The last URL path segment of the entry |
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
-    | `/entries/*/policies` | Array | Yes | The names of the authentication policies that govern the directory entry |
+    | `/entries/*/policies` | Array | Yes | The authentication policies that govern the directory entry |
+    | `/entries/*/policies/*/name` | String | Yes | The policy name |
+    | `/entries/*/policies/*/title` | String | Yes | The human readable version of the policy name |
+    | `/entries/*/policies/*/type` | String | Yes | The policy type (`apiKey`, `jwt`, or `oidc`) |
     | `/entries/*/health` | Integer | No | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
     | `/entries/*/title` | String | No | The title associated with the entry |

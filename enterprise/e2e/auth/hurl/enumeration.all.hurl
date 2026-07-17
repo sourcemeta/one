@@ -131,17 +131,23 @@ listing_schema: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 jsonpath "$.entries" count == 2
 jsonpath "$.policies" count == 1
-jsonpath "$.policies[0]" == "reports"
+jsonpath "$.policies[0].name" == "reports"
+jsonpath "$.policies[0].title" == "reports"
+jsonpath "$.policies[0].type" == "apiKey"
 jsonpath "$.entries[0].name" == "open"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/private/open/"
 jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0]" == "reports"
+jsonpath "$.entries[0].policies[0].name" == "reports"
+jsonpath "$.entries[0].policies[0].title" == "reports"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/private/secret"
 jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0]" == "reports"
+jsonpath "$.entries[1].policies[0].name" == "reports"
+jsonpath "$.entries[1].policies[0].title" == "reports"
+jsonpath "$.entries[1].policies[0].type" == "apiKey"
 jsonpath "$.entries[1].identifier" == "{{base}}/private/secret"
 jsonpath "$.entries[1].health" exists
 jsonpath "$.entries[1].bytes" exists

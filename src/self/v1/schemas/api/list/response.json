@@ -9,7 +9,13 @@
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
-      "policies": [],
+      "policies": [
+        {
+          "name": "corporate",
+          "title": "Corporate SSO",
+          "type": "oidc"
+        }
+      ],
       "breadcrumb": [
         {
           "name": "Home",
@@ -174,8 +180,21 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "type": "string",
-        "pattern": "^[a-z0-9-]+$"
+        "type": "object",
+        "required": [ "name", "title", "type" ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [ "apiKey", "jwt", "oidc" ]
+          }
+        },
+        "additionalProperties": false
       }
     }
   }

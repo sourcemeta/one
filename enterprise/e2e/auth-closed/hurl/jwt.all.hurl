@@ -44,12 +44,24 @@ listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 3
 jsonpath "$.policies" count == 3
-jsonpath "$.policies[0]" == "keycloak"
-jsonpath "$.policies[1]" == "machine"
-jsonpath "$.policies[2]" == "registry"
-jsonpath "$.entries[0].policies[0]" == "keycloak"
-jsonpath "$.entries[0].policies[1]" == "machine"
-jsonpath "$.entries[0].policies[2]" == "registry"
+jsonpath "$.policies[0].name" == "registry"
+jsonpath "$.policies[0].title" == "registry"
+jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.policies[1].name" == "machine"
+jsonpath "$.policies[1].title" == "machine"
+jsonpath "$.policies[1].type" == "jwt"
+jsonpath "$.policies[2].name" == "keycloak"
+jsonpath "$.policies[2].title" == "keycloak"
+jsonpath "$.policies[2].type" == "oidc"
+jsonpath "$.entries[0].policies[0].name" == "registry"
+jsonpath "$.entries[0].policies[0].title" == "registry"
+jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].policies[1].name" == "machine"
+jsonpath "$.entries[0].policies[1].title" == "machine"
+jsonpath "$.entries[0].policies[1].type" == "jwt"
+jsonpath "$.entries[0].policies[2].name" == "keycloak"
+jsonpath "$.entries[0].policies[2].title" == "keycloak"
+jsonpath "$.entries[0].policies[2].type" == "oidc"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 Authorization: Bearer {{access_token}}
