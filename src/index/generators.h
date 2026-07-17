@@ -1029,6 +1029,12 @@ struct GENERATE_URITEMPLATE_ROUTES {
       router.add("/self/v1/auth/login/{policy}", "auth_login", next_id++,
                  sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_V1,
                  auth_login_arguments);
+      // The page offering the providers only exists where pages do
+      if (action.data == "Full") {
+        router.add("/self/v1/auth/login", "auth_login_page", next_id++,
+                   sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_V1,
+                   auth_login_arguments);
+      }
 
       const sourcemeta::core::URITemplateRouter::Argument
           auth_callback_arguments[] = {

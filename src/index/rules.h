@@ -31,13 +31,14 @@ enum : BuildPlan::Action::Type {
   ACTION_ROUTES,
   ACTION_AUTHENTICATION,
   ACTION_WEB_UNAUTHORIZED,
+  ACTION_WEB_LOGIN,
   ACTION_REMOVE,
   ACTION_COUNT
 };
 
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
-inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
+inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
     .leaves = {{
         {.action = ACTION_MATERIALISE,
          .base = 0,
@@ -326,6 +327,17 @@ inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
         {.action = ACTION_WEB_UNAUTHORIZED,
          .base = 1,
          .filename = "401.metapack",
+         .gate = TargetGate::OnlyInFullMode,
+         .scope = ContainerScope::RootOnly,
+         .only_full_rebuild = true,
+         .is_listing = false,
+         .dependencies = {{{.kind = ContainerDependencyKind::ExternalConfig,
+                            .filename = nullptr}}},
+         .dependency_count = 1},
+
+        {.action = ACTION_WEB_LOGIN,
+         .base = 1,
+         .filename = "login-html.metapack",
          .gate = TargetGate::OnlyInFullMode,
          .scope = ContainerScope::RootOnly,
          .only_full_rebuild = true,

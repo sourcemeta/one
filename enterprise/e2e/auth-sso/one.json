@@ -8,8 +8,19 @@
     {
       "type": "oidc",
       "name": "keycloak",
-      "paths": [ "/private", "/archive" ],
+      "title": "Corporate SSO",
+      "paths": [ "/private", "/archive", "/shared" ],
       "issuer": "http://keycloak:8080/realms/main",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
+      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" }
+    },
+    {
+      "type": "oidc",
+      "name": "other",
+      "title": "Partner Login",
+      "paths": [ "/shared" ],
+      "issuer": "http://keycloak:8080/realms/second",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
       "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" }
@@ -24,6 +35,9 @@
     },
     "archive": {
       "path": "./schemas/archive"
+    },
+    "shared": {
+      "path": "./schemas/shared"
     }
   }
 }

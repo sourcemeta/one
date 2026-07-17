@@ -52,34 +52,6 @@ public:
                                       "If-Modified-Since");
       return;
     }
-    // Browser-targeted security headers we apply to every HTML response:
-    //
-    // - Referrer-Policy (W3C Referrer Policy):
-    //   https://www.w3.org/TR/referrer-policy/
-    //   Send full URL on same-origin navigation, only the origin on
-    //   cross-origin navigation. Schema paths within the browser encode the
-    //   user's current view and would otherwise leak via every external link
-    //   click.
-    //
-    // - Content-Security-Policy frame-ancestors (W3C CSP Level 3 §6.4.2):
-    //   https://www.w3.org/TR/CSP3/#directive-frame-ancestors
-    //   Modern clickjacking control: deny embedding the web UI in any
-    //   iframe.
-    //
-    // - X-Frame-Options (RFC 7034):
-    //   https://datatracker.ietf.org/doc/html/rfc7034
-    //   Legacy clickjacking control for browsers that predate CSP3
-    //   frame-ancestors. Belt-and-suspenders for old client coverage at
-    //   near-zero header cost.
-    //
-    // JSON and static-asset responses pass a default-constructed (all-empty)
-    // instance and emit none of these.
-    static constexpr sourcemeta::one::RouterAction::BrowserSecurityHeaders
-        HTML_BROWSER_SECURITY{
-            .referrer_policy = "strict-origin-when-cross-origin",
-            .frame_ancestors = "'none'",
-            .x_frame_options = "DENY",
-        };
     const auto stripped{sourcemeta::core::URI::strip_path_prefix(
         request.path(), this->server_uri_base_path())};
     if (!stripped.has_value()) {

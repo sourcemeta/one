@@ -9,6 +9,7 @@ services:
       - "8080:8080"
     volumes:
       - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./realm-second.json:/opt/keycloak/data/import/realm-second.json:ro
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\r\nHost: 127.0.0.1:9000\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3" ]
       interval: 2s

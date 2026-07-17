@@ -151,13 +151,18 @@ auto RouterAction::redirect_to_login(
   const auto challenges{
       this->dispatcher().authentication().interactive_challenges(
           request.path(), this->server_uri_base_path())};
-  if (challenges.size() != 1) {
+  if (challenges.empty()) {
     return false;
   }
 
+  // A single provider is entered directly, while several send the browser to
+  // the page that lets it choose one
   std::string location{this->server_uri_base_path()};
-  location += "/self/v1/auth/login/";
-  location += challenges.front();
+  location += "/self/v1/auth/login";
+  if (challenges.size() == 1) {
+    location += "/";
+    location += challenges.front();
+  }
   // Carry the page the browser was denied, its query string included, so the
   // login can return it there. It is percent-encoded so the whole target
   // travels intact through this query

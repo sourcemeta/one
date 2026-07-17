@@ -4,7 +4,8 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME web
     pages/directory.cc
     pages/schema.cc
     pages/not_found.cc
-    pages/unauthorized.cc)
+    pages/unauthorized.cc
+    pages/login.cc)
 
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::build)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::json)
@@ -21,6 +22,7 @@ sourcemeta_esbuild_bundle(
   DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/main.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/copy.js"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/login.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/search.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tabs.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/editor.js"
