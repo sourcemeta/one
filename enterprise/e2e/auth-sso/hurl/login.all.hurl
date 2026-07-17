@@ -84,10 +84,11 @@ header "Location" contains "code="
 header "Location" contains "state="
 
 # The callback redeems the code, establishes the session, and clears the
-# transaction, redirecting back to the instance
+# transaction. This login named no target, so it lands on what the policy
+# governs rather than the instance root
 GET {{callback_url}}
 HTTP 303
-Location: /
+Location: /private
 Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_keycloak" exists

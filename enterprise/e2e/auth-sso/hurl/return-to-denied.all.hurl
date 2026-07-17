@@ -1,8 +1,8 @@
 # A return target that is not a same-origin local path cannot be used to bounce
 # the browser off-site. Each of the classic open-redirect payloads is crafted
 # directly onto the login as an attacker would, travels through the full
-# unescape-and-validate path, is dropped rather than sealed, and the callback
-# falls back to the instance root, never the attacker's host.
+# validation path, and is dropped rather than sealed, so the session lands on
+# what the policy governs, never on the attacker's host.
 
 # Protocol-relative. The first login authenticates against the form.
 GET {{base}}/self/v1/auth/login/keycloak?to=%2F%2Fevil.example.com
@@ -28,7 +28,7 @@ callback_url: header "Location"
 
 GET {{callback_url}}
 HTTP 303
-Location: /
+Location: /private
 Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_keycloak" exists
@@ -49,7 +49,7 @@ callback_backslash: header "Location"
 
 GET {{callback_backslash}}
 HTTP 303
-Location: /
+Location: /private
 Cache-Control: no-store
 
 # An absolute URL with a scheme, which is not a rooted path at all
@@ -66,5 +66,5 @@ callback_scheme: header "Location"
 
 GET {{callback_scheme}}
 HTTP 303
-Location: /
+Location: /private
 Cache-Control: no-store

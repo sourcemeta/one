@@ -81,7 +81,8 @@ auto encode_oidc_metadata(const std::string_view issuer,
                           const std::string_view client_id,
                           const std::string_view client_secret_variable,
                           const std::string_view name,
-                          const std::string_view session_secret_variable)
+                          const std::string_view session_secret_variable,
+                          const std::string_view default_path)
     -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
@@ -89,6 +90,7 @@ auto encode_oidc_metadata(const std::string_view issuer,
   append_string(result, client_secret_variable);
   append_string(result, name);
   append_string(result, session_secret_variable);
+  append_string(result, default_path);
   return result;
 }
 
@@ -222,7 +224,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
 
       policy_metadata = encode_oidc_metadata(
           policy.issuer, policy.client_id, policy.client_secret_variable,
-          policy.name, policy.session_secret_variable);
+          policy.name, policy.session_secret_variable,
+          policy.paths.empty() ? std::string_view{} : policy.paths.front());
     } else if (!policy.keys.empty()) {
       policy_metadata = encode_apikey_metadata(policy.keys);
     }
