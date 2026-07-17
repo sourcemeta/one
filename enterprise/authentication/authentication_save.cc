@@ -73,10 +73,9 @@ auto encode_apikey_metadata(
   return result;
 }
 
-// The issuer, client identifier, the names of the environment variables
-// holding the client secret and the session secret, and the policy name are
-// stored as length-prefixed strings. The issuer and client identifier lead so
-// that their bytes keep spanning exactly the provider client identity
+// Every field is stored as a length-prefixed string. The issuer and client
+// identifier lead so that their bytes keep spanning exactly the provider
+// client identity
 auto encode_oidc_metadata(const std::string_view issuer,
                           const std::string_view client_id,
                           const std::string_view client_secret_variable,

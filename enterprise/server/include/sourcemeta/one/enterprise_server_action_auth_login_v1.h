@@ -137,8 +137,7 @@ public:
     // was denied. The query value arrives already percent-decoded, so it is
     // taken as-is, and only a same-origin local path is honoured, so the login
     // cannot be turned into an open redirect. Anything else falls back to what
-    // the policy governs. It is sealed into the transaction so that the
-    // callback trusts it
+    // the policy governs
     const auto destination{request.query("to")};
     if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
       payload.assign_assume_new(
