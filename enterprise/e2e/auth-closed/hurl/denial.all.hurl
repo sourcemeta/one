@@ -134,7 +134,7 @@ Access-Control-Allow-Origin: *
 GET {{base}}/
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login/keycloak
+Location: /self/v1/auth/login/keycloak?to=%2F
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" not exists
@@ -142,7 +142,7 @@ header "Set-Cookie" not exists
 GET {{base}}/catalog/
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login/keycloak
+Location: /self/v1/auth/login/keycloak?to=%2Fcatalog%2F
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" not exists

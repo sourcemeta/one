@@ -1,5 +1,6 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
@@ -157,6 +158,11 @@ auto RouterAction::redirect_to_login(
   std::string location{this->server_uri_base_path()};
   location += "/self/v1/auth/login/";
   location += challenges.front();
+  // Carry the page the browser was denied, its query string included, so the
+  // login can return it there. It is percent-encoded so the whole target
+  // travels intact through this query
+  location += "?to=";
+  sourcemeta::core::URI::escape(request.target(), location);
   response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
   response.write_header("Location", location);
   response.write_header("Cache-Control", "no-store");

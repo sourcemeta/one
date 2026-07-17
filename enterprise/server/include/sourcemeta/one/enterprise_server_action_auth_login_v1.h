@@ -133,6 +133,16 @@ public:
                               sourcemeta::core::JSON{transaction.nonce});
     payload.assign_assume_new(
         "verifier", sourcemeta::core::JSON{transaction.code_verifier});
+    // An optional return target lets the login send the browser back to the
+    // page it was denied. The query value arrives already percent-decoded, so
+    // it is taken as-is. It is sealed into the transaction so the callback
+    // trusts it, and only a same-origin local path is honoured, so the login
+    // cannot be turned into an open redirect
+    const auto destination{request.query("to")};
+    if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
+      payload.assign_assume_new(
+          "to", sourcemeta::core::JSON{std::string{destination}});
+    }
     std::ostringstream payload_text;
     sourcemeta::core::stringify(payload, payload_text);
 

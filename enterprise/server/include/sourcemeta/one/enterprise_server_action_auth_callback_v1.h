@@ -241,12 +241,25 @@ public:
       return;
     }
 
+    // The login may have sealed a page to return to. It came through this
+    // instance's own signature, yet it is re-checked as a same-origin local
+    // path before being trusted as a redirect target, defaulting to the
+    // instance root
+    std::string destination{scope};
+    const auto *sealed_destination{transaction.value().try_at("to")};
+    if (sealed_destination != nullptr && sealed_destination->is_string()) {
+      const auto &candidate{sealed_destination->to_string()};
+      if (sourcemeta::one::is_local_path(candidate)) {
+        destination = candidate;
+      }
+    }
+
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     response.write_header("Set-Cookie", session_cookie.value());
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
     this->expire_transaction(response, policy_name, scope, secure);
-    response.write_header("Location", scope);
+    response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);

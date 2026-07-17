@@ -60,6 +60,13 @@ public:
     return this->request_ ? this->request_->getUrl() : this->path_;
   }
 
+  // The full request target, the path together with the raw query string, as it
+  // arrived on the wire. Unlike path(), it preserves any query so a caller can
+  // reproduce the exact URL the client requested
+  [[nodiscard]] auto target() const noexcept -> std::string_view {
+    return this->request_ ? this->request_->getFullUrl() : this->path_;
+  }
+
   [[nodiscard]] auto header(const std::string_view name) const noexcept
       -> std::string_view {
     return this->request_->getHeader(name);
