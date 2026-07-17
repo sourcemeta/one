@@ -784,6 +784,8 @@ TEST(authentication_inherited_from_extends) {
 }
 
 TEST(authentication_explicit_paths) {
+  // Declared out of alphabetical order, so that the paths keep the order they
+  // were declared in rather than a sorted one
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
     "authentication": [
@@ -791,7 +793,7 @@ TEST(authentication_explicit_paths) {
         "type": "apiKey",
         "algorithm": "identity",
         "name": "internal",
-        "paths": [ "/internal", "/vendor" ],
+        "paths": [ "/vendor", "/internal" ],
         "keys": [ { "environmentVariable": "ONE_KEY" } ]
       }
     ]
@@ -803,7 +805,7 @@ TEST(authentication_explicit_paths) {
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(
       configuration.authentication.at(0).paths,
-      (std::vector<sourcemeta::core::JSON::String>{"/internal", "/vendor"}));
+      (std::vector<sourcemeta::core::JSON::String>{"/vendor", "/internal"}));
 }
 
 TEST(authentication_apikey_identity) {

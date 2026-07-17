@@ -36,6 +36,35 @@ header "Set-Cookie" not exists
   "detail": "This resource requires authentication"
 }
 
+# The archive catalog is governed by that same policy, so it denies identically
+GET {{base}}/archive/record.json
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+[Captures]
+archive_denied: body
+[Asserts]
+header "Set-Cookie" not exists
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{archive_denied}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
 ```
 {{anonymous_denied}}
@@ -85,7 +114,8 @@ header "Location" contains "state="
 
 # The callback redeems the code, establishes the session, and clears the
 # transaction. This login named no target, so it lands on what the policy
-# governs rather than the instance root
+# governs rather than the instance root. The policy governs two collections and
+# lands on the one it declares first, which is not the one that sorts first
 GET {{callback_url}}
 HTTP 303
 Location: /private
@@ -113,6 +143,23 @@ header "ETag" exists
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/private/secret",
   "type": "object"
+}
+
+# The one session opens every collection the policy governs, not only the one
+# the login landed on
+GET {{base}}/archive/record.json
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/archive/record",
+  "type": "array"
 }
 
 # Logging out clears the session

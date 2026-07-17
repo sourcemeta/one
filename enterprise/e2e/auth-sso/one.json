@@ -2,13 +2,13 @@
   "url": "http://localhost:8000",
   "html": {
     "name": "SSO Sandbox",
-    "description": "A registry whose private catalog is gated by a single interactive OpenID Connect policy"
+    "description": "A registry whose private catalogs are gated by a single interactive OpenID Connect policy"
   },
   "authentication": [
     {
       "type": "oidc",
       "name": "keycloak",
-      "paths": [ "/private" ],
+      "paths": [ "/private", "/archive" ],
       "issuer": "http://keycloak:8080/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
@@ -21,6 +21,9 @@
     },
     "private": {
       "path": "./schemas/private"
+    },
+    "archive": {
+      "path": "./schemas/archive"
     }
   }
 }
