@@ -32,7 +32,7 @@
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <utility>     // std::move, std::unreachable
 #include <vector>      // std::vector
 
 static auto make_breadcrumb(const std::string &base_path,
@@ -114,20 +114,22 @@ static auto policy_type_name(
     const sourcemeta::one::Configuration::AuthenticationEntry::Type type)
     -> std::string_view {
   switch (type) {
+    case sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey:
+      return "apiKey";
     case sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT:
       return "jwt";
     case sourcemeta::one::Configuration::AuthenticationEntry::Type::OIDC:
       return "oidc";
-    default:
-      return "apiKey";
   }
+
+  std::unreachable();
 }
 
 static auto make_policies(const sourcemeta::one::Authentication &authentication,
                           const sourcemeta::one::Configuration &configuration,
                           const std::string &registry_path)
     -> sourcemeta::core::JSON {
-  // The policies that gate the path, in declaration order. An empty set means
+  // The policies that gate the path, in declaration order. An empty array means
   // the path is public
   auto result{sourcemeta::core::JSON::make_array()};
   for (const auto index : authentication.governing(registry_path)) {
