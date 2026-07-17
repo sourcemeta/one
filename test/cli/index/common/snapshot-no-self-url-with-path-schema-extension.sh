@@ -47,12 +47,14 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/%/404.metapack
 ./explorer/%/directory-html.metapack
 ./explorer/%/directory.metapack
+./explorer/%/login-html.metapack
 ./explorer/%/mcp.metapack
 ./explorer/%/search.metapack
 ./explorer/example
 ./explorer/example/%
 ./explorer/example/%/directory-html.metapack
 ./explorer/example/%/directory.metapack
+./explorer/example/%/login-html.metapack
 ./explorer/example/foo
 ./explorer/example/foo/%
 ./explorer/example/foo/%/schema-html.metapack
