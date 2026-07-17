@@ -68,6 +68,8 @@ struct Configuration {
     Type type{Type::ApiKey};
     // The policy name
     sourcemeta::core::JSON::String name;
+    // A human readable version of the name
+    sourcemeta::core::JSON::String title;
     std::vector<sourcemeta::core::JSON::String> paths;
     Algorithm algorithm{Algorithm::Identity};
     // Environment variable names holding the keys

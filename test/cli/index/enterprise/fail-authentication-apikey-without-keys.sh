@@ -33,7 +33,7 @@ The object value was expected to validate against the defined properties subsche
 The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/1/required"
-The object value was expected to only define properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecret", and "type", but it also defines properties "algorithm", and "keys"
+The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecret", and "type"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/2/required"
 The object value was expected to validate against at least one of the 3 given subschemas

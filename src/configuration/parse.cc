@@ -176,6 +176,8 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
             entry.at("clientSecret").at("environmentVariable").to_string();
         parsed.session_secret_variable =
             entry.at("sessionSecret").at("environmentVariable").to_string();
+        const auto *title{entry.try_at("title")};
+        parsed.title = title == nullptr ? parsed.name : title->to_string();
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =
