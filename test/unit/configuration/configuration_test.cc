@@ -828,6 +828,7 @@ TEST(authentication_apikey_identity) {
   EXPECT_EQ(configuration.path, "/tmp/one.json");
   EXPECT_EQ(configuration.authentication.size(), 1);
   EXPECT_EQ(configuration.authentication.at(0).name, "internal");
+  EXPECT_EQ(configuration.authentication.at(0).title, "internal");
   EXPECT_EQ(configuration.authentication.at(0).paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
   EXPECT_EQ(
@@ -857,6 +858,7 @@ TEST(authentication_jwt) {
   EXPECT_EQ(entry.type,
             sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT);
   EXPECT_EQ(entry.name, "ci");
+  EXPECT_EQ(entry.title, "ci");
   EXPECT_EQ(entry.paths,
             (std::vector<sourcemeta::core::JSON::String>{"/internal"}));
   EXPECT_EQ(entry.issuer, "https://acme.example.com");
