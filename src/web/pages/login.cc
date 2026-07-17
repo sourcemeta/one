@@ -6,9 +6,8 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
-#include <algorithm> // std::ranges::any_of
-#include <chrono>    // std::chrono
-#include <string>    // std::string
+#include <chrono> // std::chrono
+#include <string> // std::string
 
 namespace sourcemeta::one {
 
@@ -42,21 +41,6 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
   body.close();
 }
 
-auto write_empty(sourcemeta::core::HTMLWriter &body,
-                 const sourcemeta::one::Configuration &configuration) -> void {
-  body.p().attribute("class", "text-secondary text-center small mb-4");
-  body.text("No identity provider is configured for signing in");
-  body.close();
-
-  body.div().attribute("class", "d-grid");
-  body.a()
-      .attribute("class", "btn btn-outline-secondary")
-      .attribute("href", configuration.url);
-  body.text("Back to home");
-  body.close();
-  body.close();
-}
-
 } // namespace
 
 auto GENERATE_WEB_LOGIN::handler(
@@ -66,11 +50,6 @@ auto GENERATE_WEB_LOGIN::handler(
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
-
-  const auto interactive{std::ranges::any_of(
-      configuration.authentication, [](const auto &entry) -> bool {
-        return entry.type == Configuration::AuthenticationEntry::Type::OIDC;
-      })};
 
   sourcemeta::core::HTMLWriter writer;
   writer.raw("<!DOCTYPE html>");
@@ -101,11 +80,7 @@ auto GENERATE_WEB_LOGIN::handler(
   writer.close();
   writer.close();
 
-  if (interactive) {
-    write_providers(writer, configuration);
-  } else {
-    write_empty(writer, configuration);
-  }
+  write_providers(writer, configuration);
 
   writer.close();
   writer.close();

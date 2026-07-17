@@ -78,8 +78,17 @@ public:
     }
 
     // Without a policy name there is nobody to log in with yet, so the page
-    // offering the providers is served instead
+    // offering the providers is served instead. An instance with no interactive
+    // provider has no such page to offer
     if (matches.empty()) {
+      if (!this->dispatcher().authentication().has_interactive()) {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+            "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+            this->error_schema_, "*");
+        return;
+      }
+
       const auto page{this->artifact_resolve_path_unauthenticated(
           "", Tree::Explorer, "login-html")};
       if (page.has_value()) {

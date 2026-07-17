@@ -36,10 +36,20 @@ Cache-Control: no-store
 [Asserts]
 cookie "sourcemeta_one_session_other" exists
 
-# The session opens the shared collection that was denied before
+# The session opens the shared collection that was denied before, served
+# private so a shared cache cannot retain it
 GET {{base}}/shared/doc.json
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "object"
+header "Vary" == "User-Agent, Accept-Encoding"
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/shared/doc",
+  "type": "object"
+}

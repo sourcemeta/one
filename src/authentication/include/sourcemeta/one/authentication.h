@@ -124,6 +124,9 @@ public:
                          std::string_view base_path = {}) const
       -> std::vector<std::string_view>;
 
+  // Whether the instance declares any interactive policy at all
+  [[nodiscard]] auto has_interactive() const -> bool;
+
   // What an interactive policy declares about its provider client. The views
   // point into the artifact and remain valid for the lifetime of this
   // instance

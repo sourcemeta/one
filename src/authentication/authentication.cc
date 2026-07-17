@@ -65,6 +65,8 @@ auto Authentication::interactive_challenges(const std::string_view,
   return {};
 }
 
+auto Authentication::has_interactive() const -> bool { return false; }
+
 auto Authentication::interactive(const std::string_view) const
     -> std::optional<Authentication::InteractivePolicy> {
   return std::nullopt;

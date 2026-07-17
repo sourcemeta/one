@@ -10,12 +10,20 @@ Cache-Control: no-store
 header "Set-Cookie" not exists
 
 # The picker page lists every interactive provider, in declaration order, by its
-# configured title, each linking to its own login
+# configured title, each linking to its own login. It is served with the same
+# browser hardening and no-store discipline as the other gate pages
 GET {{base}}/self/v1/auth/login
 Accept: text/html
 HTTP 200
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept-Encoding
 [Asserts]
+xpath "string(//title)" == "Sign In"
+xpath "string(//h1)" == "SSO Sandbox"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 2
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "Corporate SSO"
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"

@@ -8,7 +8,7 @@
 
 #include "authentication_format.h"
 
-#include <algorithm>     // std::ranges::all_of
+#include <algorithm>     // std::ranges::all_of, std::ranges::any_of
 #include <bit>           // std::countr_zero
 #include <chrono>        // std::chrono::system_clock, std::chrono::seconds
 #include <cstddef>       // std::byte, std::size_t
@@ -680,6 +680,17 @@ struct Authentication::Impl {
         .default_path = decoded.default_path};
   }
 
+  [[nodiscard]] auto has_interactive() const -> bool {
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    return std::ranges::any_of(std::span{policies, this->policy_count_},
+                               [](const auto &entry) -> bool {
+                                 return static_cast<Authentication::Type>(
+                                            entry.type) ==
+                                        Authentication::Type::OIDC;
+                               });
+  }
+
   [[nodiscard]] auto
   interactive_challenges(const std::string_view registry_path) const
       -> std::vector<std::string_view> {
@@ -979,6 +990,10 @@ auto Authentication::admits(const std::string_view registry_path,
 auto Authentication::interactive(const std::string_view name) const
     -> std::optional<Authentication::InteractivePolicy> {
   return this->impl_->interactive(name);
+}
+
+auto Authentication::has_interactive() const -> bool {
+  return this->impl_->has_interactive();
 }
 
 auto Authentication::seal(const std::string_view policy,
