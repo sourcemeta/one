@@ -1013,6 +1013,40 @@ TEST(interactive_challenges_names_the_covering_interactive_policies) {
             (std::vector<std::string_view>{}));
 }
 
+TEST(has_interactive_reflects_whether_any_oidc_policy_exists) {
+  setenv("ONE_TEST_HAS_INTERACTIVE_KEY", "key-secret", 1);
+  const std::array<std::string_view, 1> key_paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_HAS_INTERACTIVE_KEY"}};
+
+  // An instance with only machine policies declares no interactive login
+  const std::array<sourcemeta::one::Authentication::Policy, 1> machine_only{
+      {{.paths = key_paths, .keys = keys}}};
+  const auto machine_path{test_path("has_interactive_machine.bin")};
+  sourcemeta::one::Authentication::save(machine_only, machine_path,
+                                        machine_path);
+  const sourcemeta::one::Authentication machine{machine_path,
+                                                stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(machine.has_interactive());
+
+  // A single interactive policy alongside a machine one is enough to declare
+  // one
+  const std::array<std::string_view, 1> portal{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> mixed{
+      {{.paths = key_paths, .keys = keys},
+       {.paths = portal,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_HAS_INTERACTIVE_KEY",
+        .name = "okta",
+        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
+  const auto mixed_path{test_path("has_interactive_mixed.bin")};
+  sourcemeta::one::Authentication::save(mixed, mixed_path, mixed_path);
+  const sourcemeta::one::Authentication mixed_auth{mixed_path,
+                                                   stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(mixed_auth.has_interactive());
+}
+
 TEST(oidc_policy_admits_its_session_cookie) {
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

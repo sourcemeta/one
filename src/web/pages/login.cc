@@ -32,7 +32,7 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
     body.a()
         .attribute("class", "btn btn-primary d-flex align-items-center "
                             "justify-content-center")
-        .attribute("data-sourcemeta-ui-login", "")
+        .attribute("data-sourcemeta-ui-login", entry.name)
         .attribute("href", prefix + entry.name);
     body.i().attribute("class", "bi bi-box-arrow-in-right me-2").close();
     body.text(entry.title);

@@ -14,5 +14,6 @@ Vary: Accept-Encoding
 xpath "string(//title)" == "Sign In"
 xpath "string(//h1)" == "Authentication Sandbox"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 1
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "keycloak"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "keycloak"
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"

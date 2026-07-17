@@ -168,6 +168,15 @@ auto RouterAction::redirect_to_login(
   // travels intact through this query
   location += "?to=";
   sourcemeta::core::URI::escape(request.target(), location);
+  // Carry the covering policies so the picker offers only those, never a
+  // provider that would leave the caller logged in but still denied at the
+  // page they were after. A single provider was entered directly above
+  if (challenges.size() > 1) {
+    for (const auto &challenge : challenges) {
+      location += "&policy=";
+      sourcemeta::core::URI::escape(challenge, location);
+    }
+  }
   response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
   response.write_header("Location", location);
   response.write_header("Cache-Control", "no-store");

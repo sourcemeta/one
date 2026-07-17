@@ -1,10 +1,11 @@
 # The shared collection is governed by two interactive policies, so the gate
 # cannot choose a provider for the browser. Instead of a direct redirect it
-# sends the browser to the page that offers the choice.
+# sends the browser to the page that offers the choice, carrying the covering
+# policies so the picker offers only those.
 GET {{base}}/shared/
 Accept: text/html
 HTTP 303
-Location: /self/v1/auth/login?to=%2Fshared%2F
+Location: /self/v1/auth/login?to=%2Fshared%2F&policy=keycloak&policy=other
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" not exists
@@ -25,8 +26,10 @@ Vary: Accept-Encoding
 xpath "string(//title)" == "Sign In"
 xpath "string(//h1)" == "SSO Sandbox"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 2
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "keycloak"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "Corporate SSO"
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
+xpath "string((//a[@data-sourcemeta-ui-login])[2]/@data-sourcemeta-ui-login)" == "other"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[2])" == "Partner Login"
 xpath "string((//a[@data-sourcemeta-ui-login])[2]/@href)" == "/self/v1/auth/login/other"
 
