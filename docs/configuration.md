@@ -534,6 +534,7 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
+| `/title`        | String  | No | The policy name | A human readable version of the policy name |
 | `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens |
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
@@ -559,6 +560,7 @@ sign in through their identity provider to reach it:
     {
       "type": "oidc",
       "name": "console",
+      "title": "Acme Single Sign-On",
       "paths": [ "/console" ],
       "issuer": "https://accounts.example.com",
       "clientId": "schemas-registry",

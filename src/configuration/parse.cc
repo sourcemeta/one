@@ -147,6 +147,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     for (const auto &entry : data.at("authentication").as_array()) {
       Configuration::AuthenticationEntry parsed;
       parsed.name = entry.at("name").to_string();
+      parsed.title = parsed.name;
       for (const auto &path : entry.at("paths").as_array()) {
         parsed.paths.push_back(path.to_string());
       }
@@ -176,6 +177,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
             entry.at("clientSecret").at("environmentVariable").to_string();
         parsed.session_secret_variable =
             entry.at("sessionSecret").at("environmentVariable").to_string();
+        const auto *title{entry.try_at("title")};
+        if (title != nullptr) {
+          parsed.title = title->to_string();
+        }
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =
