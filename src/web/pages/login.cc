@@ -22,11 +22,7 @@ auto is_interactive(const sourcemeta::core::JSON &policy) -> bool {
 auto write_providers(sourcemeta::core::HTMLWriter &body,
                      const sourcemeta::one::Configuration &configuration,
                      const sourcemeta::core::JSON &policies) -> void {
-  body.div().attribute("class", "container-fluid p-4");
-  body.h2().attribute("class", "fw-bold");
-  body.text("This page requires authentication");
-  body.close();
-  body.p().attribute("class", "lead");
+  body.p().attribute("class", "text-secondary text-center small mb-4");
   body.text("Choose how you want to sign in");
   body.close();
 
@@ -42,13 +38,14 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
     href += "/self/v1/auth/login/";
     href += policy.at("name").to_string();
     body.a()
-        .attribute("class", "btn btn-primary")
+        .attribute("class", "btn btn-primary d-flex align-items-center "
+                            "justify-content-center")
         .attribute("data-sourcemeta-ui-login", policy.at("name").to_string())
         .attribute("href", href);
+    body.i().attribute("class", "bi bi-box-arrow-in-right me-2").close();
     body.text(policy.at("title").to_string());
     body.close();
   }
-  body.close();
   body.close();
 }
 
@@ -83,17 +80,53 @@ auto GENERATE_WEB_LOGIN::handler(
   // This page is served for every path an interactive policy governs, including
   // ones that resolve to no schema at all. Denials must not disclose which
   // schemas exist, so the page has to be byte-identical for every path under
-  // the same policies: were it to embed the directory's own URL or a per-path
-  // return target, a caller could tell an existing collection from a missing
-  // one by comparing responses. So it names only its providers, its canonical
-  // URL is the instance root like the plain denial page, and the return target
-  // is deferred to the login endpoint
+  // the same policies: it names only its providers and the instance, its
+  // canonical URL is the instance root, and the return target is deferred to
+  // the login endpoint
   sourcemeta::core::HTMLWriter writer;
-  html::make_page(writer, configuration, configuration.url, "Sign In",
-                  "Sign in to access this page",
-                  [&](sourcemeta::core::HTMLWriter &body) -> void {
-                    write_providers(body, configuration, policies);
-                  });
+  writer.raw("<!DOCTYPE html>");
+  writer.html().attribute("class", "h-100").attribute("lang", "en");
+  html::make_head(writer, configuration, configuration.url, "Sign In",
+                  "Sign in to access this page");
+  writer.body().attribute("class",
+                          "h-100 d-flex flex-column bg-body-secondary");
+
+  writer.main().attribute(
+      "class",
+      "flex-grow-1 d-flex align-items-center justify-content-center p-3");
+  writer.div()
+      .attribute("class", "card bg-white border-0 shadow-sm w-100")
+      .attribute("style", "max-width: 22rem;");
+  writer.div().attribute("class", "card-body p-4");
+
+  writer.div().attribute("class", "text-center mb-4");
+  writer.img()
+      .attribute("src", configuration.base_path + "/self/v1/static/icon.svg")
+      .attribute("alt", "")
+      .attribute("width", "48")
+      .attribute("height", "48")
+      .attribute("class", "mb-3");
+  writer.h1().attribute("class", "h5 fw-bold mb-0");
+  writer.text(configuration.html->name);
+  writer.close();
+  writer.close();
+
+  write_providers(writer, configuration, policies);
+
+  writer.close();
+  writer.close();
+  writer.close();
+
+  html::make_footer(writer, configuration);
+  writer.script()
+      .attribute("async", "")
+      .attribute("defer", "")
+      .attribute("src", configuration.base_path +
+                            "/self/v1/static/main.min.js?v=" +
+                            std::string{SOURCEMETA_ONE_JS_CHECKSUM});
+  writer.close();
+  writer.close();
+  writer.close();
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
   metapack_write_text(action.destination, writer.str(),

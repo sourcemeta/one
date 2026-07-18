@@ -18,7 +18,8 @@ login_etag: header "ETag"
 header "Location" not exists
 header "Set-Cookie" not exists
 xpath "string(//title)" == "Sign In"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//h1)" == "SSO Sandbox"
+xpath "string(//p[@class='text-secondary text-center small mb-4'])" == "Choose how you want to sign in"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 1
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "keycloak"
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
