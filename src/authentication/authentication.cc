@@ -59,12 +59,6 @@ auto Authentication::governing(const std::string_view,
   return {};
 }
 
-auto Authentication::interactive_challenges(const std::string_view,
-                                            const std::string_view) const
-    -> std::vector<std::string_view> {
-  return {};
-}
-
 auto Authentication::interactive(const std::string_view) const
     -> std::optional<Authentication::InteractivePolicy> {
   return std::nullopt;
