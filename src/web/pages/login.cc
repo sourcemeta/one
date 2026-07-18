@@ -33,7 +33,10 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
     }
 
     // The link carries no return target on purpose. The login endpoint decides
-    // where to land the caller, so nothing here depends on the requested path
+    // where to land the caller, so nothing here depends on the requested path.
+    // The whole page stays at the site-wide no-referrer default, so only this
+    // navigation opts in to a same-origin referrer, handing the endpoint the
+    // denied path while every other request from the page still leaks nothing
     std::string href{configuration.base_path};
     href += "/self/v1/auth/login/";
     href += policy.at("name").to_string();
@@ -41,6 +44,7 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
         .attribute("class", "btn btn-primary d-flex align-items-center "
                             "justify-content-center")
         .attribute("data-sourcemeta-ui-login", policy.at("name").to_string())
+        .attribute("referrerpolicy", "same-origin")
         .attribute("href", href);
     body.i().attribute("class", "bi bi-box-arrow-in-right me-2").close();
     body.text(policy.at("title").to_string());
@@ -87,7 +91,7 @@ auto GENERATE_WEB_LOGIN::handler(
   writer.raw("<!DOCTYPE html>");
   writer.html().attribute("class", "h-100").attribute("lang", "en");
   html::make_head(writer, configuration, configuration.url, "Sign In",
-                  "Sign in to access this page", "same-origin");
+                  "Sign in to access this page");
   writer.body().attribute("class",
                           "h-100 d-flex flex-column bg-body-secondary");
 

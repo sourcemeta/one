@@ -148,12 +148,11 @@ auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
     return false;
   }
 
-  // Same-origin, not the stricter default, so the provider link can hand the
-  // login endpoint the denied path as its return target. The only same-origin
-  // navigation from this page is that link, and the cross-origin redirect to
-  // the identity provider still carries no referrer
+  // The same headers every HTML response carries. The provider link opts into
+  // a same-origin referrer on its own, so the page as a whole keeps the strict
+  // default and leaks no referrer from any other request
   static constexpr BrowserSecurityHeaders SECURITY{
-      .referrer_policy = "same-origin",
+      .referrer_policy = "strict-origin-when-cross-origin",
       .frame_ancestors = "'none'",
       .x_frame_options = "DENY",
   };

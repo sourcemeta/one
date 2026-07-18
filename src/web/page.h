@@ -125,20 +125,16 @@ inline auto make_footer(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
-inline auto
-make_head(sourcemeta::core::HTMLWriter &writer,
-          const Configuration &configuration, const std::string &canonical,
-          const std::string &page_title, const std::string &description,
-          const std::string_view referrer_policy = "no-referrer") -> void {
+inline auto make_head(sourcemeta::core::HTMLWriter &writer,
+                      const Configuration &configuration,
+                      const std::string &canonical,
+                      const std::string &page_title,
+                      const std::string &description) -> void {
   writer.head();
   writer.meta().attribute("charset", "utf-8");
-  // Pages leak no referrer by default, since a schema path in the browser
-  // encodes the user's current view. The login page relaxes this to
-  // same-origin so it can hand its own return endpoint the denied path, while
-  // still leaking nothing to the identity provider or any external link
   writer.meta()
       .attribute("name", "referrer")
-      .attribute("content", referrer_policy);
+      .attribute("content", "no-referrer");
   writer.meta()
       .attribute("name", "viewport")
       .attribute("content", "width=device-width, initial-scale=1.0");
