@@ -680,45 +680,6 @@ struct Authentication::Impl {
         .default_path = decoded.default_path};
   }
 
-  [[nodiscard]] auto
-  interactive_challenges(const std::string_view registry_path) const
-      -> std::vector<std::string_view> {
-    std::vector<std::string_view> result;
-    if (this->nodes_ == nullptr) {
-      return result;
-    }
-
-    const auto governing{this->match(registry_path)};
-    if (governing == 0) {
-      return result;
-    }
-
-    const auto *policies{
-        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
-    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
-      if ((governing & (PolicySet{1} << index)) == 0) {
-        continue;
-      }
-
-      const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
-          entry.metadata_length == 0) {
-        continue;
-      }
-
-      const std::span<const std::byte> metadata{
-          this->view_->as<std::byte>(entry.metadata_offset),
-          entry.metadata_length};
-      OIDCPolicyMetadata decoded;
-      if (decode_oidc_metadata(metadata, decoded) && !decoded.name.empty()) {
-        result.push_back(decoded.name);
-      }
-    }
-
-    return result;
-  }
-
   // Split a secret variable's value into one secret per non-blank line. The
   // resulting views borrow from the given value, so it must outlive them, and
   // blank lines are skipped so a stray one cannot become a forgeable empty key
@@ -1005,13 +966,6 @@ auto Authentication::governing(const std::string_view registry_path,
   }
 
   return result;
-}
-
-auto Authentication::interactive_challenges(
-    const std::string_view registry_path,
-    const std::string_view base_path) const -> std::vector<std::string_view> {
-  return this->impl_->interactive_challenges(
-      strip_base_path(registry_path, base_path));
 }
 
 auto Authentication::reference_permitted(

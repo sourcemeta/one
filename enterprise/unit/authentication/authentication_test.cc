@@ -960,59 +960,6 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
   EXPECT_FALSE(token_verdict.principal.has_value());
 }
 
-TEST(interactive_challenges_names_the_covering_interactive_policies) {
-  setenv("ONE_TEST_CHALLENGE_KEY", "key-secret", 1);
-  const std::array<std::string_view, 2> key_paths{{"/both", "/machine"}};
-  const std::array<std::string_view, 1> keys{{"ONE_TEST_CHALLENGE_KEY"}};
-  const std::array<std::string_view, 1> portal{{"/portal"}};
-  const std::array<std::string_view, 1> both{{"/both"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 4> policies{
-      {{.paths = key_paths, .keys = keys},
-       {.paths = portal,
-        .type = sourcemeta::one::Authentication::Type::OIDC,
-        .issuer = "acme",
-        .client_id = "client",
-        .client_secret_variable = "ONE_TEST_CHALLENGE_KEY",
-        .name = "okta",
-        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"},
-       {.paths = both,
-        .type = sourcemeta::one::Authentication::Type::OIDC,
-        .issuer = "acme",
-        .client_id = "client",
-        .client_secret_variable = "ONE_TEST_CHALLENGE_KEY",
-        .name = "azure",
-        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"},
-       {.paths = portal,
-        .type = sourcemeta::one::Authentication::Type::OIDC,
-        .issuer = "acme",
-        .client_id = "client",
-        .client_secret_variable = "ONE_TEST_CHALLENGE_KEY",
-        .name = "second",
-        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
-  const auto path{test_path("interactive_challenges.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
-
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-
-  // An apiKey-only path offers no interactive login
-  EXPECT_EQ(authentication.interactive_challenges("/machine/x"),
-            (std::vector<std::string_view>{}));
-
-  // A single interactive policy names one challenge, ignoring the apiKey
-  // policy that also covers the path
-  EXPECT_EQ(authentication.interactive_challenges("/both/x"),
-            (std::vector<std::string_view>{"azure"}));
-
-  // Several interactive policies covering a path are named in declaration order
-  EXPECT_EQ(authentication.interactive_challenges("/portal/x"),
-            (std::vector<std::string_view>{"okta", "second"}));
-
-  // An ungoverned path has none
-  EXPECT_EQ(authentication.interactive_challenges("/public"),
-            (std::vector<std::string_view>{}));
-}
-
 TEST(oidc_policy_admits_its_session_cookie) {
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
