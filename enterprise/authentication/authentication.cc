@@ -7,6 +7,7 @@
 #include <sourcemeta/core/json.h>
 
 #include "authentication_format.h"
+#include "authentication_oidc.h"
 
 #include <algorithm>     // std::ranges::all_of
 #include <bit>           // std::countr_zero
@@ -793,12 +794,12 @@ struct Authentication::Impl {
 
     std::string location;
     if (jwks_uri.empty()) {
-      const auto metadata{this->fetcher_(discovery_url(issuer))};
+      const auto metadata{this->fetcher_(oidc_discovery_url(issuer))};
       if (!metadata.has_value()) {
         return nullptr;
       }
 
-      auto document{discovery_parse(metadata.value().body)};
+      auto document{oidc_parse_provider_metadata(metadata.value().body)};
       if (!document.has_value() || !document.value().jwks_uri.has_value()) {
         return nullptr;
       }

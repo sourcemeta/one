@@ -11,6 +11,9 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
+#include <authentication_oauth.h>
+#include <authentication_oidc.h>
+
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <cstdlib>     // std::getenv
 #include <filesystem>  // std::filesystem::path
@@ -122,17 +125,16 @@ public:
       return;
     }
 
-    const auto transaction{sourcemeta::one::oidc_transaction()};
+    const auto state{sourcemeta::one::oauth_state()};
+    const auto nonce{sourcemeta::one::oidc_nonce()};
+    const auto verifier{sourcemeta::one::oauth_pkce_verifier()};
 
     auto payload{sourcemeta::core::JSON::make_object()};
     payload.assign_assume_new("policy",
                               sourcemeta::core::JSON{std::string{policy_name}});
-    payload.assign_assume_new("state",
-                              sourcemeta::core::JSON{transaction.state});
-    payload.assign_assume_new("nonce",
-                              sourcemeta::core::JSON{transaction.nonce});
-    payload.assign_assume_new(
-        "verifier", sourcemeta::core::JSON{transaction.code_verifier});
+    payload.assign_assume_new("state", sourcemeta::core::JSON{state});
+    payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
+    payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
     // The return target lets the login send the browser back to the page it
     // was denied. An explicit `to` query wins, then the referring page, which
     // for a login served in place is exactly that denied page and so needs no
@@ -186,12 +188,13 @@ public:
     redirect_uri += CALLBACK_PATH;
     redirect_uri += policy_name;
 
+    const auto challenge{sourcemeta::one::oauth_pkce_challenge(verifier)};
     const auto url{
         sourcemeta::one::oidc_authorization_url(authorization_endpoint.value(),
                                                 {.client_id = policy->client_id,
                                                  .client_secret = client_secret,
                                                  .redirect_uri = redirect_uri},
-                                                "openid", transaction)};
+                                                state, challenge, nonce)};
 
     std::string cookie_name;
     cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
@@ -240,7 +243,7 @@ private:
       -> std::optional<std::string> {
     try {
       sourcemeta::core::HTTPSystemRequest fetch{
-          sourcemeta::one::discovery_url(issuer)};
+          sourcemeta::one::oidc_discovery_url(issuer)};
       fetch.connect_timeout(std::chrono::seconds{2});
       fetch.timeout(std::chrono::seconds{5});
       fetch.maximum_response_size(1024UL * 1024UL);
@@ -250,7 +253,7 @@ private:
         return std::nullopt;
       }
 
-      auto document{sourcemeta::one::discovery_parse(result.body)};
+      auto document{sourcemeta::one::oidc_parse_provider_metadata(result.body)};
       if (!document.has_value() ||
           !document.value().authorization_endpoint.has_value()) {
         return std::nullopt;
