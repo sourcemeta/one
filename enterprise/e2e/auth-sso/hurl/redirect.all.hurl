@@ -54,6 +54,7 @@ Accept: text/html
 HTTP 401
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 header "Location" not exists
 header "ETag" == {{login_etag}}
@@ -64,7 +65,10 @@ GET {{base}}/private/nope/deeper/still
 Accept: text/html
 HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
 [Asserts]
+header "Location" not exists
 header "ETag" == {{login_etag}}
 
 # The query string no longer changes the response: the page carries no return
@@ -73,7 +77,10 @@ GET {{base}}/private/?view=raw&page=2
 Accept: text/html
 HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
 [Asserts]
+header "Location" not exists
 header "ETag" == {{login_etag}}
 
 # A public page is served, never fronted by a login, so the page only guards
