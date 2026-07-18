@@ -126,6 +126,7 @@ auto GENERATE_WEB_LOGIN::handler(
                             std::string{SOURCEMETA_ONE_JS_CHECKSUM});
   writer.close();
   writer.close();
+  writer.close();
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
   metapack_write_text(action.destination, writer.str(),
