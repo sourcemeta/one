@@ -193,6 +193,17 @@ private:
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 
+  // Resolve a named artifact by walking up from the input path to the nearest
+  // ancestor directory whose copy has content, skipping the empty placeholders
+  // that mark directories the artifact does not apply to. This lets a
+  // per-directory page answer any path beneath it, including one that resolves
+  // to no resource at all. Like the unauthenticated resolver it bypasses
+  // authorisation, so it is only for denial pages that are public by design
+  [[nodiscard]] auto
+  artifact_resolve_ancestor(std::string_view input, Tree tree,
+                            std::string_view artifact_name) const
+      -> std::optional<ResolvedArtifact>;
+
   [[nodiscard]] auto blaze_template(Credentials credentials,
                                     std::string_view schema_uri,
                                     sourcemeta::blaze::Mode mode) const

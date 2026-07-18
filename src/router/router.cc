@@ -1,8 +1,6 @@
 #include <sourcemeta/core/http.h>
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/uri.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
@@ -158,44 +156,22 @@ auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
 
   // The login page is a per-directory artifact, so a schema or a non-existent
   // path is answered by the nearest directory above it that offers a login.
-  // Empty artifacts mark a directory no interactive policy governs, so they are
-  // skipped. Because every login page under the same policies is
-  // byte-identical, this walk never betrays whether a deeper path exists
+  // Because every login page under the same policies is byte-identical, this
+  // never betrays whether a deeper path exists
   const auto stripped{sourcemeta::core::URI::strip_path_prefix(
       request.path(), this->server_uri_base_path())};
-  std::string_view remaining{stripped.has_value()
-                                 ? std::string_view{stripped.value()}
-                                 : request.path()};
-  if (remaining.ends_with("/")) {
-    remaining.remove_suffix(1);
+  const auto page{this->artifact_resolve_ancestor(
+      stripped.has_value() ? std::string_view{stripped.value()}
+                           : request.path(),
+      Tree::Explorer, "login-html")};
+  if (!page.has_value()) {
+    return false;
   }
 
-  while (true) {
-    const auto page{this->artifact_resolve_path_unauthenticated(
-        remaining, Tree::Explorer, "login-html")};
-    if (page.has_value()) {
-      const sourcemeta::core::FileView view{page.value().path()};
-      const auto info{sourcemeta::one::metapack_info(view)};
-      // A directory no interactive policy governs gets a placeholder page with
-      // no content. Text artifacts always carry a trailing newline, so that
-      // placeholder is a lone byte, while a real login page is a full document
-      if (info.has_value() && info->content_bytes > 1) {
-        this->artifact_serve(page.value(),
-                             sourcemeta::core::HTTP_STATUS_UNAUTHORIZED, false,
-                             {}, {}, SECURITY, request, response, {},
-                             "no-store", "Accept, Accept-Encoding");
-        return true;
-      }
-    }
-
-    if (remaining.empty()) {
-      return false;
-    }
-
-    const auto slash{remaining.find_last_of('/')};
-    remaining = slash == std::string_view::npos ? std::string_view{}
-                                                : remaining.substr(0, slash);
-  }
+  this->artifact_serve(page.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
+                       false, {}, {}, SECURITY, request, response, {},
+                       "no-store", "Accept, Accept-Encoding");
+  return true;
 }
 
 } // namespace sourcemeta::one
