@@ -1,6 +1,8 @@
 #include <sourcemeta/core/http.h>
+#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/uri.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
@@ -128,7 +130,7 @@ auto Router::dispatch(
            .admits(request.path(), credential, request.header("cookie"),
                    instance->server_uri_base_path())
            .allowed) {
-    if (instance->redirect_to_login(request, response)) {
+    if (instance->serve_login(request, response)) {
       return;
     }
 
@@ -140,35 +142,60 @@ auto Router::dispatch(
   instance->rest(matches, credential, request, response);
 }
 
-auto RouterAction::redirect_to_login(
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) const -> bool {
+auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
+                               sourcemeta::one::HTTPResponse &response) const
+    -> bool {
   if ((request.method() != "get" && request.method() != "head") ||
       !sourcemeta::one::prefers_html(request.header("accept"))) {
     return false;
   }
 
-  const auto challenges{
-      this->dispatcher().authentication().interactive_challenges(
-          request.path(), this->server_uri_base_path())};
-  if (challenges.size() != 1) {
-    return false;
+  static constexpr BrowserSecurityHeaders SECURITY{
+      .referrer_policy = "strict-origin-when-cross-origin",
+      .frame_ancestors = "'none'",
+      .x_frame_options = "DENY",
+  };
+
+  // The login page is a per-directory artifact, so a schema or a non-existent
+  // path is answered by the nearest directory above it that offers a login.
+  // Empty artifacts mark a directory no interactive policy governs, so they are
+  // skipped. Because every login page under the same policies is
+  // byte-identical, this walk never betrays whether a deeper path exists
+  const auto stripped{sourcemeta::core::URI::strip_path_prefix(
+      request.path(), this->server_uri_base_path())};
+  std::string_view remaining{stripped.has_value()
+                                 ? std::string_view{stripped.value()}
+                                 : request.path()};
+  if (remaining.ends_with("/")) {
+    remaining.remove_suffix(1);
   }
 
-  std::string location{this->server_uri_base_path()};
-  location += "/self/v1/auth/login/";
-  location += challenges.front();
-  // Carry the page the browser was denied, its query string included, so the
-  // login can return it there. It is percent-encoded so the whole target
-  // travels intact through this query
-  location += "?to=";
-  sourcemeta::core::URI::escape(request.target(), location);
-  response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-  response.write_header("Location", location);
-  response.write_header("Cache-Control", "no-store");
-  sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
-                                 request, response);
-  return true;
+  while (true) {
+    const auto page{this->artifact_resolve_path_unauthenticated(
+        remaining, Tree::Explorer, "login-html")};
+    if (page.has_value()) {
+      const sourcemeta::core::FileView view{page.value().path()};
+      const auto info{sourcemeta::one::metapack_info(view)};
+      // A directory no interactive policy governs gets a placeholder page with
+      // no content. Text artifacts always carry a trailing newline, so that
+      // placeholder is a lone byte, while a real login page is a full document
+      if (info.has_value() && info->content_bytes > 1) {
+        this->artifact_serve(page.value(),
+                             sourcemeta::core::HTTP_STATUS_UNAUTHORIZED, false,
+                             {}, {}, SECURITY, request, response, {},
+                             "no-store", "Accept, Accept-Encoding");
+        return true;
+      }
+    }
+
+    if (remaining.empty()) {
+      return false;
+    }
+
+    const auto slash{remaining.find_last_of('/')};
+    remaining = slash == std::string_view::npos ? std::string_view{}
+                                                : remaining.substr(0, slash);
+  }
 }
 
 } // namespace sourcemeta::one

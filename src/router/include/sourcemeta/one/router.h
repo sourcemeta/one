@@ -88,12 +88,15 @@ public:
     return false;
   }
 
-  // Send an unauthenticated browser navigating to a path that exactly one
-  // interactive policy governs to begin a login, returning true when it wrote
-  // the redirect so the caller stops. Machines, non-navigations, and paths
-  // with no or several interactive policies fall through to the plain denial
-  [[nodiscard]] auto redirect_to_login(HTTPRequest &request,
-                                       HTTPResponse &response) const -> bool;
+  // Serve, in place, the login page for an unauthenticated browser navigating
+  // to a path an interactive policy governs, returning true when it wrote the
+  // response so the caller stops. The page is a per-directory artifact resolved
+  // from the nearest governing directory above the path, so it is identical for
+  // every path under the same policies and a denial never reveals whether a
+  // schema exists. Machines, non-navigations, and paths with no interactive
+  // policy fall through to the plain denial
+  [[nodiscard]] auto serve_login(HTTPRequest &request,
+                                 HTTPResponse &response) const -> bool;
 
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;

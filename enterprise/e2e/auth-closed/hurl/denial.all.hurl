@@ -129,23 +129,33 @@ Access-Control-Allow-Origin: *
   "detail": "This resource requires authentication"
 }
 
-# A browser navigating to a gated page is sent to begin a login rather than
-# shown a denial, since a single interactive policy governs the whole registry
+# A browser navigating to a gated page is shown its login in place rather than
+# a redirect, since a single interactive policy governs the whole registry
 GET {{base}}/
 Accept: text/html
-HTTP 303
-Location: /self/v1/auth/login/keycloak?to=%2F
+HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
+[Captures]
+login_etag: header "ETag"
 [Asserts]
+header "Location" not exists
 header "Set-Cookie" not exists
+xpath "string(//title)" == "Sign In"
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
 
+# A nested directory is answered by the byte-identical page, so the whole gated
+# tree is indistinguishable from one denied path to the next
 GET {{base}}/catalog/
 Accept: text/html
-HTTP 303
-Location: /self/v1/auth/login/keycloak?to=%2Fcatalog%2F
+HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
 [Asserts]
+header "Location" not exists
 header "Set-Cookie" not exists
+header "ETag" == {{login_etag}}
 
 # The same directories requested as JSON deny identically, the root included
 GET {{base}}/

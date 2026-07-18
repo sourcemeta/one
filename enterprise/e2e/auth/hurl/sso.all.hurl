@@ -58,15 +58,21 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# A browser navigating to the console page is sent to begin a login, while the
-# machine key above keeps working: one path, two audiences
+# A browser navigating to the console page is shown its login in place, a 401
+# whose body is the login page rather than a redirect, while the machine key
+# above keeps working: one path, two audiences
 GET {{base}}/console/
 Accept: text/html
-HTTP 303
-Location: /self/v1/auth/login/keycloak?to=%2Fconsole%2F
+HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
 [Asserts]
+header "Location" not exists
 header "Set-Cookie" not exists
+xpath "string(//title)" == "Sign In"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 1
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
 
 # Starting a login redirects to the real provider with the transaction cookie
 GET {{base}}/self/v1/auth/login/keycloak

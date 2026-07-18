@@ -134,18 +134,29 @@ public:
     payload.assign_assume_new(
         "verifier", sourcemeta::core::JSON{transaction.code_verifier});
     // The return target lets the login send the browser back to the page it
-    // was denied. The query value arrives already percent-decoded, so it is
-    // taken as-is, and only a same-origin local path is honoured, so the login
-    // cannot be turned into an open redirect. Anything else falls back to what
-    // the policy governs
+    // was denied. An explicit `to` query wins, then the referring page, which
+    // for a login served in place is exactly that denied page and so needs no
+    // query, then what the policy governs. Only a same-origin local path is
+    // ever honoured, so the login cannot be turned into an open redirect
+    std::optional<std::string> target;
     const auto destination{request.query("to")};
     if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
-      payload.assign_assume_new(
-          "to", sourcemeta::core::JSON{std::string{destination}});
-    } else if (!policy->default_path.empty()) {
+      target = std::string{destination};
+    } else if (const auto referer{request.header("referer")};
+               referer.starts_with(this->server_uri())) {
+      std::string candidate{this->server_uri_base_path()};
+      candidate += referer.substr(this->server_uri().size());
+      if (sourcemeta::one::is_local_path(candidate)) {
+        target = std::move(candidate);
+      }
+    }
+    if (!target.has_value() && !policy->default_path.empty()) {
       std::string fallback{this->server_uri_base_path()};
       fallback += policy->default_path;
-      payload.assign_assume_new("to", sourcemeta::core::JSON{fallback});
+      target = std::move(fallback);
+    }
+    if (target.has_value()) {
+      payload.assign_assume_new("to", sourcemeta::core::JSON{target.value()});
     }
     std::ostringstream payload_text;
     sourcemeta::core::stringify(payload, payload_text);
