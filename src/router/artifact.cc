@@ -171,6 +171,38 @@ auto RouterAction::artifact_resolve_path_unauthenticated(
   return ResolvedArtifact{std::move(located).value()};
 }
 
+auto RouterAction::artifact_resolve_ancestor(
+    const std::string_view input, const Tree tree,
+    const std::string_view artifact_name) const
+    -> std::optional<ResolvedArtifact> {
+  std::string_view remaining{input};
+  if (remaining.ends_with("/")) {
+    remaining.remove_suffix(1);
+  }
+
+  while (true) {
+    auto located{this->artifact_resolve_path_unauthenticated(remaining, tree,
+                                                             artifact_name)};
+    if (located.has_value()) {
+      const sourcemeta::core::FileView view{located.value().path()};
+      const auto info{sourcemeta::one::metapack_info(view)};
+      // Text artifacts always carry a trailing newline, so an empty placeholder
+      // is a lone byte while a real page is a whole document
+      if (info.has_value() && info->content_bytes > 1) {
+        return located;
+      }
+    }
+
+    if (remaining.empty()) {
+      return std::nullopt;
+    }
+
+    const auto slash{remaining.find_last_of('/')};
+    remaining = slash == std::string_view::npos ? std::string_view{}
+                                                : remaining.substr(0, slash);
+  }
+}
+
 auto RouterAction::artifact_resolve_static(
     const std::filesystem::path &root, const std::string_view relative) const
     -> ArtifactResolution {

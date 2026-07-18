@@ -250,9 +250,9 @@ private:
           &browser_security,
       sourcemeta::one::HTTPRequest &request,
       sourcemeta::one::HTTPResponse &response) -> void {
-    // A browser denied a page is sent to begin a login when a single
-    // interactive policy governs the path, rather than shown the denial page
-    if (this->redirect_to_login(request, response)) {
+    // A browser denied a page under an interactive policy is shown that path's
+    // login page in place, rather than the plain denial
+    if (this->serve_login(request, response)) {
       return;
     }
 

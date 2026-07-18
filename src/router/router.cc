@@ -128,7 +128,7 @@ auto Router::dispatch(
            .admits(request.path(), credential, request.header("cookie"),
                    instance->server_uri_base_path())
            .allowed) {
-    if (instance->redirect_to_login(request, response)) {
+    if (instance->serve_login(request, response)) {
       return;
     }
 
@@ -140,34 +140,37 @@ auto Router::dispatch(
   instance->rest(matches, credential, request, response);
 }
 
-auto RouterAction::redirect_to_login(
-    sourcemeta::one::HTTPRequest &request,
-    sourcemeta::one::HTTPResponse &response) const -> bool {
+auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
+                               sourcemeta::one::HTTPResponse &response) const
+    -> bool {
   if ((request.method() != "get" && request.method() != "head") ||
       !sourcemeta::one::prefers_html(request.header("accept"))) {
     return false;
   }
 
-  const auto challenges{
-      this->dispatcher().authentication().interactive_challenges(
-          request.path(), this->server_uri_base_path())};
-  if (challenges.size() != 1) {
+  static constexpr BrowserSecurityHeaders SECURITY{
+      .referrer_policy = "strict-origin-when-cross-origin",
+      .frame_ancestors = "'none'",
+      .x_frame_options = "DENY",
+  };
+
+  // The login page is a per-directory artifact, so a schema or a non-existent
+  // path is answered by the nearest directory above it that offers a login.
+  // Because every login page under the same policies is byte-identical, this
+  // never betrays whether a deeper path exists
+  const auto stripped{sourcemeta::core::URI::strip_path_prefix(
+      request.path(), this->server_uri_base_path())};
+  const auto page{this->artifact_resolve_ancestor(
+      stripped.has_value() ? std::string_view{stripped.value()}
+                           : request.path(),
+      Tree::Explorer, "login-html")};
+  if (!page.has_value()) {
     return false;
   }
 
-  std::string location{this->server_uri_base_path()};
-  location += "/self/v1/auth/login/";
-  location += challenges.front();
-  // Carry the page the browser was denied, its query string included, so the
-  // login can return it there. It is percent-encoded so the whole target
-  // travels intact through this query
-  location += "?to=";
-  sourcemeta::core::URI::escape(request.target(), location);
-  response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-  response.write_header("Location", location);
-  response.write_header("Cache-Control", "no-store");
-  sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
-                                 request, response);
+  this->artifact_serve(page.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
+                       false, {}, {}, SECURITY, request, response, {},
+                       "no-store", "Accept, Accept-Encoding");
   return true;
 }
 

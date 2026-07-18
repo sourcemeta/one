@@ -88,12 +88,15 @@ public:
     return false;
   }
 
-  // Send an unauthenticated browser navigating to a path that exactly one
-  // interactive policy governs to begin a login, returning true when it wrote
-  // the redirect so the caller stops. Machines, non-navigations, and paths
-  // with no or several interactive policies fall through to the plain denial
-  [[nodiscard]] auto redirect_to_login(HTTPRequest &request,
-                                       HTTPResponse &response) const -> bool;
+  // Serve, in place, the login page for an unauthenticated browser navigating
+  // to a path an interactive policy governs, returning true when it wrote the
+  // response so the caller stops. The page is a per-directory artifact resolved
+  // from the nearest governing directory above the path, so it is identical for
+  // every path under the same policies and a denial never reveals whether a
+  // schema exists. Machines, non-navigations, and paths with no interactive
+  // policy fall through to the plain denial
+  [[nodiscard]] auto serve_login(HTTPRequest &request,
+                                 HTTPResponse &response) const -> bool;
 
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
@@ -189,6 +192,17 @@ private:
   [[nodiscard]] auto artifact_locate(std::string_view input, Tree tree,
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
+
+  // Resolve a named artifact by walking up from the input path to the nearest
+  // ancestor directory whose copy has content, skipping the empty placeholders
+  // that mark directories the artifact does not apply to. This lets a
+  // per-directory page answer any path beneath it, including one that resolves
+  // to no resource at all. Like the unauthenticated resolver it bypasses
+  // authorisation, so it is only for denial pages that are public by design
+  [[nodiscard]] auto
+  artifact_resolve_ancestor(std::string_view input, Tree tree,
+                            std::string_view artifact_name) const
+      -> std::optional<ResolvedArtifact>;
 
   [[nodiscard]] auto blaze_template(Credentials credentials,
                                     std::string_view schema_uri,

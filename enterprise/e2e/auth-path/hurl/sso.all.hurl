@@ -57,15 +57,20 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# A browser navigating to the console page under the base path is sent to begin
-# a login, its redirect target rooted at the base path like every other link
+# A browser navigating to the console page under the base path is shown its
+# login in place, a 401 whose provider link is rooted at the base path like
+# every other link
 GET {{base}}/registry/console/
 Accept: text/html
-HTTP 303
-Location: /registry/self/v1/auth/login/keycloak?to=%2Fregistry%2Fconsole%2F
+HTTP 401
 Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+WWW-Authenticate: Bearer realm="registry"
 [Asserts]
+header "Location" not exists
 header "Set-Cookie" not exists
+xpath "string(//title)" == "Sign In"
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/registry/self/v1/auth/login/keycloak"
 
 # Starting a login redirects to the real provider, carrying a transaction cookie
 # scoped to the base path
