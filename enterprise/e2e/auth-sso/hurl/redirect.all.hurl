@@ -8,7 +8,7 @@ HTTP 401
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 WWW-Authenticate: Bearer realm="registry"
-Referrer-Policy: strict-origin-when-cross-origin
+Referrer-Policy: same-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 Vary: Accept, Accept-Encoding

@@ -87,7 +87,7 @@ auto GENERATE_WEB_LOGIN::handler(
   writer.raw("<!DOCTYPE html>");
   writer.html().attribute("class", "h-100").attribute("lang", "en");
   html::make_head(writer, configuration, configuration.url, "Sign In",
-                  "Sign in to access this page");
+                  "Sign in to access this page", "same-origin");
   writer.body().attribute("class",
                           "h-100 d-flex flex-column bg-body-secondary");
 
