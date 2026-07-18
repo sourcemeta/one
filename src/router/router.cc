@@ -148,6 +148,9 @@ auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
     return false;
   }
 
+  // The same headers every HTML response carries. The provider link opts into
+  // a same-origin referrer on its own, so the page as a whole keeps the strict
+  // default and leaks no referrer from any other request
   static constexpr BrowserSecurityHeaders SECURITY{
       .referrer_policy = "strict-origin-when-cross-origin",
       .frame_ancestors = "'none'",
