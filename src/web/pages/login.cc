@@ -3,7 +3,6 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
-#include <sourcemeta/core/uri.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
@@ -18,6 +17,39 @@ namespace {
 
 auto is_interactive(const sourcemeta::core::JSON &policy) -> bool {
   return policy.at("type").to_string() == "oidc";
+}
+
+auto write_providers(sourcemeta::core::HTMLWriter &body,
+                     const sourcemeta::one::Configuration &configuration,
+                     const sourcemeta::core::JSON &policies) -> void {
+  body.div().attribute("class", "container-fluid p-4");
+  body.h2().attribute("class", "fw-bold");
+  body.text("This page requires authentication");
+  body.close();
+  body.p().attribute("class", "lead");
+  body.text("Choose how you want to sign in");
+  body.close();
+
+  body.div().attribute("class", "d-grid gap-2");
+  for (const auto &policy : policies.as_array()) {
+    if (!is_interactive(policy)) {
+      continue;
+    }
+
+    // The link carries no return target on purpose. The login endpoint decides
+    // where to land the caller, so nothing here depends on the requested path
+    std::string href{configuration.base_path};
+    href += "/self/v1/auth/login/";
+    href += policy.at("name").to_string();
+    body.a()
+        .attribute("class", "btn btn-primary")
+        .attribute("data-sourcemeta-ui-login", policy.at("name").to_string())
+        .attribute("href", href);
+    body.text(policy.at("title").to_string());
+    body.close();
+  }
+  body.close();
+  body.close();
 }
 
 } // namespace
@@ -48,41 +80,19 @@ auto GENERATE_WEB_LOGIN::handler(
     return;
   }
 
-  const auto &canonical{directory.at("url").to_string()};
-  const auto &target{directory.at("path").to_string()};
-
+  // This page is served for every path an interactive policy governs, including
+  // ones that resolve to no schema at all. Denials must not disclose which
+  // schemas exist, so the page has to be byte-identical for every path under
+  // the same policies: were it to embed the directory's own URL or a per-path
+  // return target, a caller could tell an existing collection from a missing
+  // one by comparing responses. So it names only its providers, its canonical
+  // URL is the instance root like the plain denial page, and the return target
+  // is deferred to the login endpoint
   sourcemeta::core::HTMLWriter writer;
-  html::make_page(writer, configuration, canonical, "Sign In",
+  html::make_page(writer, configuration, configuration.url, "Sign In",
                   "Sign in to access this page",
                   [&](sourcemeta::core::HTMLWriter &body) -> void {
-                    body.div().attribute("class", "container-fluid p-4");
-                    body.h2().attribute("class", "fw-bold");
-                    body.text("This page requires authentication");
-                    body.close();
-                    body.p().attribute("class", "lead");
-                    body.text("Choose how you want to sign in");
-                    body.close();
-
-                    body.div().attribute("class", "d-grid gap-2");
-                    for (const auto &policy : policies.as_array()) {
-                      if (!is_interactive(policy)) {
-                        continue;
-                      }
-
-                      std::string href{configuration.base_path};
-                      href += "/self/v1/auth/login/";
-                      href += policy.at("name").to_string();
-                      href += "?to=";
-                      sourcemeta::core::URI::escape(target, href);
-                      body.a()
-                          .attribute("class", "btn btn-primary")
-                          .attribute("data-sourcemeta-ui-login",
-                                     policy.at("name").to_string())
-                          .attribute("href", href);
-                      body.text(policy.at("title").to_string());
-                      body.close();
-                    }
-                    body.close();
+                    write_providers(body, configuration, policies);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};
