@@ -49,6 +49,7 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
     body.close();
   }
   body.close();
+  body.close();
 }
 
 } // namespace
