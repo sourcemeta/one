@@ -342,7 +342,7 @@ private:
         return std::nullopt;
       }
 
-      return sourcemeta::one::oidc_parse_provider_metadata(result.body);
+      return sourcemeta::one::oidc_parse_provider_metadata(result.body, issuer);
     } catch (...) {
       return std::nullopt;
     }

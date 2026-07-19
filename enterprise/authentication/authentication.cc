@@ -799,7 +799,8 @@ struct Authentication::Impl {
         return nullptr;
       }
 
-      auto document{oidc_parse_provider_metadata(metadata.value().body)};
+      auto document{
+          oidc_parse_provider_metadata(metadata.value().body, issuer)};
       if (!document.has_value() || !document.value().jwks_uri.has_value()) {
         return nullptr;
       }

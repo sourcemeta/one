@@ -69,11 +69,19 @@ inline auto oidc_discovery_url(const std::string_view issuer) -> std::string {
 /// @ingroup oidc
 /// Read the provider endpoints out of an OpenID Provider metadata document
 /// (OpenID Connect Discovery 1.0 Section 3), returning nothing for a body that
-/// is not a JSON object.
-inline auto oidc_parse_provider_metadata(const std::string_view body)
+/// is not a JSON object, or whose `issuer` is not identical to the issuer the
+/// document was requested from (OpenID Connect Discovery 1.0 Section 4.3), so a
+/// valid response cannot bind the flow to a different provider's endpoints.
+inline auto oidc_parse_provider_metadata(const std::string_view body,
+                                         const std::string_view issuer)
     -> std::optional<OIDCProviderMetadata> {
   const auto document{sourcemeta::core::try_parse_json(body)};
   if (!document.has_value() || !document.value().is_object()) {
+    return std::nullopt;
+  }
+
+  const auto returned_issuer{detail::read_endpoint(document.value(), "issuer")};
+  if (!returned_issuer.has_value() || returned_issuer.value() != issuer) {
     return std::nullopt;
   }
 

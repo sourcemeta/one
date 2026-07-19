@@ -253,7 +253,8 @@ private:
         return std::nullopt;
       }
 
-      auto document{sourcemeta::one::oidc_parse_provider_metadata(result.body)};
+      auto document{
+          sourcemeta::one::oidc_parse_provider_metadata(result.body, issuer)};
       if (!document.has_value() ||
           !document.value().authorization_endpoint.has_value()) {
         return std::nullopt;
