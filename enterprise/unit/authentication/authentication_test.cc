@@ -838,10 +838,11 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
 
   const sourcemeta::one::Authentication authentication{
       path,
-      stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
-                     R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
-                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-                   nullptr)};
+      stub_fetcher(
+          {{"https://acme.test/.well-known/openid-configuration",
+            R"JSON({ "issuer": "https://acme.test", "jwks_uri": "https://acme.test/keys" })JSON"},
+           {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+          nullptr)};
   // The issuer claim is "acme", independent of the discovery host
   const std::array<sourcemeta::one::Authentication::Policy, 1> issuer_policies{
       {{.paths = paths,
@@ -854,10 +855,11 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
                                         issuer_path);
   const sourcemeta::one::Authentication issuer_authentication{
       issuer_path,
-      stub_fetcher({{"acme/.well-known/openid-configuration",
-                     R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
-                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-                   nullptr)};
+      stub_fetcher(
+          {{"acme/.well-known/openid-configuration",
+            R"JSON({ "issuer": "acme", "jwks_uri": "https://acme.test/keys" })JSON"},
+           {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+          nullptr)};
   EXPECT_TRUE(issuer_authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
 }
 

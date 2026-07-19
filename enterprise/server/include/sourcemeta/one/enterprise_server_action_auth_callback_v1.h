@@ -12,6 +12,9 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
+#include <authentication_oauth.h>
+#include <authentication_oidc.h>
+
 #include <array>       // std::array
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <cstdlib>     // std::getenv
@@ -176,9 +179,9 @@ public:
     std::string redirect_uri{this->server_uri()};
     redirect_uri += "/self/v1/auth/callback/";
     redirect_uri += policy_name;
-    const sourcemeta::one::OIDCClient client{.client_id = policy->client_id,
-                                             .client_secret = client_secret,
-                                             .redirect_uri = redirect_uri};
+    const sourcemeta::one::OAuthClient client{.client_id = policy->client_id,
+                                              .client_secret = client_secret,
+                                              .redirect_uri = redirect_uri};
 
     const auto id_token{this->exchange(metadata.value().token_endpoint.value(),
                                        client, code, verifier->to_string())};
@@ -191,8 +194,8 @@ public:
 
     auto provider{this->jwks_provider(metadata.value().jwks_uri.value())};
     const auto identity{sourcemeta::one::oidc_validate(
-        provider, id_token.value(), ID_TOKEN_ALGORITHMS, policy->issuer, client,
-        nonce->to_string())};
+        provider, id_token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
+        policy->client_id, nonce->to_string())};
     if (!identity.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-invalid-identity",
@@ -326,10 +329,10 @@ private:
   }
 
   [[nodiscard]] auto discover(const std::string_view issuer) const
-      -> std::optional<sourcemeta::one::DiscoveryDocument> {
+      -> std::optional<sourcemeta::one::OIDCProviderMetadata> {
     try {
       sourcemeta::core::HTTPSystemRequest fetch{
-          sourcemeta::one::discovery_url(issuer)};
+          sourcemeta::one::oidc_discovery_url(issuer)};
       fetch.connect_timeout(std::chrono::seconds{2});
       fetch.timeout(std::chrono::seconds{5});
       fetch.maximum_response_size(1024UL * 1024UL);
@@ -339,14 +342,14 @@ private:
         return std::nullopt;
       }
 
-      return sourcemeta::one::discovery_parse(result.body);
+      return sourcemeta::one::oidc_parse_provider_metadata(result.body, issuer);
     } catch (...) {
       return std::nullopt;
     }
   }
 
   [[nodiscard]] auto exchange(const std::string_view token_endpoint,
-                              const sourcemeta::one::OIDCClient &client,
+                              const sourcemeta::one::OAuthClient &client,
                               const std::string_view code,
                               const std::string_view code_verifier) const
       -> std::optional<std::string> {
@@ -358,14 +361,14 @@ private:
       fetch.maximum_response_size(1024UL * 1024UL);
       fetch.follow_redirects(false);
       fetch.body(
-          sourcemeta::one::oidc_token_request(client, code, code_verifier),
+          sourcemeta::one::oauth_token_request(client, code, code_verifier),
           "application/x-www-form-urlencoded");
       const auto result{fetch.send()};
       if (result.status.code < 200 || result.status.code >= 300) {
         return std::nullopt;
       }
 
-      return sourcemeta::one::oidc_parse_token_response(result.body);
+      return sourcemeta::one::oidc_parse_id_token(result.body);
     } catch (...) {
       return std::nullopt;
     }
