@@ -31,8 +31,8 @@ auto load_custom_lint_rules(
     const sourcemeta::one::BuildDynamicCallback &callback) -> void {
   const auto default_dialect{
       configuration.default_dialect.value_or(std::string{})};
-  for (const auto &rule_path : configuration.lint.rules) {
-    auto rule_schema{sourcemeta::core::read_yaml_or_json(rule_path)};
+  for (const auto &rule : configuration.lint.rules) {
+    auto rule_schema{sourcemeta::core::read_yaml_or_json(rule.path)};
     try {
       custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
           rule_schema, sourcemeta::blaze::schema_walker,
@@ -40,22 +40,25 @@ auto load_custom_lint_rules(
               const auto identifier) -> std::optional<sourcemeta::core::JSON> {
             return resolver(identifier, callback);
           },
-          sourcemeta::blaze::default_schema_compiler, default_dialect));
+          sourcemeta::blaze::default_schema_compiler, default_dialect,
+          std::nullopt,
+          rule.top_level ? sourcemeta::blaze::SchemaRule::Scope::TopLevel
+                         : sourcemeta::blaze::SchemaRule::Scope::All));
     } catch (
         const sourcemeta::blaze::SchemaRuleInvalidNamePatternError &error) {
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaRuleInvalidNamePatternError>(
-          rule_path, error.identifier(), error.regex());
+          rule.path, error.identifier(), error.regex());
     } catch (const sourcemeta::blaze::SchemaRuleInvalidNameError &error) {
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaRuleInvalidNameError>(
-          rule_path, error.identifier(), error.what());
+          rule.path, error.identifier(), error.what());
     } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaRuleMissingNameError>(rule_path);
+          sourcemeta::blaze::SchemaRuleMissingNameError>(rule.path);
     } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownBaseDialectError>(rule_path);
+          sourcemeta::blaze::SchemaUnknownBaseDialectError>(rule.path);
     }
   }
 }

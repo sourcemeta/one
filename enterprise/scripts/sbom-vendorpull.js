@@ -44,7 +44,19 @@ const IGNORED = new Set([
   "jsonschema-draft1",
   "jsonschema-draft0",
   "openapi",
-  "spdx"
+  "spdx",
+  "iana-oauth/parameters.csv",
+  "iana-oauth/extensions-error.csv",
+  "iana-oauth/token-types.csv",
+  "iana-oauth/token-type-hint.csv",
+  "iana-oauth/token-endpoint-auth-method.csv",
+  "iana-oauth/pkce-code-challenge-method.csv",
+  "iana-oauth/authorization-server-metadata.csv",
+  "iana-oauth/protected-resource-metadata.csv",
+  "iana-oauth/client-metadata.csv",
+  "iana-oauth/uri.csv",
+  "iana-oauth/token-introspection-response.csv",
+  "iana-oauth/endpoint.csv"
 ]);
 
 const IGNORED_PREFIXES = [
