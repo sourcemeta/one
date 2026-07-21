@@ -1,10 +1,9 @@
 #ifndef SOURCEMETA_ONE_AUTHENTICATION_OIDC_H_
 #define SOURCEMETA_ONE_AUTHENTICATION_OIDC_H_
 
-#include "authentication_oauth.h"
-
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/oauth.h>
 
 #include <array>       // std::array
 #include <optional>    // std::optional, std::nullopt
@@ -14,7 +13,7 @@
 
 /// @defgroup oidc OpenID Connect
 /// @brief Standards-driven primitives for the OpenID Connect identity layer,
-/// building on @ref oauth and JOSE.
+/// building on OAuth and JOSE.
 
 namespace sourcemeta::one {
 
@@ -98,24 +97,38 @@ inline auto oidc_parse_provider_metadata(const std::string_view body,
 /// @ingroup oidc
 /// Mint a fresh, high-entropy nonce that binds an identity token to the login
 /// this instance started, defeating replay (OpenID Connect Core 1.0
-/// Section 15.5.2).
-inline auto oidc_nonce() -> std::string { return detail::random_token(); }
+/// Section 15.5.2). The 43 bytes are not null terminated, so pass them onward
+/// as a view of `data()` and `size()` rather than as a C string.
+inline auto oidc_nonce() -> std::array<char, 43> {
+  return sourcemeta::core::oauth_random_token();
+}
 
 /// @ingroup oidc
 /// The URL that begins an OpenID Connect authentication request, an OAuth
 /// authorization code request (RFC 6749 Section 4.1.1) that always carries the
 /// `openid` scope and a `nonce` bound to this login (OpenID Connect Core 1.0
-/// Section 3.1.2.1). Deferring to @ref oauth_authorization_url keeps the
-/// request and @ref oidc_validate from drifting on the nonce.
-inline auto
-oidc_authorization_url(const std::string_view authorization_endpoint,
-                       const OAuthClient &client, const std::string_view state,
-                       const std::string_view code_challenge,
-                       const std::string_view nonce) -> std::string {
-  const std::array<OAuthParameter, 1> extra{
+/// Section 3.1.2.1). Building the request in one place keeps it and
+/// @ref oidc_validate from drifting on the nonce.
+inline auto oidc_authorization_url(
+    const std::string_view authorization_endpoint,
+    const std::string_view client_id, const std::string_view redirect_uri,
+    const std::string_view state, const std::string_view code_challenge,
+    const std::string_view nonce) -> std::string {
+  const std::array<sourcemeta::core::OAuthParameter, 1> extra{
       {{.name = "nonce", .value = nonce}}};
-  return oauth_authorization_url(authorization_endpoint, client, "openid",
-                                 state, code_challenge, extra);
+  sourcemeta::core::OAuthAuthorizationRequest request;
+  request.client_id = client_id;
+  request.redirect_uri = redirect_uri;
+  request.scope = "openid";
+  request.state = state;
+  request.code_challenge = code_challenge;
+  request.code_challenge_method = sourcemeta::core::oauth_pkce_method_code(
+      sourcemeta::core::OAuthPKCEMethod::S256);
+  request.extra = extra;
+  std::string result;
+  sourcemeta::core::oauth_build_authorization_url(authorization_endpoint,
+                                                  request, result);
+  return result;
 }
 
 /// @ingroup oidc

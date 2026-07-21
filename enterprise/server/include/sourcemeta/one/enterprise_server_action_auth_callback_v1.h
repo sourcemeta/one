@@ -1,18 +1,19 @@
 #ifndef SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTION_AUTH_CALLBACK_V1_H_
 #define SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTION_AUTH_CALLBACK_V1_H_
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <authentication_oauth.h>
 #include <authentication_oidc.h>
 
 #include <array>       // std::array
@@ -179,12 +180,10 @@ public:
     std::string redirect_uri{this->server_uri()};
     redirect_uri += "/self/v1/auth/callback/";
     redirect_uri += policy_name;
-    const sourcemeta::one::OAuthClient client{.client_id = policy->client_id,
-                                              .client_secret = client_secret,
-                                              .redirect_uri = redirect_uri};
 
-    const auto id_token{this->exchange(metadata.value().token_endpoint.value(),
-                                       client, code, verifier->to_string())};
+    const auto id_token{this->exchange(
+        metadata.value().token_endpoint.value(), policy->client_id,
+        client_secret, redirect_uri, code, verifier->to_string())};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-exchange-failed",
@@ -349,7 +348,9 @@ private:
   }
 
   [[nodiscard]] auto exchange(const std::string_view token_endpoint,
-                              const sourcemeta::one::OAuthClient &client,
+                              const std::string_view client_id,
+                              const std::string_view client_secret,
+                              const std::string_view redirect_uri,
                               const std::string_view code,
                               const std::string_view code_verifier) const
       -> std::optional<std::string> {
@@ -360,9 +361,13 @@ private:
       fetch.timeout(std::chrono::seconds{5});
       fetch.maximum_response_size(1024UL * 1024UL);
       fetch.follow_redirects(false);
-      fetch.body(
-          sourcemeta::one::oauth_token_request(client, code, code_verifier),
-          "application/x-www-form-urlencoded");
+      sourcemeta::core::SecureString body;
+      sourcemeta::core::oauth_build_token_request_code(code, redirect_uri,
+                                                       code_verifier, {}, body);
+      sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
+                                                 body);
+      fetch.body(std::string{std::string_view{body}},
+                 "application/x-www-form-urlencoded");
       const auto result{fetch.send()};
       if (result.status.code < 200 || result.status.code >= 300) {
         return std::nullopt;

@@ -3,14 +3,14 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_server
 
 target_compile_definitions(sourcemeta_one_enterprise_server INTERFACE SOURCEMETA_ONE_ENTERPRISE)
 
-# The auth endpoints compiled through this target consume the header-only OAuth
-# and OIDC modules that live beside the authentication library, so this target
-# carries both their include directory and the libraries their inline bodies
-# call into
+# The auth endpoints compiled through this target consume the header-only OIDC
+# module that lives beside the authentication library, so this target carries
+# both its include directory and the libraries its inline bodies call into
 target_include_directories(sourcemeta_one_enterprise_server INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/enterprise/authentication>")
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::crypto)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::jose)
+target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::oauth)
 
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::http)
