@@ -276,13 +276,17 @@ TEST(valid_005) {
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 2);
   EXPECT_COLLECTION(
-      configuration, "example", lint.rules.at(0),
+      configuration, "example", lint.rules.at(0).path,
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
                                         "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).top_level,
+                    false);
   EXPECT_COLLECTION(
-      configuration, "example", lint.rules.at(1),
+      configuration, "example", lint.rules.at(1).path,
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
                                         "rules" / "another_rule.py"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(1).top_level,
+                    false);
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
   EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
   EXPECT_COLLECTION(configuration, "example",
@@ -388,9 +392,11 @@ TEST(valid_007) {
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);
   EXPECT_COLLECTION(
-      configuration, "example", lint.rules.at(0),
+      configuration, "example", lint.rules.at(0).path,
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
                                         "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).top_level,
+                    false);
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 1);
   EXPECT_COLLECTION(configuration, "example", ignore.at(0),
                     std::filesystem::weakly_canonical(
@@ -438,9 +444,11 @@ TEST(valid_008) {
                     "https://example.com/schemas");
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);
   EXPECT_COLLECTION(
-      configuration, "example", lint.rules.at(0),
+      configuration, "example", lint.rules.at(0).path,
       std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
                                         "folder" / "rules" / "my_rule.py"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).top_level,
+                    false);
   EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
 
   EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
