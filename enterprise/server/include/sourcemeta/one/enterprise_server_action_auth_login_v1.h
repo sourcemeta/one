@@ -5,13 +5,13 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <authentication_oauth.h>
 #include <authentication_oidc.h>
 
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
@@ -125,9 +125,12 @@ public:
       return;
     }
 
-    const auto state{sourcemeta::one::oauth_state()};
-    const auto nonce{sourcemeta::one::oidc_nonce()};
-    const auto verifier{sourcemeta::one::oauth_pkce_verifier()};
+    const auto secrets{sourcemeta::core::oauth_transaction_mint()};
+    const std::string_view state{secrets.state.data(), secrets.state.size()};
+    const std::string_view verifier{secrets.code_verifier.data(),
+                                    secrets.code_verifier.size()};
+    const auto nonce_token{sourcemeta::one::oidc_nonce()};
+    const std::string_view nonce{nonce_token.data(), nonce_token.size()};
 
     auto payload{sourcemeta::core::JSON::make_object()};
     payload.assign_assume_new("policy",
@@ -188,13 +191,10 @@ public:
     redirect_uri += CALLBACK_PATH;
     redirect_uri += policy_name;
 
-    const auto challenge{sourcemeta::one::oauth_pkce_challenge(verifier)};
-    const auto url{
-        sourcemeta::one::oidc_authorization_url(authorization_endpoint.value(),
-                                                {.client_id = policy->client_id,
-                                                 .client_secret = client_secret,
-                                                 .redirect_uri = redirect_uri},
-                                                state, challenge, nonce)};
+    const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
+    const auto url{sourcemeta::one::oidc_authorization_url(
+        authorization_endpoint.value(), policy->client_id, redirect_uri, state,
+        std::string_view{challenge.data(), challenge.size()}, nonce)};
 
     std::string cookie_name;
     cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
