@@ -11,6 +11,7 @@ target_include_directories(sourcemeta_one_enterprise_server INTERFACE
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::crypto)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::jose)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::oauth)
+target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::oidc)
 
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::http)

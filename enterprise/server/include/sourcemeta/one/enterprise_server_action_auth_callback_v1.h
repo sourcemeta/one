@@ -8,6 +8,7 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
+#include <sourcemeta/core/oidc.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
@@ -123,8 +124,9 @@ public:
         !sealed_policy->is_string() ||
         sealed_policy->to_string() != policy_name || sealed_state == nullptr ||
         !sealed_state->is_string() || sealed_state->to_string() != state ||
-        nonce == nullptr || !nonce->is_string() || verifier == nullptr ||
-        !verifier->is_string()) {
+        nonce == nullptr || !nonce->is_string() || nonce->to_string().empty() ||
+        verifier == nullptr || !verifier->is_string() ||
+        verifier->to_string().empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
@@ -191,10 +193,20 @@ public:
       return;
     }
 
+    const auto token{sourcemeta::core::JWT::from(id_token.value())};
+    if (!token.has_value()) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
+                 "urn:sourcemeta:one:auth-invalid-identity",
+                 "The identity token could not be validated", policy_name);
+      return;
+    }
+
     auto provider{this->jwks_provider(metadata.value().jwks_uri.value())};
-    const auto identity{sourcemeta::one::oidc_validate(
-        provider, id_token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
-        policy->client_id, nonce->to_string())};
+    sourcemeta::core::OIDCValidationOptions options;
+    options.nonce = nonce->to_string();
+    const auto identity{sourcemeta::core::oidc_validate_id_token(
+        provider, token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
+        policy->client_id, options)};
     if (!identity.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-invalid-identity",
@@ -373,7 +385,12 @@ private:
         return std::nullopt;
       }
 
-      return sourcemeta::one::oidc_parse_id_token(result.body);
+      const auto document{sourcemeta::core::try_parse_json(result.body)};
+      if (!document.has_value()) {
+        return std::nullopt;
+      }
+
+      return sourcemeta::core::oidc_parse_id_token(document.value());
     } catch (...) {
       return std::nullopt;
     }
