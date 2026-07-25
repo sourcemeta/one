@@ -1,5 +1,5 @@
 # A JWT policy under a base path is matched with the base path stripped
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
@@ -66,7 +66,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 }
 
 # A token minted for a different audience does not satisfy the policy
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-wrong

@@ -22,8 +22,8 @@ services:
     image: nginx:1.27-alpine
     network_mode: service:keycloak
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./tls:/etc/nginx/tls:ro
+      - ../keycloak/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../keycloak/tls:/etc/nginx/tls:ro
     depends_on:
       keycloak:
         condition: service_started
@@ -32,6 +32,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      additional_contexts:
+        tls: ../keycloak/tls
       args:
         SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
     environment:

@@ -1,5 +1,5 @@
 # The provider issues a signed JWT via the client_credentials grant
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
@@ -274,7 +274,7 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # A correctly signed token minted for a different audience is denied
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-wrong
