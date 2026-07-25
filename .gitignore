@@ -13,4 +13,3 @@ Brewfile.lock.json
 .DS_Store
 /node_modules
 /.cache
-/enterprise/e2e/auth-sso/tls
