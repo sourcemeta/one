@@ -1,7 +1,6 @@
 FROM one
 COPY tls/ca.crt /usr/local/share/ca-certificates/auth-sso-authority.crt
-RUN cat /usr/local/share/ca-certificates/auth-sso-authority.crt \
-  >> /etc/ssl/certs/ca-certificates.crt
+RUN update-ca-certificates
 COPY one.json .
 COPY schemas schemas
 RUN sourcemeta one.json --profile
