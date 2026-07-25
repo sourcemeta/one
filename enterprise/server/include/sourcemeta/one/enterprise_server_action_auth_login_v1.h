@@ -6,6 +6,7 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
+#include <sourcemeta/core/oidc.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
@@ -129,7 +130,7 @@ public:
     const std::string_view state{secrets.state.data(), secrets.state.size()};
     const std::string_view verifier{secrets.code_verifier.data(),
                                     secrets.code_verifier.size()};
-    const auto nonce_token{sourcemeta::one::oidc_nonce()};
+    const auto nonce_token{sourcemeta::core::oidc_nonce()};
     const std::string_view nonce{nonce_token.data(), nonce_token.size()};
 
     auto payload{sourcemeta::core::JSON::make_object()};
@@ -192,9 +193,18 @@ public:
     redirect_uri += policy_name;
 
     const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
-    const auto url{sourcemeta::one::oidc_authorization_url(
+    const auto url{sourcemeta::core::oidc_authorization_url(
         authorization_endpoint.value(), policy->client_id, redirect_uri, state,
         std::string_view{challenge.data(), challenge.size()}, nonce)};
+    if (!url.has_value()) {
+      sourcemeta::one::json_error(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          "urn:sourcemeta:one:auth-misconfigured",
+          "The authentication configuration is incomplete", this->error_schema_,
+          "*");
+      return;
+    }
 
     std::string cookie_name;
     cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
@@ -225,7 +235,7 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     response.write_header("Set-Cookie", cookie.value());
-    response.write_header("Location", url);
+    response.write_header("Location", url.value());
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
