@@ -125,7 +125,8 @@ public:
         sealed_policy->to_string() != policy_name || sealed_state == nullptr ||
         !sealed_state->is_string() || sealed_state->to_string() != state ||
         nonce == nullptr || !nonce->is_string() || nonce->to_string().empty() ||
-        verifier == nullptr || !verifier->is_string()) {
+        verifier == nullptr || !verifier->is_string() ||
+        verifier->to_string().empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
