@@ -5,6 +5,7 @@
 #include <sourcemeta/core/http_export.h>
 #endif
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/http_aws_sigv4.h>
 #include <sourcemeta/core/http_method.h>
 #include <sourcemeta/core/http_status.h>
@@ -17,6 +18,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move, std::pair
+#include <variant>     // std::variant, std::visit
 #include <vector>      // std::vector
 
 namespace sourcemeta::core {
@@ -163,6 +165,17 @@ public:
     return *this;
   }
 
+  /// Set the request body from wiping storage, sent along with the given
+  /// `Content-Type` header. The body is held in the wiping storage so a secret
+  /// it carries, such as a client secret or PKCE code verifier, is never copied
+  /// into an ordinary string
+  auto body(SecureString data, std::string content_type)
+      -> HTTPSystemRequest & {
+    this->body_ =
+        Body{.data = std::move(data), .content_type = std::move(content_type)};
+    return *this;
+  }
+
   /// Set whether to follow redirects, on by default
   auto follow_redirects(const bool value) -> HTTPSystemRequest & {
     this->follow_redirects_ = value;
@@ -224,8 +237,17 @@ public:
 
 private:
   struct Body {
-    std::string data;
+    // A plain body carries no secret and keeps the ordinary string storage,
+    // while a body set from wiping storage stays in it, so the common request
+    // pays nothing and a secret one is never copied into an ordinary string
+    std::variant<std::string, SecureString> data;
     std::string content_type;
+
+    [[nodiscard]] auto bytes() const -> std::string_view {
+      return std::visit(
+          [](const auto &value) -> std::string_view { return value; },
+          this->data);
+    }
   };
 
   std::string url_;

@@ -45,7 +45,7 @@ GET {{base}}/self/v1/auth/login/keycloak
 HTTP 303
 Cache-Control: no-store
 [Asserts]
-header "Location" startsWith "http://keycloak:8080/realms/main/protocol/openid-connect/auth?"
+header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/auth?"
 header "Location" contains "client_id=registry"
 header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
 header "WWW-Authenticate" not exists

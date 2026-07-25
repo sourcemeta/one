@@ -1,5 +1,5 @@
 # A token opens the closed registry just as the root key does
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
@@ -73,7 +73,7 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # A token minted for a different audience opens nothing
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-wrong

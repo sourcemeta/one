@@ -1,4 +1,6 @@
 FROM one
+COPY tls/ca.crt /usr/local/share/ca-certificates/sandbox-authority.crt
+RUN update-ca-certificates
 COPY one.json .
 COPY schemas schemas
 RUN sourcemeta one.json --profile

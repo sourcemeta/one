@@ -1,5 +1,5 @@
 # Two clients of the same issuer, each scoped to a different audience
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-service
@@ -11,7 +11,7 @@ schemas_token: jsonpath "$.access_token"
 jsonpath "$.token_type" == "Bearer"
 jsonpath "$.access_token" matches /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
-POST http://localhost:8080/realms/main/protocol/openid-connect/token
+POST https://keycloak:8443/realms/main/protocol/openid-connect/token
 [FormParams]
 grant_type: client_credentials
 client_id: ci-reports

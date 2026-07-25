@@ -9,14 +9,14 @@ GET {{base}}/self/v1/auth/login/keycloak?to=%2F%2Fevil.example.com
 HTTP 303
 Cache-Control: no-store
 [Captures]
-authorize_url: header "Location" replace "http://keycloak:8080" "http://localhost:8080"
+authorize_url: header "Location"
 [Asserts]
 header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
 
 GET {{authorize_url}}
 HTTP 200
 [Captures]
-login_action: xpath "string(//form[@id='kc-form-login']/@action)" replace "http://keycloak:8080" "http://localhost:8080"
+login_action: xpath "string(//form[@id='kc-form-login']/@action)"
 
 POST {{login_action}}
 [FormParams]
@@ -40,7 +40,7 @@ GET {{base}}/self/v1/auth/login/keycloak?to=%2F%5Cevil.example.com
 HTTP 303
 Cache-Control: no-store
 [Captures]
-authorize_backslash: header "Location" replace "http://keycloak:8080" "http://localhost:8080"
+authorize_backslash: header "Location"
 
 GET {{authorize_backslash}}
 HTTP 302
@@ -57,7 +57,7 @@ GET {{base}}/self/v1/auth/login/keycloak?to=https%3A%2F%2Fevil.example.com
 HTTP 303
 Cache-Control: no-store
 [Captures]
-authorize_scheme: header "Location" replace "http://keycloak:8080" "http://localhost:8080"
+authorize_scheme: header "Location"
 
 GET {{authorize_scheme}}
 HTTP 302

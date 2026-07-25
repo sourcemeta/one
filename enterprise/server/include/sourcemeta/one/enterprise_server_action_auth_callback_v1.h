@@ -15,8 +15,6 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <authentication_oidc.h>
-
 #include <array>       // std::array
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <cstdlib>     // std::getenv
@@ -171,8 +169,8 @@ public:
     }
 
     const auto metadata{this->discover(policy->issuer)};
-    if (!metadata.has_value() || !metadata.value().token_endpoint.has_value() ||
-        !metadata.value().jwks_uri.has_value()) {
+    if (!metadata.has_value() ||
+        !metadata.value().token_endpoint().has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-provider-unreachable",
                  "The identity provider could not be reached", policy_name);
@@ -184,7 +182,7 @@ public:
     redirect_uri += policy_name;
 
     const auto id_token{this->exchange(
-        metadata.value().token_endpoint.value(), policy->client_id,
+        metadata.value().token_endpoint().value(), policy->client_id,
         client_secret, redirect_uri, code, verifier->to_string())};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
@@ -201,7 +199,8 @@ public:
       return;
     }
 
-    auto provider{this->jwks_provider(metadata.value().jwks_uri.value())};
+    auto provider{
+        this->jwks_provider(std::string{metadata.value().jwks_uri()})};
     sourcemeta::core::OIDCValidationOptions options;
     options.nonce = nonce->to_string();
     const auto identity{sourcemeta::core::oidc_validate_id_token(
@@ -340,10 +339,14 @@ private:
   }
 
   [[nodiscard]] auto discover(const std::string_view issuer) const
-      -> std::optional<sourcemeta::one::OIDCProviderMetadata> {
+      -> std::optional<sourcemeta::core::OIDCProviderMetadata> {
     try {
-      sourcemeta::core::HTTPSystemRequest fetch{
-          sourcemeta::one::oidc_discovery_url(issuer)};
+      const auto url{sourcemeta::core::oidc_discovery_url(issuer)};
+      if (!url.has_value()) {
+        return std::nullopt;
+      }
+
+      sourcemeta::core::HTTPSystemRequest fetch{url.value()};
       fetch.connect_timeout(std::chrono::seconds{2});
       fetch.timeout(std::chrono::seconds{5});
       fetch.maximum_response_size(1024UL * 1024UL);
@@ -353,7 +356,13 @@ private:
         return std::nullopt;
       }
 
-      return sourcemeta::one::oidc_parse_provider_metadata(result.body, issuer);
+      auto parsed{sourcemeta::core::try_parse_json(result.body)};
+      if (!parsed.has_value()) {
+        return std::nullopt;
+      }
+
+      return sourcemeta::core::OIDCProviderMetadata::from(
+          std::move(parsed).value(), issuer);
     } catch (...) {
       return std::nullopt;
     }
@@ -378,8 +387,7 @@ private:
                                                        code_verifier, {}, body);
       sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
                                                  body);
-      fetch.body(std::string{std::string_view{body}},
-                 "application/x-www-form-urlencoded");
+      fetch.body(std::move(body), "application/x-www-form-urlencoded");
       const auto result{fetch.send()};
       if (result.status.code < 200 || result.status.code >= 300) {
         return std::nullopt;

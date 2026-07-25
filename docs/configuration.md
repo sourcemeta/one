@@ -474,7 +474,7 @@ same response as any other unauthenticated request.
 | `/issuer`       | String  | :red_circle: **Yes** | N/A | The token issuer to trust, matched against the `iss` claim |
 | `/audience`     | String  | :red_circle: **Yes** | N/A | The audience this instance identifies as. A token is accepted when its `aud` claim includes this value, so a token minted for several audiences at once is accepted as long as this one is among them |
 | `/algorithms`   | Array   | :red_circle: **Yes** | N/A | The JSON Web Signature algorithms the policy accepts. One or more of `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`, `ES256`, `ES384`, `ES512`, and `EdDSA` |
-| `/jwksUri`      | String  | No | Discovered from the issuer | The URL of the issuer's JSON Web Key Set. When omitted, it is discovered from the issuer's OpenID Connect metadata at `{issuer}/.well-known/openid-configuration` |
+| `/jwksUri`      | String  | No | Discovered from the issuer | The URL of the issuer's JSON Web Key Set. When omitted, it is discovered from the issuer's OpenID Connect metadata at `{issuer}/.well-known/openid-configuration`, which requires the issuer to be an `https` URL that publishes a valid OpenID Provider metadata document. Set it explicitly for an issuer that does not meet that bar |
 
 For example, the following instance keeps `/docs` public, gates `/partners`
 behind an API key, and protects `/internal` with a JWT policy that trusts a
@@ -535,7 +535,7 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
 | `/title`        | String  | No | The policy name | A human readable version of the policy name |
-| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens |
+| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens. It must be an `https` URL, as OpenID Connect Discovery requires. Front a provider that only speaks plain HTTP with TLS termination and trust its certificate authority |
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |

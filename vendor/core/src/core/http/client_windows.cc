@@ -193,7 +193,8 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
   LPVOID body_data{WINHTTP_NO_REQUEST_DATA};
   DWORD body_size{0};
   if (this->body_.has_value()) {
-    if (this->body_.value().data.size() > std::numeric_limits<DWORD>::max()) {
+    if (this->body_.value().bytes().size() >
+        std::numeric_limits<DWORD>::max()) {
       throw HTTPError{this->method_, this->url_,
                       "The request body is too large"};
     }
@@ -201,8 +202,8 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
     serialized_headers += "Content-Type: ";
     serialized_headers += this->body_.value().content_type;
     serialized_headers += "\r\n";
-    body_data = const_cast<char *>(this->body_.value().data.data());
-    body_size = static_cast<DWORD>(this->body_.value().data.size());
+    body_data = const_cast<char *>(this->body_.value().bytes().data());
+    body_size = static_cast<DWORD>(this->body_.value().bytes().size());
   }
 
   const auto request_headers{

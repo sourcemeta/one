@@ -79,9 +79,9 @@ GET {{base}}/self/v1/auth/login/keycloak
 HTTP 303
 Cache-Control: no-store
 [Captures]
-authorize_url: header "Location" replace "http://keycloak:8080" "http://localhost:8080"
+authorize_url: header "Location"
 [Asserts]
-header "Location" startsWith "http://keycloak:8080/realms/main/protocol/openid-connect/auth?"
+header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/auth?"
 header "Location" contains "response_type=code"
 header "Location" contains "client_id=registry"
 header "Location" contains "scope=openid"
@@ -94,7 +94,7 @@ header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
 GET {{authorize_url}}
 HTTP 200
 [Captures]
-login_action: xpath "string(//form[@id='kc-form-login']/@action)" replace "http://keycloak:8080" "http://localhost:8080"
+login_action: xpath "string(//form[@id='kc-form-login']/@action)"
 
 # Submitting the user's credentials sends the browser back to the callback
 POST {{login_action}}

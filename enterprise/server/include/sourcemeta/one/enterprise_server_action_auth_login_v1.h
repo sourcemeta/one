@@ -13,8 +13,6 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
-#include <authentication_oidc.h>
-
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <cstdlib>     // std::getenv
 #include <filesystem>  // std::filesystem::path
@@ -252,8 +250,12 @@ private:
   discover_authorization_endpoint(const std::string_view issuer) const
       -> std::optional<std::string> {
     try {
-      sourcemeta::core::HTTPSystemRequest fetch{
-          sourcemeta::one::oidc_discovery_url(issuer)};
+      const auto url{sourcemeta::core::oidc_discovery_url(issuer)};
+      if (!url.has_value()) {
+        return std::nullopt;
+      }
+
+      sourcemeta::core::HTTPSystemRequest fetch{url.value()};
       fetch.connect_timeout(std::chrono::seconds{2});
       fetch.timeout(std::chrono::seconds{5});
       fetch.maximum_response_size(1024UL * 1024UL);
@@ -263,14 +265,19 @@ private:
         return std::nullopt;
       }
 
-      auto document{
-          sourcemeta::one::oidc_parse_provider_metadata(result.body, issuer)};
-      if (!document.has_value() ||
-          !document.value().authorization_endpoint.has_value()) {
+      auto parsed{sourcemeta::core::try_parse_json(result.body)};
+      if (!parsed.has_value()) {
         return std::nullopt;
       }
 
-      return std::move(document.value().authorization_endpoint);
+      const auto document{sourcemeta::core::OIDCProviderMetadata::from(
+          std::move(parsed).value(), issuer)};
+      if (!document.has_value() ||
+          !document.value().authorization_endpoint().has_value()) {
+        return std::nullopt;
+      }
+
+      return std::string{document.value().authorization_endpoint().value()};
     } catch (...) {
       return std::nullopt;
     }

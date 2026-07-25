@@ -47,7 +47,7 @@
       "type": "jwt",
       "name": "machine",
       "paths": [ "/machine" ],
-      "issuer": "http://keycloak:8080/realms/main",
+      "issuer": "https://keycloak:8443/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "RS256" ]
     },
@@ -55,16 +55,16 @@
       "type": "jwt",
       "name": "telemetry",
       "paths": [ "/telemetry" ],
-      "issuer": "http://keycloak:8080/realms/main",
+      "issuer": "https://keycloak:8443/realms/main",
       "audience": "https://reports.example.com",
-      "jwksUri": "http://keycloak:8080/realms/main/protocol/openid-connect/certs",
+      "jwksUri": "https://keycloak:8443/realms/main/protocol/openid-connect/certs",
       "algorithms": [ "RS256" ]
     },
     {
       "type": "jwt",
       "name": "strict",
       "paths": [ "/strict" ],
-      "issuer": "http://keycloak:8080/realms/main",
+      "issuer": "https://keycloak:8443/realms/main",
       "audience": "https://schemas.example.com",
       "algorithms": [ "ES256" ]
     },
@@ -79,7 +79,7 @@
       "type": "oidc",
       "name": "keycloak",
       "paths": [ "/console" ],
-      "issuer": "http://keycloak:8080/realms/main",
+      "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": {
         "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
