@@ -1,5 +1,5 @@
 FROM one
-COPY --from=tls ca.crt /usr/local/share/ca-certificates/sandbox-authority.crt
+COPY tls/ca.crt /usr/local/share/ca-certificates/sandbox-authority.crt
 RUN update-ca-certificates
 COPY one.json .
 COPY schemas schemas

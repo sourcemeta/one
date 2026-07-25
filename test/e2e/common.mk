@@ -28,7 +28,7 @@ up: $(COMPOSE)
 # chance of catching any potential flakiness
 .PHONY: test-hurl
 test-hurl:
-	$(HURL) --repeat 10 --test --variable base=$(BASE):$(PORT) --variable port=$(PORT) \
+	$(HURL) $(HURL_FLAGS) --repeat 10 --test --variable base=$(BASE):$(PORT) --variable port=$(PORT) \
 		$(wildcard hurl/*.all.hurl) \
 		$(wildcard hurl/*.$(EDITION).hurl)
 
