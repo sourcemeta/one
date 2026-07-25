@@ -366,10 +366,11 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
     std::string content_type_line{"Content-Type: "};
     content_type_line += this->body_.value().content_type;
     header_list.append(content_type_line);
-    api.easy_setopt(handle.get(), CURLOPT_POSTFIELDSIZE_LARGE,
-                    static_cast<curl_off_t>(this->body_.value().data.size()));
+    api.easy_setopt(
+        handle.get(), CURLOPT_POSTFIELDSIZE_LARGE,
+        static_cast<curl_off_t>(this->body_.value().bytes().size()));
     api.easy_setopt(handle.get(), CURLOPT_POSTFIELDS,
-                    this->body_.value().data.data());
+                    this->body_.value().bytes().data());
   }
 
   if (header_list.get()) {

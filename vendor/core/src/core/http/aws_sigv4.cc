@@ -287,9 +287,9 @@ auto HTTPSystemRequest::sign_aws_sigv4(
 
   const auto amz_date{to_iso8601_basic(moment)};
   const std::string_view date{std::string_view{amz_date}.substr(0, 8)};
-  const auto payload_hash{sha256(
-      this->body_.has_value() ? std::string_view{this->body_.value().data}
-                              : std::string_view{})};
+  const auto payload_hash{sha256(this->body_.has_value()
+                                     ? this->body_.value().bytes()
+                                     : std::string_view{})};
 
   // Drop any signing headers left over from a previous signature so that
   // re-signing replaces them rather than appending duplicates
