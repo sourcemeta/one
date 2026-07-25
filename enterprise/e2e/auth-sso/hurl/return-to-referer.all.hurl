@@ -8,7 +8,7 @@ Referer: {{base}}/private/secret?view=raw
 HTTP 303
 Cache-Control: no-store
 [Captures]
-authorize_url: header "Location" replace "http://keycloak:8080" "http://localhost:8080"
+authorize_url: header "Location"
 [Asserts]
 header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
 
@@ -16,7 +16,7 @@ header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
 GET {{authorize_url}}
 HTTP 200
 [Captures]
-login_action: xpath "string(//form[@id='kc-form-login']/@action)" replace "http://keycloak:8080" "http://localhost:8080"
+login_action: xpath "string(//form[@id='kc-form-login']/@action)"
 
 # Submitting the user's credentials returns to the callback with a code
 POST {{login_action}}

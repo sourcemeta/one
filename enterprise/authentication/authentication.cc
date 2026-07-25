@@ -5,9 +5,9 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/oidc.h>
 
 #include "authentication_format.h"
-#include "authentication_oidc.h"
 
 #include <algorithm>     // std::ranges::all_of
 #include <bit>           // std::countr_zero
@@ -794,18 +794,28 @@ struct Authentication::Impl {
 
     std::string location;
     if (jwks_uri.empty()) {
-      const auto metadata{this->fetcher_(oidc_discovery_url(issuer))};
+      const auto url{sourcemeta::core::oidc_discovery_url(issuer)};
+      if (!url.has_value()) {
+        return nullptr;
+      }
+
+      const auto metadata{this->fetcher_(url.value())};
       if (!metadata.has_value()) {
         return nullptr;
       }
 
-      auto document{
-          oidc_parse_provider_metadata(metadata.value().body, issuer)};
-      if (!document.has_value() || !document.value().jwks_uri.has_value()) {
+      auto parsed{sourcemeta::core::try_parse_json(metadata.value().body)};
+      if (!parsed.has_value()) {
         return nullptr;
       }
 
-      location = std::move(document.value().jwks_uri).value();
+      const auto document{sourcemeta::core::OIDCProviderMetadata::from(
+          std::move(parsed).value(), issuer)};
+      if (!document.has_value()) {
+        return nullptr;
+      }
+
+      location = document.value().jwks_uri();
     } else {
       location = jwks_uri;
     }

@@ -836,31 +836,45 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
   const auto path{test_path("jwt_discovery.bin")};
   sourcemeta::one::Authentication::save(policies, path, path);
 
+  const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
       path,
       stub_fetcher(
           {{"https://acme.test/.well-known/openid-configuration",
-            R"JSON({ "issuer": "https://acme.test", "jwks_uri": "https://acme.test/keys" })JSON"},
+            R"JSON({ "issuer": "https://acme.test", "jwks_uri": "https://acme.test/keys", "response_types_supported": [ "code" ], "subject_types_supported": [ "public" ], "id_token_signing_alg_values_supported": [ "RS256" ] })JSON"},
            {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-          nullptr)};
-  // The issuer claim is "acme", independent of the discovery host
-  const std::array<sourcemeta::one::Authentication::Policy, 1> issuer_policies{
+          calls)};
+  // Both the provider metadata and the key set it names are retrieved, and
+  // the token then fails only on its issuer claim, which names a different
+  // issuer than the policy trusts
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_EQ(*calls, 2);
+}
+
+TEST(jwt_without_a_discoverable_issuer_fails_closed) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // The issuer claim is an opaque string rather than an https URL, so with no
+  // pinned key set location there is nowhere trustworthy to discover one
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
         .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
         .algorithms = algorithms}}};
-  const auto issuer_path{test_path("jwt_discovery_issuer.bin")};
-  sourcemeta::one::Authentication::save(issuer_policies, issuer_path,
-                                        issuer_path);
-  const sourcemeta::one::Authentication issuer_authentication{
-      issuer_path,
+  const auto path{test_path("jwt_discovery_issuer.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+  const auto calls{std::make_shared<int>(0)};
+  const sourcemeta::one::Authentication authentication{
+      path,
       stub_fetcher(
           {{"acme/.well-known/openid-configuration",
             R"JSON({ "issuer": "acme", "jwks_uri": "https://acme.test/keys" })JSON"},
            {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-          nullptr)};
-  EXPECT_TRUE(issuer_authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+          calls)};
+  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_EQ(*calls, 0);
 }
 
 TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {

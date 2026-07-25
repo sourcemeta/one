@@ -9,7 +9,7 @@
       "type": "oidc",
       "name": "keycloak",
       "paths": [ "/private", "/archive" ],
-      "issuer": "http://keycloak:8080/realms/main",
+      "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
       "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" }

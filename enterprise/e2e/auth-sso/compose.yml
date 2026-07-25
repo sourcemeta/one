@@ -1,12 +1,11 @@
 services:
-  keycloak:
+  keycloak-backend:
     image: quay.io/keycloak/keycloak:26.6
     command: start-dev --import-realm
     environment:
       - KC_HEALTH_ENABLED=true
-      - KC_HOSTNAME=http://keycloak:8080
-    ports:
-      - "8080:8080"
+      - KC_HOSTNAME=https://keycloak:8443
+      - KC_PROXY_HEADERS=xforwarded
     volumes:
       - ./realm.json:/opt/keycloak/data/import/realm.json:ro
     healthcheck:
@@ -14,6 +13,19 @@ services:
       interval: 2s
       timeout: 5s
       retries: 60
+
+  # TLS termination in front of the identity provider, carrying the name the
+  # issuer advertises, so every client verifies a real certificate chain
+  keycloak:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tls:/etc/nginx/tls:ro
+    ports:
+      - "8443:8443"
+    depends_on:
+      keycloak-backend:
+        condition: service_healthy
 
   sandbox:
     build:
@@ -27,6 +39,8 @@ services:
       - environment
     depends_on:
       keycloak:
+        condition: service_started
+      keycloak-backend:
         condition: service_healthy
     ports:
       - "${PORT}:8001"
