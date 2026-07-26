@@ -16,15 +16,16 @@ Access-Control-Expose-Headers: Link, ETag
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
-denied_schema: header "Link" regex "<([^>]+)>"
-```
+denied_schema: header "Link" regex "</registry([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/registry/self/v1/api/schemas/evaluate{{denied_schema}}
 ```
@@ -37,17 +38,16 @@ jsonpath "$.valid" == true
 # Search does not disclose it, and the empty result is the whole body
 GET {{base}}/registry/self/v1/api/schemas/search?q=secret
 HTTP 200
-Cache-Control: no-store
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 empty_search: body
-empty_search_schema: header "Link" regex "<([^>]+)>"
-```
-[]
-```
+empty_search_schema: header "Link" regex "</registry([^>]+)>"
+[Asserts]
+jsonpath "$" count == 0
 
 POST {{base}}/registry/self/v1/api/schemas/evaluate{{empty_search_schema}}
 ```
@@ -60,22 +60,21 @@ jsonpath "$.valid" == true
 # Nor does a query naming the gated collection itself
 GET {{base}}/registry/self/v1/api/schemas/search?q=private
 HTTP 200
-Cache-Control: no-store
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
-```
-[]
-```
+[Asserts]
+jsonpath "$" count == 0
 
 # The public schema is disclosed in full, so the filter is not refusing all
 GET {{base}}/registry/self/v1/api/schemas/search?q=string
 HTTP 200
-Cache-Control: no-store
+Cache-Control: public, max-age=60
 Content-Type: application/json
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 public_search: body
-public_search_schema: header "Link" regex "<([^>]+)>"
+public_search_schema: header "Link" regex "</registry([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/registry/public/string"
@@ -97,12 +96,12 @@ jsonpath "$.valid" == true
 GET {{base}}/registry/self/v1/api/schemas/search?q=secret
 Authorization: Bearer content-secret-key
 HTTP 200
-Cache-Control: no-store
+Cache-Control: private, max-age=60
 Content-Type: application/json
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 admitted_search: body
-admitted_search_schema: header "Link" regex "<([^>]+)>"
+admitted_search_schema: header "Link" regex "</registry([^>]+)>"
 [Asserts]
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/registry/private/secret"
@@ -138,7 +137,7 @@ Link: </registry/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
 anonymous_resources: body
-anonymous_resources_schema: header "Link" regex "<([^>]+)>"
+anonymous_resources_schema: header "Link" regex "</registry([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1
@@ -174,7 +173,7 @@ Link: </registry/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
 admitted_resources: body
-admitted_resources_schema: header "Link" regex "<([^>]+)>"
+admitted_resources_schema: header "Link" regex "</registry([^>]+)>"
 [Asserts]
 jsonpath "$.result.resources[*].uri" includes "http://localhost:8000/registry/private/secret"
 jsonpath "$.result.resources[*].uri" includes "http://localhost:8000/registry/public/string"
@@ -207,7 +206,7 @@ Link: </registry/self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Captures]
 anonymous_tool: body
-anonymous_tool_schema: header "Link" regex "<([^>]+)>"
+anonymous_tool_schema: header "Link" regex "</registry([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1

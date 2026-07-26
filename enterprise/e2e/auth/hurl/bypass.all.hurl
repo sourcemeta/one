@@ -74,14 +74,12 @@ upper_slash_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 header "Last-Modified" not exists
-```
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_slash_schema}}
 ```
@@ -108,14 +106,12 @@ triple_slash_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 header "Last-Modified" not exists
-```
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{triple_slash_schema}}
 ```
@@ -142,14 +138,12 @@ upper_dot_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 header "Last-Modified" not exists
-```
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_dot_schema}}
 ```
@@ -176,14 +170,12 @@ upper_extension_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 header "Last-Modified" not exists
-```
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_extension_schema}}
 ```
@@ -210,14 +202,12 @@ upper_jwt_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 header "Last-Modified" not exists
-```
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_jwt_schema}}
 ```
@@ -230,9 +220,9 @@ jsonpath "$.valid" == true
 # The same spelling admits the caller that holds the key, so the gate reads the
 # location the policy governs rather than merely refusing anything unusual
 GET {{base}}//PRIVATE/secret.json
+Authorization: Bearer primary-secret-key
 [Options]
 path-as-is: true
-Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
@@ -241,12 +231,18 @@ Access-Control-Expose-Headers: Link, ETag
 Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 [Asserts]
 header "ETag" exists
-jsonpath "$.$schema" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.$id" == "http://localhost:8000/private/secret"
-jsonpath "$.type" == "object"
-jsonpath "$.required" count == 1
-jsonpath "$.required[0]" == "token"
-jsonpath "$.properties.token.type" == "string"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/private/secret",
+  "type": "object",
+  "required": [ "token" ],
+  "properties": {
+    "token": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
 
 # The gated directory listing is denied through the same spelling
 GET {{base}}//PRIVATE/
@@ -262,14 +258,15 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_directory_body: body
 upper_directory_schema: header "Link" regex "<([^>]+)>"
-```
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
 {
   "type": "urn:sourcemeta:one:authentication-required",
   "title": "Unauthorized",
   "status": 401,
   "detail": "This resource requires authentication"
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_directory_schema}}
 ```

@@ -29,7 +29,6 @@ canonical_denial: body
 canonical_denial_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Vary" not exists
-```
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -43,7 +42,6 @@ header "Vary" not exists
     "isError": true
   }
 }
-```
 
 POST {{base}}/self/v1/api/schemas/evaluate{{canonical_denial_schema}}
 ```
@@ -147,10 +145,11 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 2
 jsonpath "$.error" not exists
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 1
+jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent.name" == "private"
-jsonpath "$.result.structuredContent.type" == "directory"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "http://localhost:8000/private/secret"
+jsonpath "$.result.structuredContent.schemas" == 2
 jsonpath "$.result.structuredContent.entries" count == 2
 jsonpath "$.result.structuredContent.entries[0].name" == "open"
 jsonpath "$.result.structuredContent.entries[1].name" == "secret"
