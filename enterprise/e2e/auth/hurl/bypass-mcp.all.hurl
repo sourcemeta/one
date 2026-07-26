@@ -1,9 +1,10 @@
-# The MCP tools take a path as an argument rather than as a request target, so
-# they reach the gate through their own route. A spelling that names a gated
-# location has to be denied there too, and once answered a listing through this
-# tool once because the argument reached the gate uncanonicalised.
+# The MCP tools take a location as an argument rather than as a request target,
+# so they reach the gate through their own route. A spelling that names a gated
+# location has to be refused there too, and one such spelling once answered
+# with the listing because the argument reached the gate as written.
 
-# The canonical spelling of a gated directory is refused
+# The canonical spelling of a gated directory is refused, and the whole
+# envelope is asserted so a listing cannot hide inside it
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -19,21 +20,112 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
+[Captures]
+canonical_denial: body
+canonical_denial_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1
-jsonpath "$.error" not exists
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content" count == 1
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Authentication required"
+header "Vary" not exists
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Authentication required"
+      }
+    ],
+    "isError": true
+  }
+}
+```
 
-# An upper-cased spelling of the same directory is refused identically
+POST {{base}}/self/v1/api/schemas/evaluate{{canonical_denial_schema}}
+```
+{{canonical_denial}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# An upper-cased spelling of the same directory answers byte for byte the same,
+# so it cannot be told apart from the canonical refusal
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { "name": "list_directory", "arguments": { "path": "/PRIVATE" } }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Asserts]
+body == {{canonical_denial}}
+
+# So does a spelling carrying a repeated separator and a dot segment
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { "name": "list_directory", "arguments": { "path": "//PRIVATE/./" } }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Asserts]
+body == {{canonical_denial}}
+
+# And a traversal that lands on the gated directory from a public one
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { "name": "list_directory", "arguments": { "path": "/public/../private" } }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Asserts]
+body == {{canonical_denial}}
+
+# The key opens the same directory through a non-canonical spelling, so the
+# tool reads the location the policy governs rather than refusing every unusual
+# argument. The whole listing is asserted, then round-tripped through the
+# response schema the surface advertises
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+Authorization: Bearer primary-secret-key
 ```
 {
   "jsonrpc": "2.0",
@@ -45,71 +137,34 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
+[Captures]
+admitted_listing: body
+admitted_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 2
 jsonpath "$.error" not exists
-jsonpath "$.result.isError" == true
+jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Authentication required"
+jsonpath "$.result.structuredContent.name" == "private"
+jsonpath "$.result.structuredContent.type" == "directory"
+jsonpath "$.result.structuredContent.entries" count == 2
+jsonpath "$.result.structuredContent.entries[0].name" == "open"
+jsonpath "$.result.structuredContent.entries[1].name" == "secret"
 
-# So is a spelling carrying a repeated separator and a dot segment
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
+POST {{base}}/self/v1/api/schemas/evaluate{{admitted_listing_schema}}
 ```
-{
-  "jsonrpc": "2.0",
-  "id": 3,
-  "method": "tools/call",
-  "params": { "name": "list_directory", "arguments": { "path": "//PRIVATE/./" } }
-}
+{{admitted_listing}}
 ```
 HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-MCP-Protocol-Version: 2025-11-25
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 3
-jsonpath "$.error" not exists
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content" count == 1
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Authentication required"
+jsonpath "$.valid" == true
 
-# And a traversal that lands on the gated directory from a public one
-POST {{base}}/self/v1/mcp
-Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2025-11-25
-Content-Type: application/json
-```
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
-  "params": { "name": "list_directory", "arguments": { "path": "/public/../private" } }
-}
-```
-HTTP 200
-Cache-Control: no-store
-Content-Type: application/json
-MCP-Protocol-Version: 2025-11-25
-[Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 4
-jsonpath "$.error" not exists
-jsonpath "$.result.isError" == true
-jsonpath "$.result.content" count == 1
-jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Authentication required"
-
-# The credential opens the same directory through a non-canonical spelling, so
-# the tool is reading the location the gate governs rather than refusing every
-# unusual argument
+# The canonical spelling returns that same listing to that same caller, so
+# admission does not depend on how the location was written either
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -118,18 +173,15 @@ Authorization: Bearer primary-secret-key
 ```
 {
   "jsonrpc": "2.0",
-  "id": 5,
+  "id": 2,
   "method": "tools/call",
-  "params": { "name": "list_directory", "arguments": { "path": "/PRIVATE" } }
+  "params": { "name": "list_directory", "arguments": { "path": "/private" } }
 }
 ```
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
 MCP-Protocol-Version: 2025-11-25
 [Asserts]
-jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 5
-jsonpath "$.error" not exists
-jsonpath "$.result.isError" == false
-jsonpath "$.result.content[0].text" contains "secret"
+body == {{admitted_listing}}

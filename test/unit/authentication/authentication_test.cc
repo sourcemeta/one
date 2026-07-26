@@ -7,6 +7,15 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
+// Every gate question is asked about a canonical location, so the tests name
+// one the same way a request would
+static auto at(const std::string_view input)
+    -> sourcemeta::one::Authentication::Path {
+  return sourcemeta::one::Authentication::Path::parse(
+             input, "http://localhost:8000", "")
+      .value();
+}
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -14,16 +23,19 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
 TEST(admits_every_path_without_a_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("", "").allowed);
-  EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").allowed);
+  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at(""), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/acme/foo/bar"), {.bearer = ""}).allowed);
 }
 
 TEST(admits_every_path_with_any_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.admits("/internal", "anything").allowed);
-  EXPECT_TRUE(authentication.admits("/internal/foo", "another").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal"), {.bearer = "anything"}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/internal/foo"), {.bearer = "another"})
+                  .allowed);
 }
 
 TEST(save_emits_an_empty_artifact_that_admits_everything) {
@@ -37,15 +49,17 @@ TEST(save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_EQ(std::filesystem::file_size(path), 0);
 
   const sourcemeta::one::Authentication authentication{path, {}};
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(permits_every_reference) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.reference_permitted("/one", "/two"));
+  EXPECT_TRUE(authentication.reference_permitted(at("/one"), at("/two")));
+  EXPECT_TRUE(authentication.reference_permitted(at("/public/one"),
+                                                 at("/private/two")));
   EXPECT_TRUE(
-      authentication.reference_permitted("/public/one", "/private/two"));
-  EXPECT_TRUE(authentication.reference_permitted("/internal/a", "/internal/a"));
+      authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
 }

@@ -1999,3 +1999,91 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
   EXPECT_TRUE(
       authentication.reference_permitted(at("/alpha/one"), at("/gamma/two")));
 }
+
+// A configured policy path that only differs cosmetically still has to gate the
+// location it names. A spelling the matcher could not traverse would leave the
+// target public while the configuration reads as though it were gated
+
+TEST(a_policy_path_declared_canonically_gates_its_location) {
+  setenv("ONE_TEST_KEY_CANONICAL", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CANONICAL"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_declared_canonically.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_carrying_a_dot_segment_gates_its_location) {
+  setenv("ONE_TEST_KEY_DOT", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/./private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_DOT"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_carrying_a_dot_segment.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_that_climbs_back_into_itself_gates_its_location) {
+  setenv("ONE_TEST_KEY_CLIMB", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/private/../private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CLIMB"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_that_climbs_back_into_itself.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
+  setenv("ONE_TEST_KEY_SEPARATOR", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"//private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SEPARATOR"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_carrying_a_repeated_separator.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}

@@ -55,49 +55,226 @@ Content-Type: application/schema+json
 [Asserts]
 jsonpath "$.type" == "string"
 
-# Repeated leading slash combined with an upper-cased prefix. Each half of this
-# spelling is covered above on its own, and the pair once slipped past the gate
-# because the path reached the policy trie in a spelling the trie never holds
+# Repeated leading slash combined with an upper-cased prefix. Each half of
+# this spelling is covered above on its own, and the pair once reached the
+# policy trie in a spelling the trie never holds, which left the resource open
 GET {{base}}//PRIVATE/secret.json
+[Options]
+path-as-is: true
 HTTP 401
+Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+upper_slash_body: body
+upper_slash_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
 
-# The same pair against a directory rather than a schema
-GET {{base}}//PRIVATE/
-HTTP 401
-Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
-
-# Repeated leading slash, upper case, and a dot segment together
-GET {{base}}//PRIVATE/./secret.json
-HTTP 401
-Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+POST {{base}}/self/v1/api/schemas/evaluate{{upper_slash_schema}}
+```
+{{upper_slash_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # Three leading slashes with an upper-cased prefix
 GET {{base}}///PRIVATE/secret.json
+[Options]
+path-as-is: true
 HTTP 401
+Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+triple_slash_body: body
+triple_slash_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
 
-# An upper-cased extension names the same representation
-GET {{base}}//PRIVATE/SECRET.JSON
+POST {{base}}/self/v1/api/schemas/evaluate{{triple_slash_schema}}
+```
+{{triple_slash_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# Repeated leading slash, upper case, and a dot segment together
+GET {{base}}//PRIVATE/./secret.json
+[Options]
+path-as-is: true
 HTTP 401
+Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+upper_dot_body: body
+upper_dot_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
+
+POST {{base}}/self/v1/api/schemas/evaluate{{upper_dot_schema}}
+```
+{{upper_dot_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# An upper-cased extension names the same representation of the same resource
+GET {{base}}//PRIVATE/SECRET.JSON
+[Options]
+path-as-is: true
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+upper_extension_body: body
+upper_extension_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
+
+POST {{base}}/self/v1/api/schemas/evaluate{{upper_extension_schema}}
+```
+{{upper_extension_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # A JWT-gated prefix is reached through the same spelling, and denied the same
 GET {{base}}//MACHINE/config.json
+[Options]
+path-as-is: true
 HTTP 401
+Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+upper_jwt_body: body
+upper_jwt_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" not exists
+header "Last-Modified" not exists
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
 
-# The credential still admits the caller through a non-canonical spelling, so
-# the gate is reading the same location rather than merely refusing oddities
+POST {{base}}/self/v1/api/schemas/evaluate{{upper_jwt_schema}}
+```
+{{upper_jwt_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The same spelling admits the caller that holds the key, so the gate reads the
+# location the policy governs rather than merely refusing anything unusual
 GET {{base}}//PRIVATE/secret.json
+[Options]
+path-as-is: true
 Authorization: Bearer primary-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
 [Asserts]
+header "ETag" exists
+jsonpath "$.$schema" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.$id" == "http://localhost:8000/private/secret"
 jsonpath "$.type" == "object"
+jsonpath "$.required" count == 1
+jsonpath "$.required[0]" == "token"
+jsonpath "$.properties.token.type" == "string"
+
+# The gated directory listing is denied through the same spelling
+GET {{base}}//PRIVATE/
+[Options]
+path-as-is: true
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+upper_directory_body: body
+upper_directory_schema: header "Link" regex "<([^>]+)>"
+```
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+```
+
+POST {{base}}/self/v1/api/schemas/evaluate{{upper_directory_schema}}
+```
+{{upper_directory_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

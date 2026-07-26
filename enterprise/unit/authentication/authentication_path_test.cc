@@ -106,16 +106,24 @@ TEST(every_spelling_of_one_location_agrees) {
   EXPECT_EQ(value("http://localhost:8000/private/secret.json"), representation);
 }
 
-TEST(canonicalisation_is_idempotent) {
-  for (const std::string_view input :
-       {"/private/secret.json", "//PRIVATE//secret", "/./a/../b/c.JSON", "/",
-        "/a/b/"}) {
-    const auto once{parse(input)};
-    EXPECT_TRUE(once.has_value());
-    const auto twice{parse(once.value().value())};
-    EXPECT_TRUE(twice.has_value());
-    EXPECT_EQ(once.value().value(), twice.value().value());
-  }
+TEST(canonicalising_a_representation_twice_changes_nothing) {
+  EXPECT_EQ(value(value("/private/secret.json")), "private/secret.json");
+}
+
+TEST(canonicalising_repeated_separators_twice_changes_nothing) {
+  EXPECT_EQ(value(value("//PRIVATE//secret")), "private/secret");
+}
+
+TEST(canonicalising_relative_segments_twice_changes_nothing) {
+  EXPECT_EQ(value(value("/./a/../b/c.JSON")), "b/c.json");
+}
+
+TEST(canonicalising_the_root_twice_changes_nothing) {
+  EXPECT_EQ(value(value("/")), "");
+}
+
+TEST(canonicalising_a_trailing_separator_twice_changes_nothing) {
+  EXPECT_EQ(value(value("/a/b/")), "a/b");
 }
 
 TEST(a_url_on_this_instance_reduces_to_its_path) {
@@ -154,18 +162,39 @@ TEST(a_base_path_is_matched_on_whole_segments) {
   EXPECT_FALSE(parse("/registrynot/private", BASED, "/registry").has_value());
 }
 
-TEST(hostile_spellings_never_escape_their_location) {
-  // Each of these was a gate bypass attempt, and every one has to reduce to
-  // the same governed location rather than to something a policy would miss
-  for (const std::string_view input :
-       {"//PRIVATE/secret", "/PRIVATE/secret", "//private/secret",
-        "///PRIVATE///SECRET", "/./PRIVATE/secret",
-        "/private/../PRIVATE/secret", "/%50RIVATE/secret",
-        "/public/../PRIVATE/secret"}) {
-    const auto result{parse(input)};
-    EXPECT_TRUE(result.has_value());
-    EXPECT_EQ(result.value().value(), "private/secret");
-  }
+// Each of the spellings below was a gate bypass attempt. Every one has to name
+// the governed location rather than something a policy would miss
+
+TEST(a_repeated_leading_separator_with_upper_case_names_the_location) {
+  EXPECT_EQ(value("//PRIVATE/secret"), "private/secret");
+}
+
+TEST(an_upper_cased_prefix_names_the_location) {
+  EXPECT_EQ(value("/PRIVATE/secret"), "private/secret");
+}
+
+TEST(a_repeated_leading_separator_names_the_location) {
+  EXPECT_EQ(value("//private/secret"), "private/secret");
+}
+
+TEST(repeated_separators_throughout_with_upper_case_name_the_location) {
+  EXPECT_EQ(value("///PRIVATE///SECRET"), "private/secret");
+}
+
+TEST(a_leading_dot_segment_with_upper_case_names_the_location) {
+  EXPECT_EQ(value("/./PRIVATE/secret"), "private/secret");
+}
+
+TEST(climbing_back_into_an_upper_cased_prefix_names_the_location) {
+  EXPECT_EQ(value("/private/../PRIVATE/secret"), "private/secret");
+}
+
+TEST(an_escaped_letter_in_the_prefix_names_the_location) {
+  EXPECT_EQ(value("/%50RIVATE/secret"), "private/secret");
+}
+
+TEST(climbing_from_a_public_prefix_into_an_upper_cased_one_names_the_location) {
+  EXPECT_EQ(value("/public/../PRIVATE/secret"), "private/secret");
 }
 
 TEST(two_paths_compare_by_their_canonical_spelling) {
@@ -188,11 +217,27 @@ TEST(input_already_relative_to_the_root_is_canonicalised_as_is) {
   EXPECT_EQ(sourcemeta::one::Authentication::Path::relative("").value(), "");
 }
 
-TEST(a_relative_path_is_canonicalised_the_same_way_a_request_is) {
-  for (const std::string_view input :
-       {"/PRIVATE/secret", "//private//secret", "/private/./secret",
-        "/public/../private/secret"}) {
-    EXPECT_EQ(sourcemeta::one::Authentication::Path::relative(input).value(),
-              parse("/private/secret").value().value());
-  }
+TEST(a_relative_upper_cased_path_reads_as_the_request_form_does) {
+  EXPECT_EQ(sourcemeta::one::Authentication::Path::relative("/PRIVATE/secret")
+                .value(),
+            "private/secret");
+}
+
+TEST(a_relative_path_with_repeated_separators_reads_as_the_request_form_does) {
+  EXPECT_EQ(sourcemeta::one::Authentication::Path::relative("//private//secret")
+                .value(),
+            "private/secret");
+}
+
+TEST(a_relative_path_with_a_dot_segment_reads_as_the_request_form_does) {
+  EXPECT_EQ(sourcemeta::one::Authentication::Path::relative("/private/./secret")
+                .value(),
+            "private/secret");
+}
+
+TEST(a_relative_path_that_climbs_reads_as_the_request_form_does) {
+  EXPECT_EQ(sourcemeta::one::Authentication::Path::relative(
+                "/public/../private/secret")
+                .value(),
+            "private/secret");
 }
