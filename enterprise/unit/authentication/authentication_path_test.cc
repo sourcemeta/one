@@ -161,7 +161,7 @@ TEST(a_path_outside_the_base_path_names_nowhere_here) {
 TEST(a_base_path_is_matched_as_configured_rather_than_case_insensitively) {
   // The base path is how the instance is deployed rather than a location
   // inside it, so it is removed before anything is lowercased. A target that
-  // spells it differently names nowhere here, which is the closed answer
+  // spells it differently names nowhere here, which fails closed
   EXPECT_FALSE(
       parse("/REGISTRY/private/secret", BASED, "/registry").has_value());
   EXPECT_FALSE(
