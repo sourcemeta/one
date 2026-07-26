@@ -339,7 +339,10 @@ private:
         0, this->search_view_.count(),
         [this, credential, &authentication, &resources, &admitted,
          offset](const sourcemeta::one::SearchListEntry &entry) -> void {
-          if (!authentication.admits(entry.path, credential).allowed) {
+          const auto location{this->canonical_path(entry.path)};
+          if (!location.has_value() ||
+              !authentication.admits(location.value(), {.bearer = credential})
+                   .allowed) {
             return;
           }
 

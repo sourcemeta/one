@@ -35,7 +35,8 @@ namespace {
 constexpr std::uint32_t NO_CHILD{std::numeric_limits<std::uint32_t>::max()};
 
 // A base that is not a whole-segment prefix is left in place, where it matches
-// no policy and is denied
+// no policy. The spelling is otherwise untouched, since a route is matched on
+// the target as it arrived
 auto strip_base_path(const std::string_view path,
                      const std::string_view base) noexcept -> std::string_view {
   if (base.empty() || !path.starts_with(base)) {
@@ -940,13 +941,11 @@ Authentication::Authentication(const std::filesystem::path &path,
 
 Authentication::~Authentication() = default;
 
-auto Authentication::admits(const std::string_view registry_path,
-                            const std::string_view credential,
-                            const std::string_view cookies,
-                            const std::string_view base_path) const
+auto Authentication::admits(const Authentication::Path &path,
+                            const Credentials &credentials) const
     -> Authentication::Verdict {
-  return this->impl_->admits(strip_base_path(registry_path, base_path),
-                             credential, cookies);
+  return this->impl_->admits(path.value(), credentials.bearer,
+                             credentials.cookies);
 }
 
 auto Authentication::interactive(const std::string_view name) const
@@ -967,10 +966,17 @@ auto Authentication::open(const std::string_view policy,
   return this->impl_->open(policy, value);
 }
 
-auto Authentication::governing(const std::string_view registry_path,
-                               const std::string_view base_path) const
+auto Authentication::admits_route(const std::string_view target,
+                                  const std::string_view base_path,
+                                  const Credentials &credentials) const
+    -> Authentication::Verdict {
+  return this->impl_->admits(strip_base_path(target, base_path),
+                             credentials.bearer, credentials.cookies);
+}
+
+auto Authentication::governing(const Authentication::Path &path) const
     -> std::vector<std::size_t> {
-  auto mask{this->impl_->match(strip_base_path(registry_path, base_path))};
+  auto mask{this->impl_->match(path.value())};
   std::vector<std::size_t> result;
   while (mask != 0) {
     result.push_back(static_cast<std::size_t>(std::countr_zero(mask)));
@@ -981,9 +987,9 @@ auto Authentication::governing(const std::string_view registry_path,
 }
 
 auto Authentication::reference_permitted(
-    const std::string_view referrer_path,
-    const std::string_view referent_path) const -> bool {
-  return this->impl_->reference_permitted(referrer_path, referent_path);
+    const Authentication::Path &referrer,
+    const Authentication::Path &referent) const -> bool {
+  return this->impl_->reference_permitted(referrer.value(), referent.value());
 }
 
 } // namespace sourcemeta::one

@@ -122,11 +122,16 @@ auto Router::dispatch(
   // path. A CORS preflight is never gated, and neither is a route that must
   // stay reachable to establish authentication in the first place, which
   // vouches for itself instead
+  // An explicit route is matched on the request target literally, so the gate
+  // authorises that same spelling rather than the location it resolves to. A
+  // target reaching past a governed prefix is therefore still governed by it,
+  // while one that merely addresses content relative to its own route is not
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
       !this->authentication_
-           .admits(request.path(), credential, request.header("cookie"),
-                   instance->server_uri_base_path())
+           .admits_route(
+               request.path(), instance->server_uri_base_path(),
+               {.bearer = credential, .cookies = request.header("cookie")})
            .allowed) {
     if (instance->serve_login(request, response)) {
       return;

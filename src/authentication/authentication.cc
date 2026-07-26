@@ -46,15 +46,20 @@ Authentication::Authentication(const std::filesystem::path &,
 
 Authentication::~Authentication() = default;
 
-auto Authentication::admits(const std::string_view, const std::string_view,
-                            const std::string_view,
-                            const std::string_view) const
+auto Authentication::admits(const Authentication::Path &,
+                            const Credentials &) const
     -> Authentication::Verdict {
   return {.allowed = true, .principal = std::nullopt};
 }
 
-auto Authentication::governing(const std::string_view,
-                               const std::string_view) const
+auto Authentication::admits_route(const std::string_view,
+                                  const std::string_view,
+                                  const Credentials &) const
+    -> Authentication::Verdict {
+  return {.allowed = true, .principal = std::nullopt};
+}
+
+auto Authentication::governing(const Authentication::Path &) const
     -> std::vector<std::size_t> {
   return {};
 }
@@ -75,8 +80,9 @@ auto Authentication::open(const std::string_view, const std::string_view) const
   return std::nullopt;
 }
 
-auto Authentication::reference_permitted(const std::string_view,
-                                         const std::string_view) const -> bool {
+auto Authentication::reference_permitted(const Authentication::Path &,
+                                         const Authentication::Path &) const
+    -> bool {
   return true;
 }
 
