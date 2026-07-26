@@ -133,11 +133,17 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   for (std::size_t index{0}; index < policies.size(); index += 1) {
     const auto bit{static_cast<std::uint64_t>(1) << index};
     for (const auto &policy_path : policies[index].paths) {
+      // The trie is keyed by the same spelling a request resolves to, so a
+      // configured path is canonicalised here rather than stored as written.
+      // Otherwise a path that only differs cosmetically would build segments
+      // no request could ever traverse, and its target would be left public
+      const auto canonical{Authentication::Path::relative(policy_path)};
+      const auto value{canonical.value()};
       std::uint32_t current{0};
       std::size_t cursor{0};
-      for (auto segment{authentication_next_segment(policy_path, cursor)};
+      for (auto segment{authentication_next_segment(value, cursor)};
            !segment.empty();
-           segment = authentication_next_segment(policy_path, cursor)) {
+           segment = authentication_next_segment(value, cursor)) {
         current = find_or_create_child(nodes, current, segment);
       }
 

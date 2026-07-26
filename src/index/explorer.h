@@ -132,7 +132,10 @@ static auto make_policies(const sourcemeta::one::Authentication &authentication,
   // The policies that gate the path, in declaration order. An empty array means
   // the path is public
   auto result{sourcemeta::core::JSON::make_array()};
-  for (const auto index : authentication.governing(registry_path)) {
+  // The indexer composes these from the content tree, so they are already
+  // relative to the instance root
+  for (const auto index : authentication.governing(
+           sourcemeta::one::Authentication::Path::relative(registry_path))) {
     assert(index < configuration.authentication.size());
     const auto &entry{configuration.authentication[index]};
     auto policy{sourcemeta::core::JSON::make_object()};

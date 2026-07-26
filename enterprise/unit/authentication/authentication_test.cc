@@ -20,6 +20,24 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
+// Every gate question is asked about a canonical location, so the tests name
+// one the same way a request would
+static auto at(const std::string_view input)
+    -> sourcemeta::one::Authentication::Path {
+  return sourcemeta::one::Authentication::Path::parse(
+             input, "http://localhost:8000", "")
+      .value();
+}
+
+// The same location named through an instance that is served under a base path
+static auto at_base(const std::string_view input, const std::string_view base)
+    -> sourcemeta::one::Authentication::Path {
+  const std::string instance{std::string{"http://localhost:8000"} +
+                             std::string{base}};
+  return sourcemeta::one::Authentication::Path::parse(input, instance, base)
+      .value();
+}
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -77,9 +95,9 @@ TEST(missing_artifact_denies_everything) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"},
       stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/", "").allowed);
-  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
-  EXPECT_FALSE(authentication.admits("", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/acme/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at(""), {.bearer = ""}).allowed);
 }
 
 TEST(malformed_artifact_denies_everything) {
@@ -91,8 +109,8 @@ TEST(malformed_artifact_denies_everything) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/", "").allowed);
-  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/acme/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(structurally_corrupt_artifact_denies_everything) {
@@ -110,8 +128,9 @@ TEST(structurally_corrupt_artifact_denies_everything) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(artifact_exceeding_the_policy_ceiling_denies_everything) {
@@ -132,8 +151,8 @@ TEST(artifact_exceeding_the_policy_ceiling_denies_everything) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/", "").allowed);
-  EXPECT_FALSE(authentication.admits("/acme/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/acme/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(corrupted_section_offset_denies_everything) {
@@ -153,8 +172,9 @@ TEST(corrupted_section_offset_denies_everything) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
-  EXPECT_FALSE(authentication.admits("/", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/"), {.bearer = ""}).allowed);
 }
 
 TEST(zero_policies_admits_every_path) {
@@ -164,11 +184,13 @@ TEST(zero_policies_admits_every_path) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("", "").allowed);
-  EXPECT_TRUE(authentication.admits("/acme/foo/bar", "").allowed);
-  EXPECT_EQ(authentication.governing("/"), (std::vector<std::size_t>{}));
-  EXPECT_EQ(authentication.governing("/acme"), (std::vector<std::size_t>{}));
+  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at(""), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/acme/foo/bar"), {.bearer = ""}).allowed);
+  EXPECT_EQ(authentication.governing(at("/")), (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.governing(at("/acme")),
+            (std::vector<std::size_t>{}));
 }
 
 TEST(uncovered_paths_are_public_around_a_gated_scope) {
@@ -183,14 +205,18 @@ TEST(uncovered_paths_are_public_around_a_gated_scope) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The covered subtree is gated
-  EXPECT_FALSE(authentication.admits("/internal", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
-  EXPECT_TRUE(authentication.admits("/internal", "scope-secret").allowed);
-  EXPECT_TRUE(authentication.admits("/internal/foo", "scope-secret").allowed);
+  EXPECT_FALSE(authentication.admits(at("/internal"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/internal"), {.bearer = "scope-secret"})
+                  .allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "scope-secret"})
+          .allowed);
   // Everything outside it is public
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("/vendor", "").allowed);
-  EXPECT_TRUE(authentication.admits("/vendor/foo", "").allowed);
+  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/vendor"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/vendor/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(scope_matches_whole_segments_only) {
@@ -204,12 +230,14 @@ TEST(scope_matches_whole_segments_only) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The scope gates its own segment
-  EXPECT_FALSE(authentication.admits("/internal", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/internal"), {.bearer = ""}).allowed);
   // A textual prefix that is not a whole segment is a different path, so it is
   // uncovered and public
-  EXPECT_TRUE(authentication.admits("/internalish", "").allowed);
-  EXPECT_TRUE(authentication.admits("/int", "").allowed);
-  EXPECT_TRUE(authentication.admits("/internal-team", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internalish"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/int"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal-team"), {.bearer = ""}).allowed);
 }
 
 TEST(distinct_policies_each_gate_their_scope) {
@@ -226,11 +254,12 @@ TEST(distinct_policies_each_gate_their_scope) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/alpha/one", "").allowed);
-  EXPECT_FALSE(authentication.admits("/beta/two", "").allowed);
-  EXPECT_FALSE(authentication.admits("/gamma/three", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/alpha/one"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/beta/two"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/gamma/three"), {.bearer = ""}).allowed);
   // Between the scopes the registry is public
-  EXPECT_TRUE(authentication.admits("/delta", "").allowed);
+  EXPECT_TRUE(authentication.admits(at("/delta"), {.bearer = ""}).allowed);
 }
 
 TEST(nested_prefixes_gate_their_subtrees) {
@@ -245,12 +274,16 @@ TEST(nested_prefixes_gate_their_subtrees) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/internal", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/other", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/secret", "").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/secret/deep", "").allowed);
-  EXPECT_TRUE(authentication.admits("/", "").allowed);
-  EXPECT_TRUE(authentication.admits("/public", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/internal"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/other"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/secret"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/secret/deep"), {.bearer = ""})
+          .allowed);
+  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/public"), {.bearer = ""}).allowed);
 }
 
 TEST(nested_inner_key_widens_access) {
@@ -268,11 +301,19 @@ TEST(nested_inner_key_widens_access) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The inner path is covered by both, so either key admits it
-  EXPECT_TRUE(authentication.admits("/internal/secret", "wo-secret").allowed);
-  EXPECT_TRUE(authentication.admits("/internal/secret", "wi-secret").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/secret"), {.bearer = "wo-secret"})
+          .allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/secret"), {.bearer = "wi-secret"})
+          .allowed);
   // The outer path is covered only by the outer policy
-  EXPECT_TRUE(authentication.admits("/internal/other", "wo-secret").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/other", "wi-secret").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/other"), {.bearer = "wo-secret"})
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/other"), {.bearer = "wi-secret"})
+          .allowed);
 }
 
 TEST(single_policy_with_multiple_prefixes) {
@@ -285,9 +326,11 @@ TEST(single_policy_with_multiple_prefixes) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
-  EXPECT_FALSE(authentication.admits("/vendor/bar", "").allowed);
-  EXPECT_TRUE(authentication.admits("/public", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/vendor/bar"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/public"), {.bearer = ""}).allowed);
 }
 
 TEST(extensionless_policy_gates_every_representation) {
@@ -302,23 +345,35 @@ TEST(extensionless_policy_gates_every_representation) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The resource, every representation of it, and its subtree are all governed
-  EXPECT_FALSE(authentication.admits("/secret/data", "").allowed);
-  EXPECT_FALSE(authentication.admits("/secret/data.json", "").allowed);
-  EXPECT_FALSE(authentication.admits("/secret/data.xml", "").allowed);
-  EXPECT_FALSE(authentication.admits("/secret/data/nested", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/data"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/data.json"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/data.xml"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/data/nested"), {.bearer = ""}).allowed);
   EXPECT_TRUE(
-      authentication.admits("/secret/data", "representation-secret").allowed);
-  EXPECT_TRUE(
-      authentication.admits("/secret/data.json", "representation-secret")
+      authentication
+          .admits(at("/secret/data"), {.bearer = "representation-secret"})
           .allowed);
-  EXPECT_TRUE(authentication.admits("/secret/data.xml", "representation-secret")
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/secret/data.json"), {.bearer = "representation-secret"})
+          .allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/secret/data.xml"), {.bearer = "representation-secret"})
+          .allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/secret/data/nested"),
+                          {.bearer = "representation-secret"})
                   .allowed);
-  EXPECT_TRUE(
-      authentication.admits("/secret/data/nested", "representation-secret")
-          .allowed);
   // A sibling sharing a textual prefix is covered by no policy, so it is public
-  EXPECT_TRUE(authentication.admits("/secret/database", "").allowed);
-  EXPECT_TRUE(authentication.admits("/secret/data2.json", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secret/database"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secret/data2.json"), {.bearer = ""}).allowed);
 }
 
 TEST(extension_specific_policy_gates_only_that_representation) {
@@ -333,15 +388,21 @@ TEST(extension_specific_policy_gates_only_that_representation) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // Only the named representation is gated
-  EXPECT_FALSE(authentication.admits("/secret/data.json", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/data.json"), {.bearer = ""}).allowed);
   EXPECT_TRUE(
-      authentication.admits("/secret/data.json", "specific-secret").allowed);
+      authentication
+          .admits(at("/secret/data.json"), {.bearer = "specific-secret"})
+          .allowed);
   EXPECT_TRUE(
-      authentication.admits("/secret/data.json/nested", "specific-secret")
+      authentication
+          .admits(at("/secret/data.json/nested"), {.bearer = "specific-secret"})
           .allowed);
   // The bare resource and other representations are uncovered, so public
-  EXPECT_TRUE(authentication.admits("/secret/data", "").allowed);
-  EXPECT_TRUE(authentication.admits("/secret/data.xml", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secret/data"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secret/data.xml"), {.bearer = ""}).allowed);
 }
 
 TEST(extension_handling_is_confined_to_the_terminal_segment) {
@@ -355,14 +416,15 @@ TEST(extension_handling_is_confined_to_the_terminal_segment) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The policy on /v1 gates its own subtree
-  EXPECT_FALSE(authentication.admits("/v1", "").allowed);
-  EXPECT_FALSE(authentication.admits("/v1/secret", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/v1"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/v1/secret"), {.bearer = ""}).allowed);
   // As a terminal segment, /v1.0 is a representation of /v1 under the
   // content-negotiation rule, the same way /person.json represents /person
-  EXPECT_FALSE(authentication.admits("/v1.0", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/v1.0"), {.bearer = ""}).allowed);
   // But as an intermediate segment it is a distinct directory that does not
   // descend into the /v1 subtree, so its children are uncovered and public
-  EXPECT_TRUE(authentication.admits("/v1.0/secret", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/v1.0/secret"), {.bearer = ""}).allowed);
 }
 
 TEST(base_path_is_stripped_before_matching) {
@@ -378,31 +440,46 @@ TEST(base_path_is_stripped_before_matching) {
       path, stub_fetcher({}, nullptr)};
   // With the base path stripped, the registry path under it is matched. The
   // uncovered public path is admitted, the covered one is gated
-  EXPECT_TRUE(
-      authentication.admits("/registry/public/string", "", {}, "/registry")
-          .allowed);
-  EXPECT_FALSE(
-      authentication.admits("/registry/private/secret", "", {}, "/registry")
-          .allowed);
-  EXPECT_TRUE(
-      authentication
-          .admits("/registry/private/secret", "base-secret", {}, "/registry")
-          .allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at_base("/registry/public/string", "/registry"),
+                          {.bearer = "", .cookies = {}})
+                  .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at_base("/registry/private/secret", "/registry"),
+                           {.bearer = "", .cookies = {}})
+                   .allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at_base("/registry/private/secret", "/registry"),
+                          {.bearer = "base-secret", .cookies = {}})
+                  .allowed);
 
   // An empty base path strips nothing
-  EXPECT_TRUE(authentication.admits("/public/string", "", "").allowed);
-  EXPECT_FALSE(authentication.admits("/private/secret", "", "").allowed);
-
-  // A base path that is not a whole-segment prefix is left in place, so the
-  // path is covered by no policy and is public
   EXPECT_TRUE(
-      authentication.admits("/registryextra/public/string", "", {}, "/registry")
+      authentication.admits(at("/public/string"), {.bearer = "", .cookies = ""})
           .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/private/secret"), {.bearer = "", .cookies = ""})
+                   .allowed);
 
-  // A request outside the base path is left in place and covered by no policy
-  EXPECT_TRUE(
-      authentication.admits("/elsewhere/public/string", "", {}, "/registry")
-          .allowed);
+  // A base that is not a whole-segment prefix of the target is left in place,
+  // where it is covered by no policy. An explicit route is matched on the
+  // target as it arrived, so this is asked the way the surface gate asks it
+  EXPECT_TRUE(authentication
+                  .admits_route("/registryextra/private/secret", "/registry",
+                                {.bearer = "", .cookies = {}})
+                  .allowed);
+
+  // A target outside the base path is likewise covered by no policy
+  EXPECT_TRUE(authentication
+                  .admits_route("/elsewhere/private/secret", "/registry",
+                                {.bearer = "", .cookies = {}})
+                  .allowed);
+
+  // While one that does carry the base path is governed by the policy under it
+  EXPECT_FALSE(authentication
+                   .admits_route("/registry/private/secret", "/registry",
+                                 {.bearer = "", .cookies = {}})
+                   .allowed);
 }
 
 TEST(apikey_admits_matching_credential) {
@@ -416,9 +493,13 @@ TEST(apikey_admits_matching_credential) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.admits("/internal/foo", "secret-match").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "wrong").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "secret-match"})
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = "wrong"}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(apikey_with_multiple_keys_admits_any) {
@@ -434,9 +515,12 @@ TEST(apikey_with_multiple_keys_admits_any) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.admits("/internal/foo", "key-a").allowed);
-  EXPECT_TRUE(authentication.admits("/internal/foo", "key-b").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "key-c").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "key-a"}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "key-b"}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = "key-c"}).allowed);
 }
 
 TEST(apikey_with_unset_variable_denies) {
@@ -449,8 +533,11 @@ TEST(apikey_with_unset_variable_denies) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/internal/foo", "anything").allowed);
-  EXPECT_FALSE(authentication.admits("/internal/foo", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = "anything"})
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
 TEST(sha256_policy_admits_the_matching_credential) {
@@ -465,12 +552,16 @@ TEST(sha256_policy_admits_the_matching_credential) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.admits("/secret/foo", raw).allowed);
-  EXPECT_FALSE(authentication.admits("/secret/foo", "wrong").allowed);
-  EXPECT_FALSE(authentication.admits("/secret/foo", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secret/foo"), {.bearer = raw}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/foo"), {.bearer = "wrong"}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/foo"), {.bearer = ""}).allowed);
   // Presenting the stored hash itself does not authenticate
   EXPECT_FALSE(
-      authentication.admits("/secret/foo", sourcemeta::core::sha256(raw))
+      authentication
+          .admits(at("/secret/foo"), {.bearer = sourcemeta::core::sha256(raw)})
           .allowed);
 }
 
@@ -493,9 +584,11 @@ TEST(mixed_algorithms_admit_either_key_with_identity_first) {
       path, stub_fetcher({}, nullptr)};
   // Either key type opens the path regardless of declaration order. The sha256
   // key must work even though the identity policy is checked first and fails
-  EXPECT_TRUE(authentication.admits("/mixed/x", "plain-a").allowed);
-  EXPECT_TRUE(authentication.admits("/mixed/x", raw).allowed);
-  EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/mixed/x"), {.bearer = "plain-a"}).allowed);
+  EXPECT_TRUE(authentication.admits(at("/mixed/x"), {.bearer = raw}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/mixed/x"), {.bearer = "neither"}).allowed);
 }
 
 TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
@@ -515,9 +608,11 @@ TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The identity key must work even though the sha256 policy is checked first
-  EXPECT_TRUE(authentication.admits("/mixed/x", raw).allowed);
-  EXPECT_TRUE(authentication.admits("/mixed/x", "plain-b").allowed);
-  EXPECT_FALSE(authentication.admits("/mixed/x", "neither").allowed);
+  EXPECT_TRUE(authentication.admits(at("/mixed/x"), {.bearer = raw}).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/mixed/x"), {.bearer = "plain-b"}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/mixed/x"), {.bearer = "neither"}).allowed);
 }
 
 TEST(supports_the_maximum_number_of_policies) {
@@ -547,10 +642,10 @@ TEST(supports_the_maximum_number_of_policies) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // The keyless policies gate their scope with no key that can open it
-  EXPECT_FALSE(authentication.admits("/p0/foo", "").allowed);
-  EXPECT_FALSE(authentication.admits("/p63/foo", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/p0/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/p63/foo"), {.bearer = ""}).allowed);
   // An uncovered path is public
-  EXPECT_TRUE(authentication.admits("/missing", "").allowed);
+  EXPECT_TRUE(authentication.admits(at("/missing"), {.bearer = ""}).allowed);
 }
 
 TEST(governing_returns_policy_indices_in_declaration_order) {
@@ -565,11 +660,12 @@ TEST(governing_returns_policy_indices_in_declaration_order) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.governing("/"), (std::vector<std::size_t>{0}));
-  EXPECT_EQ(authentication.governing("/vendor"), (std::vector<std::size_t>{0}));
-  EXPECT_EQ(authentication.governing("/internal"),
+  EXPECT_EQ(authentication.governing(at("/")), (std::vector<std::size_t>{0}));
+  EXPECT_EQ(authentication.governing(at("/vendor")),
+            (std::vector<std::size_t>{0}));
+  EXPECT_EQ(authentication.governing(at("/internal")),
             (std::vector<std::size_t>{0, 1}));
-  EXPECT_EQ(authentication.governing("/internal/foo"),
+  EXPECT_EQ(authentication.governing(at("/internal/foo")),
             (std::vector<std::size_t>{0, 1}));
 }
 
@@ -583,8 +679,9 @@ TEST(governing_of_an_ungoverned_path_is_empty) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.governing("/vendor"), (std::vector<std::size_t>{}));
-  EXPECT_EQ(authentication.governing("/internal"),
+  EXPECT_EQ(authentication.governing(at("/vendor")),
+            (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.governing(at("/internal")),
             (std::vector<std::size_t>{0}));
 }
 
@@ -592,10 +689,12 @@ TEST(reference_through_a_broken_artifact_is_rejected) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"},
       stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/open/two"));
-  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secret/two"));
   EXPECT_FALSE(
-      authentication.reference_permitted("/secret/one", "/secret/two"));
+      authentication.reference_permitted(at("/open/one"), at("/open/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/open/one"), at("/secret/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/secret/one"), at("/secret/two")));
 }
 
 TEST(reference_to_a_public_schema_is_permitted) {
@@ -608,8 +707,10 @@ TEST(reference_to_a_public_schema_is_permitted) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.reference_permitted("/secret/one", "/open/two"));
-  EXPECT_TRUE(authentication.reference_permitted("/open/one", "/open/two"));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/secret/one"), at("/open/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/open/one"), at("/open/two")));
 }
 
 TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
@@ -622,7 +723,8 @@ TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secret/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/open/one"), at("/secret/two")));
 }
 
 TEST(reference_within_the_same_policy_is_permitted) {
@@ -635,10 +737,10 @@ TEST(reference_within_the_same_policy_is_permitted) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted("/internal/one", "/internal/two"));
-  EXPECT_TRUE(
-      authentication.reference_permitted("/internal/one", "/internal/one"));
+  EXPECT_TRUE(authentication.reference_permitted(at("/internal/one"),
+                                                 at("/internal/two")));
+  EXPECT_TRUE(authentication.reference_permitted(at("/internal/one"),
+                                                 at("/internal/one")));
 }
 
 TEST(reference_across_disjoint_policies_is_rejected) {
@@ -653,8 +755,10 @@ TEST(reference_across_disjoint_policies_is_rejected) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
-  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
@@ -669,8 +773,10 @@ TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.reference_permitted("/p/one", "/p/inner/two"));
-  EXPECT_FALSE(authentication.reference_permitted("/p/inner/two", "/p/one"));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/p/one"), at("/p/inner/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/p/inner/two"), at("/p/one")));
 }
 
 TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
@@ -691,11 +797,14 @@ TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          calls)};
-  EXPECT_TRUE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
-  EXPECT_FALSE(authentication.admits("/secure/x", "not-a-token").allowed);
-  EXPECT_FALSE(authentication.admits("/secure/x", "").allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
+  EXPECT_FALSE(authentication.admits(at("/secure/x"), {.bearer = "not-a-token"})
+                   .allowed);
+  EXPECT_FALSE(authentication.admits(at("/secure/x"), {.bearer = ""}).allowed);
   // A second valid request reuses the cached key set rather than refetching
-  EXPECT_TRUE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
   EXPECT_EQ(*calls, 1);
 }
 
@@ -716,7 +825,8 @@ TEST(jwt_denies_a_token_for_the_wrong_audience) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          nullptr)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_denies_a_token_from_the_wrong_issuer) {
@@ -736,7 +846,8 @@ TEST(jwt_denies_a_token_from_the_wrong_issuer) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          nullptr)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_denies_a_disallowed_algorithm) {
@@ -756,7 +867,8 @@ TEST(jwt_denies_a_disallowed_algorithm) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          nullptr)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_denies_when_the_signing_key_is_absent) {
@@ -777,7 +889,8 @@ TEST(jwt_denies_when_the_signing_key_is_absent) {
       path,
       stub_fetcher({{"https://idp.test/jwks", std::string{UNRELATED_KEYS}}},
                    nullptr)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
@@ -796,7 +909,8 @@ TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
@@ -817,8 +931,10 @@ TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          calls)};
-  EXPECT_FALSE(authentication.admits("/secure/x", "static-api-key").allowed);
-  EXPECT_FALSE(authentication.admits("/secure/x", "").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = "static-api-key"})
+          .allowed);
+  EXPECT_FALSE(authentication.admits(at("/secure/x"), {.bearer = ""}).allowed);
   EXPECT_EQ(*calls, 0);
 }
 
@@ -847,7 +963,8 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
   // Both the provider metadata and the key set it names are retrieved, and
   // the token then fails only on its issuer claim, which names a different
   // issuer than the policy trusts
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
   EXPECT_EQ(*calls, 2);
 }
 
@@ -873,7 +990,8 @@ TEST(jwt_without_a_discoverable_issuer_fails_closed) {
             R"JSON({ "issuer": "acme", "jwks_uri": "https://acme.test/keys" })JSON"},
            {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
           calls)};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
   EXPECT_EQ(*calls, 0);
 }
 
@@ -898,11 +1016,14 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          nullptr)};
   // The static key opens the path
-  EXPECT_TRUE(authentication.admits("/both/x", "static-secret").allowed);
+  EXPECT_TRUE(authentication.admits(at("/both/x"), {.bearer = "static-secret"})
+                  .allowed);
   // The token opens the path
-  EXPECT_TRUE(authentication.admits("/both/x", SIGNED_TOKEN).allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/both/x"), {.bearer = SIGNED_TOKEN}).allowed);
   // Neither a wrong key nor a wrong token opens it
-  EXPECT_FALSE(authentication.admits("/both/x", "wrong").allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/both/x"), {.bearer = "wrong"}).allowed);
 }
 
 TEST(oidc_policy_admits_no_presented_credential) {
@@ -930,15 +1051,18 @@ TEST(oidc_policy_admits_no_presented_credential) {
                     {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
                    calls)};
 
-  const auto empty_verdict{authentication.admits("/portal/x", "")};
+  const auto empty_verdict{
+      authentication.admits(at("/portal/x"), {.bearer = ""})};
   EXPECT_FALSE(empty_verdict.allowed);
   EXPECT_FALSE(empty_verdict.principal.has_value());
 
-  const auto secret_verdict{authentication.admits("/portal/x", "confidential")};
+  const auto secret_verdict{
+      authentication.admits(at("/portal/x"), {.bearer = "confidential"})};
   EXPECT_FALSE(secret_verdict.allowed);
   EXPECT_FALSE(secret_verdict.principal.has_value());
 
-  const auto token_verdict{authentication.admits("/portal/x", SIGNED_TOKEN)};
+  const auto token_verdict{
+      authentication.admits(at("/portal/x"), {.bearer = SIGNED_TOKEN})};
   EXPECT_FALSE(token_verdict.allowed);
   EXPECT_FALSE(token_verdict.principal.has_value());
 
@@ -964,14 +1088,16 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
 
-  const auto key_verdict{authentication.admits("/both/x", "union-secret")};
+  const auto key_verdict{
+      authentication.admits(at("/both/x"), {.bearer = "union-secret"})};
   EXPECT_TRUE(key_verdict.allowed);
   EXPECT_TRUE(key_verdict.principal.has_value());
   EXPECT_EQ(key_verdict.principal.value().type,
             sourcemeta::one::Authentication::Type::ApiKey);
   EXPECT_EQ(key_verdict.principal.value().policy, std::size_t{0});
 
-  const auto token_verdict{authentication.admits("/both/x", SIGNED_TOKEN)};
+  const auto token_verdict{
+      authentication.admits(at("/both/x"), {.bearer = SIGNED_TOKEN})};
   EXPECT_FALSE(token_verdict.allowed);
   EXPECT_FALSE(token_verdict.principal.has_value());
 }
@@ -1000,7 +1126,8 @@ TEST(oidc_policy_admits_its_session_cookie) {
   const std::string cookies{"theme=dark; sourcemeta_one_session_okta=" +
                             sealed};
 
-  const auto verdict{authentication.admits("/portal/x", "", cookies)};
+  const auto verdict{authentication.admits(at("/portal/x"),
+                                           {.bearer = "", .cookies = cookies})};
   EXPECT_TRUE(verdict.allowed);
   EXPECT_TRUE(verdict.principal.has_value());
   EXPECT_EQ(verdict.principal.value().type,
@@ -1008,7 +1135,8 @@ TEST(oidc_policy_admits_its_session_cookie) {
   EXPECT_EQ(verdict.principal.value().policy, std::size_t{0});
   EXPECT_EQ(*calls, 0);
 
-  const auto anonymous_verdict{authentication.admits("/portal/x", "")};
+  const auto anonymous_verdict{
+      authentication.admits(at("/portal/x"), {.bearer = ""})};
   EXPECT_FALSE(anonymous_verdict.allowed);
   EXPECT_FALSE(anonymous_verdict.principal.has_value());
 }
@@ -1043,14 +1171,23 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
 
   // The session opens the path its policy governs
   const std::string okta_cookies{"sourcemeta_one_session_okta=" + sealed};
-  EXPECT_TRUE(authentication.admits("/alpha/x", "", okta_cookies).allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = okta_cookies})
+          .allowed);
 
   // The same session does not open a path governed by another policy
-  EXPECT_FALSE(authentication.admits("/beta/x", "", okta_cookies).allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/beta/x"), {.bearer = "", .cookies = okta_cookies})
+          .allowed);
 
   // Nor does re-presenting the value under the other policy's cookie name
   const std::string renamed_cookies{"sourcemeta_one_session_google=" + sealed};
-  EXPECT_FALSE(authentication.admits("/beta/x", "", renamed_cookies).allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/beta/x"), {.bearer = "", .cookies = renamed_cookies})
+          .allowed);
 }
 
 TEST(expired_session_cookie_is_denied) {
@@ -1074,7 +1211,9 @@ TEST(expired_session_cookie_is_denied) {
   const auto sealed{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, past)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
-  EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
 }
 
 TEST(forged_session_cookie_is_denied) {
@@ -1098,7 +1237,10 @@ TEST(forged_session_cookie_is_denied) {
   const auto foreign{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", "other-secret", SESSION_EXPIRY)};
   const std::string foreign_cookies{"sourcemeta_one_session_okta=" + foreign};
-  EXPECT_FALSE(authentication.admits("/portal/x", "", foreign_cookies).allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = foreign_cookies})
+          .allowed);
 
   // A value whose signature no longer matches its contents
   auto tampered{sourcemeta::one::session_seal(R"JSON({ "policy": "okta" })JSON",
@@ -1106,13 +1248,16 @@ TEST(forged_session_cookie_is_denied) {
   tampered.back() = tampered.back() == 'A' ? 'B' : 'A';
   const std::string tampered_cookies{"sourcemeta_one_session_okta=" + tampered};
   EXPECT_FALSE(
-      authentication.admits("/portal/x", "", tampered_cookies).allowed);
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = tampered_cookies})
+          .allowed);
 
   // A value that is not a sealed session at all
-  EXPECT_FALSE(
-      authentication
-          .admits("/portal/x", "", "sourcemeta_one_session_okta=garbage")
-          .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/portal/x"),
+                           {.bearer = "",
+                            .cookies = "sourcemeta_one_session_okta=garbage"})
+                   .allowed);
 }
 
 TEST(session_payload_must_declare_its_policy) {
@@ -1139,7 +1284,10 @@ TEST(session_payload_must_declare_its_policy) {
     const auto sealed{
         sourcemeta::one::session_seal(payload, SESSION_SECRET, SESSION_EXPIRY)};
     const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
-    EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+    EXPECT_FALSE(
+        authentication
+            .admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+            .allowed);
   }
 }
 
@@ -1163,7 +1311,9 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
   const auto sealed{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
-  EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
 }
 
 TEST(session_admitted_under_a_rotated_secret) {
@@ -1190,7 +1340,9 @@ TEST(session_admitted_under_a_rotated_secret) {
       R"JSON({ "policy": "okta" })JSON", "old-secret", SESSION_EXPIRY)};
   EXPECT_TRUE(
       authentication
-          .admits("/portal/x", "", "sourcemeta_one_session_okta=" + old_sealed)
+          .admits(at("/portal/x"),
+                  {.bearer = "",
+                   .cookies = "sourcemeta_one_session_okta=" + old_sealed})
           .allowed);
 
   // A fresh login mints under the newest secret alone, so the minted value
@@ -1211,7 +1363,9 @@ TEST(session_admitted_under_a_rotated_secret) {
       R"JSON({ "policy": "okta" })JSON", "retired-secret", SESSION_EXPIRY)};
   EXPECT_FALSE(
       authentication
-          .admits("/portal/x", "", "sourcemeta_one_session_okta=" + retired)
+          .admits(at("/portal/x"),
+                  {.bearer = "",
+                   .cookies = "sourcemeta_one_session_okta=" + retired})
           .allowed);
 }
 
@@ -1236,7 +1390,9 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
   const auto forged{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", "", SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + forged};
-  EXPECT_FALSE(authentication.admits("/portal/x", "", cookies).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
 }
 
 TEST(save_rejects_a_nameless_interactive_policy) {
@@ -1277,7 +1433,8 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
 
-  const auto key_verdict{authentication.admits("/both/x", "union-key")};
+  const auto key_verdict{
+      authentication.admits(at("/both/x"), {.bearer = "union-key"})};
   EXPECT_TRUE(key_verdict.allowed);
   EXPECT_TRUE(key_verdict.principal.has_value());
   EXPECT_EQ(key_verdict.principal.value().type,
@@ -1287,14 +1444,15 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
   const auto sealed{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
-  const auto session_verdict{authentication.admits("/both/x", "", cookies)};
+  const auto session_verdict{
+      authentication.admits(at("/both/x"), {.bearer = "", .cookies = cookies})};
   EXPECT_TRUE(session_verdict.allowed);
   EXPECT_TRUE(session_verdict.principal.has_value());
   EXPECT_EQ(session_verdict.principal.value().type,
             sourcemeta::one::Authentication::Type::OIDC);
   EXPECT_EQ(session_verdict.principal.value().policy, std::size_t{1});
 
-  EXPECT_FALSE(authentication.admits("/both/x", "").allowed);
+  EXPECT_FALSE(authentication.admits(at("/both/x"), {.bearer = ""}).allowed);
 }
 
 TEST(session_cookie_does_not_open_an_apikey_path) {
@@ -1313,7 +1471,10 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   const auto sealed{sourcemeta::one::session_seal(
       R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
-  EXPECT_FALSE(authentication.admits("/internal/x", "", cookies).allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/internal/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
 }
 
 TEST(interactive_returns_the_policy_by_name) {
@@ -1503,8 +1664,10 @@ TEST(reference_within_the_same_oidc_scope_is_permitted) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.reference_permitted("/alpha/one", "/beta/two"));
-  EXPECT_TRUE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_across_distinct_oidc_clients_is_rejected) {
@@ -1530,8 +1693,10 @@ TEST(reference_across_distinct_oidc_clients_is_rejected) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
-  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_across_swapped_oidc_identities_is_rejected) {
@@ -1559,8 +1724,10 @@ TEST(reference_across_swapped_oidc_identities_is_rejected) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
-  EXPECT_FALSE(authentication.reference_permitted("/beta/two", "/alpha/one"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
@@ -1597,7 +1764,7 @@ TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(
-      authentication.reference_permitted("/source/one", "/target/two"));
+      authentication.reference_permitted(at("/source/one"), at("/target/two")));
 }
 
 TEST(admission_by_an_apikey_policy_identifies_the_principal) {
@@ -1611,8 +1778,8 @@ TEST(admission_by_an_apikey_policy_identifies_the_principal) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  const auto verdict{
-      authentication.admits("/internal/foo", "principal-secret")};
+  const auto verdict{authentication.admits(at("/internal/foo"),
+                                           {.bearer = "principal-secret"})};
   EXPECT_TRUE(verdict.allowed);
   EXPECT_TRUE(verdict.principal.has_value());
   EXPECT_EQ(verdict.principal.value().type,
@@ -1637,7 +1804,8 @@ TEST(admission_by_a_jwt_policy_identifies_the_principal) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                          nullptr)};
-  const auto verdict{authentication.admits("/secure/foo", SIGNED_TOKEN)};
+  const auto verdict{
+      authentication.admits(at("/secure/foo"), {.bearer = SIGNED_TOKEN})};
   EXPECT_TRUE(verdict.allowed);
   EXPECT_TRUE(verdict.principal.has_value());
   EXPECT_EQ(verdict.principal.value().type,
@@ -1667,14 +1835,15 @@ TEST(principal_identifies_the_admitting_policy_among_several) {
                          nullptr)};
 
   const auto apikey_verdict{
-      authentication.admits("/both/x", "principal-mixed")};
+      authentication.admits(at("/both/x"), {.bearer = "principal-mixed"})};
   EXPECT_TRUE(apikey_verdict.allowed);
   EXPECT_TRUE(apikey_verdict.principal.has_value());
   EXPECT_EQ(apikey_verdict.principal.value().type,
             sourcemeta::one::Authentication::Type::ApiKey);
   EXPECT_EQ(apikey_verdict.principal.value().policy, std::size_t{0});
 
-  const auto jwt_verdict{authentication.admits("/both/x", SIGNED_TOKEN)};
+  const auto jwt_verdict{
+      authentication.admits(at("/both/x"), {.bearer = SIGNED_TOKEN})};
   EXPECT_TRUE(jwt_verdict.allowed);
   EXPECT_TRUE(jwt_verdict.principal.has_value());
   EXPECT_EQ(jwt_verdict.principal.value().type,
@@ -1695,12 +1864,14 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
       path, stub_fetcher({}, nullptr)};
 
   // An uncovered path admits an anonymous caller
-  const auto anonymous_verdict{authentication.admits("/open/foo", "")};
+  const auto anonymous_verdict{
+      authentication.admits(at("/open/foo"), {.bearer = ""})};
   EXPECT_TRUE(anonymous_verdict.allowed);
   EXPECT_FALSE(anonymous_verdict.principal.has_value());
 
   // A denial identifies nobody
-  const auto denied_verdict{authentication.admits("/internal/foo", "wrong")};
+  const auto denied_verdict{
+      authentication.admits(at("/internal/foo"), {.bearer = "wrong"})};
   EXPECT_FALSE(denied_verdict.allowed);
   EXPECT_FALSE(denied_verdict.principal.has_value());
 
@@ -1708,7 +1879,8 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
   const sourcemeta::one::Authentication missing{
       std::filesystem::path{"/no/such/authentication.bin"},
       stub_fetcher({}, nullptr)};
-  const auto missing_verdict{missing.admits("/internal/foo", "principal-none")};
+  const auto missing_verdict{
+      missing.admits(at("/internal/foo"), {.bearer = "principal-none"})};
   EXPECT_FALSE(missing_verdict.allowed);
   EXPECT_FALSE(missing_verdict.principal.has_value());
 }
@@ -1731,10 +1903,13 @@ TEST(reference_rules_treat_a_jwt_scope_conservatively) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   // A public schema may not reference one behind the token scope
-  EXPECT_FALSE(authentication.reference_permitted("/open/one", "/secure/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/open/one"), at("/secure/two")));
   // The token scope may reference a public schema, and itself
-  EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/open/two"));
-  EXPECT_TRUE(authentication.reference_permitted("/secure/one", "/secure/two"));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/secure/one"), at("/open/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/secure/one"), at("/secure/two")));
 }
 
 TEST(jwt_without_a_transport_denies_rather_than_crashes) {
@@ -1752,7 +1927,8 @@ TEST(jwt_without_a_transport_denies_rather_than_crashes) {
   sourcemeta::one::Authentication::save(policies, path, path);
 
   const sourcemeta::one::Authentication authentication{path, {}};
-  EXPECT_FALSE(authentication.admits("/secure/x", SIGNED_TOKEN).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
@@ -1783,8 +1959,11 @@ TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
                 nullptr)};
   // The primary path is populated first, which under a per-issuer cache would
   // have leaked its key set to the secondary path
-  EXPECT_TRUE(authentication.admits("/primary/x", SIGNED_TOKEN).allowed);
-  EXPECT_FALSE(authentication.admits("/secondary/x", SIGNED_TOKEN).allowed);
+  EXPECT_TRUE(authentication.admits(at("/primary/x"), {.bearer = SIGNED_TOKEN})
+                  .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secondary/x"), {.bearer = SIGNED_TOKEN})
+          .allowed);
 }
 
 TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
@@ -1821,7 +2000,97 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
       path, stub_fetcher({}, nullptr)};
   // Same issuer, audience, and key set but a different algorithm is a different
   // scope, so no token could satisfy the reference
-  EXPECT_FALSE(authentication.reference_permitted("/alpha/one", "/beta/two"));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
   // An identical policy is the same scope
-  EXPECT_TRUE(authentication.reference_permitted("/alpha/one", "/gamma/two"));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/gamma/two")));
+}
+
+// A configured policy path that only differs cosmetically still has to gate the
+// location it names. A spelling the matcher could not traverse would leave the
+// target public while the configuration reads as though it were gated
+
+TEST(a_policy_path_declared_canonically_gates_its_location) {
+  setenv("ONE_TEST_KEY_CANONICAL", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CANONICAL"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_declared_canonically.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_carrying_a_dot_segment_gates_its_location) {
+  setenv("ONE_TEST_KEY_DOT", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/./private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_DOT"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_carrying_a_dot_segment.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_that_climbs_back_into_itself_gates_its_location) {
+  setenv("ONE_TEST_KEY_CLIMB", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/private/../private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CLIMB"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_that_climbs_back_into_itself.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
+}
+
+TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
+  setenv("ONE_TEST_KEY_SEPARATOR", "spelling-secret", 1);
+  const std::array<std::string_view, 1> paths{{"//private"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SEPARATOR"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("policy_carrying_a_repeated_separator.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/private/secret"), {.bearer = ""}).allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/private/secret"), {.bearer = "spelling-secret"})
+                  .allowed);
+  // A location the policy does not name stays public
+  EXPECT_TRUE(
+      authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
 }

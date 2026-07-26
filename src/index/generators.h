@@ -319,8 +319,10 @@ struct GENERATE_DEPENDENCIES {
       for (const auto &edge : result.as_array()) {
         const auto &referrer_uri{edge.at("from").to_string()};
         const auto &referent_uri{edge.at("to").to_string()};
-        const auto referrer{registry_path(referrer_uri, configuration.url)};
-        const auto referent{registry_path(referent_uri, configuration.url)};
+        const auto referrer{sourcemeta::one::Authentication::Path::parse(
+            referrer_uri, configuration.url, configuration.base_path)};
+        const auto referent{sourcemeta::one::Authentication::Path::parse(
+            referent_uri, configuration.url, configuration.base_path)};
         if (referrer.has_value() && referent.has_value() &&
             !authentication.reference_permitted(referrer.value(),
                                                 referent.value())) {
@@ -347,22 +349,6 @@ private:
     }
 
     return sourcemeta::core::JSON{uri};
-  }
-
-  static auto registry_path(const std::string_view uri,
-                            const std::string_view base)
-      -> std::optional<std::string_view> {
-    if (!uri.starts_with(base)) {
-      return std::nullopt;
-    }
-
-    const auto remainder{uri.substr(base.size())};
-    if (!base.ends_with('/') && !remainder.empty() &&
-        !remainder.starts_with('/')) {
-      return std::nullopt;
-    }
-
-    return remainder;
   }
 };
 

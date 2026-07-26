@@ -169,6 +169,11 @@ public:
       const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
+  // Where a request points within this instance, in the one spelling the gate
+  // and the artifact tree both read, or nothing when it points outside
+  [[nodiscard]] auto canonical_path(std::string_view input) const
+      -> std::optional<Authentication::Path>;
+
 protected:
   // Resolution for trees that are not registry content, such as the
   // compile-time static asset bundle. Same containment discipline as
@@ -189,7 +194,8 @@ protected:
       -> std::optional<ResolvedArtifact>;
 
 private:
-  [[nodiscard]] auto artifact_locate(std::string_view input, Tree tree,
+  [[nodiscard]] auto artifact_locate(const Authentication::Path &path,
+                                     Tree tree,
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 

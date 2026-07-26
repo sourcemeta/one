@@ -28,49 +28,17 @@ struct DialectExtension {
 };
 #pragma pack(pop)
 
-auto uri_to_relative_path(const std::string_view uri,
-                          const std::string_view server_uri)
-    -> std::optional<std::filesystem::path> {
-  std::optional<sourcemeta::core::URI> parsed;
-  try {
-    parsed.emplace(uri);
-    parsed->canonicalize();
-  } catch (const std::exception &) {
-    return std::nullopt;
-  }
-
-  parsed->relative_to(sourcemeta::core::URI{server_uri});
-  if (parsed->is_absolute()) {
-    return std::nullopt;
-  }
-
-  const auto path_option{parsed->path()};
-  if (path_option.has_value() && path_option.value().starts_with("/")) {
-    return std::nullopt;
-  }
-
-  std::string_view normalized{path_option.has_value()
-                                  ? std::string_view{path_option.value()}
-                                  : std::string_view{}};
-  while (normalized.starts_with("../")) {
-    normalized.remove_prefix(3);
-  }
-  if (normalized == "..") {
-    normalized = std::string_view{};
-  }
-
-  const auto stripped{
-      sourcemeta::core::remove_suffix_ignore_case(normalized, ".json")};
-  std::filesystem::path result{stripped};
-  sourcemeta::core::to_lowercase(result);
-  return result;
-}
-
 } // namespace
 
 namespace sourcemeta::one {
 
-auto RouterAction::artifact_locate(const std::string_view input,
+auto RouterAction::canonical_path(const std::string_view input) const
+    -> std::optional<Authentication::Path> {
+  return Authentication::Path::parse(input, this->server_uri_,
+                                     this->server_uri_base_path_);
+}
+
+auto RouterAction::artifact_locate(const Authentication::Path &path,
                                    const Tree tree,
                                    const std::string_view artifact_name) const
     -> std::optional<std::filesystem::path> {
@@ -78,19 +46,11 @@ auto RouterAction::artifact_locate(const std::string_view input,
                                                             : "explorer"};
   const auto tree_root{this->index_directory_ / tree_segment};
   auto directory{tree_root};
-  if (!input.empty()) {
-    auto resolved{uri_to_relative_path(input, this->server_uri_)};
-    if (!resolved.has_value()) {
-      auto stripped{sourcemeta::core::URI::strip_path_prefix(
-          input, this->server_uri_base_path_)};
-      if (!stripped.has_value()) {
-        return std::nullopt;
-      }
-      resolved = std::filesystem::path{std::move(stripped).value()};
-    }
-    if (!resolved.value().empty()) {
-      directory /= std::move(resolved).value();
-    }
+  // The tree stores a resource once, whatever representation was asked for
+  const auto location{
+      sourcemeta::core::remove_suffix_ignore_case(path.value(), ".json")};
+  if (!location.empty()) {
+    directory /= std::filesystem::path{location};
   }
   directory /= "%";
   directory /= std::string{artifact_name} + ".metapack";
@@ -108,30 +68,22 @@ auto RouterAction::artifact_resolve_path(
     const Credentials credentials, const std::string_view input,
     const Tree tree, const std::string_view artifact_name) const
     -> ArtifactResolution {
-  // The gate consults the registry path, not the filesystem, and runs
-  // before the existence check so a denial reveals nothing about
-  // whether the artifact exists. The relative-path computation here
-  // mirrors the locator below, and the two converge once the gate is
-  // real
-  std::filesystem::path relative;
-  if (!input.empty()) {
-    auto resolved{uri_to_relative_path(input, this->server_uri_)};
-    if (!resolved.has_value()) {
-      auto stripped{sourcemeta::core::URI::strip_path_prefix(
-          input, this->server_uri_base_path_)};
-      if (stripped.has_value()) {
-        resolved = std::filesystem::path{std::move(stripped).value()};
-      }
-    }
-    if (resolved.has_value()) {
-      relative = std::move(resolved).value();
-    }
+  // The gate and the locator have to agree on where a request points, so both
+  // read the one canonical path rather than each deriving its own. A path that
+  // names nowhere in this instance is refused without consulting the gate,
+  // since there is nothing to be admitted to
+  const auto path{this->canonical_path(input)};
+  if (!path.has_value()) {
+    return {.outcome = ArtifactResolution::Outcome::NotFound,
+            .path = std::nullopt,
+            .is_public = false};
   }
 
+  // The gate consults the registry path, not the filesystem, and runs before
+  // the existence check so a denial reveals nothing about whether the artifact
+  // exists
   const auto &authentication{this->dispatcher_.authentication()};
-  const auto registry_path{relative.generic_string()};
-  const auto verdict{authentication.admits(registry_path, credentials.bearer,
-                                           credentials.cookies)};
+  const auto verdict{authentication.admits(path.value(), credentials)};
   // Nothing is served on a denial or a miss, so report the path as not public
   // and let any caller that skips the outcome check fall back to a private
   // caching directive rather than a public one
@@ -141,7 +93,7 @@ auto RouterAction::artifact_resolve_path(
             .is_public = false};
   }
 
-  auto located{this->artifact_locate(input, tree, artifact_name)};
+  auto located{this->artifact_locate(path.value(), tree, artifact_name)};
   if (!located.has_value()) {
     return {.outcome = ArtifactResolution::Outcome::NotFound,
             .path = std::nullopt,
@@ -154,7 +106,7 @@ auto RouterAction::artifact_resolve_path(
   // public for shared caches
   const auto is_public{
       (credentials.bearer.empty() && credentials.cookies.empty()) ||
-      authentication.admits(registry_path, {}).allowed};
+      authentication.admits(path.value(), {}).allowed};
   return {.outcome = ArtifactResolution::Outcome::Found,
           .path = ResolvedArtifact{std::move(located).value()},
           .is_public = is_public};
@@ -164,7 +116,12 @@ auto RouterAction::artifact_resolve_path_unauthenticated(
     const std::string_view input, const Tree tree,
     const std::string_view artifact_name) const
     -> std::optional<ResolvedArtifact> {
-  auto located{this->artifact_locate(input, tree, artifact_name)};
+  const auto path{this->canonical_path(input)};
+  if (!path.has_value()) {
+    return std::nullopt;
+  }
+
+  auto located{this->artifact_locate(path.value(), tree, artifact_name)};
   if (!located.has_value()) {
     return std::nullopt;
   }

@@ -2,6 +2,7 @@ if(ONE_ENTERPRISE)
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h session.h
     SOURCES
+      path.cc
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/session.cc")
@@ -9,12 +10,16 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::http)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::oidc)
-  target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::uri)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h session.h
-    SOURCES authentication.cc session.cc)
+    SOURCES authentication.cc path.cc session.cc)
 endif()
+
+# Paths are the key the policy trie is built from and looked up by, so
+# canonicalising them belongs to this module in both editions
+target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::text)
+target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::uri)
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::jose)

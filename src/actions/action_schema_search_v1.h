@@ -182,7 +182,12 @@ public:
         query, limit, scope,
         [this, &credential, cookies](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(path, credential, cookies).allowed;
+          const auto location{this->canonical_path(path)};
+          return location.has_value() &&
+                 authentication
+                     .admits(location.value(),
+                             {.bearer = credential, .cookies = cookies})
+                     .allowed;
         })};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
@@ -286,7 +291,10 @@ public:
         arguments.at("q").to_string(), limit, scope,
         [this, &credential](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
-          return authentication.admits(path, credential).allowed;
+          const auto location{this->canonical_path(path)};
+          return location.has_value() &&
+                 authentication.admits(location.value(), {.bearer = credential})
+                     .allowed;
         })};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
