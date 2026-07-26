@@ -158,6 +158,19 @@ TEST(a_path_outside_the_base_path_names_nowhere_here) {
   EXPECT_FALSE(parse("/elsewhere/private", BASED, "/registry").has_value());
 }
 
+TEST(a_base_path_is_matched_as_configured_rather_than_case_insensitively) {
+  // The base path is how the instance is deployed rather than a location
+  // inside it, so it is removed before anything is lowercased. A target that
+  // spells it differently names nowhere here, which is the closed answer
+  EXPECT_FALSE(
+      parse("/REGISTRY/private/secret", BASED, "/registry").has_value());
+  EXPECT_FALSE(
+      parse("/Registry/private/secret", BASED, "/registry").has_value());
+  // While the segments below it are canonicalised as anywhere else
+  EXPECT_EQ(value("/registry/PRIVATE/SECRET", BASED, "/registry"),
+            "private/secret");
+}
+
 TEST(a_base_path_is_matched_on_whole_segments) {
   EXPECT_FALSE(parse("/registrynot/private", BASED, "/registry").has_value());
 }
@@ -240,4 +253,9 @@ TEST(a_relative_path_that_climbs_reads_as_the_request_form_does) {
                 "/public/../private/secret")
                 .value(),
             "private/secret");
+}
+
+TEST(a_url_on_this_instance_but_outside_the_base_path_names_nowhere_here) {
+  EXPECT_FALSE(parse("http://localhost:8000/private/secret", BASED, "/registry")
+                   .has_value());
 }

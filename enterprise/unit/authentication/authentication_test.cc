@@ -461,18 +461,25 @@ TEST(base_path_is_stripped_before_matching) {
                    .admits(at("/private/secret"), {.bearer = "", .cookies = ""})
                    .allowed);
 
-  // A base path that is not a whole-segment prefix is left in place, so the
-  // path is covered by no policy and is public
+  // A base that is not a whole-segment prefix of the target is left in place,
+  // where it is covered by no policy. An explicit route is matched on the
+  // target as it arrived, so this is asked the way the surface gate asks it
   EXPECT_TRUE(authentication
-                  .admits(at("/registryextra/public/string"),
-                          {.bearer = "", .cookies = {}})
+                  .admits_route("/registryextra/private/secret", "/registry",
+                                {.bearer = "", .cookies = {}})
                   .allowed);
 
-  // A request outside the base path is left in place and covered by no policy
-  EXPECT_TRUE(
-      authentication
-          .admits(at("/elsewhere/public/string"), {.bearer = "", .cookies = {}})
-          .allowed);
+  // A target outside the base path is likewise covered by no policy
+  EXPECT_TRUE(authentication
+                  .admits_route("/elsewhere/private/secret", "/registry",
+                                {.bearer = "", .cookies = {}})
+                  .allowed);
+
+  // While one that does carry the base path is governed by the policy under it
+  EXPECT_FALSE(authentication
+                   .admits_route("/registry/private/secret", "/registry",
+                                 {.bearer = "", .cookies = {}})
+                   .allowed);
 }
 
 TEST(apikey_admits_matching_credential) {

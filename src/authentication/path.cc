@@ -127,8 +127,11 @@ auto Authentication::Path::parse(const std::string_view input,
   }
 
   if (parsed->scheme().has_value()) {
+    std::string absolute;
     try {
       parsed->canonicalize();
+      const auto path{parsed->path()};
+      absolute = path.has_value() ? std::string{path.value()} : std::string{};
       parsed->relative_to(sourcemeta::core::URI{std::string{instance_url}});
     } catch (const std::exception &) {
       return std::nullopt;
@@ -139,8 +142,12 @@ auto Authentication::Path::parse(const std::string_view input,
       return std::nullopt;
     }
 
-    const auto path{parsed->path()};
-    reduced = path.has_value() ? std::string{path.value()} : std::string{};
+    // Reducing against the instance answers whether the origin matches, but
+    // not whether the URL sits under the base path, since a sibling of that
+    // base reduces to a relative path just as a child of it does. So the URL
+    // continues as the target it names, which the base path is then removed
+    // from exactly as it is for a request
+    reduced = absolute.empty() ? std::string{"/"} : std::move(absolute);
     target = reduced;
   }
 

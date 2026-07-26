@@ -19,8 +19,9 @@
 #include <memory>      // std::unique_ptr
 #include <optional>    // std::optional
 #include <span>        // std::span
-#include <string>      // std::string, std::move
+#include <string>      // std::string
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 #include <vector>      // std::vector
 
 namespace sourcemeta::one {

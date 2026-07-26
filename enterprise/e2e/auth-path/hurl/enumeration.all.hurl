@@ -62,6 +62,8 @@ GET {{base}}/registry/self/v1/api/schemas/search?q=private
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Asserts]
 jsonpath "$" count == 0
@@ -71,6 +73,8 @@ GET {{base}}/registry/self/v1/api/schemas/search?q=string
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 public_search: body
@@ -98,6 +102,8 @@ Authorization: Bearer content-secret-key
 HTTP 200
 Cache-Control: private, max-age=60
 Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </registry/self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 admitted_search: body
