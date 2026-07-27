@@ -603,9 +603,9 @@ struct Authentication::Impl {
     // identity token as an API credential. Pinning it is a configuration
     // question rather than a default, since a provider that does not stamp the
     // type would otherwise stop working on upgrade
-    const auto error{provider->verify(
-        token, policy.algorithms, policy.issuer, policy.audience, std::nullopt,
-        std::optional<std::string_view>{"at+jwt"})};
+    const auto error{provider->verify(token, policy.algorithms, policy.issuer,
+                                      policy.audience, std::nullopt,
+                                      std::nullopt)};
     return !error.has_value();
   }
 
