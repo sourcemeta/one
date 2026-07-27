@@ -13,7 +13,7 @@ if(ONE_ENTERPRISE)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h
-    SOURCES authentication.cc path.cc session.cc)
+    SOURCES authentication.cc path.cc)
 endif()
 
 # Paths are the key the policy trie is built from and looked up by, so

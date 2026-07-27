@@ -1,5 +1,6 @@
 sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME enterprise_authentication
-  SOURCES authentication_path_test.cc authentication_test.cc session_test.cc)
+  SOURCES authentication_path_test.cc authentication_session_test.cc
+    authentication_test.cc)
 
 target_link_libraries(sourcemeta_one_enterprise_authentication_unit
   PRIVATE sourcemeta::one::authentication)
