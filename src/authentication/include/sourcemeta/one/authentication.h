@@ -199,6 +199,11 @@ public:
   [[nodiscard]] auto interactive(std::string_view name) const
       -> std::optional<InteractivePolicy>;
 
+  // Sealing is an edition-dependent capability. Where an instance does not
+  // offer it, nothing seals and no value opens, so a caller that treats an
+  // absent seal as unusable and an unopened value as a denial reaches the same
+  // outcome under either edition
+
   // Seal a payload for one purpose under the named interactive policy's
   // session secret, producing a value that the gate and this instance's
   // replicas accept until the expiry. Nothing is produced when the policy is
