@@ -7,6 +7,11 @@ import { createHmac } from 'node:crypto';
 // hollow transaction on its own rather than downstream.
 const SESSION_SECRET = 'a-session-signing-secret-for-the-sso-sandbox';
 
+// A sealed value is signed under a key derived from the secret and what the
+// value is for, so forging one means naming its purpose too. That is what
+// stops a transaction from being presented as a session.
+const TRANSACTION_LABEL = 'sourcemeta/one/transaction';
+
 const STATE = 'e2e-forged-state-value-for-callback-tests-1';
 const NONCE = 'e2e-forged-nonce-value-for-callback-tests-1';
 const VERIFIER = 'e2e-forged-verifier-value-for-callback-12';
@@ -15,9 +20,10 @@ function sealTransaction(payload) {
   const expiry = Math.floor(Date.now() / 1000) + 600;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const prefix = `1.${expiry}.${encoded}`;
-  const signature = createHmac('sha256', SESSION_SECRET)
-    .update(prefix)
-    .digest('base64url');
+  const key = createHmac('sha256', SESSION_SECRET)
+    .update(TRANSACTION_LABEL)
+    .digest();
+  const signature = createHmac('sha256', key).update(prefix).digest('base64url');
   return `${prefix}.${signature}`;
 }
 
