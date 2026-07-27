@@ -540,6 +540,72 @@ TEST(apikey_with_unset_variable_denies) {
       authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
+TEST(apikey_with_an_empty_variable_denies) {
+  setenv("ONE_TEST_KEY_EMPTY", "", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_EMPTY"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("apikey_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A variable an operator meant to hold a key but left blank gates the path
+  // exactly as an unset one does, rather than opening it to everyone
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = "anything"})
+          .allowed);
+}
+
+TEST(apikey_with_an_empty_variable_alongside_a_real_one_denies) {
+  setenv("ONE_TEST_KEY_PAIR_BLANK", "", 1);
+  setenv("ONE_TEST_KEY_PAIR_REAL", "pair-secret", 1);
+  const std::array<std::string_view, 2> keys{
+      {"ONE_TEST_KEY_PAIR_BLANK", "ONE_TEST_KEY_PAIR_REAL"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("apikey_pair.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // The blank one neither admits anybody nor keeps the key beside it from
+  // working
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "pair-secret"})
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/internal/foo"), {.bearer = "wrong"}).allowed);
+}
+
+TEST(sha256_policy_with_an_empty_variable_denies) {
+  setenv("ONE_TEST_KEY_SHA_EMPTY", "", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA_EMPTY"}};
+  const std::array<std::string_view, 1> paths{{"/secret"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+  const auto path{test_path("sha256_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/foo"), {.bearer = ""}).allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secret/foo"), {.bearer = "anything"}).allowed);
+  // Nor does the digest of nothing, which is what an empty credential hashes to
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/secret/foo"), {.bearer = sourcemeta::core::sha256("")})
+          .allowed);
+}
+
 TEST(sha256_policy_admits_the_matching_credential) {
   const std::string raw{"raw-secret-key"};
   setenv("ONE_TEST_KEY_SHA", sourcemeta::core::sha256(raw).c_str(), 1);
@@ -1506,6 +1572,8 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
 
 TEST(interactive_returns_the_policy_by_name) {
   setenv("ONE_TEST_KEY_INTERACTIVE", "key-value", 1);
+  setenv("ONE_TEST_OIDC_LOOKUP_A", "lookup-a-secret", 1);
+  setenv("ONE_TEST_OIDC_LOOKUP_B", "lookup-b-secret", 1);
   const std::array<std::string_view, 1> key_paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_INTERACTIVE"}};
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
@@ -1536,18 +1604,77 @@ TEST(interactive_returns_the_policy_by_name) {
   EXPECT_TRUE(okta.has_value());
   EXPECT_EQ(okta.value().issuer, "https://login.test");
   EXPECT_EQ(okta.value().client_id, "registry");
-  EXPECT_EQ(okta.value().client_secret_variable, "ONE_TEST_OIDC_LOOKUP_A");
   EXPECT_EQ(okta.value().default_path, "/alpha");
+  EXPECT_EQ(authentication.client_secret("okta").value(), "lookup-a-secret");
 
   const auto google{authentication.interactive("google")};
   EXPECT_TRUE(google.has_value());
   EXPECT_EQ(google.value().issuer, "https://accounts.test");
   EXPECT_EQ(google.value().client_id, "dashboard");
-  EXPECT_EQ(google.value().client_secret_variable, "ONE_TEST_OIDC_LOOKUP_B");
   EXPECT_EQ(google.value().default_path, "/beta");
+  EXPECT_EQ(authentication.client_secret("google").value(), "lookup-b-secret");
 
   EXPECT_FALSE(authentication.interactive("github").has_value());
   EXPECT_FALSE(authentication.interactive("").has_value());
+  EXPECT_FALSE(authentication.client_secret("github").has_value());
+  EXPECT_FALSE(authentication.client_secret("").has_value());
+}
+
+TEST(client_secret_of_an_unset_variable_is_absent) {
+  unsetenv("ONE_TEST_OIDC_SECRET_UNSET");
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_SECRET_UNSET",
+        .name = "okta",
+        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
+  const auto path{test_path("oidc_secret_unset.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(authentication.interactive("okta").has_value());
+  EXPECT_FALSE(authentication.client_secret("okta").has_value());
+}
+
+TEST(client_secret_of_an_empty_variable_is_absent) {
+  setenv("ONE_TEST_OIDC_SECRET_EMPTY", "", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .client_secret_variable = "ONE_TEST_OIDC_SECRET_EMPTY",
+        .name = "okta",
+        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
+  const auto path{test_path("oidc_secret_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A policy an operator meant to configure but left blank cannot authenticate
+  // to its provider, and says so rather than attempting the exchange with
+  // nothing
+  EXPECT_TRUE(authentication.interactive("okta").has_value());
+  EXPECT_FALSE(authentication.client_secret("okta").has_value());
+}
+
+TEST(client_secret_of_a_non_interactive_policy_is_absent) {
+  setenv("ONE_TEST_KEY_NOT_INTERACTIVE", "key-value", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NOT_INTERACTIVE"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "internal"}}};
+  const auto path{test_path("oidc_secret_apikey.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(authentication.client_secret("internal").has_value());
 }
 
 TEST(interactive_default_path_is_the_first_path_declared) {

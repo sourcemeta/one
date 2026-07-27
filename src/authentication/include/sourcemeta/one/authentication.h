@@ -189,8 +189,6 @@ public:
   struct InteractivePolicy {
     std::string_view issuer{};
     std::string_view client_id{};
-    // The environment variable name holding the client secret
-    std::string_view client_secret_variable{};
     // The first registry path the policy governs
     std::string_view default_path{};
   };
@@ -198,6 +196,13 @@ public:
   // The interactive policy declared under the given name, if any
   [[nodiscard]] auto interactive(std::string_view name) const
       -> std::optional<InteractivePolicy>;
+
+  // The client secret the named interactive policy authenticates to its
+  // provider with, if the policy is known and its secret is configured in the
+  // environment. Every secret this system holds is read here rather than by
+  // whoever needs it, so no caller is in a position to read one differently
+  [[nodiscard]] auto client_secret(std::string_view policy) const
+      -> std::optional<std::string>;
 
   // Sealing is an edition-dependent capability. Where an instance does not
   // offer it, nothing seals and no value opens, so a caller that treats an

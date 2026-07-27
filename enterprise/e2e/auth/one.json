@@ -44,6 +44,13 @@
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_MIXED_HASHED" } ]
     },
     {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "mixed-blank",
+      "paths": [ "/mixed" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_BLANK" } ]
+    },
+    {
       "type": "jwt",
       "name": "machine",
       "paths": [ "/machine" ],

@@ -14,7 +14,6 @@
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
-#include <cstdlib>     // std::getenv
 #include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
@@ -100,10 +99,9 @@ public:
       return;
     }
 
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    const char *client_secret{
-        std::getenv(std::string{policy->client_secret_variable}.c_str())};
-    if (client_secret == nullptr) {
+    // Starting a login that cannot be completed only strands the person at the
+    // provider, so the secret the exchange will need is required up front
+    if (!authentication.client_secret(policy_name).has_value()) {
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
