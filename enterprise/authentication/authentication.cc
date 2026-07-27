@@ -603,9 +603,9 @@ struct Authentication::Impl {
     // identity token as an API credential. Pinning it is a configuration
     // question rather than a default, since a provider that does not stamp the
     // type would otherwise stop working on upgrade
-    const auto error{provider->verify(token, policy.algorithms, policy.issuer,
-                                      policy.audience, std::nullopt,
-                                      std::nullopt)};
+    const auto error{provider->verify(
+        token, policy.algorithms, policy.issuer, policy.audience, std::nullopt,
+        std::optional<std::string_view>{"at+jwt"})};
     return !error.has_value();
   }
 
@@ -631,33 +631,36 @@ struct Authentication::Impl {
     // domain and the host itself can each set one and neither the header nor
     // the order says which is which. Taking any single one lets whoever
     // controls a neighbouring host decide which session this instance reads,
-    // so every value is tried and the caller is admitted if any of them opens
+    // so each is carried through the whole check and the caller is admitted
+    // when any of them is a session for this policy
     std::vector<std::string_view> candidates;
     sourcemeta::core::http_cookie_values(cookies, cookie_name, candidates);
-    std::optional<std::string> payload;
     for (const auto sealed : candidates) {
-      payload = this->session_open(decoded.session_secret_variable,
-                                   Authentication::Purpose::Session, sealed);
-      if (payload.has_value()) {
-        break;
+      const auto payload{this->session_open(decoded.session_secret_variable,
+                                            Authentication::Purpose::Session,
+                                            sealed)};
+      if (!payload.has_value()) {
+        continue;
+      }
+
+      const auto document{sourcemeta::core::try_parse_json(payload.value())};
+      if (!document.has_value() || !document.value().is_object()) {
+        continue;
+      }
+
+      // Cookie names travel outside the signature, so the sealed payload
+      // itself declares the policy it was minted for, and a value re-presented
+      // under another policy's cookie name is rejected. Policies can share a
+      // session secret, so one minted elsewhere opens here and must be passed
+      // over rather than end the search
+      const auto *minted_for{document.value().try_at("policy")};
+      if (minted_for != nullptr && minted_for->is_string() &&
+          minted_for->to_string() == policy_name) {
+        return true;
       }
     }
 
-    if (!payload.has_value()) {
-      return false;
-    }
-
-    // Cookie names travel outside the signature, so the sealed payload
-    // itself declares the policy it was minted for, and a value re-presented
-    // under another policy's cookie name is rejected
-    const auto document{sourcemeta::core::try_parse_json(payload.value())};
-    if (!document.has_value() || !document.value().is_object()) {
-      return false;
-    }
-
-    const auto *minted_for{document.value().try_at("policy")};
-    return minted_for != nullptr && minted_for->is_string() &&
-           minted_for->to_string() == policy_name;
+    return false;
   }
 
   // The decoded metadata of the OIDC policy declared under the given name,
