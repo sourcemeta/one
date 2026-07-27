@@ -38,6 +38,10 @@ static auto at_base(const std::string_view input, const std::string_view base)
       .value();
 }
 
+// These tests name locations directly rather than modelling what an instance
+// serves, so every path a policy is scoped to is one to gate
+static auto anywhere(const std::string_view) -> bool { return true; }
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -161,7 +165,7 @@ TEST(corrupted_section_offset_denies_everything) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("corrupted_offset.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   // Overwrite the node section offset with a value that aliases the header
   std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
@@ -180,7 +184,7 @@ TEST(corrupted_section_offset_denies_everything) {
 TEST(zero_policies_admits_every_path) {
   const std::array<sourcemeta::one::Authentication::Policy, 0> policies{};
   const auto path{test_path("zero_policies.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -200,7 +204,7 @@ TEST(uncovered_paths_are_public_around_a_gated_scope) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("uncovered_public.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -225,7 +229,7 @@ TEST(scope_matches_whole_segments_only) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("segment_boundary.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -250,7 +254,7 @@ TEST(distinct_policies_each_gate_their_scope) {
   const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
       {{alpha, alpha_keys}, {beta, beta_keys}, {gamma, gamma_keys}}};
   const auto path{test_path("distinct_policies.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -270,7 +274,7 @@ TEST(nested_prefixes_gate_their_subtrees) {
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{internal, internal_keys}, {secret, secret_keys}}};
   const auto path{test_path("nested_prefixes.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -296,7 +300,7 @@ TEST(nested_inner_key_widens_access) {
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{outer, outer_keys}, {inner, inner_keys}}};
   const auto path{test_path("nested_widen.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -322,7 +326,7 @@ TEST(single_policy_with_multiple_prefixes) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("multiple_prefixes.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -340,7 +344,7 @@ TEST(extensionless_policy_gates_every_representation) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("representation_agnostic.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -383,7 +387,7 @@ TEST(extension_specific_policy_gates_only_that_representation) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("representation_specific.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -411,7 +415,7 @@ TEST(extension_handling_is_confined_to_the_terminal_segment) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("intermediate_dot.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -434,7 +438,7 @@ TEST(base_path_is_stripped_before_matching) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{apikey_paths, keys}}};
   const auto path{test_path("base_path.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -489,7 +493,7 @@ TEST(apikey_admits_matching_credential) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("apikey_match.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -511,7 +515,7 @@ TEST(apikey_with_multiple_keys_admits_any) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("apikey_multi.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -529,7 +533,7 @@ TEST(apikey_with_unset_variable_denies) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("apikey_unset.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -547,7 +551,7 @@ TEST(apikey_with_an_empty_variable_denies) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("apikey_empty.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -569,7 +573,7 @@ TEST(apikey_ignores_an_empty_variable_beside_a_real_one) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("apikey_pair.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -591,7 +595,7 @@ TEST(sha256_policy_with_an_empty_variable_denies) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_empty.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -614,7 +618,7 @@ TEST(sha256_policy_admits_the_matching_credential) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_match.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -644,7 +648,7 @@ TEST(mixed_algorithms_admit_either_key_with_identity_first) {
        {paths, sha256_keys,
         sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("mixed_identity_first.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -669,7 +673,7 @@ TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
        {paths, identity_keys,
         sourcemeta::one::Authentication::Algorithm::Identity}}};
   const auto path{test_path("mixed_sha256_first.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -703,7 +707,7 @@ TEST(supports_the_maximum_number_of_policies) {
   }
 
   const auto path{test_path("maximum_policies.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -722,7 +726,7 @@ TEST(governing_returns_policy_indices_in_declaration_order) {
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{root_paths, root_keys}, {internal_paths, internal_keys}}};
   const auto path{test_path("governing.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -741,7 +745,7 @@ TEST(governing_of_an_ungoverned_path_is_empty) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{internal_paths, keys}}};
   const auto path{test_path("governing_empty.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -769,7 +773,7 @@ TEST(reference_to_a_public_schema_is_permitted) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{secret_paths, keys}}};
   const auto path{test_path("ref_to_public.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -785,7 +789,7 @@ TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{secret_paths, keys}}};
   const auto path{test_path("ref_public_to_apikey.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -799,7 +803,7 @@ TEST(reference_within_the_same_policy_is_permitted) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("ref_same_policy.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -817,7 +821,7 @@ TEST(reference_across_disjoint_policies_is_rejected) {
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{alpha_paths, alpha_keys}, {beta_paths, beta_keys}}};
   const auto path{test_path("ref_disjoint.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -835,7 +839,7 @@ TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{broad_paths, broad_keys}, {nested_paths, nested_keys}}};
   const auto path{test_path("ref_narrow_to_wide.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -857,7 +861,7 @@ TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_valid.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
@@ -886,7 +890,7 @@ TEST(jwt_denies_a_token_for_the_wrong_audience) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_audience.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -907,7 +911,7 @@ TEST(jwt_denies_a_token_from_the_wrong_issuer) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_issuer.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -928,7 +932,7 @@ TEST(jwt_denies_a_disallowed_algorithm) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_algorithm.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -949,7 +953,7 @@ TEST(jwt_denies_when_the_signing_key_is_absent) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_unknown_key.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path,
@@ -971,7 +975,7 @@ TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_fetch_fails.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -991,7 +995,7 @@ TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_no_fetch.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
@@ -1016,7 +1020,7 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
         .audience = "client",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_discovery.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
@@ -1047,7 +1051,7 @@ TEST(jwt_without_a_discoverable_issuer_fails_closed) {
         .audience = "client",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_discovery_issuer.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
       path,
@@ -1076,7 +1080,7 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_mixed.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -1104,7 +1108,7 @@ TEST(oidc_policy_admits_no_presented_credential) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_deny.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   // The provider is reachable and would verify the token, yet no presented
   // credential opens the path, not even one the equivalent token policy
@@ -1149,7 +1153,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_union.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1180,7 +1184,7 @@ TEST(oidc_policy_admits_its_session_cookie) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{path,
@@ -1228,7 +1232,7 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
         .name = "google",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session_bound.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1271,7 +1275,7 @@ TEST(expired_session_cookie_is_denied) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session_expired.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1298,7 +1302,7 @@ TEST(forged_session_cookie_is_denied) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session_forged.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1346,7 +1350,7 @@ TEST(session_payload_must_declare_its_policy) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session_payload.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1378,7 +1382,7 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_UNSET_SECRET"}}};
   const auto path{test_path("oidc_session_no_secrets.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1407,7 +1411,7 @@ TEST(session_admitted_under_a_rotated_secret) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_ROTATED_SECRET"}}};
   const auto path{test_path("oidc_session_rotated.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1469,7 +1473,7 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_BLANK_SECRET"}}};
   const auto path{test_path("oidc_session_blank.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1494,7 +1498,7 @@ TEST(save_rejects_a_nameless_interactive_policy) {
         .client_secret_variable = "ONE_TEST_OIDC_NAMELESS"}}};
   const auto path{test_path("oidc_nameless.bin")};
   try {
-    sourcemeta::one::Authentication::save(policies, path, path);
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
     FAIL();
   } catch (const std::runtime_error &error) {
     EXPECT_STREQ(error.what(),
@@ -1517,7 +1521,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_session_union.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1554,7 +1558,7 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("oidc_session_apikey.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1595,7 +1599,7 @@ TEST(interactive_returns_the_policy_by_name) {
         .name = "google",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_lookup.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1632,7 +1636,7 @@ TEST(client_secret_of_an_unset_variable_is_absent) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_secret_unset.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1652,7 +1656,7 @@ TEST(client_secret_of_an_empty_variable_is_absent) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_secret_empty.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1673,7 +1677,7 @@ TEST(client_secret_of_a_policy_naming_no_variable_is_absent) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_secret_nameless.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1690,7 +1694,7 @@ TEST(client_secret_of_a_non_interactive_policy_is_absent) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths, .keys = keys, .name = "internal"}}};
   const auto path{test_path("oidc_secret_apikey.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1710,7 +1714,7 @@ TEST(interactive_default_path_is_the_first_path_declared) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_default_path.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1747,7 +1751,7 @@ TEST(seal_and_open_round_trip_under_the_policy_secret) {
         .name = "google",
         .session_secret_variable = "ONE_TEST_OIDC_SEAL_OTHER"}}};
   const auto path{test_path("oidc_seal.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   // The other policy holds its own, distinct secret
   setenv("ONE_TEST_OIDC_SEAL_OTHER", "another-secret", 1);
@@ -1796,7 +1800,7 @@ TEST(seal_without_a_configured_secret_produces_nothing) {
         .name = "okta",
         .session_secret_variable = "ONE_TEST_OIDC_SEAL_NONE_SECRET"}}};
   const auto path{test_path("oidc_seal_none.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1824,7 +1828,7 @@ TEST(open_rejects_an_expired_value) {
         .name = "okta",
         .session_secret_variable = SESSION_SECRET_VARIABLE}}};
   const auto path{test_path("oidc_seal_expired.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1862,7 +1866,7 @@ TEST(reference_within_the_same_oidc_scope_is_permitted) {
         .name = "beta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_ref_same.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1891,7 +1895,7 @@ TEST(reference_across_distinct_oidc_clients_is_rejected) {
         .name = "beta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_ref_distinct.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1922,7 +1926,7 @@ TEST(reference_across_swapped_oidc_identities_is_rejected) {
         .name = "beta",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_ref_swapped.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1961,7 +1965,7 @@ TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
         .name = "target-two",
         .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
   const auto path{test_path("oidc_ref_mixed.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -1976,7 +1980,7 @@ TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("principal_apikey.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2001,7 +2005,7 @@ TEST(admission_by_a_jwt_policy_identifies_the_principal) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("principal_jwt.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -2030,7 +2034,7 @@ TEST(principal_identifies_the_admitting_policy_among_several) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("principal_mixed.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
@@ -2060,7 +2064,7 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("principal_none.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2099,7 +2103,7 @@ TEST(reference_rules_treat_a_jwt_scope_conservatively) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_reference.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   // Reference checks read only the policy, so no key set transport is needed
   const sourcemeta::one::Authentication authentication{
@@ -2126,7 +2130,7 @@ TEST(jwt_without_a_transport_denies_rather_than_crashes) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_no_transport.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{path, {}};
   EXPECT_FALSE(
@@ -2152,7 +2156,7 @@ TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
         .jwks_uri = "https://idp.test/secondary",
         .algorithms = algorithms}}};
   const auto path{test_path("jwt_shared_issuer.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher(
@@ -2196,7 +2200,7 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = rsa}}};
   const auto path{test_path("jwt_reference_algorithms.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2220,7 +2224,7 @@ TEST(a_policy_path_declared_canonically_gates_its_location) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("policy_declared_canonically.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2241,7 +2245,7 @@ TEST(a_policy_path_carrying_a_dot_segment_gates_its_location) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("policy_carrying_a_dot_segment.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2262,7 +2266,7 @@ TEST(a_policy_path_that_climbs_back_into_itself_gates_its_location) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("policy_that_climbs_back_into_itself.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
@@ -2283,7 +2287,7 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{paths, keys}}};
   const auto path{test_path("policy_carrying_a_repeated_separator.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};

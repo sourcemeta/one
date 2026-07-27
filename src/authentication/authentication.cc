@@ -1,5 +1,4 @@
 #include <sourcemeta/one/authentication.h>
-#include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/io.h>
 
@@ -20,18 +19,14 @@ namespace sourcemeta::one {
 // emitted, empty, to keep the build output identical in shape across editions
 struct Authentication::Impl {};
 
-auto Authentication::save(const std::span<const Authentication::Policy>,
-                          const std::filesystem::path &,
-                          const std::filesystem::path &destination) -> void {
-  sourcemeta::core::write_file(destination, std::vector<std::byte>{});
-}
-
-auto Authentication::save(const Configuration &configuration,
-                          const sourcemeta::core::URITemplateRouterView &,
-                          const std::filesystem::path &destination) -> void {
-  if (!configuration.authentication.empty()) {
+auto Authentication::save(
+    const std::span<const Authentication::Policy> policies,
+    const std::filesystem::path &configuration,
+    const std::filesystem::path &destination, const Authentication::PathGuard &)
+    -> void {
+  if (!policies.empty()) {
     throw EnterpriseOnlyFeatureError(
-        configuration.path,
+        configuration,
         "Authentication is only available on the enterprise edition");
   }
 

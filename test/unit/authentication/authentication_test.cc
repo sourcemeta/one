@@ -16,6 +16,10 @@ static auto at(const std::string_view input)
       .value();
 }
 
+// These tests name locations directly rather than modelling what an instance
+// serves, so every path a policy is scoped to is one to gate
+static auto anywhere(const std::string_view) -> bool { return true; }
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -39,11 +43,8 @@ TEST(admits_every_path_with_any_credential) {
 }
 
 TEST(save_emits_an_empty_artifact_that_admits_everything) {
-  const std::array<std::string_view, 1> paths{{"/"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, {}}}};
   const auto path{test_path("community_public_root.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path);
+  sourcemeta::one::Authentication::save({}, path, path, anywhere);
 
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);
@@ -52,6 +53,20 @@ TEST(save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
   EXPECT_TRUE(
       authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+}
+
+TEST(save_rejects_any_policy) {
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, {}}}};
+  const auto path{test_path("community_policy.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::EnterpriseOnlyFeatureError &error) {
+    EXPECT_STREQ(error.what(),
+                 "Authentication is only available on the enterprise edition");
+  }
 }
 
 TEST(permits_every_reference) {
