@@ -20,8 +20,8 @@
       "paths": [ "/discovery" ],
       "issuer": "https://keycloak:8443/realms/cleartext",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_DISCOVERY_SECRET" },
-      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_DISCOVERY_SECRET" }
+      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_CLIENT_SECRET" },
+      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET" }
     },
     {
       "type": "oidc",
@@ -29,8 +29,8 @@
       "paths": [ "/discovery" ],
       "issuer": "https://keycloak:8443/realms/encrypted",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_DISCOVERY_SECRET" },
-      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_DISCOVERY_SECRET" }
+      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET" },
+      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET" }
     }
   ],
   "contents": {
