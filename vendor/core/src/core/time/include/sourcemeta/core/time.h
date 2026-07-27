@@ -188,6 +188,46 @@ auto to_unix_timestamp(
     -> std::chrono::duration<double>;
 
 /// @ingroup time
+/// Move a time point back by a span of seconds, saturating at the oldest
+/// instant the clock can represent instead of overflowing. A negative span is
+/// treated as no span at all. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/time.h>
+/// #include <chrono>
+/// #include <cassert>
+///
+/// const auto point{std::chrono::system_clock::from_time_t(100)};
+/// assert(sourcemeta::core::clock_shift_backward(
+///            point, std::chrono::seconds{40}) ==
+///        std::chrono::system_clock::from_time_t(60));
+/// ```
+SOURCEMETA_CORE_TIME_EXPORT
+auto clock_shift_backward(const std::chrono::system_clock::time_point time,
+                          const std::chrono::seconds span) noexcept
+    -> std::chrono::system_clock::time_point;
+
+/// @ingroup time
+/// Move a time point forward by a span of seconds, saturating at the newest
+/// instant the clock can represent instead of overflowing. A negative span is
+/// treated as no span at all. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/time.h>
+/// #include <chrono>
+/// #include <cassert>
+///
+/// const auto point{std::chrono::system_clock::from_time_t(100)};
+/// assert(sourcemeta::core::clock_shift_forward(
+///            point, std::chrono::seconds{40}) ==
+///        std::chrono::system_clock::from_time_t(140));
+/// ```
+SOURCEMETA_CORE_TIME_EXPORT
+auto clock_shift_forward(const std::chrono::system_clock::time_point time,
+                         const std::chrono::seconds span) noexcept
+    -> std::chrono::system_clock::time_point;
+
+/// @ingroup time
 /// Check whether the given string is a valid date-time value per RFC 3339
 /// Section 5.6 (Internet Date/Time Format). This implements the full
 /// `date-time` production rule:

@@ -194,6 +194,11 @@ public:
     this->buffer_.reserve(capacity);
   }
 
+  /// The number of bytes that can be held before growing the storage.
+  [[nodiscard]] auto capacity() const noexcept -> size_type {
+    return this->buffer_.capacity();
+  }
+
   /// Resize to the given number of bytes, padding new ones with the given
   /// value.
   auto resize(const size_type count, const char value) -> void {

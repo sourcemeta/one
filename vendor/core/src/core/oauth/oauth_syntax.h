@@ -46,6 +46,37 @@ inline auto oauth_is_resource_identifier(const std::string_view value) -> bool {
          !uri->host().value().empty() && !uri->fragment().has_value();
 }
 
+// An issuer identifier a document advertises for someone else, rather than the
+// one the document was retrieved for. RFC 8414 Section 2 gives it the same
+// shape, but Section 4 scopes code-point comparison to "comparing values in the
+// messages to known values", and an advertised issuer is matched against
+// nothing at parse time. Its validity therefore follows RFC 3986 Section 3.1,
+// which makes the scheme case-insensitive
+inline auto oauth_is_advertised_issuer(const std::string_view value) -> bool {
+  const auto uri{oauth_try_parse_uri(value)};
+  return uri.has_value() && uri->scheme().has_value() &&
+         equals_ignore_case(uri->scheme().value(), "https") &&
+         uri->host().has_value() && !uri->host().value().empty() &&
+         !uri->query().has_value() && !uri->fragment().has_value();
+}
+
+// RFC 6749 Section 3.1: "the authorization server MUST require the use of TLS
+// as described in Section 1.6 when sending requests to the authorization
+// endpoint", which over HTTP means the https scheme, and "The endpoint URI MUST
+// NOT include a fragment component", while it "MAY include an
+// "application/x-www-form-urlencoded" formatted (per Appendix B) query
+// component". Unlike an identifier, which RFC 8414 Section 4 compares as "a
+// Unicode code-point-to-code-point equality comparison", an endpoint is a
+// location to dereference, so RFC 3986 Section 3.1 governs and makes its scheme
+// case-insensitive
+inline auto oauth_is_endpoint_url(const std::string_view value) -> bool {
+  const auto uri{oauth_try_parse_uri(value)};
+  return uri.has_value() && uri->scheme().has_value() &&
+         equals_ignore_case(uri->scheme().value(), "https") &&
+         uri->host().has_value() && !uri->host().value().empty() &&
+         !uri->fragment().has_value();
+}
+
 // RFC 3986 Section 2.3: "unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"",
 // the character set RFC 7636 reuses for the PKCE verifier and challenge
 inline auto oauth_is_unreserved(const char character) noexcept -> bool {

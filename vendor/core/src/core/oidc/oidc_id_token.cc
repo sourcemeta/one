@@ -103,7 +103,8 @@ auto oidc_id_token_checks(const JWT &token, const std::string_view issuer,
   // OpenID Connect Core 1.0 Section 3.1.3.7 step 10: the optional issued-at age
   // policy
   if (options.maximum_issued_at_age.has_value() &&
-      now - issued_at.value() > options.maximum_issued_at_age.value()) {
+      issued_at.value() <
+          clock_shift_backward(now, options.maximum_issued_at_age.value())) {
     return std::nullopt;
   }
 
@@ -150,8 +151,9 @@ auto oidc_id_token_checks(const JWT &token, const std::string_view issuer,
     // An authentication time in the future has not happened yet, so it cannot
     // satisfy a freshness window and is rejected before the age comparison
     if (!authentication_time.has_value() || authentication_time.value() > now ||
-        now - authentication_time.value() >
-            options.maximum_authentication_age.value()) {
+        authentication_time.value() <
+            clock_shift_backward(now,
+                                 options.maximum_authentication_age.value())) {
       return std::nullopt;
     }
   }

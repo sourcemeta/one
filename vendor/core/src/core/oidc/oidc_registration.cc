@@ -33,6 +33,7 @@ constexpr auto HASH_USERINFO_SIGNED_ALG{
 constexpr auto HASH_DEFAULT_MAX_AGE{JSON::Object::hash("default_max_age"sv)};
 constexpr auto HASH_REQUIRE_AUTH_TIME{
     JSON::Object::hash("require_auth_time"sv)};
+constexpr auto HASH_JWKS_URI{JSON::Object::hash("jwks_uri"sv)};
 constexpr auto HASH_INITIATE_LOGIN_URI{
     JSON::Object::hash("initiate_login_uri"sv)};
 constexpr auto HASH_POST_LOGOUT_REDIRECT_URIS{
@@ -140,6 +141,20 @@ auto validate_client_metadata(const OAuthClientMetadata &oauth) -> void {
       data.try_at("sector_identifier_uri"sv, HASH_SECTOR_IDENTIFIER_URI)};
   if (sector != nullptr &&
       (!sector->is_string() || !is_https_url_with_host(sector->to_string()))) {
+    throw OIDCRegistrationParseError{};
+  }
+
+  // OpenID Connect Dynamic Client Registration 1.0 Section 2: the jwks_uri is a
+  // "URL for the Client's JWK Set document, which MUST use the https scheme".
+  // The provider fetches it to obtain the keys that authenticate the client, so
+  // over cleartext an attacker substitutes them and impersonates the client.
+  // Note that request_uris carries the neighbouring rule conditionally, "unless
+  // the target Request Object is signed in a way that is verifiable by the OP",
+  // which is not knowable here, so it is deliberately left unchecked
+  const auto *client_keys{data.try_at("jwks_uri"sv, HASH_JWKS_URI)};
+  if (client_keys != nullptr &&
+      (!client_keys->is_string() ||
+       !is_https_url_with_host(client_keys->to_string()))) {
     throw OIDCRegistrationParseError{};
   }
 
