@@ -168,8 +168,9 @@ public:
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       TRANSACTION_LIFETIME};
-    const auto sealed{
-        authentication.seal(policy_name, payload_text.str(), expiry)};
+    const auto sealed{authentication.seal(
+        policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
+        payload_text.str(), expiry)};
     if (!sealed.has_value()) {
       sourcemeta::one::json_error(
           request, response,
@@ -205,9 +206,10 @@ public:
     }
 
     std::string cookie_name;
-    cookie_name.reserve(sourcemeta::one::TRANSACTION_COOKIE_PREFIX.size() +
-                        policy_name.size());
-    cookie_name += sourcemeta::one::TRANSACTION_COOKIE_PREFIX;
+    cookie_name.reserve(
+        sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX.size() +
+        policy_name.size());
+    cookie_name += sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX;
     cookie_name += policy_name;
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};

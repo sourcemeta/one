@@ -100,9 +100,13 @@ public:
     // trigger an error on a person's behalf, per RFC 6749 section 4.1.2.1
     const auto sealed{this->transaction_cookie(request, policy_name)};
     const auto &authentication{this->dispatcher().authentication()};
-    const auto opened{sealed.empty()
-                          ? std::optional<std::string>{std::nullopt}
-                          : authentication.open(policy_name, sealed)};
+    const auto opened{
+        sealed.empty()
+            ? std::optional<std::string>{std::nullopt}
+            : authentication.open(
+                  policy_name,
+                  sourcemeta::one::Authentication::Purpose::Transaction,
+                  sealed)};
     const auto transaction{
         opened.has_value()
             ? sourcemeta::core::try_parse_json(opened.value())
@@ -224,8 +228,9 @@ public:
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       SESSION_LIFETIME};
-    const auto session{
-        authentication.seal(policy_name, payload_text.str(), expiry)};
+    const auto session{authentication.seal(
+        policy_name, sourcemeta::one::Authentication::Purpose::Session,
+        payload_text.str(), expiry)};
     if (!session.has_value()) {
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -238,8 +243,9 @@ public:
     const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto secure{this->server_uri().starts_with("https")};
     const auto session_cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = this->cookie_name(sourcemeta::one::SESSION_COOKIE_PREFIX,
-                                   policy_name),
+        {.name = this->cookie_name(
+             sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX,
+             policy_name),
          .value = session.value(),
          .path = scope,
          .max_age = SESSION_LIFETIME,
@@ -307,7 +313,8 @@ private:
                      const std::string_view policy_name) const
       -> std::string_view {
     const auto name{this->cookie_name(
-        sourcemeta::one::TRANSACTION_COOKIE_PREFIX, policy_name)};
+        sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX,
+        policy_name)};
     std::string_view sealed;
     sourcemeta::core::http_parse_cookies(
         request.header("cookie"),
@@ -325,8 +332,9 @@ private:
                           const std::string_view scope, const bool secure) const
       -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = this->cookie_name(sourcemeta::one::TRANSACTION_COOKIE_PREFIX,
-                                   policy_name),
+        {.name = this->cookie_name(
+             sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX,
+             policy_name),
          .value = "",
          .path = scope,
          .max_age = std::chrono::seconds{0},

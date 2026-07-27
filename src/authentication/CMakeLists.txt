@@ -1,6 +1,6 @@
 if(ONE_ENTERPRISE)
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
-    PRIVATE_HEADERS error.h session.h
+    PRIVATE_HEADERS error.h
     SOURCES
       path.cc
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
@@ -12,8 +12,8 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::oidc)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
-    PRIVATE_HEADERS error.h session.h
-    SOURCES authentication.cc path.cc session.cc)
+    PRIVATE_HEADERS error.h
+    SOURCES authentication.cc path.cc)
 endif()
 
 # Paths are the key the policy trie is built from and looked up by, so
