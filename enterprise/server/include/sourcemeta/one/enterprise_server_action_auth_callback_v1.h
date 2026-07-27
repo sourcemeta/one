@@ -17,7 +17,6 @@
 
 #include <array>       // std::array
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
-#include <cstdlib>     // std::getenv
 #include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
@@ -161,10 +160,8 @@ public:
       return;
     }
 
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    const char *client_secret{
-        std::getenv(std::string{policy->client_secret_variable}.c_str())};
-    if (client_secret == nullptr) {
+    const auto client_secret{authentication.client_secret(policy_name)};
+    if (!client_secret.has_value()) {
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
@@ -187,7 +184,7 @@ public:
 
     const auto id_token{this->exchange(
         metadata.value().token_endpoint().value(), policy->client_id,
-        client_secret, redirect_uri, code, verifier->to_string())};
+        client_secret.value(), redirect_uri, code, verifier->to_string())};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-exchange-failed",

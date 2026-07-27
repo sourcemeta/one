@@ -185,8 +185,15 @@ auto read_u32(const std::span<const std::byte> metadata, std::size_t &cursor,
   return true;
 }
 
+// The one place a secret is read. A name that is empty names no variable, and
+// a variable set to nothing holds no secret, so neither reaches a caller as a
+// value it might compare something against
 auto resolve_environment(const std::string_view variable)
     -> std::optional<std::string> {
+  if (variable.empty()) {
+    return std::nullopt;
+  }
+
   static std::mutex mutex;
   static std::unordered_map<std::string, std::optional<std::string>> cache;
   const std::string name{variable};
@@ -199,7 +206,9 @@ auto resolve_environment(const std::string_view variable)
   std::optional<std::string> resolved;
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const char *value{std::getenv(name.c_str())};
-  if (value != nullptr) {
+  // A variable set to nothing holds no secret, so it reads here the same as
+  // one that was never set at all
+  if (value != nullptr && *value != '\0') {
     resolved = value;
   }
 
@@ -211,6 +220,12 @@ auto admits_apikey(const std::span<const std::byte> metadata,
                    const std::string_view credential,
                    const sourcemeta::one::Authentication::Algorithm algorithm)
     -> bool {
+  // Presenting nothing is not presenting a credential, whatever any policy
+  // happens to hold
+  if (credential.empty()) {
+    return false;
+  }
+
   std::size_t cursor{0};
   std::uint32_t count{0};
   if (!read_u32(metadata, cursor, count)) {
@@ -676,11 +691,20 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return Authentication::InteractivePolicy{
-        .issuer = decoded.issuer,
-        .client_id = decoded.client_id,
-        .client_secret_variable = decoded.client_secret_variable,
-        .default_path = decoded.default_path};
+    return Authentication::InteractivePolicy{.issuer = decoded.issuer,
+                                             .client_id = decoded.client_id,
+                                             .default_path =
+                                                 decoded.default_path};
+  }
+
+  [[nodiscard]] auto client_secret(const std::string_view policy) const
+      -> std::optional<std::string> {
+    OIDCPolicyMetadata decoded;
+    if (!this->find_interactive(policy, decoded)) {
+      return std::nullopt;
+    }
+
+    return resolve_environment(decoded.client_secret_variable);
   }
 
   // Split a secret variable's value into one secret per non-blank line. The
@@ -712,10 +736,6 @@ struct Authentication::Impl {
                const std::string_view payload,
                const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
-    if (session_secret_variable.empty()) {
-      return std::nullopt;
-    }
-
     // The resolved value backs the secret views, so keep it alive alongside
     const auto resolved{resolve_environment(session_secret_variable)};
     if (!resolved.has_value()) {
@@ -737,10 +757,6 @@ struct Authentication::Impl {
                const Authentication::Purpose purpose,
                const std::string_view value) const
       -> std::optional<std::string> {
-    if (session_secret_variable.empty()) {
-      return std::nullopt;
-    }
-
     const auto resolved{resolve_environment(session_secret_variable)};
     if (!resolved.has_value()) {
       return std::nullopt;
@@ -958,6 +974,11 @@ auto Authentication::admits(const Authentication::Path &path,
 auto Authentication::interactive(const std::string_view name) const
     -> std::optional<Authentication::InteractivePolicy> {
   return this->impl_->interactive(name);
+}
+
+auto Authentication::client_secret(const std::string_view policy) const
+    -> std::optional<std::string> {
+  return this->impl_->client_secret(policy);
 }
 
 auto Authentication::seal(const std::string_view policy, const Purpose purpose,

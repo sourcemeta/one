@@ -58,8 +58,25 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+replayed_body: body
+replayed_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{replayed_schema}}
+```
+{{replayed_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # Nor does it open any other path the same policy governs
 GET {{base}}/archive/record.json
@@ -68,8 +85,26 @@ HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+archive_body: body
+archive_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{archive_schema}}
+```
+{{archive_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # Nor the gated directory listing
 GET {{base}}/private/
@@ -79,8 +114,26 @@ HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+listing_body: body
+listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
+```
+{{listing_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # It is still a valid transaction for the callback that minted it, so the two
 # purposes are separated rather than the value being broken outright. Without
@@ -149,8 +202,16 @@ Cookie: sourcemeta_one_session_keycloak={{session}}
 HTTP 200
 Content-Type: application/schema+json
 Cache-Control: private, max-age=0, must-revalidate
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-jsonpath "$.type" == "object"
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/private/secret",
+  "type": "object"
+}
 
 # But presented as a transaction it opens nothing, so the callback refuses it
 # exactly as it refuses a caller carrying no transaction at all
@@ -159,5 +220,23 @@ Cookie: sourcemeta_one_transaction_keycloak={{session}}
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+session_as_transaction_body: body
+session_as_transaction_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{callback_body}}
+{
+  "type": "urn:sourcemeta:one:auth-invalid-callback",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "The login could not be completed"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{session_as_transaction_schema}}
+```
+{{session_as_transaction_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
