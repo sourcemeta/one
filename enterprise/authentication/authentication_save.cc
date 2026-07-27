@@ -7,10 +7,11 @@
 
 #include <algorithm>   // std::ranges::sort
 #include <array>       // std::array
+#include <cassert>     // assert
 #include <cstddef>     // std::byte, std::size_t
 #include <cstdint>     // std::uint32_t, std::uint64_t, std::uint8_t
 #include <cstring>     // std::memcpy
-#include <filesystem>  // std::filesystem::create_directories
+#include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
 #include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
@@ -120,6 +121,7 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                           const std::filesystem::path &configuration,
                           const std::filesystem::path &destination,
                           const Authentication::PathGuard &gateable) -> void {
+  assert(gateable);
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
   if (policies.size() > Authentication::MAXIMUM_POLICIES) {

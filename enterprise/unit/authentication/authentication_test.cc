@@ -1488,6 +1488,24 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
           .allowed);
 }
 
+TEST(save_creates_the_directory_it_writes_into) {
+  setenv("ONE_TEST_KEY_NESTED", "nested-secret", 1);
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NESTED"}};
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{paths, keys}}};
+  const auto path{test_path("nested") / "deeper" / "authentication.bin"};
+  std::filesystem::remove_all(test_path("nested"));
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  EXPECT_TRUE(std::filesystem::exists(path));
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(
+      authentication.admits(at("/internal/foo"), {.bearer = "nested-secret"})
+          .allowed);
+}
+
 TEST(save_rejects_a_nameless_interactive_policy) {
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{

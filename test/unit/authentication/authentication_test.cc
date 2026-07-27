@@ -55,6 +55,15 @@ TEST(save_emits_an_empty_artifact_that_admits_everything) {
       authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
 }
 
+TEST(save_creates_the_directory_it_writes_into) {
+  const auto path{test_path("nested") / "deeper" / "authentication.bin"};
+  std::filesystem::remove_all(test_path("nested"));
+  sourcemeta::one::Authentication::save({}, path, path, anywhere);
+
+  EXPECT_TRUE(std::filesystem::exists(path));
+  EXPECT_EQ(std::filesystem::file_size(path), 0);
+}
+
 TEST(save_rejects_any_policy) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{

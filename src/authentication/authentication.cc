@@ -4,7 +4,7 @@
 
 #include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::byte, std::size_t
-#include <filesystem>  // std::filesystem::create_directories
+#include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <string>      // std::string
@@ -30,7 +30,6 @@ auto Authentication::save(
         "Authentication is only available on the enterprise edition");
   }
 
-  std::filesystem::create_directories(destination.parent_path());
   sourcemeta::core::write_file(destination, std::vector<std::byte>{});
 }
 
