@@ -164,6 +164,22 @@ OIDCProviderMetadata::OIDCProviderMetadata(JSON &&data,
   validate_provider_metadata(this->oauth_);
 }
 
+OIDCProviderMetadata::OIDCProviderMetadata(OAuthServerMetadata &&oauth)
+    : oauth_{std::move(oauth)} {
+  validate_provider_metadata(this->oauth_);
+}
+
+auto OIDCProviderMetadata::from(OAuthServerMetadata &&oauth)
+    -> std::optional<OIDCProviderMetadata> {
+  // The OAuth layer validated itself on the way in, so only the OpenID Connect
+  // requirements can fail here
+  try {
+    return OIDCProviderMetadata{std::move(oauth)};
+  } catch (const OIDCMetadataParseError &) {
+    return std::nullopt;
+  }
+}
+
 auto OIDCProviderMetadata::from(JSON &&data, const std::string_view issuer)
     -> std::optional<OIDCProviderMetadata> {
   try {

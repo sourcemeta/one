@@ -236,7 +236,8 @@ auto oidc_validate_id_token(
   // audience, expiration, not-before, and issued-at (OpenID Connect Core 1.0
   // Section 3.1.3.7 steps 6 through 9)
   const auto error{jwt_verify(token, keys, allowed_algorithms, issuer,
-                              client_id, now, clock_skew)};
+                              client_id, now, clock_skew, std::nullopt,
+                              std::nullopt)};
   if (error.has_value()) {
     return std::nullopt;
   }

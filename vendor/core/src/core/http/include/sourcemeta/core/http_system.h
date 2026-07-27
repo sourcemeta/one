@@ -232,7 +232,10 @@ public:
       -> HTTPSystemRequest &;
 
   /// Perform the request. A failure to obtain a response is reported as an
-  /// error, while unsuccessful status codes are returned on the result
+  /// error, while unsuccessful status codes are returned on the result. This
+  /// blocks the calling thread until the response arrives or a timeout elapses,
+  /// so it must not run on an event loop or any other thread serving unrelated
+  /// work.
   [[nodiscard]] auto send() const -> HTTPResponse;
 
 private:

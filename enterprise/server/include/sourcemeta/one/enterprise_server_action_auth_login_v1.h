@@ -217,7 +217,7 @@ public:
          .path = scope,
          .max_age = TRANSACTION_LIFETIME,
          .http_only = true,
-         .secure = this->server_uri().starts_with("https"),
+         .secure = this->server_uri().starts_with("https://"),
          .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
     // A redirect without the transaction cookie could never complete at the
     // callback, so it is not worth sending

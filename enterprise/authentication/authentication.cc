@@ -598,8 +598,14 @@ struct Authentication::Impl {
       return false;
     }
 
+    // The token type is not pinned, so a policy whose audience coincides with
+    // an interactive policy's client identifier on the same issuer admits an
+    // identity token as an API credential. Pinning it is a configuration
+    // question rather than a default, since a provider that does not stamp the
+    // type would otherwise stop working on upgrade
     const auto error{provider->verify(token, policy.algorithms, policy.issuer,
-                                      policy.audience)};
+                                      policy.audience, std::nullopt,
+                                      std::nullopt)};
     return !error.has_value();
   }
 
@@ -621,22 +627,22 @@ struct Authentication::Impl {
                         policy_name.size());
     cookie_name += Authentication::SESSION_COOKIE_PREFIX;
     cookie_name += policy_name;
-    std::string_view sealed;
-    sourcemeta::core::http_parse_cookies(
-        cookies,
-        [&cookie_name, &sealed](const std::string_view name,
-                                const std::string_view value) -> void {
-          if (name == cookie_name) {
-            sealed = value;
-          }
-        });
-    if (sealed.empty()) {
-      return false;
+    // A request can carry several cookies under one name, since a parent
+    // domain and the host itself can each set one and neither the header nor
+    // the order says which is which. Taking any single one lets whoever
+    // controls a neighbouring host decide which session this instance reads,
+    // so every value is tried and the caller is admitted if any of them opens
+    std::vector<std::string_view> candidates;
+    sourcemeta::core::http_cookie_values(cookies, cookie_name, candidates);
+    std::optional<std::string> payload;
+    for (const auto sealed : candidates) {
+      payload = this->session_open(decoded.session_secret_variable,
+                                   Authentication::Purpose::Session, sealed);
+      if (payload.has_value()) {
+        break;
+      }
     }
 
-    const auto payload{this->session_open(decoded.session_secret_variable,
-                                          Authentication::Purpose::Session,
-                                          sealed)};
     if (!payload.has_value()) {
       return false;
     }

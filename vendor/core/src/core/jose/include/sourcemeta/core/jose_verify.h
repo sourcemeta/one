@@ -244,15 +244,14 @@ enum class JWTVerificationError : std::uint8_t {
 /// assert(error.has_value());
 /// ```
 SOURCEMETA_CORE_JOSE_EXPORT
-auto jwt_verify(
-    const JWT &token, const JWKS &keys,
-    const std::span<const JWSAlgorithm> allowed_algorithms,
-    const std::string_view expected_issuer,
-    const std::string_view expected_audience,
-    const std::chrono::system_clock::time_point now,
-    const JWTClockSkew clock_skew = {},
-    const std::optional<std::string_view> expected_subject = std::nullopt,
-    const std::optional<std::string_view> expected_type = std::nullopt)
+auto jwt_verify(const JWT &token, const JWKS &keys,
+                const std::span<const JWSAlgorithm> allowed_algorithms,
+                const std::string_view expected_issuer,
+                const std::string_view expected_audience,
+                const std::chrono::system_clock::time_point now,
+                const JWTClockSkew clock_skew,
+                const std::optional<std::string_view> expected_subject,
+                const std::optional<std::string_view> expected_type)
     -> std::optional<JWTVerificationError>;
 
 } // namespace sourcemeta::core
