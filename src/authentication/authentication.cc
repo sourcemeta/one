@@ -69,13 +69,15 @@ auto Authentication::interactive(const std::string_view) const
   return std::nullopt;
 }
 
-auto Authentication::seal(const std::string_view, const std::string_view,
+auto Authentication::seal(const std::string_view, const Purpose,
+                          const std::string_view,
                           const std::chrono::sys_seconds) const
     -> std::optional<std::string> {
   return std::nullopt;
 }
 
-auto Authentication::open(const std::string_view, const std::string_view) const
+auto Authentication::open(const std::string_view, const Purpose,
+                          const std::string_view) const
     -> std::optional<std::string> {
   return std::nullopt;
 }

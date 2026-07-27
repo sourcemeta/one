@@ -602,9 +602,9 @@ struct Authentication::Impl {
     const auto policy_name{decoded.name};
 
     std::string cookie_name;
-    cookie_name.reserve(sourcemeta::one::SESSION_COOKIE_PREFIX.size() +
+    cookie_name.reserve(Authentication::SESSION_COOKIE_PREFIX.size() +
                         policy_name.size());
-    cookie_name += sourcemeta::one::SESSION_COOKIE_PREFIX;
+    cookie_name += Authentication::SESSION_COOKIE_PREFIX;
     cookie_name += policy_name;
     std::string_view sealed;
     sourcemeta::core::http_parse_cookies(
@@ -619,8 +619,9 @@ struct Authentication::Impl {
       return false;
     }
 
-    const auto payload{
-        this->session_open(decoded.session_secret_variable, sealed)};
+    const auto payload{this->session_open(decoded.session_secret_variable,
+                                          Authentication::Purpose::Session,
+                                          sealed)};
     if (!payload.has_value()) {
       return false;
     }
@@ -707,6 +708,7 @@ struct Authentication::Impl {
   // signed under it has expired
   [[nodiscard]] auto
   session_seal(const std::string_view session_secret_variable,
+               const Authentication::Purpose purpose,
                const std::string_view payload,
                const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -726,11 +728,13 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return sourcemeta::one::session_seal(payload, secrets.front(), expiry);
+    return Authentication::seal_value(payload, purpose, secrets.front(),
+                                      expiry);
   }
 
   [[nodiscard]] auto
   session_open(const std::string_view session_secret_variable,
+               const Authentication::Purpose purpose,
                const std::string_view value) const
       -> std::optional<std::string> {
     if (session_secret_variable.empty()) {
@@ -750,10 +754,11 @@ struct Authentication::Impl {
 
     const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
-    return sourcemeta::one::session_open(value, secrets, now);
+    return Authentication::open_value(value, purpose, secrets, now);
   }
 
   [[nodiscard]] auto seal(const std::string_view policy,
+                          const Authentication::Purpose purpose,
                           const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -762,10 +767,12 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return this->session_seal(decoded.session_secret_variable, payload, expiry);
+    return this->session_seal(decoded.session_secret_variable, purpose, payload,
+                              expiry);
   }
 
   [[nodiscard]] auto open(const std::string_view policy,
+                          const Authentication::Purpose purpose,
                           const std::string_view value) const
       -> std::optional<std::string> {
     OIDCPolicyMetadata decoded;
@@ -773,7 +780,7 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return this->session_open(decoded.session_secret_variable, value);
+    return this->session_open(decoded.session_secret_variable, purpose, value);
   }
 
   [[nodiscard]] auto provider_for(const std::string_view issuer,
@@ -953,17 +960,17 @@ auto Authentication::interactive(const std::string_view name) const
   return this->impl_->interactive(name);
 }
 
-auto Authentication::seal(const std::string_view policy,
+auto Authentication::seal(const std::string_view policy, const Purpose purpose,
                           const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
     -> std::optional<std::string> {
-  return this->impl_->seal(policy, payload, expiry);
+  return this->impl_->seal(policy, purpose, payload, expiry);
 }
 
-auto Authentication::open(const std::string_view policy,
+auto Authentication::open(const std::string_view policy, const Purpose purpose,
                           const std::string_view value) const
     -> std::optional<std::string> {
-  return this->impl_->open(policy, value);
+  return this->impl_->open(policy, purpose, value);
 }
 
 auto Authentication::admits_route(const std::string_view target,

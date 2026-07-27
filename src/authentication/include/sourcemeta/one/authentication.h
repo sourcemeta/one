@@ -6,7 +6,6 @@
 #endif
 
 #include <sourcemeta/one/authentication_error.h>
-#include <sourcemeta/one/authentication_session.h>
 #include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/jose.h>
@@ -91,6 +90,22 @@ public:
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
   enum class Type : std::uint8_t { ApiKey = 0, JWT = 1, OIDC = 2 };
+
+  // What a sealed value is for. A value is only ever opened for the purpose it
+  // was sealed under, because the two derive different keys from the policy's
+  // secret, so one kind of value cannot be presented as the other
+  enum class Purpose : std::uint8_t { Session = 0, Transaction = 1 };
+
+  // A session cookie is named per policy under this common prefix, so a
+  // browser holds one session per interactive policy and any holder can be
+  // recognised and cleared without knowing which policies exist
+  static constexpr std::string_view SESSION_COOKIE_PREFIX{
+      "sourcemeta_one_session_"};
+
+  // A login transaction cookie follows the same shape for the short window
+  // between the login redirect and the callback
+  static constexpr std::string_view TRANSACTION_COOKIE_PREFIX{
+      "sourcemeta_one_transaction_"};
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
@@ -184,19 +199,40 @@ public:
   [[nodiscard]] auto interactive(std::string_view name) const
       -> std::optional<InteractivePolicy>;
 
-  // Seal a payload under the named interactive policy's session secret,
-  // producing a value that the gate and this instance's replicas accept until
-  // the expiry. Nothing is produced when the policy is unknown or its session
-  // secret is not configured in the environment
-  [[nodiscard]] auto seal(std::string_view policy, std::string_view payload,
+  // Seal a payload for one purpose under the named interactive policy's
+  // session secret, producing a value that the gate and this instance's
+  // replicas accept until the expiry. Nothing is produced when the policy is
+  // unknown or its session secret is not configured in the environment
+  [[nodiscard]] auto seal(std::string_view policy, Purpose purpose,
+                          std::string_view payload,
                           std::chrono::sys_seconds expiry) const
       -> std::optional<std::string>;
 
-  // Recover the payload of a value sealed under the named policy by this
-  // instance or one of its replicas, returning nothing for a value that does
-  // not verify or has expired
-  [[nodiscard]] auto open(std::string_view policy, std::string_view value) const
+  // Recover the payload of a value sealed for that purpose under the named
+  // policy by this instance or one of its replicas, returning nothing for a
+  // value that does not verify, was sealed for another purpose, or has expired
+  [[nodiscard]] auto open(std::string_view policy, Purpose purpose,
+                          std::string_view value) const
       -> std::optional<std::string>;
+
+  // Bind a payload and an expiry under a key derived from the secret and the
+  // purpose, producing a value that is safe to transport as a cookie. Only a
+  // holder of the secret can produce or alter such a value, though anyone can
+  // read its contents
+  [[nodiscard]] static auto seal_value(std::string_view payload,
+                                       Purpose purpose, std::string_view secret,
+                                       std::chrono::sys_seconds expiry)
+      -> std::string;
+
+  // Recover the payload of a sealed value, returning nothing for a value that
+  // was not produced for that purpose under one of the given secrets, was
+  // altered in any way, or has expired. Accepting several secrets lets a newly
+  // introduced secret coexist with the one it replaces until every value
+  // sealed under the old secret has expired
+  [[nodiscard]] static auto
+  open_value(std::string_view value, Purpose purpose,
+             std::span<const std::string_view> secrets,
+             std::chrono::sys_seconds now) -> std::optional<std::string>;
 
   [[nodiscard]] auto reference_permitted(const Path &referrer,
                                          const Path &referent) const -> bool;

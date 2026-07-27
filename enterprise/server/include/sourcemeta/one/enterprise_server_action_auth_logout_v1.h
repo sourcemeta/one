@@ -76,8 +76,10 @@ public:
         request.header("cookie"),
         [&response, secure, scope](const std::string_view name,
                                    const std::string_view) -> void {
-          if (!name.starts_with(sourcemeta::one::SESSION_COOKIE_PREFIX) &&
-              !name.starts_with(sourcemeta::one::TRANSACTION_COOKIE_PREFIX)) {
+          if (!name.starts_with(
+                  sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX) &&
+              !name.starts_with(
+                  sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX)) {
             return;
           }
 

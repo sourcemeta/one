@@ -1120,9 +1120,10 @@ TEST(oidc_policy_admits_its_session_cookie) {
   const sourcemeta::one::Authentication authentication{path,
                                                        stub_fetcher({}, calls)};
 
-  const auto sealed{sourcemeta::one::session_seal(
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
       R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
-      SESSION_SECRET, SESSION_EXPIRY)};
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
   const std::string cookies{"theme=dark; sourcemeta_one_session_okta=" +
                             sealed};
 
@@ -1166,8 +1167,10 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
 
-  const auto sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
 
   // The session opens the path its policy governs
   const std::string okta_cookies{"sourcemeta_one_session_okta=" + sealed};
@@ -1208,8 +1211,9 @@ TEST(expired_session_cookie_is_denied) {
       path, stub_fetcher({}, nullptr)};
 
   const std::chrono::sys_seconds past{std::chrono::seconds{1000}};
-  const auto sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, past)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET, past)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
   EXPECT_FALSE(
       authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
@@ -1234,8 +1238,10 @@ TEST(forged_session_cookie_is_denied) {
       path, stub_fetcher({}, nullptr)};
 
   // A value sealed under a secret this policy does not hold
-  const auto foreign{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", "other-secret", SESSION_EXPIRY)};
+  const auto foreign{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, "other-secret",
+      SESSION_EXPIRY)};
   const std::string foreign_cookies{"sourcemeta_one_session_okta=" + foreign};
   EXPECT_FALSE(
       authentication
@@ -1243,8 +1249,10 @@ TEST(forged_session_cookie_is_denied) {
           .allowed);
 
   // A value whose signature no longer matches its contents
-  auto tampered{sourcemeta::one::session_seal(R"JSON({ "policy": "okta" })JSON",
-                                              SESSION_SECRET, SESSION_EXPIRY)};
+  auto tampered{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
   tampered.back() = tampered.back() == 'A' ? 'B' : 'A';
   const std::string tampered_cookies{"sourcemeta_one_session_okta=" + tampered};
   EXPECT_FALSE(
@@ -1281,8 +1289,9 @@ TEST(session_payload_must_declare_its_policy) {
       {"not json", "[ 1, 2 ]", R"JSON({ "subject": "jane" })JSON",
        R"JSON({ "policy": "google" })JSON"}};
   for (const auto payload : payloads) {
-    const auto sealed{
-        sourcemeta::one::session_seal(payload, SESSION_SECRET, SESSION_EXPIRY)};
+    const auto sealed{sourcemeta::one::Authentication::seal_value(
+        payload, sourcemeta::one::Authentication::Purpose::Session,
+        SESSION_SECRET, SESSION_EXPIRY)};
     const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
     EXPECT_FALSE(
         authentication
@@ -1308,8 +1317,10 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
 
-  const auto sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
   EXPECT_FALSE(
       authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
@@ -1336,8 +1347,10 @@ TEST(session_admitted_under_a_rotated_secret) {
       path, stub_fetcher({}, nullptr)};
 
   // A cookie signed under the older secret is still admitted
-  const auto old_sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", "old-secret", SESSION_EXPIRY)};
+  const auto old_sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, "old-secret",
+      SESSION_EXPIRY)};
   EXPECT_TRUE(
       authentication
           .admits(at("/portal/x"),
@@ -1348,19 +1361,28 @@ TEST(session_admitted_under_a_rotated_secret) {
   // A fresh login mints under the newest secret alone, so the minted value
   // verifies under a new-only secret set and not under an old-only one
   const auto minted{authentication.seal(
-      "okta", R"JSON({ "policy": "okta" })JSON", SESSION_EXPIRY)};
+      "okta", sourcemeta::one::Authentication::Purpose::Session,
+      R"JSON({ "policy": "okta" })JSON", SESSION_EXPIRY)};
   EXPECT_TRUE(minted.has_value());
   const std::chrono::sys_seconds now{std::chrono::seconds{1000000}};
   const std::array<std::string_view, 1> new_only{{"new-secret"}};
-  EXPECT_TRUE(
-      sourcemeta::one::session_open(minted.value(), new_only, now).has_value());
+  EXPECT_TRUE(sourcemeta::one::Authentication::open_value(
+                  minted.value(),
+                  sourcemeta::one::Authentication::Purpose::Session, new_only,
+                  now)
+                  .has_value());
   const std::array<std::string_view, 1> old_only{{"old-secret"}};
-  EXPECT_FALSE(
-      sourcemeta::one::session_open(minted.value(), old_only, now).has_value());
+  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
+                   minted.value(),
+                   sourcemeta::one::Authentication::Purpose::Session, old_only,
+                   now)
+                   .has_value());
 
   // A secret no longer in the set is rejected
-  const auto retired{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", "retired-secret", SESSION_EXPIRY)};
+  const auto retired{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, "retired-secret",
+      SESSION_EXPIRY)};
   EXPECT_FALSE(
       authentication
           .admits(at("/portal/x"),
@@ -1387,8 +1409,9 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
       path, stub_fetcher({}, nullptr)};
 
   // A blank secret would let anyone forge sessions, so it never verifies one
-  const auto forged{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", "", SESSION_EXPIRY)};
+  const auto forged{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, "", SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + forged};
   EXPECT_FALSE(
       authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
@@ -1441,8 +1464,10 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
             sourcemeta::one::Authentication::Type::ApiKey);
   EXPECT_EQ(key_verdict.principal.value().policy, std::size_t{0});
 
-  const auto sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
   const auto session_verdict{
       authentication.admits(at("/both/x"), {.bearer = "", .cookies = cookies})};
@@ -1468,8 +1493,10 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
 
-  const auto sealed{sourcemeta::one::session_seal(
-      R"JSON({ "policy": "okta" })JSON", SESSION_SECRET, SESSION_EXPIRY)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
   const std::string cookies{"sourcemeta_one_session_okta=" + sealed};
   EXPECT_FALSE(
       authentication
@@ -1579,20 +1606,35 @@ TEST(seal_and_open_round_trip_under_the_policy_secret) {
   setenv("ONE_TEST_OIDC_SEAL_OTHER", "another-secret", 1);
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  const auto sealed{authentication.seal("okta", "the-payload", SESSION_EXPIRY)};
+  const auto sealed{authentication.seal(
+      "okta", sourcemeta::one::Authentication::Purpose::Session, "the-payload",
+      SESSION_EXPIRY)};
   EXPECT_TRUE(sealed.has_value());
-  const auto payload{authentication.open("okta", sealed.value())};
+  const auto payload{authentication.open(
+      "okta", sourcemeta::one::Authentication::Purpose::Session,
+      sealed.value())};
   EXPECT_TRUE(payload.has_value());
   EXPECT_EQ(payload.value(), "the-payload");
 
   // A value opened under a different policy, holding a different secret, does
   // not verify
-  EXPECT_FALSE(authentication.open("google", sealed.value()).has_value());
+  EXPECT_FALSE(authentication
+                   .open("google",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         sealed.value())
+                   .has_value());
 
   // An unknown policy seals and opens nothing
-  EXPECT_FALSE(
-      authentication.seal("github", "the-payload", SESSION_EXPIRY).has_value());
-  EXPECT_FALSE(authentication.open("github", sealed.value()).has_value());
+  EXPECT_FALSE(authentication
+                   .seal("github",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         "the-payload", SESSION_EXPIRY)
+                   .has_value());
+  EXPECT_FALSE(authentication
+                   .open("github",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         sealed.value())
+                   .has_value());
 }
 
 TEST(seal_without_a_configured_secret_produces_nothing) {
@@ -1611,9 +1653,16 @@ TEST(seal_without_a_configured_secret_produces_nothing) {
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.seal("okta", "the-payload", SESSION_EXPIRY).has_value());
-  EXPECT_FALSE(authentication.open("okta", "anything").has_value());
+  EXPECT_FALSE(authentication
+                   .seal("okta",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         "the-payload", SESSION_EXPIRY)
+                   .has_value());
+  EXPECT_FALSE(authentication
+                   .open("okta",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         "anything")
+                   .has_value());
 }
 
 TEST(open_rejects_an_expired_value) {
@@ -1633,9 +1682,15 @@ TEST(open_rejects_an_expired_value) {
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   const std::chrono::sys_seconds past{std::chrono::seconds{1000}};
-  const auto sealed{authentication.seal("okta", "the-payload", past)};
+  const auto sealed{authentication.seal(
+      "okta", sourcemeta::one::Authentication::Purpose::Session, "the-payload",
+      past)};
   EXPECT_TRUE(sealed.has_value());
-  EXPECT_FALSE(authentication.open("okta", sealed.value()).has_value());
+  EXPECT_FALSE(authentication
+                   .open("okta",
+                         sourcemeta::one::Authentication::Purpose::Session,
+                         sealed.value())
+                   .has_value());
 }
 
 TEST(reference_within_the_same_oidc_scope_is_permitted) {

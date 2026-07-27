@@ -1,4 +1,4 @@
-#include <sourcemeta/one/authentication_session.h>
+#include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/crypto.h>
 
@@ -13,6 +13,7 @@
 #include <span>        // std::span
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view
+#include <utility>     // std::unreachable
 
 namespace {
 
@@ -26,6 +27,29 @@ constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
 // anything else is rejected before it is even decoded
 constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
     ((SESSION_SIGNATURE_LENGTH * 4) + 2) / 3};
+
+// A value is only ever opened for the purpose it was sealed under, and the
+// cookie name that would otherwise distinguish the two travels outside the
+// signature where a client chooses it. So the purpose picks the key rather
+// than being asserted alongside it: a value sealed for one purpose cannot
+// verify under another's key, whether or not a caller remembers to check
+auto purpose_label(const sourcemeta::one::Authentication::Purpose purpose)
+    -> std::string_view {
+  switch (purpose) {
+    case sourcemeta::one::Authentication::Purpose::Session:
+      return "sourcemeta/one/session";
+    case sourcemeta::one::Authentication::Purpose::Transaction:
+      return "sourcemeta/one/transaction";
+  }
+
+  std::unreachable();
+}
+
+auto derive_key(const std::string_view secret,
+                const sourcemeta::one::Authentication::Purpose purpose)
+    -> std::array<std::uint8_t, 32> {
+  return sourcemeta::core::hmac_sha256_digest(secret, purpose_label(purpose));
+}
 
 auto digest_view(const std::array<std::uint8_t, 32> &digest)
     -> std::string_view {
@@ -57,8 +81,12 @@ auto parse_expiry(const std::string_view input)
 
 namespace sourcemeta::one {
 
-auto session_seal(const std::string_view payload, const std::string_view secret,
-                  const std::chrono::sys_seconds expiry) -> std::string {
+auto Authentication::seal_value(const std::string_view payload,
+                                const Purpose purpose,
+                                const std::string_view secret,
+                                const std::chrono::sys_seconds expiry)
+    -> std::string {
+  const auto key{derive_key(secret, purpose)};
   std::string result{SESSION_VERSION};
   result += '.';
   // A pre-epoch expiry is clamped so that every sealed value is well-formed,
@@ -67,15 +95,17 @@ auto session_seal(const std::string_view payload, const std::string_view secret,
                                     expiry.time_since_epoch().count()));
   result += '.';
   result += sourcemeta::core::base64url_encode(payload);
-  const auto digest{sourcemeta::core::hmac_sha256_digest(secret, result)};
+  const auto digest{
+      sourcemeta::core::hmac_sha256_digest(digest_view(key), result)};
   result += '.';
   result += sourcemeta::core::base64url_encode(digest_view(digest));
   return result;
 }
 
-auto session_open(const std::string_view value,
-                  const std::span<const std::string_view> secrets,
-                  const std::chrono::sys_seconds now)
+auto Authentication::open_value(const std::string_view value,
+                                const Purpose purpose,
+                                const std::span<const std::string_view> secrets,
+                                const std::chrono::sys_seconds now)
     -> std::optional<std::string> {
   // Expiry comparisons are meaningless under a clock that reads before the
   // epoch, so such a clock validates nothing
@@ -128,8 +158,9 @@ auto session_open(const std::string_view value,
   const auto signing_input{value.substr(0, payload_end)};
   auto authentic{false};
   for (const auto secret : secrets) {
+    const auto key{derive_key(secret, purpose)};
     const auto digest{
-        sourcemeta::core::hmac_sha256_digest(secret, signing_input)};
+        sourcemeta::core::hmac_sha256_digest(digest_view(key), signing_input)};
     if (sourcemeta::core::secure_equals(digest_view(digest),
                                         presented.value())) {
       authentic = true;
