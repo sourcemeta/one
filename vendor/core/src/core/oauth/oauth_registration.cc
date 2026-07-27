@@ -2,6 +2,7 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/oauth_error.h>
+#include <sourcemeta/core/oauth_metadata.h>
 
 #include "oauth_json.h"
 #include "oauth_syntax.h"

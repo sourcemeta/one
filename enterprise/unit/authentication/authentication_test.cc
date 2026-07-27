@@ -1370,6 +1370,143 @@ TEST(session_payload_must_declare_its_policy) {
   }
 }
 
+TEST(session_is_admitted_when_a_shadowing_cookie_precedes_it) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SHADOW_A",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_shadow_before.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
+
+  // A parent domain can set a cookie the host also sets, and the header says
+  // nothing about which is which, so the genuine one is honoured wherever it
+  // appears
+  const std::string cookies{"sourcemeta_one_session_okta=not-a-session; "
+                            "sourcemeta_one_session_okta=" +
+                            sealed};
+  EXPECT_TRUE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
+}
+
+TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SHADOW_B",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_shadow_after.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
+
+  // Taking the last match would deny here, which is the shape that lets a
+  // neighbouring host lock somebody out of an instance it does not control
+  const std::string cookies{"sourcemeta_one_session_okta=" + sealed +
+                            "; sourcemeta_one_session_okta=not-a-session"};
+  EXPECT_TRUE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
+}
+
+TEST(a_session_for_another_policy_does_not_end_the_search) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  // Both policies read the same session secret, so a value minted for one
+  // opens under the other and is only told apart by the payload
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SEARCH_A",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SEARCH_B",
+        .name = "google",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_search.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto other{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "google" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
+  const auto mine{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      SESSION_EXPIRY)};
+
+  // The first value opens but was minted elsewhere, so stopping there would
+  // deny a caller who did present a session for this policy
+  const std::string cookies{"sourcemeta_one_session_okta=" + other +
+                            "; sourcemeta_one_session_okta=" + mine};
+  EXPECT_TRUE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
+
+  // And a value minted elsewhere still opens nothing on its own
+  const std::string alone{"sourcemeta_one_session_okta=" + other};
+  EXPECT_FALSE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = alone})
+          .allowed);
+}
+
+TEST(a_shadowing_cookie_alone_never_admits) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_SHADOW_C",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_shadow_only.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // Trying every value admits a caller if any one opens, and never because
+  // several did not
+  const std::string cookies{"sourcemeta_one_session_okta=not-a-session; "
+                            "sourcemeta_one_session_okta=nor-is-this"};
+  EXPECT_FALSE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+          .allowed);
+}
+
 TEST(session_cookie_without_a_configured_secret_is_denied) {
   const std::array<std::string_view, 1> paths{{"/portal"}};
   // The session secret variable is deliberately never set in the environment

@@ -24,6 +24,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+#include <vector>      // std::vector
 
 class ActionAuthCallback_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -97,42 +98,18 @@ public:
     // one the provider echoes back. This gate runs before either the success
     // or the decline is honoured, so a cross-site callback cannot even
     // trigger an error on a person's behalf, per RFC 6749 section 4.1.2.1
-    const auto sealed{this->transaction_cookie(request, policy_name)};
     const auto &authentication{this->dispatcher().authentication()};
-    const auto opened{
-        sealed.empty()
-            ? std::optional<std::string>{std::nullopt}
-            : authentication.open(
-                  policy_name,
-                  sourcemeta::one::Authentication::Purpose::Transaction,
-                  sealed)};
     const auto transaction{
-        opened.has_value()
-            ? sourcemeta::core::try_parse_json(opened.value())
-            : std::optional<sourcemeta::core::JSON>{std::nullopt}};
-    if (!transaction.has_value() || !transaction.value().is_object()) {
+        this->transaction(request, authentication, policy_name, state)};
+    if (!transaction.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed", policy_name);
       return;
     }
 
-    const auto *sealed_policy{transaction.value().try_at("policy")};
-    const auto *sealed_state{transaction.value().try_at("state")};
     const auto *nonce{transaction.value().try_at("nonce")};
     const auto *verifier{transaction.value().try_at("verifier")};
-    if (state.empty() || sealed_policy == nullptr ||
-        !sealed_policy->is_string() ||
-        sealed_policy->to_string() != policy_name || sealed_state == nullptr ||
-        !sealed_state->is_string() || sealed_state->to_string() != state ||
-        nonce == nullptr || !nonce->is_string() || nonce->to_string().empty() ||
-        verifier == nullptr || !verifier->is_string() ||
-        verifier->to_string().empty()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed", policy_name);
-      return;
-    }
 
     // Only once the callback is proven to belong to a real login is the
     // provider's outcome honoured: a decline returns an error instead of a
@@ -238,7 +215,7 @@ public:
 
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
-    const auto secure{this->server_uri().starts_with("https")};
+    const auto secure{this->server_uri().starts_with("https://")};
     const auto session_cookie{sourcemeta::core::http_serialize_cookie(
         {.name = this->cookie_name(
              sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX,
@@ -305,23 +282,60 @@ private:
     return result;
   }
 
+  // The transaction a callback belongs to, if the request carries one. A
+  // request can present several cookies under one name, since a parent
+  // domain and the host itself can each set one and neither the header nor
+  // the order says which is which, so every value is tried. Letting whoever
+  // controls a neighbouring host decide which transaction this instance
+  // reads is what turns the cookie from a defence against a forged callback
+  // into the way to mount one
   [[nodiscard]] auto
-  transaction_cookie(sourcemeta::one::HTTPRequest &request,
-                     const std::string_view policy_name) const
-      -> std::string_view {
+  transaction(sourcemeta::one::HTTPRequest &request,
+              const sourcemeta::one::Authentication &authentication,
+              const std::string_view policy_name,
+              const std::string_view state) const
+      -> std::optional<sourcemeta::core::JSON> {
+    if (state.empty()) {
+      return std::nullopt;
+    }
+
     const auto name{this->cookie_name(
         sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX,
         policy_name)};
-    std::string_view sealed;
-    sourcemeta::core::http_parse_cookies(
-        request.header("cookie"),
-        [&name, &sealed](const std::string_view cookie,
-                         const std::string_view value) -> void {
-          if (cookie == name) {
-            sealed = value;
-          }
-        });
-    return sealed;
+    std::vector<std::string_view> candidates;
+    sourcemeta::core::http_cookie_values(request.header("cookie"), name,
+                                         candidates);
+    for (const auto sealed : candidates) {
+      auto opened{authentication.open(
+          policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
+          sealed)};
+      if (!opened.has_value()) {
+        continue;
+      }
+
+      auto document{sourcemeta::core::try_parse_json(opened.value())};
+      if (!document.has_value() || !document.value().is_object()) {
+        continue;
+      }
+
+      const auto *sealed_policy{document.value().try_at("policy")};
+      const auto *sealed_state{document.value().try_at("state")};
+      const auto *nonce{document.value().try_at("nonce")};
+      const auto *verifier{document.value().try_at("verifier")};
+      if (sealed_policy == nullptr || !sealed_policy->is_string() ||
+          sealed_policy->to_string() != policy_name ||
+          sealed_state == nullptr || !sealed_state->is_string() ||
+          sealed_state->to_string() != state || nonce == nullptr ||
+          !nonce->is_string() || nonce->to_string().empty() ||
+          verifier == nullptr || !verifier->is_string() ||
+          verifier->to_string().empty()) {
+        continue;
+      }
+
+      return document;
+    }
+
+    return std::nullopt;
   }
 
   auto expire_transaction(sourcemeta::one::HTTPResponse &response,
