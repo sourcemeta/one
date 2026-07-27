@@ -80,6 +80,32 @@ struct JWTClockSkew {
 };
 
 /// @ingroup jose
+/// Reduce a caller-supplied clock skew to the grace period token validation
+/// honours, one mean Gregorian year, treating a negative tolerance as none.
+/// Every path that validates a token applies this, so the same tolerance means
+/// the same thing whichever one runs. For example:
+///
+/// ```cpp
+/// #include <sourcemeta/core/jose.h>
+/// #include <chrono>
+/// #include <cassert>
+///
+/// assert(sourcemeta::core::jwt_bounded_clock_skew(
+///            std::chrono::seconds{30}) == std::chrono::seconds{30});
+/// assert(sourcemeta::core::jwt_bounded_clock_skew(
+///            std::chrono::seconds{-30}) == std::chrono::seconds{0});
+/// ```
+inline auto jwt_bounded_clock_skew(const std::chrono::seconds skew) noexcept
+    -> std::chrono::seconds {
+  // A mean Gregorian year, the widest grace period any deployment plausibly
+  // needs, so an extreme value cannot widen the acceptance window without bound
+  constexpr std::chrono::seconds maximum{31556952};
+  return skew < std::chrono::seconds::zero() ? std::chrono::seconds::zero()
+         : skew > maximum                    ? maximum
+                                             : skew;
+}
+
+/// @ingroup jose
 /// Validate the registered claims of a JSON Web Token against the expected
 /// issuer and audience at a given time, returning the first failing check or no
 /// value when every check passes. The expiration claim is required (RFC 9068

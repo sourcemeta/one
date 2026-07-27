@@ -117,6 +117,10 @@ public:
   [[nodiscard]] auto registration_endpoint() const
       -> std::optional<std::string_view>;
 
+  /// The device authorization endpoint (RFC 8628 Section 4).
+  [[nodiscard]] auto device_authorization_endpoint() const
+      -> std::optional<std::string_view>;
+
   /// The token revocation endpoint (RFC 8414 Section 2).
   [[nodiscard]] auto revocation_endpoint() const
       -> std::optional<std::string_view>;

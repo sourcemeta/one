@@ -29,6 +29,8 @@ constexpr auto HASH_PAR_ENDPOINT{
     JSON::Object::hash("pushed_authorization_request_endpoint"sv)};
 constexpr auto HASH_REQUIRE_PAR{
     JSON::Object::hash("require_pushed_authorization_requests"sv)};
+constexpr auto HASH_DEVICE_AUTHORIZATION_ENDPOINT{
+    JSON::Object::hash("device_authorization_endpoint"sv)};
 constexpr auto HASH_REVOCATION_ENDPOINT{
     JSON::Object::hash("revocation_endpoint"sv)};
 constexpr auto HASH_INTROSPECTION_ENDPOINT{
@@ -71,6 +73,23 @@ auto string_member(const JSON &data, const JSON::StringView name,
   return std::string_view{member->to_string()};
 }
 
+// An advertised endpoint is a location the client dereferences with its
+// credentials, so a document naming a cleartext one would direct those
+// credentials there. A member that is present but is not a valid https URL
+// fails the parse rather than being ignored, since an accessor would otherwise
+// report a malformed member as an absent one
+auto validate_endpoint(const JSON &data, const JSON::StringView name,
+                       const JSON::Object::hash_type hash) -> void {
+  const auto *member{data.try_at(name, hash)};
+  if (member == nullptr) {
+    return;
+  }
+
+  if (!member->is_string() || !oauth_is_endpoint_url(member->to_string())) {
+    throw OAuthMetadataParseError{};
+  }
+}
+
 auto validated_server_metadata(JSON &&data, const std::string_view issuer)
     -> JSON {
   if (!data.is_object()) {
@@ -82,12 +101,47 @@ auto validated_server_metadata(JSON &&data, const std::string_view issuer)
     throw OAuthMetadataParseError{};
   }
 
-  // RFC 8414 Section 3.3: the issuer in the document must be identical by code
-  // points to the one the document was retrieved for, the impersonation defense
+  // RFC 8414 Section 3.3: the issuer in the document "MUST be identical to the
+  // authorization server's issuer identifier value into which the well-known
+  // URI string was inserted", the impersonation defense, and Section 4 fixes
+  // how that comparison runs, as "a Unicode code-point-to-code-point equality
+  // comparison"
   const auto issuer_value{std::string_view{issuer_member->to_string()}};
   if (issuer_value != issuer || !oauth_is_issuer_identifier(issuer_value)) {
     throw OAuthMetadataParseError{};
   }
+
+  // Each advertised endpoint carries its own transport requirement, and the
+  // document arrives from the party the client is still deciding whether to
+  // trust, so the rule is enforced when the document is read and not only when
+  // one is built. Some of these sources mandate the scheme outright and the
+  // rest mandate the transport, which over HTTP is the same demand. RFC 8414
+  // Section 2 on jwks_uri: "This URL MUST use the "https" scheme". RFC 9126
+  // Section 2: "The PAR endpoint URL MUST use the "https" scheme". RFC 7009
+  // Section 2: "URLs for token revocation endpoints MUST be HTTPS URLs" and,
+  // addressed at this side of the exchange, "Clients MUST verify that the URL
+  // is an HTTPS URL". RFC 6749 Section 3.1 and Section 3.2: "the authorization
+  // server MUST require the use of TLS" for the authorization and token
+  // endpoints. RFC 7591 Section 3: the "registration endpoint MUST be protected
+  // by a transport-layer security mechanism". RFC 7662 Section 2: "The
+  // introspection endpoint MUST be protected by a transport-layer security
+  // mechanism". RFC 8628 Section 3.1 on the device authorization endpoint:
+  // "All requests from the device MUST use the Transport Layer Security (TLS)
+  // protocol", and the client authentication rules of RFC 6749 Section 3.2.1
+  // apply there too, so it carries credentials just as the token endpoint does
+  validate_endpoint(data, "authorization_endpoint"sv,
+                    HASH_AUTHORIZATION_ENDPOINT);
+  validate_endpoint(data, "token_endpoint"sv, HASH_TOKEN_ENDPOINT);
+  validate_endpoint(data, "registration_endpoint"sv,
+                    HASH_REGISTRATION_ENDPOINT);
+  validate_endpoint(data, "pushed_authorization_request_endpoint"sv,
+                    HASH_PAR_ENDPOINT);
+  validate_endpoint(data, "device_authorization_endpoint"sv,
+                    HASH_DEVICE_AUTHORIZATION_ENDPOINT);
+  validate_endpoint(data, "revocation_endpoint"sv, HASH_REVOCATION_ENDPOINT);
+  validate_endpoint(data, "introspection_endpoint"sv,
+                    HASH_INTROSPECTION_ENDPOINT);
+  validate_endpoint(data, "jwks_uri"sv, HASH_JWKS_URI);
 
   // RFC 8414 Section 2: response_types_supported is REQUIRED, and Section 3.2:
   // "Claims with zero elements MUST be omitted from the response", so a
@@ -130,13 +184,42 @@ auto validated_resource_metadata(JSON &&data, const std::string_view resource)
     throw OAuthMetadataParseError{};
   }
 
-  // RFC 9728 Section 3.3: the resource in the document must be a valid resource
-  // identifier and identical by code points to the one the document was
-  // retrieved for, the impersonation defense
+  // RFC 9728 Section 3.3: the resource in the document "MUST be identical to
+  // the protected resource's resource identifier value into which the
+  // well-known URI path suffix was inserted", the impersonation defense, and
+  // Section 6 fixes how that comparison runs, as "a Unicode
+  // code-point-to-code-point equality comparison". It must also be a valid
+  // resource identifier in the first place
   const auto resource_value{std::string_view{resource_member->to_string()}};
   if (resource_value != resource ||
       !oauth_is_resource_identifier(resource_value)) {
     throw OAuthMetadataParseError{};
+  }
+
+  // RFC 9728 Section 2 on jwks_uri: "This URL MUST use the https scheme"
+  validate_endpoint(data, "jwks_uri"sv, HASH_JWKS_URI);
+
+  // RFC 9728 Section 2: the authorization servers are "OAuth authorization
+  // server issuer identifiers, as defined in [RFC8414]", and each one is where
+  // the client starts its next discovery request, so an entry that is not a
+  // valid issuer identifier is rejected rather than handed onwards. RFC 8414
+  // Section 2 requires the https scheme, a host, and no query or fragment,
+  // while leaving the scheme case-insensitive for an advertised value. Section
+  // 3.2: "Parameters with zero values MUST be omitted from the response", so a
+  // present but empty array is a malformed document
+  const auto *authorization_servers{
+      data.try_at("authorization_servers"sv, HASH_AUTHORIZATION_SERVERS)};
+  if (authorization_servers != nullptr) {
+    if (!authorization_servers->is_array() || authorization_servers->empty()) {
+      throw OAuthMetadataParseError{};
+    }
+
+    for (const auto &element : authorization_servers->as_array()) {
+      if (!element.is_string() ||
+          !oauth_is_advertised_issuer(element.to_string())) {
+        throw OAuthMetadataParseError{};
+      }
+    }
   }
 
   // RFC 9728 Section 2: "none" MUST NOT appear in the resource signing
@@ -274,6 +357,12 @@ auto OAuthServerMetadata::registration_endpoint() const
                        HASH_REGISTRATION_ENDPOINT);
 }
 
+auto OAuthServerMetadata::device_authorization_endpoint() const
+    -> std::optional<std::string_view> {
+  return string_member(this->data_, "device_authorization_endpoint"sv,
+                       HASH_DEVICE_AUTHORIZATION_ENDPOINT);
+}
+
 auto OAuthServerMetadata::revocation_endpoint() const
     -> std::optional<std::string_view> {
   return string_member(this->data_, "revocation_endpoint"sv,
@@ -389,17 +478,14 @@ auto OAuthResourceMetadata::first_authorization_server() const
 
   const auto *member{this->data_.try_at("authorization_servers"sv,
                                         HASH_AUTHORIZATION_SERVERS)};
-  if (member == nullptr || !member->is_array()) {
+  if (member == nullptr) {
     return std::nullopt;
   }
 
-  for (const auto &element : member->as_array()) {
-    if (element.is_string()) {
-      return std::string_view{element.to_string()};
-    }
-  }
-
-  return std::nullopt;
+  // Construction rejects a document whose authorization servers are anything
+  // other than a non-empty array of issuer identifiers, so the first element is
+  // a string and needs no search past a malformed one
+  return std::string_view{member->front().to_string()};
 }
 
 auto OAuthResourceMetadata::supports_authorization_server(
@@ -459,7 +545,8 @@ auto oauth_make_server_metadata(const OAuthServerMetadataConfig &config)
   // type is advertised, and the token endpoint unless the only grant type is
   // the implicit one, and every advertised URL is an https location. A present
   // scalar that is not a valid https URL, or a missing required endpoint, would
-  // yield an unusable discovery document
+  // yield an unusable discovery document. The same predicate the parse path
+  // applies is used here, so a document this builder emits always parses back
   const bool token_endpoint_needed{
       config.grant_types_supported.empty() ||
       std::ranges::any_of(config.grant_types_supported,
@@ -467,19 +554,16 @@ auto oauth_make_server_metadata(const OAuthServerMetadataConfig &config)
                             return grant != "implicit";
                           })};
   const bool token_endpoint_required_and_valid{
-      token_endpoint_needed
-          ? oauth_is_resource_identifier(config.token_endpoint)
-          : config.token_endpoint.empty() ||
-                oauth_is_resource_identifier(config.token_endpoint)};
-  if (!oauth_is_resource_identifier(config.authorization_endpoint) ||
+      token_endpoint_needed ? oauth_is_endpoint_url(config.token_endpoint)
+                            : config.token_endpoint.empty() ||
+                                  oauth_is_endpoint_url(config.token_endpoint)};
+  if (!oauth_is_endpoint_url(config.authorization_endpoint) ||
       !token_endpoint_required_and_valid ||
       (!config.registration_endpoint.empty() &&
-       !oauth_is_resource_identifier(config.registration_endpoint)) ||
+       !oauth_is_endpoint_url(config.registration_endpoint)) ||
       (!config.pushed_authorization_request_endpoint.empty() &&
-       !oauth_is_resource_identifier(
-           config.pushed_authorization_request_endpoint)) ||
-      (!config.jwks_uri.empty() &&
-       !oauth_is_resource_identifier(config.jwks_uri))) {
+       !oauth_is_endpoint_url(config.pushed_authorization_request_endpoint)) ||
+      (!config.jwks_uri.empty() && !oauth_is_endpoint_url(config.jwks_uri))) {
     return std::nullopt;
   }
 
