@@ -1,17 +1,35 @@
 FROM debian:trixie AS builder
 
-# NodeSource provides npm >= 10, required for the "npm sbom" command
+# Debian ships npm 9, while the "npm sbom" command below needs 10, so Node
+# comes from the distribution its own project publishes rather than from the
+# APT repository a third party hosts for it. The archive is checked against
+# the checksums that release publishes, which is the integrity that signing
+# the repository was there to provide
+ARG NODE_VERSION=22.23.1
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck curl gnupg \
+  build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck curl \
   openssl libssl-dev openssl-provider-fips libcurl4-openssl-dev \
+  && apt-get clean && rm -rf /var/lib/apt/lists/* \
+  && NODE_ARCH="$(dpkg --print-architecture)" \
+  && case "${NODE_ARCH}" in \
+    amd64) NODE_ARCH=x64 ;; \
+    arm64) NODE_ARCH=arm64 ;; \
+    *) echo "Unsupported architecture: ${NODE_ARCH}" >&2; exit 1 ;; \
+  esac \
+  && NODE_ARCHIVE="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.gz" \
   && curl --fail --silent --show-error --location \
-    https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-    | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg \
-  && echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
-    > /etc/apt/sources.list.d/nodesource.list \
-  && apt-get --yes update \
-  && apt-get install --yes --no-install-recommends nodejs \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+    --output "/tmp/${NODE_ARCHIVE}" \
+    "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}" \
+  && curl --fail --silent --show-error --location \
+    --output /tmp/SHASUMS256.txt \
+    "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" \
+  && (cd /tmp && grep " ${NODE_ARCHIVE}$" SHASUMS256.txt \
+    | sha256sum --check --strict -) \
+  && tar --extract --gzip --file "/tmp/${NODE_ARCHIVE}" --directory /usr/local \
+    --strip-components=1 --no-same-owner \
+    --exclude "*/CHANGELOG.md" --exclude "*/LICENSE" --exclude "*/README.md" \
+  && rm "/tmp/${NODE_ARCHIVE}" /tmp/SHASUMS256.txt \
+  && node --version && npm --version
 
 # Enable the OpenSSL FIPS provider by running the module self-tests
 # and appending the integrity-checked configuration to our openssl.cnf
