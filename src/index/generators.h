@@ -1063,68 +1063,68 @@ struct GENERATE_URITEMPLATE_ROUTES {
   }
 };
 
-// The policies borrow the paths and keys they are declared with, so the
-// vectors that hold those must outlive the policies that point into them
-static auto
-make_policies(const sourcemeta::one::Configuration &configuration,
-              std::vector<std::vector<std::string_view>> &policy_paths,
-              std::vector<std::vector<std::string_view>> &policy_keys)
-    -> std::vector<sourcemeta::one::Authentication::Policy> {
-  std::vector<sourcemeta::one::Authentication::Policy> policies;
-  policies.reserve(configuration.authentication.size());
-  policy_paths.reserve(configuration.authentication.size());
-  policy_keys.reserve(configuration.authentication.size());
-  for (const auto &entry : configuration.authentication) {
-    std::vector<std::string_view> paths;
-    paths.reserve(entry.paths.size());
-    for (const auto &path : entry.paths) {
-      paths.push_back(path);
-    }
-
-    policy_paths.push_back(std::move(paths));
-
-    using Entry = sourcemeta::one::Configuration::AuthenticationEntry;
-    if (entry.type == Entry::Type::JWT) {
-      policies.push_back(
-          {.paths = policy_paths.back(),
-           .type = sourcemeta::one::Authentication::Type::JWT,
-           .issuer = entry.issuer,
-           .audience = entry.audience,
-           .jwks_uri = entry.jwks_uri.has_value()
-                           ? std::string_view{entry.jwks_uri.value()}
-                           : std::string_view{},
-           .algorithms = entry.algorithms});
-    } else if (entry.type == Entry::Type::OIDC) {
-      policies.push_back(
-          {.paths = policy_paths.back(),
-           .type = sourcemeta::one::Authentication::Type::OIDC,
-           .issuer = entry.issuer,
-           .client_id = entry.client_id,
-           .client_secret_variable = entry.client_secret_variable,
-           .name = entry.name,
-           .session_secret_variable = entry.session_secret_variable});
-    } else {
-      std::vector<std::string_view> keys;
-      keys.reserve(entry.keys.size());
-      for (const auto &key : entry.keys) {
-        keys.push_back(key);
+struct GENERATE_AUTHENTICATION {
+  // The policies borrow the paths and keys they are declared with, so the
+  // vectors that hold those must outlive the policies that point into them
+  static auto
+  make_policies(const sourcemeta::one::Configuration &configuration,
+                std::vector<std::vector<std::string_view>> &policy_paths,
+                std::vector<std::vector<std::string_view>> &policy_keys)
+      -> std::vector<sourcemeta::one::Authentication::Policy> {
+    std::vector<sourcemeta::one::Authentication::Policy> policies;
+    policies.reserve(configuration.authentication.size());
+    policy_paths.reserve(configuration.authentication.size());
+    policy_keys.reserve(configuration.authentication.size());
+    for (const auto &entry : configuration.authentication) {
+      std::vector<std::string_view> paths;
+      paths.reserve(entry.paths.size());
+      for (const auto &path : entry.paths) {
+        paths.push_back(path);
       }
 
-      policy_keys.push_back(std::move(keys));
-      const auto algorithm{
-          entry.algorithm == Entry::Algorithm::Sha256
-              ? sourcemeta::one::Authentication::Algorithm::Sha256
-              : sourcemeta::one::Authentication::Algorithm::Identity};
-      policies.push_back({.paths = policy_paths.back(),
-                          .keys = policy_keys.back(),
-                          .algorithm = algorithm});
+      policy_paths.push_back(std::move(paths));
+
+      using Entry = sourcemeta::one::Configuration::AuthenticationEntry;
+      if (entry.type == Entry::Type::JWT) {
+        policies.push_back(
+            {.paths = policy_paths.back(),
+             .type = sourcemeta::one::Authentication::Type::JWT,
+             .issuer = entry.issuer,
+             .audience = entry.audience,
+             .jwks_uri = entry.jwks_uri.has_value()
+                             ? std::string_view{entry.jwks_uri.value()}
+                             : std::string_view{},
+             .algorithms = entry.algorithms});
+      } else if (entry.type == Entry::Type::OIDC) {
+        policies.push_back(
+            {.paths = policy_paths.back(),
+             .type = sourcemeta::one::Authentication::Type::OIDC,
+             .issuer = entry.issuer,
+             .client_id = entry.client_id,
+             .client_secret_variable = entry.client_secret_variable,
+             .name = entry.name,
+             .session_secret_variable = entry.session_secret_variable});
+      } else {
+        std::vector<std::string_view> keys;
+        keys.reserve(entry.keys.size());
+        for (const auto &key : entry.keys) {
+          keys.push_back(key);
+        }
+
+        policy_keys.push_back(std::move(keys));
+        const auto algorithm{
+            entry.algorithm == Entry::Algorithm::Sha256
+                ? sourcemeta::one::Authentication::Algorithm::Sha256
+                : sourcemeta::one::Authentication::Algorithm::Identity};
+        policies.push_back({.paths = policy_paths.back(),
+                            .keys = policy_keys.back(),
+                            .algorithm = algorithm});
+      }
     }
+
+    return policies;
   }
 
-  return policies;
-}
-
-struct GENERATE_AUTHENTICATION {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
