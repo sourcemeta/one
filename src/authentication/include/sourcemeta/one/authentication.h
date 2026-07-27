@@ -6,15 +6,14 @@
 #endif
 
 #include <sourcemeta/one/authentication_error.h>
-#include <sourcemeta/one/configuration.h>
 
 #include <sourcemeta/core/jose.h>
-#include <sourcemeta/core/uritemplate.h>
 
 #include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::function
 #include <memory>      // std::unique_ptr
 #include <optional>    // std::optional
 #include <span>        // std::span
@@ -143,13 +142,17 @@ public:
     std::optional<Principal> principal;
   };
 
+  // Whether a path is one this instance could gate. A policy scoped to
+  // anything else would gate nothing at all, so the answer comes from whoever
+  // knows what this instance serves
+  using PathGuard = std::function<bool(std::string_view)>;
+
+  // Write the policies to the artifact the gate reads, refusing any policy
+  // scoped to a path the guard does not recognise
   static auto save(std::span<const Policy> policies,
                    const std::filesystem::path &configuration,
-                   const std::filesystem::path &destination) -> void;
-
-  static auto save(const Configuration &configuration,
-                   const sourcemeta::core::URITemplateRouterView &routes,
-                   const std::filesystem::path &destination) -> void;
+                   const std::filesystem::path &destination,
+                   const PathGuard &gateable) -> void;
 
   Authentication(const std::filesystem::path &path,
                  sourcemeta::core::JWKSProvider::Fetcher fetcher);

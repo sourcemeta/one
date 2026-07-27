@@ -23,5 +23,3 @@ target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::ur
 
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::io)
 target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::jose)
-target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::one::configuration)
-target_link_libraries(sourcemeta_one_authentication PUBLIC sourcemeta::core::uritemplate)
