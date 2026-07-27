@@ -185,8 +185,15 @@ auto read_u32(const std::span<const std::byte> metadata, std::size_t &cursor,
   return true;
 }
 
+// The one place a secret is read. A name that is empty names no variable, and
+// a variable set to nothing holds no secret, so neither reaches a caller as a
+// value it might compare something against
 auto resolve_environment(const std::string_view variable)
     -> std::optional<std::string> {
+  if (variable.empty()) {
+    return std::nullopt;
+  }
+
   static std::mutex mutex;
   static std::unordered_map<std::string, std::optional<std::string>> cache;
   const std::string name{variable};
@@ -729,10 +736,6 @@ struct Authentication::Impl {
                const std::string_view payload,
                const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
-    if (session_secret_variable.empty()) {
-      return std::nullopt;
-    }
-
     // The resolved value backs the secret views, so keep it alive alongside
     const auto resolved{resolve_environment(session_secret_variable)};
     if (!resolved.has_value()) {
@@ -754,10 +757,6 @@ struct Authentication::Impl {
                const Authentication::Purpose purpose,
                const std::string_view value) const
       -> std::optional<std::string> {
-    if (session_secret_variable.empty()) {
-      return std::nullopt;
-    }
-
     const auto resolved{resolve_environment(session_secret_variable)};
     if (!resolved.has_value()) {
       return std::nullopt;

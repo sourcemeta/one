@@ -560,7 +560,7 @@ TEST(apikey_with_an_empty_variable_denies) {
           .allowed);
 }
 
-TEST(apikey_with_an_empty_variable_alongside_a_real_one_denies) {
+TEST(apikey_ignores_an_empty_variable_beside_a_real_one) {
   setenv("ONE_TEST_KEY_PAIR_BLANK", "", 1);
   setenv("ONE_TEST_KEY_PAIR_REAL", "pair-secret", 1);
   const std::array<std::string_view, 2> keys{
@@ -1659,6 +1659,26 @@ TEST(client_secret_of_an_empty_variable_is_absent) {
   // A policy an operator meant to configure but left blank cannot authenticate
   // to its provider, and says so rather than attempting the exchange with
   // nothing
+  EXPECT_TRUE(authentication.interactive("okta").has_value());
+  EXPECT_FALSE(authentication.client_secret("okta").has_value());
+}
+
+TEST(client_secret_of_a_policy_naming_no_variable_is_absent) {
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "registry",
+        .name = "okta",
+        .session_secret_variable = "ONE_TEST_OIDC_SESSION_UNUSED"}}};
+  const auto path{test_path("oidc_secret_nameless.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A policy that names no variable at all has nowhere to read a secret from,
+  // which is not the same as naming one that happens to be unset
   EXPECT_TRUE(authentication.interactive("okta").has_value());
   EXPECT_FALSE(authentication.client_secret("okta").has_value());
 }
