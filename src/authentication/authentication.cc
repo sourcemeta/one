@@ -73,6 +73,11 @@ auto Authentication::endpoints(const std::string_view) const
   return std::nullopt;
 }
 
+auto Authentication::open_session(const std::string_view) const
+    -> std::optional<std::string> {
+  return std::nullopt;
+}
+
 auto Authentication::seal(const std::string_view, const Purpose,
                           const std::string_view,
                           const std::chrono::sys_seconds) const

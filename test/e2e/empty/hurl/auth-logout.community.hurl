@@ -1,7 +1,7 @@
 # Interactive authentication is an enterprise feature, so this edition
 # rejects logout without touching any cookie
 GET {{base}}/self/v1/auth/logout
-Cookie: sourcemeta_one_session_okta=abc
+Cookie: sourcemeta_one_session=abc
 HTTP 403
 Cache-Control: no-store
 Content-Type: application/problem+json

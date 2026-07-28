@@ -9,7 +9,7 @@ Cache-Control: no-store
 [Captures]
 authorize_url: header "Location"
 [Asserts]
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
 
 # The provider renders its login form
 GET {{authorize_url}}
@@ -35,5 +35,5 @@ HTTP 303
 Location: /private/secret?view=raw
 Cache-Control: no-store
 [Asserts]
-cookie "sourcemeta_one_session_keycloak" exists
-cookie "sourcemeta_one_transaction_keycloak[Max-Age]" == 0
+cookie "sourcemeta_one_session" exists
+cookie "sourcemeta_one_transaction[Max-Age]" == 0

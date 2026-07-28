@@ -90,7 +90,7 @@ header "Location" contains "scope=openid"
 header "Location" contains "code_challenge_method=S256"
 header "Location" contains "state="
 header "Location" contains "nonce="
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
 
 # The provider renders its login form
 GET {{authorize_url}}
@@ -121,11 +121,11 @@ HTTP 303
 Location: /private
 Cache-Control: no-store
 [Asserts]
-cookie "sourcemeta_one_session_keycloak" exists
-cookie "sourcemeta_one_session_keycloak[Max-Age]" == 3600
-cookie "sourcemeta_one_session_keycloak[HttpOnly]" exists
-cookie "sourcemeta_one_session_keycloak[SameSite]" == "Lax"
-cookie "sourcemeta_one_transaction_keycloak[Max-Age]" == 0
+cookie "sourcemeta_one_session" exists
+cookie "sourcemeta_one_session[Max-Age]" == 3600
+cookie "sourcemeta_one_session[HttpOnly]" exists
+cookie "sourcemeta_one_session[SameSite]" == "Lax"
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
 
 # The session now opens the private catalog that was denied before, served
 # private so a shared cache cannot retain it
@@ -162,13 +162,16 @@ header "ETag" exists
   "type": "array"
 }
 
-# Logging out clears the session
+# Logging out clears the session and sends the browser on to the provider so
+# its own session ends too, which logout.all.hurl covers in full
 GET {{base}}/self/v1/auth/logout
 HTTP 303
-Location: /
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" startsWith "sourcemeta_one_session_keycloak="
+header "Set-Cookie" count == 2
+cookie "sourcemeta_one_session[Max-Age]" == 0
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
+header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
 # And the private catalog is gated again, the denial byte-identical to the first
 GET {{base}}/private/secret.json

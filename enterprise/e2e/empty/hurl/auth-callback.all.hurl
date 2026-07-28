@@ -43,7 +43,7 @@ jsonpath "$.valid" == true
 
 # An unopenable transaction cookie is treated the same as none
 GET {{base}}/self/v1/auth/callback/okta?code=the-code&state=the-state
-Cookie: sourcemeta_one_transaction_okta=garbage
+Cookie: sourcemeta_one_transaction=garbage
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

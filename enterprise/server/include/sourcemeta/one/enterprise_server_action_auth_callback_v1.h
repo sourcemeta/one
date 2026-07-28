@@ -41,6 +41,13 @@ public:
   // its usefulness, with silent re-authentication as the eventual refresh
   static constexpr std::chrono::seconds SESSION_LIFETIME{3600};
 
+  // RFC 6265 Section 6.1 asks a user agent to support "at least 4096 bytes per
+  // cookie (as measured by the sum of the length of the cookie's name, value,
+  // and attributes)". That is a floor they should honour rather than a ceiling
+  // they must enforce, and what happens above it is left unsaid, so the whole
+  // serialised cookie is kept under it with room to spare
+  static constexpr std::size_t MAXIMUM_COOKIE_LENGTH{4000};
+
   ActionAuthCallback_v1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
@@ -190,41 +197,30 @@ public:
       return;
     }
 
-    auto payload{sourcemeta::core::JSON::make_object()};
-    payload.assign_assume_new("policy",
-                              sourcemeta::core::JSON{std::string{policy_name}});
-    payload.assign_assume_new("subject",
-                              sourcemeta::core::JSON{identity.value().subject});
-    std::ostringstream payload_text;
-    sourcemeta::core::stringify(payload, payload_text);
-
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       SESSION_LIFETIME};
-    const auto session{authentication.seal(
-        policy_name, sourcemeta::one::Authentication::Purpose::Session,
-        payload_text.str(), expiry)};
-    if (!session.has_value()) {
-      this->fail(request, response,
-                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                 "urn:sourcemeta:one:auth-misconfigured",
-                 "The authentication configuration is incomplete", policy_name);
-      return;
-    }
-
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
-    const auto session_cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = this->cookie_name(
-             sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX,
-             policy_name),
-         .value = session.value(),
-         .path = scope,
-         .max_age = SESSION_LIFETIME,
-         .http_only = true,
-         .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+
+    // The identity token is kept so that logging out can prove whose session
+    // it is asking the provider to end, which is what spares the person a
+    // confirmation page there. A provider that mints a large one can push the
+    // cookie past what a browser will store, and a browser drops such a cookie
+    // without saying so, which would look like signing in and then not being
+    // signed in. So the whole cookie is measured, and the token is left out
+    // when it does not fit, which costs the confirmation page and nothing else
+    auto session_cookie{this->session_cookie(
+        authentication, policy_name, identity.value().subject, id_token.value(),
+        expiry, scope, secure)};
+    if (session_cookie.has_value() &&
+        session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
+      session_cookie = this->session_cookie(authentication, policy_name,
+                                            identity.value().subject, "",
+                                            expiry, scope, secure);
+    }
+
     if (!session_cookie.has_value()) {
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -250,7 +246,7 @@ public:
     response.write_header("Set-Cookie", session_cookie.value());
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
-    this->expire_transaction(response, policy_name, scope, secure);
+    this->expire_transaction(response, scope, secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -271,16 +267,6 @@ private:
       ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
                            sourcemeta::core::JWSAlgorithm::ES256}};
 
-  [[nodiscard]] auto cookie_name(const std::string_view prefix,
-                                 const std::string_view policy_name) const
-      -> std::string {
-    std::string result;
-    result.reserve(prefix.size() + policy_name.size());
-    result += prefix;
-    result += policy_name;
-    return result;
-  }
-
   // The transaction a callback belongs to, if the request carries one. A
   // request can present several cookies under one name, since a parent
   // domain and the host itself can each set one and neither the header nor
@@ -298,12 +284,10 @@ private:
       return std::nullopt;
     }
 
-    const auto name{this->cookie_name(
-        sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX,
-        policy_name)};
     std::vector<std::string_view> candidates;
-    sourcemeta::core::http_cookie_values(request.header("cookie"), name,
-                                         candidates);
+    sourcemeta::core::http_cookie_values(
+        request.header("cookie"),
+        sourcemeta::one::Authentication::TRANSACTION_COOKIE, candidates);
     for (const auto sealed : candidates) {
       auto opened{authentication.open(
           policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
@@ -337,14 +321,49 @@ private:
     return std::nullopt;
   }
 
+  // The session cookie for a login, carrying the identity token when one is
+  // given. Building it is separated out so the caller can measure the result
+  // and ask for a smaller one
+  [[nodiscard]] auto session_cookie(
+      const sourcemeta::one::Authentication &authentication,
+      const std::string_view policy_name, const std::string_view subject,
+      const std::string_view id_token, const std::chrono::sys_seconds expiry,
+      const std::string_view scope, const bool secure) const
+      -> std::optional<std::string> {
+    auto payload{sourcemeta::core::JSON::make_object()};
+    payload.assign_assume_new("policy",
+                              sourcemeta::core::JSON{std::string{policy_name}});
+    payload.assign_assume_new("subject",
+                              sourcemeta::core::JSON{std::string{subject}});
+    if (!id_token.empty()) {
+      payload.assign_assume_new("id_token",
+                                sourcemeta::core::JSON{std::string{id_token}});
+    }
+
+    std::ostringstream payload_text;
+    sourcemeta::core::stringify(payload, payload_text);
+    const auto sealed{authentication.seal(
+        policy_name, sourcemeta::one::Authentication::Purpose::Session,
+        payload_text.str(), expiry)};
+    if (!sealed.has_value()) {
+      return std::nullopt;
+    }
+
+    return sourcemeta::core::http_serialize_cookie(
+        {.name = sourcemeta::one::Authentication::SESSION_COOKIE,
+         .value = sealed.value(),
+         .path = scope,
+         .max_age = SESSION_LIFETIME,
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
+  }
+
   auto expire_transaction(sourcemeta::one::HTTPResponse &response,
-                          const std::string_view policy_name,
                           const std::string_view scope, const bool secure) const
       -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = this->cookie_name(
-             sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX,
-             policy_name),
+        {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
          .value = "",
          .path = scope,
          .max_age = std::chrono::seconds{0},

@@ -1,14 +1,14 @@
 # Under a base path, the cookie expirations and the redirect are both scoped
 # to the instance rather than the whole host
 GET {{base}}/v1/catalog/self/v1/auth/logout
-Cookie: sourcemeta_one_session_okta=abc; theme=dark; sourcemeta_one_transaction_okta=xyz
+Cookie: sourcemeta_one_session=abc; theme=dark; sourcemeta_one_transaction=xyz
 HTTP 303
 Location: /v1/catalog
 Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" count == 2
-header "Set-Cookie" contains "sourcemeta_one_session_okta=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
-header "Set-Cookie" contains "sourcemeta_one_transaction_okta=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_session=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -22,7 +22,10 @@ HTTP 303
 Location: /v1/catalog
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" not exists
+header "Set-Cookie" count == 2
+cookie "sourcemeta_one_session[Max-Age]" == 0
+cookie "sourcemeta_one_session[Path]" == "/v1/catalog"
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

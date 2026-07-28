@@ -639,11 +639,6 @@ struct Authentication::Impl {
     }
     const auto policy_name{decoded.name};
 
-    std::string cookie_name;
-    cookie_name.reserve(Authentication::SESSION_COOKIE_PREFIX.size() +
-                        policy_name.size());
-    cookie_name += Authentication::SESSION_COOKIE_PREFIX;
-    cookie_name += policy_name;
     // A request can carry several cookies under one name, since a parent
     // domain and the host itself can each set one and neither the header nor
     // the order says which is which. Taking any single one lets whoever
@@ -651,7 +646,8 @@ struct Authentication::Impl {
     // so each is carried through the whole check and the caller is admitted
     // when any of them is a session for this policy
     std::vector<std::string_view> candidates;
-    sourcemeta::core::http_cookie_values(cookies, cookie_name, candidates);
+    sourcemeta::core::http_cookie_values(
+        cookies, Authentication::SESSION_COOKIE, candidates);
     for (const auto sealed : candidates) {
       const auto payload{this->session_open(decoded.session_secret_variable,
                                             Authentication::Purpose::Session,
@@ -665,11 +661,13 @@ struct Authentication::Impl {
         continue;
       }
 
-      // Cookie names travel outside the signature, so the sealed payload
-      // itself declares the policy it was minted for, and a value re-presented
-      // under another policy's cookie name is rejected. Policies can share a
-      // session secret, so one minted elsewhere opens here and must be passed
-      // over rather than end the search
+      // Every policy governing this location reads the one session the browser
+      // holds, so this is what keeps a session established under one policy
+      // from admitting its holder under another. Two policies may share a
+      // session secret, in which case a value minted elsewhere opens cleanly
+      // here and nothing but the payload tells them apart. It is the control,
+      // not a belt on top of one, and a value that is not for this policy is
+      // passed over rather than ending the search
       const auto *minted_for{document.value().try_at("policy")};
       if (minted_for != nullptr && minted_for->is_string() &&
           minted_for->to_string() == policy_name) {
@@ -682,6 +680,59 @@ struct Authentication::Impl {
 
   // The decoded metadata of the OIDC policy declared under the given name,
   // scanned out of the artifact
+  // The payload of a session value, whichever interactive policy minted it.
+  // The policy travels inside the sealed value, so a caller learns which one
+  // established the session rather than nominating one, and a value is only
+  // ever accepted under the policy it names. Deciding that here rather than at
+  // a call site keeps one answer to what a session is
+  [[nodiscard]] auto open_session(const std::string_view value) const
+      -> std::optional<std::string> {
+    if (this->policy_count_ == 0) {
+      return std::nullopt;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          this->view_->as<std::byte>(entry.metadata_offset),
+          entry.metadata_length};
+      OIDCPolicyMetadata decoded;
+      if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
+        continue;
+      }
+
+      const auto payload{this->session_open(decoded.session_secret_variable,
+                                            Authentication::Purpose::Session,
+                                            value)};
+      if (!payload.has_value()) {
+        continue;
+      }
+
+      const auto document{sourcemeta::core::try_parse_json(payload.value())};
+      if (!document.has_value() || !document.value().is_object()) {
+        continue;
+      }
+
+      const auto *minted_for{document.value().try_at("policy")};
+      if (minted_for == nullptr || !minted_for->is_string() ||
+          minted_for->to_string() != decoded.name) {
+        continue;
+      }
+
+      return payload;
+    }
+
+    return std::nullopt;
+  }
+
   [[nodiscard]] auto find_interactive(const std::string_view name,
                                       OIDCPolicyMetadata &result) const
       -> bool {
@@ -1104,6 +1155,11 @@ auto Authentication::client_secret(const std::string_view policy) const
 auto Authentication::endpoints(const std::string_view policy) const
     -> std::optional<Authentication::ProviderEndpoints> {
   return this->impl_->endpoints(policy);
+}
+
+auto Authentication::open_session(const std::string_view value) const
+    -> std::optional<std::string> {
+  return this->impl_->open_session(value);
 }
 
 auto Authentication::seal(const std::string_view policy, const Purpose purpose,

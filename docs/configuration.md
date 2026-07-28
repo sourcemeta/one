@@ -542,6 +542,38 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
 | `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
 
+!!! tip
+
+    Two URLs must be registered with the provider for an interactive policy,
+    both derived from the instance's `url` and the policy's name:
+
+    - **Redirect URI**, `{url}/self/v1/auth/callback/{name}`, where the
+      provider sends the browser back after signing in.
+    - **Post-logout redirect URI**, `{url}`, where it sends the browser back
+      after signing out.
+
+    For an instance at `https://schemas.example.com` with a policy named
+    `corporate`, those are
+    `https://schemas.example.com/self/v1/auth/callback/corporate` and
+    `https://schemas.example.com`.
+
+!!! note
+
+    A browser holds one session with an instance, whichever interactive policy
+    established it. Signing in with a second one ends the first, so somebody
+    who holds identities at two providers gating different paths can only use
+    one at a time, and separate browser profiles are the way to hold both.
+
+    Signing out sends the browser on to the provider to end its own session
+    too, so that signing in again asks who you are rather than admitting
+    whoever used the browser last. That requires `{url}` to be registered at
+    the provider as a post-logout redirect URI, alongside the callback URL. If
+    the provider offers no end-session endpoint, signing out is local only.
+
+    Signing out takes the session from the browser rather than revoking it.
+    Sessions are sealed values and this instance keeps no record of them, so a
+    copy taken beforehand remains usable until it expires.
+
 !!! warning
 
     The instance's own `url` must be an origin a browser treats as trustworthy,

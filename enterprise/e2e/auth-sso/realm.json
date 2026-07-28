@@ -18,10 +18,13 @@
         "http://localhost:8000/self/v1/auth/callback/keycloak"
       ],
       "fullScopeAllowed": false,
-      "defaultClientScopes": [ "basic" ],
+      "defaultClientScopes": [
+        "basic"
+      ],
       "optionalClientScopes": [],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8000"
       }
     }
   ],
