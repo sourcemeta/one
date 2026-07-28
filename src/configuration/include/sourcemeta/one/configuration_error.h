@@ -163,11 +163,12 @@ private:
 class ConfigurationInsecureAuthenticationURLError : public std::exception {
 public:
   ConfigurationInsecureAuthenticationURLError(std::filesystem::path path,
-                                              std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
+                                              std::string name, std::string url)
+      : path_{std::move(path)}, name_{std::move(name)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An interactive authentication policy requires an https instance";
+    return "An interactive authentication policy requires the instance itself "
+           "to be served over https";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -178,9 +179,14 @@ public:
     return this->name_;
   }
 
+  [[nodiscard]] auto url() const noexcept -> const std::string & {
+    return this->url_;
+  }
+
 private:
   std::filesystem::path path_;
   std::string name_;
+  std::string url_;
 };
 
 // Raised when an authentication policy names an issuer that this instance

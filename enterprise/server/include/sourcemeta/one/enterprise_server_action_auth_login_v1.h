@@ -7,6 +7,7 @@
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
@@ -216,7 +217,7 @@ public:
          .path = scope,
          .max_age = TRANSACTION_LIFETIME,
          .http_only = true,
-         .secure = this->server_uri().starts_with("https://"),
+         .secure = sourcemeta::core::URI{this->server_uri()}.is_https(),
          .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
     // A redirect without the transaction cookie could never complete at the
     // callback, so it is not worth sending

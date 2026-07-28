@@ -2,7 +2,6 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
-#include <sourcemeta/core/ip.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
@@ -18,29 +17,13 @@ namespace {
 
 // A session cookie is only marked secure on an https instance, so an
 // interactive login anywhere else hands the browser a credential that travels
-// in the clear. A loopback host is the exception, since a browser already
-// treats one as a trustworthy origin and honours the attribute there
+// in the clear. A loopback address and the special-use localhost name are the
+// exception, since a browser already treats either as a trustworthy origin and
+// honours the attribute there
 auto serves_securely(const std::string_view url) -> bool {
-  sourcemeta::core::URI parsed{std::string{url}};
-  const auto scheme{parsed.scheme()};
-  if (!scheme.has_value()) {
-    return false;
-  }
-
-  if (scheme.value() == "https") {
-    return true;
-  }
-
-  if (scheme.value() != "http" || !parsed.host().has_value()) {
-    return false;
-  }
-
-  const auto host{parsed.host().value()};
-  return host == "localhost" ||
-         sourcemeta::core::ipv4_classify(host) ==
-             sourcemeta::core::IPAddressClass::Loopback ||
-         sourcemeta::core::ipv6_classify(host) ==
-             sourcemeta::core::IPAddressClass::Loopback;
+  const sourcemeta::core::URI parsed{std::string{url}};
+  return parsed.is_https() ||
+         (parsed.is_http() && (parsed.is_loopback() || parsed.is_localhost()));
 }
 
 auto page_from_json(const sourcemeta::core::JSON &input)
@@ -251,7 +234,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
 
     // OpenID Connect Discovery 1.0 Section 3: the issuer is an https URL
-    if (!entry.issuer.starts_with("https://")) {
+    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
       throw ConfigurationInvalidAuthenticationIssuerError(
           configuration_path, entry.name, entry.issuer);
     }
@@ -259,7 +242,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     if (entry.type == Configuration::AuthenticationEntry::Type::OIDC &&
         !serves_securely(result.url)) {
       throw ConfigurationInsecureAuthenticationURLError(configuration_path,
-                                                        entry.name);
+                                                        entry.name, result.url);
     }
   }
 

@@ -9,6 +9,7 @@
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
@@ -213,7 +214,7 @@ public:
 
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
-    const auto secure{this->server_uri().starts_with("https://")};
+    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
     const auto session_cookie{sourcemeta::core::http_serialize_cookie(
         {.name = this->cookie_name(
              sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX,
