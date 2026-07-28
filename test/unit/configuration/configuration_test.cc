@@ -896,6 +896,38 @@ TEST(authentication_jwt_issuer_with_a_key_set_is_left_alone) {
             "http://acme.example.com/");
 }
 
+TEST(authentication_oidc_refuses_a_url_that_is_only_a_scheme) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https:",
+    "authentication": [
+      {
+        "type": "oidc",
+        "name": "corporate",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "clientId": "registry",
+        "clientSecret": { "environmentVariable": "ONE_CLIENT_SECRET" },
+        "sessionSecret": { "environmentVariable": "ONE_SESSION_SECRET" }
+      }
+    ]
+  })JSON")};
+
+  // A scheme names no origin, so it is not one a browser would hold a session
+  // cookie against, however secure the scheme itself looks
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, "/tmp/one.json",
+                                          ".");
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInsecureAuthenticationURLError
+               &error) {
+    EXPECT_STREQ(error.what(), "An interactive authentication policy requires "
+                               "the instance itself to be served over https");
+    EXPECT_EQ(error.url(), "https:");
+    EXPECT_EQ(error.name(), "corporate");
+    EXPECT_EQ(error.path(), "/tmp/one.json");
+  }
+}
+
 TEST(authentication_jwt) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

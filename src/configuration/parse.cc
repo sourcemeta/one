@@ -22,6 +22,12 @@ namespace {
 // honours the attribute there
 auto serves_securely(const std::string_view url) -> bool {
   const sourcemeta::core::URI parsed{std::string{url}};
+  // A scheme on its own names no origin, so there is nowhere for a browser to
+  // hold a cookie against in the first place
+  if (!parsed.host().has_value() || parsed.host().value().empty()) {
+    return false;
+  }
+
   return parsed.is_https() ||
          (parsed.is_http() && (parsed.is_loopback() || parsed.is_localhost()));
 }

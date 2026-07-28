@@ -159,7 +159,8 @@ private:
 };
 
 // Raised when an interactive authentication policy is declared on an instance
-// that does not serve over https
+// a browser would not treat as a trustworthy origin, which means https, or
+// plain HTTP on a loopback address or the special-use localhost name
 class ConfigurationInsecureAuthenticationURLError : public std::exception {
 public:
   ConfigurationInsecureAuthenticationURLError(std::filesystem::path path,
