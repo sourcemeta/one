@@ -5,20 +5,21 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/oidc.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <optional> // std::optional, std::nullopt
-#include <sourcemeta/core/oidc.h>
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
-#include <vector> // std::vector
 
 #include <chrono>      // std::chrono::seconds
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 class ActionAuthLogout_v1 : public sourcemeta::one::RouterAction {
 public:
