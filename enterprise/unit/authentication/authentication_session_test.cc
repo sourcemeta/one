@@ -2,8 +2,9 @@
 
 #include <sourcemeta/core/test.h>
 
-#include <array>       // std::array
-#include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
+#include <array> // std::array
+#include <chrono>
+#include <cstddef>     // std::chrono::sys_seconds, std::chrono::seconds
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
@@ -16,6 +17,28 @@ static const std::array<std::string_view, 1> SECRETS{{"session-secret"}};
 // value is for, so they name one purpose throughout
 static constexpr auto PURPOSE{
     sourcemeta::one::Authentication::Purpose::Session};
+
+// A sealed value is version.issued.expiry.payload.signature. Every field is
+// covered by the signature, so a test that disturbs the wrong one still passes
+// and quietly stops testing what it names. These say which field they mean
+enum class Field : std::size_t {
+  Version = 0,
+  Issued = 1,
+  Expiry = 2,
+  Payload = 3,
+  Signature = 4
+};
+
+static auto field_start(const std::string_view value, const Field field)
+    -> std::size_t {
+  std::size_t position{0};
+  for (std::size_t index{0}; index < static_cast<std::size_t>(field);
+       index += 1) {
+    position = value.find('.', position) + 1;
+  }
+
+  return position;
+}
 
 TEST(session_round_trips_a_payload) {
   const auto value{sourcemeta::one::Authentication::seal_value(
@@ -104,11 +127,24 @@ TEST(session_admits_a_value_sealed_under_an_older_secret) {
           .has_value());
 }
 
+TEST(session_value_has_the_shape_the_tests_below_assume) {
+  // Several tests locate a field by index, so a change to the grammar would
+  // silently move what they disturb while leaving them green. This pins the
+  // whole shape against known inputs, so such a change fails here first and
+  // names what moved
+  const auto value{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
+  constexpr std::string_view prefix{"1.1000000.1000060.dGhlLXBheWxvYWQ."};
+  EXPECT_TRUE(value.starts_with(prefix));
+  // The signature is the unpadded encoding of a fixed-width digest
+  EXPECT_EQ(value.size(), prefix.size() + 43);
+}
+
 TEST(session_denies_a_tampered_payload) {
   const auto value{sourcemeta::one::Authentication::seal_value(
       "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   auto tampered{value};
-  const auto payload_start{tampered.find('.', tampered.find('.') + 1) + 1};
+  const auto payload_start{field_start(tampered, Field::Payload)};
   tampered[payload_start] = tampered[payload_start] == 'A' ? 'B' : 'A';
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
                                                            SECRETS, NOW)
@@ -119,7 +155,7 @@ TEST(session_denies_a_tampered_expiry) {
   const auto expired{sourcemeta::one::Authentication::seal_value(
       "the-payload", PURPOSE, "session-secret", NOW, NOW)};
   // Extending the lifetime of an expired value must break its signature
-  const auto expiry_start{expired.find('.') + 1};
+  const auto expiry_start{field_start(expired, Field::Expiry)};
   auto tampered{expired};
   tampered.insert(expiry_start, "9");
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
@@ -202,18 +238,53 @@ TEST(session_denies_malformed_values) {
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
                    "no-dots-at-all", PURPOSE, SECRETS, NOW)
                    .has_value());
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value("1.123.AA", PURPOSE,
+  // Too few fields to be a sealed value
+  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
+                   "1.123.456.AA", PURPOSE, SECRETS, NOW)
+                   .has_value());
+  // One field too many, which lands in the signature, where a separator says
+  // the value was not produced by sealing anything
+  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
+                   "1.123.456.AA.BB.CC", PURPOSE, SECRETS, NOW)
+                   .has_value());
+}
+
+TEST(session_denies_a_tampered_issuance) {
+  const auto value{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
+  // Moving the instant of minting backwards would stretch the lifetime a value
+  // is allowed to claim, so the signature has to cover it like everything else
+  const auto issued_start{field_start(value, Field::Issued)};
+  auto tampered{value};
+  tampered.insert(issued_start, "9");
+  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
                                                            SECRETS, NOW)
                    .has_value());
+}
+
+TEST(session_denies_a_malformed_issuance) {
+  const auto value{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
+  const auto issued_start{field_start(value, Field::Issued)};
+  const auto issued_end{value.find('.', issued_start)};
+
+  auto empty_issued{value};
+  empty_issued.erase(issued_start, issued_end - issued_start);
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   "1.123.AA.BB.CC", PURPOSE, SECRETS, NOW)
+                   empty_issued, PURPOSE, SECRETS, NOW)
+                   .has_value());
+
+  auto negative_issued{value};
+  negative_issued.replace(issued_start, issued_end - issued_start, "-1");
+  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
+                   negative_issued, PURPOSE, SECRETS, NOW)
                    .has_value());
 }
 
 TEST(session_denies_a_malformed_expiry) {
   const auto value{sourcemeta::one::Authentication::seal_value(
       "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto expiry_start{value.find('.') + 1};
+  const auto expiry_start{field_start(value, Field::Expiry)};
   const auto expiry_end{value.find('.', expiry_start)};
 
   auto empty_expiry{value};

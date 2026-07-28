@@ -1792,6 +1792,72 @@ TEST(interactive_returns_the_policy_by_name) {
   EXPECT_FALSE(authentication.client_secret("").has_value());
 }
 
+TEST(provider_endpoints_are_retrieved_once_and_reused) {
+  const auto calls{std::make_shared<int>(0)};
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_CACHE",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_endpoints_cached.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const std::map<std::string, std::string> responses{
+      {"https://login.test/.well-known/openid-configuration",
+       R"JSON({
+         "issuer": "https://login.test",
+         "authorization_endpoint": "https://login.test/authorize",
+         "token_endpoint": "https://login.test/token",
+         "jwks_uri": "https://login.test/jwks",
+         "end_session_endpoint": "https://login.test/logout",
+         "response_types_supported": [ "code" ],
+         "subject_types_supported": [ "public" ],
+         "id_token_signing_alg_values_supported": [ "RS256" ]
+       })JSON"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher(responses, calls)};
+
+  const auto first{authentication.endpoints("okta")};
+  EXPECT_TRUE(first.has_value());
+  EXPECT_EQ(first.value().authorization, "https://login.test/authorize");
+  EXPECT_EQ(first.value().token, "https://login.test/token");
+  EXPECT_EQ(first.value().jwks_uri, "https://login.test/jwks");
+  EXPECT_EQ(first.value().end_session, "https://login.test/logout");
+  EXPECT_EQ(*calls, 1);
+
+  // Asking again does not ask the provider again. A login is an
+  // unauthenticated endpoint, so fetching per request would let anybody drive
+  // outbound traffic one for one
+  const auto second{authentication.endpoints("okta")};
+  EXPECT_TRUE(second.has_value());
+  EXPECT_EQ(second.value().token, "https://login.test/token");
+  EXPECT_EQ(*calls, 1);
+}
+
+TEST(provider_endpoints_of_an_unreachable_provider_are_absent) {
+  const auto calls{std::make_shared<int>(0)};
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_UNREACHABLE",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_endpoints_unreachable.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{path,
+                                                       stub_fetcher({}, calls)};
+  EXPECT_FALSE(authentication.endpoints("okta").has_value());
+  EXPECT_FALSE(authentication.endpoints("github").has_value());
+}
+
 TEST(client_secret_of_an_unset_variable_is_absent) {
   unsetenv("ONE_TEST_OIDC_SECRET_UNSET");
   const std::array<std::string_view, 1> paths{{"/alpha"}};
