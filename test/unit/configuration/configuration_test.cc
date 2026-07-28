@@ -846,6 +846,56 @@ TEST(authentication_apikey_identity) {
       (std::vector<sourcemeta::core::JSON::String>{"ONE_KEY_A", "ONE_KEY_B"}));
 }
 
+TEST(authentication_jwt_issuer_trailing_slash_is_dropped) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com/",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  // The slash is not part of the identifier, so it is dropped once here rather
+  // than disagreeing between the URL that is built and the issuer that comes
+  // back to be compared against
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).issuer,
+            "https://acme.example.com");
+}
+
+TEST(authentication_jwt_issuer_with_a_key_set_is_left_alone) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "http://acme.example.com/",
+        "audience": "https://schemas.example.com",
+        "jwksUri": "https://acme.example.com/jwks",
+        "algorithms": [ "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  // A policy naming its key set makes no discovery exchange, so its issuer is
+  // only ever compared against a token's claim and is taken as written
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).issuer,
+            "http://acme.example.com/");
+}
+
 TEST(authentication_jwt) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

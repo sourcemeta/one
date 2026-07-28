@@ -194,8 +194,7 @@ public:
         issuer_{std::move(issuer)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy issuer must be an https URL without a "
-           "trailing slash";
+    return "An authentication policy issuer must be an https URL";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

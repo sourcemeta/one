@@ -40,7 +40,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: An authentication policy issuer must be an https URL without a trailing slash
+error: An authentication policy issuer must be an https URL
   at issuer http://accounts.example.com
   at name machine
   at path $(realpath "$TMP")/one.json

@@ -228,18 +228,30 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
   }
 
-  // An issuer this instance fetches a discovery document from is compared
-  // against the one that document declares, code point for code point, so a
-  // spelling that cannot match is refused here rather than reported later as
-  // a provider that could not be reached. A policy naming its key set
-  // directly never makes that exchange, so its issuer is only an identifier
-  for (const auto &entry : result.authentication) {
+  // An issuer this instance fetches a discovery document from must be one it
+  // could complete that exchange against. A policy naming its key set directly
+  // never makes the exchange, so its issuer is only an identifier compared
+  // against a token's claim, and nothing here applies to it
+  for (auto &entry : result.authentication) {
     const auto discovers{
         entry.type == Configuration::AuthenticationEntry::Type::OIDC ||
         (entry.type == Configuration::AuthenticationEntry::Type::JWT &&
          !entry.jwks_uri.has_value())};
-    if (discovers && (!entry.issuer.starts_with("https://") ||
-                      entry.issuer.ends_with("/"))) {
+    if (!discovers) {
+      continue;
+    }
+
+    // OpenID Connect Discovery 1.0 Section 4.1 removes a trailing slash before
+    // appending the well-known suffix, and Section 4.3 requires the document to
+    // declare the prefix that was actually used. So the slash is not part of
+    // the identifier and is dropped here, once, rather than left to disagree
+    // with itself between building the URL and comparing what comes back
+    if (entry.issuer.ends_with("/")) {
+      entry.issuer.pop_back();
+    }
+
+    // OpenID Connect Discovery 1.0 Section 3: the issuer is an https URL
+    if (!entry.issuer.starts_with("https://")) {
       throw ConfigurationInvalidAuthenticationIssuerError(
           configuration_path, entry.name, entry.issuer);
     }
