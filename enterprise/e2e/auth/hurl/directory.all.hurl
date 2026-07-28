@@ -312,6 +312,7 @@ xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'console']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'typed']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'mixed']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'machine']]//i[contains(@class, 'bi-lock-fill')])" == 1

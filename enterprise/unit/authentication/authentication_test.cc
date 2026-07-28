@@ -603,7 +603,9 @@ TEST(sha256_policy_with_an_empty_variable_denies) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA_EMPTY"}};
   const std::array<std::string_view, 1> paths{{"/secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+      {{.paths = paths,
+        .keys = keys,
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -626,7 +628,9 @@ TEST(sha256_policy_admits_the_matching_credential) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA"}};
   const std::array<std::string_view, 1> paths{{"/secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+      {{.paths = paths,
+        .keys = keys,
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_match.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 

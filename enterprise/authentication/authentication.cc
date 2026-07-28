@@ -373,7 +373,12 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
   keys.emplace(audience);
   keys.emplace(jwks_uri);
   // A policy that requires a token type admits a narrower set than one that
-  // does not, so two policies alike but for it are not the same audience
+  // does not, so two policies alike but for it are not the same audience.
+  // This refuses a reference from the stricter of the two to the looser one,
+  // which every holder of the stricter credential could have followed anyway.
+  // That is deliberate: the comparison is by equality, and the cost of
+  // refusing is a build that has to say so, against disclosing a referent to
+  // somebody the referrer never admitted
   keys.emplace(token_type);
 
   std::uint32_t count{0};
