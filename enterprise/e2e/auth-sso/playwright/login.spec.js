@@ -92,9 +92,21 @@ test.describe('Interactive SSO login on a subpath', () => {
     await signIn(page);
     await expect(page.locator('table tbody tr').first()).toBeVisible();
 
-    // Logging out clears the session, so the gated collection is fronted by the
-    // login again
-    await page.goto('/self/v1/auth/logout');
+    // Signing out is a form submit rather than a navigation, since it ends a
+    // session at the provider. This is the shape the sign-out control will
+    // take once the explorer renders one.
+    // TODO: Replace this with clicking the sign-out control once the explorer
+    // renders one, which is a form submit for the same reason
+    await page.evaluate(() => {
+      const form = document.createElement('form');
+      form.method = 'post';
+      form.action = '/self/v1/auth/logout';
+      document.body.appendChild(form);
+      form.submit();
+    });
+    await page.waitForURL((url) => !url.pathname.startsWith('/private'));
+
+    // The gated collection is fronted by the login again
     await page.goto('/private/');
     await expect(page).toHaveTitle('Sign In');
     await expect(

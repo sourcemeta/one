@@ -9,7 +9,7 @@
 # the request carried them, so no outcome below can leave a session behind.
 
 # A caller carrying nothing is still logged out, and still told where to go
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 HTTP 303
 Cache-Control: no-store
 Location: /
@@ -24,7 +24,7 @@ cookie "sourcemeta_one_transaction[Path]" == "/"
 
 # A value that is not a session this instance minted is cleared just the same,
 # and discloses nothing by being treated differently
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 Cookie: sourcemeta_one_session=not-a-session
 HTTP 303
 Cache-Control: no-store
@@ -74,7 +74,7 @@ jsonpath "$.type" == "object"
 
 # Logging out expires both cookies and sends the browser to the provider to end
 # its own session, naming this instance as where to come back to
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 Cookie: sourcemeta_one_session={{session}}
 HTTP 303
 Cache-Control: no-store

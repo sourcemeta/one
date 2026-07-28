@@ -52,18 +52,26 @@ public:
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Cache-Control", "no-store");
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow
-      response.write_header("Allow", "GET, HEAD, OPTIONS");
+      response.write_header("Allow", "POST, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
                                      request, response);
       return;
     }
 
-    if (request.method() != "get" && request.method() != "head") {
+    // Signing out ends a session at the provider, which RFC 9110 Section 9.2.1
+    // puts outside what a safe method may do, since the guarantee it gives is
+    // what lets a user agent "prefetch, follow links" freely. A link to this
+    // would be followed by anything that warms URLs or unfurls them in a chat
+    // window, and the person would be signed out by something that was only
+    // looking. So the control that reaches it is a form rather than a link.
+    // A confirmation page answering the same URL over GET would suit an
+    // instance that renders HTML, and is worth adding when there is one
+    if (request.method() != "post") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "urn:sourcemeta:one:method-not-allowed",
           "This HTTP method is invalid for this URL", this->error_schema_, "*",
-          "GET, HEAD, OPTIONS");
+          "POST, OPTIONS");
       return;
     }
 

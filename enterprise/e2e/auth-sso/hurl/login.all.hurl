@@ -164,7 +164,7 @@ header "ETag" exists
 
 # Logging out clears the session and sends the browser on to the provider so
 # its own session ends too, which logout.all.hurl covers in full
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 HTTP 303
 Cache-Control: no-store
 [Asserts]
