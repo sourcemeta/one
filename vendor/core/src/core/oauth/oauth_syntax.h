@@ -54,10 +54,9 @@ inline auto oauth_is_resource_identifier(const std::string_view value) -> bool {
 // which makes the scheme case-insensitive
 inline auto oauth_is_advertised_issuer(const std::string_view value) -> bool {
   const auto uri{oauth_try_parse_uri(value)};
-  return uri.has_value() && uri->scheme().has_value() &&
-         equals_ignore_case(uri->scheme().value(), "https") &&
-         uri->host().has_value() && !uri->host().value().empty() &&
-         !uri->query().has_value() && !uri->fragment().has_value();
+  return uri.has_value() && uri->is_https() && uri->host().has_value() &&
+         !uri->host().value().empty() && !uri->query().has_value() &&
+         !uri->fragment().has_value();
 }
 
 // RFC 3986 Section 2.3: "unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"",

@@ -3,7 +3,6 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc_error.h>
-#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include <chrono>      // std::chrono::seconds
@@ -72,11 +71,8 @@ auto is_absolute_uri_without_fragment(const std::string_view value) -> bool {
 auto is_https_url_with_host(const std::string_view value) -> bool {
   try {
     const URI uri{value};
-    // RFC 3986 Section 3.1: the scheme is case-insensitive, so an uppercase or
-    // mixed-case HTTPS is still https
-    return uri.scheme().has_value() &&
-           equals_ignore_case(uri.scheme().value(), "https") &&
-           uri.host().has_value() && !uri.host().value().empty();
+    return uri.is_https() && uri.host().has_value() &&
+           !uri.host().value().empty();
   } catch (const URIParseError &) {
     return false;
   }

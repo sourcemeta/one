@@ -3,7 +3,6 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc_error.h>
-#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include <optional>    // std::optional, std::nullopt
@@ -88,12 +87,9 @@ auto is_https_url(const std::string_view value) -> bool {
     // Section 3 enumerates what an endpoint may carry as "port, path, and query
     // parameter components", so a fragment is refused as outside that list
     // rather than because it could not be dereferenced, which would be the
-    // wrong reason for the two endpoints a user agent loads. RFC 3986 Section
-    // 3.1 makes the scheme case-insensitive
-    return uri.scheme().has_value() &&
-           equals_ignore_case(uri.scheme().value(), "https") &&
-           uri.host().has_value() && !uri.host().value().empty() &&
-           !uri.fragment().has_value();
+    // wrong reason for the two endpoints a user agent loads
+    return uri.is_https() && uri.host().has_value() &&
+           !uri.host().value().empty() && !uri.fragment().has_value();
   } catch (const URIParseError &) {
     return false;
   }
