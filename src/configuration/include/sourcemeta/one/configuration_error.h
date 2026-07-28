@@ -158,6 +158,64 @@ private:
   std::filesystem::path target_;
 };
 
+// Raised when an interactive authentication policy is declared on an instance
+// that does not serve over https
+class ConfigurationInsecureAuthenticationURLError : public std::exception {
+public:
+  ConfigurationInsecureAuthenticationURLError(std::filesystem::path path,
+                                              std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An interactive authentication policy requires an https instance";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
+// Raised when an authentication policy names an issuer that this instance
+// could never complete a discovery exchange against
+class ConfigurationInvalidAuthenticationIssuerError : public std::exception {
+public:
+  ConfigurationInvalidAuthenticationIssuerError(std::filesystem::path path,
+                                                std::string name,
+                                                std::string issuer)
+      : path_{std::move(path)}, name_{std::move(name)},
+        issuer_{std::move(issuer)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy issuer must be an https URL without a "
+           "trailing slash";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+  [[nodiscard]] auto issuer() const noexcept -> const std::string & {
+    return this->issuer_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+  std::string issuer_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

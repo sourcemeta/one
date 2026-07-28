@@ -2,6 +2,7 @@
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
+#include <sourcemeta/core/ip.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
@@ -14,6 +15,33 @@
 #include <string_view> // std::string_view
 
 namespace {
+
+// A session cookie is only marked secure on an https instance, so an
+// interactive login anywhere else hands the browser a credential that travels
+// in the clear. A loopback host is the exception, since a browser already
+// treats one as a trustworthy origin and honours the attribute there
+auto serves_securely(const std::string_view url) -> bool {
+  sourcemeta::core::URI parsed{std::string{url}};
+  const auto scheme{parsed.scheme()};
+  if (!scheme.has_value()) {
+    return false;
+  }
+
+  if (scheme.value() == "https") {
+    return true;
+  }
+
+  if (scheme.value() != "http" || !parsed.host().has_value()) {
+    return false;
+  }
+
+  const auto host{parsed.host().value()};
+  return host == "localhost" ||
+         sourcemeta::core::ipv4_classify(host) ==
+             sourcemeta::core::IPAddressClass::Loopback ||
+         sourcemeta::core::ipv6_classify(host) ==
+             sourcemeta::core::IPAddressClass::Loopback;
+}
 
 auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
@@ -197,6 +225,29 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       }
 
       result.authentication.push_back(std::move(parsed));
+    }
+  }
+
+  // An issuer this instance fetches a discovery document from is compared
+  // against the one that document declares, code point for code point, so a
+  // spelling that cannot match is refused here rather than reported later as
+  // a provider that could not be reached. A policy naming its key set
+  // directly never makes that exchange, so its issuer is only an identifier
+  for (const auto &entry : result.authentication) {
+    const auto discovers{
+        entry.type == Configuration::AuthenticationEntry::Type::OIDC ||
+        (entry.type == Configuration::AuthenticationEntry::Type::JWT &&
+         !entry.jwks_uri.has_value())};
+    if (discovers && (!entry.issuer.starts_with("https://") ||
+                      entry.issuer.ends_with("/"))) {
+      throw ConfigurationInvalidAuthenticationIssuerError(
+          configuration_path, entry.name, entry.issuer);
+    }
+
+    if (entry.type == Configuration::AuthenticationEntry::Type::OIDC &&
+        !serves_securely(result.url)) {
+      throw ConfigurationInsecureAuthenticationURLError(configuration_path,
+                                                        entry.name);
     }
   }
 

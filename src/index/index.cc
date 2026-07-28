@@ -726,6 +726,17 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ConfigurationInvalidAuthenticationIssuerError
+               &error) {
+    std::print(
+        stdout, "error: {}\n  at issuer {}\n  at name {}\n  at path {}\n",
+        error.what(), error.issuer(), error.name(), error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ConfigurationInsecureAuthenticationURLError
+               &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReservedAuthenticationNameError
                &error) {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
