@@ -146,9 +146,8 @@ public:
       return;
     }
 
-    const auto metadata{this->discover(policy->issuer)};
-    if (!metadata.has_value() ||
-        !metadata.value().token_endpoint().has_value()) {
+    const auto endpoints{authentication.endpoints(policy_name)};
+    if (!endpoints.has_value() || endpoints.value().token.empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-provider-unreachable",
                  "The identity provider could not be reached", policy_name);
@@ -160,8 +159,8 @@ public:
     redirect_uri += policy_name;
 
     const auto id_token{this->exchange(
-        metadata.value().token_endpoint().value(), policy->client_id,
-        client_secret.value(), redirect_uri, code, verifier->to_string())};
+        endpoints.value().token, policy->client_id, client_secret.value(),
+        redirect_uri, code, verifier->to_string())};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-exchange-failed",
@@ -177,8 +176,7 @@ public:
       return;
     }
 
-    auto provider{
-        this->jwks_provider(std::string{metadata.value().jwks_uri()})};
+    auto provider{this->jwks_provider(endpoints.value().jwks_uri)};
     sourcemeta::core::OIDCValidationOptions options;
     options.nonce = nonce->to_string();
     const auto identity{sourcemeta::core::oidc_validate_id_token(
@@ -354,36 +352,6 @@ private:
          .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
     if (cookie.has_value()) {
       response.write_header("Set-Cookie", cookie.value());
-    }
-  }
-
-  [[nodiscard]] auto discover(const std::string_view issuer) const
-      -> std::optional<sourcemeta::core::OIDCProviderMetadata> {
-    try {
-      const auto url{sourcemeta::core::oidc_discovery_url(issuer)};
-      if (!url.has_value()) {
-        return std::nullopt;
-      }
-
-      sourcemeta::core::HTTPSystemRequest fetch{url.value()};
-      fetch.connect_timeout(std::chrono::seconds{2});
-      fetch.timeout(std::chrono::seconds{5});
-      fetch.maximum_response_size(1024UL * 1024UL);
-      fetch.follow_redirects(false);
-      const auto result{fetch.send()};
-      if (result.status.code < 200 || result.status.code >= 300) {
-        return std::nullopt;
-      }
-
-      auto parsed{sourcemeta::core::try_parse_json(result.body)};
-      if (!parsed.has_value()) {
-        return std::nullopt;
-      }
-
-      return sourcemeta::core::OIDCProviderMetadata::from(
-          std::move(parsed).value(), issuer);
-    } catch (...) {
-      return std::nullopt;
     }
   }
 

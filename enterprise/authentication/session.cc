@@ -23,6 +23,17 @@ constexpr std::string_view SESSION_VERSION{"1"};
 
 constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
 
+// A sealed value carries the instant it was minted alongside the instant it
+// stops being honoured, so a lifetime is a fact about the value rather than
+// whatever its expiry happens to claim. Nothing this system mints lives
+// anywhere near this long, and refusing more bounds what a leaked secret is
+// worth: a forged value cannot outlive this no matter what expiry it names
+constexpr std::chrono::seconds MAXIMUM_LIFETIME{std::chrono::hours{24}};
+
+// Replicas seal and open each other's values, so a clock that reads slightly
+// ahead of the one opening must not produce values nobody accepts yet
+constexpr std::chrono::seconds CLOCK_SKEW{60};
+
 // The canonical unpadded encoding of a signature has exactly one length, so
 // anything else is rejected before it is even decoded
 constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
@@ -84,10 +95,14 @@ namespace sourcemeta::one {
 auto Authentication::seal_value(const std::string_view payload,
                                 const Purpose purpose,
                                 const std::string_view secret,
+                                const std::chrono::sys_seconds issued,
                                 const std::chrono::sys_seconds expiry)
     -> std::string {
   const auto key{derive_key(secret, purpose)};
   std::string result{SESSION_VERSION};
+  result += '.';
+  result += std::to_string(std::max(std::chrono::seconds::rep{0},
+                                    issued.time_since_epoch().count()));
   result += '.';
   // A pre-epoch expiry is clamped so that every sealed value is well-formed,
   // remaining expired from the moment it is produced
@@ -118,7 +133,12 @@ auto Authentication::open_value(const std::string_view value,
     return std::nullopt;
   }
 
-  const auto expiry_end{value.find('.', version_end + 1)};
+  const auto issued_end{value.find('.', version_end + 1)};
+  if (issued_end == std::string_view::npos) {
+    return std::nullopt;
+  }
+
+  const auto expiry_end{value.find('.', issued_end + 1)};
   if (expiry_end == std::string_view::npos) {
     return std::nullopt;
   }
@@ -137,9 +157,27 @@ auto Authentication::open_value(const std::string_view value,
     return std::nullopt;
   }
 
-  const auto expiry{parse_expiry(
-      value.substr(version_end + 1, expiry_end - version_end - 1))};
+  const auto issued{parse_expiry(
+      value.substr(version_end + 1, issued_end - version_end - 1))};
+  if (!issued.has_value()) {
+    return std::nullopt;
+  }
+
+  const auto expiry{
+      parse_expiry(value.substr(issued_end + 1, expiry_end - issued_end - 1))};
   if (!expiry.has_value()) {
+    return std::nullopt;
+  }
+
+  // A value that claims to outlive anything this system mints was not minted
+  // by it, whatever signature it carries, and one that expires before it was
+  // issued names no interval at all. Bounding the interval is only worth
+  // anything alongside refusing one issued in the future, since a lifetime
+  // measured from an instant that has not arrived would otherwise start
+  // whenever its holder chose
+  if (expiry.value() < issued.value() ||
+      expiry.value() - issued.value() > MAXIMUM_LIFETIME ||
+      issued.value() > now + CLOCK_SKEW) {
     return std::nullopt;
   }
 

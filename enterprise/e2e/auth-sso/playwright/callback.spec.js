@@ -17,9 +17,12 @@ const NONCE = 'e2e-forged-nonce-value-for-callback-tests-1';
 const VERIFIER = 'e2e-forged-verifier-value-for-callback-12';
 
 function sealTransaction(payload) {
-  const expiry = Math.floor(Date.now() / 1000) + 600;
+  // A sealed value carries the instant it was minted alongside its expiry, so
+  // that the interval it claims is one the instance would have produced
+  const issued = Math.floor(Date.now() / 1000);
+  const expiry = issued + 600;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const prefix = `1.${expiry}.${encoded}`;
+  const prefix = `1.${issued}.${expiry}.${encoded}`;
   const key = createHmac('sha256', SESSION_SECRET)
     .update(TRANSACTION_LABEL)
     .digest();
