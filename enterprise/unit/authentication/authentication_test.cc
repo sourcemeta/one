@@ -1698,6 +1698,7 @@ TEST(open_session_recovers_the_payload_of_whichever_policy_minted_it) {
         .client_secret_variable = "ONE_TEST_OIDC_OPEN_B",
         .name = "google",
         .session_secret_variable = "ONE_TEST_OIDC_OPEN_SECRET"}}};
+  setenv("ONE_TEST_OIDC_OPEN_SECRET", "another-secret", 1);
   const auto path{test_path("oidc_open_session.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 

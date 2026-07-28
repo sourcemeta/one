@@ -26,6 +26,7 @@ header "Set-Cookie" count == 2
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_session[Path]" == "/v1/catalog"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+cookie "sourcemeta_one_transaction[Path]" == "/v1/catalog"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

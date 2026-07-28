@@ -211,6 +211,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:auth-identity-too-large",
+        "title": "Bad Gateway",
+        "status": 502,
+        "detail": "The identity provider returned more than a session can hold"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:auth-login-declined",
         "title": "Forbidden",
         "status": 403,

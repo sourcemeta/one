@@ -221,6 +221,20 @@ public:
                                             expiry, scope, secure);
     }
 
+    // Without the token there is very little left, so exceeding the limit here
+    // takes something extraordinary, such as a provider that identifies people
+    // by something enormous. Answering plainly beats handing over a cookie the
+    // browser discards, which would look like signing in and then not being
+    // signed in, with nothing anywhere to explain it
+    if (session_cookie.has_value() &&
+        session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
+                 "urn:sourcemeta:one:auth-identity-too-large",
+                 "The identity provider returned more than a session can hold",
+                 policy_name);
+      return;
+    }
+
     if (!session_cookie.has_value()) {
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,

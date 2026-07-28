@@ -59,6 +59,7 @@ Cache-Control: no-store
 [Asserts]
 header "Set-Cookie" count == 2
 header "Set-Cookie" contains "sourcemeta_one_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists

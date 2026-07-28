@@ -555,8 +555,9 @@ follows is signed with a secret of the instance's own, unrelated to the provider
     established it, so signing in with a second one ends the first. Separate
     browser profiles are the way to hold both at once.
 
-    Signing out ends the provider's session too, so signing in again asks who
-    you are rather than admitting whoever used the browser last. It takes the
+    Signing out ends the provider's session too, where the provider offers to
+    end it, so signing in again asks who you are rather than admitting whoever
+    used the browser last. It takes the
     session from the browser rather than revoking it, since a session is a
     sealed value this instance keeps no record of, which is what lets it stay
     stateless and scale horizontally. A copy taken beforehand therefore stays

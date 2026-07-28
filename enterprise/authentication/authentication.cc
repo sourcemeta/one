@@ -678,8 +678,6 @@ struct Authentication::Impl {
     return false;
   }
 
-  // The decoded metadata of the OIDC policy declared under the given name,
-  // scanned out of the artifact
   // The payload of a session value, whichever interactive policy minted it.
   // The policy travels inside the sealed value, so a caller learns which one
   // established the session rather than nominating one, and a value is only
@@ -733,6 +731,8 @@ struct Authentication::Impl {
     return std::nullopt;
   }
 
+  // The decoded metadata of the OIDC policy declared under the given name,
+  // scanned out of the artifact
   [[nodiscard]] auto find_interactive(const std::string_view name,
                                       OIDCPolicyMetadata &result) const
       -> bool {
