@@ -19,7 +19,7 @@ static constexpr auto PURPOSE{
 
 TEST(session_round_trips_a_payload) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
                                                                  SECRETS, NOW)};
   EXPECT_TRUE(payload.has_value());
@@ -28,7 +28,7 @@ TEST(session_round_trips_a_payload) {
 
 TEST(session_round_trips_an_empty_payload) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "", PURPOSE, "session-secret", LATER)};
+      "", PURPOSE, "session-secret", NOW, LATER)};
   const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
                                                                  SECRETS, NOW)};
   EXPECT_TRUE(payload.has_value());
@@ -37,7 +37,8 @@ TEST(session_round_trips_an_empty_payload) {
 
 TEST(session_round_trips_a_payload_containing_separators) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "left.right.{\"claims\":[1,2]}\n", PURPOSE, "session-secret", LATER)};
+      "left.right.{\"claims\":[1,2]}\n", PURPOSE, "session-secret", NOW,
+      LATER)};
   const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
                                                                  SECRETS, NOW)};
   EXPECT_TRUE(payload.has_value());
@@ -46,7 +47,8 @@ TEST(session_round_trips_a_payload_containing_separators) {
 
 TEST(session_value_is_cookie_safe) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "payload with spaces; and = signs", PURPOSE, "session-secret", LATER)};
+      "payload with spaces; and = signs", PURPOSE, "session-secret", NOW,
+      LATER)};
   for (const auto character : value) {
     const auto safe{(character >= 'a' && character <= 'z') ||
                     (character >= 'A' && character <= 'Z') ||
@@ -58,7 +60,7 @@ TEST(session_value_is_cookie_safe) {
 
 TEST(session_denies_at_and_after_the_expiry_instant) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   EXPECT_TRUE(
       sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
           .has_value());
@@ -73,7 +75,7 @@ TEST(session_denies_at_and_after_the_expiry_instant) {
 
 TEST(session_denies_a_wrong_secret) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "other-secret", LATER)};
+      "the-payload", PURPOSE, "other-secret", NOW, LATER)};
   EXPECT_FALSE(
       sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
           .has_value());
@@ -81,7 +83,7 @@ TEST(session_denies_a_wrong_secret) {
 
 TEST(session_denies_with_no_secrets) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const std::array<std::string_view, 0> no_secrets{};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(value, PURPOSE,
                                                            no_secrets, NOW)
@@ -90,7 +92,7 @@ TEST(session_denies_with_no_secrets) {
 
 TEST(session_admits_a_value_sealed_under_an_older_secret) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "old-secret", LATER)};
+      "the-payload", PURPOSE, "old-secret", NOW, LATER)};
   const std::array<std::string_view, 2> rotated{{"new-secret", "old-secret"}};
   const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
                                                                  rotated, NOW)};
@@ -104,7 +106,7 @@ TEST(session_admits_a_value_sealed_under_an_older_secret) {
 
 TEST(session_denies_a_tampered_payload) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   auto tampered{value};
   const auto payload_start{tampered.find('.', tampered.find('.') + 1) + 1};
   tampered[payload_start] = tampered[payload_start] == 'A' ? 'B' : 'A';
@@ -115,7 +117,7 @@ TEST(session_denies_a_tampered_payload) {
 
 TEST(session_denies_a_tampered_expiry) {
   const auto expired{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW)};
+      "the-payload", PURPOSE, "session-secret", NOW, NOW)};
   // Extending the lifetime of an expired value must break its signature
   const auto expiry_start{expired.find('.') + 1};
   auto tampered{expired};
@@ -127,7 +129,7 @@ TEST(session_denies_a_tampered_expiry) {
 
 TEST(session_denies_a_tampered_version) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   auto tampered{value};
   tampered[0] = '2';
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
@@ -137,9 +139,9 @@ TEST(session_denies_a_tampered_version) {
 
 TEST(session_denies_a_transplanted_signature) {
   const auto first{sourcemeta::one::Authentication::seal_value(
-      "first-payload", PURPOSE, "session-secret", LATER)};
+      "first-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto second{sourcemeta::one::Authentication::seal_value(
-      "second-payload", PURPOSE, "session-secret", LATER)};
+      "second-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto first_body{first.substr(0, first.rfind('.'))};
   const auto second_signature{second.substr(second.rfind('.') + 1)};
   const auto spliced{first_body + "." + second_signature};
@@ -150,7 +152,7 @@ TEST(session_denies_a_transplanted_signature) {
 
 TEST(session_denies_a_truncated_signature) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto truncated{value.substr(0, value.size() - 2)};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(truncated, PURPOSE,
                                                            SECRETS, NOW)
@@ -159,7 +161,7 @@ TEST(session_denies_a_truncated_signature) {
 
 TEST(session_denies_a_lengthened_signature) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto lengthened{value + "AA"};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(lengthened, PURPOSE,
                                                            SECRETS, NOW)
@@ -169,7 +171,7 @@ TEST(session_denies_a_lengthened_signature) {
 TEST(session_denies_a_value_sealed_with_a_pre_epoch_expiry) {
   const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", before_epoch)};
+      "the-payload", PURPOSE, "session-secret", NOW, before_epoch)};
   EXPECT_FALSE(
       sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
           .has_value());
@@ -180,7 +182,7 @@ TEST(session_denies_a_value_sealed_with_a_pre_epoch_expiry) {
 
 TEST(session_denies_everything_under_a_pre_epoch_clock) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
                    value, PURPOSE, SECRETS, before_epoch)
@@ -210,7 +212,7 @@ TEST(session_denies_malformed_values) {
 
 TEST(session_denies_a_malformed_expiry) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto expiry_start{value.find('.') + 1};
   const auto expiry_end{value.find('.', expiry_start)};
 
@@ -242,12 +244,69 @@ TEST(session_denies_a_malformed_expiry) {
 
 TEST(session_denies_a_signature_that_is_not_base64url) {
   const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", LATER)};
+      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
   const auto body{value.substr(0, value.rfind('.'))};
   const auto invalid{body + ".!!!not-base64url!!!"};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(invalid, PURPOSE,
                                                            SECRETS, NOW)
                    .has_value());
+}
+
+TEST(session_denies_a_lifetime_longer_than_any_this_system_mints) {
+  // Only the expiry used to be sealed, so a value could name any expiry it
+  // liked and be honoured until it. Sealing the instant of minting alongside
+  // it makes the lifetime a fact about the value, and one this long was not
+  // minted here whatever signature it carries
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW,
+      NOW + std::chrono::hours{25})};
+  EXPECT_FALSE(
+      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
+          .has_value());
+}
+
+TEST(session_admits_a_lifetime_at_the_bound) {
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW,
+      NOW + std::chrono::hours{24})};
+  const auto opened{sourcemeta::one::Authentication::open_value(sealed, PURPOSE,
+                                                                SECRETS, NOW)};
+  EXPECT_TRUE(opened.has_value());
+  EXPECT_EQ(opened.value(), "the-payload");
+}
+
+TEST(session_denies_a_value_issued_in_the_future) {
+  // A bounded lifetime measured from an instant that has not arrived would
+  // start whenever its holder chose, so the bound only means anything
+  // alongside this
+  const auto ahead{NOW + std::chrono::hours{12}};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", ahead,
+      ahead + std::chrono::hours{1})};
+  EXPECT_FALSE(
+      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
+          .has_value());
+}
+
+TEST(session_admits_a_value_issued_within_the_clock_skew) {
+  // Replicas seal for one another, so one reading slightly ahead must not mint
+  // values the rest refuse
+  const auto ahead{NOW + std::chrono::seconds{30}};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", ahead,
+      ahead + std::chrono::hours{1})};
+  EXPECT_TRUE(
+      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
+          .has_value());
+}
+
+TEST(session_denies_an_expiry_before_the_instant_it_was_issued) {
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      "the-payload", PURPOSE, "session-secret", NOW,
+      NOW - std::chrono::seconds{1})};
+  EXPECT_FALSE(
+      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
+          .has_value());
 }
 
 TEST(session_denies_a_value_sealed_for_another_purpose) {
@@ -257,7 +316,7 @@ TEST(session_denies_a_value_sealed_for_another_purpose) {
   // inspects what the payload claims to be
   const auto transaction{sourcemeta::one::Authentication::seal_value(
       "the-payload", sourcemeta::one::Authentication::Purpose::Transaction,
-      "session-secret", LATER)};
+      "session-secret", NOW, LATER)};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
                    transaction,
                    sourcemeta::one::Authentication::Purpose::Session, SECRETS,
@@ -268,7 +327,7 @@ TEST(session_denies_a_value_sealed_for_another_purpose) {
 TEST(transaction_denies_a_value_sealed_as_a_session) {
   const auto session{sourcemeta::one::Authentication::seal_value(
       "the-payload", sourcemeta::one::Authentication::Purpose::Session,
-      "session-secret", LATER)};
+      "session-secret", NOW, LATER)};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
                    session,
                    sourcemeta::one::Authentication::Purpose::Transaction,
@@ -280,7 +339,7 @@ TEST(each_purpose_opens_the_value_it_sealed) {
   const auto transaction{sourcemeta::one::Authentication::seal_value(
       "transaction-payload",
       sourcemeta::one::Authentication::Purpose::Transaction, "session-secret",
-      LATER)};
+      NOW, LATER)};
   const auto opened{sourcemeta::one::Authentication::open_value(
       transaction, sourcemeta::one::Authentication::Purpose::Transaction,
       SECRETS, NOW)};
@@ -291,9 +350,9 @@ TEST(each_purpose_opens_the_value_it_sealed) {
 TEST(the_two_purposes_seal_one_payload_differently) {
   const auto session{sourcemeta::one::Authentication::seal_value(
       "the-payload", sourcemeta::one::Authentication::Purpose::Session,
-      "session-secret", LATER)};
+      "session-secret", NOW, LATER)};
   const auto transaction{sourcemeta::one::Authentication::seal_value(
       "the-payload", sourcemeta::one::Authentication::Purpose::Transaction,
-      "session-secret", LATER)};
+      "session-secret", NOW, LATER)};
   EXPECT_FALSE(session == transaction);
 }

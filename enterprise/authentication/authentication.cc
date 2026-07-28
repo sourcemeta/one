@@ -5,6 +5,7 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc.h>
 
 #include "authentication_format.h"
@@ -757,7 +758,9 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return Authentication::seal_value(payload, purpose, secrets.front(),
+    const auto issued{std::chrono::time_point_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now())};
+    return Authentication::seal_value(payload, purpose, secrets.front(), issued,
                                       expiry);
   }
 
@@ -806,6 +809,87 @@ struct Authentication::Impl {
     }
 
     return this->session_open(decoded.session_secret_variable, purpose, value);
+  }
+
+  // The provider's description of itself is fetched once and refreshed on the
+  // freshness its own response advertises, rather than on every login. The
+  // caching resolver hands back a snapshot of what it last read, so the OpenID
+  // Connect layer is applied again only when that snapshot changes rather than
+  // once per request
+  [[nodiscard]] auto endpoints(const std::string_view policy) const
+      -> std::optional<Authentication::ProviderEndpoints> {
+    OIDCPolicyMetadata decoded;
+    if (!this->find_interactive(policy, decoded) || !this->fetcher_) {
+      return std::nullopt;
+    }
+
+    std::string issuer{decoded.issuer};
+    sourcemeta::core::OAuthMetadataProvider *provider{nullptr};
+    {
+      const std::scoped_lock lock{this->metadata_mutex_};
+      const auto existing{this->metadata_providers_.find(issuer)};
+      if (existing == this->metadata_providers_.cend()) {
+        // The two resolvers describe a retrieval with their own result type,
+        // so the one transport this instance was given is adapted rather than
+        // a second one being introduced
+        auto transport{
+            [fetcher = this->fetcher_](const std::string_view url)
+                -> std::optional<
+                    sourcemeta::core::OAuthMetadataProvider::FetchResult> {
+              auto result{fetcher(url)};
+              if (!result.has_value()) {
+                return std::nullopt;
+              }
+
+              const auto max_age{result.value().max_age};
+              return sourcemeta::core::OAuthMetadataProvider::FetchResult{
+                  .body = std::move(result).value().body, .max_age = max_age};
+            }};
+        auto fresh{std::make_unique<sourcemeta::core::OAuthMetadataProvider>(
+            issuer,
+            sourcemeta::core::OAuthWellKnownKind::OpenIDConfigurationAppended,
+            std::move(transport))};
+        provider = fresh.get();
+        this->metadata_providers_.emplace(issuer, std::move(fresh));
+      } else {
+        provider = existing->second.get();
+      }
+    }
+
+    const auto server{provider->metadata()};
+    if (!server) {
+      return std::nullopt;
+    }
+
+    const std::scoped_lock lock{this->metadata_mutex_};
+    auto &cached{this->endpoints_[issuer]};
+    if (cached.source != server) {
+      auto document{sourcemeta::core::OIDCProviderMetadata::from(
+          sourcemeta::core::OAuthServerMetadata{*server})};
+      if (!document.has_value()) {
+        return std::nullopt;
+      }
+
+      Authentication::ProviderEndpoints resolved;
+      if (document.value().authorization_endpoint().has_value()) {
+        resolved.authorization =
+            document.value().authorization_endpoint().value();
+      }
+
+      if (document.value().token_endpoint().has_value()) {
+        resolved.token = document.value().token_endpoint().value();
+      }
+
+      resolved.jwks_uri = document.value().jwks_uri();
+      if (document.value().end_session_endpoint().has_value()) {
+        resolved.end_session = document.value().end_session_endpoint().value();
+      }
+
+      cached.source = server;
+      cached.resolved = std::move(resolved);
+    }
+
+    return cached.resolved;
   }
 
   [[nodiscard]] auto provider_for(const std::string_view issuer,
@@ -965,6 +1049,17 @@ struct Authentication::Impl {
   mutable std::map<std::pair<std::string, std::string>,
                    std::unique_ptr<sourcemeta::core::JWKSProvider>>
       jwks_providers_;
+
+  struct ResolvedEndpoints {
+    std::shared_ptr<const sourcemeta::core::OAuthServerMetadata> source;
+    Authentication::ProviderEndpoints resolved;
+  };
+
+  mutable std::mutex metadata_mutex_;
+  mutable std::map<std::string,
+                   std::unique_ptr<sourcemeta::core::OAuthMetadataProvider>>
+      metadata_providers_;
+  mutable std::map<std::string, ResolvedEndpoints> endpoints_;
 };
 
 Authentication::Authentication(const std::filesystem::path &path,
@@ -988,6 +1083,11 @@ auto Authentication::interactive(const std::string_view name) const
 auto Authentication::client_secret(const std::string_view policy) const
     -> std::optional<std::string> {
   return this->impl_->client_secret(policy);
+}
+
+auto Authentication::endpoints(const std::string_view policy) const
+    -> std::optional<Authentication::ProviderEndpoints> {
+  return this->impl_->endpoints(policy);
 }
 
 auto Authentication::seal(const std::string_view policy, const Purpose purpose,

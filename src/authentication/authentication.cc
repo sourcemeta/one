@@ -68,6 +68,11 @@ auto Authentication::client_secret(const std::string_view) const
   return std::nullopt;
 }
 
+auto Authentication::endpoints(const std::string_view) const
+    -> std::optional<Authentication::ProviderEndpoints> {
+  return std::nullopt;
+}
+
 auto Authentication::seal(const std::string_view, const Purpose,
                           const std::string_view,
                           const std::chrono::sys_seconds) const
@@ -91,6 +96,7 @@ auto Authentication::reference_permitted(const Authentication::Path &,
 // feature, so this edition never produces a sealed value and never accepts one
 auto Authentication::seal_value(const std::string_view, const Purpose,
                                 const std::string_view,
+                                const std::chrono::sys_seconds,
                                 const std::chrono::sys_seconds) -> std::string {
   return {};
 }

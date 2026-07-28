@@ -200,6 +200,24 @@ public:
   [[nodiscard]] auto interactive(std::string_view name) const
       -> std::optional<InteractivePolicy>;
 
+  // Where a provider says its endpoints are. The values are copies, so they
+  // stay usable across a refresh of what the provider last said
+  struct ProviderEndpoints {
+    std::string authorization{};
+    std::string token{};
+    std::string jwks_uri{};
+    // Absent from a provider that does not offer to end its own session
+    std::string end_session{};
+  };
+
+  // What the named interactive policy's provider says about itself, retrieved
+  // once and refreshed on the freshness its own response advertises rather
+  // than on every request. Nothing is returned when the policy is unknown,
+  // the provider cannot be reached, or what it returned is not a description
+  // this instance can act on
+  [[nodiscard]] auto endpoints(std::string_view policy) const
+      -> std::optional<ProviderEndpoints>;
+
   // The client secret the named interactive policy authenticates to its
   // provider with, if the policy is known and its secret is configured in the
   // environment. Every secret this system holds is read here rather than by
@@ -232,9 +250,9 @@ public:
   // purpose, producing a value that is safe to transport as a cookie. Only a
   // holder of the secret can produce or alter such a value, though anyone can
   // read its contents
-  [[nodiscard]] static auto seal_value(std::string_view payload,
-                                       Purpose purpose, std::string_view secret,
-                                       std::chrono::sys_seconds expiry)
+  [[nodiscard]] static auto
+  seal_value(std::string_view payload, Purpose purpose, std::string_view secret,
+             std::chrono::sys_seconds issued, std::chrono::sys_seconds expiry)
       -> std::string;
 
   // Recover the payload of a sealed value, returning nothing for a value that

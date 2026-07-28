@@ -111,9 +111,8 @@ public:
       return;
     }
 
-    const auto authorization_endpoint{
-        this->discover_authorization_endpoint(policy->issuer)};
-    if (!authorization_endpoint.has_value()) {
+    const auto endpoints{authentication.endpoints(policy_name)};
+    if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
           "urn:sourcemeta:one:auth-provider-unreachable",
@@ -191,7 +190,7 @@ public:
 
     const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
     const auto url{sourcemeta::core::oidc_authorization_url(
-        authorization_endpoint.value(), policy->client_id, redirect_uri, state,
+        endpoints.value().authorization, policy->client_id, redirect_uri, state,
         std::string_view{challenge.data(), challenge.size()}, nonce)};
     if (!url.has_value()) {
       sourcemeta::one::json_error(
@@ -246,43 +245,6 @@ public:
   }
 
 private:
-  [[nodiscard]] auto
-  discover_authorization_endpoint(const std::string_view issuer) const
-      -> std::optional<std::string> {
-    try {
-      const auto url{sourcemeta::core::oidc_discovery_url(issuer)};
-      if (!url.has_value()) {
-        return std::nullopt;
-      }
-
-      sourcemeta::core::HTTPSystemRequest fetch{url.value()};
-      fetch.connect_timeout(std::chrono::seconds{2});
-      fetch.timeout(std::chrono::seconds{5});
-      fetch.maximum_response_size(1024UL * 1024UL);
-      fetch.follow_redirects(false);
-      const auto result{fetch.send()};
-      if (result.status.code < 200 || result.status.code >= 300) {
-        return std::nullopt;
-      }
-
-      auto parsed{sourcemeta::core::try_parse_json(result.body)};
-      if (!parsed.has_value()) {
-        return std::nullopt;
-      }
-
-      const auto document{sourcemeta::core::OIDCProviderMetadata::from(
-          std::move(parsed).value(), issuer)};
-      if (!document.has_value() ||
-          !document.value().authorization_endpoint().has_value()) {
-        return std::nullopt;
-      }
-
-      return std::string{document.value().authorization_endpoint().value()};
-    } catch (...) {
-      return std::nullopt;
-    }
-  }
-
   std::string_view error_schema_;
 };
 
