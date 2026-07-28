@@ -77,10 +77,10 @@ header "Location" contains "code_challenge_method=S256"
 header "Location" contains "state="
 header "Location" contains "nonce="
 header "Location" contains "code_challenge="
-cookie "sourcemeta_one_transaction_encrypted" exists
-cookie "sourcemeta_one_transaction_encrypted[HttpOnly]" exists
-cookie "sourcemeta_one_transaction_encrypted[SameSite]" == "Lax"
-cookie "sourcemeta_one_transaction_encrypted[Max-Age]" == 600
+cookie "sourcemeta_one_transaction" exists
+cookie "sourcemeta_one_transaction[HttpOnly]" exists
+cookie "sourcemeta_one_transaction[SameSite]" == "Lax"
+cookie "sourcemeta_one_transaction[Max-Age]" == 600
 
 # Neither provider gates anything the other does not, so the collection they
 # both govern stays denied to a caller carrying nothing

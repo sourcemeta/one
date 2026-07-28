@@ -11,7 +11,7 @@ Cache-Control: no-store
 [Captures]
 authorize_url: header "Location"
 [Asserts]
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
 
 GET {{authorize_url}}
 HTTP 200
@@ -31,7 +31,7 @@ HTTP 303
 Location: /private
 Cache-Control: no-store
 [Asserts]
-cookie "sourcemeta_one_session_keycloak" exists
+cookie "sourcemeta_one_session" exists
 
 # Backslash-escaped, which a browser resolves to a protocol-relative URL. The
 # provider now recognises the session, so the authorize returns straight to the

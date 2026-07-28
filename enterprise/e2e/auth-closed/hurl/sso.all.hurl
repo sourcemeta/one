@@ -46,7 +46,7 @@ header "Location" contains "scope=openid"
 header "Location" contains "code_challenge_method=S256"
 header "Location" contains "state="
 header "Location" contains "nonce="
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
 
 # The provider renders its login form
 GET {{authorize_url}}
@@ -74,11 +74,11 @@ HTTP 303
 Location: /
 Cache-Control: no-store
 [Asserts]
-cookie "sourcemeta_one_session_keycloak" exists
-cookie "sourcemeta_one_session_keycloak[Max-Age]" == 3600
-cookie "sourcemeta_one_session_keycloak[HttpOnly]" exists
-cookie "sourcemeta_one_session_keycloak[SameSite]" == "Lax"
-cookie "sourcemeta_one_transaction_keycloak[Max-Age]" == 0
+cookie "sourcemeta_one_session" exists
+cookie "sourcemeta_one_session[Max-Age]" == 3600
+cookie "sourcemeta_one_session[HttpOnly]" exists
+cookie "sourcemeta_one_session[SameSite]" == "Lax"
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
 
 # The human session now opens the locked catalog, no machine credential in sight
 GET {{base}}/catalog/example.json
@@ -116,10 +116,12 @@ header "ETag" exists
 # browser reaches it and its session is cleared
 GET {{base}}/self/v1/auth/logout
 HTTP 303
-Location: /
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" startsWith "sourcemeta_one_session_keycloak="
+header "Set-Cookie" count == 2
+cookie "sourcemeta_one_session[Max-Age]" == 0
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
+header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
 # With the session gone the catalog is locked to the browser again, the denial
 # byte-identical to the anonymous one at the top

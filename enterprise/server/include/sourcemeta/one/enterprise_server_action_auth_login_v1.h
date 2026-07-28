@@ -203,16 +203,10 @@ public:
       return;
     }
 
-    std::string cookie_name;
-    cookie_name.reserve(
-        sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX.size() +
-        policy_name.size());
-    cookie_name += sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX;
-    cookie_name += policy_name;
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = cookie_name,
+        {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
          .value = sealed.value(),
          .path = scope,
          .max_age = TRANSACTION_LIFETIME,

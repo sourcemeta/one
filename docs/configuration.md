@@ -542,6 +542,27 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
 | `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
 
+!!! tip
+
+    Two URLs must be registered with the provider, both derived from the
+    instance's `url` and the policy's name: the redirect URI
+    `{url}/self/v1/auth/callback/{name}`, and the post-logout redirect URI
+    `{url}`.
+
+!!! note
+
+    A browser holds one session per instance, whichever interactive policy
+    established it, so signing in with a second one ends the first. Separate
+    browser profiles are the way to hold both at once.
+
+    Signing out ends the provider's session too, where the provider offers to
+    end it, so signing in again asks who you are rather than admitting whoever
+    used the browser last. It takes the
+    session from the browser rather than revoking it, since a session is a
+    sealed value this instance keeps no record of, which is what lets it stay
+    stateless and scale horizontally. A copy taken beforehand therefore stays
+    usable until it expires, which is why sessions are short-lived.
+
 !!! warning
 
     The instance's own `url` must be an origin a browser treats as trustworthy,

@@ -47,7 +47,7 @@ Cache-Control: no-store
 [Asserts]
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/auth?"
 header "Location" contains "client_id=registry"
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
 header "WWW-Authenticate" not exists
 
 # Logout is not exempt: a session that could log out would itself pass the gate,

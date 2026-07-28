@@ -41,18 +41,18 @@ GET {{base}}/self/v1/auth/login/keycloak
 HTTP 303
 Cache-Control: no-store
 [Captures]
-transaction: cookie "sourcemeta_one_transaction_keycloak"
+transaction: cookie "sourcemeta_one_transaction"
 [Asserts]
-header "Set-Cookie" startsWith "sourcemeta_one_transaction_keycloak="
-cookie "sourcemeta_one_transaction_keycloak" exists
-cookie "sourcemeta_one_transaction_keycloak[HttpOnly]" exists
-cookie "sourcemeta_one_transaction_keycloak[SameSite]" == "Lax"
-cookie "sourcemeta_one_transaction_keycloak[Max-Age]" == 600
+header "Set-Cookie" startsWith "sourcemeta_one_transaction="
+cookie "sourcemeta_one_transaction" exists
+cookie "sourcemeta_one_transaction[HttpOnly]" exists
+cookie "sourcemeta_one_transaction[SameSite]" == "Lax"
+cookie "sourcemeta_one_transaction[Max-Age]" == 600
 
 # Presented as a session it opens nothing, and the denial is the one an
 # empty-handed caller gets, so it discloses nothing about why it failed either
 GET {{base}}/private/secret.json
-Cookie: sourcemeta_one_session_keycloak={{transaction}}
+Cookie: sourcemeta_one_session={{transaction}}
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -80,7 +80,7 @@ jsonpath "$.valid" == true
 
 # Nor does it open any other path the same policy governs
 GET {{base}}/archive/record.json
-Cookie: sourcemeta_one_session_keycloak={{transaction}}
+Cookie: sourcemeta_one_session={{transaction}}
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -108,7 +108,7 @@ jsonpath "$.valid" == true
 
 # Nor the gated directory listing
 GET {{base}}/private/
-Cookie: sourcemeta_one_session_keycloak={{transaction}}
+Cookie: sourcemeta_one_session={{transaction}}
 Accept: application/json
 HTTP 401
 Cache-Control: no-store
@@ -140,7 +140,7 @@ jsonpath "$.valid" == true
 # a matching state the callback refuses it, which is the CSRF binding rather
 # than the purpose check
 GET {{base}}/self/v1/auth/callback/keycloak?state=not-the-sealed-state&code=x
-Cookie: sourcemeta_one_transaction_keycloak={{transaction}}
+Cookie: sourcemeta_one_transaction={{transaction}}
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -171,7 +171,7 @@ GET {{base}}/self/v1/auth/login/keycloak
 HTTP 303
 [Captures]
 authorize_url: header "Location"
-second_transaction: cookie "sourcemeta_one_transaction_keycloak"
+second_transaction: cookie "sourcemeta_one_transaction"
 
 GET {{authorize_url}}
 HTTP 200
@@ -187,18 +187,18 @@ HTTP 302
 callback_url: header "Location"
 
 GET {{callback_url}}
-Cookie: sourcemeta_one_transaction_keycloak={{second_transaction}}
+Cookie: sourcemeta_one_transaction={{second_transaction}}
 HTTP 303
 Location: /private
 Cache-Control: no-store
 [Captures]
-session: cookie "sourcemeta_one_session_keycloak"
+session: cookie "sourcemeta_one_session"
 [Asserts]
-cookie "sourcemeta_one_session_keycloak" exists
+cookie "sourcemeta_one_session" exists
 
 # The session it produced opens the gated schema, so the flow works
 GET {{base}}/private/secret.json
-Cookie: sourcemeta_one_session_keycloak={{session}}
+Cookie: sourcemeta_one_session={{session}}
 HTTP 200
 Content-Type: application/schema+json
 Cache-Control: private, max-age=0, must-revalidate
@@ -216,7 +216,7 @@ header "ETag" exists
 # But presented as a transaction it opens nothing, so the callback refuses it
 # exactly as it refuses a caller carrying no transaction at all
 GET {{base}}/self/v1/auth/callback/keycloak?state=whatever&code=x
-Cookie: sourcemeta_one_transaction_keycloak={{session}}
+Cookie: sourcemeta_one_transaction={{session}}
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

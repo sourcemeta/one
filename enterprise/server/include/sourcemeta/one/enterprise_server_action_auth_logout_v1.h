@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/oidc.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -14,8 +15,11 @@
 
 #include <chrono>      // std::chrono::seconds
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 class ActionAuthLogout_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -65,41 +69,27 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
 
-    // Logout is local: expire every session and login-transaction cookie the
-    // request carries, and there is no server-side state to destroy. The
-    // attributes must mirror the ones the cookies are minted under, scoped to
-    // the instance rather than the whole host, so the browser replaces the
-    // cookies rather than shadowing them
     const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
-    sourcemeta::core::http_parse_cookies(
-        request.header("cookie"),
-        [&response, secure, scope](const std::string_view name,
-                                   const std::string_view) -> void {
-          if (!name.starts_with(
-                  sourcemeta::one::Authentication::SESSION_COOKIE_PREFIX) &&
-              !name.starts_with(
-                  sourcemeta::one::Authentication::TRANSACTION_COOKIE_PREFIX)) {
-            return;
-          }
 
-          // A name that does not serialise back was never minted here, so it
-          // is left alone
-          const auto cookie{sourcemeta::core::http_serialize_cookie(
-              {.name = name,
-               .value = "",
-               .path = scope,
-               .max_age = std::chrono::seconds{0},
-               .http_only = true,
-               .secure = secure,
-               .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-          if (cookie.has_value()) {
-            response.write_header("Set-Cookie", cookie.value());
-          }
-        });
+    // Both cookies are expired whether or not the request carried them. A
+    // cookie is withheld on plenty of navigations while the browser still
+    // holds it, so clearing only what arrived leaves a session behind and
+    // tells the person they are signed out. This runs before anything that
+    // could fail, so no outcome below can end with the session surviving
+    this->expire(response, sourcemeta::one::Authentication::SESSION_COOKIE,
+                 scope, secure);
+    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+                 scope, secure);
 
-    response.write_header("Location", scope);
+    // Ending the session here leaves the provider's own untouched, so signing
+    // in again would not ask who you are. Where the session names a policy
+    // whose provider offers to end it, the browser is sent there to finish the
+    // job, carrying the identity token as the proof of whose session it is
+    const auto &authentication{this->dispatcher().authentication()};
+    const auto elsewhere{this->provider_logout(request, authentication)};
+    response.write_header("Location", elsewhere.value_or(std::string{scope}));
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
@@ -112,6 +102,76 @@ public:
   }
 
 private:
+  auto expire(sourcemeta::one::HTTPResponse &response,
+              const std::string_view name, const std::string_view scope,
+              const bool secure) const -> void {
+    // The attributes mirror the ones the cookie is minted under, scoped to the
+    // instance rather than the whole host, so the browser replaces the cookie
+    // rather than keeping it alongside a second one of the same name
+    const auto cookie{sourcemeta::core::http_serialize_cookie(
+        {.name = name,
+         .value = "",
+         .path = scope,
+         .max_age = std::chrono::seconds{0},
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (cookie.has_value()) {
+      response.write_header("Set-Cookie", cookie.value());
+    }
+  }
+
+  // Where to send the browser so the provider ends its own session, if the
+  // request carried a session this instance minted and the provider offers to
+  // end it. Every step that cannot be completed simply yields nothing, since
+  // the local session is already gone by the time this runs
+  [[nodiscard]] auto
+  provider_logout(sourcemeta::one::HTTPRequest &request,
+                  const sourcemeta::one::Authentication &authentication) const
+      -> std::optional<std::string> {
+    std::vector<std::string_view> candidates;
+    sourcemeta::core::http_cookie_values(
+        request.header("cookie"),
+        sourcemeta::one::Authentication::SESSION_COOKIE, candidates);
+    for (const auto sealed : candidates) {
+      const auto payload{authentication.open_session(sealed)};
+      if (!payload.has_value()) {
+        continue;
+      }
+
+      const auto document{sourcemeta::core::try_parse_json(payload.value())};
+      if (!document.has_value() || !document.value().is_object()) {
+        continue;
+      }
+
+      const auto *policy{document.value().try_at("policy")};
+      const auto *token{document.value().try_at("id_token")};
+      if (policy == nullptr || !policy->is_string()) {
+        continue;
+      }
+
+      const auto endpoints{authentication.endpoints(policy->to_string())};
+      if (!endpoints.has_value() || endpoints.value().end_session.empty()) {
+        continue;
+      }
+
+      sourcemeta::core::OIDCLogoutRequest logout;
+      if (token != nullptr && token->is_string()) {
+        logout.id_token_hint = token->to_string();
+      }
+
+      // The instance URL already carries whatever base path it is served
+      // under, so this is where the provider sends the browser back to
+      logout.post_logout_redirect_uri = this->server_uri();
+      std::string url;
+      sourcemeta::core::oidc_build_logout_url(endpoints.value().end_session,
+                                              logout, url);
+      return url;
+    }
+
+    return std::nullopt;
+  }
+
   std::string_view error_schema_;
 };
 

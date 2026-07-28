@@ -35,7 +35,7 @@ async function callback(request, transaction) {
     `/self/v1/auth/callback/keycloak?code=a-code-nobody-issued&state=${STATE}`,
     {
       headers: {
-        Cookie: `sourcemeta_one_transaction_keycloak=${sealTransaction(transaction)}`
+        Cookie: `sourcemeta_one_transaction=${sealTransaction(transaction)}`
       }
     }
   );

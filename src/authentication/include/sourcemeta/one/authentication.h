@@ -95,16 +95,16 @@ public:
   // secret, so one kind of value cannot be presented as the other
   enum class Purpose : std::uint8_t { Session = 0, Transaction = 1 };
 
-  // A session cookie is named per policy under this common prefix, so a
-  // browser holds one session per interactive policy and any holder can be
-  // recognised and cleared without knowing which policies exist
-  static constexpr std::string_view SESSION_COOKIE_PREFIX{
-      "sourcemeta_one_session_"};
+  // A browser holds one session, whichever policy established it, and the
+  // policy travels inside the sealed value rather than in the name. One name
+  // means logging out has a single thing to end, and means a caller cannot
+  // choose which policy a value is read as by choosing what to call it
+  static constexpr std::string_view SESSION_COOKIE{"sourcemeta_one_session"};
 
-  // A login transaction cookie follows the same shape for the short window
-  // between the login redirect and the callback
-  static constexpr std::string_view TRANSACTION_COOKIE_PREFIX{
-      "sourcemeta_one_transaction_"};
+  // A login transaction follows the same shape for the short window between
+  // the login redirect and the callback
+  static constexpr std::string_view TRANSACTION_COOKIE{
+      "sourcemeta_one_transaction"};
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
@@ -225,6 +225,13 @@ public:
   // environment. Every secret this system holds is read here rather than by
   // whoever needs it, so no caller is in a position to read one differently
   [[nodiscard]] auto client_secret(std::string_view policy) const
+      -> std::optional<std::string>;
+
+  // Recover the payload of a session value, whichever interactive policy
+  // minted it, returning nothing when no policy accepts it. A value is only
+  // accepted under the policy its payload names, so a caller learns which
+  // policy established the session rather than choosing one to try
+  [[nodiscard]] auto open_session(std::string_view value) const
       -> std::optional<std::string>;
 
   // Sealing is an edition-dependent capability. Where an instance does not
