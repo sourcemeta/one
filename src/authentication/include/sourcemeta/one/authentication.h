@@ -117,6 +117,8 @@ public:
     std::string_view audience{};
     std::string_view jwks_uri{};
     std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
+    // The `typ` header a presented token must carry, empty to accept any
+    std::string_view token_type{};
     std::string_view client_id{};
     // The environment variable name holding the client secret
     std::string_view client_secret_variable{};

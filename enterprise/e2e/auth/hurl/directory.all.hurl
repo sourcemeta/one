@@ -16,9 +16,9 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 72
+jsonpath "$.schemas" == 73
 jsonpath "$.policies" count == 0
-jsonpath "$.entries" count == 11
+jsonpath "$.entries" count == 12
 jsonpath "$.entries[0].name" == "console"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/console/"
@@ -97,6 +97,13 @@ jsonpath "$.entries[10].policies" count == 1
 jsonpath "$.entries[10].policies[0].name" == "telemetry"
 jsonpath "$.entries[10].policies[0].title" == "telemetry"
 jsonpath "$.entries[10].policies[0].type" == "jwt"
+jsonpath "$.entries[11].name" == "typed"
+jsonpath "$.entries[11].type" == "directory"
+jsonpath "$.entries[11].path" == "/typed/"
+jsonpath "$.entries[11].policies" count == 1
+jsonpath "$.entries[11].policies[0].name" == "typed"
+jsonpath "$.entries[11].policies[0].title" == "typed"
+jsonpath "$.entries[11].policies[0].type" == "jwt"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -300,7 +307,7 @@ Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 8
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 9
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'console']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1

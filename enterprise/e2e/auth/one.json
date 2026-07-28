@@ -69,6 +69,15 @@
     },
     {
       "type": "jwt",
+      "name": "typed",
+      "paths": [ "/typed" ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "audience": "https://typed.example.com",
+      "tokenType": "at+jwt",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
       "name": "strict",
       "paths": [ "/strict" ],
       "issuer": "https://keycloak:8443/realms/main",
@@ -106,6 +115,7 @@
     "machine": { "path": "./schemas/machine" },
     "telemetry": { "path": "./schemas/telemetry" },
     "strict": { "path": "./schemas/strict" },
+    "typed": { "path": "./schemas/typed" },
     "console": { "path": "./schemas/console" }
   }
 }

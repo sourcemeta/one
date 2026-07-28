@@ -310,6 +310,7 @@ struct JWTPolicy {
   std::string_view issuer;
   std::string_view audience;
   std::string_view jwks_uri;
+  std::string_view token_type;
   std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
 };
 
@@ -318,7 +319,8 @@ auto decode_jwt_metadata(const std::span<const std::byte> metadata,
   std::size_t cursor{0};
   if (!read_string(metadata, cursor, result.issuer) ||
       !read_string(metadata, cursor, result.audience) ||
-      !read_string(metadata, cursor, result.jwks_uri)) {
+      !read_string(metadata, cursor, result.jwks_uri) ||
+      !read_string(metadata, cursor, result.token_type)) {
     return false;
   }
 
@@ -359,15 +361,20 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
   std::string_view issuer;
   std::string_view audience;
   std::string_view jwks_uri;
+  std::string_view token_type;
   if (!read_string(metadata, cursor, issuer) ||
       !read_string(metadata, cursor, audience) ||
-      !read_string(metadata, cursor, jwks_uri)) {
+      !read_string(metadata, cursor, jwks_uri) ||
+      !read_string(metadata, cursor, token_type)) {
     return;
   }
 
   keys.emplace(issuer);
   keys.emplace(audience);
   keys.emplace(jwks_uri);
+  // A policy that requires a token type admits a narrower set than one that
+  // does not, so two policies alike but for it are not the same audience
+  keys.emplace(token_type);
 
   std::uint32_t count{0};
   if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
@@ -599,14 +606,18 @@ struct Authentication::Impl {
       return false;
     }
 
-    // The token type is not pinned, so a policy whose audience coincides with
-    // an interactive policy's client identifier on the same issuer admits an
-    // identity token as an API credential. Pinning it is a configuration
-    // question rather than a default, since a provider that does not stamp the
-    // type would otherwise stop working on upgrade
+    // RFC 9068 Section 4 has a resource server refuse a token whose `typ` is
+    // not the access token profile's, which is what keeps an identity token
+    // from being spent as an API credential. A provider that does not stamp
+    // the header at all cannot be told apart that way, so the policy says
+    // which type it requires rather than one being assumed
+    const auto expected_type{
+        policy.token_type.empty()
+            ? std::optional<std::string_view>{std::nullopt}
+            : std::optional<std::string_view>{policy.token_type}};
     const auto error{provider->verify(token, policy.algorithms, policy.issuer,
                                       policy.audience, std::nullopt,
-                                      std::nullopt)};
+                                      expected_type)};
     return !error.has_value();
   }
 

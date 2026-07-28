@@ -18,7 +18,9 @@
         "http://localhost:8000/self/v1/auth/callback/keycloak"
       ],
       "fullScopeAllowed": false,
-      "defaultClientScopes": [ "basic" ],
+      "defaultClientScopes": [
+        "basic"
+      ],
       "optionalClientScopes": [],
       "attributes": {
         "pkce.code.challenge.method": "S256"
@@ -36,7 +38,9 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": false,
-      "defaultClientScopes": [ "basic" ],
+      "defaultClientScopes": [
+        "basic"
+      ],
       "optionalClientScopes": [],
       "protocolMappers": [
         {
@@ -64,7 +68,9 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": false,
-      "defaultClientScopes": [ "basic" ],
+      "defaultClientScopes": [
+        "basic"
+      ],
       "optionalClientScopes": [],
       "protocolMappers": [
         {
@@ -92,7 +98,9 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": false,
-      "defaultClientScopes": [ "basic" ],
+      "defaultClientScopes": [
+        "basic"
+      ],
       "optionalClientScopes": [],
       "protocolMappers": [
         {
@@ -102,6 +110,69 @@
           "consentRequired": false,
           "config": {
             "included.custom.audience": "https://other.example.com",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "ci-typed",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ci-typed-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "basic"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "https://typed.example.com",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "attributes": {
+        "access.token.header.type.rfc9068": "true"
+      }
+    },
+    {
+      "clientId": "ci-untyped",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ci-untyped-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "basic"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "https://typed.example.com",
             "access.token.claim": "true",
             "id.token.claim": "false"
           }
