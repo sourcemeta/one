@@ -1094,7 +1094,8 @@ struct GENERATE_AUTHENTICATION {
              .jwks_uri = entry.jwks_uri.has_value()
                              ? std::string_view{entry.jwks_uri.value()}
                              : std::string_view{},
-             .algorithms = entry.algorithms});
+             .algorithms = entry.algorithms,
+             .token_type = entry.token_type});
       } else if (entry.type == Entry::Type::OIDC) {
         policies.push_back(
             {.paths = policy_paths.back(),

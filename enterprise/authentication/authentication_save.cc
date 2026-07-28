@@ -98,12 +98,13 @@ auto encode_oidc_metadata(const std::string_view issuer,
 auto encode_jwt_metadata(
     const std::string_view issuer, const std::string_view audience,
     const std::string_view jwks_uri,
-    const std::span<const sourcemeta::core::JWSAlgorithm> algorithms)
-    -> std::vector<std::byte> {
+    const std::span<const sourcemeta::core::JWSAlgorithm> algorithms,
+    const std::string_view token_type) -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
   append_string(result, audience);
   append_string(result, jwks_uri);
+  append_string(result, token_type);
   append_u32(result, static_cast<std::uint32_t>(algorithms.size()));
   for (const auto algorithm : algorithms) {
     result.push_back(
@@ -224,8 +225,9 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   for (const auto &policy : policies) {
     std::vector<std::byte> policy_metadata;
     if (policy.type == Authentication::Type::JWT) {
-      policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
-                                            policy.jwks_uri, policy.algorithms);
+      policy_metadata =
+          encode_jwt_metadata(policy.issuer, policy.audience, policy.jwks_uri,
+                              policy.algorithms, policy.token_type);
     } else if (policy.type == Authentication::Type::OIDC) {
       // A nameless interactive policy could never match a session cookie, and
       // one without a session secret could never mint or verify one, so both

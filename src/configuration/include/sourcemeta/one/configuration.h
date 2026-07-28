@@ -78,6 +78,8 @@ struct Configuration {
     sourcemeta::core::JSON::String audience;
     std::optional<sourcemeta::core::JSON::String> jwks_uri;
     std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
+    // The `typ` header a presented token must carry, empty to accept any
+    sourcemeta::core::JSON::String token_type;
     sourcemeta::core::JSON::String client_id;
     // The environment variable name holding the client secret
     sourcemeta::core::JSON::String client_secret_variable;

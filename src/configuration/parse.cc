@@ -160,6 +160,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
           parsed.jwks_uri = entry.at("jwksUri").to_string();
         }
 
+        if (entry.defines("tokenType")) {
+          parsed.token_type = entry.at("tokenType").to_string();
+        }
+
         for (const auto &algorithm : entry.at("algorithms").as_array()) {
           parsed.algorithms.push_back(
               sourcemeta::core::to_jws_algorithm(algorithm.to_string())

@@ -603,7 +603,9 @@ TEST(sha256_policy_with_an_empty_variable_denies) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA_EMPTY"}};
   const std::array<std::string_view, 1> paths{{"/secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+      {{.paths = paths,
+        .keys = keys,
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -626,7 +628,9 @@ TEST(sha256_policy_admits_the_matching_credential) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SHA"}};
   const std::array<std::string_view, 1> paths{{"/secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys, sourcemeta::one::Authentication::Algorithm::Sha256}}};
+      {{.paths = paths,
+        .keys = keys,
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
   const auto path{test_path("sha256_match.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -886,6 +890,76 @@ TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
   EXPECT_TRUE(
       authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
   EXPECT_EQ(*calls, 1);
+}
+
+TEST(jwt_admits_a_token_whose_type_the_policy_requires) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .token_type = "at+jwt"}}};
+  const auto path{test_path("jwt_type_match.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
+}
+
+TEST(jwt_denies_a_token_whose_type_is_not_the_required_one) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // An identity token is signed by the same provider under the same key, and
+  // carries the client identifier as its audience, so where a policy names
+  // that audience the type is the only thing telling the two apart
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .token_type = "JWT"}}};
+  const auto path{test_path("jwt_type_mismatch.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
+}
+
+TEST(jwt_without_a_required_type_admits_any_type) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // A provider that does not stamp the header cannot be told apart this way,
+  // so a policy that names no type keeps working against one
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_type_absent.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(
+      authentication.admits(at("/secure/x"), {.bearer = SIGNED_TOKEN}).allowed);
 }
 
 TEST(jwt_denies_a_token_for_the_wrong_audience) {
