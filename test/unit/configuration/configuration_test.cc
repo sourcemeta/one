@@ -920,8 +920,9 @@ TEST(authentication_oidc_refuses_a_url_that_is_only_a_scheme) {
     FAIL();
   } catch (const sourcemeta::one::ConfigurationInsecureAuthenticationURLError
                &error) {
-    EXPECT_STREQ(error.what(), "An interactive authentication policy requires "
-                               "the instance itself to be served over https");
+    EXPECT_STREQ(error.what(),
+                 "An interactive authentication policy requires an https "
+                 "instance, or a loopback one for local development");
     EXPECT_EQ(error.url(), "https:");
     EXPECT_EQ(error.name(), "corporate");
     EXPECT_EQ(error.path(), "/tmp/one.json");

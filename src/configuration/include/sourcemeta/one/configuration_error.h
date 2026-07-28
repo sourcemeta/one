@@ -168,8 +168,8 @@ public:
       : path_{std::move(path)}, name_{std::move(name)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An interactive authentication policy requires the instance itself "
-           "to be served over https";
+    return "An interactive authentication policy requires an https instance, "
+           "or a loopback one for local development";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

@@ -41,7 +41,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: An interactive authentication policy requires the instance itself to be served over https
+error: An interactive authentication policy requires an https instance, or a loopback one for local development
   at url http://schemas.example.com
   at name corporate
   at path $(realpath "$TMP")/one.json

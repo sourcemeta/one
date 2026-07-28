@@ -544,15 +544,13 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 
 !!! warning
 
-    An interactive policy requires the instance's own `url` to be an `https`
-    one, and indexing refuses the configuration otherwise. This is about the
-    instance rather than the provider: an `https` issuer does not help if the
-    browser reaches this instance over plain HTTP. A session cookie is
-    only marked `Secure` on an `https` instance, so an interactive login served
-    over plain HTTP hands the browser a credential that travels in the clear. A
-    loopback address such as `http://127.0.0.1:8000`, and the special-use
-    `localhost` name, are exempt because a browser already treats either as a
-    trustworthy origin.
+    The instance's own `url` must be an origin a browser treats as trustworthy,
+    since the session cookie is only marked `Secure` on one and otherwise
+    reaches the browser in the clear. That means `https`, or plain HTTP on a
+    loopback address such as `http://127.0.0.1:8000`, with the special-use
+    `localhost` name accepted alongside it. Indexing refuses anything else.
+    Note that this is about the instance and not the provider: an `https`
+    issuer does not help if the browser reaches the instance over plain HTTP.
 | `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
 
 For example, the following instance keeps `/docs` public, gates `/partners`
