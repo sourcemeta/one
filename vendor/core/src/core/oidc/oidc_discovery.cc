@@ -23,15 +23,13 @@ constexpr std::string_view ISSUER_RELATION{
     "http://openid.net/specs/connect/1.0/issuer"};
 
 // OpenID Connect Discovery 1.0 Section 2: an issuer identifier is an https URL
-// with a host and no query or fragment. RFC 3986 Section 3.1 makes the scheme
-// case-insensitive
+// with a host and no query or fragment
 auto is_issuer_identifier(const std::string_view value) -> bool {
   try {
     const URI uri{value};
-    return uri.scheme().has_value() &&
-           equals_ignore_case(uri.scheme().value(), "https") &&
-           uri.host().has_value() && !uri.host().value().empty() &&
-           !uri.query().has_value() && !uri.fragment().has_value();
+    return uri.is_https() && uri.host().has_value() &&
+           !uri.host().value().empty() && !uri.query().has_value() &&
+           !uri.fragment().has_value();
   } catch (const URIParseError &) {
     return false;
   }
@@ -88,11 +86,9 @@ auto oidc_webfinger_request(const std::string_view identifier)
     try {
       const URI resource{request.resource};
       // OpenID Connect Discovery 1.0 Section 2.1: a URL resource uses the https
-      // scheme and carries a host, so a non-https URL identifier is rejected.
-      // RFC 3986 Section 3.1 makes the scheme case-insensitive
-      if (!resource.scheme().has_value() ||
-          !equals_ignore_case(resource.scheme().value(), "https") ||
-          !resource.host().has_value() || resource.host().value().empty()) {
+      // scheme and carries a host, so a non-https URL identifier is rejected
+      if (!resource.is_https() || !resource.host().has_value() ||
+          resource.host().value().empty()) {
         return std::nullopt;
       }
 

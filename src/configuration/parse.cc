@@ -15,6 +15,23 @@
 
 namespace {
 
+// A session cookie is only marked secure on an https instance, so an
+// interactive login anywhere else hands the browser a credential that travels
+// in the clear. A loopback address and the special-use localhost name are the
+// exception, since a browser already treats either as a trustworthy origin and
+// honours the attribute there
+auto serves_securely(const std::string_view url) -> bool {
+  const sourcemeta::core::URI parsed{std::string{url}};
+  // A scheme on its own names no origin, so there is nowhere for a browser to
+  // hold a cookie against in the first place
+  if (!parsed.host().has_value() || parsed.host().value().empty()) {
+    return false;
+  }
+
+  return parsed.is_https() ||
+         (parsed.is_http() && (parsed.is_loopback() || parsed.is_localhost()));
+}
+
 auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
   sourcemeta::one::Configuration::Page result;
@@ -197,6 +214,41 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       }
 
       result.authentication.push_back(std::move(parsed));
+    }
+  }
+
+  // An issuer this instance fetches a discovery document from must be one it
+  // could complete that exchange against. A policy naming its key set directly
+  // never makes the exchange, so its issuer is only an identifier compared
+  // against a token's claim, and nothing here applies to it
+  for (auto &entry : result.authentication) {
+    const auto discovers{
+        entry.type == Configuration::AuthenticationEntry::Type::OIDC ||
+        (entry.type == Configuration::AuthenticationEntry::Type::JWT &&
+         !entry.jwks_uri.has_value())};
+    if (!discovers) {
+      continue;
+    }
+
+    // OpenID Connect Discovery 1.0 Section 4.1 removes a trailing slash before
+    // appending the well-known suffix, and Section 4.3 requires the document to
+    // declare the prefix that was actually used. So the slash is not part of
+    // the identifier and is dropped here, once, rather than left to disagree
+    // with itself between building the URL and comparing what comes back
+    if (entry.issuer.ends_with("/")) {
+      entry.issuer.pop_back();
+    }
+
+    // OpenID Connect Discovery 1.0 Section 3: the issuer is an https URL
+    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
+      throw ConfigurationInvalidAuthenticationIssuerError(
+          configuration_path, entry.name, entry.issuer);
+    }
+
+    if (entry.type == Configuration::AuthenticationEntry::Type::OIDC &&
+        !serves_securely(result.url)) {
+      throw ConfigurationInsecureAuthenticationURLError(configuration_path,
+                                                        entry.name, result.url);
     }
   }
 

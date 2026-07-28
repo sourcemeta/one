@@ -5,6 +5,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/authentication.h>
@@ -69,7 +70,7 @@ public:
     // attributes must mirror the ones the cookies are minted under, scoped to
     // the instance rather than the whole host, so the browser replaces the
     // cookies rather than shadowing them
-    const auto secure{this->server_uri().starts_with("https://")};
+    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
     const auto base{this->server_uri_base_path()};
     const auto scope{base.empty() ? std::string_view{"/"} : base};
     sourcemeta::core::http_parse_cookies(

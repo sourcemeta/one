@@ -248,10 +248,8 @@ auto validated_resource_metadata(JSON &&data, const std::string_view resource)
 // case-insensitive
 auto oauth_is_endpoint_url(const std::string_view value) -> bool {
   const auto uri{oauth_try_parse_uri(value)};
-  return uri.has_value() && uri->scheme().has_value() &&
-         equals_ignore_case(uri->scheme().value(), "https") &&
-         uri->host().has_value() && !uri->host().value().empty() &&
-         !uri->fragment().has_value();
+  return uri.has_value() && uri->is_https() && uri->host().has_value() &&
+         !uri->host().value().empty() && !uri->fragment().has_value();
 }
 
 auto oauth_well_known_url(const std::string_view identifier,

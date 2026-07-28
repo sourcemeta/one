@@ -158,6 +158,70 @@ private:
   std::filesystem::path target_;
 };
 
+// Raised when an interactive authentication policy is declared on an instance
+// a browser would not treat as a trustworthy origin, which means https, or
+// plain HTTP on a loopback address or the special-use localhost name
+class ConfigurationInsecureAuthenticationURLError : public std::exception {
+public:
+  ConfigurationInsecureAuthenticationURLError(std::filesystem::path path,
+                                              std::string name, std::string url)
+      : path_{std::move(path)}, name_{std::move(name)}, url_{std::move(url)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An interactive authentication policy requires an https instance, "
+           "or a loopback one for local development";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+  [[nodiscard]] auto url() const noexcept -> const std::string & {
+    return this->url_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+  std::string url_;
+};
+
+// Raised when an authentication policy names an issuer that this instance
+// could never complete a discovery exchange against
+class ConfigurationInvalidAuthenticationIssuerError : public std::exception {
+public:
+  ConfigurationInvalidAuthenticationIssuerError(std::filesystem::path path,
+                                                std::string name,
+                                                std::string issuer)
+      : path_{std::move(path)}, name_{std::move(name)},
+        issuer_{std::move(issuer)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy issuer must be an https URL";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+  [[nodiscard]] auto issuer() const noexcept -> const std::string & {
+    return this->issuer_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+  std::string issuer_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

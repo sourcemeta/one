@@ -471,7 +471,7 @@ same response as any other unauthenticated request.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/issuer`       | String  | :red_circle: **Yes** | N/A | The token issuer to trust, matched against the `iss` claim |
+| `/issuer`       | String  | :red_circle: **Yes** | N/A | The token issuer to trust, matched against the `iss` claim. When `jwksUri` is omitted, the key set is discovered from this issuer, which must then be a valid issuer identifier as per [OpenID Connect Discovery 1.0](https://openid.net/specs/openid-connect-discovery-1_0.html): an `https` URL, with any trailing slash dropped |
 | `/audience`     | String  | :red_circle: **Yes** | N/A | The audience this instance identifies as. A token is accepted when its `aud` claim includes this value, so a token minted for several audiences at once is accepted as long as this one is among them |
 | `/algorithms`   | Array   | :red_circle: **Yes** | N/A | The JSON Web Signature algorithms the policy accepts. One or more of `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`, `ES256`, `ES384`, `ES512`, and `EdDSA` |
 | `/tokenType`    | String  | No | Any type is accepted | The `typ` header a presented token must carry, such as `at+jwt` for the [RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) JSON Web Token access token profile. Set it whenever the issuer stamps one. An identity token is signed by the same issuer under the same key, and where this policy's `audience` matches the `clientId` of an `oidc` policy on that issuer, the type is the only thing distinguishing the two, so without it an identity token is accepted as an API credential |
@@ -536,11 +536,21 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
 | `/title`        | String  | No | The policy name | A human readable version of the policy name |
-| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens. It must be an `https` URL, as OpenID Connect Discovery requires. Front a provider that only speaks plain HTTP with TLS termination and trust its certificate authority |
+| `/issuer`       | String  | :red_circle: **Yes** | N/A | The OpenID Connect issuer to trust, matched against the identity token's `iss` claim and used to discover the provider's metadata, including the signing key set that verifies tokens. It must be a valid issuer identifier as per [OpenID Connect Discovery 1.0](https://openid.net/specs/openid-connect-discovery-1_0.html): an `https` URL, with any trailing slash dropped. Front a provider that only speaks plain HTTP with TLS termination and trust its certificate authority |
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
 | `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
+
+!!! warning
+
+    The instance's own `url` must be an origin a browser treats as trustworthy,
+    since the session cookie is only marked `Secure` on one and otherwise
+    reaches the browser in the clear. That means `https`, or plain HTTP on a
+    loopback address such as `http://127.0.0.1:8000`, with the special-use
+    `localhost` name accepted alongside it. Indexing refuses anything else.
+    Note that this is about the instance and not the provider: an `https`
+    issuer does not help if the browser reaches the instance over plain HTTP.
 | `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
 
 For example, the following instance keeps `/docs` public, gates `/partners`
