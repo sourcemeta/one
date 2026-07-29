@@ -114,7 +114,7 @@ header "ETag" exists
 
 # Logout is not exempt, but the live session passes the gate, so a logged-in
 # browser reaches it and its session is cleared
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 HTTP 303
 Cache-Control: no-store
 [Asserts]

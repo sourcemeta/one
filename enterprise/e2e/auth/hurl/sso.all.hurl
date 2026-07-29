@@ -150,7 +150,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 }
 
 # Logging out clears the session
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 HTTP 303
 Cache-Control: no-store
 [Asserts]
