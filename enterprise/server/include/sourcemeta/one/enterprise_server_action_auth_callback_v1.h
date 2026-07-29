@@ -266,8 +266,6 @@ public:
     }
 
     if (!session_cookie.has_value()) {
-      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
-                                policy_name);
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
@@ -413,17 +411,26 @@ private:
         policy_name, sourcemeta::one::Authentication::Purpose::Session,
         payload_text.str(), expiry)};
     if (!sealed.has_value()) {
+      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
+                                policy_name);
       return std::nullopt;
     }
 
-    return sourcemeta::core::http_serialize_cookie(
+    auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = sourcemeta::one::Authentication::SESSION_COOKIE,
          .value = sealed.value(),
          .path = scope,
          .max_age = SESSION_LIFETIME,
          .http_only = true,
          .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (!cookie.has_value()) {
+      sourcemeta::one::HTTP_LOG("The session could not be put in a cookie, "
+                                "for the policy",
+                                policy_name);
+    }
+
+    return cookie;
   }
 
   auto expire_transaction(sourcemeta::one::HTTPResponse &response,
