@@ -8,7 +8,6 @@
 
 #include "template.h"
 
-#include <algorithm>   // std::ranges::sort
 #include <cassert>     // assert
 #include <set>         // std::set
 #include <string_view> // std::string_view
@@ -178,16 +177,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         }
 
         if (entry.defines("tokenType")) {
-          // A media type is compared case-insensitively and with the
-          // `application/` prefix optional, so the spelling is reduced here to
-          // the single form the artifact carries. Otherwise two policies that
-          // admit exactly the same tokens would read as different scopes
           parsed.token_type = entry.at("tokenType").to_string();
-          sourcemeta::core::to_lowercase(parsed.token_type);
-          constexpr std::string_view MEDIA_TYPE_PREFIX{"application/"};
-          if (parsed.token_type.starts_with(MEDIA_TYPE_PREFIX)) {
-            parsed.token_type.erase(0, MEDIA_TYPE_PREFIX.size());
-          }
         }
 
         for (const auto &algorithm : entry.at("algorithms").as_array()) {
@@ -195,10 +185,6 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
               sourcemeta::core::to_jws_algorithm(algorithm.to_string())
                   .value());
         }
-
-        // Canonicalise the allow-list so that policies with the same set of
-        // algorithms serialise identically regardless of declaration order
-        std::ranges::sort(parsed.algorithms);
       } else if (entry.at("type").to_string() == "oidc") {
         parsed.type = Configuration::AuthenticationEntry::Type::OIDC;
         parsed.issuer = entry.at("issuer").to_string();

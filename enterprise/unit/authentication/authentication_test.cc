@@ -2699,6 +2699,175 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
       authentication.reference_permitted(at("/alpha/one"), at("/gamma/two")));
 }
 
+TEST(reference_between_jwt_scopes_ignores_algorithm_order) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 2> one_order{
+      {sourcemeta::core::JWSAlgorithm::ES256,
+       sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 2> other_order{
+      {sourcemeta::core::JWSAlgorithm::RS256,
+       sourcemeta::core::JWSAlgorithm::ES256}};
+  // The allow-list decides admission by membership, so these two admit exactly
+  // the same tokens and must be the same scope
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = one_order},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = other_order}}};
+  const auto path{test_path("jwt_reference_algorithm_order.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
+TEST(reference_between_jwt_scopes_ignores_token_type_spelling) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // A media type is matched case-insensitively and with the `application/`
+  // prefix optional, so these two admit exactly the same tokens
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa,
+        .token_type = "at+jwt"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa,
+        .token_type = "Application/AT+JWT"}}};
+  const auto path{test_path("jwt_reference_token_type_spelling.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
+TEST(reference_between_jwt_scopes_ignores_repeated_algorithms) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 3> repeated{
+      {sourcemeta::core::JWSAlgorithm::RS256,
+       sourcemeta::core::JWSAlgorithm::ES256,
+       sourcemeta::core::JWSAlgorithm::RS256}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 2> once{
+      {sourcemeta::core::JWSAlgorithm::RS256,
+       sourcemeta::core::JWSAlgorithm::ES256}};
+  // Naming an algorithm twice admits nothing a single mention does not
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = repeated},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = once}}};
+  const auto path{test_path("jwt_reference_repeated_algorithms.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
+TEST(a_token_type_that_is_the_bare_media_prefix_still_names_a_type) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // Reducing the prefix on its own would leave nothing, and a policy naming no
+  // type accepts every type, so a policy that names one must never become one
+  // that does not
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa,
+        .token_type = "application/"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa}}};
+  const auto path{test_path("jwt_token_type_bare_prefix.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
+TEST(a_token_type_carrying_a_further_separator_keeps_its_prefix) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // What follows the prefix is only a subtype when it carries no separator of
+  // its own, so these two name different types and are read as such
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa,
+        .token_type = "application/one/two"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa,
+        .token_type = "one/two"}}};
+  const auto path{test_path("jwt_token_type_nested_separator.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
 TEST(reference_across_swapped_jwt_identities_is_rejected) {
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
