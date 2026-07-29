@@ -541,6 +541,7 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
 | `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
+| `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
 
 !!! tip
 
@@ -572,7 +573,6 @@ follows is signed with a secret of the instance's own, unrelated to the provider
     `localhost` name accepted alongside it. Indexing refuses anything else.
     Note that this is about the instance and not the provider: an `https`
     issuer does not help if the browser reaches the instance over plain HTTP.
-| `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
 
 For example, the following instance keeps `/docs` public, gates `/partners`
 behind an API key, and protects `/console` with an `oidc` policy so that users

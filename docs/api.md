@@ -137,6 +137,164 @@ This endpoint is always mounted, but web assets are only served when the
 
     The HTTP method is not `GET` or `HEAD`.
 
+## Authentication
+
+!!! success "Enterprise"
+
+    Gating any part of an instance is only available in the
+    [Enterprise](commercial.md) edition. Learn more about [commercial
+    licensing](commercial.md).
+
+Every endpoint on this page is public unless the [configuration
+file](configuration.md#authentication) declares a policy that governs the path
+it reaches. A request no governing policy admits is answered with `401` and a
+`WWW-Authenticate` header, and directory listings omit whatever the caller
+cannot see rather than disclosing that it exists.
+
+A machine caller presents its credential on every request and needs none of the
+endpoints below:
+
+```
+Authorization: Bearer <credential>
+```
+
+For an [`apiKey`](configuration.md#api-key) policy that credential is one of
+the keys the policy declares. For a [`jwt`](configuration.md#jwt) policy it is
+an access token from the issuer the policy trusts.
+
+An [`oidc`](configuration.md#oidc) policy signs a person in at their provider
+instead, through the three endpoints below, leaving the browser holding a
+session cookie that admits it exactly as a credential would. That cookie is
+`HttpOnly`, `SameSite=Lax`, scoped to the instance rather than to the whole
+host, and `Secure` whenever the instance URL is `https`. It carries its own
+expiry and the signature that proves this instance minted it, so no session is
+kept in memory and every replica of an instance accepts the sessions the others
+mint. A browser holds one session per instance, whichever policy established
+it.
+
+### Login
+
+*This endpoint begins an interactive login against the named policy's identity
+provider.*
+
+```
+GET /self/v1/auth/login/{policy}[?to={redirect-location}]
+```
+
+The response redirects the browser to the provider's authorization endpoint,
+discovered from the policy's issuer, and sets a short-lived transaction cookie
+that binds the login to this browser. That cookie is what the callback checks
+before it acts on anything the provider says.
+
+=== "303"
+
+    The provider's authorization URL in `Location`, with the transaction
+    cookie in `Set-Cookie`.
+
+=== "404"
+
+    No `oidc` policy carries that name. A policy of another type answers the
+    same way, so the endpoint discloses nothing about what is configured.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
+=== "500"
+
+    The policy's client secret or session secret is absent from the
+    environment. A login that could not be completed is refused here rather
+    than stranding the person at the provider.
+
+=== "502"
+
+    The provider's metadata could not be retrieved, or names no authorization
+    endpoint.
+
+### Callback
+
+*This endpoint completes an interactive login by exchanging the provider's
+authorization code for a session.*
+
+```
+GET /self/v1/auth/callback/{policy}
+```
+
+**This is the redirect URI to register with the identity provider**, as
+`{url}/self/v1/auth/callback/{policy}`, built from the instance
+[`url`](configuration.md) and the policy name. The provider sends the browser
+here, and the endpoint verifies that the transaction cookie belongs to a login
+this instance started before acting on the outcome, so a callback arriving from
+anywhere else cannot establish a session or report a failure on somebody's
+behalf.
+
+=== "303"
+
+    The session cookie in `Set-Cookie`, the spent transaction cookie expired
+    alongside it, and the login's return target in `Location`.
+
+=== "400"
+
+    The callback does not belong to a login this instance started, or is
+    missing the code that would complete one. Nothing distinguishes the two,
+    so a caller learns nothing about the login by asking.
+
+=== "403"
+
+    The provider declined the login, in a callback that does belong to a login
+    this instance started.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
+=== "500"
+
+    The policy's client secret or session secret is absent from the
+    environment.
+
+=== "502"
+
+    The provider could not be reached, refused the authorization code, or
+    returned an identity token that does not validate or that no session
+    cookie can hold.
+
+### Logout
+
+*This endpoint ends the browser's session, and the provider's session with it.*
+
+```
+POST /self/v1/auth/logout
+```
+
+Both cookies are expired before anything else is decided, and whether or not
+the request carried them, so no outcome leaves a session behind. Where the
+session names a policy whose provider offers to end its own session, the
+browser is then sent on to do so, carrying the identity token as proof of
+whose session it is asking to end. That is what stops the next sign-in from
+silently admitting whoever used the browser last.
+
+This endpoint answers `POST` rather than `GET` because signing out changes
+state at the provider, which [RFC 9110
+§9.2.1](https://datatracker.ietf.org/doc/html/rfc9110#section-9.2.1) puts
+outside what a safe method may do. A link to it would be followed by anything
+that prefetches or unfurls URLs, signing the person out unasked, so the
+control that reaches it is a form submission.
+
+A session is a sealed value this instance keeps no record of, which is what
+lets it stay stateless. Signing out therefore takes the session from the
+browser rather than revoking it, and a copy taken beforehand stays usable
+until it expires. Sessions are short-lived for that reason.
+
+=== "303"
+
+    Both cookies expired in `Set-Cookie`, and either the provider's end-session
+    URL or the instance root in `Location`.
+
+=== "405"
+
+    The HTTP method is not `POST`.
+
 ## Schemas
 
 ### Fetch
@@ -166,7 +324,6 @@ meta-schema that a schema may declare.
     regardless of its value. `?bundle`, `?bundle=1`, `?bundle=true`,
     `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
     bundling, omit the parameter entirely.
-
 
 === "200"
 
