@@ -42,6 +42,12 @@ static auto at_base(const std::string_view input, const std::string_view base)
 // serves, so every path a policy is scoped to is one to gate
 static auto anywhere(const std::string_view) -> bool { return true; }
 
+// One cookie field, which is what a browser conforming to RFC 6265 sends
+static auto fields(const std::string_view value)
+    -> std::array<std::string_view, 1> {
+  return {{value}};
+}
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -469,10 +475,10 @@ TEST(base_path_is_stripped_before_matching) {
 
   // An empty base path strips nothing
   EXPECT_TRUE(
-      authentication.admits(at("/public/string"), {.bearer = "", .cookies = ""})
+      authentication.admits(at("/public/string"), {.bearer = "", .cookies = {}})
           .allowed);
   EXPECT_FALSE(authentication
-                   .admits(at("/private/secret"), {.bearer = "", .cookies = ""})
+                   .admits(at("/private/secret"), {.bearer = "", .cookies = {}})
                    .allowed);
 
   // A base that is not a whole-segment prefix of the target is left in place,
@@ -1280,8 +1286,8 @@ TEST(oidc_policy_admits_its_session_cookie) {
       minted_now(), session_expiry())};
   const std::string cookies{"theme=dark; sourcemeta_one_session=" + sealed};
 
-  const auto verdict{authentication.admits(at("/portal/x"),
-                                           {.bearer = "", .cookies = cookies})};
+  const auto verdict{authentication.admits(
+      at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})};
   EXPECT_TRUE(verdict.allowed);
   EXPECT_TRUE(verdict.principal.has_value());
   EXPECT_EQ(verdict.principal.value().type,
@@ -1327,19 +1333,19 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
 
   // The session opens the path its policy governs
   const std::string okta_cookies{"sourcemeta_one_session=" + sealed};
-  EXPECT_TRUE(
-      authentication
-          .admits(at("/alpha/x"), {.bearer = "", .cookies = okta_cookies})
-          .allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/alpha/x"),
+                          {.bearer = "", .cookies = fields(okta_cookies)})
+                  .allowed);
 
   // And not a path governed by another policy. Both policies here read the
   // same session secret, so the value verifies under either and the payload is
   // the only thing that tells them apart. There is no cookie name left to
   // separate them, which makes this the control rather than a second opinion
-  EXPECT_FALSE(
-      authentication
-          .admits(at("/beta/x"), {.bearer = "", .cookies = okta_cookies})
-          .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/beta/x"),
+                           {.bearer = "", .cookies = fields(okta_cookies)})
+                   .allowed);
 }
 
 TEST(expired_session_cookie_is_denied) {
@@ -1366,7 +1372,8 @@ TEST(expired_session_cookie_is_denied) {
       past + std::chrono::hours{1})};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
   EXPECT_FALSE(
-      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1393,10 +1400,10 @@ TEST(forged_session_cookie_is_denied) {
       sourcemeta::one::Authentication::Purpose::Session, "other-secret",
       minted_now(), session_expiry())};
   const std::string foreign_cookies{"sourcemeta_one_session=" + foreign};
-  EXPECT_FALSE(
-      authentication
-          .admits(at("/portal/x"), {.bearer = "", .cookies = foreign_cookies})
-          .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/portal/x"),
+                           {.bearer = "", .cookies = fields(foreign_cookies)})
+                   .allowed);
 
   // A value whose signature no longer matches its contents
   auto tampered{sourcemeta::one::Authentication::seal_value(
@@ -1405,16 +1412,17 @@ TEST(forged_session_cookie_is_denied) {
       minted_now(), session_expiry())};
   tampered.back() = tampered.back() == 'A' ? 'B' : 'A';
   const std::string tampered_cookies{"sourcemeta_one_session=" + tampered};
-  EXPECT_FALSE(
-      authentication
-          .admits(at("/portal/x"), {.bearer = "", .cookies = tampered_cookies})
-          .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/portal/x"),
+                           {.bearer = "", .cookies = fields(tampered_cookies)})
+                   .allowed);
 
   // A value that is not a sealed session at all
   EXPECT_FALSE(
       authentication
           .admits(at("/portal/x"),
-                  {.bearer = "", .cookies = "sourcemeta_one_session=garbage"})
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=garbage")})
           .allowed);
 }
 
@@ -1445,7 +1453,7 @@ TEST(session_payload_must_declare_its_policy) {
     const std::string cookies{"sourcemeta_one_session=" + sealed};
     EXPECT_FALSE(
         authentication
-            .admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+            .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
             .allowed);
   }
 }
@@ -1478,7 +1486,8 @@ TEST(session_is_admitted_when_a_shadowing_cookie_precedes_it) {
                             "sourcemeta_one_session=" +
                             sealed};
   EXPECT_TRUE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1508,7 +1517,8 @@ TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
   const std::string cookies{"sourcemeta_one_session=" + sealed +
                             "; sourcemeta_one_session=not-a-session"};
   EXPECT_TRUE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1552,13 +1562,15 @@ TEST(a_session_for_another_policy_does_not_end_the_search) {
   const std::string cookies{"sourcemeta_one_session=" + other +
                             "; sourcemeta_one_session=" + mine};
   EXPECT_TRUE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 
   // And a value minted elsewhere still opens nothing on its own
   const std::string alone{"sourcemeta_one_session=" + other};
   EXPECT_FALSE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = alone})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(alone)})
           .allowed);
 }
 
@@ -1583,7 +1595,8 @@ TEST(a_shadowing_cookie_alone_never_admits) {
   const std::string cookies{"sourcemeta_one_session=not-a-session; "
                             "sourcemeta_one_session=nor-is-this"};
   EXPECT_FALSE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1621,10 +1634,12 @@ TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
   EXPECT_TRUE(
-      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/alpha/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
   EXPECT_FALSE(
-      authentication.admits(at("/beta/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/beta/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1653,7 +1668,8 @@ TEST(a_session_naming_no_policy_never_admits) {
   EXPECT_FALSE(
       authentication
           .admits(at("/alpha/x"),
-                  {.bearer = "", .cookies = "sourcemeta_one_session=" + empty})
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=" + empty)})
           .allowed);
 
   // Names a policy that does not exist
@@ -1661,11 +1677,12 @@ TEST(a_session_naming_no_policy_never_admits) {
       R"JSON({ "policy": "nowhere" })JSON",
       sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
       minted_now(), session_expiry())};
-  EXPECT_FALSE(authentication
-                   .admits(at("/alpha/x"),
-                           {.bearer = "",
-                            .cookies = "sourcemeta_one_session=" + unknown})
-                   .allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/alpha/x"),
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=" + unknown)})
+          .allowed);
 
   // Names a policy but not as a string
   const auto typed{sourcemeta::one::Authentication::seal_value(
@@ -1675,7 +1692,8 @@ TEST(a_session_naming_no_policy_never_admits) {
   EXPECT_FALSE(
       authentication
           .admits(at("/alpha/x"),
-                  {.bearer = "", .cookies = "sourcemeta_one_session=" + typed})
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=" + typed)})
           .allowed);
 }
 
@@ -1795,7 +1813,8 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
       minted_now(), session_expiry())};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
   EXPECT_FALSE(
-      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1823,11 +1842,12 @@ TEST(session_admitted_under_a_rotated_secret) {
       R"JSON({ "policy": "okta" })JSON",
       sourcemeta::one::Authentication::Purpose::Session, "old-secret",
       minted_now(), session_expiry())};
-  EXPECT_TRUE(authentication
-                  .admits(at("/portal/x"),
-                          {.bearer = "",
-                           .cookies = "sourcemeta_one_session=" + old_sealed})
-                  .allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/portal/x"),
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=" + old_sealed)})
+          .allowed);
 
   // A fresh login mints under the newest secret alone, so the minted value
   // verifies under a new-only secret set and not under an old-only one
@@ -1855,11 +1875,12 @@ TEST(session_admitted_under_a_rotated_secret) {
       R"JSON({ "policy": "okta" })JSON",
       sourcemeta::one::Authentication::Purpose::Session, "retired-secret",
       minted_now(), session_expiry())};
-  EXPECT_FALSE(authentication
-                   .admits(at("/portal/x"),
-                           {.bearer = "",
-                            .cookies = "sourcemeta_one_session=" + retired})
-                   .allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/portal/x"),
+                  {.bearer = "",
+                   .cookies = fields("sourcemeta_one_session=" + retired)})
+          .allowed);
 }
 
 TEST(session_with_a_blank_configured_secret_is_denied) {
@@ -1886,7 +1907,8 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
       session_expiry())};
   const std::string cookies{"sourcemeta_one_session=" + forged};
   EXPECT_FALSE(
-      authentication.admits(at("/portal/x"), {.bearer = "", .cookies = cookies})
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 
@@ -1959,8 +1981,8 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
       sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
       minted_now(), session_expiry())};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
-  const auto session_verdict{
-      authentication.admits(at("/both/x"), {.bearer = "", .cookies = cookies})};
+  const auto session_verdict{authentication.admits(
+      at("/both/x"), {.bearer = "", .cookies = fields(cookies)})};
   EXPECT_TRUE(session_verdict.allowed);
   EXPECT_TRUE(session_verdict.principal.has_value());
   EXPECT_EQ(session_verdict.principal.value().type,
@@ -1990,7 +2012,7 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   const std::string cookies{"sourcemeta_one_session=" + sealed};
   EXPECT_FALSE(
       authentication
-          .admits(at("/internal/x"), {.bearer = "", .cookies = cookies})
+          .admits(at("/internal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
 

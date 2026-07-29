@@ -65,21 +65,23 @@ public:
   auto rest(const std::span<std::string_view> matches,
             std::string_view credential, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    const sourcemeta::one::RequestCookies cookies{request};
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, {.bearer = credential, .cookies = request.header("cookie")},
-        request, response, *this, this->response_schema_, this->error_schema_,
+        matches, {.bearer = credential, .cookies = cookies}, request, response,
+        *this, this->response_schema_, this->error_schema_,
         this->request_schema_,
         // A throw here is intended and caught by the surrounding request
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [this, bearer = std::string{credential},
-         cookies = std::string{request.header("cookie")}](
+         cookies = sourcemeta::one::owned_cookies(request)](
             const std::string_view schema_uri,
             const std::string &body) -> sourcemeta::core::JSON {
           sourcemeta::core::PointerPositionTracker tracker;
           sourcemeta::core::JSON instance_json{nullptr};
           sourcemeta::core::parse_json(body, instance_json, std::ref(tracker));
-          return this->trace({.bearer = bearer, .cookies = cookies}, schema_uri,
+          const sourcemeta::one::RequestCookies fields{cookies};
+          return this->trace({.bearer = bearer, .cookies = fields}, schema_uri,
                              instance_json, &tracker,
                              sourcemeta::core::Pointer{});
         });

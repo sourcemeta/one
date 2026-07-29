@@ -70,9 +70,10 @@ public:
 
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
+    const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
-        {.bearer = credential, .cookies = request.header("cookie")}, path_match,
-        Tree::Explorer, this->artifact_)};
+        {.bearer = credential, .cookies = cookies}, path_match, Tree::Explorer,
+        this->artifact_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,

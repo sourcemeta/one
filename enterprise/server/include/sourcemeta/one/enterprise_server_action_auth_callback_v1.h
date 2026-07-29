@@ -330,9 +330,12 @@ private:
     }
 
     std::vector<std::string_view> candidates;
-    sourcemeta::core::http_cookie_values(
-        request.header("cookie"),
-        sourcemeta::one::Authentication::TRANSACTION_COOKIE, candidates);
+    request.header_values(
+        "cookie", [&candidates](const std::string_view field) -> void {
+          sourcemeta::core::http_cookie_values(
+              field, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+              candidates);
+        });
     for (const auto sealed : candidates) {
       auto opened{authentication.open(
           policy_name, sourcemeta::one::Authentication::Purpose::Transaction,

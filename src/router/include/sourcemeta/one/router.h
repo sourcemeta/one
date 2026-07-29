@@ -19,13 +19,62 @@
 #include <mutex>       // std::once_flag
 #include <optional>    // std::optional
 #include <span>        // std::span
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move, std::pair
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
 class Router;
 class RouterAction;
+
+// The cookie fields a request carried, held for as long as the credentials
+// that view them. A request may present the field more than once, so every
+// occurrence is kept rather than the first, and they are not joined, since
+// what a cookie means is decided by whoever reads it
+class RequestCookies {
+public:
+  explicit RequestCookies(const HTTPRequest &request) {
+    request.header_values("cookie",
+                          [this](const std::string_view value) -> void {
+                            this->fields_.emplace_back(value);
+                          });
+  }
+
+  // Storage for an asynchronous body, where the request is gone by the time
+  // the credentials are read, so the fields must be owned rather than viewed
+  explicit RequestCookies(const std::vector<std::string> &owned) {
+    this->fields_.reserve(owned.size());
+    for (const auto &field : owned) {
+      this->fields_.emplace_back(field);
+    }
+  }
+
+  [[nodiscard]] operator std::span<const std::string_view>() const noexcept {
+    return this->fields_;
+  }
+
+  // Whether the request carried no cookie at all, which is one of the two
+  // things that make a caller anonymous
+  [[nodiscard]] auto empty() const noexcept -> bool {
+    return this->fields_.empty();
+  }
+
+private:
+  std::vector<std::string_view> fields_;
+};
+
+// The same fields, copied, for a handler that outlives the request
+[[nodiscard]] inline auto owned_cookies(const HTTPRequest &request)
+    -> std::vector<std::string> {
+  std::vector<std::string> result;
+  request.header_values("cookie",
+                        [&result](const std::string_view value) -> void {
+                          result.emplace_back(value);
+                        });
+  return result;
+}
 
 // Proof that a path was produced by the artifact resolver. Only the
 // action base class can mint one, so every artifact read must have

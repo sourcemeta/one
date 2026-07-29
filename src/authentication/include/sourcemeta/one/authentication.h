@@ -25,11 +25,13 @@
 namespace sourcemeta::one {
 
 // Everything a request presented for authentication: the bearer value from
-// the authorization header and the raw request cookie header, either of
-// which may admit the caller under a covering policy
+// the authorization header and every cookie field it carried, either of which
+// may admit the caller under a covering policy. The cookie fields are kept as
+// they arrived rather than joined, since a request may carry more than one and
+// what a cookie means is decided by whoever reads it
 struct Credentials {
   std::string_view bearer{};
-  std::string_view cookies{};
+  std::span<const std::string_view> cookies{};
 };
 
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
