@@ -24,7 +24,8 @@
       "optionalClientScopes": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:8000"
+        "post.logout.redirect.uris": "http://localhost:8000",
+        "id.token.signed.response.alg": "PS256"
       }
     }
   ],

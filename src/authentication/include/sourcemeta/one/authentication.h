@@ -227,7 +227,7 @@ public:
   // environment. Every secret this system holds is read here rather than by
   // whoever needs it, so no caller is in a position to read one differently
   [[nodiscard]] auto client_secret(std::string_view policy) const
-      -> std::optional<std::string>;
+      -> std::optional<sourcemeta::core::SecureString>;
 
   // Recover the payload of a session value, whichever interactive policy
   // minted it, returning nothing when no policy accepts it. A value is only

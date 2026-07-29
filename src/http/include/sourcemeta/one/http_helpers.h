@@ -25,12 +25,22 @@
 
 namespace sourcemeta::one {
 
-inline auto HTTP_LOG(const std::string_view message) -> void {
+// A line about something that happened, optionally naming the one value it
+// happened to, such as the policy a failure concerns. Keeping the value apart
+// from the message means neither has to be built into a string to say both
+inline auto HTTP_LOG(const std::string_view message,
+                     const std::string_view value = {}) -> void {
   static std::mutex log_mutex;
   std::scoped_lock guard{log_mutex};
-  std::print(stderr, "[{}] {} {}\n",
-             sourcemeta::core::to_imf_fixdate(std::chrono::system_clock::now()),
-             std::this_thread::get_id(), message);
+  const auto now{
+      sourcemeta::core::to_imf_fixdate(std::chrono::system_clock::now())};
+  if (value.empty()) {
+    std::print(stderr, "[{}] {} {}\n", now, std::this_thread::get_id(),
+               message);
+  } else {
+    std::print(stderr, "[{}] {} {}: {}\n", now, std::this_thread::get_id(),
+               message, value);
+  }
 }
 
 inline auto write_link_header(HTTPResponse &response,

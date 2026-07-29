@@ -173,6 +173,8 @@ public:
 
     const auto client_secret{authentication.client_secret(policy_name)};
     if (!client_secret.has_value()) {
+      sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
+                                policy_name);
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
@@ -182,6 +184,9 @@ public:
 
     const auto endpoints{authentication.endpoints(policy_name)};
     if (!endpoints.has_value() || endpoints.value().token.empty()) {
+      sourcemeta::one::HTTP_LOG("The provider named no token endpoint, or "
+                                "could not be reached, for the policy",
+                                policy_name);
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-provider-unreachable",
                  "The identity provider could not be reached");
@@ -299,12 +304,24 @@ public:
   }
 
 private:
-  // The signature algorithms an identity token may be signed with. The major
-  // providers sign with one of these, and the policy does not yet let an
-  // operator narrow the set
-  static constexpr std::array<sourcemeta::core::JWSAlgorithm, 2>
+  // The signature algorithms an identity token may be signed with: every
+  // asymmetric one, since a provider picks from these and an instance that
+  // named a narrower set would refuse a provider it could otherwise serve,
+  // after the person had already signed in. The symmetric ones are left out
+  // deliberately. They sign with the client secret rather than a key from the
+  // provider's published set, so admitting them alongside the rest is the
+  // shape that lets one algorithm be verified as though it were another
+  static constexpr std::array<sourcemeta::core::JWSAlgorithm, 10>
       ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
-                           sourcemeta::core::JWSAlgorithm::ES256}};
+                           sourcemeta::core::JWSAlgorithm::RS384,
+                           sourcemeta::core::JWSAlgorithm::RS512,
+                           sourcemeta::core::JWSAlgorithm::PS256,
+                           sourcemeta::core::JWSAlgorithm::PS384,
+                           sourcemeta::core::JWSAlgorithm::PS512,
+                           sourcemeta::core::JWSAlgorithm::ES256,
+                           sourcemeta::core::JWSAlgorithm::ES384,
+                           sourcemeta::core::JWSAlgorithm::ES512,
+                           sourcemeta::core::JWSAlgorithm::EdDSA}};
 
   // The tolerance allowed on an identity token's time-based claims, matching
   // what a presented access token is already given. A provider whose clock
@@ -394,17 +411,26 @@ private:
         policy_name, sourcemeta::one::Authentication::Purpose::Session,
         payload_text.str(), expiry)};
     if (!sealed.has_value()) {
+      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
+                                policy_name);
       return std::nullopt;
     }
 
-    return sourcemeta::core::http_serialize_cookie(
+    auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = sourcemeta::one::Authentication::SESSION_COOKIE,
          .value = sealed.value(),
          .path = scope,
          .max_age = SESSION_LIFETIME,
          .http_only = true,
          .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (!cookie.has_value()) {
+      sourcemeta::one::HTTP_LOG("The session could not be put in a cookie, "
+                                "for the policy",
+                                policy_name);
+    }
+
+    return cookie;
   }
 
   auto expire_transaction(sourcemeta::one::HTTPResponse &response,

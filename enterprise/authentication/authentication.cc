@@ -190,13 +190,15 @@ auto read_u32(const std::span<const std::byte> metadata, std::size_t &cursor,
 // a variable set to nothing holds no secret, so neither reaches a caller as a
 // value it might compare something against
 auto resolve_environment(const std::string_view variable)
-    -> std::optional<std::string> {
+    -> std::optional<sourcemeta::core::SecureString> {
   if (variable.empty()) {
     return std::nullopt;
   }
 
   static std::mutex mutex;
-  static std::unordered_map<std::string, std::optional<std::string>> cache;
+  static std::unordered_map<std::string,
+                            std::optional<sourcemeta::core::SecureString>>
+      cache;
   const std::string name{variable};
   const std::scoped_lock lock{mutex};
   const auto existing{cache.find(name)};
@@ -204,13 +206,13 @@ auto resolve_environment(const std::string_view variable)
     return existing->second;
   }
 
-  std::optional<std::string> resolved;
+  std::optional<sourcemeta::core::SecureString> resolved;
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const char *value{std::getenv(name.c_str())};
   // A variable set to nothing holds no secret, so it reads here the same as
   // one that was never set at all
   if (value != nullptr && *value != '\0') {
-    resolved = value;
+    resolved.emplace(std::string_view{value});
   }
 
   cache.emplace(name, resolved);
@@ -778,7 +780,7 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto client_secret(const std::string_view policy) const
-      -> std::optional<std::string> {
+      -> std::optional<sourcemeta::core::SecureString> {
     OIDCPolicyMetadata decoded;
     if (!this->find_interactive(policy, decoded)) {
       return std::nullopt;
@@ -1151,7 +1153,7 @@ auto Authentication::interactive(const std::string_view name) const
 }
 
 auto Authentication::client_secret(const std::string_view policy) const
-    -> std::optional<std::string> {
+    -> std::optional<sourcemeta::core::SecureString> {
   return this->impl_->client_secret(policy);
 }
 
