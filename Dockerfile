@@ -51,7 +51,8 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
 
 # Run a few times to rule out any flakiness
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
-  --output-on-failure --parallel --repeat-until-fail 5
+  --output-on-failure --parallel ${SOURCEMETA_ONE_PARALLEL} \
+  --repeat-until-fail 5
 
 FROM debian:trixie-slim
 
