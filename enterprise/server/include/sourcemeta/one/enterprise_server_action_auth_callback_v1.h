@@ -173,9 +173,8 @@ public:
 
     const auto client_secret{authentication.client_secret(policy_name)};
     if (!client_secret.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          std::string{"No client secret is set for the policy "}.append(
-              policy_name));
+      sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
+                                policy_name);
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
@@ -185,10 +184,9 @@ public:
 
     const auto endpoints{authentication.endpoints(policy_name)};
     if (!endpoints.has_value() || endpoints.value().token.empty()) {
-      sourcemeta::one::HTTP_LOG(
-          std::string{"The provider named no token endpoint, or could not be "
-                      "reached, for the policy "}
-              .append(policy_name));
+      sourcemeta::one::HTTP_LOG("The provider named no token endpoint, or "
+                                "could not be reached, for the policy",
+                                policy_name);
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-provider-unreachable",
                  "The identity provider could not be reached");
@@ -268,9 +266,8 @@ public:
     }
 
     if (!session_cookie.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          std::string{"No session secret is set for the policy "}.append(
-              policy_name));
+      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
+                                policy_name);
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
