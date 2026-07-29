@@ -871,6 +871,31 @@ TEST(authentication_jwt_issuer_trailing_slash_is_dropped) {
             "https://acme.example.com");
 }
 
+TEST(authentication_jwt_token_type_is_reduced_to_one_spelling) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "tokenType": "Application/AT+JWT",
+        "algorithms": [ "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  // A media type is compared case-insensitively and with the leading
+  // `application/` optional, so spellings that admit exactly the same tokens
+  // must not read as different policies anywhere downstream
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).token_type, "at+jwt");
+}
+
 TEST(authentication_jwt_issuer_with_a_key_set_is_left_alone) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

@@ -140,6 +140,7 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 own_issuer_body: body
 [Asserts]
 header "Set-Cookie" not exists
+header "Location" not exists
 body == {{exchange_body}}
 {
   "type": "urn:sourcemeta:one:auth-exchange-failed",
@@ -274,6 +275,7 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 foreign_refusal_body: body
 [Asserts]
 header "Set-Cookie" not exists
+header "Location" not exists
 body == {{refused_body}}
 {
   "type": "urn:sourcemeta:one:auth-invalid-callback",

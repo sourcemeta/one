@@ -306,6 +306,12 @@ private:
       ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
                            sourcemeta::core::JWSAlgorithm::ES256}};
 
+  // The tolerance allowed on an identity token's time-based claims, matching
+  // what a presented access token is already given. A provider whose clock
+  // runs a little fast otherwise mints a token this refuses the instant it
+  // arrives, which ends a login that did everything right
+  static constexpr std::chrono::seconds ID_TOKEN_CLOCK_SKEW{60};
+
   // The transaction a callback belongs to, if the request carries one. A
   // request can present several cookies under one name, since a parent
   // domain and the host itself can each set one and neither the header nor
@@ -473,7 +479,7 @@ private:
             return std::nullopt;
           }
         },
-        {}};
+        {.clock_skew = ID_TOKEN_CLOCK_SKEW}};
   }
 
   // A failed login leaves its transaction cookie in place, sealed and bound
