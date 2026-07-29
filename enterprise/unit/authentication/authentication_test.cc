@@ -1522,6 +1522,68 @@ TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
           .allowed);
 }
 
+TEST(session_is_admitted_when_it_arrives_in_a_later_cookie_field) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_FIELD_LATER",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_field_later.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+
+  // A request may carry its cookies across several fields rather than one, so
+  // reading only the first would deny a session that did arrive
+  const std::string second{"sourcemeta_one_session=" + sealed};
+  const std::array<std::string_view, 2> carried{
+      {"sourcemeta_one_session=not-a-session", second}};
+  EXPECT_TRUE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = carried})
+          .allowed);
+}
+
+TEST(session_is_admitted_when_it_arrives_in_an_earlier_cookie_field) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/alpha"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_FIELD_EARLIER",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_field_earlier.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+
+  // And neither field is the one that decides, so a later one carrying nothing
+  // does not undo an earlier one that does
+  const std::string first{"sourcemeta_one_session=" + sealed};
+  const std::array<std::string_view, 2> carried{
+      {first, "sourcemeta_one_session=not-a-session"}};
+  EXPECT_TRUE(
+      authentication.admits(at("/alpha/x"), {.bearer = "", .cookies = carried})
+          .allowed);
+}
+
 TEST(a_session_for_another_policy_does_not_end_the_search) {
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};

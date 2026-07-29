@@ -51,9 +51,17 @@ public:
     }
   }
 
-  [[nodiscard]] operator std::span<const std::string_view>() const noexcept {
+  // What this views has to outlive it, so it cannot be built from storage that
+  // ends with the expression that built it
+  explicit RequestCookies(std::vector<std::string> &&) = delete;
+
+  [[nodiscard]] operator std::span<const std::string_view>() const & noexcept {
     return this->fields_;
   }
+
+  // For the same reason, what it hands out cannot outlive it either, so a
+  // temporary is refused rather than left to be read once it is gone
+  operator std::span<const std::string_view>() const && = delete;
 
   // Whether the request carried no cookie at all, which is one of the two
   // things that make a caller anonymous
