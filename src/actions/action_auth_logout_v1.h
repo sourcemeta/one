@@ -50,18 +50,20 @@ public:
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
       response.write_header("Cache-Control", "no-store");
-      response.write_header("Allow", "GET, HEAD, OPTIONS");
+      response.write_header("Allow", "POST, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
                                      request, response);
       return;
     }
 
-    if (request.method() != "get" && request.method() != "head") {
+    // The method this answers is part of the contract both editions present,
+    // so it is refused here exactly as the edition that implements it does
+    if (request.method() != "post") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
           "urn:sourcemeta:one:method-not-allowed",
           "This HTTP method is invalid for this URL", this->error_schema_, "*",
-          "GET, HEAD, OPTIONS");
+          "POST, OPTIONS");
       return;
     }
 

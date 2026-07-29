@@ -52,7 +52,7 @@ header "WWW-Authenticate" not exists
 
 # Logout is not exempt: a session that could log out would itself pass the gate,
 # so anonymous here the route denies like any other, leaking no session cookie
-GET {{base}}/self/v1/auth/logout
+POST {{base}}/self/v1/auth/logout
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
