@@ -56,8 +56,10 @@ public:
       return;
     }
 
-    // The method this answers is part of the contract both editions present,
-    // so it is refused here exactly as the edition that implements it does
+    // Which method this answers is part of the contract both editions present,
+    // so anything other than a POST is refused here exactly as the edition
+    // that implements signing out refuses it. Where the two differ is only in
+    // what a POST then gets
     if (request.method() != "post") {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
