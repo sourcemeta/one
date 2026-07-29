@@ -23,14 +23,13 @@
 #include "generators.h"
 #include "rules.h"
 
-#include <algorithm>     // std::ranges::any_of, std::ranges::sort
+#include <algorithm>     // std::copy, std::ranges::any_of, std::ranges::sort
 #include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
 #include <chrono>        // std::chrono
 #include <cstdint>       // std::uint8_t
 #include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
-#include <cstring>       // std::memcpy
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
@@ -361,9 +360,9 @@ static auto index_main(const std::string_view &program,
   sourcemeta::core::prettify(raw_configuration, inputs_text);
   inputs_text << sourcemeta::one::version();
   const auto inputs_digest{sourcemeta::core::sha256_digest(inputs_text.str())};
-  std::uint64_t inputs_fingerprint{0};
-  std::memcpy(&inputs_fingerprint, inputs_digest.data(),
-              sizeof(inputs_fingerprint));
+  sourcemeta::one::BuildState::InputsFingerprint inputs_fingerprint{};
+  std::copy(inputs_digest.cbegin(), inputs_digest.cend(),
+            inputs_fingerprint.begin());
 
   entries.load(
       state_path, sourcemeta::one::INDEX_RULES.leaves,

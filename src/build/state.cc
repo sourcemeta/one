@@ -18,7 +18,7 @@ namespace {
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
 constexpr std::uint32_t STATE_VERSION{4};
 constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
-constexpr std::size_t HEADER_SIZE{36};
+constexpr std::size_t HEADER_SIZE{60};
 
 #pragma pack(push, 1)
 struct LeafIndexRecord {
@@ -132,7 +132,8 @@ auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
 }
 
 auto BuildState::configure(std::span<const LeafRule> rules,
-                           std::uint32_t fingerprint, std::uint64_t inputs,
+                           std::uint32_t fingerprint,
+                           const BuildState::InputsFingerprint &inputs,
                            std::string_view sentinel) -> void {
   this->leaf_rules = rules;
   this->rules_fingerprint = fingerprint;
@@ -153,7 +154,8 @@ auto BuildState::reset_loaded_state() -> void {
 
 auto BuildState::load(const std::filesystem::path &path,
                       std::span<const LeafRule> rules,
-                      std::uint32_t fingerprint, std::uint64_t inputs,
+                      std::uint32_t fingerprint,
+                      const BuildState::InputsFingerprint &inputs,
                       std::string_view sentinel) -> void {
   this->configure(rules, fingerprint, inputs, sentinel);
 
@@ -182,7 +184,11 @@ auto BuildState::load(const std::filesystem::path &path,
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
     const auto on_disk_fingerprint{header_reader.get_dword()};
-    const auto on_disk_inputs{header_reader.get_qword()};
+    BuildState::InputsFingerprint on_disk_inputs{};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    header_reader.get_bytes(
+        reinterpret_cast<std::byte *>(on_disk_inputs.data()),
+        on_disk_inputs.size());
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
         on_disk_fingerprint != fingerprint) {
       this->reset_loaded_state();
@@ -745,11 +751,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     std::memcpy(slots.data(), this->table_slots, old_slots_size);
 
     sourcemeta::core::BinaryReader pool_size_reader{*this->view};
-    // Layout: [magic, version, fingerprint, configuration, capacity,
-    // entry_count, pool_size, resolver_entry_count], so the pool size sits two
-    // dwords past the entry count. Derived from the header size rather than
-    // written out, so that adding a field cannot leave this reading the wrong
-    // one
+    // Layout: [magic, version, fingerprint, inputs, capacity, entry_count,
+    // pool_size, resolver_entry_count], so the pool size is the second dword
+    // from the end. Counted back from the header size rather than written out,
+    // so that adding a field cannot leave this reading the wrong one
     pool_size_reader.seek(HEADER_SIZE - (2 * sizeof(std::uint32_t)));
     old_pool_size = pool_size_reader.get_dword();
 
@@ -1262,7 +1267,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           writer.put_dword(STATE_MAGIC);
           writer.put_dword(STATE_VERSION);
           writer.put_dword(this->rules_fingerprint);
-          writer.put_qword(this->inputs_fingerprint);
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          writer.put_bytes(reinterpret_cast<const std::byte *>(
+                               this->inputs_fingerprint.data()),
+                           this->inputs_fingerprint.size());
           writer.put_dword(capacity);
           writer.put_dword(output_count);
           writer.put_dword(total_pool_size);

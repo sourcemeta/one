@@ -126,6 +126,12 @@ struct GlobalRule {
 
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {
 public:
+  // A digest of everything a build was asked to apply, kept whole rather than
+  // truncated: a shortened one lets two sets of inputs land on the same value,
+  // and this is what decides whether a policy the configuration declares is
+  // read back from an artifact that never received it
+  using InputsFingerprint = std::array<std::uint8_t, 32>;
+
   struct Entry {
     std::filesystem::file_time_type file_mark;
     std::vector<std::filesystem::path> dependencies;
@@ -150,11 +156,12 @@ public:
 
   auto configure(std::span<const LeafRule> leaf_rules,
                  std::uint32_t rules_fingerprint,
-                 std::uint64_t inputs_fingerprint, std::string_view sentinel)
-      -> void;
+                 const InputsFingerprint &inputs_fingerprint,
+                 std::string_view sentinel) -> void;
   auto load(const std::filesystem::path &path,
             std::span<const LeafRule> leaf_rules,
-            std::uint32_t rules_fingerprint, std::uint64_t inputs_fingerprint,
+            std::uint32_t rules_fingerprint,
+            const InputsFingerprint &inputs_fingerprint,
             std::string_view sentinel) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
@@ -280,7 +287,7 @@ private:
   // honest record of what was actually applied. Both belong here because both
   // are recorded in files written before the outputs derived from them, so
   // neither file can vouch for itself
-  std::uint64_t inputs_fingerprint{0};
+  InputsFingerprint inputs_fingerprint{};
   // Whether the state on disk was built from the same inputs. A run that died
   // partway leaves outputs derived from inputs it never finished applying,
   // while its state still describes the ones before

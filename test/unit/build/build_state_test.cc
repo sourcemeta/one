@@ -9,7 +9,14 @@
 #include <string>     // std::string
 
 // A build of one unchanging configuration and version
-static constexpr std::uint64_t INPUTS{0x0123456789abcdefULL};
+static const sourcemeta::one::BuildState::InputsFingerprint INPUTS{
+    {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}};
+
+// A build of some other configuration, or of the same one by another version.
+// It differs from the above only past its eighth byte, so keeping any prefix of
+// a digest rather than the whole of it would read the two as one
+static const sourcemeta::one::BuildState::InputsFingerprint OTHER_INPUTS{
+    {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01}};
 
 static auto state_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "state" / name;
@@ -74,7 +81,7 @@ TEST(a_state_is_not_built_from_inputs_it_never_saw) {
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      INPUTS + 1, test_rules::RULES.sentinel);
+                      OTHER_INPUTS, test_rules::RULES.sentinel);
   EXPECT_FALSE(loaded_entries.built_from_these_inputs());
 
   // The mismatch withholds the records derived from those inputs, and nothing
