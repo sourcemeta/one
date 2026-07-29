@@ -5,7 +5,12 @@
 #include "build_test_utils.h"
 #include "test_rules.h"
 
+#include <cstdint>    // std::uint64_t
 #include <filesystem> // std::filesystem::path
+
+// A build of one unchanging configuration and version
+static constexpr sourcemeta::one::BuildState::InputsFingerprint INPUTS{
+    0x0123456789abcdefULL};
 
 TEST(full_empty_registry) {
   const std::filesystem::path output{"/output"};
@@ -14,7 +19,7 @@ TEST(full_empty_registry) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {})};
@@ -45,7 +50,7 @@ TEST(full_single_leaf) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {})};
@@ -95,7 +100,7 @@ TEST(full_single_leaf_headless_skips_full_only) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_HEADLESS, entries,
       output, schemas, "1.0.0", false, "", "Headless", {})};
@@ -141,7 +146,7 @@ TEST(full_nested_leaf_path) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {})};
@@ -203,7 +208,7 @@ TEST(full_with_comment_emits_comment_global) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "hello world", "Full", {})};
@@ -238,7 +243,7 @@ TEST(full_without_comment_removes_stale_comment) {
                   {.file_mark = MTIME(50), .dependencies = {}});
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {})};
@@ -273,7 +278,7 @@ TEST(full_multiple_leaves_emits_per_leaf_actions) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {})};
@@ -349,7 +354,7 @@ TEST(incremental_cached_globals_are_omitted) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", true, "", "Full", {})};
@@ -394,7 +399,7 @@ TEST(incremental_new_leaf_added_alongside_existing) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", true, "", "Full", {})};
@@ -446,7 +451,7 @@ TEST(limits_zero_disables_check) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full",
@@ -463,7 +468,7 @@ TEST(limits_within_threshold_succeeds) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full",
@@ -481,7 +486,7 @@ TEST(limits_exceeded_throws) {
 
   entries.configure(test_rules::RULES.leaves,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                    test_rules::RULES.sentinel);
+                    INPUTS, test_rules::RULES.sentinel);
   try {
     sourcemeta::one::delta<test_rules::RULES>(
         sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,

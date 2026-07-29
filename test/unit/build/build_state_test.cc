@@ -4,8 +4,17 @@
 #include "test_rules.h"
 
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint>    // std::uint64_t
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
+
+// A build of one unchanging configuration and version
+static constexpr sourcemeta::one::BuildState::InputsFingerprint INPUTS{
+    0x0123456789abcdefULL};
+
+// A build of some other configuration, or of the same one by another version
+static constexpr sourcemeta::one::BuildState::InputsFingerprint OTHER_INPUTS{
+    0xfedcba9876543210ULL};
 
 static auto state_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "state" / name;
@@ -18,15 +27,79 @@ TEST(round_trip_empty) {
   sourcemeta::one::BuildState original_entries;
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      INPUTS, test_rules::RULES.sentinel);
   EXPECT_TRUE(loaded_entries.empty());
+}
+
+TEST(a_state_is_built_from_the_inputs_it_was_saved_under) {
+  // The state is written once a build has finished, so it is the only record
+  // that answers for what a build actually applied
+  const auto path{state_path("inputs_same")};
+  std::filesystem::create_directories(path.parent_path());
+
+  sourcemeta::one::BuildState original_entries;
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
+      test_rules::RULES.sentinel);
+  original_entries.save(path);
+
+  sourcemeta::one::BuildState loaded_entries;
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      INPUTS, test_rules::RULES.sentinel);
+  EXPECT_TRUE(loaded_entries.built_from_these_inputs());
+}
+
+TEST(a_state_is_not_built_from_inputs_it_never_saw) {
+  const auto path{state_path("inputs_other")};
+  std::filesystem::create_directories(path.parent_path());
+
+  const auto now{std::filesystem::file_time_type::clock::now()};
+  sourcemeta::one::BuildState original_entries;
+  original_entries.emplace("/output/schemas/foo/%/schema.metapack",
+                           {.file_mark = now, .dependencies = {}});
+  original_entries.configure(
+      test_rules::RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
+      test_rules::RULES.sentinel);
+  original_entries.save(path);
+
+  // A configuration edited since, or a newer tool applying the same one. Either
+  // way what sits beside this state was derived from something else, and
+  // reading the anchor or the version as though it had been applied is what
+  // leaves a policy declared and ungated
+  sourcemeta::one::BuildState loaded_entries;
+  loaded_entries.load(path, test_rules::RULES.leaves,
+                      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                      OTHER_INPUTS, test_rules::RULES.sentinel);
+  EXPECT_FALSE(loaded_entries.built_from_these_inputs());
+
+  // The mismatch withholds the records derived from those inputs, and nothing
+  // else. What the state knows about the outputs already there is still needed
+  // to tell which of them have to go
+  EXPECT_EQ(loaded_entries.size(), 1);
+  EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
+}
+
+TEST(a_state_that_was_never_written_is_built_from_nothing) {
+  // Nothing has finished here, so nothing beside it was derived from anything
+  const auto path{state_path("inputs_absent")};
+  std::filesystem::create_directories(path.parent_path());
+  std::filesystem::remove(path);
+
+  sourcemeta::one::BuildState entries;
+  entries.load(path, test_rules::RULES.leaves,
+               sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
+               test_rules::RULES.sentinel);
+  EXPECT_FALSE(entries.built_from_these_inputs());
 }
 
 TEST(round_trip_single_entry_no_deps) {
@@ -40,14 +113,14 @@ TEST(round_trip_single_entry_no_deps) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
@@ -68,14 +141,14 @@ TEST(round_trip_with_file_mark) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -106,14 +179,14 @@ TEST(round_trip_with_dependencies) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -142,14 +215,14 @@ TEST(round_trip_multiple_entries) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(

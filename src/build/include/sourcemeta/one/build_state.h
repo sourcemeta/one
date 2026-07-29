@@ -126,6 +126,19 @@ struct GlobalRule {
 
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {
 public:
+  // A fingerprint of everything a build was asked to apply. Not a
+  // cryptographic digest: this decides whether an output may be reused, and
+  // anybody able to craft a colliding configuration can already write to the
+  // output directory, so the only collisions worth ruling out are accidental
+  // ones. It is the same hash the state keys its own table by, which keeps a
+  // cryptography backend off the indexing path, where initialising one costs
+  // more than the rest of a cached rebuild put together
+  using InputsFingerprint = std::uint64_t;
+
+  // The fingerprint of what a build is applying, over any text describing it
+  [[nodiscard]] static auto fingerprint(std::string_view inputs)
+      -> InputsFingerprint;
+
   struct Entry {
     std::filesystem::file_time_type file_mark;
     std::vector<std::filesystem::path> dependencies;
@@ -149,14 +162,24 @@ public:
   [[nodiscard]] auto take_lock() const -> std::unique_lock<std::mutex>;
 
   auto configure(std::span<const LeafRule> leaf_rules,
-                 std::uint32_t rules_fingerprint, std::string_view sentinel)
-      -> void;
+                 std::uint32_t rules_fingerprint,
+                 const InputsFingerprint &inputs_fingerprint,
+                 std::string_view sentinel) -> void;
   auto load(const std::filesystem::path &path,
             std::span<const LeafRule> leaf_rules,
-            std::uint32_t rules_fingerprint, std::string_view sentinel) -> void;
+            std::uint32_t rules_fingerprint,
+            const InputsFingerprint &inputs_fingerprint,
+            std::string_view sentinel) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
   [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
+
+  // Whether the state on disk was built from the same inputs this build is
+  // applying, which is what makes anything derived from them reusable rather
+  // than merely present
+  [[nodiscard]] auto built_from_these_inputs() const -> bool {
+    return this->inputs_match;
+  }
   [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
 
   [[nodiscard]] auto contains(std::string_view key) const -> bool;
@@ -266,6 +289,16 @@ private:
 
   std::span<const LeafRule> leaf_rules{};
   std::uint32_t rules_fingerprint{0};
+  // The configuration and version the outputs beside this state were built
+  // from. The state is written once a build has finished, so it is the only
+  // honest record of what was actually applied. Both belong here because both
+  // are recorded in files written before the outputs derived from them, so
+  // neither file can vouch for itself
+  InputsFingerprint inputs_fingerprint{};
+  // Whether the state on disk was built from the same inputs. A run that died
+  // partway leaves outputs derived from inputs it never finished applying,
+  // while its state still describes the ones before
+  bool inputs_match{false};
   std::string sentinel_separator{};
 };
 

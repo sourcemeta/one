@@ -16,9 +16,9 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{3};
+constexpr std::uint32_t STATE_VERSION{4};
 constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
-constexpr std::size_t HEADER_SIZE{28};
+constexpr std::size_t HEADER_SIZE{36};
 
 #pragma pack(push, 1)
 struct LeafIndexRecord {
@@ -127,15 +127,23 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
+auto BuildState::fingerprint(const std::string_view inputs)
+    -> BuildState::InputsFingerprint {
+  return fnv1a(inputs.data(), inputs.size());
+}
+
 auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
   return std::unique_lock<std::mutex>{this->mutex_};
 }
 
 auto BuildState::configure(std::span<const LeafRule> rules,
-                           std::uint32_t fingerprint, std::string_view sentinel)
-    -> void {
+                           std::uint32_t fingerprint,
+                           const BuildState::InputsFingerprint &inputs,
+                           std::string_view sentinel) -> void {
   this->leaf_rules = rules;
   this->rules_fingerprint = fingerprint;
+  this->inputs_fingerprint = inputs;
+  this->inputs_match = false;
   this->sentinel_separator = std::string{"/"} + std::string{sentinel} + "/";
 }
 
@@ -151,9 +159,10 @@ auto BuildState::reset_loaded_state() -> void {
 
 auto BuildState::load(const std::filesystem::path &path,
                       std::span<const LeafRule> rules,
-                      std::uint32_t fingerprint, std::string_view sentinel)
-    -> void {
-  this->configure(rules, fingerprint, sentinel);
+                      std::uint32_t fingerprint,
+                      const BuildState::InputsFingerprint &inputs,
+                      std::string_view sentinel) -> void {
+  this->configure(rules, fingerprint, inputs, sentinel);
 
   if (!std::filesystem::exists(path)) {
     return;
@@ -180,11 +189,18 @@ auto BuildState::load(const std::filesystem::path &path,
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
     const auto on_disk_fingerprint{header_reader.get_dword()};
+    const auto on_disk_inputs{header_reader.get_qword()};
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
         on_disk_fingerprint != fingerprint) {
       this->reset_loaded_state();
       return;
     }
+
+    // A state built from other inputs still describes what this output holds,
+    // so it is kept and reused for everything that does not depend on them.
+    // What it cannot vouch for is anything derived from them, which is why the
+    // mismatch is recorded rather than discarding the whole file
+    this->inputs_match = on_disk_inputs == inputs;
 
     const auto capacity{header_reader.get_dword()};
     const auto entries{header_reader.get_dword()};
@@ -736,10 +752,11 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     std::memcpy(slots.data(), this->table_slots, old_slots_size);
 
     sourcemeta::core::BinaryReader pool_size_reader{*this->view};
-    // Pool size sits two dwords past the magic/version/fingerprint/capacity/
-    // entry_count prefix. Layout: [magic, version, fingerprint, capacity,
-    // entry_count, pool_size, resolver_entry_count].
-    pool_size_reader.seek(20);
+    // Layout: [magic, version, fingerprint, inputs, capacity, entry_count,
+    // pool_size, resolver_entry_count], so the pool size is the second dword
+    // from the end. Counted back from the header size rather than written out,
+    // so that adding a field cannot leave this reading the wrong one
+    pool_size_reader.seek(HEADER_SIZE - (2 * sizeof(std::uint32_t)));
     old_pool_size = pool_size_reader.get_dword();
 
     auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
@@ -1251,6 +1268,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           writer.put_dword(STATE_MAGIC);
           writer.put_dword(STATE_VERSION);
           writer.put_dword(this->rules_fingerprint);
+          writer.put_qword(this->inputs_fingerprint);
           writer.put_dword(capacity);
           writer.put_dword(output_count);
           writer.put_dword(total_pool_size);
