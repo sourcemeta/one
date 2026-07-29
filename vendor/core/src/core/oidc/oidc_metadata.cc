@@ -246,6 +246,11 @@ auto OIDCProviderMetadata::supports_response_type(
   return this->oauth_.supports_response_type(value);
 }
 
+auto OIDCProviderMetadata::supports_token_endpoint_auth_method(
+    const std::string_view value) const -> bool {
+  return this->oauth_.supports_token_endpoint_auth_method(value);
+}
+
 auto OIDCProviderMetadata::supports_scope(const std::string_view value) const
     -> bool {
   return this->oauth_.data().array_member_contains(

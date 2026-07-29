@@ -138,6 +138,13 @@ public:
   [[nodiscard]] auto supports_response_type(const std::string_view value) const
       -> bool;
 
+  /// Whether a token endpoint authentication method is supported, defaulting
+  /// to `client_secret_basic` when absent (OpenID Connect Discovery 1.0
+  /// Section 3).
+  [[nodiscard]] auto
+  supports_token_endpoint_auth_method(const std::string_view value) const
+      -> bool;
+
   /// Whether a scope is supported (OpenID Connect Discovery 1.0 Section 3).
   [[nodiscard]] auto supports_scope(const std::string_view value) const -> bool;
 

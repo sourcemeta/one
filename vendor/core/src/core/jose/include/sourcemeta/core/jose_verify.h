@@ -228,6 +228,7 @@ enum class JWTVerificationError : std::uint8_t {
 /// #include <array>
 /// #include <cassert>
 /// #include <chrono>
+/// #include <optional>
 /// #include <string>
 ///
 /// const std::string input{
@@ -240,7 +241,8 @@ enum class JWTVerificationError : std::uint8_t {
 /// const std::array allowed{sourcemeta::core::JWSAlgorithm::RS256};
 /// const auto error{sourcemeta::core::jwt_verify(
 ///     token.value(), keys.value(), allowed, "acme", "client",
-///     std::chrono::system_clock::from_time_t(1500000000))};
+///     std::chrono::system_clock::from_time_t(1500000000), {}, std::nullopt,
+///     std::nullopt)};
 /// assert(error.has_value());
 /// ```
 SOURCEMETA_CORE_JOSE_EXPORT

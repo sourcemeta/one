@@ -67,6 +67,9 @@ public:
     /// identifier.
     std::chrono::seconds unknown_kid_cooldown{std::chrono::minutes{5}};
     /// The tolerance applied to time-based claims, uniform or per claim.
+    /// Unlike the other fields, the default is zero tolerance, so set it
+    /// deliberately when validating tokens minted by a clock that is not
+    /// your own.
     JWTClockSkew clock_skew{};
   };
 
