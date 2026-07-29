@@ -112,7 +112,7 @@ public:
     if (!transaction.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed", policy_name);
+                 "The login could not be completed");
       return;
     }
 
@@ -121,11 +121,21 @@ public:
 
     // Only once the callback is proven to belong to a real login is the
     // provider's outcome honoured: a decline returns an error instead of a
-    // code, and a success without a code is malformed
+    // code, and a success without a code is malformed. RFC 6749 Section
+    // 4.1.2.1 has a decline name itself with an error code, so one that names
+    // nothing is not a decision this can report as the provider's. It is no
+    // grant either, and a code arriving beside it is left unredeemed
     if (request.has_query("error")) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-                 "urn:sourcemeta:one:auth-login-declined",
-                 "The identity provider declined the login", policy_name);
+      if (request.query("error").empty()) {
+        this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                   "urn:sourcemeta:one:auth-invalid-callback",
+                   "The login could not be completed");
+      } else {
+        this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+                   "urn:sourcemeta:one:auth-login-declined",
+                   "The identity provider declined the login");
+      }
+
       return;
     }
 
@@ -133,15 +143,19 @@ public:
     if (code.empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed", policy_name);
+                 "The login could not be completed");
       return;
     }
 
+    // Which policy a callback belongs to is settled by opening its
+    // transaction, so nothing reaching here names one this instance does not
+    // serve. Answering as though the callback were unproven keeps that the
+    // only thing this URL ever says about a name
     const auto policy{authentication.interactive(policy_name)};
     if (!policy.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                 "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-                 policy_name);
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                 "urn:sourcemeta:one:auth-invalid-callback",
+                 "The login could not be completed");
       return;
     }
 
@@ -150,7 +164,7 @@ public:
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
-                 "The authentication configuration is incomplete", policy_name);
+                 "The authentication configuration is incomplete");
       return;
     }
 
@@ -158,7 +172,7 @@ public:
     if (!endpoints.has_value() || endpoints.value().token.empty()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-provider-unreachable",
-                 "The identity provider could not be reached", policy_name);
+                 "The identity provider could not be reached");
       return;
     }
 
@@ -172,7 +186,7 @@ public:
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-exchange-failed",
-                 "The authorization code could not be redeemed", policy_name);
+                 "The authorization code could not be redeemed");
       return;
     }
 
@@ -180,7 +194,7 @@ public:
     if (!token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-invalid-identity",
-                 "The identity token could not be validated", policy_name);
+                 "The identity token could not be validated");
       return;
     }
 
@@ -193,7 +207,7 @@ public:
     if (!identity.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-invalid-identity",
-                 "The identity token could not be validated", policy_name);
+                 "The identity token could not be validated");
       return;
     }
 
@@ -230,8 +244,7 @@ public:
         session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-identity-too-large",
-                 "The identity provider returned more than a session can hold",
-                 policy_name);
+                 "The identity provider returned more than a session can hold");
       return;
     }
 
@@ -239,7 +252,7 @@ public:
       this->fail(request, response,
                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                  "urn:sourcemeta:one:auth-misconfigured",
-                 "The authentication configuration is incomplete", policy_name);
+                 "The authentication configuration is incomplete");
       return;
     }
 
@@ -458,8 +471,8 @@ private:
   auto fail(sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response,
             const sourcemeta::core::HTTPStatus &status,
-            const std::string_view type, const std::string_view detail,
-            const std::string_view) const -> void {
+            const std::string_view type, const std::string_view detail) const
+      -> void {
     sourcemeta::one::json_error(request, response, status, type, detail,
                                 this->error_schema_, "*");
   }
