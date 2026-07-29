@@ -9,8 +9,8 @@
 #include <filesystem> // std::filesystem::path
 
 // A build of one unchanging configuration and version
-static const sourcemeta::one::BuildState::InputsFingerprint INPUTS{
-    {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}};
+static constexpr sourcemeta::one::BuildState::InputsFingerprint INPUTS{
+    0x0123456789abcdefULL};
 
 TEST(full_empty_registry) {
   const std::filesystem::path output{"/output"};

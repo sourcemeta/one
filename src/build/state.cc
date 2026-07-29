@@ -18,7 +18,7 @@ namespace {
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
 constexpr std::uint32_t STATE_VERSION{4};
 constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
-constexpr std::size_t HEADER_SIZE{60};
+constexpr std::size_t HEADER_SIZE{36};
 
 #pragma pack(push, 1)
 struct LeafIndexRecord {
@@ -127,6 +127,11 @@ namespace sourcemeta::one {
 
 using mark_type = std::filesystem::file_time_type;
 
+auto BuildState::fingerprint(const std::string_view inputs)
+    -> BuildState::InputsFingerprint {
+  return fnv1a(inputs.data(), inputs.size());
+}
+
 auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
   return std::unique_lock<std::mutex>{this->mutex_};
 }
@@ -184,11 +189,7 @@ auto BuildState::load(const std::filesystem::path &path,
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
     const auto on_disk_fingerprint{header_reader.get_dword()};
-    BuildState::InputsFingerprint on_disk_inputs{};
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    header_reader.get_bytes(
-        reinterpret_cast<std::byte *>(on_disk_inputs.data()),
-        on_disk_inputs.size());
+    const auto on_disk_inputs{header_reader.get_qword()};
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
         on_disk_fingerprint != fingerprint) {
       this->reset_loaded_state();
@@ -1267,10 +1268,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           writer.put_dword(STATE_MAGIC);
           writer.put_dword(STATE_VERSION);
           writer.put_dword(this->rules_fingerprint);
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          writer.put_bytes(reinterpret_cast<const std::byte *>(
-                               this->inputs_fingerprint.data()),
-                           this->inputs_fingerprint.size());
+          writer.put_qword(this->inputs_fingerprint);
           writer.put_dword(capacity);
           writer.put_dword(output_count);
           writer.put_dword(total_pool_size);

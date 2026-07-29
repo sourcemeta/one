@@ -126,11 +126,18 @@ struct GlobalRule {
 
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {
 public:
-  // A digest of everything a build was asked to apply, kept whole rather than
-  // truncated: a shortened one lets two sets of inputs land on the same value,
-  // and this is what decides whether a policy the configuration declares is
-  // read back from an artifact that never received it
-  using InputsFingerprint = std::array<std::uint8_t, 32>;
+  // A fingerprint of everything a build was asked to apply. Not a
+  // cryptographic digest: this decides whether an output may be reused, and
+  // anybody able to craft a colliding configuration can already write to the
+  // output directory, so the only collisions worth ruling out are accidental
+  // ones. It is the same hash the state keys its own table by, which keeps a
+  // cryptography backend off the indexing path, where initialising one costs
+  // more than the rest of a cached rebuild put together
+  using InputsFingerprint = std::uint64_t;
+
+  // The fingerprint of what a build is applying, over any text describing it
+  [[nodiscard]] static auto fingerprint(std::string_view inputs)
+      -> InputsFingerprint;
 
   struct Entry {
     std::filesystem::file_time_type file_mark;

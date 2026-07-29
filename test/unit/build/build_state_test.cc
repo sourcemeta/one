@@ -9,14 +9,12 @@
 #include <string>     // std::string
 
 // A build of one unchanging configuration and version
-static const sourcemeta::one::BuildState::InputsFingerprint INPUTS{
-    {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}};
+static constexpr sourcemeta::one::BuildState::InputsFingerprint INPUTS{
+    0x0123456789abcdefULL};
 
-// A build of some other configuration, or of the same one by another version.
-// It differs from the above only past its eighth byte, so keeping any prefix of
-// a digest rather than the whole of it would read the two as one
-static const sourcemeta::one::BuildState::InputsFingerprint OTHER_INPUTS{
-    {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01}};
+// A build of some other configuration, or of the same one by another version
+static constexpr sourcemeta::one::BuildState::InputsFingerprint OTHER_INPUTS{
+    0xfedcba9876543210ULL};
 
 static auto state_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "state" / name;

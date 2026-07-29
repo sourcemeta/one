@@ -2,7 +2,6 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/frame.h>
 
-#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
@@ -23,7 +22,7 @@
 #include "generators.h"
 #include "rules.h"
 
-#include <algorithm>     // std::copy, std::ranges::any_of, std::ranges::sort
+#include <algorithm>     // std::ranges::any_of, std::ranges::sort
 #include <array>         // std::array
 #include <atomic>        // std::atomic
 #include <cassert>       // assert
@@ -353,16 +352,13 @@ static auto index_main(const std::string_view &program,
   // What this build is being asked to apply: the configuration exactly as the
   // anchor records it, and the version of the tool applying it, since a
   // version change is what makes artifacts of an older format unusable. A
-  // digest rather than a hash meant for bucketing, because two sets of inputs
-  // landing on one value here would have the state vouch for work done under
-  // the other
+  // fingerprint over both, so that a state describing one of them never
+  // vouches for work done under the other
   std::ostringstream inputs_text;
   sourcemeta::core::prettify(raw_configuration, inputs_text);
   inputs_text << sourcemeta::one::version();
-  const auto inputs_digest{sourcemeta::core::sha256_digest(inputs_text.str())};
-  sourcemeta::one::BuildState::InputsFingerprint inputs_fingerprint{};
-  std::copy(inputs_digest.cbegin(), inputs_digest.cend(),
-            inputs_fingerprint.begin());
+  const auto inputs_fingerprint{
+      sourcemeta::one::BuildState::fingerprint(inputs_text.str())};
 
   entries.load(
       state_path, sourcemeta::one::INDEX_RULES.leaves,
