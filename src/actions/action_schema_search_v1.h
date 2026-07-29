@@ -177,10 +177,10 @@ public:
       }
     }
 
-    const auto cookies{request.header("cookie")};
+    const sourcemeta::one::RequestCookies cookies{request};
     auto result{this->search_view_.search(
         query, limit, scope,
-        [this, &credential, cookies](const std::string_view path) -> bool {
+        [this, &credential, &cookies](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
           const auto location{this->canonical_path(path)};
           return location.has_value() &&

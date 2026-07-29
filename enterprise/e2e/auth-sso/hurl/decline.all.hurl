@@ -495,3 +495,82 @@ Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+# A browser may present its cookies across several fields rather than one,
+# which HTTP/2 permits so that a proxy can compress them, and whoever reads
+# them has to put them back together. Starting a second login leaves this
+# browser carrying one transaction in each field
+GET {{base}}/self/v1/auth/login/keycloak
+HTTP 303
+Cache-Control: no-store
+[Captures]
+second_state: header "Location" regex "[?&]state=([A-Za-z0-9_-]+)"
+[Asserts]
+cookie "sourcemeta_one_transaction" exists
+
+# The state the first login named is honoured, though that transaction now
+# arrives in the later of the two fields. Reading only the first would refuse
+# a login that is entirely in order, and the person would be told nothing
+GET {{base}}/self/v1/auth/callback/keycloak?error=access_denied&state={{state}}
+Cookie: sourcemeta_one_transaction={{transaction}}
+HTTP 403
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+later_field_body: body
+[Asserts]
+header "Set-Cookie" not exists
+header "Location" not exists
+body == {{declined_body}}
+{
+  "type": "urn:sourcemeta:one:auth-login-declined",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "The identity provider declined the login"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{later_field_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# And the state the second login named is honoured just the same, so neither
+# field is the one that decides
+GET {{base}}/self/v1/auth/callback/keycloak?error=access_denied&state={{second_state}}
+Cookie: sourcemeta_one_transaction={{transaction}}
+HTTP 403
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+earlier_field_body: body
+[Asserts]
+header "Set-Cookie" not exists
+header "Location" not exists
+body == {{declined_body}}
+{
+  "type": "urn:sourcemeta:one:auth-login-declined",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "The identity provider declined the login"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{earlier_field_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

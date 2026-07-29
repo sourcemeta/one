@@ -138,9 +138,12 @@ private:
                   const sourcemeta::one::Authentication &authentication) const
       -> std::optional<std::string> {
     std::vector<std::string_view> candidates;
-    sourcemeta::core::http_cookie_values(
-        request.header("cookie"),
-        sourcemeta::one::Authentication::SESSION_COOKIE, candidates);
+    request.header_values(
+        "cookie", [&candidates](const std::string_view field) -> void {
+          sourcemeta::core::http_cookie_values(
+              field, sourcemeta::one::Authentication::SESSION_COOKIE,
+              candidates);
+        });
     for (const auto sealed : candidates) {
       const auto payload{authentication.open_session(sealed)};
       if (!payload.has_value()) {

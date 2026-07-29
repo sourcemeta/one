@@ -105,12 +105,13 @@ public:
     std::string schema_uri{this->server_uri()};
     schema_uri.push_back('/');
     schema_uri.append(path);
-    const auto schema_present{this->artifact_resolve_path(
-        {.bearer = credential, .cookies = request.header("cookie")}, schema_uri,
-        Tree::Schemas, "schema")};
+    const sourcemeta::one::RequestCookies cookies{request};
+    const auto schema_present{
+        this->artifact_resolve_path({.bearer = credential, .cookies = cookies},
+                                    schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        {.bearer = credential, .cookies = request.header("cookie")}, schema_uri,
-        Tree::Schemas, "blaze-exhaustive")};
+        {.bearer = credential, .cookies = cookies}, schema_uri, Tree::Schemas,
+        "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -173,7 +174,7 @@ public:
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [this, schema_template, schema_uri = std::move(schema_uri),
          bearer = std::string{credential},
-         cookies = std::string{request.header("cookie")}](
+         cookies = sourcemeta::one::owned_cookies(request)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) -> void {
@@ -208,9 +209,9 @@ public:
             return;
           }
 
-          if (!this->schema_evaluate_fast(
-                  {.bearer = bearer, .cookies = cookies}, this->request_schema_,
-                  envelope)) {
+          const sourcemeta::one::RequestCookies fields{cookies};
+          if (!this->schema_evaluate_fast({.bearer = bearer, .cookies = fields},
+                                          this->request_schema_, envelope)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -240,7 +241,7 @@ public:
                    .detail = "The instance does not conform to the schema"})};
               payload.assign(
                   "errors",
-                  this->schema_evaluate({.bearer = bearer, .cookies = cookies},
+                  this->schema_evaluate({.bearer = bearer, .cookies = fields},
                                         schema_uri, instance,
                                         sourcemeta::blaze::Mode::Exhaustive)
                       .second.at("errors"));

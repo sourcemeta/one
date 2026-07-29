@@ -81,9 +81,10 @@ public:
       return;
     }
 
+    const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
-        {.bearer = credential, .cookies = request.header("cookie")},
-        matches.front(), Tree::Schemas, this->metapack_)};
+        {.bearer = credential, .cookies = cookies}, matches.front(),
+        Tree::Schemas, this->metapack_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,

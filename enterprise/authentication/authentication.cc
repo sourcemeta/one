@@ -538,9 +538,10 @@ struct Authentication::Impl {
     return result;
   }
 
-  [[nodiscard]] auto admits(const std::string_view registry_path,
-                            const std::string_view credential,
-                            const std::string_view cookies) const
+  [[nodiscard]] auto
+  admits(const std::string_view registry_path,
+         const std::string_view credential,
+         const std::span<const std::string_view> cookies) const
       -> Authentication::Verdict {
     // A missing or structurally broken artifact leaves the section pointers
     // null and denies everything. Only a valid policy fails open below
@@ -625,8 +626,9 @@ struct Authentication::Impl {
     return !error.has_value();
   }
 
-  [[nodiscard]] auto admits_session(const std::span<const std::byte> metadata,
-                                    const std::string_view cookies) const
+  [[nodiscard]] auto
+  admits_session(const std::span<const std::byte> metadata,
+                 const std::span<const std::string_view> cookies) const
       -> bool {
     if (cookies.empty()) {
       return false;
@@ -645,8 +647,10 @@ struct Authentication::Impl {
     // so each is carried through the whole check and the caller is admitted
     // when any of them is a session for this policy
     std::vector<std::string_view> candidates;
-    sourcemeta::core::http_cookie_values(
-        cookies, Authentication::SESSION_COOKIE, candidates);
+    for (const auto field : cookies) {
+      sourcemeta::core::http_cookie_values(
+          field, Authentication::SESSION_COOKIE, candidates);
+    }
     for (const auto sealed : candidates) {
       const auto payload{this->session_open(decoded.session_secret_variable,
                                             Authentication::Purpose::Session,

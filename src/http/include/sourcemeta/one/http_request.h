@@ -8,6 +8,7 @@
 #include <sourcemeta/one/http_uwebsockets.h>
 
 #include <chrono>      // std::chrono::system_clock
+#include <concepts>    // std::invocable
 #include <cstddef>     // std::size_t
 #include <exception>   // std::exception_ptr, std::current_exception
 #include <memory>      // std::shared_ptr, std::make_shared
@@ -67,16 +68,32 @@ public:
     return this->request_ ? this->request_->getFullUrl() : this->path_;
   }
 
-  // TODO: This answers with the first field of a given name, which is the
-  // wrong answer for cookies. RFC 9113 Section 8.2.3 lets a client split those
-  // across several fields and asks whoever reads them to rejoin them first, so
-  // a browser behind a proxy that forwards the split unchanged has every
-  // cookie past the first ignored here. A cookie only ever admits, so missing
-  // one denies rather than lets anybody in, though somebody would experience
-  // it as signing in and then not being signed in
+  // The first value of a field, which is all a field carrying one value has.
+  // Where a field may arrive more than once, ask for every value instead
   [[nodiscard]] auto header(const std::string_view name) const noexcept
       -> std::string_view {
     return this->request_->getHeader(name);
+  }
+
+  // Every value a field carries, in the order they arrived. RFC 9110 Section
+  // 5.2 lets a field appear more than once, and Section 5.3 only permits
+  // repeats to be folded into one line for a field defined as a
+  // comma-separated list, which is why RFC 9113 Section 8.2.3 has to name the
+  // separator for cookies specifically. So how repeats combine is left to
+  // whoever knows the field, and this only says what arrived
+  template <typename Callback>
+    requires std::invocable<Callback, std::string_view>
+  auto header_values(const std::string_view name, Callback callback) const
+      -> void {
+    if (this->request_ == nullptr) {
+      return;
+    }
+
+    for (const auto [key, value] : *this->request_) {
+      if (key == name) {
+        callback(value);
+      }
+    }
   }
 
   // uWebSockets stores header field-names lowercased, so `name` must be

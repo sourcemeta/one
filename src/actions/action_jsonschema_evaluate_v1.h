@@ -54,19 +54,21 @@ public:
   auto rest(const std::span<std::string_view> matches,
             std::string_view credential, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    const sourcemeta::one::RequestCookies cookies{request};
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, {.bearer = credential, .cookies = request.header("cookie")},
-        request, response, *this, this->response_schema_, this->error_schema_,
+        matches, {.bearer = credential, .cookies = cookies}, request, response,
+        *this, this->response_schema_, this->error_schema_,
         this->request_schema_,
         // A throw here is intended and caught by the surrounding request
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [this, bearer = std::string{credential},
-         cookies = std::string{request.header("cookie")}](
+         cookies = sourcemeta::one::owned_cookies(request)](
             const std::string_view schema_uri,
             const std::string &body) -> sourcemeta::core::JSON {
+          const sourcemeta::one::RequestCookies fields{cookies};
           return this
-              ->schema_evaluate({.bearer = bearer, .cookies = cookies},
+              ->schema_evaluate({.bearer = bearer, .cookies = fields},
                                 schema_uri, sourcemeta::core::parse_json(body),
                                 sourcemeta::blaze::Mode::Exhaustive)
               .second;
@@ -246,7 +248,8 @@ public:
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [response_schema, error_schema, schema_uri = std::move(schema_uri),
          &self, request_schema, bearer = std::string{credentials.bearer},
-         cookies = std::string{credentials.cookies},
+         cookies = std::vector<std::string>{credentials.cookies.begin(),
+                                            credentials.cookies.end()},
          perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -282,7 +285,8 @@ public:
             return;
           }
 
-          if (!self.schema_evaluate_fast({.bearer = bearer, .cookies = cookies},
+          const sourcemeta::one::RequestCookies fields{cookies};
+          if (!self.schema_evaluate_fast({.bearer = bearer, .cookies = fields},
                                          request_schema, instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
