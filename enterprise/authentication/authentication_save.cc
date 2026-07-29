@@ -2,6 +2,7 @@
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/text.h>
 
 #include "authentication_format.h"
 
@@ -92,9 +93,27 @@ auto encode_oidc_metadata(const std::string_view issuer,
   return result;
 }
 
+// A media type is compared case-insensitively and with the `application/`
+// prefix optional, so two spellings that admit exactly the same tokens are
+// reduced to one here
+auto canonical_token_type(const std::string_view token_type) -> std::string {
+  std::string result{token_type};
+  sourcemeta::core::to_lowercase(result);
+  constexpr std::string_view MEDIA_TYPE_PREFIX{"application/"};
+  if (result.starts_with(MEDIA_TYPE_PREFIX)) {
+    result.erase(0, MEDIA_TYPE_PREFIX.size());
+  }
+
+  return result;
+}
+
 // The issuer, audience, and key set location are stored as length-prefixed
 // strings, followed by the allow-listed signature algorithms as one byte each.
-// An empty key set location means the location is discovered from the issuer
+// An empty key set location means the location is discovered from the issuer.
+// Both the algorithms and the token type arrive in whatever shape the caller
+// held them, and are reduced here to the single spelling the artifact carries,
+// exactly as a path is. Two policies admitting the same tokens must serialise
+// identically, since that is what decides whether one may reference the other
 auto encode_jwt_metadata(
     const std::string_view issuer, const std::string_view audience,
     const std::string_view jwks_uri,
@@ -104,9 +123,15 @@ auto encode_jwt_metadata(
   append_string(result, issuer);
   append_string(result, audience);
   append_string(result, jwks_uri);
-  append_string(result, token_type);
-  append_u32(result, static_cast<std::uint32_t>(algorithms.size()));
-  for (const auto algorithm : algorithms) {
+  append_string(result, canonical_token_type(token_type));
+
+  // The allow-list decides admission by membership, so its order carries no
+  // meaning and only its contents may
+  std::vector<sourcemeta::core::JWSAlgorithm> sorted{algorithms.begin(),
+                                                     algorithms.end()};
+  std::ranges::sort(sorted);
+  append_u32(result, static_cast<std::uint32_t>(sorted.size()));
+  for (const auto algorithm : sorted) {
     result.push_back(
         static_cast<std::byte>(static_cast<std::uint8_t>(algorithm)));
   }
