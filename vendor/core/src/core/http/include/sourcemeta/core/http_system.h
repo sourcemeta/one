@@ -125,9 +125,37 @@ public:
     return *this;
   }
 
+  /// A request header value, holding ordinary storage for a plain value and
+  /// wiping storage for one set from a secret
+  struct HeaderValue {
+    /// The held bytes. A plain value carries no secret and keeps the ordinary
+    /// string storage, while a value set from wiping storage stays in it, so
+    /// the common request pays nothing and a secret one is never retained in
+    /// an ordinary string
+    std::variant<std::string, SecureString> data;
+
+    /// Get a view of the held bytes
+    [[nodiscard]] auto bytes() const -> std::string_view {
+      return std::visit(
+          [](const auto &value) -> std::string_view { return value; },
+          this->data);
+    }
+  };
+
   /// Add a request header. Repeated names are permitted
   auto header(std::string name, std::string value) -> HTTPSystemRequest & {
-    this->headers_.emplace_back(std::move(name), std::move(value));
+    this->headers_.emplace_back(std::move(name),
+                                HeaderValue{.data = std::move(value)});
+    return *this;
+  }
+
+  /// Add a request header from wiping storage. The value is held in the wiping
+  /// storage so a secret it carries, such as a client credential, is never
+  /// retained in an ordinary string, and the transient serialisation a backend
+  /// builds at send time is wiped
+  auto header(std::string name, SecureString value) -> HTTPSystemRequest & {
+    this->headers_.emplace_back(std::move(name),
+                                HeaderValue{.data = std::move(value)});
     return *this;
   }
 
@@ -146,7 +174,7 @@ public:
       -> std::optional<std::string_view> {
     for (const auto &[key, value] : this->headers_) {
       if (equals_ignore_case(key, name)) {
-        return value;
+        return value.bytes();
       }
     }
 
@@ -255,7 +283,7 @@ private:
 
   std::string url_;
   HTTPMethod method_;
-  std::vector<std::pair<std::string, std::string>> headers_;
+  std::vector<std::pair<std::string, HeaderValue>> headers_;
   std::optional<Body> body_;
   bool follow_redirects_{true};
   std::size_t maximum_redirects_{20};

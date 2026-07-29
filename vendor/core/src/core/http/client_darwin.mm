@@ -136,7 +136,7 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
       for (const auto &[name, value] : this->headers_) {
         // Repeated headers are folded into a single comma-separated field
         // line, which is semantically equivalent per RFC 9110
-        [url_request addValue:to_nsstring(value)
+        [url_request addValue:to_nsstring(value.bytes())
             forHTTPHeaderField:to_nsstring(name)];
       }
 

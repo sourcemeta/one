@@ -6,6 +6,7 @@
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint16_t
+#include <cstring>     // std::strlen
 #include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -33,7 +34,10 @@ using CURLoption = int;
 using CURLINFO = int;
 using curl_off_t = long long;
 
-struct curl_slist;
+struct curl_slist {
+  char *data;
+  curl_slist *next;
+};
 
 auto curl_global_init(long flags) -> CURLcode;
 auto curl_easy_init() -> CURL *;
@@ -122,6 +126,15 @@ public:
   explicit CurlHeaderList(const CurlApi &api) : api_{api} {}
   ~CurlHeaderList() {
     if (this->list_) {
+      // libcurl duplicates every appended line and does not clear its copy
+      // on release, so wipe each one first to keep a secret header value
+      // out of freed memory
+      for (auto *entry{this->list_}; entry; entry = entry->next) {
+        if (entry->data) {
+          sourcemeta::core::secure_zero(entry->data, std::strlen(entry->data));
+        }
+      }
+
       this->api_.slist_free_all(this->list_);
     }
   }
@@ -349,14 +362,19 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
 
   CurlHeaderList header_list{api};
   for (const auto &[name, value] : this->headers_) {
-    std::string line{name};
+    // Reserve the whole line up front, so appending a possibly secret value
+    // can never reallocate storage that is wiped only at scope exit
+    std::string line;
+    line.reserve(name.size() + value.bytes().size() + 2);
+    const SecureStringScope line_scope{line};
+    line += name;
     // The semicolon form is how cURL distinguishes a header with an
     // empty value from a header to suppress
-    if (value.empty()) {
+    if (value.bytes().empty()) {
       line += ";";
     } else {
       line += ": ";
-      line += value;
+      line += value.bytes();
     }
 
     header_list.append(line);
