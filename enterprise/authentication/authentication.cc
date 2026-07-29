@@ -351,9 +351,18 @@ auto decode_jwt_metadata(const std::span<const std::byte> metadata,
   return true;
 }
 
-// The reference check treats two JWT policies as the same scope only when every
-// parameter that decides admission matches, so the identity spans the issuer,
-// audience, key set location, and the exact allowed algorithm bytes
+// The reference check treats two JWT policies as the same scope only when
+// every parameter that decides admission matches, so the issuer, audience, key
+// set location, required token type and allowed algorithms count as one
+// indivisible identity, never as separate keys that several policies could
+// satisfy piecewise or in swapped roles.
+//
+// A policy requiring a token type admits a narrower set than one that does
+// not, so two policies alike but for it are not the same audience either. That
+// refuses a reference from the stricter of the two to the looser one, which
+// every holder of the stricter credential could have followed anyway, and the
+// cost of refusing is a build that has to say so against disclosing a referent
+// to somebody the referrer never admitted
 auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
                              std::unordered_set<std::string_view> &keys)
     -> void {
@@ -369,25 +378,15 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
     return;
   }
 
-  keys.emplace(issuer);
-  keys.emplace(audience);
-  keys.emplace(jwks_uri);
-  // A policy that requires a token type admits a narrower set than one that
-  // does not, so two policies alike but for it are not the same audience.
-  // This refuses a reference from the stricter of the two to the looser one,
-  // which every holder of the stricter credential could have followed anyway.
-  // That is deliberate: the comparison is by equality, and the cost of
-  // refusing is a build that has to say so, against disclosing a referent to
-  // somebody the referrer never admitted
-  keys.emplace(token_type);
-
   std::uint32_t count{0};
   if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
     return;
   }
 
+  // The serialized run itself is the key. Its length prefixes keep the fields
+  // delimited, so exactly the equal identities compare equal
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  keys.emplace(reinterpret_cast<const char *>(metadata.data() + cursor), count);
+  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor + count);
 }
 
 struct OIDCPolicyMetadata {

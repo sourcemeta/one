@@ -90,6 +90,75 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+# An answer may name the provider it came from, and RFC 9207 Section 2.4 has a
+# client compare that against the one it addressed. Naming another provider
+# makes this an answer relayed from somewhere else, so it is refused before the
+# code is spent
+GET {{base}}/self/v1/auth/callback/keycloak?code=a-code-nobody-issued&state={{state}}&iss=https%3A%2F%2Fkeycloak%3A8443%2Frealms%2Fcleartext
+Cookie: sourcemeta_one_transaction={{transaction}}
+HTTP 400
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+foreign_issuer_body: body
+[Asserts]
+header "Set-Cookie" not exists
+header "Location" not exists
+body == {{refused_body}}
+{
+  "type": "urn:sourcemeta:one:auth-invalid-callback",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "The login could not be completed"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{foreign_issuer_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# Naming the provider this login did address reaches the exchange, so the
+# comparison is what decided the answer above rather than the parameter merely
+# being present
+GET {{base}}/self/v1/auth/callback/keycloak?code=a-code-nobody-issued&state={{state}}&iss=https%3A%2F%2Fkeycloak%3A8443%2Frealms%2Fmain
+Cookie: sourcemeta_one_transaction={{transaction}}
+HTTP 502
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+own_issuer_body: body
+[Asserts]
+header "Set-Cookie" not exists
+header "Location" not exists
+body == {{exchange_body}}
+{
+  "type": "urn:sourcemeta:one:auth-exchange-failed",
+  "title": "Bad Gateway",
+  "status": 502,
+  "detail": "The authorization code could not be redeemed"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{own_issuer_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 # A refusal carried by a proven callback is honoured, and answered as the
 # provider's decision rather than as a denial of a resource, so somebody who
 # declined at the provider is told what happened
@@ -185,6 +254,39 @@ body == {{declined_body}}
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
 ```
 {{contradictory_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# A refusal is placed before it is honoured too, so one arriving from another
+# provider is refused rather than reported as this login's outcome
+GET {{base}}/self/v1/auth/callback/keycloak?error=access_denied&state={{state}}&iss=https%3A%2F%2Fkeycloak%3A8443%2Frealms%2Fcleartext
+Cookie: sourcemeta_one_transaction={{transaction}}
+HTTP 400
+Cache-Control: no-store
+Content-Type: application/problem+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+foreign_refusal_body: body
+[Asserts]
+header "Set-Cookie" not exists
+header "Location" not exists
+body == {{refused_body}}
+{
+  "type": "urn:sourcemeta:one:auth-invalid-callback",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "The login could not be completed"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{foreign_refusal_body}}
 ```
 HTTP 200
 Cache-Control: no-store

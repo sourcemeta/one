@@ -552,6 +552,12 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 
 !!! note
 
+    A login that names no page to return to lands on the **first** path the
+    policy declares. The order of `paths` therefore decides where signing in
+    leaves somebody, though it never changes what the policy gates.
+
+!!! note
+
     A browser holds one session per instance, whichever interactive policy
     established it, so signing in with a second one ends the first. Separate
     browser profiles are the way to hold both at once.

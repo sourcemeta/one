@@ -119,6 +119,30 @@ public:
     const auto *nonce{transaction.value().try_at("nonce")};
     const auto *verifier{transaction.value().try_at("verifier")};
 
+    // Which policy a callback belongs to is settled by opening its
+    // transaction, so nothing reaching here names one this instance does not
+    // serve. Answering as though the callback were unproven keeps that the
+    // only thing this URL ever says about a name
+    const auto policy{authentication.interactive(policy_name)};
+    if (!policy.has_value()) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                 "urn:sourcemeta:one:auth-invalid-callback",
+                 "The login could not be completed");
+      return;
+    }
+
+    // RFC 9207 Section 2.4 has a client compare the issuer an answer names
+    // against the one it addressed the request to, which is what catches an
+    // answer relayed from somewhere else. A provider naming none cannot be
+    // checked that way, so this runs only when one arrives, and it runs ahead
+    // of the outcome so that no answer is acted on before it is placed
+    if (request.has_query("iss") && request.query("iss") != policy->issuer) {
+      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                 "urn:sourcemeta:one:auth-invalid-callback",
+                 "The login could not be completed");
+      return;
+    }
+
     // Only once the callback is proven to belong to a real login is the
     // provider's outcome honoured: a decline returns an error instead of a
     // code, and a success without a code is malformed. RFC 6749 Section
@@ -141,18 +165,6 @@ public:
 
     const auto code{request.query("code")};
     if (code.empty()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed");
-      return;
-    }
-
-    // Which policy a callback belongs to is settled by opening its
-    // transaction, so nothing reaching here names one this instance does not
-    // serve. Answering as though the callback were unproven keeps that the
-    // only thing this URL ever says about a name
-    const auto policy{authentication.interactive(policy_name)};
-    if (!policy.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                  "urn:sourcemeta:one:auth-invalid-callback",
                  "The login could not be completed");
@@ -293,6 +305,12 @@ private:
   static constexpr std::array<sourcemeta::core::JWSAlgorithm, 2>
       ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
                            sourcemeta::core::JWSAlgorithm::ES256}};
+
+  // The tolerance allowed on an identity token's time-based claims, matching
+  // what a presented access token is already given. A provider whose clock
+  // runs a little fast otherwise mints a token this refuses the instant it
+  // arrives, which ends a login that did everything right
+  static constexpr std::chrono::seconds ID_TOKEN_CLOCK_SKEW{60};
 
   // The transaction a callback belongs to, if the request carries one. A
   // request can present several cookies under one name, since a parent
@@ -461,7 +479,7 @@ private:
             return std::nullopt;
           }
         },
-        {}};
+        {.clock_skew = ID_TOKEN_CLOCK_SKEW}};
   }
 
   // A failed login leaves its transaction cookie in place, sealed and bound

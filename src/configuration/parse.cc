@@ -178,7 +178,16 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         }
 
         if (entry.defines("tokenType")) {
+          // A media type is compared case-insensitively and with the
+          // `application/` prefix optional, so the spelling is reduced here to
+          // the single form the artifact carries. Otherwise two policies that
+          // admit exactly the same tokens would read as different scopes
           parsed.token_type = entry.at("tokenType").to_string();
+          sourcemeta::core::to_lowercase(parsed.token_type);
+          constexpr std::string_view MEDIA_TYPE_PREFIX{"application/"};
+          if (parsed.token_type.starts_with(MEDIA_TYPE_PREFIX)) {
+            parsed.token_type.erase(0, MEDIA_TYPE_PREFIX.size());
+          }
         }
 
         for (const auto &algorithm : entry.at("algorithms").as_array()) {

@@ -2699,6 +2699,105 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
       authentication.reference_permitted(at("/alpha/one"), at("/gamma/two")));
 }
 
+TEST(reference_across_swapped_jwt_identities_is_rejected) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // One policy's issuer is the other's audience and vice versa, so the scopes
+  // share both strings yet no token satisfies them both
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://login.test",
+        .audience = "registry",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "registry",
+        .audience = "https://login.test",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa}}};
+  const auto path{test_path("jwt_reference_swapped.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
+TEST(reference_mixing_identities_across_jwt_policies_is_rejected) {
+  const std::array<std::string_view, 1> source_paths{{"/source"}};
+  const std::array<std::string_view, 1> target_paths{{"/target"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // The referrer pairs an issuer and an audience that the referent only
+  // carries through two different policies, so no single referent scope
+  // matches and the reference must not slip through their union
+  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
+      {{.paths = source_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://alpha.test",
+        .audience = "dashboard",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa},
+       {.paths = target_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://alpha.test",
+        .audience = "registry",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa},
+       {.paths = target_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://beta.test",
+        .audience = "dashboard",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa}}};
+  const auto path{test_path("jwt_reference_mixed.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/source/one"), at("/target/two")));
+}
+
+TEST(reference_across_swapped_jwt_key_set_locations_is_rejected) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> rsa{
+      {sourcemeta::core::JWSAlgorithm::RS256}};
+  // The key set location decides which keys sign an admitted token, so
+  // trading it with the audience denotes a different scope as surely as
+  // trading the issuer does
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "https://idp.test/jwks",
+        .jwks_uri = "registry",
+        .algorithms = rsa},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "registry",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = rsa}}};
+  const auto path{test_path("jwt_reference_swapped_keys.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
 // A configured policy path that only differs cosmetically still has to gate the
 // location it names. A spelling the matcher could not traverse would leave the
 // target public while the configuration reads as though it were gated
