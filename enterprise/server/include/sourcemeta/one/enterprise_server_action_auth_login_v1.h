@@ -103,6 +103,9 @@ public:
     // Starting a login that cannot be completed only strands the person at the
     // provider, so the secret the exchange will need is required up front
     if (!authentication.client_secret(policy_name).has_value()) {
+      sourcemeta::one::HTTP_LOG(
+          std::string{"No client secret is set for the policy "}.append(
+              policy_name));
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -114,6 +117,10 @@ public:
 
     const auto endpoints{authentication.endpoints(policy_name)};
     if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
+      sourcemeta::one::HTTP_LOG(
+          std::string{"The provider named no authorization endpoint, or could "
+                      "not be reached, for the policy "}
+              .append(policy_name));
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
           "urn:sourcemeta:one:auth-provider-unreachable",
@@ -170,6 +177,9 @@ public:
         policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
         payload_text.str(), expiry)};
     if (!sealed.has_value()) {
+      sourcemeta::one::HTTP_LOG(
+          std::string{"No session secret is set for the policy "}.append(
+              policy_name));
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -194,6 +204,10 @@ public:
         endpoints.value().authorization, policy->client_id, redirect_uri, state,
         std::string_view{challenge.data(), challenge.size()}, nonce)};
     if (!url.has_value()) {
+      sourcemeta::one::HTTP_LOG(
+          std::string{"The authorization endpoint is not a URL a request can "
+                      "be built against, for the policy "}
+              .append(policy_name));
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -216,6 +230,10 @@ public:
     // A redirect without the transaction cookie could never complete at the
     // callback, so it is not worth sending
     if (!cookie.has_value()) {
+      sourcemeta::one::HTTP_LOG(
+          std::string{"The login transaction could not be put in a cookie, "
+                      "for the policy "}
+              .append(policy_name));
       sourcemeta::one::json_error(
           request, response,
           sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,

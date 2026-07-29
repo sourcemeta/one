@@ -64,7 +64,7 @@ auto Authentication::interactive(const std::string_view) const
 }
 
 auto Authentication::client_secret(const std::string_view) const
-    -> std::optional<std::string> {
+    -> std::optional<sourcemeta::core::SecureString> {
   return std::nullopt;
 }
 
