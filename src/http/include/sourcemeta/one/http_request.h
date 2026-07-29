@@ -67,6 +67,13 @@ public:
     return this->request_ ? this->request_->getFullUrl() : this->path_;
   }
 
+  // TODO: This answers with the first field of a given name, which is the
+  // wrong answer for cookies. RFC 9113 Section 8.2.3 lets a client split those
+  // across several fields and asks whoever reads them to rejoin them first, so
+  // a browser behind a proxy that forwards the split unchanged has every
+  // cookie past the first ignored here. A cookie only ever admits, so missing
+  // one denies rather than lets anybody in, though somebody would experience
+  // it as signing in and then not being signed in
   [[nodiscard]] auto header(const std::string_view name) const noexcept
       -> std::string_view {
     return this->request_->getHeader(name);
