@@ -132,13 +132,12 @@ auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
 }
 
 auto BuildState::configure(std::span<const LeafRule> rules,
-                           std::uint32_t fingerprint,
-                           std::uint64_t configuration,
+                           std::uint32_t fingerprint, std::uint64_t inputs,
                            std::string_view sentinel) -> void {
   this->leaf_rules = rules;
   this->rules_fingerprint = fingerprint;
-  this->configuration_fingerprint = configuration;
-  this->configuration_matches = false;
+  this->inputs_fingerprint = inputs;
+  this->inputs_match = false;
   this->sentinel_separator = std::string{"/"} + std::string{sentinel} + "/";
 }
 
@@ -154,9 +153,9 @@ auto BuildState::reset_loaded_state() -> void {
 
 auto BuildState::load(const std::filesystem::path &path,
                       std::span<const LeafRule> rules,
-                      std::uint32_t fingerprint, std::uint64_t configuration,
+                      std::uint32_t fingerprint, std::uint64_t inputs,
                       std::string_view sentinel) -> void {
-  this->configure(rules, fingerprint, configuration, sentinel);
+  this->configure(rules, fingerprint, inputs, sentinel);
 
   if (!std::filesystem::exists(path)) {
     return;
@@ -183,19 +182,18 @@ auto BuildState::load(const std::filesystem::path &path,
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
     const auto on_disk_fingerprint{header_reader.get_dword()};
-    const auto on_disk_configuration{header_reader.get_qword()};
+    const auto on_disk_inputs{header_reader.get_qword()};
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
         on_disk_fingerprint != fingerprint) {
       this->reset_loaded_state();
       return;
     }
 
-    // A state built from another configuration still describes what this
-    // output holds, so it is kept and reused for everything that does not
-    // depend on the configuration. What it cannot vouch for is anything
-    // derived from one, which is why the mismatch is recorded rather than
-    // discarding the whole file
-    this->configuration_matches = on_disk_configuration == configuration;
+    // A state built from other inputs still describes what this output holds,
+    // so it is kept and reused for everything that does not depend on them.
+    // What it cannot vouch for is anything derived from them, which is why the
+    // mismatch is recorded rather than discarding the whole file
+    this->inputs_match = on_disk_inputs == inputs;
 
     const auto capacity{header_reader.get_dword()};
     const auto entries{header_reader.get_dword()};
@@ -1264,7 +1262,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           writer.put_dword(STATE_MAGIC);
           writer.put_dword(STATE_VERSION);
           writer.put_dword(this->rules_fingerprint);
-          writer.put_qword(this->configuration_fingerprint);
+          writer.put_qword(this->inputs_fingerprint);
           writer.put_dword(capacity);
           writer.put_dword(output_count);
           writer.put_dword(total_pool_size);

@@ -150,22 +150,21 @@ public:
 
   auto configure(std::span<const LeafRule> leaf_rules,
                  std::uint32_t rules_fingerprint,
-                 std::uint64_t configuration_fingerprint,
-                 std::string_view sentinel) -> void;
+                 std::uint64_t inputs_fingerprint, std::string_view sentinel)
+      -> void;
   auto load(const std::filesystem::path &path,
             std::span<const LeafRule> leaf_rules,
-            std::uint32_t rules_fingerprint,
-            std::uint64_t configuration_fingerprint, std::string_view sentinel)
-      -> void;
+            std::uint32_t rules_fingerprint, std::uint64_t inputs_fingerprint,
+            std::string_view sentinel) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
   [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
 
-  // Whether the state on disk was built from the configuration this build is
-  // applying, which is what makes anything derived from a configuration
-  // reusable rather than merely present
-  [[nodiscard]] auto built_from_this_configuration() const -> bool {
-    return this->configuration_matches;
+  // Whether the state on disk was built from the same inputs this build is
+  // applying, which is what makes anything derived from them reusable rather
+  // than merely present
+  [[nodiscard]] auto built_from_these_inputs() const -> bool {
+    return this->inputs_match;
   }
   [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
 
@@ -276,14 +275,16 @@ private:
 
   std::span<const LeafRule> leaf_rules{};
   std::uint32_t rules_fingerprint{0};
-  // The configuration the outputs beside this state were built from. The state
-  // is written once a build has finished, so it is the only honest record of
-  // which configuration was actually applied
-  std::uint64_t configuration_fingerprint{0};
-  // Whether the state on disk was built from the same configuration. A run
-  // that died partway leaves outputs derived from a configuration it never
-  // finished applying, and its state still describes the one before
-  bool configuration_matches{false};
+  // The configuration and version the outputs beside this state were built
+  // from. The state is written once a build has finished, so it is the only
+  // honest record of what was actually applied. Both belong here because both
+  // are recorded in files written before the outputs derived from them, so
+  // neither file can vouch for itself
+  std::uint64_t inputs_fingerprint{0};
+  // Whether the state on disk was built from the same inputs. A run that died
+  // partway leaves outputs derived from inputs it never finished applying,
+  // while its state still describes the ones before
+  bool inputs_match{false};
   std::string sentinel_separator{};
 };
 

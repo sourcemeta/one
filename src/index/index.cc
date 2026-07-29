@@ -351,21 +351,24 @@ static auto index_main(const std::string_view &program,
 
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
-  // A digest of the configuration exactly as the anchor records it, rather
-  // than a hash meant for bucketing, since two configurations landing on one
-  // value here would have the state vouch for work done under the other
-  std::ostringstream configuration_text;
-  sourcemeta::core::prettify(raw_configuration, configuration_text);
-  const auto configuration_digest{
-      sourcemeta::core::sha256_digest(configuration_text.str())};
-  std::uint64_t configuration_fingerprint{0};
-  std::memcpy(&configuration_fingerprint, configuration_digest.data(),
-              sizeof(configuration_fingerprint));
+  // What this build is being asked to apply: the configuration exactly as the
+  // anchor records it, and the version of the tool applying it, since a
+  // version change is what makes artifacts of an older format unusable. A
+  // digest rather than a hash meant for bucketing, because two sets of inputs
+  // landing on one value here would have the state vouch for work done under
+  // the other
+  std::ostringstream inputs_text;
+  sourcemeta::core::prettify(raw_configuration, inputs_text);
+  inputs_text << sourcemeta::one::version();
+  const auto inputs_digest{sourcemeta::core::sha256_digest(inputs_text.str())};
+  std::uint64_t inputs_fingerprint{0};
+  std::memcpy(&inputs_fingerprint, inputs_digest.data(),
+              sizeof(inputs_fingerprint));
 
   entries.load(
       state_path, sourcemeta::one::INDEX_RULES.leaves,
       sourcemeta::one::rules_fingerprint<sourcemeta::one::INDEX_RULES>(),
-      configuration_fingerprint, sourcemeta::one::INDEX_RULES.sentinel);
+      inputs_fingerprint, sourcemeta::one::INDEX_RULES.sentinel);
 
   // Only trust on-disk files when the state was loaded successfully,
   // otherwise the entries map and the on-disk artefacts are out of sync
@@ -373,20 +376,21 @@ static auto index_main(const std::string_view &program,
   std::string current_version;
   const auto this_version{sourcemeta::one::version()};
   const auto version_path{canonical_output / "version.json"};
-  if (!entries.empty() && std::filesystem::exists(version_path)) {
+  if (!entries.empty() && entries.built_from_these_inputs() &&
+      std::filesystem::exists(version_path)) {
     const auto version_json{sourcemeta::core::read_json(version_path)};
     current_version = version_json.to_string();
   }
 
-  // The anchor is written early, while everything derived from it is written
-  // later and the state only once the whole build has finished. So an anchor
-  // matching the configuration at hand is not on its own evidence that the
-  // configuration was ever applied: a run that died in between leaves exactly
-  // that. The state carries which configuration it was built from, and only
-  // that agreeing makes the anchor worth reading
+  // Both of these records are written early, while everything derived from
+  // them is written later and the state only once the whole build has
+  // finished. So one of them matching what this build is applying is not on
+  // its own evidence that it was ever applied: a run that died in between
+  // leaves exactly that. The state carries what it was built from, and only
+  // that agreeing makes either record worth reading
   auto current_configuration{sourcemeta::core::JSON{nullptr}};
   const auto configuration_json_path{canonical_output / "configuration.json"};
-  if (!entries.empty() && entries.built_from_this_configuration() &&
+  if (!entries.empty() && entries.built_from_these_inputs() &&
       std::filesystem::exists(configuration_json_path)) {
     current_configuration =
         sourcemeta::core::read_json(configuration_json_path);
