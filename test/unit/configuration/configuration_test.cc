@@ -896,6 +896,39 @@ TEST(authentication_jwt_token_type_is_reduced_to_one_spelling) {
   EXPECT_EQ(configuration.authentication.at(0).token_type, "at+jwt");
 }
 
+TEST(authentication_jwt_algorithms_are_reduced_to_one_order) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "one",
+        "paths": [ "/one" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "ES256", "RS256" ]
+      },
+      {
+        "type": "jwt",
+        "name": "two",
+        "paths": [ "/two" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "RS256", "ES256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  // The allow-list is a set as far as admission is concerned, so two policies
+  // naming the same algorithms admit the same tokens whatever order they were
+  // written in, and must not read as different policies anywhere downstream
+  EXPECT_EQ(configuration.authentication.size(), 2);
+  EXPECT_EQ(configuration.authentication.at(0).algorithms,
+            configuration.authentication.at(1).algorithms);
+}
+
 TEST(authentication_jwt_issuer_with_a_key_set_is_left_alone) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
