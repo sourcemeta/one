@@ -95,12 +95,18 @@ auto encode_oidc_metadata(const std::string_view issuer,
 
 // A media type is compared case-insensitively and with the `application/`
 // prefix optional, so two spellings that admit exactly the same tokens are
-// reduced to one here
+// reduced to one here. The prefix only comes off a bare subtype, matching how
+// a presented token's type is read: a value that is the prefix alone keeps it,
+// since dropping it would leave nothing and turn a policy that names a type
+// into one that accepts every type, and a value carrying a further separator
+// keeps it too, since what follows is then not a subtype
 auto canonical_token_type(const std::string_view token_type) -> std::string {
   std::string result{token_type};
   sourcemeta::core::to_lowercase(result);
   constexpr std::string_view MEDIA_TYPE_PREFIX{"application/"};
-  if (result.starts_with(MEDIA_TYPE_PREFIX)) {
+  if (result.size() > MEDIA_TYPE_PREFIX.size() &&
+      result.starts_with(MEDIA_TYPE_PREFIX) &&
+      result.find('/', MEDIA_TYPE_PREFIX.size()) == std::string::npos) {
     result.erase(0, MEDIA_TYPE_PREFIX.size());
   }
 
@@ -125,11 +131,13 @@ auto encode_jwt_metadata(
   append_string(result, jwks_uri);
   append_string(result, canonical_token_type(token_type));
 
-  // The allow-list decides admission by membership, so its order carries no
-  // meaning and only its contents may
+  // The allow-list decides admission by membership, so neither its order nor a
+  // repeated entry carries any meaning, and only the set it denotes may
   std::vector<sourcemeta::core::JWSAlgorithm> sorted{algorithms.begin(),
                                                      algorithms.end()};
   std::ranges::sort(sorted);
+  const auto repeated{std::ranges::unique(sorted)};
+  sorted.erase(repeated.begin(), repeated.end());
   append_u32(result, static_cast<std::uint32_t>(sorted.size()));
   for (const auto algorithm : sorted) {
     result.push_back(
