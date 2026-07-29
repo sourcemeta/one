@@ -350,7 +350,11 @@ inline auto http_serialize_headers(const Headers &headers) -> std::string {
   std::size_t total_size{0};
   for (const auto &[name, value] : headers) {
     // Account for the colon, the space, and the trailing CRLF
-    total_size += name.size() + value.size() + 4;
+    if constexpr (requires { value.bytes(); }) {
+      total_size += name.size() + value.bytes().size() + 4;
+    } else {
+      total_size += name.size() + value.size() + 4;
+    }
   }
 
   std::string result;
@@ -360,7 +364,12 @@ inline auto http_serialize_headers(const Headers &headers) -> std::string {
     // value is preferred for consistent readability by humans"
     result += name;
     result += ": ";
-    result += value;
+    if constexpr (requires { value.bytes(); }) {
+      result += value.bytes();
+    } else {
+      result += value;
+    }
+
     result += "\r\n";
   }
 

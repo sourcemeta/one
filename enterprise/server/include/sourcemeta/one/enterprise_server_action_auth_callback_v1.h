@@ -199,7 +199,8 @@ public:
 
     const auto id_token{this->exchange(
         endpoints.value().token, policy->client_id, client_secret.value(),
-        redirect_uri, code, verifier->to_string())};
+        redirect_uri, code, verifier->to_string(),
+        endpoints.value().token_endpoint_basic_auth)};
     if (!id_token.has_value()) {
       this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
                  "urn:sourcemeta:one:auth-exchange-failed",
@@ -449,13 +450,17 @@ private:
     }
   }
 
-  [[nodiscard]] auto exchange(const std::string_view token_endpoint,
-                              const std::string_view client_id,
-                              const std::string_view client_secret,
-                              const std::string_view redirect_uri,
-                              const std::string_view code,
-                              const std::string_view code_verifier) const
-      -> std::optional<std::string> {
+  // RFC 6749 Section 2.3.1 has every server accept the client secret in an
+  // authorization header, and asks that carrying it in the request body be
+  // limited to clients that cannot send one. A body is the part of a request
+  // that logging and proxies keep, while an authorization header is the part
+  // they already know to redact, so the header is used wherever the provider
+  // takes it
+  [[nodiscard]] auto exchange(
+      const std::string_view token_endpoint, const std::string_view client_id,
+      const std::string_view client_secret, const std::string_view redirect_uri,
+      const std::string_view code, const std::string_view code_verifier,
+      const bool basic_auth) const -> std::optional<std::string> {
     try {
       sourcemeta::core::HTTPSystemRequest fetch{
           std::string{token_endpoint}, sourcemeta::core::HTTPMethod::POST};
@@ -466,8 +471,16 @@ private:
       sourcemeta::core::SecureString body;
       sourcemeta::core::oauth_build_token_request_code(code, redirect_uri,
                                                        code_verifier, {}, body);
-      sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
-                                                 body);
+      if (basic_auth) {
+        sourcemeta::core::SecureString authorization;
+        sourcemeta::core::oauth_client_secret_basic(client_id, client_secret,
+                                                    authorization);
+        fetch.header("authorization", std::move(authorization));
+      } else {
+        sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
+                                                   body);
+      }
+
       fetch.body(std::move(body), "application/x-www-form-urlencoded");
       const auto result{fetch.send()};
       if (result.status.code < 200 || result.status.code >= 300) {

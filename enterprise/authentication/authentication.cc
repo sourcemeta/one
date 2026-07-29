@@ -957,6 +957,15 @@ struct Authentication::Impl {
         resolved.end_session = document.value().end_session_endpoint().value();
       }
 
+      // RFC 6749 Section 2.3.1 requires every server to accept the client
+      // secret in an authorization header and discourages carrying it in the
+      // request body, so the body is used only where the header is refused.
+      // A provider that lists nothing is taken to accept the header, which is
+      // what the specification assigns to saying nothing
+      resolved.token_endpoint_basic_auth =
+          document.value().supports_token_endpoint_auth_method(
+              "client_secret_basic");
+
       cached.source = server;
       cached.resolved = std::move(resolved);
     }

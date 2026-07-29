@@ -212,6 +212,9 @@ public:
     std::string jwks_uri{};
     // Absent from a provider that does not offer to end its own session
     std::string end_session{};
+    // Whether the provider takes the client secret in an authorization header
+    // rather than in the request body
+    bool token_endpoint_basic_auth{true};
   };
 
   // What the named interactive policy's provider says about itself, retrieved

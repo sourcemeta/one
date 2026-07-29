@@ -2174,6 +2174,110 @@ TEST(provider_endpoints_are_retrieved_once_and_reused) {
   EXPECT_EQ(*calls, 1);
 }
 
+TEST(a_provider_naming_no_authentication_method_takes_the_header) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_AUTH_ABSENT",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_auth_absent.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const std::map<std::string, std::string> responses{
+      {"https://login.test/.well-known/openid-configuration",
+       R"JSON({
+         "issuer": "https://login.test",
+         "authorization_endpoint": "https://login.test/authorize",
+         "token_endpoint": "https://login.test/token",
+         "jwks_uri": "https://login.test/jwks",
+         
+         "response_types_supported": [ "code" ],
+         "subject_types_supported": [ "public" ],
+         "id_token_signing_alg_values_supported": [ "RS256" ]
+       })JSON"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher(responses, nullptr)};
+
+  const auto endpoints{authentication.endpoints("okta")};
+  EXPECT_TRUE(endpoints.has_value());
+  // RFC 8414 Section 2 makes an absent list mean `client_secret_basic`, so
+  // saying nothing is an answer rather than the absence of one
+  EXPECT_TRUE(endpoints.value().token_endpoint_basic_auth);
+}
+
+TEST(a_provider_naming_the_header_takes_the_header) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_AUTH_BASIC",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_auth_basic.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const std::map<std::string, std::string> responses{
+      {"https://login.test/.well-known/openid-configuration",
+       R"JSON({
+         "issuer": "https://login.test",
+         "authorization_endpoint": "https://login.test/authorize",
+         "token_endpoint": "https://login.test/token",
+         "jwks_uri": "https://login.test/jwks",
+         "token_endpoint_auth_methods_supported": [ "client_secret_basic", "client_secret_post" ],
+         "response_types_supported": [ "code" ],
+         "subject_types_supported": [ "public" ],
+         "id_token_signing_alg_values_supported": [ "RS256" ]
+       })JSON"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher(responses, nullptr)};
+
+  const auto endpoints{authentication.endpoints("okta")};
+  EXPECT_TRUE(endpoints.has_value());
+  // Offering both, the header is the one RFC 6749 Section 2.3.1 asks for
+  EXPECT_TRUE(endpoints.value().token_endpoint_basic_auth);
+}
+
+TEST(a_provider_refusing_the_header_gets_the_body_instead) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://login.test",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_OIDC_AUTH_POST",
+        .name = "okta",
+        .session_secret_variable = SESSION_SECRET_VARIABLE}}};
+  const auto path{test_path("oidc_auth_post.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const std::map<std::string, std::string> responses{
+      {"https://login.test/.well-known/openid-configuration",
+       R"JSON({
+         "issuer": "https://login.test",
+         "authorization_endpoint": "https://login.test/authorize",
+         "token_endpoint": "https://login.test/token",
+         "jwks_uri": "https://login.test/jwks",
+         "token_endpoint_auth_methods_supported": [ "client_secret_post" ],
+         "response_types_supported": [ "code" ],
+         "subject_types_supported": [ "public" ],
+         "id_token_signing_alg_values_supported": [ "RS256" ]
+       })JSON"}};
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher(responses, nullptr)};
+
+  const auto endpoints{authentication.endpoints("okta")};
+  EXPECT_TRUE(endpoints.has_value());
+  // A provider that does not take the header leaves the body as the only way
+  // to authenticate, so the preference gives way rather than the login failing
+  EXPECT_FALSE(endpoints.value().token_endpoint_basic_auth);
+}
+
 TEST(provider_endpoints_of_an_unreachable_provider_are_absent) {
   const auto calls{std::make_shared<int>(0)};
   const std::array<std::string_view, 1> paths{{"/portal"}};
