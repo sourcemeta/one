@@ -475,7 +475,7 @@ private:
         sourcemeta::core::SecureString authorization;
         sourcemeta::core::oauth_client_secret_basic(client_id, client_secret,
                                                     authorization);
-        fetch.header("authorization", std::string{authorization});
+        fetch.header("authorization", std::move(authorization));
       } else {
         sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
                                                    body);
