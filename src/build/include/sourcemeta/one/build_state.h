@@ -149,14 +149,24 @@ public:
   [[nodiscard]] auto take_lock() const -> std::unique_lock<std::mutex>;
 
   auto configure(std::span<const LeafRule> leaf_rules,
-                 std::uint32_t rules_fingerprint, std::string_view sentinel)
-      -> void;
+                 std::uint32_t rules_fingerprint,
+                 std::uint64_t configuration_fingerprint,
+                 std::string_view sentinel) -> void;
   auto load(const std::filesystem::path &path,
             std::span<const LeafRule> leaf_rules,
-            std::uint32_t rules_fingerprint, std::string_view sentinel) -> void;
+            std::uint32_t rules_fingerprint,
+            std::uint64_t configuration_fingerprint, std::string_view sentinel)
+      -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
   [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
+
+  // Whether the state on disk was built from the configuration this build is
+  // applying, which is what makes anything derived from a configuration
+  // reusable rather than merely present
+  [[nodiscard]] auto built_from_this_configuration() const -> bool {
+    return this->configuration_matches;
+  }
   [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
 
   [[nodiscard]] auto contains(std::string_view key) const -> bool;
@@ -266,6 +276,14 @@ private:
 
   std::span<const LeafRule> leaf_rules{};
   std::uint32_t rules_fingerprint{0};
+  // The configuration the outputs beside this state were built from. The state
+  // is written once a build has finished, so it is the only honest record of
+  // which configuration was actually applied
+  std::uint64_t configuration_fingerprint{0};
+  // Whether the state on disk was built from the same configuration. A run
+  // that died partway leaves outputs derived from a configuration it never
+  // finished applying, and its state still describes the one before
+  bool configuration_matches{false};
   std::string sentinel_separator{};
 };
 

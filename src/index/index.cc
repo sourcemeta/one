@@ -2,6 +2,7 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/frame.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
@@ -29,6 +30,7 @@
 #include <chrono>        // std::chrono
 #include <cstdint>       // std::uint8_t
 #include <cstdlib>       // EXIT_FAILURE, EXIT_SUCCESS
+#include <cstring>       // std::memcpy
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
@@ -349,10 +351,21 @@ static auto index_main(const std::string_view &program,
 
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
+  // A digest of the configuration exactly as the anchor records it, rather
+  // than a hash meant for bucketing, since two configurations landing on one
+  // value here would have the state vouch for work done under the other
+  std::ostringstream configuration_text;
+  sourcemeta::core::prettify(raw_configuration, configuration_text);
+  const auto configuration_digest{
+      sourcemeta::core::sha256_digest(configuration_text.str())};
+  std::uint64_t configuration_fingerprint{0};
+  std::memcpy(&configuration_fingerprint, configuration_digest.data(),
+              sizeof(configuration_fingerprint));
+
   entries.load(
       state_path, sourcemeta::one::INDEX_RULES.leaves,
       sourcemeta::one::rules_fingerprint<sourcemeta::one::INDEX_RULES>(),
-      sourcemeta::one::INDEX_RULES.sentinel);
+      configuration_fingerprint, sourcemeta::one::INDEX_RULES.sentinel);
 
   // Only trust on-disk files when the state was loaded successfully,
   // otherwise the entries map and the on-disk artefacts are out of sync
@@ -365,9 +378,16 @@ static auto index_main(const std::string_view &program,
     current_version = version_json.to_string();
   }
 
+  // The anchor is written early, while everything derived from it is written
+  // later and the state only once the whole build has finished. So an anchor
+  // matching the configuration at hand is not on its own evidence that the
+  // configuration was ever applied: a run that died in between leaves exactly
+  // that. The state carries which configuration it was built from, and only
+  // that agreeing makes the anchor worth reading
   auto current_configuration{sourcemeta::core::JSON{nullptr}};
   const auto configuration_json_path{canonical_output / "configuration.json"};
-  if (!entries.empty() && std::filesystem::exists(configuration_json_path)) {
+  if (!entries.empty() && entries.built_from_this_configuration() &&
+      std::filesystem::exists(configuration_json_path)) {
     current_configuration =
         sourcemeta::core::read_json(configuration_json_path);
   }

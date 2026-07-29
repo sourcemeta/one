@@ -4,8 +4,13 @@
 #include "test_rules.h"
 
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
+#include <cstdint>    // std::uint64_t
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
+
+// A build of one unchanging configuration, which is what every case below
+// models unless it says otherwise
+static constexpr std::uint64_t CONFIGURATION{0x0123456789abcdefULL};
 
 static auto state_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "state" / name;
@@ -18,14 +23,14 @@ TEST(round_trip_empty) {
   sourcemeta::one::BuildState original_entries;
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), CONFIGURATION,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      CONFIGURATION, test_rules::RULES.sentinel);
   EXPECT_TRUE(loaded_entries.empty());
 }
 
@@ -40,14 +45,14 @@ TEST(round_trip_single_entry_no_deps) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), CONFIGURATION,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      CONFIGURATION, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
 
@@ -68,14 +73,14 @@ TEST(round_trip_with_file_mark) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), CONFIGURATION,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      CONFIGURATION, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -106,14 +111,14 @@ TEST(round_trip_with_dependencies) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), CONFIGURATION,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      CONFIGURATION, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
 
   const auto *result{
@@ -142,14 +147,14 @@ TEST(round_trip_multiple_entries) {
 
   original_entries.configure(
       test_rules::RULES.leaves,
-      sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+      sourcemeta::one::rules_fingerprint<test_rules::RULES>(), CONFIGURATION,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
-                      test_rules::RULES.sentinel);
+                      CONFIGURATION, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 3);
   EXPECT_TRUE(loaded_entries.contains("/output/schemas/foo/%/schema.metapack"));
   EXPECT_TRUE(
