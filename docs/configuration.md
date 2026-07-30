@@ -542,7 +542,7 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
 | `/sessionSecrets` | Array | :red_circle: **Yes** | N/A | The secrets used to sign the session cookies this instance mints, newest first. These are the instance's own secrets, unrelated to the provider. A cookie is signed under the first and accepted under any, so adding a new secret first and dropping the old one once the sessions signed under it have expired rotates without signing anybody out |
 | `/sessionSecrets/*` | Object | :red_circle: **Yes** | N/A | A single session signing secret |
-| `/sessionSecrets/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret, which must be at least 32 characters. A policy left with no secret of that length denies every login it is asked about |
+| `/sessionSecrets/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret. Generate it at random, with at least 32 characters, as with `openssl rand -base64 32`. Everything a session cookie carries but its signature travels in the open, so a secret that can be guessed is one that anybody holding a single cookie can find, after which they can mint sessions of their own |
 
 !!! tip
 

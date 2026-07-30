@@ -38,13 +38,6 @@ class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
-  /// The shortest session secret this instance will sign or verify with,
-  /// matching the width of the digest it derives a key with. Everything a
-  /// sealed value carries but its signature travels in the open, so a secret
-  /// short enough to guess is one anybody holding a single cookie can find
-  /// offline, at which point they can mint sessions of their own
-  static constexpr std::size_t MINIMUM_SESSION_SECRET_LENGTH{32};
-
   /// Where a resource lives within an instance, in the single spelling every
   /// part of the system agrees on: no base path, no leading or trailing
   /// separator, no empty or relative segments, and lowercase throughout. The

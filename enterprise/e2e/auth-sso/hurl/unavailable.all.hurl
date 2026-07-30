@@ -193,16 +193,13 @@ header "Location" not exists
 header "Set-Cookie" not exists
 xpath "string(//title)" == "Sign In"
 xpath "string(//h1)" == "SSO Sandbox"
-xpath "count(//a[@data-sourcemeta-ui-login])" == 3
+xpath "count(//a[@data-sourcemeta-ui-login])" == 2
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "no-client-secret"
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/no-client-secret"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "no-client-secret"
 xpath "string((//a[@data-sourcemeta-ui-login])[2]/@data-sourcemeta-ui-login)" == "no-session-secret"
 xpath "string((//a[@data-sourcemeta-ui-login])[2]/@href)" == "/self/v1/auth/login/no-session-secret"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[2])" == "no-session-secret"
-xpath "string((//a[@data-sourcemeta-ui-login])[3]/@data-sourcemeta-ui-login)" == "short-session-secret"
-xpath "string((//a[@data-sourcemeta-ui-login])[3]/@href)" == "/self/v1/auth/login/short-session-secret"
-xpath "normalize-space((//a[@data-sourcemeta-ui-login])[3])" == "short-session-secret"
 
 # HEAD and GET agree, so the refusal is not a property of having a body
 HEAD {{base}}/self/v1/auth/login/no-client-secret
@@ -275,39 +272,6 @@ body == {{uniform_body}}
 POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
 ```
 {{targeted_body}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-jsonpath "$.valid" == true
-
-# A policy whose session secret is set but too short to sign with cannot mint a
-# cookie either, and says no more about itself than the others. A secret short
-# enough to be found offline from a single captured cookie would let anybody
-# holding one mint sessions of their own, so it is refused where it is read
-GET {{base}}/self/v1/auth/login/short-session-secret
-HTTP 500
-Cache-Control: no-store
-Content-Type: application/problem+json
-Link: </self/v1/schemas/api/error>; rel="describedby"
-Access-Control-Allow-Origin: *
-[Captures]
-short_secret_body: body
-[Asserts]
-header "Set-Cookie" not exists
-header "Location" not exists
-body == {{uniform_body}}
-{
-  "type": "urn:sourcemeta:one:auth-unavailable",
-  "title": "Internal Server Error",
-  "status": 500,
-  "detail": "This login cannot be started"
-}
-
-POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
-```
-{{short_secret_body}}
 ```
 HTTP 200
 Cache-Control: no-store

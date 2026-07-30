@@ -52,15 +52,6 @@
     },
     {
       "type": "oidc",
-      "name": "short-session-secret",
-      "paths": [ "/unavailable" ],
-      "issuer": "https://keycloak:8443/realms/main",
-      "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_SHORT_SESSION_SECRET" } ]
-    },
-    {
-      "type": "oidc",
       "name": "rotated",
       "paths": [ "/rotated" ],
       "issuer": "https://keycloak:8443/realms/main",

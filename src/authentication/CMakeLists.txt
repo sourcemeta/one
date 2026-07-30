@@ -10,9 +10,6 @@ if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::http)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::oidc)
-  # A secret too short to be worth signing with is refused where it is read,
-  # and saying so is the only way an operator learns why a login stopped
-  target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::one::http)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h

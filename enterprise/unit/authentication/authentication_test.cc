@@ -89,11 +89,7 @@ static auto session_expiry() -> std::chrono::sys_seconds {
 // that signs its session and transaction cookies, so the tests set that
 // variable and mint cookies under its value
 static constexpr const char *SESSION_SECRET_VARIABLE{"ONE_TEST_SESSION_SECRET"};
-// A secret shorter than the digest a key is derived with is refused wherever
-// one is read, so every secret these tests sign under clears that length
-static constexpr const char *SESSION_SECRET_VALUE{
-    "a-session-secret-long-enough-to-be-used"};
-static constexpr std::string_view SESSION_SECRET{SESSION_SECRET_VALUE};
+static constexpr std::string_view SESSION_SECRET{"session-secret"};
 
 // An interactive policy names one variable per secret it accepts, newest
 // first, so each set of policies points at the variables it needs
@@ -1286,7 +1282,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
 }
 
 TEST(oidc_policy_admits_its_session_cookie) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1325,7 +1321,7 @@ TEST(oidc_policy_admits_its_session_cookie) {
 }
 
 TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
@@ -1372,7 +1368,7 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
 }
 
 TEST(expired_session_cookie_is_denied) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1401,7 +1397,7 @@ TEST(expired_session_cookie_is_denied) {
 }
 
 TEST(forged_session_cookie_is_denied) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1420,8 +1416,8 @@ TEST(forged_session_cookie_is_denied) {
   // A value sealed under a secret this policy does not hold
   const auto foreign{sourcemeta::one::Authentication::seal_value(
       R"JSON({ "policy": "okta" })JSON",
-      sourcemeta::one::Authentication::Purpose::Session,
-      "a-different-session-secret-entirely", minted_now(), session_expiry())};
+      sourcemeta::one::Authentication::Purpose::Session, "other-secret",
+      minted_now(), session_expiry())};
   const std::string foreign_cookies{"sourcemeta_one_session=" + foreign};
   EXPECT_FALSE(authentication
                    .admits(at("/portal/x"),
@@ -1450,7 +1446,7 @@ TEST(forged_session_cookie_is_denied) {
 }
 
 TEST(session_payload_must_declare_its_policy) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1482,7 +1478,7 @@ TEST(session_payload_must_declare_its_policy) {
 }
 
 TEST(session_is_admitted_when_a_shadowing_cookie_precedes_it) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1515,7 +1511,7 @@ TEST(session_is_admitted_when_a_shadowing_cookie_precedes_it) {
 }
 
 TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1546,7 +1542,7 @@ TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
 }
 
 TEST(session_is_admitted_when_it_arrives_in_a_later_cookie_field) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1577,7 +1573,7 @@ TEST(session_is_admitted_when_it_arrives_in_a_later_cookie_field) {
 }
 
 TEST(session_is_admitted_when_it_arrives_in_an_earlier_cookie_field) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1608,7 +1604,7 @@ TEST(session_is_admitted_when_it_arrives_in_an_earlier_cookie_field) {
 }
 
 TEST(a_session_for_another_policy_does_not_end_the_search) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   // Both policies read the same session secret, so a value minted for one
@@ -1660,7 +1656,7 @@ TEST(a_session_for_another_policy_does_not_end_the_search) {
 }
 
 TEST(a_shadowing_cookie_alone_never_admits) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1686,7 +1682,7 @@ TEST(a_shadowing_cookie_alone_never_admits) {
 }
 
 TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   // Deliberately the same secret for both, which the configuration permits.
@@ -1729,7 +1725,7 @@ TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
 }
 
 TEST(a_session_naming_no_policy_never_admits) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1783,7 +1779,7 @@ TEST(a_session_naming_no_policy_never_admits) {
 }
 
 TEST(open_session_recovers_the_payload_of_whichever_policy_minted_it) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
@@ -1801,7 +1797,7 @@ TEST(open_session_recovers_the_payload_of_whichever_policy_minted_it) {
         .client_secret_variable = "ONE_TEST_OIDC_OPEN_B",
         .name = "google",
         .session_secrets = SESSION_SECRETS_OPEN}}};
-  setenv("ONE_TEST_OIDC_OPEN_SECRET", "another-session-secret-long-enough", 1);
+  setenv("ONE_TEST_OIDC_OPEN_SECRET", "another-secret", 1);
   const auto path{test_path("oidc_open_session.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1819,7 +1815,7 @@ TEST(open_session_recovers_the_payload_of_whichever_policy_minted_it) {
 }
 
 TEST(open_session_refuses_a_value_whose_payload_names_another_policy) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   // Sharing the secret again, so the value verifies under both and only the
@@ -1853,7 +1849,7 @@ TEST(open_session_refuses_a_value_whose_payload_names_another_policy) {
 }
 
 TEST(open_session_refuses_a_transaction) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/alpha"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1906,10 +1902,8 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
 TEST(session_admitted_under_a_rotated_secret) {
   // The policy names the newest secret first, then the one it replaces, so a
   // cookie signed under the old secret still verifies
-  setenv("ONE_TEST_OIDC_ROTATED_SECRET", "a-newer-session-secret-signing-now",
-         1);
-  setenv("ONE_TEST_OIDC_ROTATED_SECRET_OLD",
-         "an-older-session-secret-still-honoured", 1);
+  setenv("ONE_TEST_OIDC_ROTATED_SECRET", "new-secret", 1);
+  setenv("ONE_TEST_OIDC_ROTATED_SECRET_OLD", "old-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -1928,9 +1922,8 @@ TEST(session_admitted_under_a_rotated_secret) {
   // A cookie signed under the older secret is still admitted
   const auto old_sealed{sourcemeta::one::Authentication::seal_value(
       R"JSON({ "policy": "okta" })JSON",
-      sourcemeta::one::Authentication::Purpose::Session,
-      "an-older-session-secret-still-honoured", minted_now(),
-      session_expiry())};
+      sourcemeta::one::Authentication::Purpose::Session, "old-secret",
+      minted_now(), session_expiry())};
   EXPECT_TRUE(
       authentication
           .admits(at("/portal/x"),
@@ -1946,15 +1939,13 @@ TEST(session_admitted_under_a_rotated_secret) {
   EXPECT_TRUE(minted.has_value());
   // The value was minted from the clock, so it is read against the same one
   const auto now{minted_now()};
-  const std::array<std::string_view, 1> new_only{
-      {"a-newer-session-secret-signing-now"}};
+  const std::array<std::string_view, 1> new_only{{"new-secret"}};
   EXPECT_TRUE(sourcemeta::one::Authentication::open_value(
                   minted.value(),
                   sourcemeta::one::Authentication::Purpose::Session, new_only,
                   now)
                   .has_value());
-  const std::array<std::string_view, 1> old_only{
-      {"an-older-session-secret-still-honoured"}};
+  const std::array<std::string_view, 1> old_only{{"old-secret"}};
   EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
                    minted.value(),
                    sourcemeta::one::Authentication::Purpose::Session, old_only,
@@ -1964,9 +1955,8 @@ TEST(session_admitted_under_a_rotated_secret) {
   // A secret no longer in the set is rejected
   const auto retired{sourcemeta::one::Authentication::seal_value(
       R"JSON({ "policy": "okta" })JSON",
-      sourcemeta::one::Authentication::Purpose::Session,
-      "a-retired-session-secret-no-longer-set", minted_now(),
-      session_expiry())};
+      sourcemeta::one::Authentication::Purpose::Session, "retired-secret",
+      minted_now(), session_expiry())};
   EXPECT_FALSE(
       authentication
           .admits(at("/portal/x"),
@@ -2042,7 +2032,7 @@ TEST(save_rejects_a_nameless_interactive_policy) {
 
 TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
   setenv("ONE_TEST_KEY_SESSION_UNION", "union-key", 1);
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/both"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SESSION_UNION"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
@@ -2086,7 +2076,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
 
 TEST(session_cookie_does_not_open_an_apikey_path) {
   setenv("ONE_TEST_KEY_NO_SESSION", "key-only", 1);
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NO_SESSION"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -2436,7 +2426,7 @@ TEST(interactive_through_a_broken_artifact_is_empty) {
 }
 
 TEST(seal_and_open_round_trip_under_the_policy_secret) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
   const std::array<std::string_view, 1> beta_paths{{"/beta"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
@@ -2458,7 +2448,7 @@ TEST(seal_and_open_round_trip_under_the_policy_secret) {
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   // The other policy holds its own, distinct secret
-  setenv("ONE_TEST_OIDC_SEAL_OTHER", "another-session-secret-long-enough", 1);
+  setenv("ONE_TEST_OIDC_SEAL_OTHER", "another-secret", 1);
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
   const auto sealed{authentication.seal(
@@ -2521,7 +2511,7 @@ TEST(seal_without_a_configured_secret_produces_nothing) {
 }
 
 TEST(open_rejects_an_expired_value) {
-  setenv(SESSION_SECRET_VARIABLE, SESSION_SECRET_VALUE, 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,

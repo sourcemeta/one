@@ -95,22 +95,4 @@ test.describe('Session secret rotation', () => {
       expect(response.status()).toBe(401);
     }
   });
-
-  test('a policy whose only secret is too short admits nothing it signed', async ({
-    request
-  }) => {
-    // The short secret is set, so this is not the absent case. A secret that
-    // could be found offline from one captured cookie is refused where it is
-    // read, which leaves the policy unable to verify even a correct signature
-    const response = await request.get('/unavailable/thing.json', {
-      headers: {
-        cookie: `sourcemeta_one_session=${sealSession('too-short', {
-          policy: 'short-session-secret',
-          subject: 'jane'
-        })}`
-      },
-      maxRedirects: 0
-    });
-    expect(response.status()).toBe(401);
-  });
 });

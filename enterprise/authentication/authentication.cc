@@ -8,8 +8,6 @@
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc.h>
 
-#include <sourcemeta/one/http.h>
-
 #include "authentication_format.h"
 
 #include <algorithm>     // std::ranges::all_of
@@ -835,28 +833,16 @@ struct Authentication::Impl {
   // resulting views borrow from the given value, so it must outlive them, and
   // blank lines are skipped so a stray one cannot become a forgeable empty key
   // The resolved values back the views handed to the sealing primitive, so
-  // they are returned to the caller to keep alive alongside them. A secret
-  // too short to resist being guessed offline is left out and named in the
-  // log, since everything a sealed value carries but its signature travels in
-  // the open
+  // they are returned to the caller to keep alive alongside them
   static auto session_secrets(const std::span<const std::byte> variables)
       -> std::vector<sourcemeta::core::SecureString> {
     std::vector<sourcemeta::core::SecureString> result;
     each_session_secret_variable(
         variables, [&result](const auto variable) -> void {
           auto resolved{resolve_environment(variable)};
-          if (!resolved.has_value()) {
-            return;
+          if (resolved.has_value()) {
+            result.push_back(std::move(resolved.value()));
           }
-
-          if (resolved.value().size() <
-              Authentication::MINIMUM_SESSION_SECRET_LENGTH) {
-            sourcemeta::one::HTTP_LOG(
-                "The session secret is too short to be used, from", variable);
-            return;
-          }
-
-          result.push_back(std::move(resolved.value()));
         });
 
     return result;
