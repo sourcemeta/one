@@ -15,17 +15,21 @@ import { createHmac } from 'node:crypto';
 const SESSION_SECRET = 'a-session-signing-secret-for-the-auth-closed-sandbox';
 const SESSION_LABEL = 'sourcemeta/one/session';
 
-function sealSession(payload) {
+function sealSession(payload, secret = SESSION_SECRET) {
   const issued = Math.floor(Date.now() / 1000);
   const expiry = issued + 3600;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const prefix = `1.${issued}.${expiry}.${encoded}`;
-  const key = createHmac('sha256', SESSION_SECRET).update(SESSION_LABEL).digest();
+  const key = createHmac('sha256', secret).update(SESSION_LABEL).digest();
   const signature = createHmac('sha256', key).update(prefix).digest('base64url');
   return `${prefix}.${signature}`;
 }
 
-const SESSION = sealSession({ policy: 'keycloak', subject: 'jane' });
+// Minted per test rather than once, so that a slow run or a retry cannot drift
+// past the expiry and fail for a reason that has nothing to do with the subject
+function session() {
+  return sealSession({ policy: 'keycloak', subject: 'jane' });
+}
 
 async function mcp(request, body, cookie) {
   return request.post('/self/v1/mcp', {
@@ -52,7 +56,7 @@ test.describe('MCP under a browser session', () => {
         method: 'tools/call',
         params: { name: 'search_schemas', arguments: { q: 'object' } }
       },
-      SESSION
+      session()
     );
 
     expect(response.status()).toBe(200);
@@ -72,10 +76,14 @@ test.describe('MCP under a browser session', () => {
     const listed = await mcp(
       request,
       { jsonrpc: '2.0', id: 2, method: 'resources/list' },
-      SESSION
+      session()
     );
     expect(listed.status()).toBe(200);
-    const resources = (await listed.json()).result.resources;
+    // A refusal arrives as a JSON-RPC error under a 200, so it is named here
+    // rather than surfacing later as a failure to read a field off nothing
+    const listing = await listed.json();
+    expect(listing.error).toBeUndefined();
+    const resources = listing.result.resources;
     expect(resources.length).toBeGreaterThan(0);
 
     const read = await mcp(
@@ -86,7 +94,7 @@ test.describe('MCP under a browser session', () => {
         method: 'resources/read',
         params: { uri: resources[0].uri }
       },
-      SESSION
+      session()
     );
     expect(read.status()).toBe(200);
     const body = await read.json();
@@ -109,19 +117,10 @@ test.describe('MCP under a browser session', () => {
   test('a session forged under another secret is refused', async ({
     request
   }) => {
-    const forged = (() => {
-      const issued = Math.floor(Date.now() / 1000);
-      const encoded = Buffer.from(
-        JSON.stringify({ policy: 'keycloak', subject: 'jane' })
-      ).toString('base64url');
-      const prefix = `1.${issued}.${issued + 3600}.${encoded}`;
-      const key = createHmac('sha256', 'a-secret-nobody-here-signs-with')
-        .update(SESSION_LABEL)
-        .digest();
-      return `${prefix}.${createHmac('sha256', key)
-        .update(prefix)
-        .digest('base64url')}`;
-    })();
+    const forged = sealSession(
+      { policy: 'keycloak', subject: 'jane' },
+      'a-secret-nobody-here-signs-with'
+    );
 
     const response = await mcp(
       request,
