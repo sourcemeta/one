@@ -161,6 +161,8 @@ cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_session[Path]" == "/registry"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Path]" == "/registry"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Path]" == "/registry"
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 # The instance URL already carries the base path, so it is named once
 header "Location" contains "post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fregistry"

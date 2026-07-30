@@ -121,6 +121,7 @@ Cache-Control: no-store
 header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
 # With the session gone the catalog is locked to the browser again, the denial
