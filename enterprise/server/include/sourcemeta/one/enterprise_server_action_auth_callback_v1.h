@@ -315,7 +315,8 @@ public:
     this->remember_renewal(response, policy_name, scope, secure);
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
-    this->expire_transaction(response, scope, secure);
+    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+                 scope, secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -495,7 +496,8 @@ private:
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
                  scope, secure);
-    this->expire_transaction(response, scope, secure);
+    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+                 scope, secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -507,22 +509,6 @@ private:
               const bool secure) const -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = name,
-         .value = "",
-         .path = scope,
-         .max_age = std::chrono::seconds{0},
-         .http_only = true,
-         .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (cookie.has_value()) {
-      response.write_header("Set-Cookie", cookie.value());
-    }
-  }
-
-  auto expire_transaction(sourcemeta::one::HTTPResponse &response,
-                          const std::string_view scope, const bool secure) const
-      -> void {
-    const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
          .value = "",
          .path = scope,
          .max_age = std::chrono::seconds{0},
