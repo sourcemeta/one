@@ -27,7 +27,7 @@ cat << 'EOF' > "$TMP/one.json"
       "issuer": "https://accounts.example.com",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_TEST_OIDC_SECRET" },
-      "sessionSecret": { "environmentVariable": "ONE_TEST_OIDC_SESSION" }
+      "sessionSecret": [ { "environmentVariable": "ONE_TEST_OIDC_SESSION" } ]
     }
   ],
   "contents": {

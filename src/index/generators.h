@@ -1064,17 +1064,20 @@ struct GENERATE_URITEMPLATE_ROUTES {
 };
 
 struct GENERATE_AUTHENTICATION {
-  // The policies borrow the paths and keys they are declared with, so the
-  // vectors that hold those must outlive the policies that point into them
-  static auto
-  make_policies(const sourcemeta::one::Configuration &configuration,
-                std::vector<std::vector<std::string_view>> &policy_paths,
-                std::vector<std::vector<std::string_view>> &policy_keys)
+  // The policies borrow the paths, keys and session secrets they are declared
+  // with, so the vectors that hold those must outlive the policies that point
+  // into them
+  static auto make_policies(
+      const sourcemeta::one::Configuration &configuration,
+      std::vector<std::vector<std::string_view>> &policy_paths,
+      std::vector<std::vector<std::string_view>> &policy_keys,
+      std::vector<std::vector<std::string_view>> &policy_session_secrets)
       -> std::vector<sourcemeta::one::Authentication::Policy> {
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
     policy_paths.reserve(configuration.authentication.size());
     policy_keys.reserve(configuration.authentication.size());
+    policy_session_secrets.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
@@ -1097,6 +1100,13 @@ struct GENERATE_AUTHENTICATION {
              .algorithms = entry.algorithms,
              .token_type = entry.token_type});
       } else if (entry.type == Entry::Type::OIDC) {
+        std::vector<std::string_view> session_secrets;
+        session_secrets.reserve(entry.session_secret_variables.size());
+        for (const auto &variable : entry.session_secret_variables) {
+          session_secrets.push_back(variable);
+        }
+
+        policy_session_secrets.push_back(std::move(session_secrets));
         policies.push_back(
             {.paths = policy_paths.back(),
              .type = sourcemeta::one::Authentication::Type::OIDC,
@@ -1104,7 +1114,7 @@ struct GENERATE_AUTHENTICATION {
              .client_id = entry.client_id,
              .client_secret_variable = entry.client_secret_variable,
              .name = entry.name,
-             .session_secret_variable = entry.session_secret_variable});
+             .session_secrets = policy_session_secrets.back()});
       } else {
         std::vector<std::string_view> keys;
         keys.reserve(entry.keys.size());
@@ -1136,8 +1146,9 @@ struct GENERATE_AUTHENTICATION {
         action.dependencies.at(0)};
     std::vector<std::vector<std::string_view>> policy_paths;
     std::vector<std::vector<std::string_view>> policy_keys;
-    const auto policies{
-        make_policies(configuration, policy_paths, policy_keys)};
+    std::vector<std::vector<std::string_view>> policy_session_secrets;
+    const auto policies{make_policies(configuration, policy_paths, policy_keys,
+                                      policy_session_secrets)};
 
     // A policy gates a route or a declared collection or page (or a namespace
     // above one), never a path inside a collection

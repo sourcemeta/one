@@ -540,8 +540,36 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
-| `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
-| `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
+| `/sessionSecret` | Array | :red_circle: **Yes** | N/A | The secrets used to sign the session cookies this instance mints, newest first, each read from an environment variable. These are the instance's own secrets, unrelated to the provider |
+| `/sessionSecret/*` | Object | :red_circle: **Yes** | N/A | A single session signing secret |
+| `/sessionSecret/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
+
+!!! warning
+
+    A session signing secret must be at least 32 characters. A shorter one is
+    refused, and every policy naming only short secrets denies every login it
+    is asked about. A sealed cookie carries everything but its signature in the
+    open, so a secret short enough to guess is one that anybody holding a
+    single cookie can find, after which they can mint sessions of their own.
+
+!!! tip
+
+    **To rotate a session signing secret without signing anybody out**, put the
+    new secret first and leave the one it replaces in place:
+
+    ```json
+    "sessionSecret": [
+      { "environmentVariable": "ONE_SESSION_SECRET_NEW" },
+      { "environmentVariable": "ONE_SESSION_SECRET_OLD" }
+    ]
+    ```
+
+    Cookies are signed under the first secret alone and accepted under any of
+    them, so sessions signed under the old secret keep working until they
+    expire, at which point it can be dropped. The environment is read once at
+    startup, so a restart is needed for a change to take effect. Removing a
+    secret from the list ends every session signed under it, which is also how
+    every session is ended at once when that is what you want.
 
 !!! tip
 
@@ -603,7 +631,7 @@ sign in through their identity provider to reach it:
       "issuer": "https://accounts.example.com",
       "clientId": "schemas-registry",
       "clientSecret": { "environmentVariable": "ONE_CONSOLE_CLIENT_SECRET" },
-      "sessionSecret": { "environmentVariable": "ONE_CONSOLE_SESSION_SECRET" }
+      "sessionSecret": [ { "environmentVariable": "ONE_CONSOLE_SESSION_SECRET" } ]
     }
   ],
   "contents": {

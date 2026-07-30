@@ -38,6 +38,13 @@ class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
+  /// The shortest session secret this instance will sign or verify with,
+  /// matching the width of the digest it derives a key with. Everything a
+  /// sealed value carries but its signature travels in the open, so a secret
+  /// short enough to guess is one anybody holding a single cookie can find
+  /// offline, at which point they can mint sessions of their own
+  static constexpr std::size_t MINIMUM_SESSION_SECRET_LENGTH{32};
+
   /// Where a resource lives within an instance, in the single spelling every
   /// part of the system agrees on: no base path, no leading or trailing
   /// separator, no empty or relative segments, and lowercase throughout. The
@@ -127,9 +134,11 @@ public:
     // The policy name, which interactive policies carry so their session
     // cookies can be recognised at the gate
     std::string_view name{};
-    // The environment variable name holding the secret that signs this
-    // policy's session and transaction cookies
-    std::string_view session_secret_variable{};
+    // The environment variable names holding the secrets that sign this
+    // policy's session and transaction cookies, newest first. A value is
+    // signed under the first and accepted under any, so a secret can be
+    // replaced without ending the sessions signed under the one before it
+    std::span<const std::string_view> session_secrets{};
   };
 
   // The identity of an admitted caller: the type of credential it presented

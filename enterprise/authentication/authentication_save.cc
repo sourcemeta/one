@@ -75,20 +75,24 @@ auto encode_apikey_metadata(
 
 // Every field is stored as a length-prefixed string. The issuer and client
 // identifier lead so that their bytes keep spanning exactly the provider
-// client identity
-auto encode_oidc_metadata(const std::string_view issuer,
-                          const std::string_view client_id,
-                          const std::string_view client_secret_variable,
-                          const std::string_view name,
-                          const std::string_view session_secret_variable,
-                          const std::string_view default_path)
-    -> std::vector<std::byte> {
+// client identity. The session secrets are counted, so that the field after
+// them is found whatever their number
+auto encode_oidc_metadata(
+    const std::string_view issuer, const std::string_view client_id,
+    const std::string_view client_secret_variable, const std::string_view name,
+    const std::span<const std::string_view> session_secret_variables,
+    const std::string_view default_path) -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
   append_string(result, client_id);
   append_string(result, client_secret_variable);
   append_string(result, name);
-  append_string(result, session_secret_variable);
+  append_u32(result,
+             static_cast<std::uint32_t>(session_secret_variables.size()));
+  for (const auto variable : session_secret_variables) {
+    append_string(result, variable);
+  }
+
   append_string(result, default_path);
   return result;
 }
@@ -270,14 +274,14 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
             "Interactive authentication policies require a name");
       }
 
-      if (policy.session_secret_variable.empty()) {
+      if (policy.session_secrets.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a session secret");
       }
 
       policy_metadata = encode_oidc_metadata(
           policy.issuer, policy.client_id, policy.client_secret_variable,
-          policy.name, policy.session_secret_variable,
+          policy.name, policy.session_secrets,
           policy.paths.empty() ? std::string_view{} : policy.paths.front());
     } else if (!policy.keys.empty()) {
       policy_metadata = encode_apikey_metadata(policy.keys);

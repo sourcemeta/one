@@ -191,8 +191,10 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         parsed.client_id = entry.at("clientId").to_string();
         parsed.client_secret_variable =
             entry.at("clientSecret").at("environmentVariable").to_string();
-        parsed.session_secret_variable =
-            entry.at("sessionSecret").at("environmentVariable").to_string();
+        for (const auto &secret : entry.at("sessionSecret").as_array()) {
+          parsed.session_secret_variables.push_back(
+              secret.at("environmentVariable").to_string());
+        }
         const auto *title{entry.try_at("title")};
         if (title != nullptr) {
           parsed.title = title->to_string();
