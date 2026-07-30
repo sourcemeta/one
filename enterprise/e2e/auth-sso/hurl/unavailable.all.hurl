@@ -51,11 +51,29 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
+[Captures]
+sealing_body: body
 [Asserts]
 header "Set-Cookie" not exists
 header "Location" not exists
 header "WWW-Authenticate" not exists
 body == {{uniform_body}}
+{
+  "type": "urn:sourcemeta:one:auth-unavailable",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "This login cannot be started"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
+```
+{{sealing_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # A provider this instance will not talk to, refused on what its own discovery
 # document says rather than on anything configured here. A third cause, still
@@ -66,10 +84,28 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
+[Captures]
+provider_body: body
 [Asserts]
 header "Set-Cookie" not exists
 header "Location" not exists
 body == {{uniform_body}}
+{
+  "type": "urn:sourcemeta:one:auth-unavailable",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "This login cannot be started"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
+```
+{{provider_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # A policy name that does not exist stays a plain 404, which is the one
 # distinction worth keeping: the response for a name the login page never
@@ -220,7 +256,25 @@ HTTP 500
 Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+targeted_body: body
 [Asserts]
 header "Set-Cookie" not exists
 header "Location" not exists
 body == {{uniform_body}}
+{
+  "type": "urn:sourcemeta:one:auth-unavailable",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "This login cannot be started"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
+```
+{{targeted_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true

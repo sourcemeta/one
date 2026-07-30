@@ -202,14 +202,14 @@ before it acts on anything the provider says.
 
 === "500"
 
-    The login cannot be started. Every reason answers this way: a client secret
-    or session secret absent from the environment, provider metadata that could
-    not be retrieved or that names no authorization endpoint, and a provider
-    this instance will not exchange a credential with. A login that could not be
-    completed is refused here rather than stranding the person at the provider,
-    and nothing distinguishes the causes, so a caller cannot use the endpoint to
-    learn how the instance is configured or whether its provider is answering.
-    The cause is written to the server log instead.
+    The login cannot be started. Every cause answers this way, among them a
+    client secret or session secret absent from the environment, provider
+    metadata that could not be retrieved or that names no authorization
+    endpoint, and a provider this instance will not send a credential to. A
+    login that could not be completed is refused here rather than stranding the
+    person at the provider. Nothing distinguishes the causes, so the endpoint
+    cannot be used to learn how an instance is configured or whether its
+    provider is answering. The cause goes to the server log.
 
 ### Callback
 
