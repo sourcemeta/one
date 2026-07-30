@@ -430,11 +430,13 @@ auto decode_oidc_metadata(const std::span<const std::byte> metadata,
   return read_string(metadata, cursor, result.default_path);
 }
 
-// Walk the variables a policy names, newest first, handing each to the caller
+// Walk the variables a policy names, newest first, handing each to the caller,
+// answering whether the whole run could be read
 template <typename Callback>
   requires std::invocable<Callback, std::string_view>
-auto each_session_secret_variable(const std::span<const std::byte> metadata,
-                                  Callback callback) -> bool {
+[[nodiscard]] auto
+each_session_secret_variable(const std::span<const std::byte> metadata,
+                             Callback callback) -> bool {
   std::size_t cursor{0};
   std::uint32_t count{0};
   if (!read_u32(metadata, cursor, count)) {
@@ -829,21 +831,22 @@ struct Authentication::Impl {
     return resolve_environment(decoded.client_secret_variable);
   }
 
-  // Split a secret variable's value into one secret per non-blank line. The
-  // resulting views borrow from the given value, so it must outlive them, and
-  // blank lines are skipped so a stray one cannot become a forgeable empty key
   // The resolved values back the views handed to the sealing primitive, so
-  // they are returned to the caller to keep alive alongside them
+  // they are returned to the caller to keep alive alongside them. A run that
+  // cannot be read to its end says nothing about which secrets a policy
+  // accepts, so none of it is trusted rather than the part read before it
   static auto session_secrets(const std::span<const std::byte> variables)
       -> std::vector<sourcemeta::core::SecureString> {
     std::vector<sourcemeta::core::SecureString> result;
-    each_session_secret_variable(
-        variables, [&result](const auto variable) -> void {
-          auto resolved{resolve_environment(variable)};
-          if (resolved.has_value()) {
-            result.push_back(std::move(resolved.value()));
-          }
-        });
+    if (!each_session_secret_variable(
+            variables, [&result](const auto variable) -> void {
+              auto resolved{resolve_environment(variable)};
+              if (resolved.has_value()) {
+                result.push_back(std::move(resolved.value()));
+              }
+            })) {
+      return {};
+    }
 
     return result;
   }
