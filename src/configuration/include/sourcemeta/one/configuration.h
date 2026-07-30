@@ -83,8 +83,10 @@ struct Configuration {
     sourcemeta::core::JSON::String client_id;
     // The environment variable name holding the client secret
     sourcemeta::core::JSON::String client_secret_variable;
-    // The environment variable name holding the session signing secret
-    sourcemeta::core::JSON::String session_secret_variable;
+    // The environment variable names holding the session signing secrets,
+    // newest first. Several coexist so that a secret can be replaced while
+    // values signed under the one it replaces are still honoured
+    std::vector<sourcemeta::core::JSON::String> session_secret_variables;
   };
 
   std::vector<AuthenticationEntry> authentication;

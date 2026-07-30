@@ -29,9 +29,7 @@
       "clientSecret": {
         "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
       },
-      "sessionSecret": {
-        "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
-      }
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" } ]
     }
   ],
   "contents": {

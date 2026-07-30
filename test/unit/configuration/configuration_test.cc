@@ -907,7 +907,7 @@ TEST(authentication_oidc_refuses_a_url_that_is_only_a_scheme) {
         "issuer": "https://acme.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_CLIENT_SECRET" },
-        "sessionSecret": { "environmentVariable": "ONE_SESSION_SECRET" }
+        "sessionSecrets": [ { "environmentVariable": "ONE_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1000,7 +1000,7 @@ TEST(authentication_oidc) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": { "environmentVariable": "ONE_OIDC_SESSION_SECRET" }
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1018,7 +1018,9 @@ TEST(authentication_oidc) {
   EXPECT_EQ(entry.issuer, "https://login.example.com");
   EXPECT_EQ(entry.client_id, "registry");
   EXPECT_EQ(entry.client_secret_variable, "ONE_OIDC_CLIENT_SECRET");
-  EXPECT_EQ(entry.session_secret_variable, "ONE_OIDC_SESSION_SECRET");
+  EXPECT_EQ(
+      entry.session_secret_variables,
+      (std::vector<sourcemeta::core::JSON::String>{"ONE_OIDC_SESSION_SECRET"}));
   EXPECT_TRUE(entry.keys.empty());
   EXPECT_TRUE(entry.algorithms.empty());
   EXPECT_TRUE(entry.audience.empty());
@@ -1037,7 +1039,7 @@ TEST(authentication_oidc_with_title) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": { "environmentVariable": "ONE_OIDC_SESSION_SECRET" }
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1064,7 +1066,7 @@ TEST(authentication_rejects_oidc_with_empty_title) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": { "environmentVariable": "ONE_OIDC_SESSION_SECRET" }
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};

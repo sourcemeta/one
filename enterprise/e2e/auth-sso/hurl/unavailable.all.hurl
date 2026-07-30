@@ -278,3 +278,14 @@ Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+# A policy naming two secrets signs with the first and starts a login normally,
+# so naming more than one costs nothing when none of them has been retired yet
+GET {{base}}/self/v1/auth/login/rotated
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/auth?"
+cookie "sourcemeta_one_transaction" exists
+cookie "sourcemeta_one_transaction[HttpOnly]" exists
+cookie "sourcemeta_one_transaction[SameSite]" == "Lax"

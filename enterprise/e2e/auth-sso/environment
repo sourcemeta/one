@@ -9,3 +9,7 @@ ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET=a-session-signing-secret-for-the-encrypted
 # to be attributable to the absent one alone
 ONE_E2E_OIDC_BROKEN_CLIENT_SECRET=a-client-secret-whose-policy-lacks-a-session-secret
 ONE_E2E_OIDC_BROKEN_SESSION_SECRET=a-session-signing-secret-whose-policy-lacks-a-client-secret
+# Two secrets, newest first, so a cookie signed under either is admitted while
+# a fresh one is signed under the first alone
+ONE_E2E_OIDC_ROTATED_SESSION_SECRET=the-session-secret-signing-from-now-on
+ONE_E2E_OIDC_ROTATED_SESSION_SECRET_OLD=the-session-secret-it-replaced-but-honours

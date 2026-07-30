@@ -127,9 +127,11 @@ public:
     // The policy name, which interactive policies carry so their session
     // cookies can be recognised at the gate
     std::string_view name{};
-    // The environment variable name holding the secret that signs this
-    // policy's session and transaction cookies
-    std::string_view session_secret_variable{};
+    // The environment variable names holding the secrets that sign this
+    // policy's session and transaction cookies, newest first. A value is
+    // signed under the first and accepted under any, so a secret can be
+    // replaced without ending the sessions signed under the one before it
+    std::span<const std::string_view> session_secrets{};
   };
 
   // The identity of an admitted caller: the type of credential it presented

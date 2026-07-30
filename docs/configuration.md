@@ -540,8 +540,9 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier registered with the provider for this instance |
 | `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret shared with the provider, read from an environment variable so that it never lives in the configuration file |
 | `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
-| `/sessionSecret` | Object | :red_circle: **Yes** | N/A | The secret used to sign the session cookies this instance mints, read from an environment variable. This is the instance's own secret, unrelated to the provider |
-| `/sessionSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret |
+| `/sessionSecrets` | Array | :red_circle: **Yes** | N/A | The secrets used to sign the session cookies this instance mints, newest first. These are the instance's own secrets, unrelated to the provider. A cookie is signed under the first and accepted under any, so adding a new secret first and dropping the old one once the sessions signed under it have expired rotates without signing anybody out |
+| `/sessionSecrets/*` | Object | :red_circle: **Yes** | N/A | A single session signing secret |
+| `/sessionSecrets/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret. Generate it at random, with at least 32 characters, as with `openssl rand -base64 32`. Everything a session cookie carries but its signature travels in the open, so a secret that can be guessed is one that anybody holding a single cookie can find, after which they can mint sessions of their own |
 
 !!! tip
 
@@ -603,7 +604,7 @@ sign in through their identity provider to reach it:
       "issuer": "https://accounts.example.com",
       "clientId": "schemas-registry",
       "clientSecret": { "environmentVariable": "ONE_CONSOLE_CLIENT_SECRET" },
-      "sessionSecret": { "environmentVariable": "ONE_CONSOLE_SESSION_SECRET" }
+      "sessionSecrets": [ { "environmentVariable": "ONE_CONSOLE_SESSION_SECRET" } ]
     }
   ],
   "contents": {

@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# The secrets a policy names are tried in order, so naming the same variable
+# twice adds nothing and reads as the mistake it is: somebody meant to name the
+# secret being replaced and named the one replacing it again, leaving a
+# rotation that retires nothing while appearing to have been carried out.
+
 set -o errexit
 set -o nounset
 
@@ -21,11 +26,16 @@ cat << 'EOF' > "$TMP/one.json"
   "url": "http://localhost:8000",
   "authentication": [
     {
-      "type": "public",
-      "algorithm": "identity",
-      "name": "open",
-      "paths": [ "/internal/open" ],
-      "keys": [ { "environmentVariable": "ONE_TEST_KEY_OPEN" } ]
+      "type": "oidc",
+      "name": "corporate",
+      "paths": [ "/internal" ],
+      "issuer": "https://login.example.com",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_TEST_OIDC_CLIENT" },
+      "sessionSecrets": [
+        { "environmentVariable": "ONE_TEST_OIDC_SESSION" },
+        { "environmentVariable": "ONE_TEST_OIDC_SESSION" }
+      ]
     }
   ],
   "contents": {
@@ -41,18 +51,18 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: Invalid configuration
   at path $(realpath "$TMP")/one.json
-The string value "public" was expected to equal the string constant "apiKey"
-  at instance location "/authentication/0/type"
-  at evaluate path "/properties/authentication/items/anyOf/0/properties/type/const"
-The object value was expected to validate against the defined properties subschemas
+The object value was expected to only define properties "algorithm", "keys", "name", "paths", and "type", but it also defines properties "clientId", "clientSecret", "issuer", and "sessionSecrets"
   at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/anyOf/0/properties"
+  at evaluate path "/properties/authentication/items/anyOf/0/required"
 The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/1/required"
-The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecrets", and "type"
+The array value contained the following duplicate item: {"environmentVariable":"ONE_TEST_OIDC_SESSION"}
+  at instance location "/authentication/0/sessionSecrets"
+  at evaluate path "/properties/authentication/items/anyOf/2/properties/sessionSecrets/uniqueItems"
+The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
-  at evaluate path "/properties/authentication/items/anyOf/2/required"
+  at evaluate path "/properties/authentication/items/anyOf/2/properties"
 The object value was expected to validate against at least one of the 3 given subschemas
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf"

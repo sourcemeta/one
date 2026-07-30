@@ -396,19 +396,63 @@ struct OIDCPolicyMetadata {
   std::string_view client_id;
   std::string_view client_secret_variable;
   std::string_view name;
-  std::string_view session_secret_variable;
+  // The variables holding this policy's session secrets, kept as the bytes
+  // they occupy so that reading a policy costs nothing until one is wanted
+  std::span<const std::byte> session_secrets;
   std::string_view default_path;
 };
 
 auto decode_oidc_metadata(const std::span<const std::byte> metadata,
                           OIDCPolicyMetadata &result) -> bool {
   std::size_t cursor{0};
-  return read_string(metadata, cursor, result.issuer) &&
-         read_string(metadata, cursor, result.client_id) &&
-         read_string(metadata, cursor, result.client_secret_variable) &&
-         read_string(metadata, cursor, result.name) &&
-         read_string(metadata, cursor, result.session_secret_variable) &&
-         read_string(metadata, cursor, result.default_path);
+  if (!read_string(metadata, cursor, result.issuer) ||
+      !read_string(metadata, cursor, result.client_id) ||
+      !read_string(metadata, cursor, result.client_secret_variable) ||
+      !read_string(metadata, cursor, result.name)) {
+    return false;
+  }
+
+  const auto secrets_start{cursor};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return false;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::string_view variable;
+    if (!read_string(metadata, cursor, variable)) {
+      return false;
+    }
+  }
+
+  result.session_secrets =
+      metadata.subspan(secrets_start, cursor - secrets_start);
+  return read_string(metadata, cursor, result.default_path);
+}
+
+// Walk the variables a policy names, newest first, handing each to the caller,
+// answering whether the whole run could be read
+template <typename Callback>
+  requires std::invocable<Callback, std::string_view>
+[[nodiscard]] auto
+each_session_secret_variable(const std::span<const std::byte> metadata,
+                             Callback callback) -> bool {
+  std::size_t cursor{0};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return false;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::string_view variable;
+    if (!read_string(metadata, cursor, variable)) {
+      return false;
+    }
+
+    callback(variable);
+  }
+
+  return true;
 }
 
 // The reference check treats two interactive policies as the same scope only
@@ -654,9 +698,8 @@ struct Authentication::Impl {
           field, Authentication::SESSION_COOKIE, candidates);
     }
     for (const auto sealed : candidates) {
-      const auto payload{this->session_open(decoded.session_secret_variable,
-                                            Authentication::Purpose::Session,
-                                            sealed)};
+      const auto payload{this->session_open(
+          decoded.session_secrets, Authentication::Purpose::Session, sealed)};
       if (!payload.has_value()) {
         continue;
       }
@@ -712,9 +755,8 @@ struct Authentication::Impl {
         continue;
       }
 
-      const auto payload{this->session_open(decoded.session_secret_variable,
-                                            Authentication::Purpose::Session,
-                                            value)};
+      const auto payload{this->session_open(
+          decoded.session_secrets, Authentication::Purpose::Session, value)};
       if (!payload.has_value()) {
         continue;
       }
@@ -789,67 +831,59 @@ struct Authentication::Impl {
     return resolve_environment(decoded.client_secret_variable);
   }
 
-  // Split a secret variable's value into one secret per non-blank line. The
-  // resulting views borrow from the given value, so it must outlive them, and
-  // blank lines are skipped so a stray one cannot become a forgeable empty key
-  static auto session_secrets(const std::string_view value,
-                              std::vector<std::string_view> &out) -> void {
-    std::string_view rest{value};
-    while (!rest.empty()) {
-      const auto newline{rest.find('\n')};
-      const auto line{
-          newline == std::string_view::npos ? rest : rest.substr(0, newline)};
-      if (!line.empty()) {
-        out.push_back(line);
-      }
-      if (newline == std::string_view::npos) {
-        break;
-      }
-      rest.remove_prefix(newline + 1);
+  // The resolved values back the views handed to the sealing primitive, so
+  // they are returned to the caller to keep alive alongside them. A run that
+  // cannot be read to its end says nothing about which secrets a policy
+  // accepts, so none of it is trusted rather than the part read before it
+  static auto session_secrets(const std::span<const std::byte> variables)
+      -> std::vector<sourcemeta::core::SecureString> {
+    std::vector<sourcemeta::core::SecureString> result;
+    if (!each_session_secret_variable(
+            variables, [&result](const auto variable) -> void {
+              auto resolved{resolve_environment(variable)};
+              if (resolved.has_value()) {
+                result.push_back(std::move(resolved.value()));
+              }
+            })) {
+      return {};
     }
+
+    return result;
   }
 
-  // The variable holds one secret per line, newest first, so a secret can be
-  // rotated by prepending the new one and dropping the old once every value
-  // signed under it has expired
-  [[nodiscard]] auto
-  session_seal(const std::string_view session_secret_variable,
-               const Authentication::Purpose purpose,
-               const std::string_view payload,
-               const std::chrono::sys_seconds expiry) const
+  // A value is signed under the newest secret and accepted under any of them,
+  // so a secret can be replaced by putting the new one first and dropping the
+  // old once every value signed under it has expired
+  [[nodiscard]] auto session_seal(const std::span<const std::byte> variables,
+                                  const Authentication::Purpose purpose,
+                                  const std::string_view payload,
+                                  const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
-    // The resolved value backs the secret views, so keep it alive alongside
-    const auto resolved{resolve_environment(session_secret_variable)};
-    if (!resolved.has_value()) {
-      return std::nullopt;
-    }
-
-    std::vector<std::string_view> secrets;
-    session_secrets(resolved.value(), secrets);
-    if (secrets.empty()) {
+    const auto resolved{session_secrets(variables)};
+    if (resolved.empty()) {
       return std::nullopt;
     }
 
     const auto issued{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
-    return Authentication::seal_value(payload, purpose, secrets.front(), issued,
-                                      expiry);
+    return Authentication::seal_value(payload, purpose, resolved.front(),
+                                      issued, expiry);
   }
 
-  [[nodiscard]] auto
-  session_open(const std::string_view session_secret_variable,
-               const Authentication::Purpose purpose,
-               const std::string_view value) const
+  [[nodiscard]] auto session_open(const std::span<const std::byte> variables,
+                                  const Authentication::Purpose purpose,
+                                  const std::string_view value) const
       -> std::optional<std::string> {
-    const auto resolved{resolve_environment(session_secret_variable)};
-    if (!resolved.has_value()) {
+    const auto resolved{session_secrets(variables)};
+    if (resolved.empty()) {
       return std::nullopt;
     }
 
+    // The views are taken once the values have stopped moving
     std::vector<std::string_view> secrets;
-    session_secrets(resolved.value(), secrets);
-    if (secrets.empty()) {
-      return std::nullopt;
+    secrets.reserve(resolved.size());
+    for (const auto &secret : resolved) {
+      secrets.emplace_back(secret);
     }
 
     const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
@@ -867,7 +901,7 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return this->session_seal(decoded.session_secret_variable, purpose, payload,
+    return this->session_seal(decoded.session_secrets, purpose, payload,
                               expiry);
   }
 
@@ -880,7 +914,7 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return this->session_open(decoded.session_secret_variable, purpose, value);
+    return this->session_open(decoded.session_secrets, purpose, value);
   }
 
   // The provider's description of itself is fetched once and refreshed on the
