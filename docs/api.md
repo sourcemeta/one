@@ -190,6 +190,11 @@ discovered from the policy's issuer, and sets a short-lived transaction cookie
 that binds the login to this browser. That cookie is what the callback checks
 before it acts on anything the provider says.
 
+`to` names where to land once the login completes, and is honoured only when it
+is a path on this instance, so the endpoint cannot be turned into an open
+redirect by whoever composes the link. Anything else falls back to the referring
+page, and then to the first path the policy declares.
+
 === "303"
 
     The provider's authorization URL in `Location`, with the transaction

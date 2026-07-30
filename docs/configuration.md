@@ -573,7 +573,9 @@ A browser holds one session per instance, whichever interactive policy
 established it, so signing in with a second one ends the first. A session lasts
 an hour and renews without anybody noticing, by sending the browser back to the
 provider, which answers without displaying anything where the sign-in still
-stands.
+stands. Only a navigation renews: a script calling the API with an expired
+session is denied plainly rather than redirected, since a redirect chain to an
+identity provider is not something it can follow.
 
 Because a session is a sealed value rather than a record, nothing can be struck
 out. Signing out takes the session from the browser, so a copy taken beforehand
