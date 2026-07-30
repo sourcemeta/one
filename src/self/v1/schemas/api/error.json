@@ -195,6 +195,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:auth-unavailable",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "This login cannot be started"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:auth-exchange-failed",
         "title": "Bad Gateway",
         "status": 502,

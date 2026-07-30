@@ -31,6 +31,24 @@
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET" },
       "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET" }
+    },
+    {
+      "type": "oidc",
+      "name": "no-client-secret",
+      "paths": [ "/unavailable" ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ABSENT_CLIENT_SECRET" },
+      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_SESSION_SECRET" }
+    },
+    {
+      "type": "oidc",
+      "name": "no-session-secret",
+      "paths": [ "/unavailable" ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET" },
+      "sessionSecret": { "environmentVariable": "ONE_E2E_OIDC_ABSENT_SESSION_SECRET" }
     }
   ],
   "contents": {
@@ -45,6 +63,9 @@
     },
     "discovery": {
       "path": "./schemas/discovery"
+    },
+    "unavailable": {
+      "path": "./schemas/unavailable"
     }
   }
 }
