@@ -154,9 +154,10 @@ POST {{base}}/self/v1/auth/logout
 HTTP 303
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
 # The browser is gated again, the denial byte-identical to the anonymous one

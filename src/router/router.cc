@@ -9,6 +9,7 @@
 #include <optional>    // std::optional, std::nullopt
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
@@ -145,6 +146,61 @@ auto Router::dispatch(
   instance->rest(matches, credential, request, response);
 }
 
+// A denial only becomes a silent renewal when the browser carries the marker a
+// previous sign-in left, and only under a policy that governs the path being
+// denied. Both matter: without the first every stranger would be sent to a
+// provider they have no account with, and without the second a stale marker
+// would send somebody to a provider whose answer could not admit them here,
+// which would deny them again and start over
+auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
+                                 sourcemeta::one::HTTPResponse &response) const
+    -> bool {
+  const RequestCookies cookies{request};
+  if (cookies.empty()) {
+    return false;
+  }
+
+  std::vector<std::string_view> candidates;
+  for (const auto field : std::span<const std::string_view>{cookies}) {
+    sourcemeta::core::http_cookie_values(field, Authentication::RENEWAL_COOKIE,
+                                         candidates);
+  }
+
+  if (candidates.empty()) {
+    return false;
+  }
+
+  const auto path{Authentication::Path::parse(
+      request.path(), this->server_uri(), this->server_uri_base_path())};
+  if (!path.has_value()) {
+    return false;
+  }
+
+  const auto &authentication{this->dispatcher().authentication()};
+  for (const auto candidate : candidates) {
+    if (!authentication.interactive(path.value(), candidate).has_value()) {
+      continue;
+    }
+
+    // The denied page is named outright rather than left to a referrer, which
+    // a redirect carries from wherever the browser came from rather than from
+    // the page it is being sent away from
+    std::string location{this->server_uri_base_path()};
+    location += "/self/v1/auth/login/";
+    location += candidate;
+    location += "?silent=1&to=";
+    sourcemeta::core::URI::escape(request.path(), location);
+    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+    response.write_header("Location", location);
+    response.write_header("Cache-Control", "no-store");
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
+                                   request, response);
+    return true;
+  }
+
+  return false;
+}
+
 auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
                                sourcemeta::one::HTTPResponse &response) const
     -> bool {
@@ -161,6 +217,12 @@ auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
       .frame_ancestors = "'none'",
       .x_frame_options = "DENY",
   };
+
+  // A browser that signed in before is asked of its provider rather than of
+  // the person, so an expired session renews without anybody noticing
+  if (this->serve_renewal(request, response)) {
+    return true;
+  }
 
   // The login page is a per-directory artifact, so a schema or a non-existent
   // path is answered by the nearest directory above it that offers a login.

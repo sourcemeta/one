@@ -155,6 +155,11 @@ public:
   [[nodiscard]] auto serve_login(HTTPRequest &request,
                                  HTTPResponse &response) const -> bool;
 
+  // Send a browser that has signed in before back to its provider, to be asked
+  // whether that sign-in still stands, rather than asking the person again
+  [[nodiscard]] auto serve_renewal(HTTPRequest &request,
+                                   HTTPResponse &response) const -> bool;
+
   [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
     return this->server_uri_base_path_;
   }

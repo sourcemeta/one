@@ -14,13 +14,16 @@ HTTP 303
 Cache-Control: no-store
 Location: /
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_session[HttpOnly]" exists
 cookie "sourcemeta_one_session[Path]" == "/"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[HttpOnly]" exists
 cookie "sourcemeta_one_transaction[Path]" == "/"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[HttpOnly]" exists
+cookie "sourcemeta_one_renewal[Path]" == "/"
 
 # A value that is not a session this instance minted is cleared just the same,
 # and discloses nothing by being treated differently
@@ -30,9 +33,10 @@ HTTP 303
 Cache-Control: no-store
 Location: /
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
 
 # A real login, so there is a genuine session to end
 GET {{base}}/self/v1/auth/login/keycloak
@@ -81,9 +85,10 @@ Cache-Control: no-store
 [Captures]
 provider_logout: header "Location"
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 header "Location" contains "id_token_hint="
 header "Location" contains "post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A8000"

@@ -821,6 +821,43 @@ struct Authentication::Impl {
                                                  decoded.default_path};
   }
 
+  [[nodiscard]] auto interactive(const std::string_view path,
+                                 const std::string_view name) const
+      -> std::optional<Authentication::InteractivePolicy> {
+    const auto mask{this->match(path)};
+    if (mask == 0 || this->policy_count_ == 0 || name.empty()) {
+      return std::nullopt;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      if ((mask & (PolicySet{1} << index)) == 0) {
+        continue;
+      }
+
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          this->view_->as<std::byte>(entry.metadata_offset),
+          entry.metadata_length};
+      OIDCPolicyMetadata decoded;
+      if (decode_oidc_metadata(metadata, decoded) && decoded.name == name) {
+        return Authentication::InteractivePolicy{.issuer = decoded.issuer,
+                                                 .client_id = decoded.client_id,
+                                                 .default_path =
+                                                     decoded.default_path};
+      }
+    }
+
+    return std::nullopt;
+  }
+
   [[nodiscard]] auto client_secret(const std::string_view policy) const
       -> std::optional<sourcemeta::core::SecureString> {
     OIDCPolicyMetadata decoded;
@@ -1193,6 +1230,12 @@ auto Authentication::admits(const Authentication::Path &path,
 auto Authentication::interactive(const std::string_view name) const
     -> std::optional<Authentication::InteractivePolicy> {
   return this->impl_->interactive(name);
+}
+
+auto Authentication::interactive(const Authentication::Path &path,
+                                 const std::string_view name) const
+    -> std::optional<Authentication::InteractivePolicy> {
+  return this->impl_->interactive(path.value(), name);
 }
 
 auto Authentication::client_secret(const std::string_view policy) const

@@ -125,9 +125,19 @@ public:
     const auto nonce_token{sourcemeta::core::oidc_nonce()};
     const std::string_view nonce{nonce_token.data(), nonce_token.size()};
 
+    // A silent attempt asks the provider whether an existing sign-in still
+    // stands, and is answered either way without the person seeing anything.
+    // The callback has to know which kind it is completing, since a provider
+    // refusing to answer without interaction is an ordinary outcome here and a
+    // failure anywhere else
+    const auto silent{!request.query("silent").empty()};
+
     auto payload{sourcemeta::core::JSON::make_object()};
     payload.assign_assume_new("policy",
                               sourcemeta::core::JSON{std::string{policy_name}});
+    if (silent) {
+      payload.assign_assume_new("silent", sourcemeta::core::JSON{true});
+    }
     payload.assign_assume_new("state", sourcemeta::core::JSON{state});
     payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
     payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
@@ -183,9 +193,26 @@ public:
     redirect_uri += policy_name;
 
     const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
-    const auto url{sourcemeta::core::oidc_authorization_url(
-        endpoints.value().authorization, policy->client_id, redirect_uri, state,
-        std::string_view{challenge.data(), challenge.size()}, nonce)};
+    sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
+    authentication_request.client_id = policy->client_id;
+    authentication_request.redirect_uri = redirect_uri;
+    authentication_request.scope = "openid";
+    authentication_request.response_type = "code";
+    authentication_request.state = state;
+    authentication_request.code_challenge = {challenge.data(),
+                                             challenge.size()};
+    authentication_request.code_challenge_method = "S256";
+    authentication_request.nonce = nonce;
+    if (silent) {
+      authentication_request.prompt = "none";
+    }
+
+    std::string authorization_url;
+    const auto url{sourcemeta::core::oidc_build_authentication_url(
+                       endpoints.value().authorization, authentication_request,
+                       authorization_url)
+                       ? std::optional<std::string>{authorization_url}
+                       : std::nullopt};
     if (!url.has_value()) {
       sourcemeta::one::HTTP_LOG("The authorization endpoint is not a URL a "
                                 "request can be built against, for the policy",

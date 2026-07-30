@@ -41,6 +41,12 @@ public:
   // its usefulness, with silent re-authentication as the eventual refresh
   static constexpr std::chrono::seconds SESSION_LIFETIME{3600};
 
+  // How long a browser stays eligible for a silent renewal after signing in.
+  // Long enough to outlast a provider session, since the provider is the one
+  // that decides whether a renewal succeeds, and losing it early only costs a
+  // sign-in page that would otherwise have been skipped
+  static constexpr std::chrono::seconds RENEWAL_LIFETIME{43200};
+
   // RFC 6265 Section 6.1 asks a user agent to support "at least 4096 bytes per
   // cookie (as measured by the sum of the length of the cookie's name, value,
   // and attributes)". That is a floor they should honour rather than a ceiling
@@ -116,6 +122,10 @@ public:
       return;
     }
 
+    // Nobody asked for a silent attempt, so from here on nothing it does is
+    // shown to them: every way this can end without a session puts the browser
+    // back where it started instead
+    const auto silent{transaction.value().try_at("silent") != nullptr};
     const auto *nonce{transaction.value().try_at("nonce")};
     const auto *verifier{transaction.value().try_at("verifier")};
 
@@ -125,9 +135,10 @@ public:
     // only thing this URL ever says about a name
     const auto policy{authentication.interactive(policy_name)};
     if (!policy.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed");
+      this->abandon(silent, transaction.value(), request, response,
+                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                    "urn:sourcemeta:one:auth-invalid-callback",
+                    "The login could not be completed");
       return;
     }
 
@@ -137,9 +148,10 @@ public:
     // checked that way, so this runs only when one arrives, and it runs ahead
     // of the outcome so that no answer is acted on before it is placed
     if (request.has_query("iss") && request.query("iss") != policy->issuer) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed");
+      this->abandon(silent, transaction.value(), request, response,
+                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                    "urn:sourcemeta:one:auth-invalid-callback",
+                    "The login could not be completed");
       return;
     }
 
@@ -151,13 +163,15 @@ public:
     // grant either, and a code arriving beside it is left unredeemed
     if (request.has_query("error")) {
       if (request.query("error").empty()) {
-        this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                   "urn:sourcemeta:one:auth-invalid-callback",
-                   "The login could not be completed");
+        this->abandon(silent, transaction.value(), request, response,
+                      sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                      "urn:sourcemeta:one:auth-invalid-callback",
+                      "The login could not be completed");
       } else {
-        this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-                   "urn:sourcemeta:one:auth-login-declined",
-                   "The identity provider declined the login");
+        this->abandon(silent, transaction.value(), request, response,
+                      sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+                      "urn:sourcemeta:one:auth-login-declined",
+                      "The identity provider declined the login");
       }
 
       return;
@@ -165,9 +179,10 @@ public:
 
     const auto code{request.query("code")};
     if (code.empty()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed");
+      this->abandon(silent, transaction.value(), request, response,
+                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                    "urn:sourcemeta:one:auth-invalid-callback",
+                    "The login could not be completed");
       return;
     }
 
@@ -175,7 +190,7 @@ public:
     if (!client_secret.has_value()) {
       sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
                                 policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -184,7 +199,7 @@ public:
       sourcemeta::one::HTTP_LOG("The provider named no token endpoint, or "
                                 "could not be reached, for the policy",
                                 policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -200,7 +215,7 @@ public:
       sourcemeta::one::HTTP_LOG(
           "The authorization code could not be redeemed for the policy",
           policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -210,7 +225,7 @@ public:
           "The provider returned an identity token that could not be read, "
           "for the policy",
           policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -223,7 +238,7 @@ public:
     if (!identity.has_value()) {
       sourcemeta::one::HTTP_LOG(
           "The identity token did not validate for the policy", policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -261,12 +276,12 @@ public:
       sourcemeta::one::HTTP_LOG(
           "The provider returned more than a session can hold, for the policy",
           policy_name);
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
     if (!session_cookie.has_value()) {
-      this->incomplete(request, response);
+      this->incomplete(silent, transaction.value(), request, response);
       return;
     }
 
@@ -285,9 +300,14 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     response.write_header("Set-Cookie", session_cookie.value());
+    // Signing in is what earns a browser a silent renewal later, and the
+    // marker outlives the session it accompanies because it is only of use
+    // once that session has expired
+    this->remember_renewal(response, policy_name, scope, secure);
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
-    this->expire_transaction(response, scope, secure);
+    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+                 scope, secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -430,11 +450,78 @@ private:
     return cookie;
   }
 
-  auto expire_transaction(sourcemeta::one::HTTPResponse &response,
-                          const std::string_view scope, const bool secure) const
+  // Every way a callback that belongs to a real login can end without a
+  // session. A silent attempt is put back where it started rather than shown
+  // any of this, since an error page would be the first anybody knew a renewal
+  // had been tried at all. The marker goes with it whatever the reason, so an
+  // attempt that did not come back with a grant is not made again on the next
+  // navigation, and every navigation after that
+  auto abandon(const bool silent, const sourcemeta::core::JSON &transaction,
+               sourcemeta::one::HTTPRequest &request,
+               sourcemeta::one::HTTPResponse &response,
+               const sourcemeta::core::HTTPStatus &status,
+               const std::string_view type, const std::string_view detail) const
+      -> void {
+    if (silent) {
+      sourcemeta::one::HTTP_LOG("A silent renewal did not end in a session",
+                                detail);
+      this->forget_renewal_and_redirect_back(transaction, request, response);
+      return;
+    }
+
+    this->fail(request, response, status, type, detail);
+  }
+
+  auto remember_renewal(sourcemeta::one::HTTPResponse &response,
+                        const std::string_view policy_name,
+                        const std::string_view scope, const bool secure) const
       -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+        {.name = sourcemeta::one::Authentication::RENEWAL_COOKIE,
+         .value = policy_name,
+         .path = scope,
+         .max_age = RENEWAL_LIFETIME,
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (cookie.has_value()) {
+      response.write_header("Set-Cookie", cookie.value());
+    }
+  }
+
+  // Where a silent attempt leaves the browser when it did not come back with a
+  // grant: back where it was denied, carrying neither a session nor the marker
+  // that would send it here again
+  auto forget_renewal_and_redirect_back(
+      const sourcemeta::core::JSON &transaction,
+      sourcemeta::one::HTTPRequest &request,
+      sourcemeta::one::HTTPResponse &response) const -> void {
+    const auto base{this->server_uri_base_path()};
+    const auto scope{base.empty() ? std::string_view{"/"} : base};
+    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
+    std::string destination{scope};
+    const auto *sealed_destination{transaction.try_at("to")};
+    if (sealed_destination != nullptr && sealed_destination->is_string() &&
+        sourcemeta::one::is_local_path(sealed_destination->to_string())) {
+      destination = sealed_destination->to_string();
+    }
+
+    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+    this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
+                 scope, secure);
+    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
+                 scope, secure);
+    response.write_header("Location", destination);
+    response.write_header("Cache-Control", "no-store");
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
+                                   request, response);
+  }
+
+  auto expire(sourcemeta::one::HTTPResponse &response,
+              const std::string_view name, const std::string_view scope,
+              const bool secure) const -> void {
+    const auto cookie{sourcemeta::core::http_serialize_cookie(
+        {.name = name,
          .value = "",
          .path = scope,
          .max_age = std::chrono::seconds{0},
@@ -540,12 +627,13 @@ private:
   // that would not validate reports how this deployment and its provider are
   // faring. The cause goes to the log, where an operator looks and a caller
   // cannot
-  auto incomplete(sourcemeta::one::HTTPRequest &request,
+  auto incomplete(const bool silent, const sourcemeta::core::JSON &transaction,
+                  sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response) const -> void {
-    this->fail(request, response,
-               sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-               "urn:sourcemeta:one:auth-incomplete",
-               "The session could not be established");
+    this->abandon(silent, transaction, request, response,
+                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                  "urn:sourcemeta:one:auth-incomplete",
+                  "The session could not be established");
   }
 
   std::string_view error_schema_;

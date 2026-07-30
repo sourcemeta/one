@@ -108,6 +108,13 @@ public:
   static constexpr std::string_view TRANSACTION_COOKIE{
       "sourcemeta_one_transaction"};
 
+  // Names the policy a browser last signed in under, so that a denial can ask
+  // the provider whether that sign-in still stands rather than asking the
+  // person again. It outlives a session, since it is only of use once one has
+  // expired, and it carries no credential: whoever holds it can start a login
+  // they were free to start anyway
+  static constexpr std::string_view RENEWAL_COOKIE{"sourcemeta_one_renewal"};
+
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
   struct Policy {
@@ -204,6 +211,12 @@ public:
 
   // The interactive policy declared under the given name, if any
   [[nodiscard]] auto interactive(std::string_view name) const
+      -> std::optional<InteractivePolicy>;
+
+  // The same, narrowed to a policy that governs the given path. A name that
+  // gates somewhere else answers nothing, so a browser carrying a stale one is
+  // never sent to a provider whose answer could not admit it here
+  [[nodiscard]] auto interactive(const Path &path, std::string_view name) const
       -> std::optional<InteractivePolicy>;
 
   // Where a provider says its endpoints are. The values are copies, so they

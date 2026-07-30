@@ -6,9 +6,10 @@ HTTP 303
 Location: /
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 header "Set-Cookie" contains "sourcemeta_one_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_renewal=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -24,9 +25,10 @@ HTTP 303
 Location: /
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 header "Set-Cookie" contains "sourcemeta_one_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_renewal=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -43,9 +45,10 @@ HTTP 303
 Location: /
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 header "Set-Cookie" contains "sourcemeta_one_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_renewal=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 bytes count == 0
 

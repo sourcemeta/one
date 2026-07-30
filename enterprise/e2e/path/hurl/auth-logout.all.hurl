@@ -6,9 +6,10 @@ HTTP 303
 Location: /v1/catalog
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 header "Set-Cookie" contains "sourcemeta_one_session=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Set-Cookie" contains "sourcemeta_one_transaction=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
+header "Set-Cookie" contains "sourcemeta_one_renewal=; Path=/v1/catalog; Max-Age=0; HttpOnly; SameSite=Lax"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
@@ -22,11 +23,13 @@ HTTP 303
 Location: /v1/catalog
 Cache-Control: no-store
 [Asserts]
-header "Set-Cookie" count == 2
+header "Set-Cookie" count == 3
 cookie "sourcemeta_one_session[Max-Age]" == 0
 cookie "sourcemeta_one_session[Path]" == "/v1/catalog"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_transaction[Path]" == "/v1/catalog"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Path]" == "/v1/catalog"
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
