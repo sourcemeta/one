@@ -336,6 +336,17 @@ never what to expose. When a path is governed by more than one policy, the
 policies are unioned, so a single collection can admit both a machine presenting a
 credential and a user carrying a session.
 
+None of it is stored. Every credential is checked as it arrives, against the
+environment or against the issuer's published key set, and a session is a sealed
+value the instance keeps no record of, so any replica verifies any of them on
+its own, with no session or state to look up and no coordination with the
+others. Public key material is still fetched from an issuer and cached, which
+is a lookup of what an issuer publishes rather than of who is signed in. That
+is what lets an instance scale horizontally, and it is why taking access away
+works differently for each policy type, described under each below. Sessions
+belong to `oidc` alone: a `jwt` policy has no session and no cookie, whether or
+not it names the same provider.
+
 **The UNIX model**: Visibility and access are kept separate, following the UNIX
 filesystem model. A policy that governs a directory does not erase it from its
 parent's listing.  Just as `ls` reveals a directory you cannot `cd` into, a
@@ -371,7 +382,9 @@ regardless of type:
 ### API Key
 
 Consumers present a key through the `Authorization` header using the `Bearer`
-scheme ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)).
+scheme ([RFC 6750](https://datatracker.ietf.org/doc/html/rfc6750)). Revoking one
+means dropping its variable from `keys` and restarting, which leaves every other
+key in the policy working.
 
 An `apiKey` policy declares the following additional properties:
 
@@ -467,7 +480,12 @@ A token is admitted only when its signature verifies against the issuer's key
 set, its `iss` claim matches the policy's `issuer`, its `aud` claim includes the
 policy's `audience`, its signature algorithm is one the policy allows, and it is
 within its validity period. A token that fails any of these is denied, with the
-same response as any other unauthenticated request.
+same response as any other unauthenticated request. Nothing here asks the
+issuer whether a subject is still welcome, and no token is ever recorded as
+withdrawn, so a valid token is accepted until it expires. The issuer can cut
+that short by retiring the key its tokens were signed with, which reaches every
+token signed under it once the cached key set refreshes. Short token lifetimes
+are what bound exposure otherwise.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
@@ -557,19 +575,24 @@ follows is signed with a secret of the instance's own, unrelated to the provider
     policy declares. The order of `paths` therefore decides where signing in
     leaves somebody, though it never changes what the policy gates.
 
-!!! note
+A browser holds one session per instance, whichever interactive policy
+established it, so signing in with a second one ends the first. A session lasts
+an hour and renews without anybody noticing, by sending the browser back to the
+provider, which answers without displaying anything where the sign-in still
+stands. Only a navigation renews: a script calling the API with an expired
+session is denied plainly rather than redirected, since a redirect chain to an
+identity provider is not something it can follow.
 
-    A browser holds one session per instance, whichever interactive policy
-    established it, so signing in with a second one ends the first. Separate
-    browser profiles are the way to hold both at once.
-
-    Signing out ends the provider's session too, where the provider offers to
-    end it, so signing in again asks who you are rather than admitting whoever
-    used the browser last. It takes the session from the browser rather than
-    revoking it, since a session is a sealed value this instance keeps no
-    record of, which is what lets it stay stateless and scale horizontally. A
-    copy taken beforehand therefore stays usable until it expires, which is why
-    sessions are short-lived.
+Because a session is a sealed value rather than a record, nothing can be struck
+out. Signing out takes the session from the browser, so a copy taken beforehand
+stays usable until it expires. Ending every session at once means leaving a
+single new secret in `sessionSecrets`, dropping the ones sessions were signed
+under, and restarting. That is the only immediate lever there is, and note that
+merely adding a secret does the opposite: existing sessions keep working, which
+is what makes rotation invisible. There is deliberately no OpenID Connect
+Back-Channel Logout, since acting on one means keeping a record of which
+sessions are dead and consulting it on every request, which is the round trip
+statelessness avoids.
 
 !!! warning
 
@@ -621,14 +644,6 @@ sign in through their identity provider to reach it:
     alongside an `apiKey` or `jwt` policy on the same path. The collection then
     admits both a machine that presents a credential and a user who signs in, so
     one endpoint can serve continuous integration and users at once.
-
-!!! note
-
-    The session signing secret is the instance's own, unrelated to the provider.
-    To rotate it without invalidating live sessions, the environment variable may
-    hold several secrets, one per line, newest first. New session cookies are
-    signed with the first, while existing cookies are accepted against any, so an
-    old secret can be retired once the sessions signed with it have expired.
 
 ## Extends
 
