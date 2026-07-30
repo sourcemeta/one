@@ -63,6 +63,12 @@ auto Authentication::interactive(const std::string_view) const
   return std::nullopt;
 }
 
+auto Authentication::interactive(const Authentication::Path &,
+                                 const std::string_view) const
+    -> std::optional<Authentication::InteractivePolicy> {
+  return std::nullopt;
+}
+
 auto Authentication::client_secret(const std::string_view) const
     -> std::optional<sourcemeta::core::SecureString> {
   return std::nullopt;

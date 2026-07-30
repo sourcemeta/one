@@ -90,6 +90,11 @@ public:
                  scope, secure);
     this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
                  scope, secure);
+    // Somebody who has signed out is asking not to be signed in, so the marker
+    // that would have renewed them silently goes too. Leaving it would undo
+    // this at the very next denial, without them doing anything
+    this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
+                 scope, secure);
 
     // Ending the session here leaves the provider's own untouched, so signing
     // in again would not ask who you are. Where the session names a policy

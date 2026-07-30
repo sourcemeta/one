@@ -41,6 +41,12 @@ public:
   // its usefulness, with silent re-authentication as the eventual refresh
   static constexpr std::chrono::seconds SESSION_LIFETIME{3600};
 
+  // How long a browser stays eligible for a silent renewal after signing in.
+  // Long enough to outlast a provider session, since the provider is the one
+  // that decides whether a renewal succeeds, and losing it early only costs a
+  // sign-in page that would otherwise have been skipped
+  static constexpr std::chrono::seconds RENEWAL_LIFETIME{43200};
+
   // RFC 6265 Section 6.1 asks a user agent to support "at least 4096 bytes per
   // cookie (as measured by the sum of the length of the cookie's name, value,
   // and attributes)". That is a floor they should honour rather than a ceiling
@@ -149,7 +155,25 @@ public:
     // 4.1.2.1 has a decline name itself with an error code, so one that names
     // nothing is not a decision this can report as the provider's. It is no
     // grant either, and a code arriving beside it is left unredeemed
+    const auto *silent{transaction.value().try_at("silent")};
     if (request.has_query("error")) {
+      // Nobody asked for a silent attempt, so nothing it does should be shown
+      // to them. Whatever the provider answered, the browser is put back where
+      // it was to carry on as an anonymous caller and be offered the sign-in
+      // page there. A provider unwilling to answer without asking the person
+      // is the ordinary end of one, per OpenID Connect Core 1.0 Section
+      // 3.1.2.6, and anything else is a fault an operator reads in the log.
+      // The marker goes either way: an attempt that did not come back with a
+      // grant must not be made again on the next navigation, or every one of
+      // them takes the same detour to the same answer
+      if (silent != nullptr) {
+        sourcemeta::one::HTTP_LOG(
+            "A silent renewal was refused, for the policy", policy_name);
+        this->forget_renewal_and_redirect_back(transaction.value(), request,
+                                               response);
+        return;
+      }
+
       if (request.query("error").empty()) {
         this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
                    "urn:sourcemeta:one:auth-invalid-callback",
@@ -285,6 +309,10 @@ public:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     response.write_header("Set-Cookie", session_cookie.value());
+    // Signing in is what earns a browser a silent renewal later, and the
+    // marker outlives the session it accompanies because it is only of use
+    // once that session has expired
+    this->remember_renewal(response, policy_name, scope, secure);
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
     this->expire_transaction(response, scope, secure);
@@ -428,6 +456,66 @@ private:
     }
 
     return cookie;
+  }
+
+  auto remember_renewal(sourcemeta::one::HTTPResponse &response,
+                        const std::string_view policy_name,
+                        const std::string_view scope, const bool secure) const
+      -> void {
+    const auto cookie{sourcemeta::core::http_serialize_cookie(
+        {.name = sourcemeta::one::Authentication::RENEWAL_COOKIE,
+         .value = policy_name,
+         .path = scope,
+         .max_age = RENEWAL_LIFETIME,
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (cookie.has_value()) {
+      response.write_header("Set-Cookie", cookie.value());
+    }
+  }
+
+  // Where a silent attempt leaves the browser when it did not come back with a
+  // grant: back where it was denied, carrying neither a session nor the marker
+  // that would send it here again
+  auto forget_renewal_and_redirect_back(
+      const sourcemeta::core::JSON &transaction,
+      sourcemeta::one::HTTPRequest &request,
+      sourcemeta::one::HTTPResponse &response) const -> void {
+    const auto base{this->server_uri_base_path()};
+    const auto scope{base.empty() ? std::string_view{"/"} : base};
+    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
+    std::string destination{scope};
+    const auto *sealed_destination{transaction.try_at("to")};
+    if (sealed_destination != nullptr && sealed_destination->is_string() &&
+        sourcemeta::one::is_local_path(sealed_destination->to_string())) {
+      destination = sealed_destination->to_string();
+    }
+
+    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+    this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
+                 scope, secure);
+    this->expire_transaction(response, scope, secure);
+    response.write_header("Location", destination);
+    response.write_header("Cache-Control", "no-store");
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
+                                   request, response);
+  }
+
+  auto expire(sourcemeta::one::HTTPResponse &response,
+              const std::string_view name, const std::string_view scope,
+              const bool secure) const -> void {
+    const auto cookie{sourcemeta::core::http_serialize_cookie(
+        {.name = name,
+         .value = "",
+         .path = scope,
+         .max_age = std::chrono::seconds{0},
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (cookie.has_value()) {
+      response.write_header("Set-Cookie", cookie.value());
+    }
   }
 
   auto expire_transaction(sourcemeta::one::HTTPResponse &response,
