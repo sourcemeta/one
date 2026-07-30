@@ -8,9 +8,11 @@
 # and nothing else, so a refusal here is attributable to the scheme alone.
 
 # The provider advertising a cleartext token endpoint is refused before a login
-# even starts, so no credential is ever sent to it
+# even starts, so no credential is ever sent to it. The refusal does not say
+# that the provider is the reason, since a login that cannot start says only
+# that much whatever the cause
 GET {{base}}/self/v1/auth/login/cleartext
-HTTP 502
+HTTP 500
 Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
@@ -22,10 +24,10 @@ refused_schema: header "Link" regex "<([^>]+)>"
 header "Set-Cookie" not exists
 header "Location" not exists
 {
-  "type": "urn:sourcemeta:one:auth-provider-unreachable",
-  "title": "Bad Gateway",
-  "status": 502,
-  "detail": "The identity provider could not be reached"
+  "type": "urn:sourcemeta:one:auth-unavailable",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "This login cannot be started"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{refused_schema}}

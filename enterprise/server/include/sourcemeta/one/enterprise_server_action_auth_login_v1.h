@@ -105,12 +105,7 @@ public:
     if (!authentication.client_secret(policy_name).has_value()) {
       sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
                                 policy_name);
-      sourcemeta::one::json_error(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:auth-misconfigured",
-          "The authentication configuration is incomplete", this->error_schema_,
-          "*");
+      this->unavailable(request, response);
       return;
     }
 
@@ -119,11 +114,7 @@ public:
       sourcemeta::one::HTTP_LOG("The provider named no authorization endpoint, "
                                 "or could not be reached, for the policy",
                                 policy_name);
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-          "urn:sourcemeta:one:auth-provider-unreachable",
-          "The identity provider could not be reached", this->error_schema_,
-          "*");
+      this->unavailable(request, response);
       return;
     }
 
@@ -177,12 +168,7 @@ public:
     if (!sealed.has_value()) {
       sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
                                 policy_name);
-      sourcemeta::one::json_error(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:auth-misconfigured",
-          "The authentication configuration is incomplete", this->error_schema_,
-          "*");
+      this->unavailable(request, response);
       return;
     }
 
@@ -204,12 +190,7 @@ public:
       sourcemeta::one::HTTP_LOG("The authorization endpoint is not a URL a "
                                 "request can be built against, for the policy",
                                 policy_name);
-      sourcemeta::one::json_error(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:auth-misconfigured",
-          "The authentication configuration is incomplete", this->error_schema_,
-          "*");
+      this->unavailable(request, response);
       return;
     }
 
@@ -229,12 +210,7 @@ public:
       sourcemeta::one::HTTP_LOG(
           "The login transaction could not be put in a cookie, for the policy",
           policy_name);
-      sourcemeta::one::json_error(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-          "urn:sourcemeta:one:auth-misconfigured",
-          "The authentication configuration is incomplete", this->error_schema_,
-          "*");
+      this->unavailable(request, response);
       return;
     }
 
@@ -253,6 +229,21 @@ public:
   }
 
 private:
+  // Every reason a login cannot start answers identically. The login page names
+  // its policies to anybody who reaches a gated path, so which policies exist
+  // is published rather than secret, but whether one is misconfigured and
+  // whether its provider is answering are neither, and telling those apart
+  // hands a caller who has authenticated to nothing a view of how this
+  // deployment is doing. The cause goes to the log, where an operator looks and
+  // a caller cannot
+  auto unavailable(sourcemeta::one::HTTPRequest &request,
+                   sourcemeta::one::HTTPResponse &response) const -> void {
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+        "urn:sourcemeta:one:auth-unavailable", "This login cannot be started",
+        this->error_schema_, "*");
+  }
+
   std::string_view error_schema_;
 };
 

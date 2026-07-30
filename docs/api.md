@@ -202,14 +202,14 @@ before it acts on anything the provider says.
 
 === "500"
 
-    The policy's client secret or session secret is absent from the
-    environment. A login that could not be completed is refused here rather
-    than stranding the person at the provider.
-
-=== "502"
-
-    The provider's metadata could not be retrieved, or names no authorization
-    endpoint.
+    The login cannot be started. Every cause answers this way, among them a
+    client secret or session secret absent from the environment, provider
+    metadata that could not be retrieved or that names no authorization
+    endpoint, and a provider this instance will not send a credential to. A
+    login that could not be completed is refused here rather than stranding the
+    person at the provider. Nothing distinguishes the causes, so the endpoint
+    cannot be used to learn how an instance is configured or whether its
+    provider is answering. The cause goes to the server log.
 
 ### Callback
 
@@ -250,14 +250,14 @@ behalf.
 
 === "500"
 
-    The policy's client secret or session secret is absent from the
-    environment.
-
-=== "502"
-
-    The provider could not be reached, refused the authorization code, or
-    returned an identity token that does not validate or that no session
-    cookie can hold.
+    The callback belongs to a login this instance started, but no session came
+    of it. Every cause answers this way, among them a client secret or session
+    secret absent from the environment, a provider that could not be reached or
+    that refused the authorization code, and an identity token that does not
+    validate or that no session cookie can hold. Anybody can start a login and
+    return with a code of their own invention, so reaching this says nothing
+    about who is asking, and nothing distinguishes the causes. The cause goes
+    to the server log.
 
 ### Logout
 

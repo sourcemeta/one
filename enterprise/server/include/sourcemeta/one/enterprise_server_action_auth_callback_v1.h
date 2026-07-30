@@ -175,10 +175,7 @@ public:
     if (!client_secret.has_value()) {
       sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
                                 policy_name);
-      this->fail(request, response,
-                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                 "urn:sourcemeta:one:auth-misconfigured",
-                 "The authentication configuration is incomplete");
+      this->incomplete(request, response);
       return;
     }
 
@@ -187,9 +184,7 @@ public:
       sourcemeta::one::HTTP_LOG("The provider named no token endpoint, or "
                                 "could not be reached, for the policy",
                                 policy_name);
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:auth-provider-unreachable",
-                 "The identity provider could not be reached");
+      this->incomplete(request, response);
       return;
     }
 
@@ -202,17 +197,20 @@ public:
         redirect_uri, code, verifier->to_string(),
         endpoints.value().token_endpoint_basic_auth)};
     if (!id_token.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:auth-exchange-failed",
-                 "The authorization code could not be redeemed");
+      sourcemeta::one::HTTP_LOG(
+          "The authorization code could not be redeemed for the policy",
+          policy_name);
+      this->incomplete(request, response);
       return;
     }
 
     const auto token{sourcemeta::core::JWT::from(id_token.value())};
     if (!token.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:auth-invalid-identity",
-                 "The identity token could not be validated");
+      sourcemeta::one::HTTP_LOG(
+          "The provider returned an identity token that could not be read, "
+          "for the policy",
+          policy_name);
+      this->incomplete(request, response);
       return;
     }
 
@@ -223,9 +221,9 @@ public:
         provider, token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
         policy->client_id, options)};
     if (!identity.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:auth-invalid-identity",
-                 "The identity token could not be validated");
+      sourcemeta::one::HTTP_LOG(
+          "The identity token did not validate for the policy", policy_name);
+      this->incomplete(request, response);
       return;
     }
 
@@ -260,17 +258,15 @@ public:
     // signed in, with nothing anywhere to explain it
     if (session_cookie.has_value() &&
         session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_GATEWAY,
-                 "urn:sourcemeta:one:auth-identity-too-large",
-                 "The identity provider returned more than a session can hold");
+      sourcemeta::one::HTTP_LOG(
+          "The provider returned more than a session can hold, for the policy",
+          policy_name);
+      this->incomplete(request, response);
       return;
     }
 
     if (!session_cookie.has_value()) {
-      this->fail(request, response,
-                 sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                 "urn:sourcemeta:one:auth-misconfigured",
-                 "The authentication configuration is incomplete");
+      this->incomplete(request, response);
       return;
     }
 
@@ -535,6 +531,21 @@ private:
       -> void {
     sourcemeta::one::json_error(request, response, status, type, detail,
                                 this->error_schema_, "*");
+  }
+
+  // Every reason a proven callback cannot end in a session answers
+  // identically. Anybody may start a login and bring back a code of their own
+  // invention, so reaching here proves nothing about who is asking, while
+  // telling a secret apart from an unanswering provider apart from a token
+  // that would not validate reports how this deployment and its provider are
+  // faring. The cause goes to the log, where an operator looks and a caller
+  // cannot
+  auto incomplete(sourcemeta::one::HTTPRequest &request,
+                  sourcemeta::one::HTTPResponse &response) const -> void {
+    this->fail(request, response,
+               sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+               "urn:sourcemeta:one:auth-incomplete",
+               "The session could not be established");
   }
 
   std::string_view error_schema_;

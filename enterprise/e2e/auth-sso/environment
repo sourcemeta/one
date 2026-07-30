@@ -4,3 +4,8 @@ ONE_E2E_OIDC_CLEARTEXT_CLIENT_SECRET=a-client-secret-for-the-cleartext-provider
 ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET=a-session-signing-secret-for-the-cleartext-provider
 ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET=a-client-secret-for-the-encrypted-provider
 ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET=a-session-signing-secret-for-the-encrypted-provider
+# The two policies gating /unavailable are each missing exactly one of the pair
+# below, so the variable the other one needs has to be present for the refusal
+# to be attributable to the absent one alone
+ONE_E2E_OIDC_BROKEN_CLIENT_SECRET=a-client-secret-whose-policy-lacks-a-session-secret
+ONE_E2E_OIDC_BROKEN_SESSION_SECRET=a-session-signing-secret-whose-policy-lacks-a-client-secret
