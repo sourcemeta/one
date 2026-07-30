@@ -90,7 +90,7 @@ TIME_START=$(date +%s%3N)
 # Whiteouts are character devices with major:minor 0:0
 find "$OVERLAY_UPPER" -type c | while read -r WHITEOUT_PATH
 do
-  RELATIVE_PATH="${WHITEOUT_PATH#$OVERLAY_UPPER/}"
+  RELATIVE_PATH="${WHITEOUT_PATH#"$OVERLAY_UPPER"/}"
   rm -rf "${OUTPUT_DIR:?}/$RELATIVE_PATH"
   rm "$WHITEOUT_PATH"
 done
