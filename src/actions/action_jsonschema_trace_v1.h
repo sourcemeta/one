@@ -89,11 +89,12 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments, std::string_view credential)
+           const sourcemeta::core::JSON &arguments,
+           const sourcemeta::one::Credentials &credentials)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate({.bearer = credential}, this->rpc_request_schema_,
-                              arguments, sourcemeta::blaze::Mode::Exhaustive)};
+        this->schema_evaluate(credentials, this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
@@ -102,9 +103,9 @@ public:
 
     const auto &schema_uri{arguments.at("schema").to_string()};
     const auto schema_present{this->artifact_resolve_path(
-        {.bearer = credential}, schema_uri, Tree::Schemas, "schema")};
+        credentials, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        {.bearer = credential}, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        credentials, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -140,8 +141,8 @@ public:
 
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->trace({.bearer = credential}, schema_uri, parsed_instance,
-                    &tracker, sourcemeta::core::Pointer{}));
+        this->trace(credentials, schema_uri, parsed_instance, &tracker,
+                    sourcemeta::core::Pointer{}));
   }
 
 private:

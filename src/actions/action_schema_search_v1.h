@@ -215,11 +215,12 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
-           const sourcemeta::core::JSON &arguments, std::string_view credential)
+           const sourcemeta::core::JSON &arguments,
+           const sourcemeta::one::Credentials &credentials)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate({.bearer = credential}, this->rpc_request_schema_,
-                              arguments, sourcemeta::blaze::Mode::Exhaustive)};
+        this->schema_evaluate(credentials, this->rpc_request_schema_, arguments,
+                              sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",
@@ -289,12 +290,11 @@ public:
 
     auto results{this->search_view_.search(
         arguments.at("q").to_string(), limit, scope,
-        [this, &credential](const std::string_view path) -> bool {
+        [this, &credentials](const std::string_view path) -> bool {
           const auto &authentication{this->dispatcher().authentication()};
           const auto location{this->canonical_path(path)};
           return location.has_value() &&
-                 authentication.admits(location.value(), {.bearer = credential})
-                     .allowed;
+                 authentication.admits(location.value(), credentials).allowed;
         })};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
