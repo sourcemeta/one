@@ -179,22 +179,6 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:auth-misconfigured",
-        "title": "Internal Server Error",
-        "status": 500,
-        "detail": "The authentication configuration is incomplete"
-      }
-    },
-    {
-      "const": {
-        "type": "urn:sourcemeta:one:auth-provider-unreachable",
-        "title": "Bad Gateway",
-        "status": 502,
-        "detail": "The identity provider could not be reached"
-      }
-    },
-    {
-      "const": {
         "type": "urn:sourcemeta:one:auth-unavailable",
         "title": "Internal Server Error",
         "status": 500,
@@ -203,26 +187,10 @@
     },
     {
       "const": {
-        "type": "urn:sourcemeta:one:auth-exchange-failed",
-        "title": "Bad Gateway",
-        "status": 502,
-        "detail": "The authorization code could not be redeemed"
-      }
-    },
-    {
-      "const": {
-        "type": "urn:sourcemeta:one:auth-invalid-identity",
-        "title": "Bad Gateway",
-        "status": 502,
-        "detail": "The identity token could not be validated"
-      }
-    },
-    {
-      "const": {
-        "type": "urn:sourcemeta:one:auth-identity-too-large",
-        "title": "Bad Gateway",
-        "status": 502,
-        "detail": "The identity provider returned more than a session can hold"
+        "type": "urn:sourcemeta:one:auth-incomplete",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "The session could not be established"
       }
     },
     {

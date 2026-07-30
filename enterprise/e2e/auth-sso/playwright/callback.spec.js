@@ -99,7 +99,7 @@ async function signInAlteringTheTransaction(page, context, alteration) {
 }
 
 test.describe('Callback transaction validation', () => {
-  test('a signed transaction with every field reaches the code exchange', async ({
+  test('a signed transaction with every field is accepted', async ({
     request
   }) => {
     const response = await callback(request, {
@@ -108,14 +108,15 @@ test.describe('Callback transaction validation', () => {
       nonce: NONCE,
       verifier: VERIFIER
     });
-    // The provider refuses the made-up code, which proves the transaction
-    // itself was accepted and the flow progressed to the exchange
-    expect(response.status()).toBe(502);
+    // A transaction that is rejected outright is refused as a bad request, so
+    // getting past that to a server-side failure is what shows this one was
+    // accepted. Which step then failed is deliberately not said
+    expect(response.status()).toBe(500);
     expect(await response.json()).toEqual({
-      type: 'urn:sourcemeta:one:auth-exchange-failed',
-      title: 'Bad Gateway',
-      status: 502,
-      detail: 'The authorization code could not be redeemed'
+      type: 'urn:sourcemeta:one:auth-incomplete',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'The session could not be established'
     });
   });
 
@@ -283,12 +284,12 @@ test.describe('Callback identity validation against a real login', () => {
       }
     ]);
     const again = await page.request.get(response.url(), { maxRedirects: 0 });
-    expect(again.status()).toBe(502);
+    expect(again.status()).toBe(500);
     expect(await again.json()).toEqual({
-      type: 'urn:sourcemeta:one:auth-exchange-failed',
-      title: 'Bad Gateway',
-      status: 502,
-      detail: 'The authorization code could not be redeemed'
+      type: 'urn:sourcemeta:one:auth-incomplete',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'The session could not be established'
     });
   });
 
@@ -304,12 +305,12 @@ test.describe('Callback identity validation against a real login', () => {
       nonce: 'a-nonce-the-provider-was-never-asked-to-echo'
     });
 
-    expect(response.status()).toBe(502);
+    expect(response.status()).toBe(500);
     expect(await response.json()).toEqual({
-      type: 'urn:sourcemeta:one:auth-invalid-identity',
-      title: 'Bad Gateway',
-      status: 502,
-      detail: 'The identity token could not be validated'
+      type: 'urn:sourcemeta:one:auth-incomplete',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'The session could not be established'
     });
     expect(response.headers()['set-cookie']).toBeUndefined();
   });
@@ -325,12 +326,12 @@ test.describe('Callback identity validation against a real login', () => {
       verifier: 'a-verifier-no-authorization-request-committed'
     });
 
-    expect(response.status()).toBe(502);
+    expect(response.status()).toBe(500);
     expect(await response.json()).toEqual({
-      type: 'urn:sourcemeta:one:auth-exchange-failed',
-      title: 'Bad Gateway',
-      status: 502,
-      detail: 'The authorization code could not be redeemed'
+      type: 'urn:sourcemeta:one:auth-incomplete',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'The session could not be established'
     });
     expect(response.headers()['set-cookie']).toBeUndefined();
   });

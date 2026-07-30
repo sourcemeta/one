@@ -62,7 +62,7 @@ jsonpath "$.valid" == true
 # between a stranger's callback and a token exchange
 GET {{base}}/self/v1/auth/callback/keycloak?code=a-code-nobody-issued&state={{state}}
 Cookie: sourcemeta_one_transaction={{transaction}}
-HTTP 502
+HTTP 500
 Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -74,10 +74,10 @@ exchange_body: body
 header "Set-Cookie" not exists
 header "Location" not exists
 {
-  "type": "urn:sourcemeta:one:auth-exchange-failed",
-  "title": "Bad Gateway",
-  "status": 502,
-  "detail": "The authorization code could not be redeemed"
+  "type": "urn:sourcemeta:one:auth-incomplete",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "The session could not be established"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -130,7 +130,7 @@ jsonpath "$.valid" == true
 # being present
 GET {{base}}/self/v1/auth/callback/keycloak?code=a-code-nobody-issued&state={{state}}&iss=https%3A%2F%2Fkeycloak%3A8443%2Frealms%2Fmain
 Cookie: sourcemeta_one_transaction={{transaction}}
-HTTP 502
+HTTP 500
 Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -143,10 +143,10 @@ header "Set-Cookie" not exists
 header "Location" not exists
 body == {{exchange_body}}
 {
-  "type": "urn:sourcemeta:one:auth-exchange-failed",
-  "title": "Bad Gateway",
-  "status": 502,
-  "detail": "The authorization code could not be redeemed"
+  "type": "urn:sourcemeta:one:auth-incomplete",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "The session could not be established"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

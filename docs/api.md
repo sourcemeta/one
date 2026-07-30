@@ -250,14 +250,14 @@ behalf.
 
 === "500"
 
-    The policy's client secret or session secret is absent from the
-    environment.
-
-=== "502"
-
-    The provider could not be reached, refused the authorization code, or
-    returned an identity token that does not validate or that no session
-    cookie can hold.
+    The callback belongs to a login this instance started, but no session came
+    of it. Every cause answers this way, among them a client secret or session
+    secret absent from the environment, a provider that could not be reached or
+    that refused the authorization code, and an identity token that does not
+    validate or that no session cookie can hold. Anybody can start a login and
+    return with a code of their own invention, so reaching this says nothing
+    about who is asking, and nothing distinguishes the causes. The cause goes
+    to the server log.
 
 ### Logout
 
