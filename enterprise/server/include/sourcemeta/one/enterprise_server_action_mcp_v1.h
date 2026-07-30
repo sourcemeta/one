@@ -217,6 +217,7 @@ public:
 
     request.body(
         [this, credential = std::string{credential},
+         cookies = sourcemeta::one::owned_cookies(request),
          version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -230,8 +231,10 @@ public:
                 version);
             return;
           }
+          const sourcemeta::one::RequestCookies fields{cookies};
           this->on_message(version, callback_request, callback_response,
-                           std::move(body), credential);
+                           std::move(body),
+                           {.bearer = credential, .cookies = fields});
         },
         [this, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
@@ -250,7 +253,8 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           std::string_view) -> sourcemeta::core::JSON override {
+           const sourcemeta::one::Credentials &)
+      -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
@@ -305,7 +309,7 @@ private:
   }
 
   auto on_resources_list(const sourcemeta::core::JSON &request_json,
-                         const std::string_view credential)
+                         const sourcemeta::one::Credentials &credentials)
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
 
@@ -337,12 +341,11 @@ private:
     std::uint64_t admitted{0};
     this->search_view_.for_each(
         0, this->search_view_.count(),
-        [this, credential, &authentication, &resources, &admitted,
+        [this, &credentials, &authentication, &resources, &admitted,
          offset](const sourcemeta::one::SearchListEntry &entry) -> void {
           const auto location{this->canonical_path(entry.path)};
           if (!location.has_value() ||
-              !authentication.admits(location.value(), {.bearer = credential})
-                   .allowed) {
+              !authentication.admits(location.value(), credentials).allowed) {
             return;
           }
 
@@ -438,7 +441,7 @@ private:
   }
 
   auto on_resources_read(const sourcemeta::core::JSON &request_json,
-                         std::string_view credential) const
+                         const sourcemeta::one::Credentials &credentials) const
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &uri{request_json.at("params").at("uri").to_string()};
@@ -486,9 +489,8 @@ private:
           "Resource not found");
     }
 
-    const auto resolution{
-        this->artifact_resolve_path({.bearer = credential}, uri, Tree::Schemas,
-                                    bundle ? "bundle" : "schema")};
+    const auto resolution{this->artifact_resolve_path(
+        credentials, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::jsonrpc_make_error(&id, -32010,
@@ -520,7 +522,8 @@ private:
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
-                     std::string_view credential) -> sourcemeta::core::JSON {
+                     const sourcemeta::one::Credentials &credentials)
+      -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
     const auto &tool_routes{this->mcp_metadata_.at("toolRoutes")};
@@ -543,7 +546,7 @@ private:
     try {
       return instance->mcp(version, id,
                            arguments == nullptr ? empty_arguments : *arguments,
-                           credential);
+                           credentials);
     } catch (const std::exception &error) {
       return sourcemeta::core::mcp_make_tool_error(id, error.what());
     }
@@ -552,7 +555,7 @@ private:
   auto on_message(const sourcemeta::core::MCPProtocolVersion version,
                   sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response, std::string &&body,
-                  std::string_view credential) -> void {
+                  const sourcemeta::one::Credentials &credentials) -> void {
     sourcemeta::core::JSON request_json{nullptr};
     try {
       request_json = sourcemeta::core::parse_json(body);
@@ -596,7 +599,7 @@ private:
           sub_id = *parsed_id;
         }
         try {
-          auto envelope{this->process_one(version, sub, credential)};
+          auto envelope{this->process_one(version, sub, credentials)};
           if (envelope.has_value()) {
             responses.push_back(std::move(envelope).value());
           }
@@ -629,7 +632,7 @@ private:
       return;
     }
 
-    auto envelope{this->process_one(version, request_json, credential)};
+    auto envelope{this->process_one(version, request_json, credentials)};
     if (envelope.has_value()) {
       this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                            envelope.value(), version);
@@ -649,7 +652,7 @@ private:
 
   auto process_one(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &request_json,
-                   std::string_view credential)
+                   const sourcemeta::one::Credentials &credentials)
       -> std::optional<sourcemeta::core::JSON> {
     if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
       return std::nullopt;
@@ -669,8 +672,8 @@ private:
     // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
     // follows MCP's tighter rule and rejects null-id requests here.
     // https://www.jsonrpc.org/specification (§4)
-    if (!this->schema_evaluate_fast({.bearer = credential},
-                                    this->request_schema_, request_json)) {
+    if (!this->schema_evaluate_fast(credentials, this->request_schema_,
+                                    request_json)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
     }
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
@@ -680,13 +683,13 @@ private:
       return this->on_tools_list(version, request_json);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-      return this->on_resources_list(request_json, credential);
+      return this->on_resources_list(request_json, credentials);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
-      return this->on_resources_read(request_json, credential);
+      return this->on_resources_read(request_json, credentials);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-      return this->on_tools_call(version, request_json, credential);
+      return this->on_tools_call(version, request_json, credentials);
     }
     if (this->mcp_metadata_.defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(

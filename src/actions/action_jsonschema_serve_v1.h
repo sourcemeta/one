@@ -106,7 +106,8 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           std::string_view) -> sourcemeta::core::JSON override {
+           const sourcemeta::one::Credentials &)
+      -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 

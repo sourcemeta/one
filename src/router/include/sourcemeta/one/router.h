@@ -132,10 +132,14 @@ public:
                     std::string_view credential, HTTPRequest &request,
                     HTTPResponse &response) -> void = 0;
 
+  // The whole credential rather than the bearer alone, since a browser reaching
+  // a tool is admitted by its session cookie and would otherwise pass the gate
+  // and then be refused by whatever the tool resolves on its behalf
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &id,
                    const sourcemeta::core::JSON &arguments,
-                   std::string_view credential) -> sourcemeta::core::JSON = 0;
+                   const Credentials &credentials)
+      -> sourcemeta::core::JSON = 0;
 
   // Whether this route stays reachable no matter which policies cover its path.
   // A route that a caller must reach in order to establish authentication
