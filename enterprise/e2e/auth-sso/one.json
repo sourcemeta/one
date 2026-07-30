@@ -12,7 +12,7 @@
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -21,7 +21,7 @@
       "issuer": "https://keycloak:8443/realms/cleartext",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -30,7 +30,7 @@
       "issuer": "https://keycloak:8443/realms/encrypted",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -39,7 +39,7 @@
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ABSENT_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_BROKEN_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_BROKEN_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -48,7 +48,7 @@
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_ABSENT_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_ABSENT_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -57,7 +57,7 @@
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET" },
-      "sessionSecret": [ { "environmentVariable": "ONE_E2E_OIDC_SHORT_SESSION_SECRET" } ]
+      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_SHORT_SESSION_SECRET" } ]
     },
     {
       "type": "oidc",
@@ -66,7 +66,7 @@
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
-      "sessionSecret": [
+      "sessionSecrets": [
         { "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET" },
         { "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET_OLD" }
       ]

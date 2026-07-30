@@ -32,7 +32,7 @@ cat << 'EOF' > "$TMP/one.json"
       "issuer": "https://login.example.com",
       "clientId": "registry",
       "clientSecret": { "environmentVariable": "ONE_TEST_OIDC_CLIENT" },
-      "sessionSecret": [
+      "sessionSecrets": [
         { "environmentVariable": "ONE_TEST_OIDC_SESSION" },
         { "environmentVariable": "ONE_TEST_OIDC_SESSION" }
       ]
@@ -51,15 +51,15 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: Invalid configuration
   at path $(realpath "$TMP")/one.json
-The object value was expected to only define properties "algorithm", "keys", "name", "paths", and "type", but it also defines properties "clientId", "clientSecret", "issuer", and "sessionSecret"
+The object value was expected to only define properties "algorithm", "keys", "name", "paths", and "type", but it also defines properties "clientId", "clientSecret", "issuer", and "sessionSecrets"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/0/required"
 The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/1/required"
 The array value contained the following duplicate item: {"environmentVariable":"ONE_TEST_OIDC_SESSION"}
-  at instance location "/authentication/0/sessionSecret"
-  at evaluate path "/properties/authentication/items/anyOf/2/properties/sessionSecret/uniqueItems"
+  at instance location "/authentication/0/sessionSecrets"
+  at evaluate path "/properties/authentication/items/anyOf/2/properties/sessionSecrets/uniqueItems"
 The object value was expected to validate against the defined properties subschemas
   at instance location "/authentication/0"
   at evaluate path "/properties/authentication/items/anyOf/2/properties"

@@ -189,7 +189,7 @@
               "issuer",
               "clientId",
               "clientSecret",
-              "sessionSecret"
+              "sessionSecrets"
             ],
             "properties": {
               "type": {
@@ -232,7 +232,7 @@
                 },
                 "additionalProperties": false
               },
-              "sessionSecret": {
+              "sessionSecrets": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,

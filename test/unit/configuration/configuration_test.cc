@@ -907,7 +907,7 @@ TEST(authentication_oidc_refuses_a_url_that_is_only_a_scheme) {
         "issuer": "https://acme.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_CLIENT_SECRET" },
-        "sessionSecret": [ { "environmentVariable": "ONE_SESSION_SECRET" } ]
+        "sessionSecrets": [ { "environmentVariable": "ONE_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1000,7 +1000,7 @@ TEST(authentication_oidc) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1039,7 +1039,7 @@ TEST(authentication_oidc_with_title) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
@@ -1066,7 +1066,7 @@ TEST(authentication_rejects_oidc_with_empty_title) {
         "issuer": "https://login.example.com",
         "clientId": "registry",
         "clientSecret": { "environmentVariable": "ONE_OIDC_CLIENT_SECRET" },
-        "sessionSecret": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
+        "sessionSecrets": [ { "environmentVariable": "ONE_OIDC_SESSION_SECRET" } ]
       }
     ]
   })JSON")};
