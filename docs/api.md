@@ -169,8 +169,12 @@ session cookie that admits it exactly as a credential would. That cookie is
 host, and `Secure` whenever the instance URL is `https`. It carries its own
 expiry and the signature that proves this instance minted it, so no session is
 kept in memory and every replica of an instance accepts the sessions the others
-mint. A browser holds one session per instance, whichever policy established
-it.
+mint.
+
+A signed-in browser also holds a short-lived transaction cookie during a login,
+and a renewal marker naming the policy it signed in under, which is what lets an
+expired session be renewed against the provider without asking the person again.
+The marker carries no credential.
 
 ### Login
 
@@ -267,12 +271,13 @@ behalf.
 POST /self/v1/auth/logout
 ```
 
-Both cookies are expired before anything else is decided, and whether or not
-the request carried them, so no outcome leaves a session behind. Where the
-session names a policy whose provider offers to end its own session, the
-browser is then sent on to do so, carrying the identity token as proof of
-whose session it is asking to end. That is what stops the next sign-in from
-silently admitting whoever used the browser last.
+Every cookie this endpoint mints is expired before anything else is decided,
+and whether or not the request carried it, so no outcome leaves a session
+behind or a browser eligible to renew one. Where the session names a policy
+whose provider offers to end its own session, the browser is then sent on to do
+so, carrying the identity token as proof of whose session it is asking to end.
+That is what stops the next sign-in from silently admitting whoever used the
+browser last.
 
 This endpoint answers `POST` rather than `GET` because signing out changes
 state at the provider, which [RFC 9110
@@ -281,15 +286,10 @@ outside what a safe method may do. A link to it would be followed by anything
 that prefetches or unfurls URLs, signing the person out unasked, so the
 control that reaches it is a form submission.
 
-A session is a sealed value this instance keeps no record of, which is what
-lets it stay stateless. Signing out therefore takes the session from the
-browser rather than revoking it, and a copy taken beforehand stays usable
-until it expires. Sessions are short-lived for that reason.
-
 === "303"
 
-    Both cookies expired in `Set-Cookie`, and either the provider's end-session
-    URL or the instance root in `Location`.
+    The session, transaction and renewal cookies expired in `Set-Cookie`, and
+    either the provider's end-session URL or the instance root in `Location`.
 
 === "405"
 
