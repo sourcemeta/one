@@ -145,3 +145,136 @@ HTTP 401
 Cache-Control: no-store
 [Asserts]
 header "Location" not exists
+
+# A silent attempt can fail well past the provider's answer: with no code at
+# all, with a code the provider will not redeem, or with an identity that does
+# not validate. None of that was asked for, so none of it is shown. Each one
+# puts the browser back where it started and takes the marker with it, since an
+# attempt that did not end in a session must not be made again on the next
+# navigation, and every navigation after that.
+
+# A silent attempt whose callback carries no code
+GET {{base}}/self/v1/auth/login/keycloak?silent=1&to=/private/
+HTTP 303
+[Captures]
+codeless_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{codeless_state}}
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" == "/private/"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+cookie "sourcemeta_one_transaction[Max-Age]" == 0
+
+# A silent attempt whose code the provider refuses to redeem. Without the rule
+# this would be the `502` an ordinary login gets, which nobody navigating to a
+# page has any way to act on
+GET {{base}}/self/v1/auth/login/keycloak?silent=1&to=/private/secret
+HTTP 303
+[Captures]
+refused_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{refused_state}}&code=a-code-nobody-issued
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" == "/private/secret"
+header "Set-Cookie" not contains "sourcemeta_one_session="
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+
+# A provider that will not answer without asking the person, which is the
+# ordinary end of a silent attempt rather than a fault (OpenID Connect Core 1.0
+# Section 3.1.2.6). It reads exactly like the failures above
+GET {{base}}/self/v1/auth/login/keycloak?silent=1&to=/private/
+HTTP 303
+[Captures]
+required_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{required_state}}&error=login_required
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" == "/private/"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+
+# A fault the provider names, rather than a refusal to interact, is treated the
+# same way. Only an operator reading the log needs to tell them apart, and the
+# marker goes either way so the next navigation does not repeat the detour
+GET {{base}}/self/v1/auth/login/keycloak?silent=1&to=/private/
+HTTP 303
+[Captures]
+faulty_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{faulty_state}}&error=server_error
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+header "Location" == "/private/"
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+
+# The same failures on a login somebody started themselves are still reported
+# to them, since they are watching and can act on what they are told
+GET {{base}}/self/v1/auth/login/keycloak?to=/private/
+HTTP 303
+[Captures]
+visible_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{visible_state}}&code=a-code-nobody-issued
+HTTP 500
+Cache-Control: no-store
+Content-Type: application/problem+json
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+visible_body: body
+visible_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Location" not exists
+{
+  "type": "urn:sourcemeta:one:auth-incomplete",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "The session could not be established"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{visible_schema}}
+```
+{{visible_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# And a decline on a login somebody started is still a decline, not a quiet
+# redirect, so the one outcome a person caused is the one they are told about
+GET {{base}}/self/v1/auth/login/keycloak?to=/private/
+HTTP 303
+[Captures]
+declined_state: header "Location" regex "state=([^&]+)"
+
+GET {{base}}/self/v1/auth/callback/keycloak?state={{declined_state}}&error=access_denied
+HTTP 403
+Cache-Control: no-store
+Content-Type: application/problem+json
+[Captures]
+declined_body: body
+[Asserts]
+header "Location" not exists
+{
+  "type": "urn:sourcemeta:one:auth-login-declined",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "The identity provider declined the login"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{visible_schema}}
+```
+{{declined_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
