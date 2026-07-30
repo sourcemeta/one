@@ -339,10 +339,13 @@ credential and a user carrying a session.
 None of it is stored. Every credential is checked as it arrives, against the
 environment or against the issuer's published key set, and a session is a sealed
 value the instance keeps no record of, so any replica verifies any of them on
-its own without a lookup. That is what lets an instance scale horizontally, and
-it is why taking access away works differently for each policy type, described
-under each below. Sessions belong to `oidc` alone: a `jwt` policy has no session
-and no cookie, whether or not it names the same provider.
+its own, with no session or state to look up and no coordination with the
+others. Public key material is still fetched from an issuer and cached, which
+is a lookup of what an issuer publishes rather than of who is signed in. That
+is what lets an instance scale horizontally, and it is why taking access away
+works differently for each policy type, described under each below. Sessions
+belong to `oidc` alone: a `jwt` policy has no session and no cookie, whether or
+not it names the same provider.
 
 **The UNIX model**: Visibility and access are kept separate, following the UNIX
 filesystem model. A policy that governs a directory does not erase it from its
@@ -477,9 +480,12 @@ A token is admitted only when its signature verifies against the issuer's key
 set, its `iss` claim matches the policy's `issuer`, its `aud` claim includes the
 policy's `audience`, its signature algorithm is one the policy allows, and it is
 within its validity period. A token that fails any of these is denied, with the
-same response as any other unauthenticated request. Only the issuer can revoke
-one, and never before it expires, since nothing here asks the issuer whether a
-subject is still welcome: the token lifetimes it mints are what bound exposure.
+same response as any other unauthenticated request. Nothing here asks the
+issuer whether a subject is still welcome, and no token is ever recorded as
+withdrawn, so a valid token is accepted until it expires. The issuer can cut
+that short by retiring the key its tokens were signed with, which reaches every
+token signed under it once the cached key set refreshes. Short token lifetimes
+are what bound exposure otherwise.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
@@ -579,11 +585,14 @@ identity provider is not something it can follow.
 
 Because a session is a sealed value rather than a record, nothing can be struck
 out. Signing out takes the session from the browser, so a copy taken beforehand
-stays usable until it expires. Ending every session at once means changing the
-policy's session secret and restarting, which is the only immediate lever there
-is. There is deliberately no OpenID Connect Back-Channel Logout, since acting on
-one means keeping a record of which sessions are dead and consulting it on every
-request, which is the round trip statelessness avoids.
+stays usable until it expires. Ending every session at once means leaving a
+single new secret in `sessionSecrets`, dropping the ones sessions were signed
+under, and restarting. That is the only immediate lever there is, and note that
+merely adding a secret does the opposite: existing sessions keep working, which
+is what makes rotation invisible. There is deliberately no OpenID Connect
+Back-Channel Logout, since acting on one means keeping a record of which
+sessions are dead and consulting it on every request, which is the round trip
+statelessness avoids.
 
 !!! warning
 
