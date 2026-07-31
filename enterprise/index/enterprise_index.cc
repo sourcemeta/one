@@ -174,6 +174,16 @@ auto generate_protected_resource_metadata(
 
   resource.append(endpoint);
 
+  // RFC 9728 Section 1.2 defines a resource identifier as an https URL, and a
+  // client is entitled to reject anything else. Loopback is the exception this
+  // project already makes elsewhere, so that a local instance stays testable
+  const sourcemeta::core::URI resource_uri{resource};
+  if (!resource_uri.is_https() &&
+      !(resource_uri.is_http() &&
+        (resource_uri.is_loopback() || resource_uri.is_localhost()))) {
+    return;
+  }
+
   // A client that reads this asks its provider for a token bound to the
   // resource below, so an issuer whose policy expects a different audience
   // would mint one this instance refuses. Only an issuer whose policy accepts
@@ -186,6 +196,14 @@ auto generate_protected_resource_metadata(
     if (entry.type !=
             sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT ||
         entry.audience != resource) {
+      continue;
+    }
+
+    // A policy that names its keys outright is never asked to discover
+    // anything, so nothing has established that its issuer is the https
+    // identifier RFC 8414 expects. Advertising it unchecked would publish an
+    // authorization server a client cannot use
+    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
       continue;
     }
 
