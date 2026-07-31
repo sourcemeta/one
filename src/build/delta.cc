@@ -7,6 +7,7 @@
 #include <span>          // std::span
 #include <string>        // std::string
 #include <string_view>   // std::string_view
+#include <system_error>  // std::error_code
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
@@ -532,8 +533,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         continue;
       }
 
+      // Probed without throwing, since a global this build cannot examine,
+      // whatever the reason, is one to produce again rather than trust
+      std::error_code existence_error;
       const auto path{output / rule.filename};
-      if (entries.contains(path.native()) && !std::filesystem::exists(path)) {
+      if (entries.contains(path.native()) &&
+          !std::filesystem::exists(path, existence_error)) {
         missing_globals[index] = true;
         has_missing_globals = true;
       }

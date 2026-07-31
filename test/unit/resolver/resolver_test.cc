@@ -694,3 +694,79 @@ TEST(path_url_absolute_ref) {
     "$ref": "2020-12-id"
   })JSON");
 }
+
+TEST(emplace_accepts_a_cache_hit_whose_artifact_is_present) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  const auto source_path{std::filesystem::path{SCHEMAS_PATH} / "example" /
+                         "2020-12-with-id.json"};
+  resolver.emplace(
+      "http://localhost:8000/example/2020-12-with-id",
+      {.path = source_path,
+       .relative_path = "example/2020-12-with-id",
+       .mtime = std::filesystem::last_write_time(source_path),
+       .evaluate = true,
+       .cache_path = source_path,
+       .dialect = "https://json-schema.org/draft/2020-12/schema",
+       .original_identifier = "https://example.com/schemas/2020-12-with-id",
+       .collection = &std::get<sourcemeta::one::Configuration::Collection>(
+           shared_configuration().entries.at("example"))});
+  EXPECT_EQ(resolver.entry("http://localhost:8000/example/2020-12-with-id")
+                .cache_path.value(),
+            source_path);
+}
+
+TEST(emplace_refuses_a_cache_hit_whose_artifact_cannot_be_examined) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  const auto source_path{std::filesystem::path{SCHEMAS_PATH} / "example" /
+                         "2020-12-with-id.json"};
+  // A component longer than any filesystem accepts makes examining the path
+  // an error rather than a clean answer, in every environment including
+  // running as root, where permission denials cannot be provoked
+  const auto unexaminable_path{std::filesystem::path{SCHEMAS_PATH} /
+                               std::string(300, 'x') / "schema.metapack"};
+  try {
+    resolver.emplace(
+        "http://localhost:8000/example/2020-12-with-id",
+        {.path = source_path,
+         .relative_path = "example/2020-12-with-id",
+         .mtime = std::filesystem::last_write_time(source_path),
+         .evaluate = true,
+         .cache_path = unexaminable_path,
+         .dialect = "https://json-schema.org/draft/2020-12/schema",
+         .original_identifier = "https://example.com/schemas/2020-12-with-id",
+         .collection = &std::get<sourcemeta::one::Configuration::Collection>(
+             shared_configuration().entries.at("example"))});
+    FAIL();
+  } catch (const sourcemeta::one::ResolverMissingCachedArtifactError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The build state references an artifact that no longer exists on disk");
+    EXPECT_EQ(error.path(), unexaminable_path);
+  }
+}
+
+TEST(emplace_refuses_a_cache_hit_whose_artifact_is_gone) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  const auto source_path{std::filesystem::path{SCHEMAS_PATH} / "example" /
+                         "2020-12-with-id.json"};
+  const std::filesystem::path missing_path{"/no/such/cache/schema.metapack"};
+  try {
+    resolver.emplace(
+        "http://localhost:8000/example/2020-12-with-id",
+        {.path = source_path,
+         .relative_path = "example/2020-12-with-id",
+         .mtime = std::filesystem::last_write_time(source_path),
+         .evaluate = true,
+         .cache_path = missing_path,
+         .dialect = "https://json-schema.org/draft/2020-12/schema",
+         .original_identifier = "https://example.com/schemas/2020-12-with-id",
+         .collection = &std::get<sourcemeta::one::Configuration::Collection>(
+             shared_configuration().entries.at("example"))});
+    FAIL();
+  } catch (const sourcemeta::one::ResolverMissingCachedArtifactError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The build state references an artifact that no longer exists on disk");
+    EXPECT_EQ(error.path(), missing_path);
+  }
+}
