@@ -22,7 +22,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 denied_body: body
 [Asserts]
@@ -83,7 +83,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 wrong_audience_denied: body
 [Asserts]
@@ -108,7 +108,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 issuer_mismatch_denied: body
 [Asserts]
@@ -133,7 +133,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 discovery_failure_denied: body
 [Asserts]

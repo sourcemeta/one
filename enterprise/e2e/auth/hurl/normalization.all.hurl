@@ -55,7 +55,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 cased_denied_body: body
 cased_denied_schema: header "Link" regex "<([^>]+)>"
@@ -112,7 +112,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 ext_denied_body: body
 ext_denied_schema: header "Link" regex "<([^>]+)>"
@@ -166,7 +166,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 crosspolicy_body: body
 crosspolicy_schema: header "Link" regex "<([^>]+)>"
@@ -230,7 +230,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 encoded_denied_body: body
 encoded_denied_schema: header "Link" regex "<([^>]+)>"
@@ -362,7 +362,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 traversal_denied_body: body
 traversal_denied_schema: header "Link" regex "<([^>]+)>"
@@ -419,7 +419,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 carveout_denied_body: body
 carveout_denied_schema: header "Link" regex "<([^>]+)>"
@@ -467,7 +467,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 singledot_body: body
 singledot_schema: header "Link" regex "<([^>]+)>"
@@ -496,7 +496,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 encodeddot_body: body
 encodeddot_schema: header "Link" regex "<([^>]+)>"
@@ -528,7 +528,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 noext_body: body
 noext_schema: header "Link" regex "<([^>]+)>"
@@ -555,7 +555,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 json_body: body
 json_schema: header "Link" regex "<([^>]+)>"
@@ -611,7 +611,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 surface_body: body
 surface_schema: header "Link" regex "<([^>]+)>"
@@ -640,7 +640,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 cased_endpoint_body: body
 cased_endpoint_schema: header "Link" regex "<([^>]+)>"
@@ -667,7 +667,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 encoded_endpoint_body: body
 encoded_endpoint_schema: header "Link" regex "<([^>]+)>"

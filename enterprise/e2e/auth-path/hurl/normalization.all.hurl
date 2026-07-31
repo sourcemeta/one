@@ -13,7 +13,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 cased_body: body
 [Asserts]
@@ -85,7 +85,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 encoded_body: body
 {
@@ -114,7 +114,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 traversal_body: body
 {
@@ -216,7 +216,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 static_body: body
 {

@@ -7,7 +7,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 anonymous_denied: body
 [Asserts]
@@ -175,7 +175,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 gated_again: body
 [Asserts]

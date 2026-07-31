@@ -12,7 +12,7 @@ Cache-Control: no-store
 Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 Link: </registry/self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
