@@ -676,8 +676,7 @@ private:
     // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
     // follows MCP's tighter rule and rejects null-id requests here.
     // https://www.jsonrpc.org/specification (§4)
-    if (!this->schema_evaluate_fast(credentials, this->request_schema_,
-                                    request_json)) {
+    if (!this->structural_evaluate_fast(this->request_schema_, request_json)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
     }
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {

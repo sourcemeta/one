@@ -210,8 +210,8 @@ public:
           }
 
           const sourcemeta::one::RequestCookies fields{cookies};
-          if (!this->schema_evaluate_fast({.bearer = bearer, .cookies = fields},
-                                          this->request_schema_, envelope)) {
+          if (!this->structural_evaluate_fast(this->request_schema_,
+                                              envelope)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -341,8 +341,8 @@ public:
            const sourcemeta::one::Credentials &credentials)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(credentials, this->rpc_request_schema_, arguments,
-                              sourcemeta::blaze::Mode::Exhaustive)};
+        this->structural_evaluate(this->rpc_request_schema_, arguments,
+                                  sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",

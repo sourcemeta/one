@@ -220,6 +220,22 @@ public:
                       std::string_view cache_control,
                       std::string_view vary) const -> void;
 
+  // Validate against one of this instance's own structural schemas, such as
+  // the envelope a request has to match before it is acted on. Those are this
+  // instance's bookkeeping rather than catalog content and are never handed to
+  // the caller, so they resolve without the gate. Passing a caller's
+  // credential here instead would refuse whoever was admitted to a route but
+  // not to `/self`, which is a policy shape an operator may reasonably write
+  [[nodiscard]] auto structural_evaluate(std::string_view schema_uri,
+                                         const sourcemeta::core::JSON &instance,
+                                         sourcemeta::blaze::Mode mode) const
+      -> std::pair<bool, sourcemeta::core::JSON>;
+
+  [[nodiscard]] auto
+  structural_evaluate_fast(std::string_view schema_uri,
+                           const sourcemeta::core::JSON &instance) const
+      -> bool;
+
   [[nodiscard]] auto
   schema_evaluate_fast(Credentials credentials, std::string_view schema_uri,
                        const sourcemeta::core::JSON &instance) const -> bool;
@@ -275,6 +291,10 @@ private:
   artifact_resolve_ancestor(std::string_view input, Tree tree,
                             std::string_view artifact_name) const
       -> std::optional<ResolvedArtifact>;
+
+  [[nodiscard]] auto structural_template(std::string_view schema_uri,
+                                         sourcemeta::blaze::Mode mode) const
+      -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
   [[nodiscard]] auto blaze_template(Credentials credentials,
                                     std::string_view schema_uri,
