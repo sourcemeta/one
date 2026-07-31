@@ -26,6 +26,27 @@ private:
   std::filesystem::path path_;
 };
 
+// The output directory belongs to the indexer, so a recorded artifact that is
+// gone from disk means something else modified the directory, which is the one
+// assumption the build cannot recover from on its own
+class ResolverMissingCachedArtifactError : public std::exception {
+public:
+  ResolverMissingCachedArtifactError(std::filesystem::path path)
+      : path_{std::move(path)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The build state references an artifact that no longer exists on "
+           "disk";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
 class ResolverOutsideBaseError : public std::exception {
 public:
   ResolverOutsideBaseError(std::filesystem::path path,

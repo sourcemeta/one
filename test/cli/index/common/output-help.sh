@@ -34,6 +34,14 @@ Advanced Options:
 
      Set the maximum number of direct entries in a directory listing
 
+Output Directory:
+
+   The output directory is owned by the indexer. Do NOT:
+
+   - Manually modify, add, or delete any file inside it
+   - Sync content into it or partially restore it from a backup
+   - Run concurrent indexer invocations over the same output
+
 For more documentation, visit https://one.sourcemeta.com
 EOF
 

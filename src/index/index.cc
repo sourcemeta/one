@@ -245,6 +245,14 @@ Advanced Options:
 
      Set the maximum number of direct entries in a directory listing
 
+Output Directory:
+
+   The output directory is owned by the indexer. Do NOT:
+
+   - Manually modify, add, or delete any file inside it
+   - Sync content into it or partially restore it from a backup
+   - Run concurrent indexer invocations over the same output
+
 For more documentation, visit https://one.sourcemeta.com
 )EOF"};
 
@@ -828,6 +836,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     std::print(stdout, "error: {}\n  at path {}\n  with count {}\n",
                error.what(), error.path().string(), error.count());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverMissingCachedArtifactError &error) {
+    std::print(stdout,
+               "error: {}\n  at path {}\nSomething other than the indexer "
+               "modified the output directory, so delete it and index again "
+               "from scratch\n",
+               error.what(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
     std::print(stdout, "error: {}\n  at path {}\n", error.what(),

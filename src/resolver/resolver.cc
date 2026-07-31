@@ -532,10 +532,15 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
 
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
   assert(std::filesystem::exists(entry.path));
-  // As the materialised path must exist if we are emplacing
-  // given a cache hit
   assert(entry.cache_path.has_value());
-  assert(std::filesystem::exists(entry.cache_path.value()));
+  // A cache hit means a finished build wrote this artifact, so it being gone
+  // means the output directory was modified from outside. That violates the
+  // one assumption the cache rests on, and it has to fail the same way in
+  // every build type rather than trip an assertion only where those exist
+  if (!std::filesystem::exists(entry.cache_path.value())) {
+    throw ResolverMissingCachedArtifactError{entry.cache_path.value()};
+  }
+
   assert(entry.collection);
   const auto path{entry.path};
   auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
