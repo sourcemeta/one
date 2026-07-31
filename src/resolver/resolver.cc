@@ -17,6 +17,7 @@
 #include <shared_mutex>  // std::shared_lock
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
+#include <system_error>  // std::error_code
 #include <unordered_set> // std::unordered_set
 
 static auto
@@ -536,8 +537,11 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
   // A cache hit means a finished build wrote this artifact, so it being gone
   // means the output directory was modified from outside. That violates the
   // one assumption the cache rests on, and it has to fail the same way in
-  // every build type rather than trip an assertion only where those exist
-  if (!std::filesystem::exists(entry.cache_path.value())) {
+  // every build type rather than trip an assertion only where those exist.
+  // The check must not itself throw, since a path the build cannot examine,
+  // whatever the reason, is equally a record it cannot honour
+  std::error_code existence_error;
+  if (!std::filesystem::exists(entry.cache_path.value(), existence_error)) {
     throw ResolverMissingCachedArtifactError{entry.cache_path.value()};
   }
 
