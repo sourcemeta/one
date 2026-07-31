@@ -161,6 +161,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
   }
 }
 
+// TODO: Compose this through a proper RFC 9728 implementation in Core, rather
+// than assembling the few fields this instance happens to need by hand
 auto generate_protected_resource_metadata(
     const sourcemeta::one::Authentication &authentication,
     const sourcemeta::one::Configuration &configuration,
