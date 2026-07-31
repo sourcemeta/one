@@ -42,6 +42,7 @@ test "$CODE" = "1" || exit 1
 cat << EOF > "$TMP/expected.txt"
 error: The build state references an artifact that no longer exists on disk
   at path $(realpath "$TMP")/output/schemas/schemas/a/%/schema.metapack
+
 Something other than the indexer modified the output directory, so delete it and index again from scratch
 EOF
 

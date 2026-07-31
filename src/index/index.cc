@@ -839,9 +839,9 @@ auto main(int argc, char *argv[]) noexcept -> int {
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverMissingCachedArtifactError &error) {
     std::print(stdout,
-               "error: {}\n  at path {}\nSomething other than the indexer "
-               "modified the output directory, so delete it and index again "
-               "from scratch\n",
+               "error: {}\n  at path {}\n\n"
+               "Something other than the indexer modified the output "
+               "directory, so delete it and index again from scratch\n",
                error.what(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
