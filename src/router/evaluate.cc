@@ -25,10 +25,6 @@ auto Router::blaze_template(const ResolvedArtifact &artifact)
       });
 }
 
-// This instance's own structural schemas are resolved without the gate, since
-// they are never handed to the caller and only decide whether what the caller
-// sent is well formed. Reading them through the gate would make a policy that
-// covers a route but not `/self` fail here rather than answer
 auto RouterAction::structural_template(const std::string_view schema_uri,
                                        const sourcemeta::blaze::Mode mode) const
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
