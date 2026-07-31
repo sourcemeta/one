@@ -347,6 +347,7 @@ Content-Type: application/json
 HTTP 401
 Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
 [Asserts]
 header "Access-Control-Expose-Headers" contains "WWW-Authenticate"
 
@@ -357,5 +358,9 @@ Origin: {{base}}
 Access-Control-Request-Method: POST
 Access-Control-Request-Headers: authorization
 HTTP 204
+Cache-Control: no-store
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Allow-Methods: POST, OPTIONS
 [Asserts]
-header "Access-Control-Allow-Headers" contains "Authorization"
+header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version"
+bytes count == 0

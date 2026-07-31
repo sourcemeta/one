@@ -369,9 +369,11 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# The preflight allows the header a token travels in. Without this a browser
-# withholds the credential before the request is ever made, so no
-# browser-resident client could authenticate whatever it holds
+# The preflight describes what the endpoint accepts. A browser only ever
+# reaches this from the instance's own origin, since any other is refused
+# outright by the origin check this endpoint is required to make, so what is
+# pinned here is that the description stays accurate rather than that it
+# unblocks a caller
 OPTIONS {{base}}/self/v1/mcp
 Origin: {{base}}
 Access-Control-Request-Method: POST
