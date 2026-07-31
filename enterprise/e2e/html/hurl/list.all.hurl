@@ -19,7 +19,7 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 137
+jsonpath "$.schemas" == 138
 jsonpath "$.entries" count == 4
 jsonpath "$.policies" count == 0
 jsonpath "$.entries[0].name" == "no-blaze"
@@ -34,7 +34,7 @@ jsonpath "$.entries[1].title" == "Self"
 jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 100
-jsonpath "$.entries[1].schemas" == 61
+jsonpath "$.entries[1].schemas" == 62
 jsonpath "$.entries[1].path" == "/self/"
 jsonpath "$.entries[2].name" == "test"
 jsonpath "$.entries[2].policies" count == 0

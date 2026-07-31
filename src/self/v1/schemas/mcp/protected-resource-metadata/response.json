@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One MCP Protected Resource Metadata Response",
+  "description": "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728",
+  "examples": [
+    {
+      "resource": "https://schemas.example.com/self/v1/mcp",
+      "authorization_servers": [ "https://login.example.com" ],
+      "bearer_methods_supported": [ "header" ]
+    }
+  ],
+  "type": "object",
+  "required": [
+    "resource",
+    "authorization_servers",
+    "bearer_methods_supported"
+  ],
+  "properties": {
+    "resource": {
+      "description": "The resource identifier a token must be bound to, which is this instance's Model Context Protocol endpoint",
+      "type": "string",
+      "format": "uri"
+    },
+    "authorization_servers": {
+      "description": "The issuer identifiers of the authorization servers that can mint a token this instance accepts at that resource",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "bearer_methods_supported": {
+      "description": "How a token is presented, which here is only the Authorization header",
+      "const": [ "header" ]
+    }
+  },
+  "additionalProperties": false
+}

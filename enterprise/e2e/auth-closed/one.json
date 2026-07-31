@@ -21,6 +21,14 @@
     },
     {
       "type": "jwt",
+      "name": "mcp-tokens",
+      "paths": [ "/self/v1/mcp" ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "audience": "http://localhost:8000/self/v1/mcp",
+      "algorithms": [ "RS256" ]
+    },
+    {
+      "type": "jwt",
       "name": "machine",
       "paths": [ "/" ],
       "issuer": "https://keycloak:8443/realms/main",

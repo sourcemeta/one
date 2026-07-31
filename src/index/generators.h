@@ -843,6 +843,9 @@ struct GENERATE_URITEMPLATE_ROUTES {
                                   "/self/v1/schemas/mcp/request"};
     const auto mcp_response_schema{configuration.base_path +
                                    "/self/v1/schemas/mcp/response"};
+    const auto mcp_protected_resource_metadata_response_schema{
+        configuration.base_path +
+        "/self/v1/schemas/mcp/protected-resource-metadata/response"};
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
@@ -1032,6 +1035,18 @@ struct GENERATE_URITEMPLATE_ROUTES {
       router.add(sourcemeta::one::ENDPOINT_MCP_TRAILING_SLASH,
                  "handle_mcp_request_trailing_slash", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
+
+      const sourcemeta::core::URITemplateRouter::Argument
+          mcp_protected_resource_metadata_arguments[] = {
+              {"errorSchema", std::string_view{error_schema}},
+              {"responseSchema",
+               std::string_view{
+                   mcp_protected_resource_metadata_response_schema}}};
+      router.add(
+          sourcemeta::one::ENDPOINT_MCP_PROTECTED_RESOURCE_METADATA,
+          "mcp_protected_resource_metadata", next_id++,
+          sourcemeta::one::ACTION_TYPE_MCP_PROTECTED_RESOURCE_METADATA_V1,
+          mcp_protected_resource_metadata_arguments);
 
       const sourcemeta::core::URITemplateRouter::Argument
           not_found_arguments[] = {
