@@ -161,4 +161,48 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
   }
 }
 
+auto generate_protected_resource_metadata(
+    const sourcemeta::one::Authentication &authentication,
+    const sourcemeta::one::Configuration &configuration,
+    const std::string_view endpoint, sourcemeta::core::JSON &result) -> void {
+  std::string resource{configuration.url};
+  if (!resource.empty() && resource.back() == '/') {
+    resource.pop_back();
+  }
+
+  resource.append(endpoint);
+
+  // A client that reads this asks its provider for a token bound to the
+  // resource below, so an issuer whose policy expects a different audience
+  // would mint one this instance refuses. Only an issuer whose policy accepts
+  // that audience can be named without sending the client into a rejection
+  auto servers{sourcemeta::core::JSON::make_array()};
+  for (const auto index : authentication.governing(
+           sourcemeta::one::Authentication::Path::relative(endpoint))) {
+    assert(index < configuration.authentication.size());
+    const auto &entry{configuration.authentication[index]};
+    if (entry.type !=
+            sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT ||
+        entry.audience != resource) {
+      continue;
+    }
+
+    sourcemeta::core::JSON issuer{entry.issuer};
+    if (!servers.contains(issuer)) {
+      servers.push_back(std::move(issuer));
+    }
+  }
+
+  if (servers.empty()) {
+    return;
+  }
+
+  result = sourcemeta::core::JSON::make_object();
+  result.assign("resource", sourcemeta::core::JSON{std::move(resource)});
+  result.assign("authorization_servers", std::move(servers));
+  auto bearer_methods{sourcemeta::core::JSON::make_array()};
+  bearer_methods.push_back(sourcemeta::core::JSON{"header"});
+  result.assign("bearer_methods_supported", std::move(bearer_methods));
+}
+
 } // namespace sourcemeta::one

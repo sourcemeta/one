@@ -286,8 +286,10 @@ inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
                 .filename = "search.metapack"},
                {.kind = ContainerDependencyKind::ExternalConfig,
                 .filename = nullptr},
-               {.kind = ContainerDependencyKind::Global, .filename = nullptr}}},
-         .dependency_count = 3},
+               {.kind = ContainerDependencyKind::Global, .filename = nullptr},
+               {.kind = ContainerDependencyKind::Global,
+                .filename = "authentication.bin"}}},
+         .dependency_count = 4},
 
         {.action = ACTION_WEB_INDEX,
          .base = 1,
