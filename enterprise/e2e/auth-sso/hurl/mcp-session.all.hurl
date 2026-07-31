@@ -121,6 +121,143 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
+# What a credential admits is this instance's own decision, so it cannot move
+# with the protocol revision a client happens to speak. Each supported revision
+# is asked the same denied read, and each must answer the same way. The
+# envelope around a successful result does change by revision, which
+# `mcp-2025-*` in the `html` sandbox covers, and that is exactly why the
+# invariant half is worth stating here: a client negotiating an older revision
+# must not thereby be admitted to more, or less
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-03-26
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/private/secret" }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+denial_2025_03_26: body
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "error": {
+    "code": -32010,
+    "message": "Authentication required"
+  }
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+```
+{{denial_2025_03_26}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-06-18
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/private/secret" }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+denial_2025_06_18: body
+[Asserts]
+body == {{denial_2025_03_26}}
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "error": {
+    "code": -32010,
+    "message": "Authentication required"
+  }
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+```
+{{denial_2025_06_18}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/private/secret" }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+denial_2025_11_25: body
+[Asserts]
+body == {{denial_2025_03_26}}
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "error": {
+    "code": -32010,
+    "message": "Authentication required"
+  }
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+```
+{{denial_2025_11_25}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# An unsupported revision is refused before any of that, so the invariant above
+# is over the revisions this instance actually speaks
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2026-07-28
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 21,
+  "method": "resources/read",
+  "params": { "uri": "{{base}}/private/secret" }
+}
+```
+HTTP 400
+Cache-Control: no-store
+[Asserts]
+jsonpath "$.error.code" == -32003
+
 # Signing in at the provider, which is what every later request presents. The
 # cookie jar carries the session from here, so nothing below names it
 GET {{base}}/self/v1/auth/login/keycloak
