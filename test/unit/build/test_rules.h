@@ -14,12 +14,13 @@ enum : sourcemeta::one::BuildPlan::Action::Type {
   ACTION_CONFIGURATION,
   ACTION_COMMENT,
   ACTION_ROUTES,
+  ACTION_GATE,
   ACTION_REMOVE
 };
 
 enum : sourcemeta::one::BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
-inline constexpr sourcemeta::one::DeltaRuleSet<3, 1, 4, 2> RULES{
+inline constexpr sourcemeta::one::DeltaRuleSet<3, 1, 5, 2> RULES{
     .leaves = {{
         {.action = ACTION_PRIMARY,
          .base = 0,
@@ -108,6 +109,15 @@ inline constexpr sourcemeta::one::DeltaRuleSet<3, 1, 4, 2> RULES{
          .external_config_anchor = false,
          .dependencies = {},
          .dependency_count = 0},
+        {.action = ACTION_GATE,
+         .filename = "gate.bin",
+         .trigger = sourcemeta::one::GlobalTrigger::FullRebuild,
+         .external_config_anchor = false,
+         .dependencies = {{{.source =
+                                sourcemeta::one::DependencySource::GlobalOutput,
+                            .base = 0,
+                            .filename = "routes.bin"}}},
+         .dependency_count = 1},
     }},
     .directories = {{"primary", "secondary"}},
     .sentinel = "%",

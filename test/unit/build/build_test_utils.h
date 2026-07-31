@@ -9,11 +9,13 @@
 #include <algorithm>  // std::ranges::sort
 #include <cstddef>    // std::size_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
-#include <set>        // std::set
-#include <string>     // std::string
-#include <unordered_map> // std::unordered_map
-#include <unordered_set> // std::unordered_set
-#include <vector>        // std::vector
+#include <fstream>    // std::ofstream
+#include <initializer_list> // std::initializer_list
+#include <set>              // std::set
+#include <string>           // std::string
+#include <unordered_map>    // std::unordered_map
+#include <unordered_set>    // std::unordered_set
+#include <vector>           // std::vector
 
 struct TestLeafEntry {
   std::string identifier;
@@ -188,6 +190,33 @@ ADD_LEAF_ENTRIES(sourcemeta::one::BuildState &entries,
   if (web) {
     entries.emplace(secondary_base / "web.bin",
                     {.file_mark = mark, .dependencies = {}});
+  }
+}
+
+// Every global the synthetic rule set produces, except the comment, whose
+// presence is driven by the comment argument rather than the build state
+[[maybe_unused]] static auto
+ADD_GLOBAL_ENTRIES(sourcemeta::one::BuildState &entries,
+                   const std::filesystem::path &output,
+                   const std::filesystem::file_time_type mark) -> void {
+  entries.emplace(output / "configuration.json",
+                  {.file_mark = mark, .dependencies = {}});
+  entries.emplace(output / "version.json",
+                  {.file_mark = mark, .dependencies = {}});
+  entries.emplace(output / "routes.bin",
+                  {.file_mark = mark, .dependencies = {}});
+  entries.emplace(output / "gate.bin", {.file_mark = mark, .dependencies = {}});
+}
+
+// The same globals as files on disk, in a directory wiped first so that a
+// re-run of the test cannot inherit what a previous run left behind
+[[maybe_unused]] static auto
+WRITE_GLOBAL_OUTPUTS(const std::filesystem::path &output) -> void {
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  for (const auto *filename :
+       {"configuration.json", "version.json", "routes.bin", "gate.bin"}) {
+    const std::ofstream stream{output / filename};
   }
 }
 

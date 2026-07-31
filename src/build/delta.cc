@@ -3,6 +3,7 @@
 #include <algorithm>     // std::ranges::sort, std::ranges::all_of
 #include <cassert>       // assert
 #include <cstdint>       // std::size_t
+#include <filesystem>    // std::filesystem::path, std::filesystem::exists
 #include <span>          // std::span
 #include <string>        // std::string
 #include <string_view>   // std::string_view
@@ -37,6 +38,106 @@ static auto append_filename(const std::string &base, const char *filename)
   result += '/';
   result += filename;
   return result;
+}
+
+static auto
+global_rule_dependencies(const GlobalRule &rule,
+                         const std::filesystem::path &output,
+                         const std::filesystem::path &configuration_path)
+    -> BuildPlan::Action::Dependencies {
+  BuildPlan::Action::Dependencies dependencies;
+  dependencies.reserve(rule.dependency_count);
+  for (std::uint8_t dependency_index{0};
+       dependency_index < rule.dependency_count; dependency_index++) {
+    const auto &dependency{rule.dependencies[dependency_index]};
+    switch (dependency.source) {
+      case DependencySource::GlobalOutput:
+        dependencies.push_back(output / dependency.filename);
+        break;
+      case DependencySource::ExternalConfig:
+        dependencies.push_back(configuration_path);
+        break;
+      case DependencySource::Base:
+      case DependencySource::ExternalSource:
+        break;
+    }
+  }
+
+  return dependencies;
+}
+
+static auto
+missing_independent_global_wave(const std::vector<bool> &missing_globals,
+                                std::span<const GlobalRule> global_rules,
+                                const std::filesystem::path &output,
+                                const std::string_view version)
+    -> std::vector<BuildPlan::Action> {
+  std::vector<BuildPlan::Action> wave;
+  for (std::size_t index{0}; index < global_rules.size(); index++) {
+    const auto &rule{global_rules[index]};
+    if (!missing_globals[index] ||
+        rule.trigger == GlobalTrigger::OnModeChange ||
+        rule.dependency_count > 0) {
+      continue;
+    }
+
+    wave.push_back({.type = rule.action,
+                    .destination = output / rule.filename,
+                    .dependencies = {},
+                    .data = rule.trigger == GlobalTrigger::WithVersion
+                                ? version
+                                : std::string_view{}});
+  }
+
+  return wave;
+}
+
+static auto
+missing_mode_global_wave(const std::vector<bool> &missing_globals,
+                         std::span<const GlobalRule> global_rules,
+                         const std::filesystem::path &output,
+                         const std::filesystem::path &configuration_path,
+                         const std::string_view mode_label)
+    -> std::vector<BuildPlan::Action> {
+  std::vector<BuildPlan::Action> wave;
+  for (std::size_t index{0}; index < global_rules.size(); index++) {
+    const auto &rule{global_rules[index]};
+    if (!missing_globals[index] ||
+        rule.trigger != GlobalTrigger::OnModeChange) {
+      continue;
+    }
+
+    wave.push_back({.type = rule.action,
+                    .destination = output / rule.filename,
+                    .dependencies = {configuration_path},
+                    .data = mode_label});
+  }
+
+  return wave;
+}
+
+static auto
+missing_dependent_global_wave(const std::vector<bool> &missing_globals,
+                              std::span<const GlobalRule> global_rules,
+                              const std::filesystem::path &output,
+                              const std::filesystem::path &configuration_path)
+    -> std::vector<BuildPlan::Action> {
+  std::vector<BuildPlan::Action> wave;
+  for (std::size_t index{0}; index < global_rules.size(); index++) {
+    const auto &rule{global_rules[index]};
+    if (!missing_globals[index] || rule.trigger != GlobalTrigger::FullRebuild ||
+        rule.external_config_anchor || rule.dependency_count == 0) {
+      continue;
+    }
+
+    wave.push_back({.type = rule.action,
+                    .destination = output / rule.filename,
+                    .dependencies = global_rule_dependencies(
+                        rule, output, configuration_path),
+                    .data = {}});
+  }
+
+  return wave;
 }
 
 struct Target {
@@ -415,6 +516,30 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto secondary_path{output / secondary_directory};
   const auto comment_string{comment_path.string()};
 
+  // The state records that a build produced each of these, not that the file
+  // is still on disk, so a recorded global gone since must be produced again
+  // rather than trusted into a hole. Only the globals are examined: a missing
+  // one takes the whole instance out, while a missing per-schema artifact
+  // costs one schema, and probing every recorded output is what a cached
+  // rebuild cannot afford. The comment is passed over, since its presence
+  // tracks the comment argument rather than the state
+  std::vector<bool> missing_globals(global_rules.size(), false);
+  bool has_missing_globals{false};
+  if (!is_full) {
+    for (std::size_t index{0}; index < global_rules.size(); index++) {
+      const auto &rule{global_rules[index]};
+      if (rule.trigger == GlobalTrigger::WithComment) {
+        continue;
+      }
+
+      const auto path{output / rule.filename};
+      if (entries.contains(path.native()) && !std::filesystem::exists(path)) {
+        missing_globals[index] = true;
+        has_missing_globals = true;
+      }
+    }
+  }
+
   if (!is_full) {
     const auto &output_string{output.native()};
     bool fast_path_dirty{false};
@@ -511,31 +636,52 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
 
     if (!fast_path_dirty) {
+      BuildPlan plan;
+      plan.output = output;
+      plan.type = build_type;
       if (!comment.empty()) {
-        BuildPlan plan;
-        plan.output = output;
-        plan.type = build_type;
         plan.waves.push_back({{.type = global_rules[indices.comment].action,
                                .destination = comment_path,
                                .dependencies = {},
                                .data = comment}});
-        plan.size = 1;
-        return plan;
-      }
-
-      if (entries.contains(comment_string)) {
-        BuildPlan plan;
-        plan.output = output;
-        plan.type = build_type;
+      } else if (entries.contains(comment_string)) {
         plan.waves.push_back({{.type = remove_action,
                                .destination = comment_path,
                                .dependencies = {},
                                .data = {}}});
-        plan.size = 1;
-        return plan;
       }
 
-      return {.output = output, .type = build_type, .waves = {}, .size = 0};
+      if (has_missing_globals) {
+        auto independent_wave{missing_independent_global_wave(
+            missing_globals, global_rules, output, version)};
+        if (!independent_wave.empty()) {
+          plan.waves.push_back(std::move(independent_wave));
+        }
+
+        auto mode_wave{missing_mode_global_wave(missing_globals, global_rules,
+                                                output, configuration_path,
+                                                mode_label)};
+        if (!mode_wave.empty()) {
+          plan.waves.push_back(std::move(mode_wave));
+        }
+
+        auto dependent_wave{missing_dependent_global_wave(
+            missing_globals, global_rules, output, configuration_path)};
+        if (!dependent_wave.empty()) {
+          plan.waves.push_back(std::move(dependent_wave));
+        }
+      }
+
+      for (auto &wave : plan.waves) {
+        std::ranges::sort(wave,
+                          [](const BuildPlan::Action &left,
+                             const BuildPlan::Action &right) -> bool {
+                            return left.destination < right.destination;
+                          });
+        plan.size += wave.size();
+      }
+
+      return plan;
     }
   }
 
@@ -852,7 +998,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto has_potential_stale{!removed_entries.empty()};
 
   if (!is_full && dirty_set.empty() && !has_missing_mode_outputs &&
-      !has_stale_mode_outputs && !has_potential_stale) {
+      !has_stale_mode_outputs && !has_potential_stale && !has_missing_globals) {
     if (!comment.empty()) {
       BuildPlan plan;
       plan.output = output;
@@ -1331,6 +1477,14 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                            .data = {}});
   }
 
+  if (has_missing_globals) {
+    auto independent_wave{missing_independent_global_wave(
+        missing_globals, global_rules, output, version)};
+    if (!independent_wave.empty()) {
+      plan.waves.push_back(std::move(independent_wave));
+    }
+  }
+
   if (is_full || mode_added || mode_removed) {
     std::vector<BuildPlan::Action> global_wave;
     for (const auto &rule : global_rules) {
@@ -1347,6 +1501,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     if (!global_wave.empty()) {
       plan.waves.push_back(std::move(global_wave));
     }
+  } else if (has_missing_globals) {
+    auto global_wave{missing_mode_global_wave(
+        missing_globals, global_rules, output, configuration_path, mode_label)};
+    if (!global_wave.empty()) {
+      plan.waves.push_back(std::move(global_wave));
+    }
   }
 
   // Globals that depend on another global's output run after it, in their own
@@ -1360,30 +1520,19 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         continue;
       }
 
-      BuildPlan::Action::Dependencies dependencies;
-      dependencies.reserve(rule.dependency_count);
-      for (std::uint8_t dependency_index{0};
-           dependency_index < rule.dependency_count; dependency_index++) {
-        const auto &dependency{rule.dependencies[dependency_index]};
-        switch (dependency.source) {
-          case DependencySource::GlobalOutput:
-            dependencies.push_back(output / dependency.filename);
-            break;
-          case DependencySource::ExternalConfig:
-            dependencies.push_back(configuration_path);
-            break;
-          case DependencySource::Base:
-          case DependencySource::ExternalSource:
-            break;
-        }
-      }
-
       dependent_global_wave.push_back({.type = rule.action,
                                        .destination = output / rule.filename,
-                                       .dependencies = std::move(dependencies),
+                                       .dependencies = global_rule_dependencies(
+                                           rule, output, configuration_path),
                                        .data = {}});
     }
 
+    if (!dependent_global_wave.empty()) {
+      plan.waves.push_back(std::move(dependent_global_wave));
+    }
+  } else if (has_missing_globals) {
+    auto dependent_global_wave{missing_dependent_global_wave(
+        missing_globals, global_rules, output, configuration_path)};
     if (!dependent_global_wave.empty()) {
       plan.waves.push_back(std::move(dependent_global_wave));
     }

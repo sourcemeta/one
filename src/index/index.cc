@@ -93,28 +93,6 @@ static constexpr std::array<BuildHandlerFunction, 27> HANDLERS{{
     nullptr,
 }};
 
-// Whether an artifact the whole instance depends on has gone from disk since
-// the build that wrote it. The build state records that a build produced a
-// file, not that the file is still there, so an incremental build would
-// otherwise trust it and report success over a gap. Only the globals are
-// examined, a handful of files rather than one per schema per rule, because a
-// missing global takes the instance out entirely while a missing per-schema
-// artifact costs one schema, and checking every output is what a cached
-// rebuild cannot afford
-static auto missing_global_output(const sourcemeta::one::BuildState &entries,
-                                  const std::filesystem::path &output) -> bool {
-  return std::ranges::any_of(sourcemeta::one::INDEX_RULES.globals,
-                             [&entries, &output](const auto &rule) -> bool {
-                               const auto path{output / rule.filename};
-                               // A global the state never recorded was never
-                               // meant to be here, which is how the ones
-                               // written only under some configurations are
-                               // passed over rather than demanded
-                               return entries.contains(path.string()) &&
-                                      !std::filesystem::exists(path);
-                             });
-}
-
 static auto parse_numeric_option(const sourcemeta::core::Options &app,
                                  const std::string_view option)
     -> unsigned long long {
@@ -533,8 +511,7 @@ static auto index_main(const std::string_view &program,
   // Skip the cache entirely if the configuration changed, as cached
   // identifiers and paths may no longer be valid
   const auto incremental{raw_configuration == current_configuration &&
-                         current_version == this_version &&
-                         !missing_global_output(entries, canonical_output)};
+                         current_version == this_version};
   std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
   for (const auto &detected : detected_schemas) {
     const auto *cached{
