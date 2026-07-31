@@ -94,7 +94,7 @@ struct ContainerDependency {
   const char *filename;
 };
 
-inline constexpr std::size_t MAX_CONTAINER_DEPENDENCIES = 3;
+inline constexpr std::size_t MAX_CONTAINER_DEPENDENCIES = 4;
 
 struct ContainerRule {
   BuildPlan::Action::Type action;

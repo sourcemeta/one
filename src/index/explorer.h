@@ -1,6 +1,8 @@
 #ifndef SOURCEMETA_ONE_INDEX_EXPLORER_H_
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
+#include "endpoints.h"
+
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/metapack.h>
@@ -691,12 +693,18 @@ struct GENERATE_MCP {
 
     auto tools{sourcemeta::core::JSON::make_array()};
     auto tool_routes{sourcemeta::core::JSON::make_object()};
+    auto protected_resource_metadata{sourcemeta::core::JSON{nullptr}};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     {
       const sourcemeta::core::URITemplateRouterView router_view{
-          action.dependencies.back()};
+          action.dependencies.at(2)};
       sourcemeta::one::generate_mcp_tools(router_view, tools, tool_routes);
+      const sourcemeta::one::Authentication authentication{
+          action.dependencies.back(), {}};
+      sourcemeta::one::generate_protected_resource_metadata(
+          authentication, configuration, sourcemeta::one::ENDPOINT_MCP,
+          protected_resource_metadata);
     }
 #endif
 
@@ -734,6 +742,10 @@ struct GENERATE_MCP {
     document.assign(std::string{sourcemeta::core::MCP_METHOD_TOOLS_LIST},
                     std::move(tools));
     document.assign("toolRoutes", std::move(tool_routes));
+    if (!protected_resource_metadata.is_null()) {
+      document.assign("protectedResourceMetadata",
+                      std::move(protected_resource_metadata));
+    }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(

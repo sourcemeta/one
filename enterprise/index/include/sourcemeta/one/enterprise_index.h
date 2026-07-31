@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ENTERPRISE_INDEX_H_
 #define SOURCEMETA_ONE_ENTERPRISE_INDEX_H_
 
+#include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
@@ -26,6 +27,14 @@ auto load_custom_lint_rules(
 auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
                         sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void;
+
+// RFC 9728 metadata naming where a token for the MCP endpoint comes from, left
+// untouched when no policy can honestly answer that
+// https://datatracker.ietf.org/doc/html/rfc9728
+auto generate_protected_resource_metadata(
+    const sourcemeta::one::Authentication &authentication,
+    const sourcemeta::one::Configuration &configuration,
+    std::string_view endpoint, sourcemeta::core::JSON &result) -> void;
 
 } // namespace sourcemeta::one
 
