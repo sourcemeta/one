@@ -25,6 +25,41 @@ auto Router::blaze_template(const ResolvedArtifact &artifact)
       });
 }
 
+auto RouterAction::structural_template(const std::string_view schema_uri,
+                                       const sourcemeta::blaze::Mode mode) const
+    -> std::shared_ptr<const sourcemeta::blaze::Template> {
+  const auto artifact{this->artifact_resolve_path_unauthenticated(
+      schema_uri, Tree::Schemas,
+      mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
+                                                      : "blaze-exhaustive")};
+  assert(artifact.has_value());
+  return this->dispatcher_.blaze_template(artifact.value());
+}
+
+auto RouterAction::structural_evaluate(const std::string_view schema_uri,
+                                       const sourcemeta::core::JSON &instance,
+                                       const sourcemeta::blaze::Mode mode) const
+    -> std::pair<bool, sourcemeta::core::JSON> {
+  const auto schema_template{this->structural_template(schema_uri, mode)};
+  sourcemeta::blaze::Evaluator evaluator;
+  auto result{
+      sourcemeta::blaze::standard(evaluator, *schema_template, instance,
+                                  sourcemeta::blaze::StandardOutput::Basic)};
+  const auto *valid{result.try_at("valid")};
+  const bool is_valid{valid != nullptr && valid->is_boolean() &&
+                      valid->to_boolean()};
+  return {is_valid, std::move(result)};
+}
+
+auto RouterAction::structural_evaluate_fast(
+    const std::string_view schema_uri,
+    const sourcemeta::core::JSON &instance) const -> bool {
+  const auto schema_template{this->structural_template(
+      schema_uri, sourcemeta::blaze::Mode::FastValidation)};
+  sourcemeta::blaze::Evaluator evaluator;
+  return evaluator.validate(*schema_template, instance);
+}
+
 auto RouterAction::blaze_template(const Credentials credentials,
                                   const std::string_view schema_uri,
                                   const sourcemeta::blaze::Mode mode) const

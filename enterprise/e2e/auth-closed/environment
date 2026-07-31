@@ -1,3 +1,4 @@
 ONE_E2E_FULL_KEY=full-secret-key
+ONE_E2E_MCP_KEY=mcp-secret-key
 ONE_E2E_OIDC_CLIENT_SECRET=registry-client-secret
 ONE_E2E_OIDC_SESSION_SECRET=a-session-signing-secret-for-the-auth-closed-sandbox

@@ -111,8 +111,8 @@ public:
            const sourcemeta::one::Credentials &credentials)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
-        this->schema_evaluate(credentials, this->rpc_request_schema_, arguments,
-                              sourcemeta::blaze::Mode::Exhaustive)};
+        this->structural_evaluate(this->rpc_request_schema_, arguments,
+                                  sourcemeta::blaze::Mode::Exhaustive)};
     if (!request_valid) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, -32602, "Params fail against the tool request schema",

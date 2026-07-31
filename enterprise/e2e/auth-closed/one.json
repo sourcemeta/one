@@ -13,6 +13,13 @@
       "keys": [ { "environmentVariable": "ONE_E2E_FULL_KEY" } ]
     },
     {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "mcp",
+      "paths": [ "/self/v1/mcp" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_MCP_KEY" } ]
+    },
+    {
       "type": "jwt",
       "name": "machine",
       "paths": [ "/" ],
