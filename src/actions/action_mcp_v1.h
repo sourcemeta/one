@@ -71,8 +71,12 @@ public:
                             this->allowed_origin_);
       response.write_header("Access-Control-Expose-Headers", "Link, ETag");
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
-      response.write_header("Access-Control-Allow-Headers",
-                            "Content-Type, MCP-Protocol-Version");
+      // Without `Authorization` a browser withholds the credential at
+      // preflight, so no browser-resident client could authenticate at all,
+      // whatever it holds
+      response.write_header(
+          "Access-Control-Allow-Headers",
+          "Authorization, Content-Type, MCP-Protocol-Version");
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.

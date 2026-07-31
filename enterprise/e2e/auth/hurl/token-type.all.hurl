@@ -61,7 +61,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"

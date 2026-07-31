@@ -17,7 +17,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
@@ -48,7 +48,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 empty_body: body
 empty_schema: header "Link" regex "<([^>]+)>"
@@ -79,7 +79,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 wrong_body: body
 wrong_schema: header "Link" regex "<([^>]+)>"
@@ -110,7 +110,7 @@ Content-Type: application/problem+json
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"

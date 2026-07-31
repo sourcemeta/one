@@ -121,7 +121,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 bytes count == 0
 header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
-header "Access-Control-Allow-Headers" == "Content-Type, MCP-Protocol-Version"
+header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version"
 header "Access-Control-Max-Age" == "3600"
 header "Allow" == "POST, OPTIONS"
 header "MCP-Protocol-Version" == "2025-03-26"

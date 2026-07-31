@@ -334,3 +334,33 @@ HTTP 204
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: GET, HEAD, OPTIONS
 Cache-Control: no-store
+
+# The challenge is exposed to a browser, not just sent. A cross-origin client
+# that cannot read `WWW-Authenticate` sees only that it was refused, never what
+# would satisfy the refusal, so the header is named in the exposed list
+POST {{base}}/self/v1/mcp
+Origin: {{base}}
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {} }
+```
+HTTP 401
+Cache-Control: no-store
+WWW-Authenticate: Bearer realm="registry"
+Access-Control-Allow-Origin: *
+[Asserts]
+header "Access-Control-Expose-Headers" contains "WWW-Authenticate"
+
+# The preflight admits the header a credential travels in, on a gated instance
+# exactly as on an open one
+OPTIONS {{base}}/self/v1/mcp
+Origin: {{base}}
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: authorization
+HTTP 204
+Cache-Control: no-store
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Allow-Methods: POST, OPTIONS
+[Asserts]
+header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version"
+bytes count == 0

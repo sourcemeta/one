@@ -90,7 +90,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 wrong_audience_denied: body
 [Asserts]
@@ -115,7 +115,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 tampered_denied: body
 [Asserts]

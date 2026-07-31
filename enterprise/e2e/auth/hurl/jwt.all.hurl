@@ -58,7 +58,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 denied_body: body
 [Asserts]
@@ -147,7 +147,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 bogus_denied: body
 {
@@ -174,7 +174,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 no_scheme_denied: body
 {
@@ -201,7 +201,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 basic_denied: body
 {
@@ -228,7 +228,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 tampered_denied: body
 {
@@ -255,7 +255,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 none_denied: body
 {
@@ -291,7 +291,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 wrong_audience_denied: body
 {
@@ -344,7 +344,7 @@ Cache-Control: no-store
 WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
+Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
 [Captures]
 ghost_denied: body
 {

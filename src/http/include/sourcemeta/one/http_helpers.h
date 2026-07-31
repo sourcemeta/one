@@ -160,7 +160,12 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   response.write_header("Cache-Control", "no-store");
   if (!origin.empty()) {
     response.write_header("Access-Control-Allow-Origin", origin);
-    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+    // A challenge a browser cannot read is a challenge it cannot answer, so
+    // the header a 401 carries is exposed alongside the rest
+    response.write_header("Access-Control-Expose-Headers",
+                          status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED
+                              ? "Link, ETag, WWW-Authenticate"
+                              : "Link, ETag");
     // RFC 9110 §12.5.5: when the response origin is anything other than
     // the wildcard, CORS-aware caches must key on the request's Origin
     // header. Otherwise origin A's cached response can be served to
