@@ -113,8 +113,8 @@ jsonpath "$.properties.resource.format" == "uri"
 jsonpath "$.properties.authorization_servers.items.format" == "uri"
 jsonpath "$.properties.bearer_methods_supported.const" includes "header"
 
-# Where no document is published the denial carries no pointer either, since
-# there would be nothing at the other end of it
+# This instance gates nothing, so the endpoint answers rather than denies, and
+# it names no metadata because there is none to name
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json

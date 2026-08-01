@@ -191,7 +191,10 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
   // https://datatracker.ietf.org/doc/html/rfc6750#section-3
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
-    if (challenge.empty()) {
+    // A value carrying CR or LF would split the response into headers of the
+    // caller's choosing, so an unusable extension is dropped rather than sent
+    if (challenge.empty() ||
+        challenge.find_first_of("\r\n") != std::string_view::npos) {
       response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
     } else {
       std::string value{"Bearer realm=\"registry\", "};
