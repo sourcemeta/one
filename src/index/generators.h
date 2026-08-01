@@ -843,6 +843,9 @@ struct GENERATE_URITEMPLATE_ROUTES {
                                   "/self/v1/schemas/mcp/request"};
     const auto mcp_response_schema{configuration.base_path +
                                    "/self/v1/schemas/mcp/response"};
+    const auto mcp_metadata_path{
+        configuration.base_path +
+        std::string{sourcemeta::one::ENDPOINT_MCP_PRM}};
     const auto mcp_protected_resource_metadata_response_schema{
         configuration.base_path + "/self/v1/schemas/mcp/prm/response"};
 
@@ -1026,9 +1029,6 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_CALLBACK_V1,
                  auth_callback_arguments);
 
-      const auto mcp_metadata_path{
-          configuration.base_path +
-          std::string{sourcemeta::one::ENDPOINT_MCP_PRM}};
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
           {"responseSchema", std::string_view{mcp_response_schema}},

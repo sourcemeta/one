@@ -194,9 +194,9 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
     if (challenge.empty()) {
       response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
     } else {
-      response.write_header("WWW-Authenticate",
-                            std::string{"Bearer realm=\"registry\", "} +
-                                std::string{challenge});
+      std::string value{"Bearer realm=\"registry\", "};
+      value.append(challenge);
+      response.write_header("WWW-Authenticate", value);
     }
   }
   if (!schema.empty()) {
