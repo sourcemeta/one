@@ -11,6 +11,7 @@
 GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 HTTP 200
 Content-Type: application/json
+Cache-Control: public, max-age=0, must-revalidate
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
@@ -65,22 +66,46 @@ GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 Authorization: Bearer full-secret-key
 HTTP 200
 Content-Type: application/json
+Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
+[Captures]
+credentialed_body: body
 {
   "resource": "{{base}}/self/v1/mcp",
   "authorization_servers": [ "https://keycloak:8443/realms/main" ],
   "bearer_methods_supported": [ "header" ]
 }
 
+POST {{base}}/self/v1/api/schemas/evaluate{{document_schema}}
+Authorization: Bearer full-secret-key
+```
+{{credentialed_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
 # A credential that belongs to no policy is not a reason to withhold it either
 GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 Authorization: Bearer not-any-key
 HTTP 200
 Content-Type: application/json
+Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
+[Captures]
+stranger_body: body
 {
   "resource": "{{base}}/self/v1/mcp",
   "authorization_servers": [ "https://keycloak:8443/realms/main" ],
   "bearer_methods_supported": [ "header" ]
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate{{document_schema}}
+Authorization: Bearer full-secret-key
+```
+{{stranger_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # Per RFC 9110 a HEAD carries the same headers and no body
 HEAD {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
@@ -129,7 +154,9 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # The endpoint the document describes still refuses an anonymous caller, so
-# publishing where a token comes from did not hand one out
+# publishing where a token comes from did not hand one out. The refusal now
+# names where one does come from, which is what saves a client from deriving
+# the location and being wrong about it
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
@@ -138,7 +165,104 @@ Content-Type: application/json
 ```
 HTTP 401
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry", resource_metadata="{{base}}/.well-known/oauth-protected-resource/self/v1/mcp"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+mcp_denied_body: body
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+header "Access-Control-Expose-Headers" contains "WWW-Authenticate"
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+Authorization: Bearer full-secret-key
+```
+{{mcp_denied_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The trailing-slash spelling of the endpoint derives a trailing-slash location,
+# so both are served rather than only the canonical one
+POST {{base}}/self/v1/mcp/
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry", resource_metadata="{{base}}/.well-known/oauth-protected-resource/self/v1/mcp"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+slash_denied_body: body
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+Authorization: Bearer full-secret-key
+```
+{{slash_denied_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp/
+HTTP 200
+Content-Type: application/json
+Cache-Control: public, max-age=0, must-revalidate
+Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
+[Captures]
+slash_body: body
+{
+  "resource": "{{base}}/self/v1/mcp",
+  "authorization_servers": [ "https://keycloak:8443/realms/main" ],
+  "bearer_methods_supported": [ "header" ]
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{document_schema}}
+Authorization: Bearer full-secret-key
+```
+{{slash_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# A denial anywhere else carries no such pointer, since nothing else on this
+# instance advertises an authorization server
+GET {{base}}/catalog/classified.json
+HTTP 401
+Cache-Control: no-store
+Content-Type: application/problem+json
+WWW-Authenticate: Bearer realm="registry"
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+elsewhere_body: body
+{
+  "type": "urn:sourcemeta:one:authentication-required",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "This resource requires authentication"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+Authorization: Bearer full-secret-key
+```
+{{elsewhere_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

@@ -149,6 +149,15 @@ public:
     return false;
   }
 
+  // What this route adds to the challenge it is denied with, beyond the realm.
+  // A route whose credential comes from somewhere a caller has no way to guess
+  // says where that is here, so a denial is actionable rather than a dead end.
+  // The default adds nothing
+  [[nodiscard]] virtual auto authentication_challenge() const noexcept
+      -> std::string_view {
+    return {};
+  }
+
   // Serve, in place, the login page for an unauthenticated browser navigating
   // to a path an interactive policy governs, returning true when it wrote the
   // response so the caller stops. The page is a per-directory artifact resolved

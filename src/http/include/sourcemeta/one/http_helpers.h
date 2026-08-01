@@ -140,13 +140,15 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
                        const std::string_view detail,
                        const std::string_view schema,
                        const std::string_view origin,
-                       const std::string_view allow = {}) -> void {
+                       const std::string_view allow = {},
+                       const std::string_view challenge = {}) -> void {
   // Header values are written to the wire verbatim. CR/LF would split
   // headers, enabling response header injection or CORS widening. Today's
   // callers pass string literals, but the asserts catch future untrusted
   // forwards.
   assert(origin.find_first_of("\r\n") == std::string_view::npos);
   assert(allow.find_first_of("\r\n") == std::string_view::npos);
+  assert(challenge.find_first_of("\r\n") == std::string_view::npos);
   const auto body{sourcemeta::core::http_make_problem_details(
       {.status = status, .type = type, .detail = detail})};
 
@@ -189,7 +191,13 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
   // https://datatracker.ietf.org/doc/html/rfc6750#section-3
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
-    response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
+    if (challenge.empty()) {
+      response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
+    } else {
+      response.write_header("WWW-Authenticate",
+                            std::string{"Bearer realm=\"registry\", "} +
+                                std::string{challenge});
+    }
   }
   if (!schema.empty()) {
     write_link_header(response, schema);
@@ -236,10 +244,13 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
 inline auto json_error_unauthorized(const HTTPRequest &request,
                                     HTTPResponse &response,
                                     const std::string_view schema,
-                                    const std::string_view origin) -> void {
+                                    const std::string_view origin,
+                                    const std::string_view challenge = {})
+    -> void {
   json_error(request, response, sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
              "urn:sourcemeta:one:authentication-required",
-             "This resource requires authentication", schema, origin);
+             "This resource requires authentication", schema, origin, {},
+             challenge);
 }
 
 } // namespace sourcemeta::one
