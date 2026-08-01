@@ -1026,9 +1026,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_CALLBACK_V1,
                  auth_callback_arguments);
 
+      const auto mcp_metadata_path{
+          configuration.base_path +
+          std::string{sourcemeta::one::ENDPOINT_MCP_PRM}};
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
-          {"responseSchema", std::string_view{mcp_response_schema}}};
+          {"responseSchema", std::string_view{mcp_response_schema}},
+          {"metadataPath", std::string_view{mcp_metadata_path}}};
       router.add(sourcemeta::one::ENDPOINT_MCP, "handle_mcp_request", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
       router.add(sourcemeta::one::ENDPOINT_MCP_TRAILING_SLASH,

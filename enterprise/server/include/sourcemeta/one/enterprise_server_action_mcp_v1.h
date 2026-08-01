@@ -47,6 +47,8 @@ public:
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
             this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "metadataPath") {
+            this->metadata_path_ = std::get<std::string_view>(value);
           } else if (key == "requestSchema") {
             this->request_schema_ = std::get<std::string_view>(value);
           }
@@ -75,9 +77,8 @@ public:
     if (this->mcp_metadata_.defines("protectedResourceMetadata")) {
       this->challenge_.append("resource_metadata=\"");
       this->challenge_.append(this->server_uri());
-      this->challenge_.append(this->server_uri_base_path());
-      this->challenge_.append(
-          "/.well-known/oauth-protected-resource/self/v1/mcp\"");
+      this->challenge_.append(this->metadata_path_);
+      this->challenge_.append("\"");
     }
   }
 
@@ -721,6 +722,7 @@ private:
   std::string_view allowed_origin_;
   std::string_view response_schema_;
   std::string_view request_schema_;
+  std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
   std::string challenge_;
   sourcemeta::one::SearchView search_view_;
