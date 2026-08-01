@@ -112,8 +112,9 @@ jsonpath "$.properties.resource.format" == "uri"
 jsonpath "$.properties.authorization_servers.items.format" == "uri"
 jsonpath "$.properties.bearer_methods_supported.const" includes "header"
 
-# This instance gates nothing, so the endpoint answers rather than denies, and
-# it names no metadata because there is none to name
+# There is no Model Context Protocol server in this edition at all, which is
+# the deeper reason there is no metadata describing one. Nothing is denied
+# here, so no challenge names a document either
 POST {{base}}/self/v1/mcp
 MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
@@ -131,7 +132,11 @@ header "WWW-Authenticate" not exists
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": {}
+  "error": {
+    "code": -32000,
+    "message": "Enterprise edition required",
+    "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
+  }
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
