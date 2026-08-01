@@ -13,7 +13,7 @@ HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/mcp/protected-resource-metadata/response>; rel="describedby"
+Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
 [Captures]
 document_body: body
 document_schema: header "Link" regex "<([^>]+)>"
@@ -87,7 +87,7 @@ HEAD {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 HTTP 200
 Content-Type: application/json
 Access-Control-Allow-Origin: *
-Link: </self/v1/schemas/mcp/protected-resource-metadata/response>; rel="describedby"
+Link: </self/v1/schemas/mcp/prm/response>; rel="describedby"
 [Asserts]
 bytes count == 0
 

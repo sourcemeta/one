@@ -321,11 +321,11 @@ jsonpath "$.result.resources[31].description" == "Sourcemeta One's response to a
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[31].size" == 609
 jsonpath "$.result.resources[31].annotations.priority" == 0
-jsonpath "$.result.resources[32].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/protected-resource-metadata/response"
+jsonpath "$.result.resources[32].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/prm/response"
 jsonpath "$.result.resources[32].name" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.result.resources[32].description" == "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728"
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 1473
+jsonpath "$.result.resources[32].size" == 1519
 jsonpath "$.result.resources[32].annotations.priority" == 0
 jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Request"

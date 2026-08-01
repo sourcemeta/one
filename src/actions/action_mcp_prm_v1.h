@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_MCP_PROTECTED_RESOURCE_METADATA_V1_H
-#define SOURCEMETA_ONE_ACTIONS_MCP_PROTECTED_RESOURCE_METADATA_V1_H
+#ifndef SOURCEMETA_ONE_ACTIONS_MCP_PRM_V1_H
+#define SOURCEMETA_ONE_ACTIONS_MCP_PRM_V1_H
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
 
@@ -71,12 +71,10 @@ public:
       return;
     }
 
-    // An edition with no authentication guards nothing, so it has no protected
-    // resource to describe. Answering that it exists elsewhere would send a
-    // client looking for a credential nothing here would ever ask for
     sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+        request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+        "urn:sourcemeta:one:enterprise-required",
+        "This feature is only available in the Enterprise edition",
         this->error_schema_, "*");
   }
 

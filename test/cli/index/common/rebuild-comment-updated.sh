@@ -55,7 +55,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/ca
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#23)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#24)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/protected-resource-metadata/response.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#26)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#27)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#29)
@@ -117,7 +117,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 37%) Resolving: self/v1/schemas/mcp/notifications/initialized.json
 ( 38%) Resolving: self/v1/schemas/mcp/ping/request.json
 ( 40%) Resolving: self/v1/schemas/mcp/ping/response.json
-( 41%) Resolving: self/v1/schemas/mcp/protected-resource-metadata/response.json
+( 41%) Resolving: self/v1/schemas/mcp/prm/response.json
 ( 43%) Resolving: self/v1/schemas/mcp/request.json
 ( 45%) Resolving: self/v1/schemas/mcp/resources/list/request.json
 ( 46%) Resolving: self/v1/schemas/mcp/resources/list/response.json
@@ -186,7 +186,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 (  3%) Producing: schemas/self/v1/schemas/mcp/notifications/initialized/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/mcp/ping/request/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/schema.metapack
-(  3%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema.metapack
+(  3%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/mcp/request/%/schema.metapack
 (  3%) Producing: schemas/self/v1/schemas/mcp/resources/list/request/%/schema.metapack
 (  4%) Producing: schemas/self/v1/schemas/mcp/resources/list/response/%/schema.metapack
@@ -323,10 +323,10 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 18%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/locations.metapack
 ( 19%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/positions.metapack
 ( 19%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/stats.metapack
-( 19%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/dependencies.metapack
-( 19%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/locations.metapack
-( 19%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/positions.metapack
-( 19%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/stats.metapack
+( 19%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/dependencies.metapack
+( 19%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/locations.metapack
+( 19%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/positions.metapack
+( 19%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/stats.metapack
 ( 19%) Producing: schemas/self/v1/schemas/mcp/request/%/dependencies.metapack
 ( 19%) Producing: schemas/self/v1/schemas/mcp/request/%/locations.metapack
 ( 19%) Producing: schemas/self/v1/schemas/mcp/request/%/positions.metapack
@@ -521,8 +521,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 41%) Producing: schemas/self/v1/schemas/mcp/ping/request/%/health.metapack
 ( 41%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/bundle.metapack
 ( 41%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/health.metapack
-( 41%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/bundle.metapack
-( 41%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/health.metapack
+( 41%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/bundle.metapack
+( 41%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/health.metapack
 ( 41%) Producing: schemas/self/v1/schemas/mcp/request/%/bundle.metapack
 ( 42%) Producing: schemas/self/v1/schemas/mcp/request/%/health.metapack
 ( 42%) Producing: schemas/self/v1/schemas/mcp/resources/list/request/%/bundle.metapack
@@ -620,7 +620,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 52%) Producing: explorer/self/v1/schemas/mcp/notifications/initialized/%/schema.metapack
 ( 52%) Producing: explorer/self/v1/schemas/mcp/ping/request/%/schema.metapack
 ( 52%) Producing: explorer/self/v1/schemas/mcp/ping/response/%/schema.metapack
-( 52%) Producing: explorer/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema.metapack
+( 52%) Producing: explorer/self/v1/schemas/mcp/prm/response/%/schema.metapack
 ( 53%) Producing: explorer/self/v1/schemas/mcp/request/%/schema.metapack
 ( 53%) Producing: explorer/self/v1/schemas/mcp/resources/list/request/%/schema.metapack
 ( 53%) Producing: explorer/self/v1/schemas/mcp/resources/list/response/%/schema.metapack
@@ -732,9 +732,9 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 65%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/blaze-exhaustive.metapack
 ( 65%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/blaze-fast.metapack
 ( 65%) Producing: schemas/self/v1/schemas/mcp/ping/response/%/editor.metapack
-( 65%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/blaze-exhaustive.metapack
-( 65%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/blaze-fast.metapack
-( 65%) Producing: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/editor.metapack
+( 65%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/blaze-exhaustive.metapack
+( 65%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/blaze-fast.metapack
+( 65%) Producing: schemas/self/v1/schemas/mcp/prm/response/%/editor.metapack
 ( 65%) Producing: schemas/self/v1/schemas/mcp/request/%/blaze-exhaustive.metapack
 ( 66%) Producing: schemas/self/v1/schemas/mcp/request/%/blaze-fast.metapack
 ( 66%) Producing: schemas/self/v1/schemas/mcp/request/%/editor.metapack
@@ -883,8 +883,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 82%) Producing: explorer/self/v1/schemas/mcp/ping/%/directory.metapack
 ( 82%) Producing: explorer/self/v1/schemas/mcp/ping/request/%/schema-html.metapack
 ( 82%) Producing: explorer/self/v1/schemas/mcp/ping/response/%/schema-html.metapack
-( 82%) Producing: explorer/self/v1/schemas/mcp/protected-resource-metadata/%/directory.metapack
-( 82%) Producing: explorer/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema-html.metapack
+( 82%) Producing: explorer/self/v1/schemas/mcp/prm/%/directory.metapack
+( 82%) Producing: explorer/self/v1/schemas/mcp/prm/response/%/schema-html.metapack
 ( 82%) Producing: explorer/self/v1/schemas/mcp/request/%/schema-html.metapack
 ( 83%) Producing: explorer/self/v1/schemas/mcp/resources/list/%/directory.metapack
 ( 83%) Producing: explorer/self/v1/schemas/mcp/resources/list/request/%/schema-html.metapack
@@ -968,8 +968,8 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 92%) Producing: explorer/self/v1/schemas/mcp/notifications/%/login-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/mcp/ping/%/directory-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/mcp/ping/%/login-html.metapack
-( 92%) Producing: explorer/self/v1/schemas/mcp/protected-resource-metadata/%/directory-html.metapack
-( 92%) Producing: explorer/self/v1/schemas/mcp/protected-resource-metadata/%/login-html.metapack
+( 92%) Producing: explorer/self/v1/schemas/mcp/prm/%/directory-html.metapack
+( 92%) Producing: explorer/self/v1/schemas/mcp/prm/%/login-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/mcp/resources/list/%/directory-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/mcp/resources/list/%/login-html.metapack
 ( 92%) Producing: explorer/self/v1/schemas/mcp/resources/read/%/directory-html.metapack
@@ -1061,7 +1061,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/respo
 ( 37%) Combining: schemas/self/v1/schemas/mcp/notifications/initialized/%/dependents.metapack
 ( 38%) Combining: schemas/self/v1/schemas/mcp/ping/request/%/dependents.metapack
 ( 40%) Combining: schemas/self/v1/schemas/mcp/ping/response/%/dependents.metapack
-( 41%) Combining: schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/dependents.metapack
+( 41%) Combining: schemas/self/v1/schemas/mcp/prm/response/%/dependents.metapack
 ( 43%) Combining: schemas/self/v1/schemas/mcp/request/%/dependents.metapack
 ( 45%) Combining: schemas/self/v1/schemas/mcp/resources/list/request/%/dependents.metapack
 ( 46%) Combining: schemas/self/v1/schemas/mcp/resources/list/response/%/dependents.metapack
@@ -1138,7 +1138,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/ca
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#23)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#24)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/protected-resource-metadata/response.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#26)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#27)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#29)

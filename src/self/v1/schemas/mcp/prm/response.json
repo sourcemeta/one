@@ -18,6 +18,7 @@
   "properties": {
     "resource": {
       "description": "The resource identifier a token must be bound to, which is this instance's Model Context Protocol endpoint",
+      "x-format-assertion": true,
       "type": "string",
       "format": "uri"
     },
@@ -27,6 +28,7 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": {
+        "x-format-assertion": true,
         "type": "string",
         "format": "uri"
       }

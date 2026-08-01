@@ -844,8 +844,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
     const auto mcp_response_schema{configuration.base_path +
                                    "/self/v1/schemas/mcp/response"};
     const auto mcp_protected_resource_metadata_response_schema{
-        configuration.base_path +
-        "/self/v1/schemas/mcp/protected-resource-metadata/response"};
+        configuration.base_path + "/self/v1/schemas/mcp/prm/response"};
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 

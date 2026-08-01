@@ -20,7 +20,7 @@
 #include "action_jsonschema_rdf_v1.h"
 #include "action_jsonschema_trace_v1.h"
 #include "action_list_directory_v1.h"
-#include "action_mcp_protected_resource_metadata_v1.h"
+#include "action_mcp_prm_v1.h"
 #include "action_mcp_v1.h"
 #include "action_not_found_v1.h"
 #include "action_schema_search_v1.h"

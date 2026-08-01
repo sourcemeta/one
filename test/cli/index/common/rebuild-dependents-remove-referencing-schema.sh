@@ -95,7 +95,7 @@ Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/ca
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#24)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#25)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#26)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/protected-resource-metadata/response.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#27)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#28)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#29)
 Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#30)
@@ -379,15 +379,15 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/self/v1/schemas/mcp/ping/response/%
 ./explorer/self/v1/schemas/mcp/ping/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/response/%/schema.metapack
-./explorer/self/v1/schemas/mcp/protected-resource-metadata
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/%
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/%/directory-html.metapack
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/%/directory.metapack
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/%/login-html.metapack
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/response
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/response/%
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema-html.metapack
-./explorer/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema.metapack
+./explorer/self/v1/schemas/mcp/prm
+./explorer/self/v1/schemas/mcp/prm/%
+./explorer/self/v1/schemas/mcp/prm/%/directory-html.metapack
+./explorer/self/v1/schemas/mcp/prm/%/directory.metapack
+./explorer/self/v1/schemas/mcp/prm/%/login-html.metapack
+./explorer/self/v1/schemas/mcp/prm/response
+./explorer/self/v1/schemas/mcp/prm/response/%
+./explorer/self/v1/schemas/mcp/prm/response/%/schema-html.metapack
+./explorer/self/v1/schemas/mcp/prm/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/request
 ./explorer/self/v1/schemas/mcp/request/%
 ./explorer/self/v1/schemas/mcp/request/%/schema-html.metapack
@@ -995,20 +995,20 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1/schemas/mcp/ping/response/%/positions.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/schema.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/stats.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/blaze-exhaustive.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/blaze-fast.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/bundle.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/dependents.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/editor.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/health.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/locations.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/positions.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/schema.metapack
-./schemas/self/v1/schemas/mcp/protected-resource-metadata/response/%/stats.metapack
+./schemas/self/v1/schemas/mcp/prm
+./schemas/self/v1/schemas/mcp/prm/response
+./schemas/self/v1/schemas/mcp/prm/response/%
+./schemas/self/v1/schemas/mcp/prm/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/dependents.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/editor.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/health.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/locations.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/positions.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/schema.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/stats.metapack
 ./schemas/self/v1/schemas/mcp/request
 ./schemas/self/v1/schemas/mcp/request/%
 ./schemas/self/v1/schemas/mcp/request/%/blaze-exhaustive.metapack

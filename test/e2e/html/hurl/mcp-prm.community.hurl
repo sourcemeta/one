@@ -1,14 +1,11 @@
-# An instance that guards nothing has no protected resource to describe, so
-# RFC 9728 metadata would name an authorization server no caller here would
-# ever be sent to. Both editions answer the same way for such an instance:
-# the Community edition because it has no authentication at all, the
-# Enterprise edition because this instance declares no policy over the
-# endpoint. Absence is reported as absence rather than as an empty document,
-# since a client is forbidden from using metadata missing the fields it needs
+# This edition has no authentication, so it has no protected resource to
+# describe and answers like every other route that only the Enterprise edition
+# implements. A client reads any non-success as no metadata, which is the
+# honest answer here either way
 # https://datatracker.ietf.org/doc/html/rfc9728
 
 GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
-HTTP 404
+HTTP 403
 Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -18,10 +15,10 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 absent_body: body
 error_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:not-found",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "There is nothing at this URL"
+  "type": "urn:sourcemeta:one:enterprise-required",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "This feature is only available in the Enterprise edition"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -36,17 +33,17 @@ jsonpath "$.valid" == true
 # withheld from anybody in particular
 GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 Authorization: Bearer whatever
-HTTP 404
+HTTP 403
 Content-Type: application/problem+json
 {
-  "type": "urn:sourcemeta:one:not-found",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "There is nothing at this URL"
+  "type": "urn:sourcemeta:one:enterprise-required",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "This feature is only available in the Enterprise edition"
 }
 
 HEAD {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
-HTTP 404
+HTTP 403
 Content-Type: application/problem+json
 [Asserts]
 bytes count == 0
@@ -86,9 +83,9 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The schema describing the document is served whether or not this instance
-# has a document to describe, since it is part of the catalog either way
-GET {{base}}/self/v1/schemas/mcp/protected-resource-metadata/response
+# The schema describing the document is part of the catalog in both editions,
+# even where no document is ever produced from it
+GET {{base}}/self/v1/schemas/mcp/prm/response
 HTTP 200
 [Asserts]
 jsonpath "$.title" == "Sourcemeta One MCP Protected Resource Metadata Response"
