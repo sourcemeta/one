@@ -44,8 +44,10 @@ inline constexpr std::string_view ENDPOINT_MCP{"/self/v1/mcp"};
 inline constexpr std::string_view ENDPOINT_MCP_TRAILING_SLASH{"/self/v1/mcp/"};
 // RFC 9728 Section 3 forms this by inserting the well-known string between
 // the host and the path of the resource it describes
-inline constexpr std::string_view ENDPOINT_MCP_PROTECTED_RESOURCE_METADATA{
+inline constexpr std::string_view ENDPOINT_MCP_PRM{
     "/.well-known/oauth-protected-resource/self/v1/mcp"};
+inline constexpr std::string_view ENDPOINT_MCP_PRM_TRAILING_SLASH{
+    "/.well-known/oauth-protected-resource/self/v1/mcp/"};
 inline constexpr std::string_view ENDPOINT_API_NOT_FOUND{"/self/v1/api/{+any}"};
 inline constexpr std::string_view ENDPOINT_STATIC{"/self/v1/static/{+path}"};
 

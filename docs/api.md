@@ -787,6 +787,20 @@ validation](https://modelcontextprotocol.io/specification/2025-06-18/basic/trans
 principle recommended by the specification to protect against DNS rebinding
 attacks.
 
+**Authorization.** The specification's
+[authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+model has this endpoint act as an OAuth 2.1 resource server that tells a client
+where its tokens come from. Where a [`jwt`](configuration.md#jwt) policy names
+this endpoint as its `audience`, the instance serves that discovery both ways
+the specification accepts: [RFC
+9728](https://datatracker.ietf.org/doc/html/rfc9728) protected resource
+metadata at its standard well-known location, and a `resource_metadata`
+parameter naming it in the `WWW-Authenticate` header of every denial here. A
+policy that protects more than this endpoint describes a wider audience and is
+not advertised, since a token bound to this endpoint alone is not what it
+accepts. OAuth scopes are not implemented, so no `scope` parameter is
+advertised and no request is refused for want of one.
+
 **Protocol versions.** The server simultaneously supports three revisions of
 the MCP specification:
 [`2025-03-26`](https://modelcontextprotocol.io/specification/2025-03-26),

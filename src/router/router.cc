@@ -138,8 +138,9 @@ auto Router::dispatch(
       return;
     }
 
-    sourcemeta::one::json_error_unauthorized(request, response,
-                                             this->default_error_schema_, "*");
+    sourcemeta::one::json_error_unauthorized(
+        request, response, this->default_error_schema_, "*",
+        instance->authentication_challenge());
     return;
   }
 

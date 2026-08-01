@@ -35,12 +35,23 @@ GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 Authorization: Bearer whatever
 HTTP 403
 Content-Type: application/problem+json
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+credentialed_absent_body: body
 {
   "type": "urn:sourcemeta:one:enterprise-required",
   "title": "Forbidden",
   "status": 403,
   "detail": "This feature is only available in the Enterprise edition"
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{credentialed_absent_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 HEAD {{base}}/.well-known/oauth-protected-resource/self/v1/mcp
 HTTP 403
@@ -87,10 +98,72 @@ jsonpath "$.valid" == true
 # even where no document is ever produced from it
 GET {{base}}/self/v1/schemas/mcp/prm/response
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
 [Asserts]
+jsonpath "$['$schema']" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.title" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.type" == "object"
 jsonpath "$.required" includes "resource"
 jsonpath "$.required" includes "authorization_servers"
 jsonpath "$.required" includes "bearer_methods_supported"
 jsonpath "$.additionalProperties" == false
+jsonpath "$.properties.resource.format" == "uri"
+jsonpath "$.properties.authorization_servers.items.format" == "uri"
+jsonpath "$.properties.bearer_methods_supported.const" includes "header"
+
+# There is no Model Context Protocol server in this edition at all, which is
+# the deeper reason there is no metadata describing one. Nothing is denied
+# here, so no challenge names a document either
+POST {{base}}/self/v1/mcp
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 1, "method": "ping" }
+```
+HTTP 200
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+ping_body: body
+mcp_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "WWW-Authenticate" not exists
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32000,
+    "message": "Enterprise edition required",
+    "data": "MCP support is only available in the Enterprise edition of Sourcemeta One"
+  }
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+```
+{{ping_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+GET {{base}}/.well-known/oauth-protected-resource/self/v1/mcp/
+HTTP 403
+Content-Type: application/problem+json
+Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+slash_absent_body: body
+{
+  "type": "urn:sourcemeta:one:enterprise-required",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "This feature is only available in the Enterprise edition"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
+```
+{{slash_absent_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true

@@ -1028,7 +1028,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
 
       const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
           {"requestSchema", std::string_view{mcp_request_schema}},
-          {"responseSchema", std::string_view{mcp_response_schema}}};
+          {"responseSchema", std::string_view{mcp_response_schema}},
+          {"metadataPath", sourcemeta::one::ENDPOINT_MCP_PRM}};
       router.add(sourcemeta::one::ENDPOINT_MCP, "handle_mcp_request", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
       router.add(sourcemeta::one::ENDPOINT_MCP_TRAILING_SLASH,
@@ -1042,8 +1043,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
                std::string_view{
                    mcp_protected_resource_metadata_response_schema}}};
       router.add(
-          sourcemeta::one::ENDPOINT_MCP_PROTECTED_RESOURCE_METADATA,
-          "mcp_protected_resource_metadata", next_id++,
+          sourcemeta::one::ENDPOINT_MCP_PRM, "mcp_protected_resource_metadata",
+          next_id++,
+          sourcemeta::one::ACTION_TYPE_MCP_PROTECTED_RESOURCE_METADATA_V1,
+          mcp_protected_resource_metadata_arguments);
+      router.add(
+          sourcemeta::one::ENDPOINT_MCP_PRM_TRAILING_SLASH,
+          "mcp_protected_resource_metadata_trailing_slash", next_id++,
           sourcemeta::one::ACTION_TYPE_MCP_PROTECTED_RESOURCE_METADATA_V1,
           mcp_protected_resource_metadata_arguments);
 

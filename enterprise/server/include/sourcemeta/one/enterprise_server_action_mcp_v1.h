@@ -47,6 +47,8 @@ public:
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
             this->response_schema_ = std::get<std::string_view>(value);
+          } else if (key == "metadataPath") {
+            this->metadata_path_ = std::get<std::string_view>(value);
           } else if (key == "requestSchema") {
             this->request_schema_ = std::get<std::string_view>(value);
           }
@@ -67,6 +69,22 @@ public:
     // somehow carried a mixed-case origin through.
     // https://datatracker.ietf.org/doc/html/rfc6454#section-4
     assert(sourcemeta::core::is_lowercase(this->allowed_origin_));
+
+    // RFC 9728 Section 5.1. A client derives this location from the resource
+    // identifier anyway, but only after being refused once, and a deployment
+    // under a base path serves it somewhere that derivation cannot reach. It
+    // is named here only when there is a document to find
+    if (this->mcp_metadata_.defines("protectedResourceMetadata")) {
+      this->challenge_.append("resource_metadata=\"");
+      this->challenge_.append(this->server_uri());
+      this->challenge_.append(this->metadata_path_);
+      this->challenge_.append("\"");
+    }
+  }
+
+  [[nodiscard]] auto authentication_challenge() const noexcept
+      -> std::string_view override {
+    return this->challenge_;
   }
 
   auto rest(const std::span<std::string_view>, std::string_view credential,
@@ -704,7 +722,9 @@ private:
   std::string_view allowed_origin_;
   std::string_view response_schema_;
   std::string_view request_schema_;
+  std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
+  std::string challenge_;
   sourcemeta::one::SearchView search_view_;
 };
 

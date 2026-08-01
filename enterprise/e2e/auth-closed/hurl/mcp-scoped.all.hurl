@@ -298,7 +298,7 @@ Content-Type: application/json
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+WWW-Authenticate: Bearer realm="registry", resource_metadata="{{base}}/.well-known/oauth-protected-resource/self/v1/mcp"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 wrong_body: body
