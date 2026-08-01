@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Example",
+  "description": "A schema served publicly while the MCP endpoint is gated",
+  "type": "string"
+}

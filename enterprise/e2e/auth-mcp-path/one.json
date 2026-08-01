@@ -1,0 +1,20 @@
+{
+  "url": "http://localhost:8000/registry",
+  "html": {
+    "name": "MCP Discovery Path Sandbox",
+    "description": "Protected resource metadata for an instance served under a base path"
+  },
+  "authentication": [
+    {
+      "type": "jwt",
+      "name": "mcp",
+      "paths": [ "/self/v1/mcp" ],
+      "issuer": "https://accounts.example.com",
+      "audience": "http://localhost:8000/registry/self/v1/mcp",
+      "algorithms": [ "RS256" ]
+    }
+  ],
+  "contents": {
+    "catalog": { "path": "./schemas/catalog" }
+  }
+}
