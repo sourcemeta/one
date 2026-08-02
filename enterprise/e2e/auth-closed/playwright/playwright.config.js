@@ -5,9 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
 // outside the browser go through Node, which has no equivalent, so they dial
 // the mapped port directly. Either way the certificate chains to a
 // sandbox-local authority, which is what `ignoreHTTPSErrors` below tolerates
+const port = process.env.PORT ?? '8000';
 const target = (process.env.PLAYWRIGHT_BASE_URL ?? '').replace(
-  '//registry:',
-  '//localhost:'
+  '//registry',
+  '//localhost'
 );
 
 export default defineConfig({
@@ -38,7 +39,7 @@ export default defineConfig({
         // container names to the mapped local ports, exactly as a developer
         // would via /etc/hosts
         launchOptions: {
-          args: ['--host-resolver-rules=MAP keycloak 127.0.0.1, MAP registry 127.0.0.1']
+          args: [`--host-resolver-rules=MAP keycloak 127.0.0.1, MAP registry 127.0.0.1:${port}`]
         }
       }
     }

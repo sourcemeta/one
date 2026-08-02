@@ -23,7 +23,7 @@ openssl req -x509 -newkey rsa:2048 -nodes \
   -keyout "$WORK/ca.key" -out "$WORK/ca.crt" -days "$DAYS" \
   -subj "/CN=Sourcemeta One End-to-End Authority" \
   -addext "basicConstraints=critical,CA:TRUE" \
-  -addext "keyUsage=critical,keyCertSign,cRLSign" 2>/dev/null
+  -addext "keyUsage=critical,keyCertSign,cRLSign"
 
 issue() {
   NAME="$1"
@@ -32,10 +32,10 @@ issue() {
   printf 'extendedKeyUsage=serverAuth\n' >> "$WORK/$NAME.ext"
   openssl req -newkey rsa:2048 -nodes \
     -keyout "$WORK/$NAME.key" -out "$WORK/$NAME.csr" \
-    -subj "/CN=$NAME" 2>/dev/null
+    -subj "/CN=$NAME"
   openssl x509 -req -in "$WORK/$NAME.csr" \
     -CA "$WORK/ca.crt" -CAkey "$WORK/ca.key" -CAcreateserial \
-    -out "$WORK/$NAME.crt" -days "$DAYS" -extfile "$WORK/$NAME.ext" 2>/dev/null
+    -out "$WORK/$NAME.crt" -days "$DAYS" -extfile "$WORK/$NAME.ext"
 }
 
 issue keycloak
