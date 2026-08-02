@@ -63,7 +63,7 @@ HTTP 302
 [Captures]
 callback_url: header "Location"
 [Asserts]
-header "Location" startsWith "http://localhost:8000/self/v1/auth/callback/keycloak?"
+header "Location" startsWith "https://registry:8000/self/v1/auth/callback/keycloak?"
 header "Location" contains "code="
 header "Location" contains "state="
 

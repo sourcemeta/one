@@ -1,6 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // See https://playwright.dev/docs/test-configuration
+// Chromium is told to resolve the sandbox's container names, but requests made
+// outside the browser go through Node, which has no equivalent, so they dial
+// the mapped port directly. Either way the certificate chains to a
+// sandbox-local authority, which is what `ignoreHTTPSErrors` below tolerates
+const target = (process.env.PLAYWRIGHT_BASE_URL ?? '').replace(
+  '//registry:',
+  '//localhost:'
+);
+
 export default defineConfig({
   testDir: '.',
   fullyParallel: false,
@@ -10,7 +19,7 @@ export default defineConfig({
   reporter: 'list',
   outputDir: '../../../../build/test-results',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL,
+    baseURL: target,
     trace: 'on-first-retry',
     // The identity provider's certificate chains to a sandbox-local authority
     // the browser does not know, so certificate errors are tolerated here
@@ -24,12 +33,12 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Keycloak advertises itself as `keycloak:8443` (its KC_HOSTNAME), so
-        // the browser must resolve that container name to the mapped local
-        // port to follow the OIDC redirect, exactly as a developer would via
-        // /etc/hosts
+        // Keycloak advertises itself as `keycloak:8443` (its KC_HOSTNAME) and
+        // the registry as `registry:8000`, so the browser must resolve both
+        // container names to the mapped local ports, exactly as a developer
+        // would via /etc/hosts
         launchOptions: {
-          args: ['--host-resolver-rules=MAP keycloak 127.0.0.1']
+          args: ['--host-resolver-rules=MAP keycloak 127.0.0.1, MAP registry 127.0.0.1']
         }
       }
     }

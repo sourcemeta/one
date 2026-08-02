@@ -10,6 +10,9 @@
 # advertised the base path twice and named a URL that resolves nowhere. Every
 # check until then had been against a root deployment, where the two spellings
 # happen to coincide. This sandbox exists so that they cannot diverge again.
+#
+# It is served over TLS because RFC 9728 Section 1.2 admits no other scheme for
+# a resource identifier, so an instance in the clear publishes nothing at all.
 # https://datatracker.ietf.org/doc/html/rfc9728
 
 # The endpoint is gated, so an anonymous client is refused and told where a
