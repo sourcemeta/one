@@ -85,6 +85,7 @@ ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/path $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh enterprise/e2e/auth-mcp-path $(EDITION) $(SANDBOX_PORT)
 	# The authentication sandboxes stand up an identity provider alongside the
 	# registry, so they only run under Docker Compose, never the native path
 endif
@@ -103,6 +104,9 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
+	# Discovery metadata needs a policy but never contacts its issuer, so this
+	# one needs no identity provider alongside it
+	$(MAKE) -C enterprise/e2e/auth-mcp-path EDITION=$(EDITION)
 	# The authentication sandboxes each stand up an identity provider alongside
 	# the registry, exercising both JWT and apiKey policies
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
