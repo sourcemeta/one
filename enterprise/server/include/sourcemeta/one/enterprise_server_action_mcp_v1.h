@@ -70,9 +70,8 @@ public:
     // https://datatracker.ietf.org/doc/html/rfc6454#section-4
     assert(sourcemeta::core::is_lowercase(this->allowed_origin_));
 
-    const auto *resource{this->mcp_metadata_.try_at("resourceIdentifier")};
-    assert(resource != nullptr);
-    this->resource_identifier_ = resource->to_string();
+    this->resource_identifier_ =
+        this->mcp_metadata_.at("resourceIdentifier").to_string();
 
     // RFC 9728 Section 5.1. A client derives this location from the resource
     // identifier anyway, but only after being refused once, and a deployment
