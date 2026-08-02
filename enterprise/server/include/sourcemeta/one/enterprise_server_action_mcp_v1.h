@@ -70,6 +70,9 @@ public:
     // https://datatracker.ietf.org/doc/html/rfc6454#section-4
     assert(sourcemeta::core::is_lowercase(this->allowed_origin_));
 
+    this->resource_identifier_ =
+        this->mcp_metadata_.at("resourceIdentifier").to_string();
+
     // RFC 9728 Section 5.1. A client derives this location from the resource
     // identifier anyway, but only after being refused once, and a deployment
     // under a base path serves it somewhere that derivation cannot reach. It
@@ -85,6 +88,13 @@ public:
   [[nodiscard]] auto authentication_challenge() const noexcept
       -> std::string_view override {
     return this->challenge_;
+  }
+
+  // This endpoint is a protected resource in its own right, so a token that
+  // names only something wider was not issued for it
+  [[nodiscard]] auto required_audience() const noexcept
+      -> std::string_view override {
+    return this->resource_identifier_;
   }
 
   auto rest(const std::span<std::string_view>, std::string_view credential,
@@ -725,6 +735,7 @@ private:
   std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
   std::string challenge_;
+  std::string resource_identifier_;
   sourcemeta::one::SearchView search_view_;
 };
 

@@ -158,6 +158,15 @@ public:
     return {};
   }
 
+  // The audience a presented token must name to reach this route, beyond
+  // whatever the admitting policy already requires. A route that is a resource
+  // in its own right says so here, so that a token issued for something wider
+  // does not reach it. The default requires nothing
+  [[nodiscard]] virtual auto required_audience() const noexcept
+      -> std::string_view {
+    return {};
+  }
+
   // Serve, in place, the login page for an unauthenticated browser navigating
   // to a path an interactive policy governs, returning true when it wrote the
   // response so the caller stops. The page is a per-directory artifact resolved

@@ -795,11 +795,18 @@ this endpoint as its `audience`, the instance serves that discovery both ways
 the specification accepts: [RFC
 9728](https://datatracker.ietf.org/doc/html/rfc9728) protected resource
 metadata at its standard well-known location, and a `resource_metadata`
-parameter naming it in the `WWW-Authenticate` header of every denial here. A
-policy that protects more than this endpoint describes a wider audience and is
-not advertised, since a token bound to this endpoint alone is not what it
-accepts. OAuth scopes are not implemented, so no `scope` parameter is
-advertised and no request is refused for want of one.
+parameter naming it in the `WWW-Authenticate` header of every denial here.
+
+The specification also has an MCP server accept only tokens issued for itself,
+rather than for whatever wider resource happens to contain it, so that a token
+minted for one service cannot be spent at another. A presented token must
+therefore name this endpoint in `aud` whichever policy admits the caller, and a
+token naming only the registry reaches everything that policy governs except
+here. An `aud` claim may list several audiences, so one token
+naming both the registry and this endpoint continues to reach both. Credentials
+that carry no audience, an [`apiKey`](configuration.md#api-key) or a browser
+session, are unaffected. OAuth scopes are not implemented, so no `scope`
+parameter is advertised and no request is refused for want of one.
 
 **Protocol versions.** The server simultaneously supports three revisions of
 the MCP specification:

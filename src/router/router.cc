@@ -132,7 +132,8 @@ auto Router::dispatch(
       !instance->is_authentication_exempt() &&
       !this->authentication_
            .admits_route(request.path(), instance->server_uri_base_path(),
-                         {.bearer = credential, .cookies = cookies})
+                         {.bearer = credential, .cookies = cookies},
+                         instance->required_audience())
            .allowed) {
     if (instance->serve_login(request, response)) {
       return;

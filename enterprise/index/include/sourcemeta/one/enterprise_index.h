@@ -28,6 +28,13 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
                         sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void;
 
+// What this instance's MCP endpoint is called as an OAuth protected resource.
+// The metadata document names it and the endpoint requires a presented token
+// to name it too, so both read it from here rather than composing their own
+auto mcp_resource_identifier(
+    const sourcemeta::one::Configuration &configuration,
+    std::string_view endpoint) -> std::string;
+
 // RFC 9728 metadata naming where a token for the MCP endpoint comes from, left
 // untouched when no policy can honestly answer that
 // https://datatracker.ietf.org/doc/html/rfc9728

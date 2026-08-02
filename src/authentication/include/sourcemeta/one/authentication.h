@@ -189,9 +189,15 @@ public:
   // that target resolves to. The spelling is taken as matched, so a target
   // reaching past a governed prefix is still governed by it, and a non-empty
   // base path is removed first
+  // A route may additionally require that a presented token names the route
+  // itself, rather than only whatever wider audience the policy admitting the
+  // caller was configured with. An empty requirement asks for nothing extra,
+  // and a credential that is not a token is unaffected, since only a token
+  // carries an audience to check
   [[nodiscard]] auto admits_route(std::string_view target,
                                   std::string_view base_path,
-                                  const Credentials &credentials) const
+                                  const Credentials &credentials,
+                                  std::string_view required_audience = {}) const
       -> Verdict;
 
   // The configuration declaration indices of the policies that govern a path,
