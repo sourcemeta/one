@@ -694,6 +694,7 @@ struct GENERATE_MCP {
     auto tools{sourcemeta::core::JSON::make_array()};
     auto tool_routes{sourcemeta::core::JSON::make_object()};
     auto protected_resource_metadata{sourcemeta::core::JSON{nullptr}};
+    std::string resource_identifier;
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     {
@@ -705,6 +706,8 @@ struct GENERATE_MCP {
       sourcemeta::one::generate_protected_resource_metadata(
           authentication, configuration, sourcemeta::one::ENDPOINT_MCP,
           protected_resource_metadata);
+      resource_identifier = sourcemeta::one::mcp_resource_identifier(
+          configuration, sourcemeta::one::ENDPOINT_MCP);
     }
 #endif
 
@@ -742,6 +745,10 @@ struct GENERATE_MCP {
     document.assign(std::string{sourcemeta::core::MCP_METHOD_TOOLS_LIST},
                     std::move(tools));
     document.assign("toolRoutes", std::move(tool_routes));
+    if (!resource_identifier.empty()) {
+      document.assign("resourceIdentifier",
+                      sourcemeta::core::JSON{std::move(resource_identifier)});
+    }
     if (!protected_resource_metadata.is_null()) {
       document.assign("protectedResourceMetadata",
                       std::move(protected_resource_metadata));

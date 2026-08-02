@@ -584,10 +584,10 @@ struct Authentication::Impl {
     return result;
   }
 
-  [[nodiscard]] auto
-  admits(const std::string_view registry_path,
-         const std::string_view credential,
-         const std::span<const std::string_view> cookies) const
+  [[nodiscard]] auto admits(const std::string_view registry_path,
+                            const std::string_view credential,
+                            const std::span<const std::string_view> cookies,
+                            const std::string_view required_audience = {}) const
       -> Authentication::Verdict {
     // A missing or structurally broken artifact leaves the section pointers
     // null and denies everything. Only a valid policy fails open below
@@ -619,7 +619,8 @@ struct Authentication::Impl {
 
       const auto type{static_cast<Authentication::Type>(entry.type)};
       if (type == Authentication::Type::JWT) {
-        if (token.has_value() && this->admits_jwt(metadata, token.value())) {
+        if (token.has_value() &&
+            this->admits_jwt(metadata, token.value(), required_audience)) {
           return {.allowed = true,
                   .principal = Authentication::Principal{
                       .type = type, .policy = static_cast<std::size_t>(index)}};
@@ -645,7 +646,8 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
-                                const sourcemeta::core::JWT &token) const
+                                const sourcemeta::core::JWT &token,
+                                const std::string_view required_audience) const
       -> bool {
     JWTPolicy policy;
     if (!decode_jwt_metadata(metadata, policy)) {
@@ -669,7 +671,14 @@ struct Authentication::Impl {
     const auto error{provider->verify(token, policy.algorithms, policy.issuer,
                                       policy.audience, std::nullopt,
                                       expected_type)};
-    return !error.has_value();
+    if (error.has_value()) {
+      return false;
+    }
+
+    // The signature and the policy's own audience are already established, so
+    // the route's requirement is one more claim read from a token that has
+    // been verified rather than a second verification
+    return required_audience.empty() || token.has_audience(required_audience);
   }
 
   [[nodiscard]] auto
@@ -1266,12 +1275,13 @@ auto Authentication::open(const std::string_view policy, const Purpose purpose,
   return this->impl_->open(policy, purpose, value);
 }
 
-auto Authentication::admits_route(const std::string_view target,
-                                  const std::string_view base_path,
-                                  const Credentials &credentials) const
-    -> Authentication::Verdict {
+auto Authentication::admits_route(
+    const std::string_view target, const std::string_view base_path,
+    const Credentials &credentials,
+    const std::string_view required_audience) const -> Authentication::Verdict {
   return this->impl_->admits(strip_base_path(target, base_path),
-                             credentials.bearer, credentials.cookies);
+                             credentials.bearer, credentials.cookies,
+                             required_audience);
 }
 
 auto Authentication::governing(const Authentication::Path &path) const

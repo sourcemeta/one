@@ -161,18 +161,25 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
   }
 }
 
+auto mcp_resource_identifier(
+    const sourcemeta::one::Configuration &configuration,
+    const std::string_view endpoint) -> std::string {
+  std::string result{configuration.url};
+  if (!result.empty() && result.back() == '/') {
+    result.pop_back();
+  }
+
+  result.append(endpoint);
+  return result;
+}
+
 // TODO: Compose this through a proper RFC 9728 implementation in Core, rather
 // than assembling the few fields this instance happens to need by hand
 auto generate_protected_resource_metadata(
     const sourcemeta::one::Authentication &authentication,
     const sourcemeta::one::Configuration &configuration,
     const std::string_view endpoint, sourcemeta::core::JSON &result) -> void {
-  std::string resource{configuration.url};
-  if (!resource.empty() && resource.back() == '/') {
-    resource.pop_back();
-  }
-
-  resource.append(endpoint);
+  const auto resource{mcp_resource_identifier(configuration, endpoint)};
 
   // RFC 9728 Section 1.2 defines a resource identifier as an https URL, and a
   // client is entitled to reject anything else. Loopback is the exception this
@@ -218,7 +225,7 @@ auto generate_protected_resource_metadata(
   }
 
   result = sourcemeta::core::JSON::make_object();
-  result.assign("resource", sourcemeta::core::JSON{std::move(resource)});
+  result.assign("resource", sourcemeta::core::JSON{resource});
   result.assign("authorization_servers", std::move(servers));
   auto bearer_methods{sourcemeta::core::JSON::make_array()};
   bearer_methods.push_back(sourcemeta::core::JSON{"header"});

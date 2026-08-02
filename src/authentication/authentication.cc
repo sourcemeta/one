@@ -47,8 +47,8 @@ auto Authentication::admits(const Authentication::Path &,
 }
 
 auto Authentication::admits_route(const std::string_view,
-                                  const std::string_view,
-                                  const Credentials &) const
+                                  const std::string_view, const Credentials &,
+                                  const std::string_view) const
     -> Authentication::Verdict {
   return {.allowed = true, .principal = std::nullopt};
 }
