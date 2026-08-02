@@ -795,7 +795,10 @@ this endpoint as its `audience`, the instance serves that discovery both ways
 the specification accepts: [RFC
 9728](https://datatracker.ietf.org/doc/html/rfc9728) protected resource
 metadata at its standard well-known location, and a `resource_metadata`
-parameter naming it in the `WWW-Authenticate` header of every denial here.
+parameter naming it in the `WWW-Authenticate` header of every denial here. The
+specification defines a resource identifier as an `https` URL and makes no
+exception for loopback, so an instance served in the clear publishes nothing
+rather than metadata a conforming client would reject.
 
 The specification also has an MCP server accept only tokens issued for itself,
 rather than for whatever wider resource happens to contain it, so that a token

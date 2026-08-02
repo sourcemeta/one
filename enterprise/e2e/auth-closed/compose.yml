@@ -44,4 +44,25 @@ services:
       keycloak-nginx:
         condition: service_started
     ports:
-      - "${PORT}:8001"
+      - "${PORT}:8000"
+
+  # TLS termination sharing the registry's network identity, so the instance
+  # answers over https under the very name its resource identifier advertises.
+  # RFC 9728 admits no other scheme, so without this there is nothing to publish
+  registry-nginx:
+    image: nginx:1.27-alpine
+    network_mode: service:sandbox
+    volumes:
+      - ./registry-nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./tls:/etc/nginx/tls:ro
+    # Sharing the registry's namespace means the listener shows up in the same
+    # table, so readiness is the TLS port being bound rather than the container
+    # being up, which is all `depends_on` would otherwise wait for
+    healthcheck:
+      test: [ "CMD-SHELL", "grep -qE ':1F40\\s+[0-9A-F:]+\\s+0A\\s' /proc/net/tcp" ]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+    depends_on:
+      sandbox:
+        condition: service_healthy

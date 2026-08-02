@@ -6,12 +6,15 @@
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/one/actions.h>
 
+#include <algorithm>   // std::ranges::find
+#include <array>       // std::array
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t
@@ -20,6 +23,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 #include <variant>     // std::get
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
 
@@ -173,29 +177,17 @@ auto mcp_resource_identifier(
   return result;
 }
 
-// TODO: Compose this through a proper RFC 9728 implementation in Core, rather
-// than assembling the few fields this instance happens to need by hand
 auto generate_protected_resource_metadata(
     const sourcemeta::one::Authentication &authentication,
     const sourcemeta::one::Configuration &configuration,
     const std::string_view endpoint, sourcemeta::core::JSON &result) -> void {
   const auto resource{mcp_resource_identifier(configuration, endpoint)};
 
-  // RFC 9728 Section 1.2 defines a resource identifier as an https URL, and a
-  // client is entitled to reject anything else. Loopback is the exception this
-  // project already makes elsewhere, so that a local instance stays testable
-  const sourcemeta::core::URI resource_uri{resource};
-  if (!resource_uri.is_https() &&
-      !(resource_uri.is_http() &&
-        (resource_uri.is_loopback() || resource_uri.is_localhost()))) {
-    return;
-  }
-
   // A client that reads this asks its provider for a token bound to the
   // resource below, so an issuer whose policy expects a different audience
   // would mint one this instance refuses. Only an issuer whose policy accepts
   // that audience can be named without sending the client into a rejection
-  auto servers{sourcemeta::core::JSON::make_array()};
+  std::vector<std::string_view> servers;
   for (const auto index : authentication.governing(
            sourcemeta::one::Authentication::Path::relative(endpoint))) {
     assert(index < configuration.authentication.size());
@@ -207,16 +199,16 @@ auto generate_protected_resource_metadata(
     }
 
     // A policy that names its keys outright is never asked to discover
-    // anything, so nothing has established that its issuer is the https
-    // identifier RFC 8414 expects. Advertising it unchecked would publish an
-    // authorization server a client cannot use
-    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
+    // anything, so nothing has established that its issuer is the identifier
+    // RFC 8414 defines. The builder refuses a document naming even one such
+    // entry, so an unusable issuer is dropped here rather than costing the
+    // instance the entries that are usable
+    if (!sourcemeta::core::oauth_is_issuer_identifier(entry.issuer)) {
       continue;
     }
 
-    sourcemeta::core::JSON issuer{entry.issuer};
-    if (!servers.contains(issuer)) {
-      servers.push_back(std::move(issuer));
+    if (std::ranges::find(servers, entry.issuer) == servers.cend()) {
+      servers.emplace_back(entry.issuer);
     }
   }
 
@@ -224,12 +216,20 @@ auto generate_protected_resource_metadata(
     return;
   }
 
-  result = sourcemeta::core::JSON::make_object();
-  result.assign("resource", sourcemeta::core::JSON{resource});
-  result.assign("authorization_servers", std::move(servers));
-  auto bearer_methods{sourcemeta::core::JSON::make_array()};
-  bearer_methods.push_back(sourcemeta::core::JSON{"header"});
-  result.assign("bearer_methods_supported", std::move(bearer_methods));
+  static constexpr std::array<std::string_view, 1> BEARER_METHODS{{"header"}};
+  sourcemeta::core::OAuthResourceMetadataConfig config;
+  config.resource = resource;
+  config.authorization_servers = servers;
+  config.bearer_methods_supported = BEARER_METHODS;
+
+  // The builder refuses anything a client could not use, which includes a
+  // resource identifier that is not an https URL. RFC 9728 Section 1.2 makes
+  // no exception for loopback, so an instance served in the clear publishes
+  // nothing rather than something a conforming client rejects
+  auto document{sourcemeta::core::oauth_make_resource_metadata(config)};
+  if (document.has_value()) {
+    result = std::move(document).value();
+  }
 }
 
 } // namespace sourcemeta::one

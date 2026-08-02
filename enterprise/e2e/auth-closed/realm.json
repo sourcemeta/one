@@ -15,7 +15,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:8000/self/v1/auth/callback/keycloak"
+        "https://registry:8000/self/v1/auth/callback/keycloak"
       ],
       "fullScopeAllowed": false,
       "defaultClientScopes": [
@@ -24,7 +24,7 @@
       "optionalClientScopes": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:8000"
+        "post.logout.redirect.uris": "https://registry:8000"
       }
     },
     {
@@ -110,7 +110,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.custom.audience": "http://localhost:8000/self/v1/mcp",
+            "included.custom.audience": "https://registry:8000/self/v1/mcp",
             "access.token.claim": "true",
             "id.token.claim": "false"
           }
@@ -151,7 +151,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.custom.audience": "http://localhost:8000/self/v1/mcp",
+            "included.custom.audience": "https://registry:8000/self/v1/mcp",
             "access.token.claim": "true",
             "id.token.claim": "false"
           }

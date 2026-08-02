@@ -1,5 +1,5 @@
 {
-  "url": "http://localhost:8000",
+  "url": "https://registry:8000",
   "html": {
     "name": "Fully Private Sandbox",
     "description": "A registry locked in its entirety, opened by an apiKey, a JWT, or an interactive session"
@@ -24,7 +24,7 @@
       "name": "mcp-tokens",
       "paths": [ "/self/v1/mcp" ],
       "issuer": "https://keycloak:8443/realms/main",
-      "audience": "http://localhost:8000/self/v1/mcp",
+      "audience": "https://registry:8000/self/v1/mcp",
       "algorithms": [ "RS256" ]
     },
     {
