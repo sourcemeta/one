@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_CORE_HTTP_MESSAGE_H_
 #define SOURCEMETA_CORE_HTTP_MESSAGE_H_
 
+#include <sourcemeta/core/http_syntax.h>
 #include <sourcemeta/core/text.h>
 
 #include <concepts>    // std::convertible_to, std::invocable
@@ -112,6 +113,13 @@ inline auto http_parse_headers(const std::string_view input, Callback callback)
         line.remove_suffix(1);
       }
 
+      // RFC 9110 §5.5: "a recipient of CR, LF, or NUL within a field value
+      // MUST either reject the message or replace each of those characters
+      // with SP", so a continuation carrying a bare one is discarded
+      if (http_field_line_has_forbidden_byte(line)) {
+        continue;
+      }
+
       callback(std::string_view{}, line);
       continue;
     }
@@ -139,6 +147,15 @@ inline auto http_parse_headers(const std::string_view input, Callback callback)
 
     while (!value.empty() && (value.back() == ' ' || value.back() == '\t')) {
       value.remove_suffix(1);
+    }
+
+    // RFC 9110 §5.5: "a recipient of CR, LF, or NUL within a field value MUST
+    // either reject the message or replace each of those characters with SP",
+    // so a field line whose name or value carries a bare one that survived the
+    // split on the line terminator is discarded
+    if (http_field_line_has_forbidden_byte(name) ||
+        http_field_line_has_forbidden_byte(value)) {
+      continue;
     }
 
     callback(name, value);
@@ -349,10 +366,21 @@ template <typename Headers>
 inline auto http_serialize_headers(const Headers &headers) -> std::string {
   std::size_t total_size{0};
   for (const auto &[name, value] : headers) {
+    // A field dropped for a forbidden byte contributes no bytes, so the reserve
+    // is sized from only the fields that are actually emitted
+    if (http_field_line_has_forbidden_byte(name)) {
+      continue;
+    }
     // Account for the colon, the space, and the trailing CRLF
     if constexpr (requires { value.bytes(); }) {
+      if (http_field_line_has_forbidden_byte(value.bytes())) {
+        continue;
+      }
       total_size += name.size() + value.bytes().size() + 4;
     } else {
+      if (http_field_line_has_forbidden_byte(value)) {
+        continue;
+      }
       total_size += name.size() + value.size() + 4;
     }
   }
@@ -360,13 +388,32 @@ inline auto http_serialize_headers(const Headers &headers) -> std::string {
   std::string result;
   result.reserve(total_size);
   for (const auto &[name, value] : headers) {
+    // RFC 9110 §5.5: "a recipient of CR, LF, or NUL within a field value MUST
+    // either reject the message or replace each of those characters with SP
+    // before further processing or forwarding of that message", so a field
+    // whose name carries one is dropped rather than written to the wire as a
+    // header-injection defense
+    if (http_field_line_has_forbidden_byte(name)) {
+      continue;
+    }
+
     // RFC 9112 §5.1 notes that "a single SP preceding the field line
     // value is preferred for consistent readability by humans"
-    result += name;
-    result += ": ";
     if constexpr (requires { value.bytes(); }) {
+      if (http_field_line_has_forbidden_byte(value.bytes())) {
+        continue;
+      }
+
+      result += name;
+      result += ": ";
       result += value.bytes();
     } else {
+      if (http_field_line_has_forbidden_byte(value)) {
+        continue;
+      }
+
+      result += name;
+      result += ": ";
       result += value;
     }
 

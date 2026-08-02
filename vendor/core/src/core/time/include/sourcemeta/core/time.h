@@ -41,7 +41,12 @@ auto to_imf_fixdate(const std::chrono::system_clock::time_point time)
     -> std::string;
 
 /// @ingroup time
-/// Parse an RFC 9110 §5.6.7 IMF-fixdate string into a time point. For example:
+/// Parse an RFC 9110 §5.6.7 IMF-fixdate string into a time point. The leading
+/// day-name is validated as a real weekday name but is not cross-checked
+/// against the calendar date, so a syntactically valid string whose day-name
+/// disagrees with its date is still accepted. RFC 9110 imposes no recipient
+/// requirement to reject such a string, the day-name is redundant with the
+/// date, and this matches how browsers and common clients behave. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/time.h>
@@ -72,7 +77,12 @@ auto to_rfc850_date(const std::chrono::system_clock::time_point time)
 
 /// @ingroup time
 /// Parse an RFC 850 date string into a time point. The two-digit year is
-/// interpreted per RFC 9110 §5.6.7. For example:
+/// interpreted per RFC 9110 §5.6.7. The leading day-name is validated as a real
+/// weekday name but is not cross-checked against the calendar date, so a
+/// syntactically valid string whose day-name disagrees with its date is still
+/// accepted. RFC 9110 imposes no recipient requirement to reject such a string,
+/// the day-name is redundant with the date, and this matches how browsers and
+/// common clients behave. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/time.h>
@@ -104,7 +114,12 @@ auto to_asctime(const std::chrono::system_clock::time_point time)
 
 /// @ingroup time
 /// Parse an RFC 9110 §5.6.7 asctime-date string into a time point. The format
-/// has no timezone token and is interpreted as GMT. For example:
+/// has no timezone token and is interpreted as GMT. The leading day-name is
+/// validated as a real weekday name but is not cross-checked against the
+/// calendar date, so a syntactically valid string whose day-name disagrees with
+/// its date is still accepted. RFC 9110 imposes no recipient requirement to
+/// reject such a string, the day-name is redundant with the date, and this
+/// matches how browsers and common clients behave. For example:
 ///
 /// ```cpp
 /// #include <sourcemeta/core/time.h>

@@ -78,6 +78,36 @@ auto is_https_url_with_host(const std::string_view value) -> bool {
   }
 }
 
+// OpenID Connect Dynamic Client Registration 1.0 Section 2: a web client using
+// the implicit grant "MUST only register URLs using the https scheme as
+// redirect_uris" and "they MUST NOT use localhost as the hostname"
+auto is_web_implicit_redirect_uri(const std::string_view value) -> bool {
+  try {
+    const URI uri{value};
+    return uri.is_https() && uri.host().has_value() &&
+           !uri.host().value().empty() && !uri.is_localhost();
+  } catch (const URIParseError &) {
+    return false;
+  }
+}
+
+// OpenID Connect Dynamic Client Registration 1.0 Section 2: a native client
+// "MUST only register redirect_uris using custom URI schemes or loopback URLs
+// using the http scheme", where a loopback URL names localhost or an IP
+// loopback literal
+auto is_native_redirect_uri(const std::string_view value) -> bool {
+  try {
+    const URI uri{value};
+    if (uri.is_http()) {
+      return uri.is_loopback() || uri.is_localhost();
+    }
+
+    return uri.scheme().has_value() && !uri.is_https();
+  } catch (const URIParseError &) {
+    return false;
+  }
+}
+
 auto validate_client_metadata(const OAuthClientMetadata &oauth) -> void {
   const auto &data{oauth.data()};
 
@@ -109,6 +139,33 @@ auto validate_client_metadata(const OAuthClientMetadata &oauth) -> void {
       !absent_or_string(data, "userinfo_signed_response_alg"sv,
                         HASH_USERINFO_SIGNED_ALG)) {
     throw OIDCRegistrationParseError{};
+  }
+
+  // OpenID Connect Dynamic Client Registration 1.0 Section 2: "The
+  // Authorization Server MUST verify that all the registered redirect_uris
+  // conform to these constraints". A native client is bound to custom-scheme or
+  // http loopback callbacks, while a web client using the implicit grant is
+  // bound to https callbacks that are not localhost. The default application
+  // type is web, and a web client that does not use the implicit grant carries
+  // no such restriction
+  const auto application_type{
+      string_member(data, "application_type"sv, HASH_APPLICATION_TYPE)
+          .value_or("web"sv)};
+  // OpenID Connect Dynamic Client Registration 1.0 Section 2 defines only the
+  // web and native application types, so an unknown value is rejected rather
+  // than defaulted and left unrestricted
+  if (application_type != "web"sv && application_type != "native"sv) {
+    throw OIDCRegistrationParseError{};
+  }
+  const bool native{application_type == "native"sv};
+  if (native || oauth.supports_grant_type("implicit"sv)) {
+    for (const auto &element : redirect_uris->as_array()) {
+      const std::string_view redirect_uri{element.to_string()};
+      if (native ? !is_native_redirect_uri(redirect_uri)
+                 : !is_web_implicit_redirect_uri(redirect_uri)) {
+        throw OIDCRegistrationParseError{};
+      }
+    }
   }
 
   const auto *max_age{data.try_at("default_max_age"sv, HASH_DEFAULT_MAX_AGE)};
