@@ -66,6 +66,7 @@ constexpr CURLoption CURLOPT_WRITEFUNCTION{20011};   // FUNCTIONPOINT + 11
 constexpr CURLoption CURLOPT_WRITEDATA{10001};       // CBPOINT + 1
 constexpr CURLoption CURLOPT_HEADERFUNCTION{20079};  // FUNCTIONPOINT + 79
 constexpr CURLoption CURLOPT_HEADERDATA{10029};      // CBPOINT + 29
+constexpr CURLoption CURLOPT_POST{47};               // LONG + 47
 constexpr CURLoption CURLOPT_POSTFIELDSIZE_LARGE{30120}; // OFF_T + 120
 constexpr CURLoption CURLOPT_POSTFIELDS{10015};          // OBJECTPOINT + 15
 constexpr CURLoption CURLOPT_HTTPHEADER{10023};          // SLISTPOINT + 23
@@ -389,6 +390,14 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
         static_cast<curl_off_t>(this->body_.value().bytes().size()));
     api.easy_setopt(handle.get(), CURLOPT_POSTFIELDS,
                     this->body_.value().bytes().data());
+  } else if (this->method_ == HTTPMethod::POST &&
+             !this->header("Content-Type").has_value()) {
+    // A bodyless POST carries no representation, so libcurl's default
+    // Content-Type of application/x-www-form-urlencoded, added when the POST
+    // data is set, is unsolicited. It is suppressed unless the caller supplied
+    // a Content-Type, matching the other backends. The bare-colon form removes
+    // an internally generated header
+    header_list.append("Content-Type:");
   }
 
   if (header_list.get()) {
@@ -398,6 +407,22 @@ auto HTTPSystemRequest::send() const -> HTTPResponse {
   const std::string method{http_method_string(this->method_)};
   if (this->method_ == HTTPMethod::HEAD) {
     api.easy_setopt(handle.get(), CURLOPT_NOBODY, 1L);
+  } else if (this->method_ == HTTPMethod::POST) {
+    // RFC 9110 §15.4.4: a 303 (See Other) redirect makes the user agent
+    // retrieve the target with GET. Marking the request as a POST with
+    // CURLOPT_POST, instead of pinning the verb with CURLOPT_CUSTOMREQUEST,
+    // lets libcurl apply its default 301/302/303 POST-to-GET transition while
+    // still preserving the method on 307/308, matching the NSURLSession and
+    // WinHTTP backends. CURLOPT_CUSTOMREQUEST would override that transition
+    // and wrongly keep POST across a 303
+    api.easy_setopt(handle.get(), CURLOPT_POST, 1L);
+    if (!this->body_.has_value()) {
+      // A bodyless POST must still pin an empty body, otherwise libcurl reads
+      // the POST data from its default input source
+      api.easy_setopt(handle.get(), CURLOPT_POSTFIELDSIZE_LARGE,
+                      static_cast<curl_off_t>(0));
+      api.easy_setopt(handle.get(), CURLOPT_POSTFIELDS, "");
+    }
   } else if (this->method_ != HTTPMethod::GET || this->body_.has_value()) {
     api.easy_setopt(handle.get(), CURLOPT_CUSTOMREQUEST, method.c_str());
   }

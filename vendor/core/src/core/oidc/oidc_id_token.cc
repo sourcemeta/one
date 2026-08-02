@@ -68,6 +68,35 @@ auto oidc_id_token_checks(const JWT &token, const std::string_view issuer,
     return std::nullopt;
   }
 
+  // OpenID Connect Core 1.0 Section 3.1.3.7 step 3: "The ID Token MUST be
+  // rejected if the ID Token does not list the Client as a valid audience, or
+  // if it contains additional audiences not trusted by the Client". The base
+  // verification already confirmed the client is a listed audience, so here
+  // every other audience must be one the caller has marked as trusted. With an
+  // empty trusted set any audience beyond the client is rejected, the strict
+  // default. A single-string audience carries no additional audience, so it is
+  // unaffected
+  if (audience != nullptr && audience->is_array()) {
+    for (const auto &element : audience->as_array()) {
+      const auto &value{element.to_string()};
+      if (value == client_id) {
+        continue;
+      }
+
+      bool trusted{false};
+      for (const auto candidate : options.trusted_audiences) {
+        if (candidate == value) {
+          trusted = true;
+          break;
+        }
+      }
+
+      if (!trusted) {
+        return std::nullopt;
+      }
+    }
+  }
+
   const bool multiple_audiences{audience != nullptr && audience->is_array() &&
                                 audience->size() > 1};
   const auto *authorized_party{payload.try_at("azp"sv, HASH_AZP)};
