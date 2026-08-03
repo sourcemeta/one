@@ -8,9 +8,12 @@
 
 #include "template.h"
 
+#include <algorithm>   // std::ranges::sort, std::ranges::unique
 #include <cassert>     // assert
 #include <set>         // std::set
 #include <string_view> // std::string_view
+#include <utility>     // std::move
+#include <vector>      // std::vector
 
 namespace {
 
@@ -29,6 +32,44 @@ auto serves_securely(const std::string_view url) -> bool {
 
   return parsed.is_https() ||
          (parsed.is_http() && (parsed.is_loopback() || parsed.is_localhost()));
+}
+
+// A rule naming a claim and the values it may carry is exactly an individual
+// claim request (OpenID Connect Core 1.0 Section 5.5.1), so it is stored as
+// one rather than in a shape of our own. Both the names and their values are
+// sorted and deduplicated here, so that two policies admitting the same
+// callers serialise identically, which is what decides whether one may
+// reference the other
+auto claims_from_json(const sourcemeta::core::JSON &input)
+    -> sourcemeta::core::JSON {
+  std::vector<sourcemeta::core::JSON::String> names;
+  names.reserve(input.size());
+  for (const auto &claim : input.as_object()) {
+    names.push_back(claim.first);
+  }
+
+  std::ranges::sort(names);
+  auto result{sourcemeta::core::JSON::make_object()};
+  for (const auto &name : names) {
+    std::vector<sourcemeta::core::JSON::String> values;
+    values.reserve(input.at(name).size());
+    for (const auto &value : input.at(name).as_array()) {
+      values.push_back(value.to_string());
+    }
+
+    std::ranges::sort(values);
+    auto accepted{sourcemeta::core::JSON::make_array()};
+    for (auto &&value : values) {
+      accepted.push_back(sourcemeta::core::JSON{std::move(value)});
+    }
+
+    auto request{sourcemeta::core::JSON::make_object()};
+    request.assign_assume_new("essential", sourcemeta::core::JSON{true});
+    request.assign_assume_new("values", std::move(accepted));
+    result.assign_assume_new(name, std::move(request));
+  }
+
+  return result;
 }
 
 auto page_from_json(const sourcemeta::core::JSON &input)
@@ -184,6 +225,11 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
           parsed.algorithms.push_back(
               sourcemeta::core::to_jws_algorithm(algorithm.to_string())
                   .value());
+        }
+
+        const auto *claims{entry.try_at("claims")};
+        if (claims != nullptr) {
+          parsed.claims = claims_from_json(*claims);
         }
       } else if (entry.at("type").to_string() == "oidc") {
         parsed.type = Configuration::AuthenticationEntry::Type::OIDC;

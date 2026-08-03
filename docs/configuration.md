@@ -494,6 +494,7 @@ are what bound exposure otherwise.
 | `/algorithms`   | Array   | :red_circle: **Yes** | N/A | The JSON Web Signature algorithms the policy accepts. One or more of `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`, `ES256`, `ES384`, `ES512`, and `EdDSA` |
 | `/tokenType`    | String  | No | Any type is accepted | The `typ` header a presented token must carry, such as `at+jwt` for the [RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) JSON Web Token access token profile. Set it whenever the issuer stamps one. An identity token is signed by the same issuer under the same key, and where this policy's `audience` matches the `clientId` of an `oidc` policy on that issuer, the type is the only thing distinguishing the two, so without it an identity token is accepted as an API credential |
 | `/jwksUri`      | String  | No | Discovered from the issuer | The URL of the issuer's JSON Web Key Set. When omitted, it is discovered from the issuer's OpenID Connect metadata at `{issuer}/.well-known/openid-configuration`, which requires the issuer to be an `https` URL that publishes a valid OpenID Provider metadata document. Set it explicitly for an issuer that does not meet that bar |
+| `/claims`       | Object  | No | Any verified token is admitted | The claims a token must carry beyond being valid, as a map from claim name to the values that admit. A token satisfies a rule by carrying any one of its values, and must satisfy every rule declared. The `scope` claim is read as the space-delimited set [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749) defines, so a value matches only as a whole token within it. An array claim matches on any member, and a member that is an object is compared on its `value` sub-attribute, which is the shape [RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) gives group, role, and entitlement claims. Rules on `iss`, `aud`, `exp`, `nbf`, and `iat` are refused, as the policy verifies those itself |
 
 For example, the following instance keeps `/docs` public, gates `/partners`
 behind an API key, and protects `/internal` with a JWT policy that trusts a
@@ -533,6 +534,29 @@ single issuer and audience:
     honouring the response's `Cache-Control` and refreshed when a token presents
     an unrecognised key identifier, so that issuer key rotation is picked up
     without restarting the instance.
+
+To narrow that policy to the machines your issuer marks as belonging to the
+platform group and granting a read scope, declare both as claim rules:
+
+```json title="one.json"
+{
+  "type": "jwt",
+  "name": "internal",
+  "paths": [ "/internal" ],
+  "issuer": "https://accounts.example.com",
+  "audience": "https://schemas.example.com",
+  "algorithms": [ "RS256" ],
+  "claims": {
+    "groups": [ "platform", "oncall" ],
+    "scope": [ "registry:read" ]
+  }
+}
+```
+
+A token is admitted when it belongs to `platform` **or** `oncall`, **and**
+carries the `registry:read` scope. Values within a rule are alternatives, and
+separate rules all have to hold, so widening who a policy admits means adding
+values to one rule rather than adding another.
 
 ### OIDC
 

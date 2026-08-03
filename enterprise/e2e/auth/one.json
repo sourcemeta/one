@@ -85,6 +85,18 @@
       "algorithms": [ "ES256" ]
     },
     {
+      "type": "jwt",
+      "name": "scoped",
+      "paths": [ "/scoped" ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "audience": "https://schemas.example.com",
+      "algorithms": [ "RS256" ],
+      "claims": {
+        "groups": [ "platform" ],
+        "scope": [ "registry:read" ]
+      }
+    },
+    {
       "type": "apiKey",
       "algorithm": "identity",
       "name": "console",
@@ -113,6 +125,7 @@
     "machine": { "path": "./schemas/machine" },
     "telemetry": { "path": "./schemas/telemetry" },
     "strict": { "path": "./schemas/strict" },
+    "scoped": { "path": "./schemas/scoped" },
     "typed": { "path": "./schemas/typed" },
     "console": { "path": "./schemas/console" }
   }

@@ -118,17 +118,20 @@ auto canonical_token_type(const std::string_view token_type) -> std::string {
 }
 
 // The issuer, audience, and key set location are stored as length-prefixed
-// strings, followed by the allow-listed signature algorithms as one byte each.
-// An empty key set location means the location is discovered from the issuer.
-// Both the algorithms and the token type arrive in whatever shape the caller
-// held them, and are reduced here to the single spelling the artifact carries,
-// exactly as a path is. Two policies admitting the same tokens must serialise
-// identically, since that is what decides whether one may reference the other
+// strings, followed by the allow-listed signature algorithms as one byte each,
+// and last the claim rules, which are counted so that a reader reaches them
+// whatever the number of algorithms before them. An empty key set location
+// means the location is discovered from the issuer. Both the algorithms and
+// the token type arrive in whatever shape the caller held them, and are
+// reduced here to the single spelling the artifact carries, exactly as a path
+// is. Two policies admitting the same tokens must serialise identically, since
+// that is what decides whether one may reference the other
 auto encode_jwt_metadata(
     const std::string_view issuer, const std::string_view audience,
     const std::string_view jwks_uri,
     const std::span<const sourcemeta::core::JWSAlgorithm> algorithms,
-    const std::string_view token_type) -> std::vector<std::byte> {
+    const std::string_view token_type, const std::string_view claims)
+    -> std::vector<std::byte> {
   std::vector<std::byte> result;
   append_string(result, issuer);
   append_string(result, audience);
@@ -148,6 +151,7 @@ auto encode_jwt_metadata(
         static_cast<std::byte>(static_cast<std::uint8_t>(algorithm)));
   }
 
+  append_string(result, claims);
   return result;
 }
 
@@ -262,9 +266,9 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   for (const auto &policy : policies) {
     std::vector<std::byte> policy_metadata;
     if (policy.type == Authentication::Type::JWT) {
-      policy_metadata =
-          encode_jwt_metadata(policy.issuer, policy.audience, policy.jwks_uri,
-                              policy.algorithms, policy.token_type);
+      policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
+                                            policy.jwks_uri, policy.algorithms,
+                                            policy.token_type, policy.claims);
     } else if (policy.type == Authentication::Type::OIDC) {
       // A nameless interactive policy could never match a session cookie, and
       // one without a session secret could never mint or verify one, so both

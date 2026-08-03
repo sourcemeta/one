@@ -871,6 +871,67 @@ TEST(authentication_jwt_issuer_trailing_slash_is_dropped) {
             "https://acme.example.com");
 }
 
+TEST(authentication_jwt_claims_become_individual_claim_requests) {
+  // Both the names and the values are declared out of order, so that the order
+  // they were written in does not survive into what is stored
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "RS256" ],
+        "claims": {
+          "groups": [ "platform", "oncall" ],
+          "department": [ "engineering" ]
+        }
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  // A rule is stored as the individual claim request it denotes, with names
+  // and values sorted, since the bytes decide whether two policies count as
+  // one audience
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).claims,
+            sourcemeta::core::parse_json(R"JSON({
+              "department": {
+                "essential": true,
+                "values": [ "engineering" ]
+              },
+              "groups": {
+                "essential": true,
+                "values": [ "oncall", "platform" ]
+              }
+            })JSON"));
+}
+
+TEST(authentication_jwt_without_claims_stores_none) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "jwt",
+        "name": "ci",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "audience": "https://schemas.example.com",
+        "algorithms": [ "RS256" ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_TRUE(configuration.authentication.at(0).claims.is_null());
+}
+
 TEST(authentication_jwt_issuer_with_a_key_set_is_left_alone) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",

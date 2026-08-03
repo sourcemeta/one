@@ -464,6 +464,225 @@
           }
         ]
       }
+    },
+    {
+      "description": "A JWT authentication policy with claim rules is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": {
+              "groups": [ "platform", "oncall" ],
+              "scope": [ "registry:read" ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication policy naming a provider specific claim is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "cognito:groups": [ "platform" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication policy with no claim rule at all is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": {}
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule naming no value is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "groups": [] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule repeating a value is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "groups": [ "platform", "platform" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule naming a non string value is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "groups": [ 1 ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule that is not a list is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "groups": "platform" }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule on the audience is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "aud": [ "https://schemas.example.com" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule on the issuer is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "iss": [ "https://acme.example.com" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication claim rule on an expiry is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "exp": [ "2000000000" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "An apiKey authentication policy with claim rules is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "apiKey",
+            "algorithm": "identity",
+            "name": "internal",
+            "paths": [ "/internal" ],
+            "keys": [ { "environmentVariable": "ONE_KEY" } ],
+            "claims": { "groups": [ "platform" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication policy with claim rules is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "claims": { "groups": [ "platform" ] }
+          }
+        ]
+      }
     }
   ]
 }
