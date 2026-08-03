@@ -194,7 +194,7 @@ jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/mcp/prm/respo
 jsonpath "$.result.resources[27].name" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.result.resources[27].description" == "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[27].size" == 1907
+jsonpath "$.result.resources[27].size" == 2176
 jsonpath "$.result.resources[27].annotations.priority" == 0
 jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One MCP Request"
@@ -642,7 +642,7 @@ jsonpath "$.result.resources[30].uri" == "{{base}}/self/v1/schemas/mcp/prm/respo
 jsonpath "$.result.resources[30].name" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.result.resources[30].description" == "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728"
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[30].size" == 1907
+jsonpath "$.result.resources[30].size" == 2176
 jsonpath "$.result.resources[30].annotations.priority" == 0
 jsonpath "$.result.resources[31].uri" == "{{base}}/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[31].name" == "Sourcemeta One MCP Request"
@@ -1073,7 +1073,7 @@ jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/mcp/prm/respo
 jsonpath "$.result.resources[28].name" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.result.resources[28].description" == "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 1907
+jsonpath "$.result.resources[28].size" == 2176
 jsonpath "$.result.resources[28].annotations.priority" == 0
 jsonpath "$.result.resources[29].uri" == "{{base}}/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[29].name" == "Sourcemeta One MCP Request"
