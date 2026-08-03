@@ -666,8 +666,8 @@
       }
     },
     {
-      "description": "An OIDC authentication policy with claim rules is invalid",
-      "valid": false,
+      "description": "An OIDC authentication policy with claim rules is valid",
+      "valid": true,
       "data": {
         "url": "http://localhost:8000",
         "authentication": [
@@ -680,6 +680,174 @@
             "clientSecret": { "environmentVariable": "ONE_SECRET" },
             "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
             "claims": { "groups": [ "platform" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication policy with email domains is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "example.com", "sub.example.com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain that is not a hostname is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "jane@example.com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain outside ASCII is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "münchen.example", "xn--mnchen-3ya.example" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain carrying a space is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "example .com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain carrying an empty label is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "example..com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain that is a whole URL is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "https://example.com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication policy with no email domain at all is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": []
+          }
+        ]
+      }
+    },
+    {
+      "description": "An apiKey authentication policy with email domains is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "apiKey",
+            "algorithm": "identity",
+            "name": "internal",
+            "paths": [ "/internal" ],
+            "keys": [ { "environmentVariable": "ONE_KEY" } ],
+            "emailDomains": [ "example.com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication policy with email domains is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "emailDomains": [ "example.com" ]
           }
         ]
       }

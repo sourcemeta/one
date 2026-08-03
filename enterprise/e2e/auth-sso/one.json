@@ -8,58 +8,149 @@
     {
       "type": "oidc",
       "name": "keycloak",
-      "paths": [ "/private", "/archive" ],
+      "paths": [
+        "/private",
+        "/archive"
+      ],
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET" } ]
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+        }
+      ]
+    },
+    {
+      "type": "oidc",
+      "name": "team",
+      "paths": [
+        "/team"
+      ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+        }
+      ],
+      "claims": {
+        "groups": [
+          "platform"
+        ]
+      }
+    },
+    {
+      "type": "oidc",
+      "name": "corp",
+      "paths": [
+        "/corp"
+      ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+        }
+      ],
+      "emailDomains": [
+        "acme.test"
+      ]
     },
     {
       "type": "oidc",
       "name": "cleartext",
-      "paths": [ "/discovery" ],
+      "paths": [
+        "/discovery"
+      ],
       "issuer": "https://keycloak:8443/realms/cleartext",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET" } ]
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_CLEARTEXT_SESSION_SECRET"
+        }
+      ]
     },
     {
       "type": "oidc",
       "name": "encrypted",
-      "paths": [ "/discovery" ],
+      "paths": [
+        "/discovery"
+      ],
       "issuer": "https://keycloak:8443/realms/encrypted",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET" } ]
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_ENCRYPTED_SESSION_SECRET"
+        }
+      ]
     },
     {
       "type": "oidc",
       "name": "no-client-secret",
-      "paths": [ "/unavailable" ],
+      "paths": [
+        "/unavailable"
+      ],
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_ABSENT_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_BROKEN_SESSION_SECRET" } ]
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_ABSENT_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_BROKEN_SESSION_SECRET"
+        }
+      ]
     },
     {
       "type": "oidc",
       "name": "no-session-secret",
-      "paths": [ "/unavailable" ],
+      "paths": [
+        "/unavailable"
+      ],
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET" },
-      "sessionSecrets": [ { "environmentVariable": "ONE_E2E_OIDC_ABSENT_SESSION_SECRET" } ]
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_BROKEN_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_ABSENT_SESSION_SECRET"
+        }
+      ]
     },
     {
       "type": "oidc",
       "name": "rotated",
-      "paths": [ "/rotated" ],
+      "paths": [
+        "/rotated"
+      ],
       "issuer": "https://keycloak:8443/realms/main",
       "clientId": "registry",
-      "clientSecret": { "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET" },
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
       "sessionSecrets": [
-        { "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET" },
-        { "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET_OLD" }
+        {
+          "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET"
+        },
+        {
+          "environmentVariable": "ONE_E2E_OIDC_ROTATED_SESSION_SECRET_OLD"
+        }
       ]
     }
   ],
@@ -81,6 +172,12 @@
     },
     "rotated": {
       "path": "./schemas/rotated"
+    },
+    "team": {
+      "path": "./schemas/team"
+    },
+    "corp": {
+      "path": "./schemas/corp"
     }
   }
 }

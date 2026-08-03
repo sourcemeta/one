@@ -2800,6 +2800,112 @@ TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
       authentication.reference_permitted(at("/source/one"), at("/target/two")));
 }
 
+TEST(reference_between_oidc_scopes_distinguishes_claims) {
+  setenv("ONE_TEST_OIDC_REF_CLAIMS", "confidential", 1);
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<std::string_view, 1> gated_paths{{"/gated"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = open_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_CLAIMS",
+        .name = "open",
+        .session_secrets = SESSION_SECRETS_UNUSED},
+       {.paths = gated_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_CLAIMS",
+        .name = "gated",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_ref_claims.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // The same provider client admitting a narrower set of people is a different
+  // audience, so neither direction reaches the other
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/open/one"), at("/gated/two")));
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/gated/two"), at("/open/one")));
+}
+
+TEST(reference_between_oidc_scopes_distinguishes_email_domains) {
+  setenv("ONE_TEST_OIDC_REF_DOMAINS", "confidential", 1);
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> alpha_domains{{"acme.test"}};
+  const std::array<std::string_view, 1> beta_domains{{"other.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .email_domains = alpha_domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_DOMAINS",
+        .name = "alpha",
+        .session_secrets = SESSION_SECRETS_UNUSED},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .email_domains = beta_domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_DOMAINS",
+        .name = "beta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_ref_domains.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+}
+
+TEST(reference_between_oidc_scopes_ignores_how_rules_were_written) {
+  setenv("ONE_TEST_OIDC_REF_SPELLING", "confidential", 1);
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  // The same two domains, written in a different order and a different case
+  const std::array<std::string_view, 2> alpha_domains{
+      {"acme.test", "Other.Test"}};
+  const std::array<std::string_view, 2> beta_domains{
+      {"OTHER.test", "ACME.TEST"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_TWO_GROUPS,
+        .email_domains = alpha_domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SPELLING",
+        .name = "alpha",
+        .session_secrets = SESSION_SECRETS_UNUSED},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_TWO_GROUPS,
+        .email_domains = beta_domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_REF_SPELLING",
+        .name = "beta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_ref_spelling.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A domain names a host, so its case says nothing about who is admitted,
+  // and neither does the order the rules were written in
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+}
+
 TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   setenv("ONE_TEST_KEY_PRINCIPAL", "principal-secret", 1);
   const std::array<std::string_view, 1> paths{{"/internal"}};

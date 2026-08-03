@@ -2,6 +2,75 @@
   "realm": "main",
   "enabled": true,
   "sslRequired": "none",
+  "groups": [
+    {
+      "name": "platform"
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "email",
+      "description": "OpenID Connect built-in scope: email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
   "clients": [
     {
       "clientId": "registry",
@@ -15,13 +84,18 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:8000/self/v1/auth/callback/keycloak"
+        "http://localhost:8000/self/v1/auth/callback/keycloak",
+        "http://localhost:8000/self/v1/auth/callback/team",
+        "http://localhost:8000/self/v1/auth/callback/corp"
       ],
       "fullScopeAllowed": false,
       "defaultClientScopes": [
-        "basic"
+        "basic",
+        "groups"
       ],
-      "optionalClientScopes": [],
+      "optionalClientScopes": [
+        "email"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:8000",
@@ -41,6 +115,24 @@
         {
           "type": "password",
           "value": "jane-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/platform"
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "bob@other.test",
+      "firstName": "Bob",
+      "lastName": "Roe",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob-password",
           "temporary": false
         }
       ]

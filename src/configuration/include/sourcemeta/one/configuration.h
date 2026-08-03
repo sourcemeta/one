@@ -84,6 +84,9 @@ struct Configuration {
     // the values that admit it, in the shape of an OpenID Connect claims
     // request parameter. Null where a policy names no rule
     sourcemeta::core::JSON claims{nullptr};
+    // The email domains that admit a person, lowercased and sorted, since a
+    // domain names a host and the order says nothing about who is admitted
+    std::vector<sourcemeta::core::JSON::String> email_domains;
     sourcemeta::core::JSON::String client_id;
     // The environment variable name holding the client secret
     sourcemeta::core::JSON::String client_secret_variable;

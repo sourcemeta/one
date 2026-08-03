@@ -192,11 +192,35 @@ public:
     redirect_uri += CALLBACK_PATH;
     redirect_uri += policy_name;
 
+    // A provider sends only the claims a request asks for, so a policy whose
+    // rules name any is asked for them here. The standard way is the claims
+    // request parameter, and where a provider does not honour that, the scopes
+    // that carry the standard claims are the fallback. A claim no standard
+    // scope carries is then arranged at the provider instead, since inventing
+    // a scope name risks a request refused outright
+    // The rules outlive every request built from them, since a claim request
+    // names its claim by pointing into them rather than copying
+    const auto rules{policy->claims.empty()
+                         ? std::optional<sourcemeta::core::JSON>{std::nullopt}
+                         : sourcemeta::core::try_parse_json(policy->claims)};
+    const auto wanted{this->wanted_claims(policy.value(), rules)};
+    std::string scope_request;
+    std::string claims_parameter;
+    if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
+      std::ostringstream text;
+      sourcemeta::core::stringify(
+          sourcemeta::core::oidc_build_claims_parameter({}, wanted), text);
+      claims_parameter = text.str();
+    }
+
+    this->requested_scope(wanted, scope_request);
+
     const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
     sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
     authentication_request.client_id = policy->client_id;
     authentication_request.redirect_uri = redirect_uri;
-    authentication_request.scope = "openid";
+    authentication_request.scope = scope_request;
+    authentication_request.claims = claims_parameter;
     authentication_request.response_type = "code";
     authentication_request.state = state;
     authentication_request.code_challenge = {challenge.data(),
@@ -257,6 +281,55 @@ public:
   }
 
 private:
+  // The claims a policy's rules speak about, each asked for as essential, so
+  // that a provider is told what is actually needed rather than being left to
+  // guess from a scope. A domain rule reads an address, so it asks for the
+  // pair OpenID Connect Core Section 5.1 defines for one
+  [[nodiscard]] static auto wanted_claims(
+      const sourcemeta::one::Authentication::InteractivePolicy &policy,
+      const std::optional<sourcemeta::core::JSON> &rules)
+      -> std::vector<sourcemeta::core::OIDCClaimRequest> {
+    std::vector<sourcemeta::core::OIDCClaimRequest> result;
+    if (!policy.email_domains.empty()) {
+      result.push_back({.name = "email", .essential = true});
+      result.push_back({.name = "email_verified", .essential = true});
+    }
+
+    if (!rules.has_value() || !rules.value().is_object()) {
+      return result;
+    }
+
+    for (const auto &rule : rules.value().as_object()) {
+      result.push_back({.name = rule.first, .essential = true});
+    }
+
+    return result;
+  }
+
+  // The scope a login asks for. Every request carries `openid`, and a claim
+  // one of the standard scopes carries adds that scope, which is the only
+  // mapping a specification defines. A claim outside them adds nothing, since
+  // a scope this invented could be refused outright by the provider
+  static auto
+  requested_scope(const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
+                  std::string &sink) -> void {
+    sink += "openid";
+    std::vector<std::string_view> scopes;
+    for (const auto &claim : wanted) {
+      const auto scope{sourcemeta::core::oidc_claim_to_scope(claim.name)};
+      if (scope.has_value() && scope.value() != "openid" &&
+          std::ranges::find(scopes, scope.value()) == scopes.cend()) {
+        scopes.push_back(scope.value());
+      }
+    }
+
+    std::ranges::sort(scopes);
+    for (const auto scope : scopes) {
+      sink += " ";
+      sink += scope;
+    }
+  }
+
   // Every reason a login cannot start answers identically. The login page names
   // its policies to anybody who reaches a gated path, so which policies exist
   // is published rather than secret, but whether one is misconfigured and

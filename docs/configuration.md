@@ -585,6 +585,8 @@ follows is signed with a secret of the instance's own, unrelated to the provider
 | `/sessionSecrets` | Array | :red_circle: **Yes** | N/A | The secrets used to sign the session cookies this instance mints, newest first. These are the instance's own secrets, unrelated to the provider. A cookie is signed under the first and accepted under any, so adding a new secret first and dropping the old one once the sessions signed under it have expired rotates without signing anybody out. Unlike a `jwt` key set, these are read from the environment once at startup, so a change to them takes effect on restart |
 | `/sessionSecrets/*` | Object | :red_circle: **Yes** | N/A | A single session signing secret |
 | `/sessionSecrets/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret. Generate it at random, with at least 32 characters, as with `openssl rand -base64 32`. Everything a session cookie carries but its signature travels in the open, so a secret that can be guessed is one that anybody holding a single cookie can find, after which they can mint sessions of their own |
+| `/claims` | Object | No | Anybody the provider authenticates is admitted | The claims a person must carry, read exactly as on a `jwt` policy. A rule is answered against the identity token, so **every claim a rule names has to reach that token**. The login asks for them through the [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) claims request parameter where the provider supports it, which asks for them there specifically. Otherwise it asks through the scope that carries the claim, and Section 5.4 has a provider return those from the UserInfo endpoint by default under the authorization code flow, so the provider has to be configured to release them into the identity token as well. A claim no standard scope carries, such as `groups`, has to be arranged at the provider either way, since inventing a scope name risks the request being refused outright |
+| `/emailDomains` | Array | No | An address is not consulted | The domains an admitted address sits at, compared against everything after the address's last `@`. Case is folded across ASCII, so a domain reaching beyond it is written either as the provider spells it or in its punycode form. An address only counts when the provider marks it verified, since [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) has a provider assert it checked ownership only then, and without that the address is whatever its holder typed. An address can also change, so this admits and nothing more: no part of the system keys identity off it |
 
 !!! tip
 
@@ -606,6 +608,35 @@ provider, which answers without displaying anything where the sign-in still
 stands. Only a navigation renews: a script calling the API with an expired
 session is denied plainly rather than redirected, since a redirect chain to an
 identity provider is not something it can follow.
+
+To narrow a policy from everyone the provider will authenticate to the people
+you mean, name what they must carry:
+
+```json title="one.json"
+{
+  "type": "oidc",
+  "name": "corporate",
+  "paths": [ "/internal" ],
+  "issuer": "https://accounts.example.com",
+  "clientId": "registry",
+  "clientSecret": { "environmentVariable": "ONE_CLIENT_SECRET" },
+  "sessionSecrets": [ { "environmentVariable": "ONE_SESSION_SECRET" } ],
+  "emailDomains": [ "example.com" ],
+  "claims": { "groups": [ "platform", "oncall" ] }
+}
+```
+
+Somebody is admitted when their verified address sits at `example.com`, **and**
+they belong to `platform` **or** `oncall`. Values within a rule are
+alternatives, and separate rules all have to hold, exactly as on a `jwt` policy.
+
+A rule is answered when somebody signs in, not on every request afterwards. So
+a person the policy will never admit is told once, rather than holding a valid
+session that is refused everywhere, and losing a group at the provider takes
+effect within a session lifetime rather than at once. Tightening a rule in
+`one.json` behaves the same way: existing sessions keep what they had until
+they expire. Removing the policy outright, or rotating its session secrets,
+are the immediate levers.
 
 Because a session is a sealed value rather than a record, nothing can be struck
 out. Signing out takes the session from the browser, so a copy taken beforehand
