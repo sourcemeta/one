@@ -80,6 +80,11 @@ struct Configuration {
     std::vector<sourcemeta::core::JWSAlgorithm> algorithms;
     // The `typ` header a presented token must carry, empty to accept any
     sourcemeta::core::JSON::String token_type;
+    // The claims a credential must carry, as the member map of an OpenID
+    // Connect claims request parameter, so that one document both asks a
+    // provider for what a rule needs and decides admission. Null where a
+    // policy names no rule
+    sourcemeta::core::JSON claims{nullptr};
     sourcemeta::core::JSON::String client_id;
     // The environment variable name holding the client secret
     sourcemeta::core::JSON::String client_secret_variable;

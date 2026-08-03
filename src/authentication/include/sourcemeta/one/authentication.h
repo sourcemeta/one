@@ -128,6 +128,11 @@ public:
     std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
     // The `typ` header a presented token must carry, empty to accept any
     std::string_view token_type{};
+    // The claims a credential must carry, serialised as the member map of an
+    // OpenID Connect claims request parameter. It arrives canonical, so that
+    // two policies admitting the same callers carry identical bytes. Empty
+    // where a policy names no rule
+    std::string_view claims{};
     std::string_view client_id{};
     // The environment variable name holding the client secret
     std::string_view client_secret_variable{};

@@ -2,6 +2,7 @@
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/json.h>
 #include <sourcemeta/core/test.h>
 
 #include <array>       // std::array
@@ -9,7 +10,8 @@
 #include <cstddef>     // std::byte, std::size_t
 #include <cstdlib>     // setenv
 #include <filesystem>  // std::filesystem::path
-#include <fstream>     // std::ofstream, std::fstream
+#include <fstream>     // std::ofstream, std::fstream, std::ifstream
+#include <iterator>    // std::istreambuf_iterator
 #include <map>         // std::map
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional, std::nullopt
@@ -67,9 +69,106 @@ static constexpr std::string_view SIGNED_TOKEN{
     "71QLwLWRFGftU2EAWuqayTSpPeUA6kB4sfn7JNsweqDs7uev30m6y8BE9uzwzHuuovaN1cZz0o"
     "TAGXcx64sfbPs6HEMp5_FoU0SccxArAbnHSjA"};
 static constexpr std::string_view SIGNED_KEYS{
-    R"JSON({ "keys": [ { "kty": "RSA", "n": "oHTpl-jfNfBuXmBp58sW8s_77UP6j2jA0mjjKjhDkxhp7Agk-xLNGgfPCS_bjdZ6YU6FGeab8uVjkSgo9_0OCJUaF4vzEGwXmNuGawANxnZtiYjWvbJlq-2mn_L7rsqGQcSkMmyM0g4aX7dF8wB6DVrXShJ78fcrNtpeoU72YGEdjehA8qVclDFwBdpCGynxxnWJePk72lQb6gkVMqKMc3jBF8GkWf8oP_sjss-fpOjSUMR1c8_0JlTYWO46KWOZa0EO2t8H1V3imMyzbhoxRd_qZHmo46gJkG-ZdebjX0vGQllaCwu0z4kLcXIfAZhqPEkdssDGhC_txwJuhaPDFQ", "e": "AQAB" } ] })JSON"};
+    R"JSON({
+      "keys": [
+        {
+          "kty": "RSA",
+          "n": "oHTpl-jfNfBuXmBp58sW8s_77UP6j2jA0mjjKjhDkxhp7Agk-xLNGgfPCS_bjdZ6YU6FGeab8uVjkSgo9_0OCJUaF4vzEGwXmNuGawANxnZtiYjWvbJlq-2mn_L7rsqGQcSkMmyM0g4aX7dF8wB6DVrXShJ78fcrNtpeoU72YGEdjehA8qVclDFwBdpCGynxxnWJePk72lQb6gkVMqKMc3jBF8GkWf8oP_sjss-fpOjSUMR1c8_0JlTYWO46KWOZa0EO2t8H1V3imMyzbhoxRd_qZHmo46gJkG-ZdebjX0vGQllaCwu0z4kLcXIfAZhqPEkdssDGhC_txwJuhaPDFQ",
+          "e": "AQAB"
+        }
+      ]
+    })JSON"};
 static constexpr std::string_view UNRELATED_KEYS{
-    R"JSON({ "keys": [ { "kty": "RSA", "n": "ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ", "e": "AQAB" } ] })JSON"};
+    R"JSON({
+      "keys": [
+        {
+          "kty": "RSA",
+          "n": "ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ",
+          "e": "AQAB"
+        }
+      ]
+    })JSON"};
+
+// A claim rule is matched against whatever a provider put in a token, so these
+// tests mint their own rather than reuse a fixed vector. The curve keeps the
+// key small enough to read
+static constexpr std::string_view CLAIMS_PRIVATE_KEY{
+    R"JSON({
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "sQbBlwx8VKtzct6SJjoYb4hmXMRIhBdC_rQtfrA7GdU",
+      "y": "gE3c3l2Uux8jUbm0DVEnXwPQlsD7ln4CLWt6FGxNbhk",
+      "d": "n0c-5YK2MYjEvSiF8OOaQOiheqm14U4iN6PdZAGLXOE"
+    })JSON"};
+static constexpr std::string_view CLAIMS_KEYS{
+    R"JSON({
+      "keys": [
+        {
+          "kty": "EC",
+          "crv": "P-256",
+          "x": "sQbBlwx8VKtzct6SJjoYb4hmXMRIhBdC_rQtfrA7GdU",
+          "y": "gE3c3l2Uux8jUbm0DVEnXwPQlsD7ln4CLWt6FGxNbhk"
+        }
+      ]
+    })JSON"};
+
+// Claim rules reach a policy already compiled into individual claim requests
+// (OpenID Connect Core 1.0 Section 5.5.1), with their names and their values
+// sorted, since the serialised bytes are what decide whether two policies
+// count as one audience
+static constexpr std::string_view CLAIMS_ONE_GROUP{
+    R"JSON({
+      "groups": {
+        "essential": true,
+        "values": [ "platform" ]
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_TWO_GROUPS{
+    R"JSON({
+      "groups": {
+        "essential": true,
+        "values": [ "oncall", "platform" ]
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_GROUP_AND_DEPARTMENT{
+    R"JSON({
+      "department": {
+        "essential": true,
+        "values": [ "engineering" ]
+      },
+      "groups": {
+        "essential": true,
+        "values": [ "platform" ]
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_SCOPE{
+    R"JSON({
+      "scope": {
+        "essential": true,
+        "values": [ "registry:read" ]
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_VERIFIED{
+    R"JSON({
+      "verified": {
+        "essential": true,
+        "values": [ "true" ]
+      }
+    })JSON"};
+
+// A token from the issuer and audience the claim tests configure, carrying
+// whatever additional claims a case is about
+static auto token_with(const std::string_view claims) -> std::string {
+  auto payload{sourcemeta::core::parse_json(claims)};
+  payload.assign("iss", sourcemeta::core::JSON{"acme"});
+  payload.assign("aud", sourcemeta::core::JSON{"client"});
+  payload.assign("exp", sourcemeta::core::JSON{2000000000});
+  const auto key{sourcemeta::core::JWKPrivate::from(
+      sourcemeta::core::parse_json(CLAIMS_PRIVATE_KEY))};
+  auto header{sourcemeta::core::JSON::make_object()};
+  header.assign("alg", sourcemeta::core::JSON{"ES256"});
+  return sourcemeta::core::jwt_sign(header, payload, key.value()).value();
+}
 
 // A sealed value carries the instant it was minted, and is only honoured for
 // a bounded interval after it, so these are read from the clock rather than
@@ -1133,12 +1232,16 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path,
-      stub_fetcher(
-          {{"https://acme.test/.well-known/openid-configuration",
-            R"JSON({ "issuer": "https://acme.test", "jwks_uri": "https://acme.test/keys", "response_types_supported": [ "code" ], "subject_types_supported": [ "public" ], "id_token_signing_alg_values_supported": [ "RS256" ] })JSON"},
-           {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-          calls)};
+      path, stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
+                           R"JSON({
+              "issuer": "https://acme.test",
+              "jwks_uri": "https://acme.test/keys",
+              "response_types_supported": [ "code" ],
+              "subject_types_supported": [ "public" ],
+              "id_token_signing_alg_values_supported": [ "RS256" ]
+            })JSON"},
+                          {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+                         calls)};
   // Both the provider metadata and the key set it names are retrieved, and
   // the token then fails only on its issuer claim, which names a different
   // issuer than the policy trusts
@@ -2864,6 +2967,391 @@ TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
   EXPECT_FALSE(
       authentication.admits(at("/secondary/x"), {.bearer = SIGNED_TOKEN})
           .allowed);
+}
+
+TEST(jwt_claims_admit_only_a_token_carrying_a_named_value) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONE_GROUP}}};
+  const auto path{test_path("jwt_claims_value.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(authentication
+                  .admits(at("/secure/x"),
+                          {.bearer = token_with(
+                               R"JSON({ "groups": [ "platform" ] })JSON")})
+                  .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "groups": [ "support" ] })JSON")})
+                   .allowed);
+  // A token the policy would otherwise admit, carrying no such claim at all
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = token_with("{}")})
+          .allowed);
+}
+
+TEST(jwt_claims_admit_any_one_of_the_named_values) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_TWO_GROUPS}}};
+  const auto path{test_path("jwt_claims_alternatives.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(authentication
+                  .admits(at("/secure/x"),
+                          {.bearer = token_with(
+                               R"JSON({ "groups": [ "platform" ] })JSON")})
+                  .allowed);
+  EXPECT_TRUE(authentication
+                  .admits(at("/secure/x"),
+                          {.bearer = token_with(
+                               R"JSON({ "groups": [ "oncall" ] })JSON")})
+                  .allowed);
+  // Belonging to something else as well takes nothing away
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(
+                       R"JSON({ "groups": [ "support", "oncall" ] })JSON")})
+          .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "groups": [ "support" ] })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_require_every_rule_it_declares) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_GROUP_AND_DEPARTMENT}}};
+  const auto path{test_path("jwt_claims_cumulative.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(
+      authentication
+          .admits(
+              at("/secure/x"),
+              {.bearer = token_with(
+                   R"JSON({ "groups": [ "platform" ], "department": "engineering" })JSON")})
+          .allowed);
+  // Either rule alone leaves the other unsatisfied
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "groups": [ "platform" ] })JSON")})
+                   .allowed);
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "department": "engineering" })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_read_a_scope_as_a_space_delimited_set) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_SCOPE}}};
+  const auto path{test_path("jwt_claims_scope.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(authentication
+                  .admits(at("/secure/x"),
+                          {.bearer = token_with(
+                               R"JSON({ "scope": "registry:read" })JSON")})
+                  .allowed);
+  // The value is one of several granted, in any position
+  EXPECT_TRUE(
+      authentication
+          .admits(
+              at("/secure/x"),
+              {.bearer = token_with(
+                   R"JSON({ "scope": "openid registry:read profile" })JSON")})
+          .allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(R"JSON({ "scope": "openid" })JSON")})
+          .allowed);
+  // A granted scope that merely contains the required one as a prefix is a
+  // different grant, and admitting it would hand over what nobody issued
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(
+                       R"JSON({ "scope": "registry:readwrite" })JSON")})
+          .allowed);
+  // Scope values are case-sensitive by RFC 6749 Section 3.3
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "scope": "Registry:Read" })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_match_a_group_object_on_its_identifier_alone) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONE_GROUP}}};
+  const auto path{test_path("jwt_claims_group_object.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // The shape RFC 9068 Section 2.2.3.1 gives the claim by way of RFC 7643
+  EXPECT_TRUE(
+      authentication
+          .admits(
+              at("/secure/x"),
+              {.bearer = token_with(
+                   R"JSON({ "groups": [ { "value": "platform", "display": "Platform" } ] })JSON")})
+          .allowed);
+  // A display name is neither unique nor stable, so admitting on one would let
+  // whoever can rename a group grant access
+  EXPECT_FALSE(
+      authentication
+          .admits(
+              at("/secure/x"),
+              {.bearer = token_with(
+                   R"JSON({ "groups": [ { "value": "g-1", "display": "platform" } ] })JSON")})
+          .allowed);
+}
+
+TEST(jwt_claims_never_match_a_value_that_is_not_a_string) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_VERIFIED}}};
+  const auto path{test_path("jwt_claims_non_string.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(R"JSON({ "verified": true })JSON")})
+          .allowed);
+  EXPECT_FALSE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(R"JSON({ "verified": 1 })JSON")})
+          .allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(R"JSON({ "verified": "true" })JSON")})
+          .allowed);
+}
+
+TEST(jwt_without_claims_admits_a_token_carrying_none) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_claims_absent.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_TRUE(
+      authentication.admits(at("/secure/x"), {.bearer = token_with("{}")})
+          .allowed);
+}
+
+TEST(jwt_claims_that_do_not_parse_deny_everything) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONE_GROUP},
+       {.paths = open_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms}}};
+  const auto path{test_path("jwt_claims_corrupt.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  // Overwrite the first byte of the serialised rules, leaving their length
+  // intact so that they are read but no longer parse
+  std::string buffer;
+  {
+    std::ifstream input{path, std::ios::binary};
+    buffer.assign(std::istreambuf_iterator<char>{input},
+                  std::istreambuf_iterator<char>{});
+  }
+  const auto opening{buffer.find(R"("groups")")};
+  EXPECT_TRUE(opening != std::string::npos);
+  buffer[opening - 1] = '?';
+  {
+    std::ofstream output{path, std::ios::binary | std::ios::trunc};
+    output.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+  }
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // Rules that cannot be read are not passed over, since doing so would drop
+  // the restriction and admit everyone the policy was meant to narrow
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "groups": [ "platform" ] })JSON")})
+                   .allowed);
+  // The whole artifact denies, rather than only the policy that carried them
+  EXPECT_FALSE(
+      authentication.admits(at("/open/x"), {.bearer = token_with("{}")})
+          .allowed);
+}
+
+TEST(reference_between_jwt_scopes_distinguishes_claims) {
+  const std::array<std::string_view, 1> open_paths{{"/open"}};
+  const std::array<std::string_view, 1> gated_paths{{"/gated"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = open_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms},
+       {.paths = gated_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONE_GROUP}}};
+  const auto path{test_path("jwt_claims_reference.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // Two policies alike but for their rules admit different callers, so the
+  // looser one may not reach what the stricter one guards
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/open/one"), at("/gated/two")));
+  // The reverse is refused too, exactly as a differing token type is. A scope
+  // is one indivisible identity rather than a set compared piecewise, so the
+  // cost is a build that has to say so, against disclosing a referent to
+  // somebody the referrer never admitted
+  EXPECT_FALSE(
+      authentication.reference_permitted(at("/gated/two"), at("/open/one")));
+}
+
+TEST(reference_between_jwt_scopes_ignores_the_order_rules_were_written_in) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_TWO_GROUPS},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_TWO_GROUPS}}};
+  const auto path{test_path("jwt_claims_reference_order.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // The rules arrive canonical, so two policies admitting the same callers
+  // carry identical bytes and count as one audience in either direction
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(
+      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_between_jwt_scopes_distinguishes_algorithms) {

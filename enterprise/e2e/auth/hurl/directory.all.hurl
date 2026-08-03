@@ -16,9 +16,9 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 74
+jsonpath "$.schemas" == 75
 jsonpath "$.policies" count == 0
-jsonpath "$.entries" count == 12
+jsonpath "$.entries" count == 13
 jsonpath "$.entries[0].name" == "console"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/console/"
@@ -78,32 +78,39 @@ jsonpath "$.entries[7].policies" count == 1
 jsonpath "$.entries[7].policies[0].name" == "reports"
 jsonpath "$.entries[7].policies[0].title" == "reports"
 jsonpath "$.entries[7].policies[0].type" == "apiKey"
-jsonpath "$.entries[8].name" == "self"
+jsonpath "$.entries[8].name" == "scoped"
 jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].path" == "/self/"
-jsonpath "$.entries[8].title" == "Self"
-jsonpath "$.entries[8].policies" count == 0
-jsonpath "$.entries[9].name" == "strict"
+jsonpath "$.entries[8].path" == "/scoped/"
+jsonpath "$.entries[8].policies" count == 1
+jsonpath "$.entries[8].policies[0].name" == "scoped"
+jsonpath "$.entries[8].policies[0].title" == "scoped"
+jsonpath "$.entries[8].policies[0].type" == "jwt"
+jsonpath "$.entries[9].name" == "self"
 jsonpath "$.entries[9].type" == "directory"
-jsonpath "$.entries[9].path" == "/strict/"
-jsonpath "$.entries[9].policies" count == 1
-jsonpath "$.entries[9].policies[0].name" == "strict"
-jsonpath "$.entries[9].policies[0].title" == "strict"
-jsonpath "$.entries[9].policies[0].type" == "jwt"
-jsonpath "$.entries[10].name" == "telemetry"
+jsonpath "$.entries[9].path" == "/self/"
+jsonpath "$.entries[9].title" == "Self"
+jsonpath "$.entries[9].policies" count == 0
+jsonpath "$.entries[10].name" == "strict"
 jsonpath "$.entries[10].type" == "directory"
-jsonpath "$.entries[10].path" == "/telemetry/"
+jsonpath "$.entries[10].path" == "/strict/"
 jsonpath "$.entries[10].policies" count == 1
-jsonpath "$.entries[10].policies[0].name" == "telemetry"
-jsonpath "$.entries[10].policies[0].title" == "telemetry"
+jsonpath "$.entries[10].policies[0].name" == "strict"
+jsonpath "$.entries[10].policies[0].title" == "strict"
 jsonpath "$.entries[10].policies[0].type" == "jwt"
-jsonpath "$.entries[11].name" == "typed"
+jsonpath "$.entries[11].name" == "telemetry"
 jsonpath "$.entries[11].type" == "directory"
-jsonpath "$.entries[11].path" == "/typed/"
+jsonpath "$.entries[11].path" == "/telemetry/"
 jsonpath "$.entries[11].policies" count == 1
-jsonpath "$.entries[11].policies[0].name" == "typed"
-jsonpath "$.entries[11].policies[0].title" == "typed"
+jsonpath "$.entries[11].policies[0].name" == "telemetry"
+jsonpath "$.entries[11].policies[0].title" == "telemetry"
 jsonpath "$.entries[11].policies[0].type" == "jwt"
+jsonpath "$.entries[12].name" == "typed"
+jsonpath "$.entries[12].type" == "directory"
+jsonpath "$.entries[12].path" == "/typed/"
+jsonpath "$.entries[12].policies" count == 1
+jsonpath "$.entries[12].policies[0].name" == "typed"
+jsonpath "$.entries[12].policies[0].title" == "typed"
+jsonpath "$.entries[12].policies[0].type" == "jwt"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -307,9 +314,10 @@ Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 xpath "string(//title)" != "Unauthorized"
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 9
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 10
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'console']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'scoped']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'typed']]//i[contains(@class, 'bi-lock-fill')])" == 1

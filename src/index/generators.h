@@ -1091,13 +1091,17 @@ struct GENERATE_AUTHENTICATION {
       const sourcemeta::one::Configuration &configuration,
       std::vector<std::vector<std::string_view>> &policy_paths,
       std::vector<std::vector<std::string_view>> &policy_keys,
-      std::vector<std::vector<std::string_view>> &policy_session_secrets)
+      std::vector<std::vector<std::string_view>> &policy_session_secrets,
+      std::vector<std::string> &policy_claims)
       -> std::vector<sourcemeta::one::Authentication::Policy> {
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
     policy_paths.reserve(configuration.authentication.size());
     policy_keys.reserve(configuration.authentication.size());
     policy_session_secrets.reserve(configuration.authentication.size());
+    // The views a policy carries point into here, so this must not grow while
+    // one is held
+    policy_claims.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
@@ -1109,6 +1113,14 @@ struct GENERATE_AUTHENTICATION {
 
       using Entry = sourcemeta::one::Configuration::AuthenticationEntry;
       if (entry.type == Entry::Type::JWT) {
+        // The rules are canonical by the time they arrive, so serialising them
+        // is all that is left to do with them
+        std::ostringstream claims;
+        if (!entry.claims.is_null()) {
+          sourcemeta::core::stringify(entry.claims, claims);
+        }
+
+        policy_claims.push_back(claims.str());
         policies.push_back(
             {.paths = policy_paths.back(),
              .type = sourcemeta::one::Authentication::Type::JWT,
@@ -1118,7 +1130,8 @@ struct GENERATE_AUTHENTICATION {
                              ? std::string_view{entry.jwks_uri.value()}
                              : std::string_view{},
              .algorithms = entry.algorithms,
-             .token_type = entry.token_type});
+             .token_type = entry.token_type,
+             .claims = policy_claims.back()});
       } else if (entry.type == Entry::Type::OIDC) {
         std::vector<std::string_view> session_secrets;
         session_secrets.reserve(entry.session_secret_variables.size());
@@ -1167,8 +1180,9 @@ struct GENERATE_AUTHENTICATION {
     std::vector<std::vector<std::string_view>> policy_paths;
     std::vector<std::vector<std::string_view>> policy_keys;
     std::vector<std::vector<std::string_view>> policy_session_secrets;
+    std::vector<std::string> policy_claims;
     const auto policies{make_policies(configuration, policy_paths, policy_keys,
-                                      policy_session_secrets)};
+                                      policy_session_secrets, policy_claims)};
 
     // A policy gates a route or a declared collection or page (or a namespace
     // above one), never a path inside a collection

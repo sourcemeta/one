@@ -353,11 +353,138 @@ auto decode_jwt_metadata(const std::span<const std::byte> metadata,
   return true;
 }
 
+// The serialised claim rules of a JWT policy, which sit past the algorithms.
+// They are read on their own, since the gate parses them once at startup while
+// admission itself never touches these bytes again
+auto read_jwt_claims(const std::span<const std::byte> metadata,
+                     std::string_view &result) -> bool {
+  std::size_t cursor{0};
+  std::string_view discarded;
+  if (!read_string(metadata, cursor, discarded) ||
+      !read_string(metadata, cursor, discarded) ||
+      !read_string(metadata, cursor, discarded) ||
+      !read_string(metadata, cursor, discarded)) {
+    return false;
+  }
+
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count) || count > metadata.size() - cursor) {
+    return false;
+  }
+
+  cursor += count;
+  return read_string(metadata, cursor, result);
+}
+
+// A single claim value, already reduced from whatever container held it. RFC
+// 9068 Section 2.2.3.1 gives group, role, and entitlement claims the shape RFC
+// 7643 Section 4.1.2 defines, where a member is an object whose `value` is the
+// identifier and whose `display` is a label that is neither unique nor stable,
+// so only the identifier is ever compared. Admitting on a label would let
+// whoever can rename a group grant access
+auto claim_scalar_accepts(const sourcemeta::core::JSON &request,
+                          const sourcemeta::core::JSON &value) -> bool {
+  if (value.is_string()) {
+    return sourcemeta::core::oidc_claim_request_accepts(request, value);
+  }
+
+  if (value.is_object()) {
+    const auto *identifier{value.try_at("value")};
+    return identifier != nullptr && identifier->is_string() &&
+           sourcemeta::core::oidc_claim_request_accepts(request, *identifier);
+  }
+
+  return false;
+}
+
+// An array carries a set the caller belongs to, so any one member satisfying
+// the rule satisfies it
+auto claim_accepts(const sourcemeta::core::JSON &request,
+                   const sourcemeta::core::JSON &value) -> bool {
+  if (value.is_array()) {
+    return std::ranges::any_of(value.as_array(),
+                               [&request](const auto &entry) -> bool {
+                                 return claim_scalar_accepts(request, entry);
+                               });
+  }
+
+  return claim_scalar_accepts(request, value);
+}
+
+// The one claim whose value is a set rather than a value. RFC 6749 Section 3.3
+// makes it a space-delimited, case-sensitive, unordered list, so a rule naming
+// values is satisfied by any one of them being granted, while a rule
+// constraining nothing asks only that a scope be carried at all
+auto scope_accepts(const sourcemeta::core::JSON &payload,
+                   const sourcemeta::core::JSON &request) -> bool {
+  bool constrained{false};
+  if (request.is_object()) {
+    const auto *single{request.try_at("value")};
+    if (single != nullptr && single->is_string()) {
+      constrained = true;
+      if (sourcemeta::core::oauth_has_scope(payload, single->to_string())) {
+        return true;
+      }
+    }
+
+    const auto *values{request.try_at("values")};
+    if (values != nullptr && values->is_array()) {
+      for (const auto &entry : values->as_array()) {
+        if (!entry.is_string()) {
+          continue;
+        }
+
+        constrained = true;
+        if (sourcemeta::core::oauth_has_scope(payload, entry.to_string())) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return !constrained && payload.defines("scope");
+}
+
+// Whether a verified token carries every claim a policy requires. The rules are
+// the member map of a claims request parameter, so each member names a claim
+// and the values it may carry. Values within one rule are alternatives and the
+// rules themselves are cumulative, which is what lets a policy widen who it
+// admits without also widening what they reach
+auto admits_claims(const sourcemeta::core::JSON &payload,
+                   const sourcemeta::core::JSON &rules) -> bool {
+  if (!rules.is_object()) {
+    return true;
+  }
+
+  for (const auto &rule : rules.as_object()) {
+    if (rule.first == "scope") {
+      if (!scope_accepts(payload, rule.second)) {
+        return false;
+      }
+
+      continue;
+    }
+
+    const auto *value{payload.try_at(rule.first)};
+    if (value == nullptr || !claim_accepts(rule.second, *value)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // The reference check treats two JWT policies as the same scope only when
 // every parameter that decides admission matches, so the issuer, audience, key
-// set location, required token type and allowed algorithms count as one
-// indivisible identity, never as separate keys that several policies could
-// satisfy piecewise or in swapped roles.
+// set location, required token type, allowed algorithms and claim rules count
+// as one indivisible identity, never as separate keys that several policies
+// could satisfy piecewise or in swapped roles.
+//
+// The rules belong in that identity for the same reason the token type does. A
+// policy carrying them admits a narrower set than one alike but for them, so
+// leaving them out would let a schema under the looser policy reference one
+// the stricter policy guards, and the check would see two identical audiences
+// where there are two different ones.
 //
 // A policy requiring a token type admits a narrower set than one that does
 // not, so two policies alike but for it are not the same audience either. That
@@ -385,10 +512,18 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
     return;
   }
 
+  cursor += count;
+  std::string_view claims;
+  if (!read_string(metadata, cursor, claims)) {
+    return;
+  }
+
   // The serialized run itself is the key. Its length prefixes keep the fields
-  // delimited, so exactly the equal identities compare equal
+  // delimited, so exactly the equal identities compare equal, and the rules
+  // arrive already canonical so that two spellings of one rule cannot part
+  // policies that admit the same callers
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor + count);
+  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor);
 }
 
 struct OIDCPolicyMetadata {
@@ -508,6 +643,47 @@ struct Authentication::Impl {
     }
 
     const auto *header{view->as<AuthenticationHeader>()};
+
+    // Claim rules are read and parsed once here rather than on each request,
+    // since a request answers a rule by lookup while the bytes behind it never
+    // change. A policy naming none is left null, which every rule vacuously
+    // satisfies.
+    //
+    // Rules that are present but unreadable leave the whole artifact denying
+    // everything, exactly as a malformed header does. Passing over them would
+    // instead drop the restriction and admit every caller the policy would
+    // otherwise have narrowed, which is the one outcome worse than refusing
+    std::vector<sourcemeta::core::JSON> claims;
+    claims.assign(header->policy_count, sourcemeta::core::JSON{nullptr});
+    const auto *policies{
+        view->as<AuthenticationPolicyEntry>(header->policies_offset)};
+    for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::JWT ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      std::string_view serialized;
+      if (!read_jwt_claims({view->as<std::byte>(entry.metadata_offset),
+                            entry.metadata_length},
+                           serialized)) {
+        return;
+      }
+
+      if (serialized.empty()) {
+        continue;
+      }
+
+      auto document{sourcemeta::core::try_parse_json(serialized)};
+      if (!document.has_value() || !document.value().is_object()) {
+        return;
+      }
+
+      claims[index] = std::move(document).value();
+    }
+
     this->nodes_ = view->as<AuthenticationNode>(header->nodes_offset);
     // The edge and string sections are empty when no policy declares a nested
     // prefix, in which case they sit at the end of the buffer and must not be
@@ -523,6 +699,7 @@ struct Authentication::Impl {
       this->policy_count_ = header->policy_count;
     }
 
+    this->claims_ = std::move(claims);
     this->view_ = std::move(view);
   }
 
@@ -620,7 +797,8 @@ struct Authentication::Impl {
       const auto type{static_cast<Authentication::Type>(entry.type)};
       if (type == Authentication::Type::JWT) {
         if (token.has_value() &&
-            this->admits_jwt(metadata, token.value(), required_audience)) {
+            this->admits_jwt(metadata, token.value(), required_audience,
+                             this->claims_[index])) {
           return {.allowed = true,
                   .principal = Authentication::Principal{
                       .type = type, .policy = static_cast<std::size_t>(index)}};
@@ -647,7 +825,8 @@ struct Authentication::Impl {
 
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
                                 const sourcemeta::core::JWT &token,
-                                const std::string_view required_audience) const
+                                const std::string_view required_audience,
+                                const sourcemeta::core::JSON &claims) const
       -> bool {
     JWTPolicy policy;
     if (!decode_jwt_metadata(metadata, policy)) {
@@ -678,7 +857,11 @@ struct Authentication::Impl {
     // The signature and the policy's own audience are already established, so
     // the route's requirement is one more claim read from a token that has
     // been verified rather than a second verification
-    return required_audience.empty() || token.has_audience(required_audience);
+    if (!required_audience.empty() && !token.has_audience(required_audience)) {
+      return false;
+    }
+
+    return admits_claims(token.payload(), claims);
   }
 
   [[nodiscard]] auto
@@ -1202,6 +1385,10 @@ struct Authentication::Impl {
   // keys. Null when the instance is unconfigured or declares no policies
   const void *policies_{nullptr};
   std::uint32_t policy_count_{0};
+
+  // The parsed claim rules of each policy, in the same order as the table
+  // above, null where a policy declares none
+  std::vector<sourcemeta::core::JSON> claims_;
 
   std::unique_ptr<sourcemeta::core::FileView> view_;
 
