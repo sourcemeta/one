@@ -165,6 +165,41 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
   }
 }
 
+namespace {
+
+// The values a policy's `scope` rule names, gathered without repeating one.
+// The views point into the configuration, which outlives the document built
+// from them
+auto collect_scope_rule(const sourcemeta::core::JSON &claims,
+                        std::vector<std::string_view> &result) -> void {
+  if (!claims.is_object()) {
+    return;
+  }
+
+  const auto *rule{claims.try_at("scope")};
+  if (rule == nullptr || !rule->is_object()) {
+    return;
+  }
+
+  const auto *values{rule->try_at("values")};
+  if (values == nullptr || !values->is_array()) {
+    return;
+  }
+
+  for (const auto &value : values->as_array()) {
+    if (!value.is_string()) {
+      continue;
+    }
+
+    const std::string_view entry{value.to_string()};
+    if (std::ranges::find(result, entry) == result.cend()) {
+      result.push_back(entry);
+    }
+  }
+}
+
+} // namespace
+
 auto mcp_resource_identifier(
     const sourcemeta::one::Configuration &configuration,
     const std::string_view endpoint) -> std::string {
@@ -188,6 +223,11 @@ auto generate_protected_resource_metadata(
   // would mint one this instance refuses. Only an issuer whose policy accepts
   // that audience can be named without sending the client into a rejection
   std::vector<std::string_view> servers;
+  // RFC 9728 Section 2 gives these as the scope values used to request access
+  // to this resource, which is exactly what a policy's `scope` rule names. A
+  // client reading them learns what to ask its provider for, rather than
+  // discovering it by being refused
+  std::vector<std::string_view> scopes;
   for (const auto index : authentication.governing(
            sourcemeta::one::Authentication::Path::relative(endpoint))) {
     assert(index < configuration.authentication.size());
@@ -210,17 +250,22 @@ auto generate_protected_resource_metadata(
     if (std::ranges::find(servers, entry.issuer) == servers.cend()) {
       servers.emplace_back(entry.issuer);
     }
+
+    collect_scope_rule(entry.claims, scopes);
   }
 
   if (servers.empty()) {
     return;
   }
 
+  std::ranges::sort(scopes);
+
   static constexpr std::array<std::string_view, 1> BEARER_METHODS{{"header"}};
   sourcemeta::core::OAuthResourceMetadataConfig config;
   config.resource = resource;
   config.authorization_servers = servers;
   config.bearer_methods_supported = BEARER_METHODS;
+  config.scopes_supported = scopes;
 
   // The builder refuses anything a client could not use, which includes a
   // resource identifier that is not an https URL. RFC 9728 Section 1.2 makes

@@ -6,6 +6,7 @@
     {
       "resource": "https://schemas.example.com/self/v1/mcp",
       "authorization_servers": [ "https://login.example.com" ],
+      "scopes_supported": [ "mcp:invoke" ],
       "bearer_methods_supported": [ "header" ]
     }
   ],
@@ -31,6 +32,15 @@
         "x-format-assertion": true,
         "type": "string",
         "format": "uri"
+      }
+    },
+    "scopes_supported": {
+      "description": "The scope values used in authorization requests to request access to this endpoint, taken from the claim rules of the policies that gate it. Absent where no policy names one",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
       }
     },
     "bearer_methods_supported": {

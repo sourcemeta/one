@@ -15,7 +15,13 @@
       "audience": "https://registry:8000/registry/self/v1/mcp",
       "algorithms": [
         "RS256"
-      ]
+      ],
+      "claims": {
+        "scope": [
+          "mcp:invoke",
+          "mcp:read"
+        ]
+      }
     }
   ],
   "contents": {
