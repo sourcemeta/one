@@ -178,6 +178,13 @@ static constexpr std::string_view CLAIMS_SCOPE_UNCONSTRAINED{
         "essential": true
       }
     })JSON"};
+static constexpr std::string_view CLAIMS_GROUPS_NO_VALUES{
+    R"JSON({
+      "groups": {
+        "essential": true,
+        "values": []
+      }
+    })JSON"};
 
 // A token from the issuer and audience the claim tests configure, carrying
 // whatever additional claims a case is about
@@ -3155,6 +3162,33 @@ TEST(jwt_claims_read_a_scope_as_a_space_delimited_set) {
                    .admits(at("/secure/x"),
                            {.bearer = token_with(
                                 R"JSON({ "scope": "Registry:Read" })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_deny_an_ordinary_rule_that_names_no_value) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_GROUPS_NO_VALUES}}};
+  const auto path{test_path("jwt_claims_groups_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // The same reading the scope rule gets, on the path that defers the
+  // comparison rather than making it here
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "groups": [ "platform" ] })JSON")})
                    .allowed);
 }
 
