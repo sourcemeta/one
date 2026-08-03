@@ -2,6 +2,36 @@
   "realm": "main",
   "enabled": true,
   "sslRequired": "none",
+  "groups": [
+    {
+      "name": "platform"
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "groups",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
   "clients": [
     {
       "clientId": "registry",
@@ -19,9 +49,12 @@
       ],
       "fullScopeAllowed": false,
       "defaultClientScopes": [
-        "basic"
+        "basic",
+        "groups"
       ],
-      "optionalClientScopes": [],
+      "optionalClientScopes": [
+        "email"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:8000",
@@ -41,6 +74,24 @@
         {
           "type": "password",
           "value": "jane-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/platform"
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "bob@other.test",
+      "firstName": "Bob",
+      "lastName": "Roe",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob-password",
           "temporary": false
         }
       ]

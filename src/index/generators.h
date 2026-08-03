@@ -1092,7 +1092,8 @@ struct GENERATE_AUTHENTICATION {
       std::vector<std::vector<std::string_view>> &policy_paths,
       std::vector<std::vector<std::string_view>> &policy_keys,
       std::vector<std::vector<std::string_view>> &policy_session_secrets,
-      std::vector<std::string> &policy_claims)
+      std::vector<std::string> &policy_claims,
+      std::vector<std::vector<std::string_view>> &policy_email_domains)
       -> std::vector<sourcemeta::one::Authentication::Policy> {
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
@@ -1102,6 +1103,7 @@ struct GENERATE_AUTHENTICATION {
     // The views a policy carries point into here, so this must not grow while
     // one is held
     policy_claims.reserve(configuration.authentication.size());
+    policy_email_domains.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
@@ -1140,10 +1142,27 @@ struct GENERATE_AUTHENTICATION {
         }
 
         policy_session_secrets.push_back(std::move(session_secrets));
+
+        std::ostringstream claims;
+        if (!entry.claims.is_null()) {
+          sourcemeta::core::stringify(entry.claims, claims);
+        }
+
+        policy_claims.push_back(claims.str());
+
+        std::vector<std::string_view> domains;
+        domains.reserve(entry.email_domains.size());
+        for (const auto &domain : entry.email_domains) {
+          domains.push_back(domain);
+        }
+
+        policy_email_domains.push_back(std::move(domains));
         policies.push_back(
             {.paths = policy_paths.back(),
              .type = sourcemeta::one::Authentication::Type::OIDC,
              .issuer = entry.issuer,
+             .claims = policy_claims.back(),
+             .email_domains = policy_email_domains.back(),
              .client_id = entry.client_id,
              .client_secret_variable = entry.client_secret_variable,
              .name = entry.name,
@@ -1181,8 +1200,10 @@ struct GENERATE_AUTHENTICATION {
     std::vector<std::vector<std::string_view>> policy_keys;
     std::vector<std::vector<std::string_view>> policy_session_secrets;
     std::vector<std::string> policy_claims;
+    std::vector<std::vector<std::string_view>> policy_email_domains;
     const auto policies{make_policies(configuration, policy_paths, policy_keys,
-                                      policy_session_secrets, policy_claims)};
+                                      policy_session_secrets, policy_claims,
+                                      policy_email_domains)};
 
     // A policy gates a route or a declared collection or page (or a namespace
     // above one), never a path inside a collection

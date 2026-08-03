@@ -245,6 +245,21 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         if (title != nullptr) {
           parsed.title = title->to_string();
         }
+
+        const auto *claims{entry.try_at("claims")};
+        if (claims != nullptr) {
+          parsed.claims = claims_from_json(*claims);
+        }
+
+        const auto *domains{entry.try_at("emailDomains")};
+        if (domains != nullptr) {
+          for (const auto &domain : domains->as_array()) {
+            parsed.email_domains.push_back(domain.to_string());
+            sourcemeta::core::to_lowercase(parsed.email_domains.back());
+          }
+
+          std::ranges::sort(parsed.email_domains);
+        }
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =

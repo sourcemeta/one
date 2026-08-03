@@ -549,6 +549,10 @@ auto collect_jwt_identifiers(const std::span<const std::byte> metadata,
 struct OIDCPolicyMetadata {
   std::string_view issuer;
   std::string_view client_id;
+  std::string_view claims;
+  // The domains this policy admits an address at, kept as the bytes they
+  // occupy so that reading a policy costs nothing until one is wanted
+  std::span<const std::byte> email_domains;
   std::string_view client_secret_variable;
   std::string_view name;
   // The variables holding this policy's session secrets, kept as the bytes
@@ -557,11 +561,59 @@ struct OIDCPolicyMetadata {
   std::string_view default_path;
 };
 
+// Walk a counted run of strings, handing each to the caller, answering whether
+// the whole run could be read
+template <typename Callback>
+  requires std::invocable<Callback, std::string_view>
+[[nodiscard]] auto
+each_counted_string(const std::span<const std::byte> metadata,
+                    Callback callback) -> bool {
+  std::size_t cursor{0};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return false;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::string_view value;
+    if (!read_string(metadata, cursor, value)) {
+      return false;
+    }
+
+    callback(value);
+  }
+
+  return true;
+}
+
+// Advance past a counted run of strings, answering the bytes it occupies
+auto read_counted_strings(const std::span<const std::byte> metadata,
+                          std::size_t &cursor,
+                          std::span<const std::byte> &result) -> bool {
+  const auto start{cursor};
+  std::uint32_t count{0};
+  if (!read_u32(metadata, cursor, count)) {
+    return false;
+  }
+
+  for (std::uint32_t index{0}; index < count; index += 1) {
+    std::string_view value;
+    if (!read_string(metadata, cursor, value)) {
+      return false;
+    }
+  }
+
+  result = metadata.subspan(start, cursor - start);
+  return true;
+}
+
 auto decode_oidc_metadata(const std::span<const std::byte> metadata,
                           OIDCPolicyMetadata &result) -> bool {
   std::size_t cursor{0};
   if (!read_string(metadata, cursor, result.issuer) ||
       !read_string(metadata, cursor, result.client_id) ||
+      !read_string(metadata, cursor, result.claims) ||
+      !read_counted_strings(metadata, cursor, result.email_domains) ||
       !read_string(metadata, cursor, result.client_secret_variable) ||
       !read_string(metadata, cursor, result.name)) {
     return false;
@@ -585,48 +637,95 @@ auto decode_oidc_metadata(const std::span<const std::byte> metadata,
   return read_string(metadata, cursor, result.default_path);
 }
 
-// Walk the variables a policy names, newest first, handing each to the caller,
-// answering whether the whole run could be read
-template <typename Callback>
-  requires std::invocable<Callback, std::string_view>
-[[nodiscard]] auto
-each_session_secret_variable(const std::span<const std::byte> metadata,
-                             Callback callback) -> bool {
-  std::size_t cursor{0};
-  std::uint32_t count{0};
-  if (!read_u32(metadata, cursor, count)) {
+// What a login and its callback need of a policy, lifted out of the bytes it
+// is stored as. The domains are copied out, since a caller matching an address
+// against them should not have to know how they are laid out
+auto interactive_policy(const OIDCPolicyMetadata &decoded)
+    -> sourcemeta::one::Authentication::InteractivePolicy {
+  sourcemeta::one::Authentication::InteractivePolicy result;
+  result.issuer = decoded.issuer;
+  result.client_id = decoded.client_id;
+  result.default_path = decoded.default_path;
+  result.claims = decoded.claims;
+  if (!each_counted_string(decoded.email_domains,
+                           [&result](const auto domain) -> void {
+                             result.email_domains.push_back(domain);
+                           })) {
+    result.email_domains.clear();
+  }
+
+  return result;
+}
+
+// Whether an address the provider vouched for sits at one of the domains a
+// policy admits. OpenID Connect Core Section 5.1 has a provider assert it
+// verified ownership of an address only when `email_verified` is true, so
+// without that the address is whatever its holder typed and proves nothing.
+//
+// The comparison takes the last separator, since a quoted local part may
+// legally carry one, and the domain names a host, so it is compared without
+// regard to case against domains the artifact already holds in lower case
+auto admits_email_domain(const sourcemeta::core::JSON &claims,
+                         const std::span<const std::byte> domains) -> bool {
+  const auto *verified{claims.try_at("email_verified")};
+  if (verified == nullptr || !verified->is_boolean() ||
+      !verified->to_boolean()) {
     return false;
   }
 
-  for (std::uint32_t index{0}; index < count; index += 1) {
-    std::string_view variable;
-    if (!read_string(metadata, cursor, variable)) {
-      return false;
-    }
-
-    callback(variable);
+  const auto *address{claims.try_at("email")};
+  if (address == nullptr || !address->is_string()) {
+    return false;
   }
 
-  return true;
+  const auto &value{address->to_string()};
+  const auto separator{value.rfind('@')};
+  if (separator == std::string::npos || separator + 1 >= value.size()) {
+    return false;
+  }
+
+  std::string domain{value.substr(separator + 1)};
+  sourcemeta::core::to_lowercase(domain);
+  bool admitted{false};
+  if (!each_counted_string(domains,
+                           [&admitted, &domain](const auto candidate) -> void {
+                             admitted = admitted || candidate == domain;
+                           })) {
+    return false;
+  }
+
+  return admitted;
 }
 
 // The reference check treats two interactive policies as the same scope only
-// when they authenticate against the same provider client, so the issuer and
-// client identifier count as one indivisible identity, never as separate
-// keys that several policies could satisfy piecewise or in swapped roles
+// when they admit the same people, so the issuer, client identifier, claim
+// rules and email domains count as one indivisible identity, never as separate
+// keys that several policies could satisfy piecewise or in swapped roles.
+//
+// The rules belong in that identity for the same reason a JWT policy's do. A
+// policy carrying them admits a narrower set than one alike but for them, so
+// leaving them out would let a schema under the looser policy reference one
+// the stricter policy guards, and the check would see two identical audiences
+// where there are two different ones
 auto collect_oidc_identifiers(const std::span<const std::byte> metadata,
                               std::unordered_set<std::string_view> &keys)
     -> void {
   std::size_t cursor{0};
   std::string_view issuer;
   std::string_view client_id;
+  std::string_view claims;
+  std::span<const std::byte> email_domains;
   if (!read_string(metadata, cursor, issuer) ||
-      !read_string(metadata, cursor, client_id)) {
+      !read_string(metadata, cursor, client_id) ||
+      !read_string(metadata, cursor, claims) ||
+      !read_counted_strings(metadata, cursor, email_domains)) {
     return;
   }
 
-  // The serialized pair itself is the key. Its length prefixes keep the two
-  // fields delimited, so exactly the equal pairs compare equal
+  // The serialized run itself is the key. Its length prefixes keep the fields
+  // delimited, so exactly the equal identities compare equal, and both the
+  // rules and the domains arrive already canonical so that two spellings of
+  // one rule cannot part policies that admit the same people
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor);
 }
@@ -679,17 +778,27 @@ struct Authentication::Impl {
         view->as<AuthenticationPolicyEntry>(header->policies_offset)};
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::JWT ||
+      const auto type{static_cast<Authentication::Type>(entry.type)};
+      if ((type != Authentication::Type::JWT &&
+           type != Authentication::Type::OIDC) ||
           entry.metadata_length == 0) {
         continue;
       }
 
+      const std::span<const std::byte> metadata{
+          view->as<std::byte>(entry.metadata_offset), entry.metadata_length};
       std::string_view serialized;
-      if (!read_jwt_claims({view->as<std::byte>(entry.metadata_offset),
-                            entry.metadata_length},
-                           serialized)) {
-        return;
+      if (type == Authentication::Type::JWT) {
+        if (!read_jwt_claims(metadata, serialized)) {
+          return;
+        }
+      } else {
+        OIDCPolicyMetadata decoded;
+        if (!decode_oidc_metadata(metadata, decoded)) {
+          return;
+        }
+
+        serialized = decoded.claims;
       }
 
       if (serialized.empty()) {
@@ -1027,10 +1136,49 @@ struct Authentication::Impl {
       return std::nullopt;
     }
 
-    return Authentication::InteractivePolicy{.issuer = decoded.issuer,
-                                             .client_id = decoded.client_id,
-                                             .default_path =
-                                                 decoded.default_path};
+    return interactive_policy(decoded);
+  }
+
+  [[nodiscard]] auto admits_identity(const std::string_view policy,
+                                     const sourcemeta::core::JSON &claims) const
+      -> bool {
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      OIDCPolicyMetadata decoded;
+      if (!decode_oidc_metadata(
+              {this->view_->as<std::byte>(entry.metadata_offset),
+               entry.metadata_length},
+              decoded) ||
+          decoded.name != policy) {
+        continue;
+      }
+
+      // A policy naming domains admits nobody whose address it cannot place,
+      // so one it cannot read denies rather than being passed over
+      std::uint32_t domains{0};
+      std::size_t cursor{0};
+      if (!read_u32(decoded.email_domains, cursor, domains)) {
+        return false;
+      }
+
+      if (domains > 0 && !admits_email_domain(claims, decoded.email_domains)) {
+        return false;
+      }
+
+      return admits_claims(claims, this->claims_[index]);
+    }
+
+    // A name that no interactive policy answers to could never have minted a
+    // session, so nothing it asserts is admitted
+    return false;
   }
 
   [[nodiscard]] auto interactive(const std::string_view path,
@@ -1060,10 +1208,7 @@ struct Authentication::Impl {
           entry.metadata_length};
       OIDCPolicyMetadata decoded;
       if (decode_oidc_metadata(metadata, decoded) && decoded.name == name) {
-        return Authentication::InteractivePolicy{.issuer = decoded.issuer,
-                                                 .client_id = decoded.client_id,
-                                                 .default_path =
-                                                     decoded.default_path};
+        return interactive_policy(decoded);
       }
     }
 
@@ -1087,13 +1232,12 @@ struct Authentication::Impl {
   static auto session_secrets(const std::span<const std::byte> variables)
       -> std::vector<sourcemeta::core::SecureString> {
     std::vector<sourcemeta::core::SecureString> result;
-    if (!each_session_secret_variable(
-            variables, [&result](const auto variable) -> void {
-              auto resolved{resolve_environment(variable)};
-              if (resolved.has_value()) {
-                result.push_back(std::move(resolved.value()));
-              }
-            })) {
+    if (!each_counted_string(variables, [&result](const auto variable) -> void {
+          auto resolved{resolve_environment(variable)};
+          if (resolved.has_value()) {
+            result.push_back(std::move(resolved.value()));
+          }
+        })) {
       return {};
     }
 
@@ -1248,6 +1392,13 @@ struct Authentication::Impl {
       resolved.token_endpoint_basic_auth =
           document.value().supports_token_endpoint_auth_method(
               "client_secret_basic");
+
+      // OpenID Connect Discovery 1.0 Section 3 defaults this to false when a
+      // provider says nothing, so a login falls back to asking through the
+      // scopes that carry a claim rather than sending a parameter that would
+      // be ignored, leaving it with no claims at all
+      resolved.claims_parameter_supported =
+          document.value().supports_claims_parameter();
 
       cached.source = server;
       cached.resolved = std::move(resolved);
@@ -1467,6 +1618,12 @@ auto Authentication::endpoints(const std::string_view policy) const
 auto Authentication::open_session(const std::string_view value) const
     -> std::optional<std::string> {
   return this->impl_->open_session(value);
+}
+
+auto Authentication::admits_identity(const std::string_view policy,
+                                     const sourcemeta::core::JSON &claims) const
+    -> bool {
+  return this->impl_->admits_identity(policy, claims);
 }
 
 auto Authentication::seal(const std::string_view policy, const Purpose purpose,

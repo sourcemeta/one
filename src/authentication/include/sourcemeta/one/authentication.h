@@ -133,6 +133,10 @@ public:
     // two policies admitting the same callers carry identical bytes. Empty
     // where a policy names no rule
     std::string_view claims{};
+    // The email domains that admit a person, beyond whatever the claims
+    // require. A domain cannot be written as a claim value, since it matches
+    // the part of an address after its last separator rather than the whole
+    std::span<const std::string_view> email_domains{};
     std::string_view client_id{};
     // The environment variable name holding the client secret
     std::string_view client_secret_variable{};
@@ -218,6 +222,14 @@ public:
     std::string_view client_id{};
     // The first registry path the policy governs
     std::string_view default_path{};
+    // The claims a person must carry to be admitted, serialised as the member
+    // map of an OpenID Connect claims request parameter. Empty where the
+    // policy names no rule
+    std::string_view claims{};
+    // The email domains that admit a person. A login asks its provider for an
+    // address whenever this is non-empty, since a rule it cannot read admits
+    // nobody
+    std::vector<std::string_view> email_domains{};
   };
 
   // The interactive policy declared under the given name, if any
@@ -241,6 +253,9 @@ public:
     // Whether the provider takes the client secret in an authorization header
     // rather than in the request body
     bool token_endpoint_basic_auth{true};
+    // Whether the provider honours the claims request parameter, which is the
+    // standard way to ask for a claim no standard scope carries
+    bool claims_parameter_supported{false};
   };
 
   // What the named interactive policy's provider says about itself, retrieved
@@ -264,6 +279,19 @@ public:
   // policy established the session rather than choosing one to try
   [[nodiscard]] auto open_session(std::string_view value) const
       -> std::optional<std::string>;
+
+  // Whether the claims a provider asserted about a person satisfy what the
+  // named interactive policy requires of them. The claims are the payload of
+  // an identity token this instance has already validated, so this decides
+  // admission rather than authenticity, and a policy naming no rule admits
+  // whoever its provider vouched for.
+  //
+  // A login asks this before a session is minted rather than the gate asking
+  // it afterwards, so that somebody a policy will never admit is told once,
+  // rather than being sent back to their provider on every request
+  [[nodiscard]] auto admits_identity(std::string_view policy,
+                                     const sourcemeta::core::JSON &claims) const
+      -> bool;
 
   // Sealing is an edition-dependent capability. Where an instance does not
   // offer it, nothing seals and no value opens, so a caller that treats an

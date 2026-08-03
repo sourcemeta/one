@@ -242,6 +242,19 @@ public:
       return;
     }
 
+    // A policy's rules are answered here rather than at the gate, so that a
+    // session only ever exists for somebody the policy admits. Answering it
+    // afterwards would leave a valid session denied on every request, and a
+    // denial asks the provider again, which is a loop rather than an answer
+    if (!authentication.admits_identity(policy_name, token.value().payload())) {
+      sourcemeta::one::HTTP_LOG(
+          "The provider authenticated somebody the policy does not admit, "
+          "for the policy",
+          policy_name);
+      this->not_admitted(silent, transaction.value(), request, response);
+      return;
+    }
+
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       SESSION_LIFETIME};
@@ -635,6 +648,20 @@ private:
                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
                   "urn:sourcemeta:one:auth-incomplete",
                   "The session could not be established");
+  }
+
+  // Somebody the provider vouched for, who this policy does not admit. That is
+  // a different answer from being refused a login, and it is the end of the
+  // road rather than something to try again, so a silent attempt gives up its
+  // marker here exactly as any other failure does and stops asking
+  auto not_admitted(const bool silent,
+                    const sourcemeta::core::JSON &transaction,
+                    sourcemeta::one::HTTPRequest &request,
+                    sourcemeta::one::HTTPResponse &response) const -> void {
+    this->abandon(silent, transaction, request, response,
+                  sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+                  "urn:sourcemeta:one:auth-not-admitted",
+                  "This account is not admitted here");
   }
 
   std::string_view error_schema_;

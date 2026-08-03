@@ -251,6 +251,35 @@
                 },
                 "additionalProperties": false
               },
+              "claims": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "not": {
+                    "enum": [ "iss", "aud", "exp", "nbf", "iat" ]
+                  },
+                  "minLength": 1
+                },
+                "additionalProperties": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "emailDomains": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[^@\\s]+$",
+                  "minLength": 1
+                }
+              },
               "sessionSecrets": {
                 "type": "array",
                 "minItems": 1,

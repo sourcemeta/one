@@ -911,6 +911,67 @@ TEST(authentication_jwt_claims_become_individual_claim_requests) {
             })JSON"));
 }
 
+TEST(authentication_oidc_claims_and_email_domains_are_canonical) {
+  // Both are declared out of order, and a domain in mixed case, so that
+  // neither the order nor the case survives into what is stored
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "oidc",
+        "name": "corporate",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "clientId": "registry",
+        "clientSecret": { "environmentVariable": "ONE_SECRET" },
+        "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+        "emailDomains": [ "Other.Example.COM", "acme.example.com" ],
+        "claims": {
+          "groups": [ "platform", "oncall" ]
+        }
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_EQ(configuration.authentication.at(0).claims,
+            sourcemeta::core::parse_json(R"JSON({
+              "groups": {
+                "essential": true,
+                "values": [ "oncall", "platform" ]
+              }
+            })JSON"));
+  // A domain names a host, so it is compared without regard to case
+  EXPECT_EQ(configuration.authentication.at(0).email_domains,
+            (std::vector<sourcemeta::core::JSON::String>{"acme.example.com",
+                                                         "other.example.com"}));
+}
+
+TEST(authentication_oidc_without_rules_stores_none) {
+  const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
+    "url": "https://example.com",
+    "authentication": [
+      {
+        "type": "oidc",
+        "name": "corporate",
+        "paths": [ "/internal" ],
+        "issuer": "https://acme.example.com",
+        "clientId": "registry",
+        "clientSecret": { "environmentVariable": "ONE_SECRET" },
+        "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ]
+      }
+    ]
+  })JSON")};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, "/tmp/one.json", ".")};
+
+  EXPECT_EQ(configuration.authentication.size(), 1);
+  EXPECT_TRUE(configuration.authentication.at(0).claims.is_null());
+  EXPECT_EQ(configuration.authentication.at(0).email_domains.size(), 0);
+}
+
 TEST(authentication_jwt_without_claims_stores_none) {
   const auto raw_configuration{sourcemeta::core::parse_json(R"JSON({
     "url": "https://example.com",
