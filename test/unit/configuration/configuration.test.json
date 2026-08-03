@@ -704,7 +704,7 @@
       }
     },
     {
-      "description": "An OIDC authentication email domain carrying a separator is invalid",
+      "description": "An OIDC authentication email domain that is not a hostname is invalid",
       "valid": false,
       "data": {
         "url": "http://localhost:8000",
@@ -718,6 +718,82 @@
             "clientSecret": { "environmentVariable": "ONE_SECRET" },
             "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
             "emailDomains": [ "jane@example.com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain outside ASCII is valid",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "münchen.example", "xn--mnchen-3ya.example" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain carrying a space is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "example .com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain carrying an empty label is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "example..com" ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication email domain that is a whole URL is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "emailDomains": [ "https://example.com" ]
           }
         ]
       }

@@ -275,9 +275,9 @@
                 "minItems": 1,
                 "uniqueItems": true,
                 "items": {
+                  "x-format-assertion": true,
                   "type": "string",
-                  "pattern": "^[^@\\s]+$",
-                  "minLength": 1
+                  "format": "idn-hostname"
                 }
               },
               "sessionSecrets": {
