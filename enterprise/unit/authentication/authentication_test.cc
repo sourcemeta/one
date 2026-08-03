@@ -156,6 +156,29 @@ static constexpr std::string_view CLAIMS_VERIFIED{
       }
     })JSON"};
 
+// Rules the indexer never emits, since the configuration format refuses them,
+// which a corrupt artifact could still carry into the gate
+static constexpr std::string_view CLAIMS_SCOPE_NO_VALUES{
+    R"JSON({
+      "scope": {
+        "essential": true,
+        "values": []
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_SCOPE_UNREADABLE{
+    R"JSON({
+      "scope": {
+        "essential": true,
+        "values": [ 42 ]
+      }
+    })JSON"};
+static constexpr std::string_view CLAIMS_SCOPE_UNCONSTRAINED{
+    R"JSON({
+      "scope": {
+        "essential": true
+      }
+    })JSON"};
+
 // A token from the issuer and audience the claim tests configure, carrying
 // whatever additional claims a case is about
 static auto token_with(const std::string_view claims) -> std::string {
@@ -2317,7 +2340,7 @@ TEST(a_provider_naming_no_authentication_method_takes_the_header) {
          "authorization_endpoint": "https://login.test/authorize",
          "token_endpoint": "https://login.test/token",
          "jwks_uri": "https://login.test/jwks",
-         
+
          "response_types_supported": [ "code" ],
          "subject_types_supported": [ "public" ],
          "id_token_signing_alg_values_supported": [ "RS256" ]
@@ -3135,6 +3158,95 @@ TEST(jwt_claims_read_a_scope_as_a_space_delimited_set) {
                    .allowed);
 }
 
+TEST(jwt_claims_deny_a_scope_rule_that_names_no_value) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_SCOPE_NO_VALUES}}};
+  const auto path{test_path("jwt_claims_scope_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // An allow list naming nothing admits nobody, rather than widening to
+  // every token that carries any scope at all
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "scope": "registry:read" })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_deny_a_scope_rule_this_cannot_read) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_SCOPE_UNREADABLE}}};
+  const auto path{test_path("jwt_claims_scope_unreadable.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // A value that is not a scope token denies, since passing it over would
+  // leave a rule that admits every token carrying any scope
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "scope": "registry:read" })JSON")})
+                   .allowed);
+}
+
+TEST(jwt_claims_scope_without_a_constraint_still_requires_a_scope) {
+  const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_SCOPE_UNCONSTRAINED}}};
+  const auto path{test_path("jwt_claims_scope_open.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  // Constraining no value asks only that a scope be carried, so any one does
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/secure/x"),
+                  {.bearer = token_with(R"JSON({ "scope": "anything" })JSON")})
+          .allowed);
+  EXPECT_FALSE(
+      authentication.admits(at("/secure/x"), {.bearer = token_with("{}")})
+          .allowed);
+  // A scope that is not a space-delimited string grants nothing this can read
+  EXPECT_FALSE(authentication
+                   .admits(at("/secure/x"),
+                           {.bearer = token_with(
+                                R"JSON({ "scope": [ "anything" ] })JSON")})
+                   .allowed);
+}
+
 TEST(jwt_claims_match_a_group_object_on_its_identifier_alone) {
   const std::array<std::string_view, 1> paths{{"/secure"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
@@ -3260,7 +3372,10 @@ TEST(jwt_claims_that_do_not_parse_deny_everything) {
                   std::istreambuf_iterator<char>{});
   }
   const auto opening{buffer.find(R"("groups")")};
-  EXPECT_TRUE(opening != std::string::npos);
+  if (opening == std::string::npos || opening == 0) {
+    throw std::runtime_error{"Could not locate the serialized claim rules"};
+  }
+
   buffer[opening - 1] = '?';
   {
     std::ofstream output{path, std::ios::binary | std::ios::trunc};

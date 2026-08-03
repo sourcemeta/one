@@ -316,6 +316,94 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "ci-group-only",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ci-group-only-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "basic",
+        "registry:readwrite"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "https://schemas.example.com",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "claim.value": "[\"platform\"]",
+            "jsonType.label": "JSON",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "ci-scope-only",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ci-scope-only-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "basic",
+        "registry:read"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "https://schemas.example.com",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "claim.value": "[\"support\"]",
+            "jsonType.label": "JSON",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
     }
   ],
   "users": [

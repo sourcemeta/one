@@ -414,35 +414,55 @@ auto claim_accepts(const sourcemeta::core::JSON &request,
 // The one claim whose value is a set rather than a value. RFC 6749 Section 3.3
 // makes it a space-delimited, case-sensitive, unordered list, so a rule naming
 // values is satisfied by any one of them being granted, while a rule
-// constraining nothing asks only that a scope be carried at all
+// constraining nothing asks only that a scope be carried at all.
+//
+// A constraint this cannot read denies rather than being passed over. Passing
+// over one would widen the rule to every token carrying any scope, so the
+// nearer a rule is to unreadable the more it would admit
 auto scope_accepts(const sourcemeta::core::JSON &payload,
                    const sourcemeta::core::JSON &request) -> bool {
-  bool constrained{false};
-  if (request.is_object()) {
-    const auto *single{request.try_at("value")};
-    if (single != nullptr && single->is_string()) {
-      constrained = true;
-      if (sourcemeta::core::oauth_has_scope(payload, single->to_string())) {
-        return true;
-      }
+  const auto *granted{payload.try_at("scope")};
+  if (granted == nullptr || !granted->is_string()) {
+    return false;
+  }
+
+  if (!request.is_object()) {
+    return true;
+  }
+
+  const auto *single{request.try_at("value")};
+  const auto *values{request.try_at("values")};
+  if (single == nullptr && values == nullptr) {
+    return true;
+  }
+
+  if (single != nullptr) {
+    if (!single->is_string()) {
+      return false;
     }
 
-    const auto *values{request.try_at("values")};
-    if (values != nullptr && values->is_array()) {
-      for (const auto &entry : values->as_array()) {
-        if (!entry.is_string()) {
-          continue;
-        }
+    if (sourcemeta::core::oauth_has_scope(payload, single->to_string())) {
+      return true;
+    }
+  }
 
-        constrained = true;
-        if (sourcemeta::core::oauth_has_scope(payload, entry.to_string())) {
-          return true;
-        }
+  if (values != nullptr) {
+    if (!values->is_array()) {
+      return false;
+    }
+
+    for (const auto &entry : values->as_array()) {
+      if (!entry.is_string()) {
+        return false;
+      }
+
+      if (sourcemeta::core::oauth_has_scope(payload, entry.to_string())) {
+        return true;
       }
     }
   }
 
-  return !constrained && payload.defines("scope");
+  return false;
 }
 
 // Whether a verified token carries every claim a policy requires. The rules are
