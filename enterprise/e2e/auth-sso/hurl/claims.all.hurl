@@ -20,14 +20,15 @@ Cache-Control: no-store
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/auth?"
 header "Location" contains "client_id=registry"
 header "Location" contains "scope=openid%20email"
+header "Location" contains "claims=%7B%22id_token%22%3A%7B%22email%22%3A%7B%22essential%22%3Atrue%7D%2C%22email_verified%22%3A%7B%22essential%22%3Atrue%7D%7D%7D"
 header "Location" contains "code_challenge_method=S256"
 header "Location" contains "state="
 header "Location" contains "nonce="
 cookie "sourcemeta_one_transaction" exists
 
 # A group is carried by no standard scope, so nothing is invented for it. The
-# provider is asked through the claims request parameter instead, and arranges
-# the claim itself
+# provider is asked through the claims request parameter instead, naming the
+# claim against the identity token, which is what a rule is answered against
 GET {{base}}/self/v1/auth/login/team
 HTTP 303
 Cache-Control: no-store
@@ -37,6 +38,7 @@ header "Location" contains "client_id=registry"
 header "Location" contains "scope=openid"
 header "Location" not contains "scope=openid%20groups"
 header "Location" not contains "%20groups"
+header "Location" contains "claims=%7B%22id_token%22%3A%7B%22groups%22%3A%7B%22essential%22%3Atrue%7D%7D%7D"
 cookie "sourcemeta_one_transaction" exists
 
 # The gated collections are closed to anybody carrying nothing
@@ -118,10 +120,10 @@ Access-Control-Expose-Headers: Link, ETag
 root_listing: body
 root_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.entries[?(@.name == 'team')].policies[0].name" nth 0 == "team"
-jsonpath "$.entries[?(@.name == 'team')].policies[0].type" nth 0 == "oidc"
-jsonpath "$.entries[?(@.name == 'corp')].policies[0].name" nth 0 == "corp"
-jsonpath "$.entries[?(@.name == 'corp')].policies[0].type" nth 0 == "oidc"
+jsonpath "$.entries[?(@.name == 'team')].policies[0].name" == "team"
+jsonpath "$.entries[?(@.name == 'team')].policies[0].type" == "oidc"
+jsonpath "$.entries[?(@.name == 'corp')].policies[0].name" == "corp"
+jsonpath "$.entries[?(@.name == 'corp')].policies[0].type" == "oidc"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```

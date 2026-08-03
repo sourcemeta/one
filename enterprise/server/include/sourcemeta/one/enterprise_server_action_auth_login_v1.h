@@ -198,7 +198,12 @@ public:
     // that carry the standard claims are the fallback. A claim no standard
     // scope carries is then arranged at the provider instead, since inventing
     // a scope name risks a request refused outright
-    const auto wanted{this->wanted_claims(policy.value())};
+    // The rules outlive every request built from them, since a claim request
+    // names its claim by pointing into them rather than copying
+    const auto rules{policy->claims.empty()
+                         ? std::optional<sourcemeta::core::JSON>{std::nullopt}
+                         : sourcemeta::core::try_parse_json(policy->claims)};
+    const auto wanted{this->wanted_claims(policy.value(), rules)};
     std::string scope_request;
     std::string claims_parameter;
     if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
@@ -281,7 +286,8 @@ private:
   // guess from a scope. A domain rule reads an address, so it asks for the
   // pair OpenID Connect Core Section 5.1 defines for one
   [[nodiscard]] static auto wanted_claims(
-      const sourcemeta::one::Authentication::InteractivePolicy &policy)
+      const sourcemeta::one::Authentication::InteractivePolicy &policy,
+      const std::optional<sourcemeta::core::JSON> &rules)
       -> std::vector<sourcemeta::core::OIDCClaimRequest> {
     std::vector<sourcemeta::core::OIDCClaimRequest> result;
     if (!policy.email_domains.empty()) {
@@ -289,11 +295,6 @@ private:
       result.push_back({.name = "email_verified", .essential = true});
     }
 
-    if (policy.claims.empty()) {
-      return result;
-    }
-
-    const auto rules{sourcemeta::core::try_parse_json(policy.claims)};
     if (!rules.has_value() || !rules.value().is_object()) {
       return result;
     }
