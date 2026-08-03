@@ -17,7 +17,10 @@
 #include <algorithm>   // std::ranges::find, std::ranges::sort
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::less
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional, std::nullopt
+#include <set>         // std::set
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -351,15 +354,31 @@ private:
       return;
     }
 
+    // Anybody at all may start a login, so saying this on every attempt would
+    // leave a stranger able to bury everything else in the log. What it says
+    // concerns a policy and its provider rather than the attempt that
+    // surfaced it, so saying it once says all of it
+    static std::mutex mutex;
+    static std::set<std::string, std::less<>> reported;
+
     for (const auto &claim : wanted) {
-      if (std::ranges::find(endpoints.claims_supported, claim.name) ==
+      if (std::ranges::find(endpoints.claims_supported, claim.name) !=
           endpoints.claims_supported.cend()) {
-        sourcemeta::one::HTTP_LOG(
-            "The provider does not advertise a claim this policy requires, so "
-            "the rule naming it may never match, for the policy",
-            policy_name);
-        sourcemeta::one::HTTP_LOG("The claim in question is", claim.name);
+        continue;
       }
+
+      std::string subject{claim.name};
+      subject += " of the policy ";
+      subject += policy_name;
+      const std::scoped_lock guard{mutex};
+      if (!reported.insert(subject).second) {
+        continue;
+      }
+
+      sourcemeta::one::HTTP_LOG(
+          "The provider does not advertise a claim a rule requires, so the "
+          "rule may never match. The claim is",
+          subject);
     }
   }
 

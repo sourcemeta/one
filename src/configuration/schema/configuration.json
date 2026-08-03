@@ -167,6 +167,17 @@
                   },
                   "minLength": 1
                 },
+                "properties": {
+                  "scope": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[\\x21\\x23-\\x5B\\x5D-\\x7E]+$"
+                    }
+                  }
+                },
                 "additionalProperties": {
                   "type": "array",
                   "minItems": 1,
@@ -259,6 +270,17 @@
                     "enum": [ "iss", "aud", "exp", "nbf", "iat" ]
                   },
                   "minLength": 1
+                },
+                "properties": {
+                  "scope": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[\\x21\\x23-\\x5B\\x5D-\\x7E]+$"
+                    }
+                  }
                 },
                 "additionalProperties": {
                   "type": "array",

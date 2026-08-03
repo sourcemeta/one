@@ -35,12 +35,14 @@
       }
     },
     "scopes_supported": {
-      "description": "The scope values used in authorization requests to request access to this endpoint, taken from the claim rules of the policies that gate it. Absent where no policy names one",
+      "description": "The scope values used in authorization requests to request access to this endpoint, taken from the claim rules of the policies that gate it. Absent where no policy names one, since RFC 9728 admits no empty array here",
       "type": "array",
+      "minItems": 1,
       "uniqueItems": true,
       "items": {
+        "description": "A single scope token, whose character set RFC 6749 Section 3.3 defines to exclude the space that separates them, along with the quote and backslash",
         "type": "string",
-        "minLength": 1
+        "pattern": "^[\\x21\\x23-\\x5B\\x5D-\\x7E]+$"
       }
     },
     "bearer_methods_supported": {
