@@ -681,15 +681,21 @@ auto admits_email_domain(const sourcemeta::core::JSON &claims,
   using Admission = sourcemeta::one::Authentication::Admission;
   const auto *verified{claims.try_at("email_verified")};
   const auto *address{claims.try_at("email")};
-  // Neither of them having arrived is a question the provider may still
-  // answer, while an address it declines to vouch for is an answer given
-  if (verified == nullptr || address == nullptr) {
-    return Admission::Incomplete;
+  // Whatever arrived is judged before whatever did not. An address the
+  // provider declines to vouch for is an answer already given, and it stays
+  // given however much its companion might still turn up elsewhere
+  if (verified != nullptr &&
+      (!verified->is_boolean() || !verified->to_boolean())) {
+    return Admission::Refused;
   }
 
-  if (!verified->is_boolean() || !verified->to_boolean() ||
-      !address->is_string()) {
+  if (address != nullptr && !address->is_string()) {
     return Admission::Refused;
+  }
+
+  // Only absence is worth a second question
+  if (verified == nullptr || address == nullptr) {
+    return Admission::Incomplete;
   }
 
   const auto &value{address->to_string()};

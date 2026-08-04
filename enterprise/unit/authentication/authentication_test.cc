@@ -1455,6 +1455,93 @@ TEST(oidc_identity_refused_by_one_rule_is_refused_whatever_another_wants) {
             Admission::Admitted);
 }
 
+TEST(oidc_identity_refuses_an_unvouched_address_whose_companion_is_absent) {
+  setenv("ONE_TEST_OIDC_ADMIT_UNVOUCHED", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_UNVOUCHED",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_unvouched.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  // The provider saying it will not vouch is an answer, so the address that
+  // never arrived cannot turn it into a question worth asking again
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email_verified": false
+                })JSON")),
+            Admission::Refused);
+  // An address that is not one settles it the same way
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email": 42
+                })JSON")),
+            Admission::Refused);
+  // Absence alone is what leaves the question open
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2"
+                })JSON")),
+            Admission::Incomplete);
+}
+
+TEST(oidc_identity_admits_rules_split_across_two_answers) {
+  setenv("ONE_TEST_OIDC_ADMIT_SPLIT", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_SPLIT",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_split.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  // What a token carried and what a second answer added have to be judged
+  // together, since either half alone refuses somebody both halves admit
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "groups": [ "platform" ]
+                })JSON")),
+            Admission::Incomplete);
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email": "jane@acme.test",
+                  "email_verified": true
+                })JSON")),
+            Admission::Incomplete);
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "groups": [ "platform" ],
+                  "email": "jane@acme.test",
+                  "email_verified": true
+                })JSON")),
+            Admission::Admitted);
+}
+
 TEST(oidc_identity_under_an_unknown_policy_is_refused) {
   setenv("ONE_TEST_OIDC_ADMIT_UNKNOWN", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

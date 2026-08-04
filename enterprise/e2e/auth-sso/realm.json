@@ -111,7 +111,8 @@
         "http://localhost:8000/self/v1/auth/callback/keycloak",
         "http://localhost:8000/self/v1/auth/callback/team",
         "http://localhost:8000/self/v1/auth/callback/corp",
-        "http://localhost:8000/self/v1/auth/callback/desk"
+        "http://localhost:8000/self/v1/auth/callback/desk",
+        "http://localhost:8000/self/v1/auth/callback/split"
       ],
       "fullScopeAllowed": false,
       "defaultClientScopes": [

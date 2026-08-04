@@ -263,7 +263,8 @@ public:
                                       grant.value().access_token,
                                       identity.value().subject)};
       if (extra.has_value()) {
-        admission = authentication.admits_identity(policy_name, extra.value());
+        admission = authentication.admits_identity(
+            policy_name, merged(token.value().payload(), extra.value()));
       }
     }
 
@@ -637,6 +638,35 @@ private:
     } catch (...) {
       return std::nullopt;
     }
+  }
+
+  // What the provider said about a person, taken together. A rule may name one
+  // claim the token carried and another only the UserInfo endpoint answers
+  // for, and either half alone would refuse somebody both halves admit.
+  //
+  // The token wins wherever both speak. It arrives signed and is verified
+  // before anything here runs, while a UserInfo response is protected only by
+  // the transport that carried it, so it fills gaps rather than overruling
+  // what a signature already established
+  [[nodiscard]] static auto merged(const sourcemeta::core::JSON &token,
+                                   const sourcemeta::core::JSON &extra)
+      -> sourcemeta::core::JSON {
+    if (!extra.is_object()) {
+      return token;
+    }
+
+    auto result{token};
+    if (!result.is_object()) {
+      return result;
+    }
+
+    for (const auto &claim : extra.as_object()) {
+      if (!result.defines(claim.first)) {
+        result.assign(claim.first, claim.second);
+      }
+    }
+
+    return result;
   }
 
   // What a provider answers at its UserInfo endpoint, which under the

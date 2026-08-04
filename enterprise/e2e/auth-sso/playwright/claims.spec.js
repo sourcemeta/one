@@ -92,6 +92,17 @@ test.describe('Admission by the claims a provider asserts', () => {
     await expect(page).toHaveTitle('Sign In');
   });
 
+  test('rules split across the token and UserInfo are read together', async ({
+    page,
+  }) => {
+    // The group only reaches the identity token and the department only the
+    // UserInfo endpoint, so judging either answer alone refuses Jane
+    await page.goto('/split/');
+    await signIn(page, 'split', 'jane', 'jane-password');
+    await expect(page).toHaveURL(/\/split\/$/);
+    await expect(page.locator('table a', { hasText: 'record' })).toBeVisible();
+  });
+
   test('a policy naming no rule still admits whoever signs in', async ({
     page,
   }) => {
