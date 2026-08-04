@@ -86,8 +86,8 @@ auto Authentication::open_session(const std::string_view) const
 
 auto Authentication::admits_identity(const std::string_view,
                                      const sourcemeta::core::JSON &) const
-    -> bool {
-  return false;
+    -> Authentication::Admission {
+  return Authentication::Admission::Refused;
 }
 
 auto Authentication::seal(const std::string_view, const Purpose,

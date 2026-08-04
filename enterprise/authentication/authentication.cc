@@ -471,27 +471,37 @@ auto scope_accepts(const sourcemeta::core::JSON &payload,
 // rules themselves are cumulative, which is what lets a policy widen who it
 // admits without also widening what they reach
 auto admits_claims(const sourcemeta::core::JSON &payload,
-                   const sourcemeta::core::JSON &rules) -> bool {
+                   const sourcemeta::core::JSON &rules)
+    -> sourcemeta::one::Authentication::Admission {
+  using Admission = sourcemeta::one::Authentication::Admission;
   if (!rules.is_object()) {
-    return true;
+    return Admission::Admitted;
   }
 
+  // A claim that never arrived is a question somewhere else may still answer,
+  // so it is held apart from one that arrived and fell short. Every rule is
+  // still read, since a rule already refused settles the whole thing whatever
+  // a later question would return
+  auto outcome{Admission::Admitted};
   for (const auto &rule : rules.as_object()) {
-    if (rule.first == "scope") {
-      if (!scope_accepts(payload, rule.second)) {
-        return false;
+    const auto *value{payload.try_at(rule.first)};
+    if (value == nullptr) {
+      if (outcome == Admission::Admitted) {
+        outcome = Admission::Incomplete;
       }
 
       continue;
     }
 
-    const auto *value{payload.try_at(rule.first)};
-    if (value == nullptr || !claim_accepts(rule.second, *value)) {
-      return false;
+    const auto accepted{rule.first == "scope"
+                            ? scope_accepts(payload, rule.second)
+                            : claim_accepts(rule.second, *value)};
+    if (!accepted) {
+      return Admission::Refused;
     }
   }
 
-  return true;
+  return outcome;
 }
 
 // The reference check treats two JWT policies as the same scope only when
@@ -666,22 +676,26 @@ auto interactive_policy(const OIDCPolicyMetadata &decoded)
 // legally carry one, and the domain names a host, so it is compared without
 // regard to case against domains the artifact already holds in lower case
 auto admits_email_domain(const sourcemeta::core::JSON &claims,
-                         const std::span<const std::byte> domains) -> bool {
+                         const std::span<const std::byte> domains)
+    -> sourcemeta::one::Authentication::Admission {
+  using Admission = sourcemeta::one::Authentication::Admission;
   const auto *verified{claims.try_at("email_verified")};
-  if (verified == nullptr || !verified->is_boolean() ||
-      !verified->to_boolean()) {
-    return false;
+  const auto *address{claims.try_at("email")};
+  // Neither of them having arrived is a question the provider may still
+  // answer, while an address it declines to vouch for is an answer given
+  if (verified == nullptr || address == nullptr) {
+    return Admission::Incomplete;
   }
 
-  const auto *address{claims.try_at("email")};
-  if (address == nullptr || !address->is_string()) {
-    return false;
+  if (!verified->is_boolean() || !verified->to_boolean() ||
+      !address->is_string()) {
+    return Admission::Refused;
   }
 
   const auto &value{address->to_string()};
   const auto separator{value.rfind('@')};
   if (separator == std::string::npos || separator + 1 >= value.size()) {
-    return false;
+    return Admission::Refused;
   }
 
   std::string domain{value.substr(separator + 1)};
@@ -691,10 +705,10 @@ auto admits_email_domain(const sourcemeta::core::JSON &claims,
                            [&admitted, &domain](const auto candidate) -> void {
                              admitted = admitted || candidate == domain;
                            })) {
-    return false;
+    return Admission::Refused;
   }
 
-  return admitted;
+  return admitted ? Admission::Admitted : Admission::Refused;
 }
 
 // The reference check treats two interactive policies as the same scope only
@@ -990,7 +1004,8 @@ struct Authentication::Impl {
       return false;
     }
 
-    return admits_claims(token.payload(), claims);
+    return admits_claims(token.payload(), claims) ==
+           Authentication::Admission::Admitted;
   }
 
   [[nodiscard]] auto
@@ -1141,7 +1156,7 @@ struct Authentication::Impl {
 
   [[nodiscard]] auto admits_identity(const std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
-      -> bool {
+      -> Authentication::Admission {
     const auto *policies{
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
@@ -1166,19 +1181,28 @@ struct Authentication::Impl {
       std::uint32_t domains{0};
       std::size_t cursor{0};
       if (!read_u32(decoded.email_domains, cursor, domains)) {
-        return false;
+        return Authentication::Admission::Refused;
       }
 
-      if (domains > 0 && !admits_email_domain(claims, decoded.email_domains)) {
-        return false;
+      const auto address{
+          domains > 0 ? admits_email_domain(claims, decoded.email_domains)
+                      : Authentication::Admission::Admitted};
+      if (address == Authentication::Admission::Refused) {
+        return address;
       }
 
-      return admits_claims(claims, this->claims_[index]);
+      const auto rules{admits_claims(claims, this->claims_[index])};
+      if (rules == Authentication::Admission::Refused) {
+        return rules;
+      }
+
+      // Either half wanting more is the whole wanting more
+      return rules == Authentication::Admission::Incomplete ? rules : address;
     }
 
     // A name that no interactive policy answers to could never have minted a
     // session, so nothing it asserts is admitted
-    return false;
+    return Authentication::Admission::Refused;
   }
 
   [[nodiscard]] auto interactive(const std::string_view path,
@@ -1382,6 +1406,10 @@ struct Authentication::Impl {
       resolved.jwks_uri = document.value().jwks_uri();
       if (document.value().end_session_endpoint().has_value()) {
         resolved.end_session = document.value().end_session_endpoint().value();
+      }
+
+      if (document.value().userinfo_endpoint().has_value()) {
+        resolved.userinfo = document.value().userinfo_endpoint().value();
       }
 
       // RFC 6749 Section 2.3.1 requires every server to accept the client
@@ -1632,7 +1660,7 @@ auto Authentication::open_session(const std::string_view value) const
 
 auto Authentication::admits_identity(const std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
-    -> bool {
+    -> Authentication::Admission {
   return this->impl_->admits_identity(policy, claims);
 }
 

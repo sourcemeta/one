@@ -69,6 +69,29 @@ test.describe('Admission by the claims a provider asserts', () => {
     await expect(page).toHaveTitle('Sign In');
   });
 
+  test('a claim the provider only answers for at UserInfo still admits', async ({
+    page,
+  }) => {
+    // The department claim is deliberately kept out of the identity token, so
+    // this only passes if the login asks the UserInfo endpoint for it
+    await page.goto('/desk/');
+    await signIn(page, 'desk', 'jane', 'jane-password');
+    await expect(page).toHaveURL(/\/desk\/$/);
+    await expect(page.locator('table a', { hasText: 'ticket' })).toBeVisible();
+  });
+
+  test('a claim answered at UserInfo can still refuse', async ({ page }) => {
+    await page.goto('/desk/');
+    await signIn(page, 'desk', 'bob', 'bob-password');
+    await expect(page.locator('body')).toContainText(
+      'This account is not admitted here',
+    );
+
+    const denied = await page.goto('/desk/');
+    expect(denied.status()).toBe(401);
+    await expect(page).toHaveTitle('Sign In');
+  });
+
   test('a policy naming no rule still admits whoever signs in', async ({
     page,
   }) => {

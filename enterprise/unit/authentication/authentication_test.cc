@@ -1338,6 +1338,147 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
       authentication.admits(at("/both/x"), {.bearer = "wrong"}).allowed);
 }
 
+TEST(oidc_identity_without_rules_admits_whoever_signs_in) {
+  setenv("ONE_TEST_OIDC_ADMIT_OPEN", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_OPEN",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_open.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2"
+                })JSON")),
+            sourcemeta::one::Authentication::Admission::Admitted);
+}
+
+TEST(oidc_identity_missing_a_claim_is_incomplete_rather_than_refused) {
+  setenv("ONE_TEST_OIDC_ADMIT_PARTIAL", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_PARTIAL",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_partial.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  // A claim that never arrived is a question the provider may still answer at
+  // its UserInfo endpoint, which is where a scope's claims land by default
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2"
+                })JSON")),
+            Admission::Incomplete);
+  // A claim that arrived and fell short is an answer already given, so asking
+  // anywhere else would only repeat it
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "groups": [ "support" ]
+                })JSON")),
+            Admission::Refused);
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "groups": [ "platform" ]
+                })JSON")),
+            Admission::Admitted);
+}
+
+TEST(oidc_identity_refused_by_one_rule_is_refused_whatever_another_wants) {
+  setenv("ONE_TEST_OIDC_ADMIT_BOTH", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_BOTH",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_both.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  // The address settles it, so the absent group changes nothing
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email": "jane@other.test",
+                  "email_verified": true
+                })JSON")),
+            Admission::Refused);
+  // An address the provider will not vouch for is an answer, not a gap
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email": "jane@acme.test",
+                  "email_verified": false,
+                  "groups": [ "platform" ]
+                })JSON")),
+            Admission::Refused);
+  // Neither half having arrived leaves both worth asking about
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2"
+                })JSON")),
+            Admission::Incomplete);
+  EXPECT_EQ(authentication.admits_identity("okta",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2",
+                  "email": "jane@acme.test",
+                  "email_verified": true,
+                  "groups": [ "platform" ]
+                })JSON")),
+            Admission::Admitted);
+}
+
+TEST(oidc_identity_under_an_unknown_policy_is_refused) {
+  setenv("ONE_TEST_OIDC_ADMIT_UNKNOWN", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_UNKNOWN",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_unknown.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A name no interactive policy answers to could never have minted a session
+  EXPECT_EQ(authentication.admits_identity("nowhere",
+                                           sourcemeta::core::parse_json(R"JSON({
+                  "sub": "a1b2"
+                })JSON")),
+            sourcemeta::one::Authentication::Admission::Refused);
+}
+
 TEST(oidc_policy_admits_no_presented_credential) {
   setenv("ONE_TEST_OIDC_DENY", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
