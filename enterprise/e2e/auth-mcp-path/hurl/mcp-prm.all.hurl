@@ -64,6 +64,7 @@ document_schema: header "Link" regex "</registry([^>]+)>"
 {
   "resource": "{{base}}/registry/self/v1/mcp",
   "authorization_servers": [ "https://accounts.example.com" ],
+  "scopes_supported": [ "mcp:invoke", "mcp:read" ],
   "bearer_methods_supported": [ "header" ]
 }
 
@@ -97,6 +98,7 @@ slash_body: body
 {
   "resource": "{{base}}/registry/self/v1/mcp",
   "authorization_servers": [ "https://accounts.example.com" ],
+  "scopes_supported": [ "mcp:invoke", "mcp:read" ],
   "bearer_methods_supported": [ "header" ]
 }
 

@@ -14,14 +14,19 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 
+#include <algorithm>   // std::ranges::find, std::ranges::sort
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::less
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional, std::nullopt
+#include <set>         // std::set
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+#include <vector>      // std::vector
 
 class ActionAuthLogin_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -214,6 +219,7 @@ public:
     }
 
     this->requested_scope(wanted, scope_request);
+    this->report_unadvertised_claims(wanted, endpoints.value(), policy_name);
 
     const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
     sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
@@ -327,6 +333,52 @@ private:
     for (const auto scope : scopes) {
       sink += " ";
       sink += scope;
+    }
+  }
+
+  // A rule naming a claim the provider never sends is one that can only ever
+  // deny, and nothing in the exchange would say so: the login succeeds, the
+  // token arrives, and admission fails for a reason nobody can see. So the
+  // provider's own account of what it may supply is compared against what the
+  // rules ask for, and a gap is named where an operator will find it.
+  //
+  // This reports and never refuses. OpenID Connect Discovery Section 3 says
+  // the list "might not be an exhaustive list", so a claim missing from it is
+  // a hint rather than a verdict, and a provider publishing no list at all is
+  // saying nothing rather than saying no
+  static auto report_unadvertised_claims(
+      const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
+      const sourcemeta::one::Authentication::ProviderEndpoints &endpoints,
+      const std::string_view policy_name) -> void {
+    if (endpoints.claims_supported.empty()) {
+      return;
+    }
+
+    // Anybody at all may start a login, so saying this on every attempt would
+    // leave a stranger able to bury everything else in the log. What it says
+    // concerns a policy and its provider rather than the attempt that
+    // surfaced it, so saying it once says all of it
+    static std::mutex mutex;
+    static std::set<std::string, std::less<>> reported;
+
+    for (const auto &claim : wanted) {
+      if (std::ranges::find(endpoints.claims_supported, claim.name) !=
+          endpoints.claims_supported.cend()) {
+        continue;
+      }
+
+      std::string subject{claim.name};
+      subject += " of the policy ";
+      subject += policy_name;
+      const std::scoped_lock guard{mutex};
+      if (!reported.insert(subject).second) {
+        continue;
+      }
+
+      sourcemeta::one::HTTP_LOG(
+          "The provider does not advertise a claim a rule requires, so the "
+          "rule may never match. The claim is",
+          subject);
     }
   }
 

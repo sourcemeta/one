@@ -331,7 +331,7 @@ jsonpath "$.result.resources[32].uri" == "{{base}}/v1/catalog/self/v1/schemas/mc
 jsonpath "$.result.resources[32].name" == "Sourcemeta One MCP Protected Resource Metadata Response"
 jsonpath "$.result.resources[32].description" == "The OAuth 2.0 Protected Resource Metadata describing where a token for this instance's Model Context Protocol endpoint is obtained, as defined by RFC 9728"
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 1519
+jsonpath "$.result.resources[32].size" == 2187
 jsonpath "$.result.resources[32].annotations.priority" == 0
 jsonpath "$.result.resources[33].uri" == "{{base}}/v1/catalog/self/v1/schemas/mcp/request"
 jsonpath "$.result.resources[33].name" == "Sourcemeta One MCP Request"

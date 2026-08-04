@@ -256,6 +256,11 @@ public:
     // Whether the provider honours the claims request parameter, which is the
     // standard way to ask for a claim no standard scope carries
     bool claims_parameter_supported{false};
+    // The claims the provider says it may be able to supply. OpenID Connect
+    // Discovery Section 3 calls this list non-exhaustive, so a claim missing
+    // from it is worth reporting and never worth refusing over, and a provider
+    // publishing none says nothing at all
+    std::vector<std::string> claims_supported{};
   };
 
   // What the named interactive policy's provider says about itself, retrieved

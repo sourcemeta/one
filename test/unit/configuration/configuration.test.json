@@ -487,6 +487,79 @@
       }
     },
     {
+      "description": "A JWT authentication scope value carrying a separator is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "scope": [ "registry:read registry:write" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A JWT authentication scope value carrying a quote is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "scope": [ "registry:\"read" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "An OIDC authentication scope value carrying a separator is invalid",
+      "valid": false,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "oidc",
+            "name": "corporate",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "clientId": "registry",
+            "clientSecret": { "environmentVariable": "ONE_SECRET" },
+            "sessionSecrets": [ { "environmentVariable": "ONE_SESSION" } ],
+            "claims": { "scope": [ "one two" ] }
+          }
+        ]
+      }
+    },
+    {
+      "description": "A claim other than the scope may carry a separator, since only that one is a set",
+      "valid": true,
+      "data": {
+        "url": "http://localhost:8000",
+        "authentication": [
+          {
+            "type": "jwt",
+            "name": "ci",
+            "paths": [ "/internal" ],
+            "issuer": "https://acme.example.com",
+            "audience": "https://schemas.example.com",
+            "algorithms": [ "RS256" ],
+            "claims": { "department": [ "platform engineering" ] }
+          }
+        ]
+      }
+    },
+    {
       "description": "A JWT authentication policy naming a provider specific claim is valid",
       "valid": true,
       "data": {

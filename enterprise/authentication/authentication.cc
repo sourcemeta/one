@@ -1400,6 +1400,16 @@ struct Authentication::Impl {
       resolved.claims_parameter_supported =
           document.value().supports_claims_parameter();
 
+      const auto *advertised{
+          document.value().data().try_at("claims_supported")};
+      if (advertised != nullptr && advertised->is_array()) {
+        for (const auto &claim : advertised->as_array()) {
+          if (claim.is_string()) {
+            resolved.claims_supported.push_back(claim.to_string());
+          }
+        }
+      }
+
       cached.source = server;
       cached.resolved = std::move(resolved);
     }
