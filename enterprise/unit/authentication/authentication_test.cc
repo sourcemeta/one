@@ -1652,6 +1652,58 @@ TEST(admitting_reads_two_answers_only_once_they_are_combined) {
             Admission::Admitted);
 }
 
+TEST(oidc_identity_names_a_claim_the_provider_answers_with_objects) {
+  setenv("ONE_TEST_OIDC_SHAPE", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_SHAPE",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_shape.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto objects{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ { "value": "g-1", "display": "platform" } ]
+  })JSON")};
+  const auto strings{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ]
+  })JSON")};
+  const auto absent{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  // The rule compares an identifier, so a rule naming what a person sees
+  // matches nothing, and that is what an operator has no other way to learn
+  EXPECT_EQ(authentication.object_shaped_claims("okta", objects),
+            (std::vector<std::string_view>{"groups"}));
+  // Nothing to say where a claim arrived in the shape a rule names
+  EXPECT_EQ(authentication.object_shaped_claims("okta", strings),
+            (std::vector<std::string_view>{}));
+  // Nor where it never arrived, which is a different problem with its own word
+  EXPECT_EQ(authentication.object_shaped_claims("okta", absent),
+            (std::vector<std::string_view>{}));
+  // A claim no rule names is nobody's business here
+  const auto elsewhere{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ],
+    "roles": [ { "value": "r-1" } ]
+  })JSON")};
+  EXPECT_EQ(authentication.object_shaped_claims("okta", elsewhere),
+            (std::vector<std::string_view>{}));
+  // And a policy that names no rule has nothing to report about
+  EXPECT_EQ(authentication.object_shaped_claims("nowhere", objects),
+            (std::vector<std::string_view>{}));
+}
+
 TEST(oidc_identity_under_an_unknown_policy_is_refused) {
   setenv("ONE_TEST_OIDC_ADMIT_UNKNOWN", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

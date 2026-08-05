@@ -84,6 +84,14 @@ auto Authentication::open_session(const std::string_view) const
   return std::nullopt;
 }
 
+// Only an interactive login ever answers for a claim, and this edition
+// establishes none, so there is never a shape to report
+auto Authentication::object_shaped_claims(const std::string_view,
+                                          const sourcemeta::core::JSON &) const
+    -> std::vector<std::string_view> {
+  return {};
+}
+
 // Only an interactive login ever has two answers to combine, and this edition
 // establishes none, so nothing here reaches this
 auto Authentication::combine_claims(const sourcemeta::core::JSON &token,

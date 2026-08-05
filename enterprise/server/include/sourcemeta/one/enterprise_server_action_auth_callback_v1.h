@@ -19,7 +19,10 @@
 #include <array>       // std::array
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::less
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional, std::nullopt
+#include <set>         // std::set
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -274,6 +277,8 @@ public:
           "The provider authenticated somebody the policy does not admit, "
           "for the policy",
           policy_name);
+      this->report_object_shaped_claims(authentication, policy_name,
+                                        token.value().payload());
       this->not_admitted(silent, transaction.value(), request, response);
       return;
     }
@@ -638,6 +643,38 @@ private:
       return grant;
     } catch (...) {
       return std::nullopt;
+    }
+  }
+
+  // A rule compared against a claim carrying objects is compared on the
+  // `value` sub-attribute alone, so a rule naming what a person sees rather
+  // than what identifies them matches nothing. A denial cannot show that, and
+  // the token it concerns is sealed inside a cookie where an operator cannot
+  // look, so it is said here.
+  //
+  // Only a refusal reaches this, so a working policy stays quiet, and each
+  // claim is named once however often somebody signs in
+  static auto report_object_shaped_claims(
+      const sourcemeta::one::Authentication &authentication,
+      const std::string_view policy_name, const sourcemeta::core::JSON &claims)
+      -> void {
+    static std::mutex mutex;
+    static std::set<std::string, std::less<>> reported;
+    for (const auto claim :
+         authentication.object_shaped_claims(policy_name, claims)) {
+      std::string subject{claim};
+      subject += " of the policy ";
+      subject += policy_name;
+      const std::scoped_lock guard{mutex};
+      if (!reported.insert(subject).second) {
+        continue;
+      }
+
+      sourcemeta::one::HTTP_LOG(
+          "A rule names a claim the provider answers with objects, which are "
+          "compared on their identifier rather than on any name shown to a "
+          "person. The claim is",
+          subject);
     }
   }
 

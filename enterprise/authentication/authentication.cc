@@ -465,6 +465,23 @@ auto scope_accepts(const sourcemeta::core::JSON &payload,
   return false;
 }
 
+// Whether a claim arrived carrying objects rather than the strings a rule
+// names. Question 6's reading compares such a claim on its `value`
+// sub-attribute alone, so a rule naming a display name matches nothing
+auto carries_objects(const sourcemeta::core::JSON &value) -> bool {
+  if (value.is_object()) {
+    return true;
+  }
+
+  if (!value.is_array()) {
+    return false;
+  }
+
+  return std::ranges::any_of(value.as_array(), [](const auto &entry) -> bool {
+    return entry.is_object();
+  });
+}
+
 // Whether a verified token carries every claim a policy requires. The rules are
 // the member map of a claims request parameter, so each member names a claim
 // and the values it may carry. Values within one rule are alternatives and the
@@ -1160,6 +1177,48 @@ struct Authentication::Impl {
     return interactive_policy(decoded);
   }
 
+  [[nodiscard]] auto
+  object_shaped_claims(const std::string_view policy,
+                       const sourcemeta::core::JSON &claims) const
+      -> std::vector<std::string_view> {
+    std::vector<std::string_view> result;
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<Authentication::Type>(entry.type) !=
+              Authentication::Type::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      OIDCPolicyMetadata decoded;
+      if (!decode_oidc_metadata(
+              {this->view_->as<std::byte>(entry.metadata_offset),
+               entry.metadata_length},
+              decoded) ||
+          decoded.name != policy) {
+        continue;
+      }
+
+      const auto &rules{this->claims_[index]};
+      if (!rules.is_object()) {
+        return result;
+      }
+
+      for (const auto &rule : rules.as_object()) {
+        const auto *value{claims.try_at(rule.first)};
+        if (value != nullptr && carries_objects(*value)) {
+          result.push_back(rule.first);
+        }
+      }
+
+      return result;
+    }
+
+    return result;
+  }
+
   [[nodiscard]] auto admits_identity(const std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
       -> Authentication::Admission {
@@ -1704,6 +1763,12 @@ auto Authentication::combine_claims(const sourcemeta::core::JSON &token,
   }
 
   return result;
+}
+
+auto Authentication::object_shaped_claims(
+    const std::string_view policy, const sourcemeta::core::JSON &claims) const
+    -> std::vector<std::string_view> {
+  return this->impl_->object_shaped_claims(policy, claims);
 }
 
 auto Authentication::admits_identity(const std::string_view policy,
