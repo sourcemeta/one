@@ -84,6 +84,14 @@ auto Authentication::open_session(const std::string_view) const
   return std::nullopt;
 }
 
+// Only an interactive login ever has two answers to combine, and this edition
+// establishes none, so nothing here reaches this
+auto Authentication::combine_claims(const sourcemeta::core::JSON &token,
+                                    const sourcemeta::core::JSON &)
+    -> sourcemeta::core::JSON {
+  return token;
+}
+
 auto Authentication::admits_identity(const std::string_view,
                                      const sourcemeta::core::JSON &) const
     -> Authentication::Admission {
